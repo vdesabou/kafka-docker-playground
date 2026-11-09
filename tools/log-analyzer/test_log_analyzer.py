@@ -753,6 +753,32 @@ def test_connector_class_from_loggers():
           log_report.connectors_text(res["connectors"], top=10))
 
 
+def test_jdbc_database_without_url():
+    """🗄️ the database of a JDBC connector without connection.url: its SQL dialect (sink and source wording), else the
+    exception of its driver; not for a connector of another plugin; the icon follows"""
+    def rec(conn, t, msg):
+        return (f"@@PGREC@@|ERROR|1|3|3|2026-11-07T10:0{t}:00|2026-11-07T10:0{t}:00\n"
+                f"[2026-11-07 10:0{t}:00,000] ERROR [{conn}|task-0] {msg} (x)\n@@PGTS@@|2026-11-07T10:0{t}:00\n")
+    text = ("@@PGFILE@@|connect.log|20|4|4|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            + rec("sink", 1, "boom") + rec("source", 2, "boom") + rec("pg", 3, "org.postgresql.util.PSQLException: ERROR: deadlock")
+            + rec("s3", 4, "com.microsoft.sqlserver.jdbc.SQLServerException: x")
+            + "@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|sink|io.confluent.connect.jdbc.sink.JdbcSinkTask\n"
+            + "@@PGEVT@@|connector_hint|1|2026-11-07T10:00:00|sink|dialect SqlServerDatabaseDialect\n"
+            + "@@PGEVT@@|connector_hint|1|2026-11-07T10:00:00|source|dialect PostgreSql\n"
+            + "@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|pg|io.confluent.connect.jdbc.sink.JdbcDbWriter\n"
+            + "@@PGEVT@@|plugin_version|1|2026-11-07T10:00:00|s3|10.5.13 io.confluent.connect.s3.S3SinkConnector\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    cards = {c["connector"]: c for c in res["connectors"]}
+    check("sink dialect", (cards["sink"].get("jdbc"), cards["sink"].get("jdbc_from")) == ("sqlserver", "SqlServerDatabaseDialect"), cards["sink"])
+    check("source dialect", cards["source"].get("jdbc") == "postgresql", cards["source"])
+    check("driver exception", (cards["pg"].get("jdbc"), cards["pg"].get("jdbc_from")) == ("postgresql", "org.postgresql.util.PSQLException"), cards["pg"])
+    check("not another plugin", not cards["s3"].get("jdbc"), cards["s3"])
+    html = log_report.connectors_health_html(res["connectors"])
+    check("icon", "sql_server.png" in html and "postgresql.png" in html, "")
+    check("card", "🗄️ SQL Server" in html, "")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
