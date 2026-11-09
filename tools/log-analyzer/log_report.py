@@ -1071,7 +1071,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
             add(ch.get("time"), c["file"], ch.get("line"), "config_change", None,
                 f"⚙️ {c['title']}: {ch['key']} {ch['previous'] or '∅'} → {ch['value'] or '∅'}"[:200], config_connector(c))
     # the lifecycle of the INFO lines: every (re)start of a worker or a broker, the first rebalances of the worker groups
-    nrebalances = 0
+    nrebalances = nevictions = 0
     for f in files:
         for ev in f.get("events") or []:
             if ev["kind"] == "process_start":
@@ -1079,6 +1079,12 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
             elif ev["kind"] == "worker_rebalance" and nrebalances < 20:
                 nrebalances += 1
                 add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None, f"🔄 rebalance of the worker group {ev.get('detail') or ''}".strip())
+            elif ev["kind"] == "member_eviction" and nevictions < 20:
+                # a member removed by the group coordinator (broker log): the rebalance that follows has its cause here
+                nevictions += 1
+                group, _, why = (ev.get("detail") or "?").partition(" · ")
+                add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None,
+                    f"🚪 members of group {group} removed by the coordinator: {why or 'timeout'}", ev.get("connector") or None)
             elif ev["kind"] == "process_stop":
                 add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"🛑 {ev.get('detail') or 'stopping'}")
             elif ev["kind"] == "controller_change":
@@ -1515,7 +1521,8 @@ STORM_PER_HOUR = 6
 LIFECYCLE_KINDS = {"worker_rebalance": "worker group rebalances", "consumer_rejoin": "consumer group rejoins",
                    "connector_start": "connector starts", "task_start": "task starts", "process_start": "process starts",
                    "process_stop": "process stops", "controller_change": "active controller changes",
-                   "gc_pause": "GC pauses of 1 s or more"}
+                   "gc_pause": "GC pauses of 1 s or more",
+                   "member_eviction": "group members removed by the coordinator"}
 
 
 def lifecycle(res: dict, files: List[dict]) -> dict:
@@ -1535,7 +1542,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
             if ev["kind"] not in LIFECYCLE_KINDS:
                 continue
             group = (ev.get("detail") or "").split(" · ")[0]
-            who = group if ev["kind"] in ("worker_rebalance", "consumer_rejoin") else \
+            who = group if ev["kind"] in ("worker_rebalance", "consumer_rejoin", "member_eviction") else \
                 ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] in ("process_start", "process_stop") else \
                 "controller" if ev["kind"] == "controller_change" else "jvm" if ev["kind"] == "gc_pause" else ev.get("connector") or ""
             r = rows.get((ev["kind"], who))
@@ -1605,7 +1612,7 @@ def lifecycle_connector(r: dict) -> Optional[str]:
     connector of the worker (they stay whatever the connector picked)"""
     if r["kind"] in ("connector_start", "task_start"):
         return r.get("who") or None
-    if r["kind"] == "consumer_rejoin":
+    if r["kind"] in ("consumer_rejoin", "member_eviction"):
         return r.get("connector") or None
     return None
 

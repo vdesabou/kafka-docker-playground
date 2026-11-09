@@ -109,8 +109,10 @@
   required: false
   help: |-
     ⏱️ Only the lines logged at or after this time: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06". The times
-    are compared as written in the logs; a line without its own time (a stack frame) follows the line before it. The
-    line numbers of the digest and of the report stay those of the files
+    are compared as written in the logs, and the epoch times of the librdkafka lines ("%3|1793896102.923|…") as UTC; a
+    line without its own time (a stack frame) follows the line before it, the lines before the first time of a file
+    follow it. A file where no time is found is analyzed whole, with a warning, rather than dropped. The line numbers
+    of the digest and of the report stay those of the files
 - long: --until
   arg: until
   required: false

@@ -10,6 +10,11 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 sed -n '/^function summarize_log_errors/,/^}/p' "$root/scripts/cli/src/lib/cli_function.sh" > "$tmp/digest.sh"
+# the --since / --until window of analyze logs (log_window_filter of scripts/cli/src/commands/analyze/logs.sh)
+sed -n '/^function window_epoch/,/^}/p;/^function log_window_filter/,/^}/p' "$root/scripts/cli/src/commands/analyze/logs.sh" > "$tmp/window.sh"
+printf '%s\n' 'header' '[2026-11-01 10:00:00,000] ERROR old' '  at a.b(C.java:1)' '[2026-11-08 10:00:00,000] ERROR new' '  at a.b(C.java:2)' > "$tmp/window-iso.log"
+printf '%s\n' '%3|1793896102.923|FAIL|rdkafka#producer-1| new' '%3|1700000000.000|FAIL|rdkafka#producer-1| old' > "$tmp/window-epoch.log"
+printf '%s\n' 'no time on this line' 'ERROR nor on this one' > "$tmp/window-none.log"
 samples=("$root/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log" "$root"/tools/log-analyzer/samples/kafka-clients/*.log
          "$root"/tools/log-analyzer/samples/kafka-streams/*.log "$root"/tools/log-analyzer/samples/compare/*.log)
 # the events of the INFO lines (lifecycle, GC pauses of 1 s or more, process stops, controller changes): same with every awk
@@ -35,6 +40,12 @@ cat > "$tmp/events.log" << 'EOF'
 [0.004s][info][gc,init] Version: 21.0.5+11-LTS (release)
 WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
 WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf.UnsafeUtil
+[2026-11-07 10:30:00,000] INFO [GroupCoordinator 1]: Member consumer-orders-1-0b1c in group orders has failed, removing it from the group (kafka.coordinator.group.GroupCoordinator)
+[2026-11-07 10:30:05,000] INFO [GroupCoordinator 1]: Group orders removed dynamic members who haven't joined: Set(consumer-orders-2-9f1e) (kafka.coordinator.group.GroupCoordinator)
+[2026-11-07 10:30:30,000] INFO [GroupCoordinator 1]: Preparing to rebalance group payments in state CompletingRebalance with old generation 5 (__consumer_offsets-3) (reason: Removing [consumer-p-2] on pending sync request expiration) (kafka.coordinator.group.GroupCoordinator)
+[2026-11-07 10:31:00,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId connect-s3-sink] Member connector-consumer-s3-sink-0-77aa has failed, removing it from the group. (org.apache.kafka.coordinator.group.GroupMetadataManager)
+[2026-11-07 10:31:05,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId connect-s3-sink] Removed dynamic members who haven't joined: [connector-consumer-s3-sink-1-88bb] (org.apache.kafka.coordinator.group.GroupMetadataManager)
+[2026-11-07 10:32:00,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId payments] Preparing to rebalance the group in state CompletingRebalance with old generation 4 (reason: Removing [consumer-p-1] on pending sync request expiration). (org.apache.kafka.coordinator.group.GroupMetadataManager)
 EOF
 # a line of a log written on Windows (CRLF)
 printf '%s\r\n' '[2026-11-07 10:28:00,003] INFO [hdfs-sink|task-1] Starting commit and rotation (io.confluent.connect.hdfs3.TopicPartitionWriter:298)' >> "$tmp/events.log"
@@ -89,6 +100,14 @@ do
         echo "❌ $awk_cmd: plugin_logger events of events.log: $got"
         failed=1
     fi
+    # the members removed by the group coordinator of a broker (session timeout, rebalance timeout, pending sync), from the
+    # Scala coordinator and from the Java one with and without its [GroupId …] prefix: the group, the timeout, the connector
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "member_eviction" {print $5 "=" $6}' "$out.records" | LC_ALL=C sort | tr '\n' ',')
+    if [ "$got" != "=orders · rebalance timeout (did not rejoin),=orders · session timeout (no heartbeat),=payments · rebalance timeout (joined, did not sync),=payments · rebalance timeout (joined, did not sync),s3-sink=connect-s3-sink · rebalance timeout (did not rejoin),s3-sink=connect-s3-sink · session timeout (no heartbeat)," ]
+    then
+        echo "❌ $awk_cmd: member_eviction events of events.log: $got"
+        failed=1
+    fi
     # the SQL dialect of a JDBC connector (sink and source wording), each once; the record of an error of the runtime
     # (LogReporter): a sink
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "connector_hint" {print $5, $6}' "$out.records" | sort | tr '\n' ',')
@@ -116,6 +135,22 @@ do
         echo "❌ $awk_cmd: a WARNING: line of the JDK launcher is a record"
         failed=1
     fi
+    # --since: the lines before the first time follow it, librdkafka epoch times are read, and a file without any time
+    # is kept whole (and noted) rather than dropped: before, every line of it became empty and the file was reported clean
+    for case in "iso||||[2026-11-08 10:00:00,000] ERROR new|  at a.b(C.java:2)|" "epoch|%3|1793896102.923|FAIL|rdkafka#producer-1| new||" \
+                "none|no time on this line|ERROR nor on this one|kept whole"
+    do
+        kind="${case%%|*}"
+        expected="${case#*|}"
+        got=$(PATH="$bin:$PATH" bash -c 'source "$1"; since=2026-11-05T00:00:00; until_ts=""; since_epoch=$(window_epoch "$since"); until_epoch=""
+                                         log_window_filter "$2" < "$3"' _ "$tmp/window.sh" "$out.window-$kind" "$tmp/window-$kind.log" | tr '\n' '|')
+        [ -s "$out.window-$kind" ] && got="${got}kept whole"
+        if [ "$got" != "$expected" ]
+        then
+            echo "❌ $awk_cmd: --since on window-$kind.log: $got instead of $expected"
+            failed=1
+        fi
+    done
     if [ -z "$reference" ]
     then
         reference="$out"

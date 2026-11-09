@@ -113,6 +113,25 @@ lab_expect_contains "🧭 Summary (--connector cdc-xstream-oracle-source): 7 occ
 lab_run playground analyze logs --sample connect_task_failure --until "2026-10-14 10:04" --output-dir "$report_dir"
 lab_expect_contains "⏱️ Only the lines logged before 2026-10-14 10:04:00 (--since / --until)"
 lab_expect_contains "🔎 2 distinct record(s), 2 occurrence(s), in 5278 lines"
+# the epoch times of the librdkafka lines are read; a file without any time is analyzed whole, with a warning
+printf '%s\n' '%3|1793896102.923|FAIL|rdkafka#producer-1| [thrd:broker:9092/1]: broker:9092/1: Connect to ipv4#10.0.0.1:9092 failed: Connection refused' > "$work/client.log"
+lab_run playground analyze logs -f "$work/client.log" --since "2026-11-05" --output-dir "$report_dir"
+lab_expect_contains "🔎 1 distinct record(s), 1 occurrence(s), in 1 lines"
+printf '%s\n' 'ERROR a line without any time' > "$work/notime.log"
+lab_run playground analyze logs -f "$work/notime.log" --since "2026-11-05" --output-dir "$report_dir"
+lab_expect_contains "no time found in its lines (YYYY-MM-DD hh:mm:ss, librdkafka epoch), --since / --until not applied: the whole file is analyzed"
+lab_expect_contains "🔎 1 distinct record(s), 1 occurrence(s), in 1 lines"
+
+log "Section 5: members removed by the group coordinator"
+cat > "$work/coordinator.log" << 'EOF'
+[2026-11-07 10:30:00,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId connect-s3-sink] Member connector-consumer-s3-sink-0-77aa has failed, removing it from the group. (org.apache.kafka.coordinator.group.GroupMetadataManager)
+[2026-11-07 10:31:05,000] INFO [GroupCoordinator 1]: Group connect-s3-sink removed dynamic members who haven't joined: Set(connector-consumer-s3-sink-1-88bb) (kafka.coordinator.group.GroupCoordinator)
+[2026-11-07 10:32:00,000] ERROR [ReplicaManager broker=1] Error processing append operation on partition orders-0 (kafka.server.ReplicaManager)
+EOF
+lab_run playground analyze logs -f "$work/coordinator.log" --output-dir "$report_dir"
+lab_expect_contains "🚪 members of group connect-s3-sink removed by the coordinator: session timeout (no heartbeat)"
+lab_expect_contains "🚪 members of group connect-s3-sink removed by the coordinator: rebalance timeout (did not rejoin)"
+lab_expect_contains "connect-s3-sink: 2 group members removed by the coordinator"
 lab_run playground analyze logs --sample connect_task_failure --show-config cdc-xstream-oracle-source --output-dir "$report_dir"
 lab_expect_contains "⚙️ SourceConnectorConfig [cdc-xstream-oracle-source|worker] cdc-xstream-oracle-source · 24 keys · connect-oracle-xstream-task-failure.log:69 (2026-10-14 10:04:59)"
 lab_expect_contains "config.action.reload = restart"
