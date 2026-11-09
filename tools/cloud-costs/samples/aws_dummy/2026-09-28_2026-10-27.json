@@ -24,11 +24,11 @@
      ],
      "Metrics": {
       "UnblendedCost": {
-       "Amount": "264.0000000000",
+       "Amount": "123.3256362570",
        "Unit": "USD"
       },
       "UsageQuantity": {
-       "Amount": "13200.0000000000",
+       "Amount": "6166.2818128505",
        "Unit": "GB"
       }
      }
@@ -56,11 +56,11 @@
      ],
      "Metrics": {
       "UnblendedCost": {
-       "Amount": "167.6400000000",
+       "Amount": "77.1046592523",
        "Unit": "USD"
       },
       "UsageQuantity": {
-       "Amount": "16764.0000000000",
+       "Amount": "7710.4659252226",
        "Unit": "GB"
       }
      }
@@ -270,6 +270,38 @@
       "UsageQuantity": {
        "Amount": "150.0000000000",
        "Unit": "Hrs"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "35.4728009551",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "394.1422328354",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0871000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "5.2000000000",
+       "Unit": "GB-Month"
       }
      }
     }

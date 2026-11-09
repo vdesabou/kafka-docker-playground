@@ -9,7 +9,9 @@ still billing flagged), per environment and line type (ccloud) or resource group
   ccloud  confluent billing cost list --output json: one line per day, product, resource and line type
   aws     aws ce get-cost-and-usage, grouped by SERVICE and USAGE_TYPE, cost and usage quantity (resources tagged
           cflt_managed_id=<user>); plus s3-buckets.json, the S3 buckets with that tag (save_aws_s3_buckets), for the
-          Amazon S3 details: cost and volume per kind of S3 usage, per month and per destination, the buckets, hints
+          Amazon S3 details: cost and volume per kind of S3 usage, per month and per destination, the buckets, hints;
+          plus daily.json (--days of costs-history), the same query per day: cost per day, the usage types whose cost per
+          day stepped up or down (also printed), the top usage types per day; and the docker pulls billed by ECR
   azure   Cost Management query, grouped by ServiceName and ResourceId (resources tagged cflt_managed_id=<user>)
 
 A month without file, or with a file that cannot be read, is shown as "no data" (the query failed).
@@ -521,6 +523,203 @@ def s3_section(months: List[dict], buckets: Optional[List[dict]], user: str) -> 
                                              "".join(parts)) + "</div>"
 
 
+# ── ECR pulls and cost per day (aws) ─────────────────────────────────────────
+
+ECR_SERVICE = "Amazon EC2 Container Registry (ECR)"
+
+
+def ecr_findings(months: List[dict]) -> List[dict]:
+    """Docker pulls billed by ECR: to the Internet (from outside AWS) or to another region; pulls from EC2 in the same region are free"""
+    cur_ids = {id(r) for r in (months[-1]["records"] if months else [])}
+    groups: Dict[tuple, List[dict]] = defaultdict(list)
+    for m in months:
+        for r in m["records"]:
+            if r["category"] != ECR_SERVICE:
+                continue
+            t = S3_TRANSFER_RE.match(r["item"])
+            if t:
+                if t.group(3) == "Out":
+                    groups[(region_name(t.group(1) or "USE1"), region_name(t.group(2)))].append(r)
+                continue
+            p = S3_PREFIX_RE.match(r["item"])
+            region, rest = (region_name(p.group(1)), p.group(2)) if p else ("us-east-1", r["item"])
+            if rest == "DataTransfer-Out-Bytes":
+                groups[(region, "Internet")].append(r)
+    out = []
+    for (src, dst), recs in sorted(groups.items(), key=lambda kv: -sum(r["amount"] for r in kv[1])):
+        v = sum(r["amount"] for r in recs)
+        if v < 1:
+            continue
+        gb = sum(r.get("quantity", 0.0) for r in recs)
+        cur = sum(r["amount"] for r in recs if id(r) in cur_ids)
+        volume = f"{fmt_quantity(gb, 'GB')} " if gb else ""
+        if dst == "Internet":
+            text = (f"{volume}pulled from ECR in {src} to the Internet ({money(v)} over the last 12 months, {money(cur)} in the current "
+                    "period): docker pulls from outside AWS, laptops or GitHub-hosted runners (they run on Azure). Pulls from EC2 in the "
+                    "same region are free. Who pulls: the BatchGetImage events of CloudTrail, aws cloudtrail lookup-events --region "
+                    f"{src} --lookup-attributes AttributeKey=EventName,AttributeValue=BatchGetImage (userIdentity: an IAM user of this "
+                    "account, or the id of another account).")
+        else:
+            text = (f"{volume}pulled from ECR in {src} by something running in {dst} ({money(v)} over the last 12 months, {money(cur)} in "
+                    f"the current period): a replica of the repository in {dst} (ECR replication) would make these pulls free.")
+        out.append({"severity": "MEDIUM" if v >= 10 else "LOW", "text": text})
+    return out
+
+
+def load_daily(path: str) -> Optional[dict]:
+    """daily.json of costs-history (aws ce get-cost-and-usage --granularity DAILY): its days and records; None without it"""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    days = [p.get("TimePeriod", {}).get("Start") for p in data.get("ResultsByTime", [])]
+    days = sorted(d for d in days if d)
+    return {"days": days, "records": parse_aws(data, {"start": days[0] if days else ""})}
+
+
+def step_change(values: List[float], min_len: int = 3) -> Optional[tuple]:
+    """The split of values in two runs of days that differ the most (between-group sum of squares), then moved to the start
+    of the last run of days at the new level: (index of the first day after, mean before, mean after, t statistic of the
+    difference); None when too short"""
+    n = len(values)
+    if n < 2 * min_len:
+        return None
+    prefix = [0.0]
+    for v in values:
+        prefix.append(prefix[-1] + v)
+    best = None
+    for k in range(min_len, n - min_len + 1):
+        a, b = prefix[k] / k, (prefix[n] - prefix[k]) / (n - k)
+        score = (a - b) ** 2 * k * (n - k) / n
+        if best is None or score > best[0]:
+            best = (score, k, a, b)
+    _, k, a, b = best
+    # the change starts with the last run of days at the new level: quiet days (a weekend) just before the change look like the
+    # new level and pull the best split earlier, a day still at the old level after it pushes it later
+    last_old = max((i for i, v in enumerate(values) if abs(v - a) < abs(v - b)), default=-1)
+    if min_len - 1 <= last_old < n - 2 and last_old + 1 != k:
+        k = last_old + 1
+        a, b = prefix[k] / k, (prefix[n] - prefix[k]) / (n - k)
+    var_a = sum((v - a) ** 2 for v in values[:k]) / max(1, k - 1)
+    var_b = sum((v - b) ** 2 for v in values[k:]) / max(1, n - k - 1)
+    se = (var_a / k + var_b / (n - k)) ** 0.5
+    return k, a, b, (abs(a - b) / se if se else float("inf"))
+
+
+def daily_changes(daily: dict) -> List[dict]:
+    """The usage types whose cost per day stepped up or down (at least 2x, $5 per month, clearly above the noise of the days);
+    the last 2 days are left out (Cost Explorer has not consolidated them yet)"""
+    days = daily["days"]
+    scan = days[:-2] if len(days) > 8 else days
+    cost: Dict[tuple, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    qty: Dict[tuple, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    unit: Dict[tuple, str] = {}
+    for r in daily["records"]:
+        key = (r["category"], r["item"])
+        cost[key][r["day"]] += r["amount"]
+        qty[key][r["day"]] += r.get("quantity", 0.0)
+        unit[key] = r.get("unit", "")
+    out = []
+    for key, by_day in cost.items():
+        values = [by_day.get(d, 0.0) for d in scan]
+        if sum(values) < 1:
+            continue
+        res = step_change(values)
+        if not res:
+            continue
+        k, a, b, t = res
+        impact = 30 * (b - a)
+        if abs(impact) < 5 or t < 3 or not (b <= a / 2 or b >= 2 * a):
+            continue
+        q = [qty[key].get(d, 0.0) for d in scan]
+        out.append({"service": key[0], "usage": key[1], "since": scan[k], "before": a, "after": b, "impact": impact,
+                    "q_before": sum(q[:k]) / k, "q_after": sum(q[k:]) / (len(scan) - k), "unit": unit[key], "days": len(scan)})
+    return sorted(out, key=lambda c: -abs(c["impact"]))[:10]
+
+
+def per_day_volume(q: float, unit: str) -> str:
+    return fmt_quantity(q, unit) if q else f"0 {unit}"
+
+
+def change_text(c: dict) -> str:
+    change = (c["after"] - c["before"]) / c["before"] if c["before"] else None
+    pct_txt = f"{100 * change:+.0f}%" if change is not None else "new"
+    vol = ""
+    if c["unit"] in ("GB", "Requests") and (c["q_before"] or c["q_after"]):
+        vol = f", {per_day_volume(c['q_before'], c['unit'])} → {per_day_volume(c['q_after'], c['unit'])} per day"
+    sign = "+" if c["impact"] > 0 else "-"
+    return (f"{c['usage']} ({c['service']}): {money(c['before'])} → {money(c['after'])} per day since {c['since']} "
+            f"({pct_txt}, {sign}{money(abs(c['impact']))} per month{vol})")
+
+
+def change_findings(changes: List[dict]) -> List[dict]:
+    out = []
+    for c in changes[:5]:
+        if c["impact"] < 0:
+            out.append({"severity": "INFO", "text": "📉 " + change_text(c) + "."})
+        else:
+            out.append({"severity": "MEDIUM" if c["impact"] >= 30 else "LOW", "text": "📈 " + change_text(c) + "."})
+    return out
+
+
+def compact_money(v: float) -> str:
+    if not round(v, 2):
+        return ""
+    return f"{v:,.0f}" if v >= 10 else f"{v:.1f}" if v >= 0.1 else f"{v:.2f}"
+
+
+def daily_section(daily: dict, changes: List[dict]) -> str:
+    """Card with the usage types whose cost per day changed, and the top usage types per day of the last 4 weeks"""
+    days, recs = daily["days"], daily["records"]
+    parts = []
+    if changes:
+        rows = []
+        for c in changes:
+            vol = (f"{per_day_volume(c['q_before'], c['unit'])} → {per_day_volume(c['q_after'], c['unit'])}"
+                   if c["unit"] in ("GB", "Requests") and (c["q_before"] or c["q_after"]) else "-")
+            pct_txt = f"{100 * (c['after'] - c['before']) / c['before']:+.0f}%" if c["before"] else "new"
+            rows.append([e(c["service"]), f"<span class='mono' style='word-break:normal'>{e(c['usage'])}</span>",
+                         f"<span style='white-space:nowrap'>{e(c['since'])}</span>", money(c["before"]), money(c["after"]), pct_txt,
+                         e(vol), ("+" if c["impact"] > 0 else "-") + money(abs(c["impact"]))])
+        parts.append(f"<h3>Usage types whose cost per day changed <span class='muted'>(a step of at least 2x and $5 per month, "
+                     f"over the {changes[0]['days']} complete days)</span></h3>"
+                     + rh.table(["Service", "Usage type", "Since", "Before, per day", "After, per day", "Change", "Volume per day",
+                                 "≈ per month"], rows, num=(3, 4, 5, 7)))
+    else:
+        parts.append("<p class='muted'>No usage type whose cost per day stepped up or down (at least 2x and $5 per month) "
+                     "over these days.</p>")
+
+    last = days[-28:]
+    window = [r for r in recs if r["day"] in set(last)]
+    top = ranked(sum_by(window, lambda r: (r["category"], r["item"])))[:12]
+    if top:
+        cells: Dict[tuple, Dict[str, list]] = defaultdict(lambda: defaultdict(lambda: [0.0, 0.0, ""]))
+        for r in window:
+            c = cells[(r["category"], r["item"])][r["day"]]
+            c[0] += r["amount"]
+            c[1] += r.get("quantity", 0.0)
+            c[2] = r.get("unit", "")
+        mx = max((v[0] for k, _ in top for v in cells[k].values()), default=0)
+        headers = ["Usage type"] + [f"<span title='{e(d)}'>{e(d[8:])}</span>" for d in last] + ["Total"]
+        rows = []
+        for k, v in top:
+            row = [f"<span class='mono' style='word-break:normal' title='{e(k[0])}'>{e(k[1])}</span>"]
+            for d in last:
+                cv, q, u = cells[k].get(d, [0.0, 0.0, ""])
+                row.append(f"<span{heat(cv, mx)} title='{e(d)}: {e(money(cv))}, {e(fmt_quantity(q, u))}'>{compact_money(cv)}</span>"
+                           if round(cv, 2) else "<span class='muted'>-</span>")
+            row.append(f"<b>{money(v)}</b>")
+            rows.append(row)
+        parts.append(f"<h3>Top {len(top)} usage types per day <span class='muted'>(last {len(last)} days, in $, hover a cell for "
+                     "the cost and the volume; the last 2 days are incomplete)</span></h3>"
+                     + "<div class='daily-matrix'>" + rh.table(headers, rows, num=tuple(range(1, len(last) + 2))) + "</div>")
+    return "<div id='cost-per-day-details'>" + rh.card(f"📈 Cost per day, per usage type <span class='muted'>({e(days[0])} to "
+                                                       f"{e(days[-1])})</span>", "".join(parts)) + "</div>"
+
+
 def still_billing(records: List[dict]) -> set:
     """ccloud: the resources with a cost on each of the last 3 days with data (not a connector of a short run that day)"""
     last_day = max((r["day"] for r in records), default="")
@@ -620,7 +819,9 @@ def range_data(records: List[dict], days: List[str], mode: str, billing_now: set
     return f"<script type='application/json' id='cost-range-data'>{payload}</script>"
 
 
-def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict]] = None) -> str:
+def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict]] = None, daily: Optional[dict] = None,
+          changes: Optional[List[dict]] = None) -> str:
+    """daily (aws): the cost per day of the last days (load_daily), changes: its daily_changes()"""
     lab = LABELS[cloud]
     today = date.today()
     records = [r for m in months for r in m["records"]]
@@ -671,6 +872,11 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
     if failed:
         body.append(rh.findings_html([{"severity": "MEDIUM", "text": f"No data for {range_label(m)}: the cost query failed, "
                                                                       f"this month is left out of the totals."} for m in failed]))
+    if cloud == "aws":
+        # the usage types whose cost per day changed (did a change work?), and the docker pulls billed by ECR
+        aws_findings = change_findings(changes or []) + ecr_findings(months)
+        if aws_findings:
+            body.append(rh.findings_html(rh.sort_findings(aws_findings)))
 
     rt = RangeTiles(cloud == "ccloud" and bool(records))
     cards = [
@@ -716,6 +922,9 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
         charts.append(("📦 Cost per resource group", rh.svg_hbars(
             [(k or "(none)", v, f"{k}: {money(v)}") for k, v in ranked(sum_by(records, "group"))[:15]], money)))
     elif cloud == "aws" and records:
+        if daily and daily["days"]:
+            charts.append((f"📆 Cost per day <span class='muted'>(last {len(daily['days'])} days)</span>",
+                           svg_daily_zoomable(sum_by(daily["records"], "day"), daily["days"])))
         charts.append(("🌍 Cost per region code <span class='muted'>(prefix of the usage type)</span>", rh.svg_hbars(
             [(k, v, f"{k}: {money(v)}") for k, v in ranked(sum_by(records, "group"))[:15]], money)))
     body.append(rh.charts_grid(charts))
@@ -734,6 +943,8 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
                             rh.table(headers, rows, num=tuple(range(1, len(months) + 2)))))
 
         if cloud == "aws":
+            if daily and daily["days"]:
+                body.append(daily_section(daily, changes or []))
             body.append(s3_section(months, buckets, user))
 
         if cloud == "ccloud" and billing_now:
@@ -826,7 +1037,8 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
     if months:
         meta.append(f"🗓️ {e(range_label({'start': months[0]['start'], 'end': months[-1]['end']}))}")
     css = ("<style>.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.kpi-value{font-size:1.4rem;white-space:nowrap}"
-           "td .heat{display:block;margin:-7px -11px;padding:7px 11px}</style>")
+           "td .heat{display:block;margin:-7px -11px;padding:7px 11px}"
+           ".daily-matrix td,.daily-matrix th{padding:5px 4px;font-size:.74rem}.daily-matrix td .heat{margin:-5px -4px;padding:5px 4px}</style>")
     if rt.on:
         css = css.replace("</style>", RANGE_CSS + "</style>") + FILTER_SCRIPT
     return rh.page(f"{lab['name']} costs", f"💰 {e(lab['name'])} costs, last 12 months", meta, css + "".join(body),
@@ -1002,8 +1214,18 @@ def main() -> int:
             buckets = json.load(fh)
     except (OSError, ValueError):
         pass
+    # aws: the cost per day of the last days, saved by costs-history (daily.json, --days); its changes are also printed
+    daily = load_daily(os.path.join(a.data_dir, "daily.json")) if a.cloud == "aws" else None
+    changes = daily_changes(daily) if daily and daily["days"] else []
+    if daily and daily["days"]:
+        if changes:
+            print(f"📆 usage types whose cost per day changed ({daily['days'][0]} to {daily['days'][-1]}, the last 2 days left out):")
+            for c in changes:
+                print(("  📉 " if c["impact"] < 0 else "  📈 ") + change_text(c))
+        else:
+            print(f"📆 no usage type whose cost per day stepped up or down from {daily['days'][0]} to {daily['days'][-1]}")
     with open(a.html_out, "w", encoding="utf-8") as fh:
-        fh.write(build(a.cloud, a.user, months, buckets if isinstance(buckets, list) else None))
+        fh.write(build(a.cloud, a.user, months, buckets if isinstance(buckets, list) else None, daily, changes))
     return 0
 
 

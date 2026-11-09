@@ -3,6 +3,8 @@ display_only_total_cost="${args[--display-only-total-cost]}"
 start_date="${args[--start-date]}"
 end_date="${args[--end-date]}"
 raw_output_file="${args[--raw-output-file]}"
+# private, DAILY for the cost per day of costs-history
+granularity="${args[--granularity]:-MONTHLY}"
 if [[ ! -n "$start_date" ]]
 then
     if [[ "$OSTYPE" == "darwin"* ]]
@@ -143,7 +145,7 @@ while true
 do
     page=$(aws ce get-cost-and-usage \
         --time-period Start=$start_date,End=$end_date \
-        --granularity MONTHLY \
+        --granularity "$granularity" \
         --metrics "UnblendedCost" "UsageQuantity" \
         --group-by Type=DIMENSION,Key=SERVICE Type=DIMENSION,Key=USAGE_TYPE \
         --filter '{

@@ -3921,6 +3921,14 @@ playground_cloud_resources_aws_costs_usage() {
       echo
 
     fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--granularity GRANULARITY")"
+      printf "    🗓️ granularity of the cost API (DAILY: the cost per day of costs-history)\n"
+      printf "    %s\n" "Allowed: MONTHLY, DAILY"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3934,7 +3942,7 @@ playground_cloud_resources_aws_costs_usage() {
 playground_cloud_resources_aws_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources aws costs-history\n\n"
-    printf "  👛  Retrieve aws costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and usage type, the month x service matrix, the top usage types, and\n  the details of each month.\n  \n  🪣 When S3 costs something, the report adds the Amazon S3 details: cost and\n  volume (GB, requests) of each kind of S3 usage per month (storage, requests,\n  Standard-IA retrieval, data sent to the Internet or to another region), the S3\n  buckets tagged cflt_managed_id=<user> (region, size per storage class,\n  objects, access logging, lifecycle) and hints. Cost Explorer has no cost per\n  bucket: that needs the resource-level data of the payer account.\n\n"
+    printf "  👛  Retrieve aws costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and usage type, the month x service matrix, the top usage types, and\n  the details of each month.\n  \n  📆 The report also shows the cost per day of the last --days days (default 60):\n  a zoomable chart, the usage types whose cost per day changed (a step up or\n  down, the day it started, before / after per day and the impact per month,\n  also printed in the terminal), and the top usage types per day. It tells\n  whether a change worked a few days after it, which the months cannot (a period\n  mixes the days before and after).\n  \n  🐳 When docker pulls from ECR go out of AWS (laptops, GitHub-hosted runners), a\n  finding gives the volume and how to see who pulls (CloudTrail BatchGetImage\n  events): pulls from EC2 in the same region are free.\n  \n  🪣 When S3 costs something, the report adds the Amazon S3 details: cost and\n  volume (GB, requests) of each kind of S3 usage per month (storage, requests,\n  Standard-IA retrieval, data sent to the Internet or to another region), the S3\n  buckets tagged cflt_managed_id=<user> (region, size per storage class,\n  objects, access logging, lifecycle) and hints. Cost Explorer has no cost per\n  bucket: that needs the resource-level data of the payer account.\n\n"
   else
     printf "playground cloud-resources aws costs-history - 👛  Retrieve aws costs for each month since last year\n\n"
   fi
@@ -3953,6 +3961,12 @@ playground_cloud_resources_aws_costs_history_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--detailed")"
     printf "    💹 display all details for each month\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--days DAYS")"
+    printf "    📆 Number of days of the cost per day section of the HTML report (0 to skip\n    it, one more cost API request when set)\n"
+    printf "    %s\n" "Default: 60"
     echo
 
     # :flag.usage
@@ -3981,6 +3995,7 @@ playground_cloud_resources_aws_costs_history_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground cloud-resources aws costs-history\n"
     printf "  playground cloud-resources aws costs-history --sample aws_dummy\n"
+    printf "  playground cloud-resources aws costs-history --days 90\n"
     echo
 
   fi
@@ -39500,8 +39515,12 @@ function remove_cdb_oracle_image() {
 # Private ECR repository holding the Oracle prebuilt images (pull allowed to the Confluent AWS organization only).
 # The tag is the local image name with ':' replaced by '-': db-prebuilt-2943665357:19.3.0-ee -> db-prebuilt-2943665357-19.3.0-ee
 # It is in us-west-2 because the engineering Semaphore agents run there: same-region pulls are free and go through their VPC endpoints.
-# Images are pushed there by hand (skopeo, gzip layers). An image built by CI for a new 01_user-setup.sh checksum is only
-# uploaded to the S3 bucket, which stays the fallback until it is pushed to ECR too.
+# The first images were pushed by hand (skopeo, gzip layers). Since then CI pushes the ones it is missing
+# (push_oracle_image_to_ecr): an image built for a new 01_user-setup.sh checksum (also uploaded to the S3 bucket), or one it
+# had to download from S3. The S3 bucket stays the fallback.
+# The other pullers of the images (CloudTrail BatchGetImage events of us-west-2): the Semaphore agents (another account of
+# the organization, same region: free) and the GitHub-hosted runners and laptops (outside AWS: ECR data sent to the
+# Internet, the USW2-DataTransfer-Out-Bytes line of 'playground cloud-resources aws costs-history').
 ORACLE_ECR_REGION="us-west-2"
 ORACLE_ECR_REGISTRY="995646271469.dkr.ecr.${ORACLE_ECR_REGION}.amazonaws.com"
 ORACLE_ECR_REPOSITORY="kafka-docker-playground/oracle-db-prebuilt"
@@ -39561,6 +39580,44 @@ function pull_oracle_image_from_ecr() {
   # only removes the ECR tag, the image stays under its local name
   docker image rm "$ecr_image" > /dev/null 2>&1
   log "📄 image $image has been pulled from ECR in $(( SECONDS - start )) seconds"
+  return 0
+}
+
+# CI only (GitHub Actions): push $1 (local image name) to the ECR repository when its tag is missing there, so that the
+# next runs pull it from ECR instead of downloading the S3 tar. Called when CI has just built the image (a new
+# 01_user-setup.sh checksum) or downloaded it from S3 (an image not pushed yet). The tags are immutable: an existing tag
+# is never pushed again. Best effort: a failure is only a warning.
+function push_oracle_image_to_ecr() {
+  local image="$1"
+  if [ -z "$GITHUB_RUN_NUMBER" ] || ! command -v aws > /dev/null 2>&1
+  then
+    return 0
+  fi
+  local ecr_image
+  ecr_image=$(oracle_ecr_image "$image")
+  local tag="${ecr_image##*:}"
+
+  if aws ecr describe-images --region "$ORACLE_ECR_REGION" --registry-id "${ORACLE_ECR_REGISTRY%%.*}" --repository-name "$ORACLE_ECR_REPOSITORY" --image-ids "imageTag=$tag" > /dev/null 2>&1
+  then
+    return 0
+  fi
+  if ! oracle_ecr_login
+  then
+    logwarn "could not log in to ECR registry $ORACLE_ECR_REGISTRY, $image is not pushed to ECR: next runs download it from S3"
+    return 1
+  fi
+
+  log "📤 pushing $image to ECR as $ecr_image, so that next runs pull it from ECR instead of S3"
+  local start=$SECONDS
+  docker tag "$image" "$ecr_image" || return 1
+  if docker push -q "$ecr_image" > /dev/null
+  then
+    log "📤 $ecr_image has been pushed to ECR in $(( SECONDS - start )) seconds"
+  else
+    logwarn "could not push $ecr_image to ECR (push rights of the CI credentials?): next runs download $image from S3"
+  fi
+  # only removes the ECR tag, the image stays under its local name
+  docker image rm "$ecr_image" > /dev/null 2>&1
   return 0
 }
 
@@ -39639,6 +39696,8 @@ function create_or_get_oracle_image() {
           if [ $? -eq 0 ]
           then
             log "📄 image $ORACLE_IMAGE has been installed locally"
+            # not in ECR (or ECR failed): CI pushes it there for the next runs
+            push_oracle_image_to_ecr "$ORACLE_IMAGE"
           fi
 
           if [[ "$OSTYPE" == "darwin"* ]]
@@ -39785,6 +39844,8 @@ function create_or_get_oracle_image() {
                     log "📄 </tmp/$ORACLE_IMAGE.tar> was uploaded to S3 bucket"
               fi
           fi
+          # a new 01_user-setup.sh checksum: without it, every run would download the S3 tar until someone pushes it by hand
+          push_oracle_image_to_ecr "$ORACLE_IMAGE"
           set -e
       fi
   fi
@@ -48256,6 +48317,8 @@ playground_cloud_resources_aws_costs_command() {
   start_date="${args[--start-date]}"
   end_date="${args[--end-date]}"
   raw_output_file="${args[--raw-output-file]}"
+  # private, DAILY for the cost per day of costs-history
+  granularity="${args[--granularity]:-MONTHLY}"
   if [[ ! -n "$start_date" ]]
   then
       if [[ "$OSTYPE" == "darwin"* ]]
@@ -48396,7 +48459,7 @@ playground_cloud_resources_aws_costs_command() {
   do
       page=$(aws ce get-cost-and-usage \
           --time-period Start=$start_date,End=$end_date \
-          --granularity MONTHLY \
+          --granularity "$granularity" \
           --metrics "UnblendedCost" "UsageQuantity" \
           --group-by Type=DIMENSION,Key=SERVICE Type=DIMENSION,Key=USAGE_TYPE \
           --filter '{
@@ -48474,6 +48537,7 @@ playground_cloud_resources_aws_costs_history_command() {
   output_dir="${args[--output-dir]}"
   no_open="${args[--no-open]}"
   sample="${args[--sample]}"
+  days="${args[--days]}"
 
   if [[ -n "$sample" ]]
   then
@@ -48564,6 +48628,25 @@ playground_cloud_resources_aws_costs_history_command() {
       # Move to the next range
       current_date="$end_date"
   done
+
+  # cost per day of the last $days days, for the cost per day section of the report (daily.json: one more request, a few
+  # pages with the usage types): it shows a change a few days after it, which a month mixing the days before and after cannot
+  if [[ "${days:-0}" -gt 0 ]]
+  then
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          daily_start=$(date -v-${days}d +%Y-%m-%d)
+      else
+          daily_start=$(date -d "$days days ago" +%Y-%m-%d)
+      fi
+      # the cost API goes back one year at most
+      if [[ "$daily_start" < "$start_date" ]]
+      then
+          daily_start="$start_date"
+      fi
+      log "📆 fetching the cost per day from $daily_start"
+      playground --output-level ERROR cloud-resources aws costs --start-date "$daily_start" --end-date "$(date +%Y-%m-%d)" --display-only-total-cost --granularity DAILY --raw-output-file "$data_dir/daily.json" > /dev/null
+  fi
 
   # the S3 buckets behind the S3 costs, for the "Amazon S3 details" of the report
   if jq -s -e '[.[].ResultsByTime[]?.Groups[] | select(.Keys[0] == "Amazon Simple Storage Service") | .Metrics.UnblendedCost.Amount | tonumber] | add > 0' "$data_dir"/*.json > /dev/null 2>&1
@@ -103394,6 +103477,20 @@ playground_cloud_resources_aws_costs_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --granularity)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--granularity']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--granularity requires an argument: --granularity GRANULARITY" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -103442,6 +103539,12 @@ playground_cloud_resources_aws_costs_parse_requirements() {
     fi
   fi
 
+  # :command.whitelist_filter
+  if [[ ${args['--granularity']:-} ]] && [[ ! ${args['--granularity']:-} =~ ^(MONTHLY|DAILY)$ ]]; then
+    printf "%s\n" "--granularity must be one of: MONTHLY, DAILY" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -103478,6 +103581,20 @@ playground_cloud_resources_aws_costs_history_parse_requirements() {
         # :flag.case_no_arg
         args['--detailed']=1
         shift
+        ;;
+
+      # :flag.case
+      --days)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--days']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--days requires an argument: --days DAYS" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -103546,7 +103663,18 @@ playground_cloud_resources_aws_costs_history_parse_requirements() {
   done
 
   # :command.default_assignments
+  [[ -n ${args['--days']:-} ]] || args['--days']="60"
   [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-cloud-costs"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--days'] ]]; then
+    validation_output="$(validate_integer "${args['--days']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--days DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
 
   # :command.whitelist_filter
   if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(aws_dummy)$ ]]; then
@@ -154045,6 +154173,16 @@ playground_cloud_resources_aws_costs_history_completion() {
 
         shift
         ;;
+      --days)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--days"]=1
+
+        ;;
       --output-dir | -o)
         shift
         if [[ $# -eq 0 ]]; then
@@ -154083,6 +154221,7 @@ playground_cloud_resources_aws_costs_history_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --detailed "$completion_current" --detailed
+    completion_flag_candidates --days "$completion_current" --days
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open
     completion_flag_candidates --sample "$completion_current" --sample -s

@@ -187,7 +187,10 @@ Gotchas:
   same report for the AWS / Azure resources of the playground. When S3 costs something, the AWS one adds the Amazon S3
   details: cost and volume of each kind of S3 usage (storage, requests, retrieval fees, data sent to the Internet or to
   another region), per month and per destination, the tagged buckets (size, access logging, lifecycle) and hints
-  (`cloud-resources aws costs-history --sample aws_dummy`). There is no cost per bucket: Cost Explorer needs the
+  (`cloud-resources aws costs-history --sample aws_dummy`). It also shows the cost per day of the last `--days` days
+  (default 60) and the usage types whose cost per day stepped up or down, with the day it started (also printed in the
+  terminal): that is how to check, a few days later, that a change of the examples worked. Docker pulls billed by ECR
+  (from outside AWS, or from another region) get a finding with the CloudTrail command that shows who pulls. There is no cost per bucket: Cost Explorer needs the
   resource-level data of the payer account for that.
 - **`playground stop` deletes the cluster the playground created**, with its topics and connectors, and keeps
   `ENVIRONMENT` / `CLUSTER_NAME` you exported. Run it in the `ccloud/fm-*` folder (its `stop.sh` calls
