@@ -1096,6 +1096,60 @@ def after_text(ev: dict) -> str:
     return f" ⏱️ {human_duration(a['seconds']) if a['seconds'] else 'right'} after {a['text']}" if a else ""
 
 
+# the class of a connector whose logs miss its startup (no "Instantiated connector" line, no config): from the loggers of
+# the lines of its tasks (plugin_logger events of summarize_log_errors). The longest prefix matching one of its packages
+# wins; the packages shared by several plugins (io.confluent.connect.jdbc.util, io.debezium.util…) are not here, they
+# decide nothing
+PLUGIN_PACKAGES = (
+    ("io.confluent.connect.jdbc.sink", "io.confluent.connect.jdbc.JdbcSinkConnector"),
+    ("io.confluent.connect.jdbc.source", "io.confluent.connect.jdbc.JdbcSourceConnector"),
+    ("io.confluent.connect.hdfs3", "io.confluent.connect.hdfs3.Hdfs3SinkConnector"),
+    ("io.confluent.connect.hdfs", "io.confluent.connect.hdfs.HdfsSinkConnector"),
+    ("io.confluent.connect.s3.source", "io.confluent.connect.s3.source.S3SourceConnector"),
+    ("io.confluent.connect.s3", "io.confluent.connect.s3.S3SinkConnector"),
+    ("io.confluent.connect.azure.blob", "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector"),
+    ("io.confluent.connect.elasticsearch", "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"),
+    ("io.confluent.connect.replicator", "io.confluent.connect.replicator.ReplicatorSourceConnector"),
+    ("io.confluent.connect.oracle.cdc", "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector"),
+    ("io.confluent.connect.oracle.xstream.cdc", "io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector"),
+    ("io.confluent.kafka.connect.datagen", "io.confluent.kafka.connect.datagen.DatagenConnector"),
+    ("io.debezium.connector.postgresql", "io.debezium.connector.postgresql.PostgresConnector"),
+    ("io.debezium.connector.mysql", "io.debezium.connector.mysql.MySqlConnector"),
+    ("io.debezium.connector.mariadb", "io.debezium.connector.mariadb.MariaDbConnector"),
+    ("io.debezium.connector.sqlserver", "io.debezium.connector.sqlserver.SqlServerConnector"),
+    ("io.debezium.connector.oracle", "io.debezium.connector.oracle.OracleConnector"),
+    ("io.debezium.connector.mongodb", "io.debezium.connector.mongodb.MongoDbConnector"),
+    ("io.debezium.connector.db2", "io.debezium.connector.db2.Db2Connector"),
+    ("io.debezium.connector.jdbc", "io.debezium.connector.jdbc.JdbcSinkConnector"),
+    ("com.mongodb.kafka.connect.sink", "com.mongodb.kafka.connect.MongoSinkConnector"),
+    ("com.mongodb.kafka.connect.source", "com.mongodb.kafka.connect.MongoSourceConnector"),
+    ("com.splunk.kafka.connect", "com.splunk.kafka.connect.SplunkSinkConnector"),
+    ("com.wepay.kafka.connect.bigquery", "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector"),
+    ("com.snowflake.kafka.connector", "com.snowflake.kafka.connector.SnowflakeSinkConnector"),
+)
+# packages of a line of a task that are not its plugin: a library (license, Hadoop client…) or a part of every connector of
+# a family; never shown as "the plugin package" when no class matches
+SHARED_PACKAGES = re.compile(r"^(io\.confluent\.(license|connect\.(utils|common|cloud\.storage|storage|connector\.common))|"
+                             r"io\.debezium\.(util|pipeline|config|jdbc|relational|storage|service|schema|connector\.common|"
+                             r"embedded|transforms|heartbeat|snapshot|function|processors|spi|bean))(\.|$)")
+
+
+def plugin_of_loggers(loggers: Sequence[str]) -> Tuple[Optional[str], Optional[str]]:
+    """(class, package that tells it) from the loggers of the lines of a connector: the longest prefix of PLUGIN_PACKAGES
+    one of their packages starts with; (None, package) when none matches: its plugin package (it has .connect or
+    .connector in it, a library does not), (None, None) when nothing tells"""
+    best = None
+    packages = [lg.rsplit(".", 1)[0] for lg in loggers if "." in lg]
+    for pkg in packages:
+        for prefix, cls in PLUGIN_PACKAGES:
+            if (pkg == prefix or pkg.startswith(prefix + ".")) and (not best or len(prefix) > len(best[0])):
+                best = (prefix, cls, pkg)
+    if best:
+        return best[1], best[2]
+    other = next((p for p in packages if re.search(r"\.connect(or)?(\.|$)", p) and not SHARED_PACKAGES.search(p)), None)
+    return None, other
+
+
 def connector_health(res: dict, files: List[dict]) -> List[dict]:
     """one card per connector of the logs: its errors and warnings (by level, first and last time), whether a task was
     killed, the known causes of its records, its configuration logged (dumps, keys changed between restarts) and the
@@ -1168,6 +1222,22 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
             # the class of the connector, not of its task (Instantiated task … of type …SourceTask): the one of the plugin
             if not c.get("class") or not cls.endswith("Task"):
                 c["class"] = cls
+    # no "Instantiated connector" line nor config: the class told by the loggers of the lines of its tasks (inferred: no
+    # version, so no changelog nor support badge), else the package of its plugin
+    loggers: Dict[str, List[str]] = {}
+    for f in files:
+        for ev in f.get("events") or []:
+            if ev["kind"] == "plugin_logger" and ev.get("connector") in cards and ev["detail"]:
+                loggers.setdefault(ev["connector"], []).append(ev["detail"])
+    for name, lgs in loggers.items():
+        c = cards[name]
+        if c.get("class"):
+            continue
+        cls, pkg = plugin_of_loggers(lgs)
+        if cls:
+            c["class"], c["class_inferred_from"] = cls, pkg
+        elif pkg:
+            c["plugin_package"] = pkg
     for c in cards.values():
         if c.get("versions") and c.get("class") and c.get("cp"):
             st = support_dates.connector_status(c["class"], c["versions"][-1], c["cp"])
@@ -2492,6 +2562,31 @@ def connectors_heatmap_html(cards: List[dict]) -> str:
             + "".join(rows) + "</div>")
 
 
+def conn_class_text(c: dict) -> str:
+    """the class of a connector without version: from a config (sure), from the loggers of its lines (inferred), or only
+    the package of its plugin; "" when nothing tells"""
+    short = (c.get("class") or "").split(".")[-1]
+    if c.get("class_inferred_from"):
+        return f"{short} (inferred from its log lines: {c['class_inferred_from']})"
+    if short:
+        return short
+    return f"plugin package {c['plugin_package']} (from its log lines)" if c.get("plugin_package") else ""
+
+
+def conn_class_html(c: dict) -> str:
+    if c.get("class_inferred_from"):
+        return (f"<div class='fi-meta'>🔎 <span class='mono' title='{e(c['class'])}'>{e(c['class'].split('.')[-1])}</span> · "
+                f"<span title='no &quot;Instantiated connector … with version&quot; line nor config in the logs: the class "
+                f"of the plugin whose classes logged the lines of its tasks (no version: no changelog, no support check)'>"
+                f"inferred from its log lines (<span class='mono'>{e(c['class_inferred_from'])}</span>)</span></div>")
+    if c.get("class"):
+        return f"<div class='fi-meta'>🏷️ <span class='mono' title='{e(c['class'])}'>{e(c['class'].split('.')[-1])}</span> · version unknown</div>"
+    if c.get("plugin_package"):
+        return (f"<div class='fi-meta'>🔎 plugin package <span class='mono'>{e(c['plugin_package'])}</span> "
+                "(from its log lines, class unknown)</div>")
+    return ""
+
+
 def connectors_health_html(cards: List[dict]) -> str:
     """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
     if not cards:
@@ -2516,7 +2611,7 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"{e(c.get('class', '').split('.')[-1])}</span> · <button type='button' class='pill conn-changelog' "
                f"data-cmd='{e(changelog_command(c))}' title='copy the command that lists what changed in the plugin since "
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
-               if c.get("versions") else "")
+               if c.get("versions") else conn_class_html(c))
             # 🛟 the plugin version against the minimum supported on the CP release of the worker (supported-connector-version)
             + (f"<div class='conn-support {'bad' if c['support']['state'] == 'unsupported' else 'good'}'>🛟 "
                f"<a href='{e(c['support']['doc'])}' title='the minimum {e(c['support']['row'])} version supported on Confluent Platform "
@@ -2584,6 +2679,8 @@ def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
             bits.append(f"🔁 {len(c['config_changes'])} config key(s) changed")
         if c.get("versions"):
             bits.append(f"🏷️ {' → '.join(c['versions'])} ({c.get('class', '').split('.')[-1]})")
+        elif conn_class_text(c):
+            bits.append(f"🔎 {conn_class_text(c)}")
         out.append(f"   {c['connector']}: {', '.join(bits)}" + (f" · {', '.join(c['known_causes'][:3])}" if c["known_causes"] else ""))
         if changelog_command(c) and (lv["FATAL"] + lv["ERROR"]):
             out.append(f"      👉 fixed in a newer version? {changelog_command(c)}")

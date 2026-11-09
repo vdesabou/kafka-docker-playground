@@ -6841,6 +6841,8 @@ function install_confluent_plugin() {
 #   @@PGCFGCHG@@<tab>line<tab>timestamp<tab>key=previous<tab>key=new: a key that changed since the previous dump of the config
 # then the events read from the INFO lines (each distinct one once):
 #   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
+#   @@PGEVT@@<tab>plugin_logger<tab>line<tab>timestamp<tab>connector<tab>logger class of a line of its tasks (its plugin
+#              when the logs miss its startup), each once, 40 per connector at most
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
 #   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
@@ -7339,6 +7341,30 @@ function summarize_log_errors() {
             if (!(ev_key in ev_seen)) {
                 ev_seen[ev_key] = 1
                 ev[++nev] = "librdkafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
+            }
+        }
+        # the plugin of a connector whose logs miss its startup (no "Instantiated connector" line, no config dump): the
+        # loggers of the lines of its tasks, "(io.confluent.connect.jdbc.sink.JdbcSinkTask:72)" at the end of a line with
+        # its [connector|task-0] context. Each logger once per connector, 40 per connector at most; not the ones of the
+        # runtime, of the JDK nor of the converters (every connector has them)
+        # (the connector read with index(), not a regex: this runs on most lines of a Connect log)
+        if (records_file != "" && ((pl_last = substr($0, length($0))) == ")" || pl_last == "\r") && ((pl_p = index($0, "|task-")) || (pl_p = index($0, "|worker]")))) {
+            pl_conn = substr($0, 1, pl_p - 1)
+            while ((pl_q = index(pl_conn, "[")) > 0) pl_conn = substr(pl_conn, pl_q + 1)
+            if (pl_conn == "" || pl_conn ~ /[] ]/) pl_conn = ""
+            # a connector whose last 500 lines brought no new logger: done (the cost of a big log stays low)
+            if (pl_conn != "" && pl_n[pl_conn] + 0 < 40 && pl_quiet[pl_conn]++ < 500 && match($0, /\([A-Za-z_][A-Za-z0-9_$]*\.[A-Za-z0-9_$.]+(:[0-9]+)?\)\r?$/)) {
+                pl_logger = substr($0, RSTART + 1, RLENGTH - 1)
+                sub(/\r$/, "", pl_logger)
+                sub(/\)$/, "", pl_logger)
+                sub(/:[0-9]+$/, "", pl_logger)
+                if (pl_logger !~ /^(org\.apache\.kafka\.|java\.|javax\.|jdk\.|sun\.|org\.slf4j\.|com\.fasterxml\.|io\.confluent\.kafka\.(serializers|schemaregistry)\.|io\.confluent\.connect\.(avro|json|protobuf|schema)\.)/ && !((pl_conn SUBSEP pl_logger) in pl_seen)) {
+                    pl_seen[pl_conn SUBSEP pl_logger] = 1
+                    pl_n[pl_conn]++
+                    pl_quiet[pl_conn] = 0
+                    pl_line = NR
+                    ev[++nev] = "plugin_logger\t" pl_line "\t" timestamp_of($0) "\t" pl_conn "\t" pl_logger
+                }
             }
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and

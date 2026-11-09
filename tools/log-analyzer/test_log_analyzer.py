@@ -717,6 +717,42 @@ def test_connect_without_mdc():
         check("fix", "%X{connector.context}" in log_report.MDC_HOW and res)
 
 
+def test_connector_class_from_loggers():
+    """🔎 no "Instantiated connector" line nor config: the class of a connector from the loggers of the lines of its tasks
+    (the longest prefix wins, a shared package decides nothing), marked inferred, no support badge; the class of an
+    "Instantiated connector" line wins; an unknown plugin: its package"""
+    def rec(conn, t):
+        return (f"@@PGREC@@|ERROR|1|3|3|2026-11-07T10:0{t}:00|2026-11-07T10:0{t}:00\n"
+                f"[2026-11-07 10:0{t}:00,000] ERROR [{conn}|task-0] boom (x)\n@@PGTS@@|2026-11-07T10:0{t}:00\n")
+
+    def lg(conn, logger):
+        return f"@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|{conn}|{logger}\n"
+    text = ("@@PGFILE@@|connect.log|20|4|4|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            + rec("hdfs", 1) + rec("cdc", 2) + rec("jdbc", 3) + rec("acme", 4) + rec("versioned", 5)
+            + lg("hdfs", "org.apache.hadoop.ipc.Client") + lg("hdfs", "io.confluent.connect.hdfs3.TopicPartitionWriter")
+            + lg("cdc", "io.debezium.util.Threads") + lg("cdc", "io.debezium.connector.postgresql.connection.PostgresConnection")
+            + lg("jdbc", "io.confluent.connect.jdbc.util.CachedConnectionProvider") + lg("jdbc", "io.confluent.connect.jdbc.sink.JdbcSinkTask")
+            + lg("acme", "io.confluent.license.LicenseManager") + lg("acme", "com.acme.kafka.connect.foo.FooTask")
+            + lg("versioned", "io.confluent.connect.jdbc.sink.JdbcSinkTask")
+            + "@@PGEVT@@|plugin_version|1|2026-11-07T10:00:00|versioned|10.8.4 io.confluent.connect.s3.S3SinkConnector\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    cards = {c["connector"]: c for c in res["connectors"]}
+    check("hdfs3", cards["hdfs"].get("class") == "io.confluent.connect.hdfs3.Hdfs3SinkConnector", cards["hdfs"])
+    check("hdfs3 evidence", cards["hdfs"].get("class_inferred_from") == "io.confluent.connect.hdfs3", cards["hdfs"])
+    check("debezium postgres", cards["cdc"].get("class") == "io.debezium.connector.postgresql.PostgresConnector", cards["cdc"])
+    check("jdbc sink", cards["jdbc"].get("class") == "io.confluent.connect.jdbc.JdbcSinkConnector", cards["jdbc"])
+    check("no support badge", not cards["jdbc"].get("support") and not cards["jdbc"].get("versions"), cards["jdbc"])
+    check("unknown plugin: its package", not cards["acme"].get("class") and cards["acme"].get("plugin_package") == "com.acme.kafka.connect.foo", cards["acme"])
+    check("Instantiated wins", cards["versioned"]["class"] == "io.confluent.connect.s3.S3SinkConnector"
+          and not cards["versioned"].get("class_inferred_from"), cards["versioned"])
+    html = log_report.connectors_health_html(res["connectors"])
+    check("card says inferred", "inferred from its log lines" in html and "Hdfs3SinkConnector" in html, "")
+    check("card shows the package", "com.acme.kafka.connect.foo" in html, "")
+    check("text", any("🔎 JdbcSinkConnector (inferred" in x for x in log_report.connectors_text(res["connectors"], top=10)),
+          log_report.connectors_text(res["connectors"], top=10))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
