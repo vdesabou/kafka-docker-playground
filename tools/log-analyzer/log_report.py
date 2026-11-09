@@ -1178,6 +1178,8 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
     return out
 
 
+# the occurrences of a row of 🔄 Restarts and rebalances listed (with a link to their line) when it is clicked
+LC_OCC_SHOWN = 100
 # a group that rebalances this often is a storm: at least STORM_MIN of them, and STORM_PER_HOUR per hour or more
 STORM_MIN = 10
 STORM_PER_HOUR = 6
@@ -1197,7 +1199,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
         for c in f.get("event_counts") or []:
             r = rows.setdefault((c["kind"], c["who"]), {"kind": c["kind"], "who": c["who"], "count": 0, "first": None,
                                                        "last": None, "connectors": Counter(), "reasons": Counter(), "times": [],
-                                                       "leaves": 0})
+                                                       "leaves": 0, "occ": []})
             r["count"] += c["count"]
             r["leaves"] += c.get("leaves") or 0
         for ev in f.get("events") or []:
@@ -1214,6 +1216,9 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                 r["first"] = min(r["first"] or ev["time"], ev["time"])
                 r["last"] = max(r["last"] or ev["time"], ev["time"])
                 r["times"].append(ev["time"])
+            # where it is: the 🔄 row lists its occurrences with a link to their line (file pages)
+            if ev.get("line"):
+                r["occ"].append((ev.get("time") or "", f["label"], ev["line"]))
             if ev.get("connector"):
                 r["connectors"][ev["connector"]] += 1
             if " · " in (ev.get("detail") or ""):
@@ -1237,7 +1242,9 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                              and per_hour is not None and per_hour >= STORM_PER_HOUR and not leaving
                              and "pro-actively leaving" not in (reason or ""),
                     # the times noted (300 per kind and file): the timeline of the 🔄 section of the HTML report only
-                    "_times": sorted(r["times"])})
+                    "_times": sorted(r["times"]),
+                    # (time, file, line) of the first LC_OCC_SHOWN noted, by time: the occurrences of a row clicked
+                    "_occ": sorted(r["occ"])[:LC_OCC_SHOWN]})
     order = list(LIFECYCLE_KINDS)
     # the groups of consumers that leave on purpose last: thousands of them must not push the real rebalances down
     out.sort(key=lambda r: (not r["storm"], r["leaving"], order.index(r["kind"]), -r["count"]))
@@ -1347,9 +1354,84 @@ def lifecycle_time(t: Optional[str]) -> Optional[float]:
         return None
 
 
-def lifecycle_html(lc: Optional[dict]) -> str:
+# a click on a 🔄 row: the chart shows it alone (box.setTimes of zoom_chart.js, its series only, zoomed on its period), its
+# occurrences open under it (tr.lc-occ, links to the lines); again, ⤺ every row or Esc: back to every row
+LIFECYCLE_SCRIPT = r"""<style>
+.lc-table tr.lc-row{cursor:pointer}.lc-table tr.lc-row:focus{outline:2px solid #6366f1;outline-offset:-2px}
+.lc-table tr.lc-row.lc-picked td{background:#e0e7ff;box-shadow:inset 0 2px 0 #6366f1,inset 0 -2px 0 #6366f1}
+.lc-table tr.lc-occ td{background:#f8fafc;padding:8px 14px;border-radius:0 0 10px 10px}
+.lc-occ-head{font-size:.78rem;color:#475569;margin-bottom:6px}
+.lc-occ-list{display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow:auto}
+.lc-o{font-size:.76rem;padding:2px 8px;border-radius:6px;background:#fff;border:1px solid #e2e8f0;white-space:nowrap}
+.lc-picked-note{margin:4px 0}.lc-unpick{font:inherit;font-size:.76rem;padding:1px 9px;border-radius:999px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;cursor:pointer}
+html[data-theme=dark] .lc-table tr.lc-row.lc-picked td{background:#312e81}
+html[data-theme=dark] .lc-table tr.lc-occ td{background:#111827}html[data-theme=dark] .lc-occ-head{color:#94a3b8}
+html[data-theme=dark] .lc-o{background:#1e293b;border-color:#334155}
+html[data-theme=dark] .lc-unpick{background:#1e1b4b;border-color:#4338ca;color:#c7d2fe}
+</style><script>
+(function () {
+  const table = document.querySelector(".lc-table");
+  if (!table) return;
+  const note = document.querySelector(".lc-picked-note");
+  let picked = null;
+  function decode(s) { let t = 0; return s ? s.split(" ").map(function (d) { t += parseInt(d, 36); return t; }) : []; }
+  function box() { return document.getElementById("lc-chart"); }
+  function pick(tr) {
+    table.querySelectorAll("tr.lc-row.lc-picked").forEach(function (r) { r.classList.remove("lc-picked"); });
+    table.querySelectorAll("tr.lc-occ").forEach(function (r) { r.hidden = true; });
+    picked = tr;
+    const b = box();
+    if (b && b.setTimes) {
+      const all = JSON.parse(b.dataset.chart).times;
+      if (tr) {
+        const j = +tr.dataset.series, ts = decode(tr.dataset.times);
+        b.setTimes(all.map(function (_, i) { return i === j ? ts : []; }));
+        if (ts.length) {
+          const a = ts[0], z = ts[ts.length - 1], pad = Math.max(120, (z - a) * 0.15);
+          b.zoomTo(a - pad, z + pad + 1);
+        }
+      } else {
+        b.setTimes(all);
+        const whole = b.querySelector("[data-zoom='all']");
+        if (whole) whole.click();
+      }
+    }
+    if (note) {
+      note.hidden = !tr;
+      if (tr) note.querySelector(".lc-picked-who").textContent = tr.dataset.who;
+    }
+    if (tr) {
+      tr.classList.add("lc-picked");
+      const occ = tr.nextElementSibling;
+      if (occ && occ.classList.contains("lc-occ")) occ.hidden = false;
+    }
+  }
+  table.addEventListener("click", function (ev) {
+    if (ev.target.closest("a, .fi-conn, tr.lc-occ")) return;
+    const tr = ev.target.closest("tr.lc-row");
+    if (tr) pick(tr === picked ? null : tr);
+  });
+  table.addEventListener("keydown", function (ev) {
+    const tr = ev.target.closest && ev.target.closest("tr.lc-row");
+    if (tr && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); pick(tr === picked ? null : tr); }
+    if (ev.key === "Escape" && picked) pick(null);
+  });
+  if (note) note.querySelector(".lc-unpick").addEventListener("click", function () { pick(null); });
+  // a row hidden by the connector filter: back to every row
+  window.pgLifecycleUnpick = function () { if (picked && picked.hidden) pick(null); };
+})();
+</script>"""
+
+
+def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None) -> str:
     if not lc or not lc.get("rows"):
         return ""
+    viewers = viewers or {}
+    # the series of the chart, the kinds with a time noted (time_chart leaves the others out): a row clicked shows its own
+    shown_kinds: List[str] = []
+    for r in lc["rows"]:
+        if r.get("_times") and r["kind"] not in shown_kinds:
+            shown_kinds.append(r["kind"])
     max_count = max(r["count"] for r in lc["rows"]) or 1
     # the activity of each row (first → last) on one time axis, the period of the whole table
     times = [t for r in lc["rows"] for t in (lifecycle_time(r.get("first")), lifecycle_time(r.get("last") or r.get("first"))) if t is not None]
@@ -1403,16 +1485,34 @@ def lifecycle_html(lc: Optional[dict]) -> str:
                     f"hour'>{r['count']:,} in {minutes} min</span>")
         return f"<span class='lc-rate {cls}'>{rate_cell(r)}/h</span>"
 
+    def occurrences(r: dict) -> str:
+        """the row under a row clicked: its occurrences noted, each with a link to its line"""
+        occ = r.get("_occ") or []
+        if not occ:
+            return ("<tr class='lc-occ' hidden><td colspan='6'><span class='legend'>No line noted for this row (the digest notes "
+                    "the first 300 of each kind per file).</span></td></tr>")
+        items = "".join(f"<span class='lc-o'><span class='mono'>{stamp(t) or '—'}</span> "
+                        f"{log_viewer.link(viewers, label, e(re.split(r'[/:]', label)[-1] + ':' + str(line)), line, edit=False)}</span>"
+                        for t, label, line in occ)
+        more = r["count"] - len(occ)
+        return (f"<tr class='lc-occ' hidden><td colspan='6'><div class='lc-occ-head'>📄 {len(occ)} occurrence(s), by time"
+                + (f" ({more:,} more not listed: the first {LC_OCC_SHOWN} noted)" if more > 0 else "")
+                + " · a click opens the line in its file</div><div class='lc-occ-list'>" + items + "</div></td></tr>")
+
     def row(r: dict) -> str:
         icon, color = LIFECYCLE_LOOK.get(r["kind"], ("•", "#64748b"))
         storm = "<br><span class='lc-storm-badge'>🌀 storm</span>" if r["storm"] else ""
         conn = f" <span class='fi-conn'>{e(r['connector'])}</span>" if r.get("connector") else ""
-        return (f"<tr class='lc-row{' lc-storm' if r['storm'] else ''}' style='--lc:{color}'{lifecycle_conn_attr(r)}>"
+        epochs = sorted(int(x) for x in (lifecycle_time(t) for t in r.get("_times") or []) if x is not None)
+        pick = (f" tabindex='0' data-series='{shown_kinds.index(r['kind']) if r['kind'] in shown_kinds else -1}'"
+                f" data-times='{encode_times(epochs)}' data-who='{e(r['who'] or '?')}' "
+                "title='click: this row only in the chart, and its occurrences with a link to their line'")
+        return (f"<tr class='lc-row{' lc-storm' if r['storm'] else ''}' style='--lc:{color}'{lifecycle_conn_attr(r)}{pick}>"
                 f"<td><span class='lc-kind'>{icon} {e(LIFECYCLE_KINDS[r['kind']])}</span>{storm}</td>"
                 f"<td class='lc-who'>{who(r)}</td>"
                 f"<td class='lc-count'><b>{r['count']:,}</b><div class='lc-meter'><i style='width:{max(2.0, 100 * r['count'] / max_count):.1f}%'></i></div></td>"
                 f"<td>{rate(r)}</td><td class='lc-when'>{when(r)}</td>"
-                f"<td class='lc-reason'>{e(r.get('reason') or '')}{conn}</td></tr>")
+                f"<td class='lc-reason'>{e(r.get('reason') or '')}{conn}</td></tr>" + occurrences(r))
 
     axis = (f"<div class='lc-axis'><span>{e(datetime.fromtimestamp(t0, timezone.utc).strftime('%m-%d %H:%M'))}</span>"
             f"<span>{e(datetime.fromtimestamp(t1, timezone.utc).strftime('%m-%d %H:%M'))}</span></div>") if times else ""
@@ -1437,11 +1537,15 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). The chart shows them over time (drag "
             "to zoom); the swimlane of When places each occurrence of a row on the period of the table (a tick per bucket, darker "
             "with more), between its first and last one. It follows the connector filter (click a connector name to set it): "
-            "the rows of the other connectors are hidden, the worker group rebalances and process starts stay.</p>"
+            "the rows of the other connectors are hidden, the worker group rebalances and process starts stay. Click a row: "
+            "the chart shows it alone, on its period, and its occurrences open under it, each with a link to its line in the "
+            "log file (again: every row).</p>"
+            + "<p class='legend lc-picked-note' hidden>🔍 only <b class='lc-picked-who'></b> in the chart and its occurrences "
+            "under its row · <button type='button' class='lc-unpick'>⤺ every row</button></p>"
             + (f"<div class='lc-chart'>{chart}</div>" if chart else "")
             + "<p class='legend lc-none' hidden>No restart nor rebalance for this connector.</p><table class='lc-table'><tr><th>What</th>"
             f"<th>Group / connector</th><th>Count</th><th>Per hour</th><th>When {axis}</th><th>Reason, connector</th></tr>"
-            + "".join(row(r) for r in lc["rows"]) + "</table></div>")
+            + "".join(row(r) for r in lc["rows"]) + "</table></div>" + LIFECYCLE_SCRIPT)
 
 
 # ⚠️ Connect logs without the connector context (the MDC %X{connector.context} of the log4j pattern of the workers,
@@ -4962,6 +5066,9 @@ function pgLifecycle() {
     tr.hidden = !keep;
     if (keep) shown++;
   });
+  // the occurrences of a row the filter hides go with it
+  document.querySelectorAll("tr.lc-occ").forEach(function (o) { const p = o.previousElementSibling; if (p && p.hidden) o.hidden = true; });
+  if (typeof pgLifecycleUnpick === "function") pgLifecycleUnpick();
   const none = document.querySelector(".lc-none"), table = document.querySelector(".lc-table");
   if (none) none.hidden = shown > 0;
   if (table) table.hidden = shown === 0;
@@ -6433,7 +6540,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             .replace("<div class='recs-list'>", findings_overview_html(findings_view, s["occurrences"]) + "<div class='recs-list'>", 1),
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
-            lifecycle_html(res.get("lifecycle")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]
+            lifecycle_html(res.get("lifecycle"), viewers), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]
     # the sanitization state (⚠️ Not sanitized, 🔒 Sanitization of analyze logs) is a line under the verdict, not a section
     notes = [(t, text) for t, text in sections if t.startswith(("⚠️ Not sanitized", "🔒 Sanitization"))]
     for t, text in notes:
@@ -6629,6 +6736,11 @@ def write_viewers(report: str, files: List[dict], res: dict, sources_file: str) 
         hits[f["label"]] = [n for r in f["records"] for n in (r["first_line"], r["last_line"])]
     for c in res.get("configuration") or []:
         hits.setdefault(c["file"], []).extend([c["line"]] if c.get("line") else [])
+    # the restarts and rebalances a 🔄 row lists: their line links to the page of the file (a big file keeps the lines
+    # around them)
+    for r in (res.get("lifecycle") or {}).get("rows") or []:
+        for _, label, line in r.get("_occ") or []:
+            hits.setdefault(label, []).append(line)
     source_of = {f["label"]: sources.get(f.get("path", f["label"]), ("", False)) for f in files}
     pages = []
     for label, lines in hits.items():
@@ -6752,7 +6864,7 @@ def main() -> int:
                        known_causes=[{k: v for k, v in h.items() if k not in ("records", "_chains")} for h in res["known_causes"]],
                        findings=[{k: v for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
         if res.get("lifecycle"):
-            strip = lambda rows: [{k: v for k, v in r.items() if k != "_times"} for r in rows]  # noqa: E731
+            strip = lambda rows: [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]  # noqa: E731
             compact["lifecycle"] = {"rows": strip(res["lifecycle"]["rows"]), "storms": strip(res["lifecycle"]["storms"])}
         if args.json_sections:
             sections = [x.strip() for x in args.json_sections.split(",") if x.strip()]

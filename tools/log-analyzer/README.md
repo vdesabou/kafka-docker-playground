@@ -321,6 +321,8 @@ The 🔄 section follows the connector filter (`pgLifecycle()`): each row carrie
 the other connectors are hidden and the worker group rebalances and process starts, which concern every connector of the
 worker, stay.
 
+
+A click on a 🔄 row (`LIFECYCLE_SCRIPT`): the chart (`lc-chart`) is drawn again with the times of that row only (`data-times`, `encode_times()`, in its series `data-series`: `box.setTimes()`), zoomed on its first → last occurrence, and the `tr.lc-occ` row under it opens: the `_occ` of the row, (time, file, line) of the first `LC_OCC_SHOWN` (100) noted, each a link to its line in the page of the file (`write_viewers()` marks these lines, so the page of a big file keeps them). Again, ⤺ every row or Esc: every row; the connector filter hiding the row unpicks it.
 ## Knowledge-base articles
 
 `LINKS` in `tools/report-common/known_causes.py` gives a known cause one or more Confluent support knowledge-base
