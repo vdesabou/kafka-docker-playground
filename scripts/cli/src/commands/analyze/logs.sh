@@ -238,6 +238,10 @@ fi
 # every distinct record, for the HTML report and --json (see summarize_log_errors)
 records_file="$tmp_dir/records"
 : > "$records_file"
+# the config files of the input (append_config_file), added to the records file once every digest is in it: written
+# right away, before the @@PGFILE@@ of any digest (they run in the background), they were dropped by log_report.py
+config_records_file="$tmp_dir/config-records"
+: > "$config_records_file"
 # label<tab>path on disk<tab>1 when the file stays there after the command (not extracted to $tmp_dir) of each file
 # analyzed: the HTML report writes a page per file with findings next to it, its locations (connect.log:33) link to
 # them, and its ✏️ open the file in the editor (a copy for the extracted ones)
@@ -588,19 +592,28 @@ function analyze_logs_gzip () {
 }
 
 # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
-# file, or a JSON file with connector configs (a connector config, {name, config}, the output of /connectors?expand=info)
+# file, or a JSON file with connector configs (a connector config, {name, config}, the output of /connectors?expand=info),
+# or the output of GET /connector-plugins (the versions installed)
 # $1: path, $2: label
 function append_config_file () {
     local path="$1"
     local label="$2"
     case "$path" in
         *.properties)
-            printf '@@PGCFG@@\t%s\tfile\t\t\t\n' "$(basename "$path")" >> "$records_file"
-            grep -v '^[[:space:]]*[#!]' "$path" 2>/dev/null | grep '=' | sed 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/; s/^/@@PGCFGL@@\t/' >> "$records_file"
+            printf '@@PGCFG@@\t%s\tfile\t\t\t\n' "$(basename "$path")" >> "$config_records_file"
+            grep -v '^[[:space:]]*[#!]' "$path" 2>/dev/null | grep '=' | sed 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/; s/^/@@PGCFGL@@\t/' >> "$config_records_file"
             ;;
         *.json)
             # a big JSON is data, not a config
             [ "$(wc -c < "$path" | tr -d ' ')" -lt 5000000 ] || return 0
+            # the output of GET /connector-plugins: the version of each plugin installed on the worker (the version of a
+            # connector whose logs miss its startup)
+            if jq -e 'type == "array" and length > 0 and all(.[]; type == "object" and has("class") and has("version") and has("type"))' "$path" > /dev/null 2>&1
+            then
+                printf '@@PGCFG@@\tconnector plugins\tfile\t\t\t%s\n' "$label" >> "$config_records_file"
+                jq -r '.[] | "@@PGCFGL@@\t\(.class)=\(.version)"' "$path" >> "$config_records_file" 2>/dev/null
+                return 0
+            fi
             jq -r '
                 def configs:
                     if type == "array" then .[] | configs
@@ -611,7 +624,7 @@ function append_config_file () {
                     else .[] | select(type == "object") | configs
                     end;
                 configs | "@@PGCFG@@\tconnector config\tfile\t\t\t\(.name)", (.config | to_entries[] | "@@PGCFGL@@\t\(.key)=\(.value | tostring)")
-            ' "$path" >> "$records_file" 2>/dev/null
+            ' "$path" >> "$config_records_file" 2>/dev/null
             ;;
     esac
 }
@@ -919,6 +932,7 @@ do
     analyze_logs_path "${file%/}" "${file%/}"
 done
 collect_digests
+cat "$config_records_file" >> "$records_file"
 set -e
 
 if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]

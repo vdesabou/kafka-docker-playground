@@ -1330,6 +1330,19 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
             c["direction"] = "sink" if kinds == {"consumer"} else "source"
             c["direction_from"] = f"its connector-{kinds.pop()}- client"
     name_hints(cards)
+    # the version of a connector without "Instantiated connector" line: the one installed on the workers, from a GET
+    # /connector-plugins of the input (only when they all have the same version of its class)
+    installed: Dict[str, set] = {}
+    for cfg in res["configuration"]:
+        if cfg["title"] == "connector plugins" and cfg.get("text"):
+            for k, v in config_values(cfg).items():
+                if k.strip() and v.strip():
+                    installed.setdefault(k.strip(), set()).add(v.strip())
+    for c in cards.values():
+        if c.get("class") and not c.get("versions") and len(installed.get(c["class"], ())) == 1:
+            c["versions"], c["version_from"] = sorted(installed[c["class"]]), "GET /connector-plugins"
+            if not c.get("cp") and len(every_cp) == 1:
+                c["cp"] = re.sub(r"-(ce|ccs)$", "", every_cp[0])
     for c in cards.values():
         if c.get("versions") and c.get("class") and c.get("cp"):
             st = support_dates.connector_status(c["class"], c["versions"][-1], c["cp"])
@@ -2189,11 +2202,25 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
             + " (the rotated files before these: connect.log.1, server.log.1…)",
             "they do not include its startup: the configuration it runs with (config dumps), the version of the plugins, "
             "and what happened before the first error are missing")
-    unversioned = [c["connector"] for c in res["connectors"] if (c["by_level"]["ERROR"] + c["by_level"]["FATAL"]) and not c.get("versions")]
-    if unversioned and not no_start:
+    # the connectors whose class is not sure (inferred from their log lines, or unknown) and the ones without version: their
+    # config and the plugins installed, which analyze logs reads (a JSON file of the input)
+    with_errors = [c for c in res["connectors"] if c["by_level"]["ERROR"] + c["by_level"]["FATAL"]]
+    unsure = [c["connector"] for c in with_errors if not c.get("class") or c.get("class_inferred_from")]
+    if unsure:
+        ask(f"the configuration of the connectors ({len(unsure)} whose class is inferred or unknown: " + ", ".join(unsure[:4])
+            + (" …" if len(unsure) > 4 else "") + ")",
+            "the logs do not say their class (no \"Instantiated connector\" line, no config dump): it is "
+            + ("inferred from their log lines, or " if any(c.get("class_inferred_from") for c in with_errors) else "")
+            + "unknown. With the config, the next analysis has the class, the database and every key of each connector",
+            "curl -s \"http://<worker>:8083/connectors?expand=info&expand=status\" > connectors.json (pass the file to "
+            "playground analyze logs with the logs)")
+    unversioned = [c["connector"] for c in with_errors if not c.get("versions")]
+    if unversioned and (not no_start or unsure):
         ask("the version of the connector plugin of " + ", ".join(unversioned[:4]) + (" …" if len(unversioned) > 4 else ""),
             "the logs do not say it (no \"Instantiated connector … with version\" line): needed to tell whether a known "
-            "bug is fixed in it", "the startup logs of the worker, or GET /connector-plugins on the worker")
+            "bug is fixed in it, and whether the version is supported",
+            "curl -s http://<worker>:8083/connector-plugins > connector-plugins.json on each worker (pass the files to "
+            "playground analyze logs with the logs), or the startup logs of the worker")
     components = {file_component(f["label"]) for f in files}
     titles = {h["title"] for h in res["known_causes"]}
     has_gc = any(c["kind"] == "gc_log" for c in (res.get("other_files") or {}).get("commands") or [])
@@ -2736,7 +2763,10 @@ def connectors_health_html(cards: List[dict]) -> str:
             f"<div class='fi-meta'>{counts} in {c['records']} distinct record(s) · {e(period)}"
             + (f" · 🧨 {c['task_killed']} task kill(s)" if c["task_killed"] else "") + "</div>"
             + (f"<div class='fi-meta'>🏷️ {e(' → '.join(c['versions']))} · <span class='mono' title='{e(c.get('class', ''))}'>"
-               f"{e(c.get('class', '').split('.')[-1])}</span> · <button type='button' class='pill conn-changelog' "
+               f"{e(c.get('class', '').split('.')[-1])}</span>"
+               + (f" · 🔎 class inferred from its log lines (<span class='mono'>{e(c['class_inferred_from'])}</span>)" if c.get("class_inferred_from") else "")
+               + (f" · version from {e(c['version_from'])}" if c.get("version_from") else "")
+               + " · <button type='button' class='pill conn-changelog' "
                f"data-cmd='{e(changelog_command(c))}' title='copy the command that lists what changed in the plugin since "
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else conn_class_html(c))
