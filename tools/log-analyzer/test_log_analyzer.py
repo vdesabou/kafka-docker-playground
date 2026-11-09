@@ -800,6 +800,30 @@ def test_connector_sink_or_source():
     check("class known: no direction line", "JdbcSinkConnector" in html and html.count("plugin unknown") == 2, "")
 
 
+def test_connector_name_hints():
+    """💡 a card without class: the words of its name, the class of the connectors with the same name prefix (only when
+    they agree); never a class nor an icon"""
+    def rec(conn, t):
+        return (f"@@PGREC@@|ERROR|1|3|3|2026-11-07T10:0{t}:00|2026-11-07T10:0{t}:00\n"
+                f"[2026-11-07 10:0{t}:00,000] ERROR [{conn}|task-0] boom (x)\n@@PGTS@@|2026-11-07T10:0{t}:00\n")
+    text = ("@@PGFILE@@|connect.log|20|5|5|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            + rec("mdm_sink_tidb_syncme", 1) + rec("mdm_sink_tidb_maintainparty", 2) + rec("dea_hdfs3_sink_metro", 3)
+            + rec("brimo_stretch-elasticsearch-sink-v2", 4) + rec("cars3_list", 5)
+            + "@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|mdm_sink_tidb_syncme|io.confluent.connect.jdbc.sink.JdbcSinkTask\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    cards = {c["connector"]: c for c in res["connectors"]}
+    check("family", cards["mdm_sink_tidb_maintainparty"].get("family_hint") == {"connectors": ["mdm_sink_tidb_syncme"],
+          "class": "io.confluent.connect.jdbc.JdbcSinkConnector"}, cards["mdm_sink_tidb_maintainparty"])
+    check("not a class", not cards["mdm_sink_tidb_maintainparty"].get("class"), cards["mdm_sink_tidb_maintainparty"])
+    check("hdfs3", cards["dea_hdfs3_sink_metro"].get("name_hint") == ["HDFS"], cards["dea_hdfs3_sink_metro"])
+    check("elasticsearch", cards["brimo_stretch-elasticsearch-sink-v2"].get("name_hint") == ["Elasticsearch"], cards["brimo_stretch-elasticsearch-sink-v2"])
+    check("s3 is a word", not cards["cars3_list"].get("name_hint"), cards["cars3_list"])
+    check("not on a card with a class", not cards["mdm_sink_tidb_syncme"].get("name_hint"), cards["mdm_sink_tidb_syncme"])
+    html = log_report.connectors_health_html(res["connectors"])
+    check("card", "💡 same name prefix as mdm_sink_tidb_syncme (JdbcSinkConnector)" in html and "💡 its name suggests HDFS" in html, "")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

@@ -1169,6 +1169,39 @@ def plugin_of_loggers(loggers: Sequence[str]) -> Tuple[Optional[str], Optional[s
     return None, other
 
 
+# 💡 a last resort when nothing in the logs tells the plugin of a connector: the words of its name (a hint, never a class:
+# not used for the icon, the support check nor the known bugs)
+NAME_WORDS = (("hdfs", "HDFS"), ("elastic", "Elasticsearch"), ("s3", "S3"), ("gcs", "GCS"), ("blob", "Azure Blob Storage"),
+              ("jdbc", "JDBC"), ("debezium", "Debezium"), ("cdc", "CDC"), ("mysql", "MySQL"), ("postgres", "PostgreSQL"),
+              ("oracle", "Oracle"), ("sqlserver", "SQL Server"), ("mssql", "SQL Server"), ("db2", "Db2"), ("mongo", "MongoDB"),
+              ("snowflake", "Snowflake"), ("bigquery", "BigQuery"), ("http", "HTTP"), ("replicator", "Replicator"),
+              ("splunk", "Splunk"), ("datagen", "Datagen"), ("salesforce", "Salesforce"), ("servicenow", "ServiceNow"))
+
+
+def name_hints(cards: Dict[str, dict]) -> None:
+    """💡 for the cards without class: the words of its name that name a plugin or a database (hdfs3, elasticsearch,
+    mysql…), and the class of the connectors whose name has the same prefix (all the words but the last, at least 2) when
+    they all have the same one (mdm_sink_tidb_maintainparty next to mdm_sink_tidb_syncme, a JdbcSinkConnector)"""
+    def prefix(name):
+        words = re.split(r"[_.\-]+", name)
+        return "_".join(words[:-1]).lower() if len(words) > 2 else None
+    families: Dict[str, Dict[str, str]] = {}
+    for n, c in cards.items():
+        if c.get("class") and prefix(n):
+            families.setdefault(prefix(n), {})[n] = c["class"]
+    for n, c in cards.items():
+        if c.get("class"):
+            continue
+        low = n.lower()
+        words = [label for w, label in NAME_WORDS
+                 if re.search(rf"(^|[^a-z0-9]){w}" if w not in ("s3", "gcs", "cdc", "db2") else rf"(^|[^a-z0-9]){w}([^a-z]|$)", low)]
+        if words:
+            c["name_hint"] = list(OrderedDict.fromkeys(words))
+        fam = families.get(prefix(n) or "", {})
+        if fam and len(set(fam.values())) == 1:
+            c["family_hint"] = {"connectors": sorted(fam)[:3], "class": next(iter(fam.values()))}
+
+
 def connector_health(res: dict, files: List[dict]) -> List[dict]:
     """one card per connector of the logs: its errors and warnings (by level, first and last time), whether a task was
     killed, the known causes of its records, its configuration logged (dumps, keys changed between restarts) and the
@@ -1296,6 +1329,7 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
         if len(kinds) == 1:
             c["direction"] = "sink" if kinds == {"consumer"} else "source"
             c["direction_from"] = f"its connector-{kinds.pop()}- client"
+    name_hints(cards)
     for c in cards.values():
         if c.get("versions") and c.get("class") and c.get("cp"):
             st = support_dates.connector_status(c["class"], c["versions"][-1], c["cp"])
@@ -2651,6 +2685,24 @@ def conn_class_html(c: dict) -> str:
     return ""
 
 
+def conn_hint_text(c: dict) -> str:
+    """💡 what the name of a connector without class suggests (its words, the class of the connectors with the same prefix)"""
+    bits = []
+    if c.get("name_hint"):
+        bits.append("its name suggests " + ", ".join(c["name_hint"]))
+    if c.get("family_hint"):
+        fam = c["family_hint"]
+        bits.append(f"same name prefix as {', '.join(fam['connectors'])} ({fam['class'].split('.')[-1]})")
+    return " · ".join(bits)
+
+
+def conn_hint_html(c: dict) -> str:
+    if c.get("class") or not conn_hint_text(c):
+        return ""
+    return (f"<div class='fi-meta conn-hint' title='a hint from its name only: nothing in the logs tells its plugin (no "
+            f"version, no class, no logger of a known plugin)'>💡 {e(conn_hint_text(c))}</div>")
+
+
 DATABASE_NAMES = {"sqlserver": "SQL Server", "jtds": "SQL Server", "postgresql": "PostgreSQL", "mysql": "MySQL", "oracle": "Oracle",
                   "db2": "Db2", "sap": "SAP HANA", "vertica": "Vertica", "redshift": "Redshift", "mariadb": "MariaDB"}
 
@@ -2689,6 +2741,7 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else conn_class_html(c))
             + conn_database_html(c)
+            + conn_hint_html(c)
             # 🛟 the plugin version against the minimum supported on the CP release of the worker (supported-connector-version)
             + (f"<div class='conn-support {'bad' if c['support']['state'] == 'unsupported' else 'good'}'>🛟 "
                f"<a href='{e(c['support']['doc'])}' title='the minimum {e(c['support']['row'])} version supported on Confluent Platform "
@@ -2733,7 +2786,7 @@ def connectors_health_html(cards: List[dict]) -> str:
             "html[data-theme=dark] .conn-support.bad{background:#450a0a;color:#fca5a5;box-shadow:0 0 0 1px #7f1d1d}"
             ".conn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.conn-only{margin-left:auto;font-size:.72rem}"
             "html[data-theme=dark] .conn-card{border-color:#334155}.conn-card[hidden]{display:none}"
-            ".conn-note{font-weight:600}.conn-note[hidden],.conn-more[hidden]{display:none}.conn-more{margin-top:10px}</style>"
+            ".conn-hint{font-style:italic}.conn-note{font-weight:600}.conn-note[hidden],.conn-more[hidden]{display:none}.conn-more{margin-top:10px}</style>"
             f"<div class='table-card' id='connectors'><h2>🔌 Connectors ({len(cards)})</h2><p class='legend'>One card per connector of the logs "
             "(the [connector|task-0] context of the lines): its errors and warnings, the known causes of its records, a task "
             "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it (and "
@@ -2758,6 +2811,8 @@ def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
             bits.append(f"🏷️ {' → '.join(c['versions'])} ({c.get('class', '').split('.')[-1]})")
         elif conn_class_text(c):
             bits.append(f"🔎 {conn_class_text(c)}")
+        if not c.get("class") and conn_hint_text(c):
+            bits.append(f"💡 {conn_hint_text(c)}")
         if c.get("jdbc_from"):
             bits.append(f"🗄️ {DATABASE_NAMES.get(c['jdbc'], c['jdbc'])} (from {c['jdbc_from']})")
         out.append(f"   {c['connector']}: {', '.join(bits)}" + (f" · {', '.join(c['known_causes'][:3])}" if c["known_causes"] else ""))
