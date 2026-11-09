@@ -41,6 +41,7 @@ import support_dates  # noqa: E402
 import known_causes  # noqa: E402
 import connector_icons  # noqa: E402
 import log_viewer  # noqa: E402
+import log_search  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
@@ -4767,7 +4768,9 @@ function pgStateWrite() {
   if (pgComponent) p.set("comp", pgComponent);
   if (pgConnector) p.set("conn", pgConnector);
   if (pgQuery) p.set("q", pgQuery);
-  if (pgWindow) p.set("t", Math.floor(pgWindow[0]) + "-" + Math.ceil(pgWindow[1]));
+  const period = (typeof pgPeriod !== "undefined" && pgPeriod) || pgWindow;
+  if (period) p.set("t", Math.floor(period[0]) + "-" + Math.ceil(period[1]));
+  if (window.pgLogQuery) p.set("lq", window.pgLogQuery);
   const s = p.toString(), url = location.href.split("#")[0] + (s ? "#pg:" + s : "");
   if (url === location.href || (!s && !location.hash.startsWith("#pg:"))) return;
   try { history.replaceState(null, "", url); } catch (e) { if (s) location.replace("#pg:" + s); }
@@ -4795,7 +4798,12 @@ function pgStateRead() {
     if (box && p.has("q")) box.value = p.get("q");
     pgApplyFilters();
     const t = (p.get("t") || "").split("-").map(Number), chart = document.getElementById("@@CHART@@");
-    if (t.length === 2 && t.every(Number.isFinite) && chart && chart.zoomTo) chart.zoomTo(t[0], t[1]);
+    if (t.length === 2 && t.every(Number.isFinite)) {
+      if (typeof pgSetPeriod === "function") pgSetPeriod(t[0], t[1], true);
+      else if (chart && chart.zoomTo) chart.zoomTo(t[0], t[1]);
+    }
+    // 🔎 Search every log line runs it once the page is ready
+    if (p.has("lq")) window.pgLogQueryInitial = p.get("lq");
   } finally { pgRestoring = false; }
   pgReady = true;
   pgStateWrite();
@@ -5510,7 +5518,7 @@ LEVEL_PILLS = (("FATAL", "💀"), ("ERROR", "🔴"), ("WARN", "🟠"))
 
 
 def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int,
-                files: Optional[List[dict]] = None) -> str:
+                files: Optional[List[dict]] = None, period: str = "") -> str:
     """The filter bar, in the look of the CFK report: 📋 All / 💀 FATAL / 🔴 ERROR / 🟠 WARN (one level at a time), a search
     box, the Component chips (from the path of each file, with 2 components or more) and the connector picker (records
     with a connector context). FILTER_SCRIPT, which applies them, is emitted by html_report()."""
@@ -5550,6 +5558,9 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
                       + "".join(options) + "</select>")
     if second:
         rows.append("<div class='fb-row'>" + "".join(second) + "</div>")
+    # 🕐 the period picker (log_search.period_row)
+    if period:
+        rows.append(period)
     return FILTER_CSS + "<div class='lvl-filter'>" + "".join(rows) + "</div>"
 
 
@@ -5612,6 +5623,33 @@ def error_bins(res: dict) -> Optional[Tuple[List[int], float, float]]:
         out = (bins, t0, t1)
     res["_error_bins"] = out
     return out
+
+
+def period_picker(res: dict) -> str:
+    """🕐 the period row of the filter bar: the first and last time of the logs, and the times of the analysis as quick
+    ranges (around the first error, the peak of the 📖 story, the first occurrence of the main known cause)"""
+    s = res["summary"]
+    lo, hi = lifecycle_time(s.get("log_first_timestamp")), lifecycle_time(s.get("log_last_timestamp"))
+    if lo is None or hi is None or hi <= lo:
+        return ""
+    marks = []
+    first = next((ev for ev in res.get("timeline") or [] if ev.get("kind") == "first_error"), None)
+    t = lifecycle_time(first.get("time")) if first else None
+    if t is not None:
+        marks.append({"label": f"± 5 min around the first {first.get('level') or 'error'} ({first['time'][11:19]})", "from": t - 300, "to": t + 300})
+    eb = error_bins(res)
+    if eb and any(eb[0]):
+        bins, t0, t1 = eb
+        i = max(range(len(bins)), key=lambda k: bins[k])
+        w = (t1 - t0) / len(bins)
+        marks.append({"label": f"the peak: {bins[i]:,} in {human_duration(int(w))} from "
+                               f"{datetime.fromtimestamp(t0 + i * w, timezone.utc).strftime('%m-%d %H:%M')}",
+                      "from": t0 + i * w, "to": t0 + (i + 1) * w})
+    for h in sorted(res.get("known_causes") or [], key=lambda h: SEVERITY_ORDER.index(h["severity"]) if h.get("severity") in SEVERITY_ORDER else 9)[:3]:
+        ft = lifecycle_time((h.get("first") or {}).get("timestamp"))
+        if ft is not None:
+            marks.append({"label": f"± 5 min around the first {h['title'][:60]}", "from": ft - 300, "to": ft + 300})
+    return log_search.period_row(lo, hi, marks)
 
 
 def story_html(res: dict, levels: str) -> str:
@@ -6194,7 +6232,7 @@ def coverage_html(cov: dict, viewers: Optional[Dict[str, str]], unit: str = "fil
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
                 sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
-                html_sections: List[Tuple[str, str]] = (), share_zip: str = "") -> str:
+                html_sections: List[Tuple[str, str]] = (), share_zip: str = "", search_index: Optional[dict] = None) -> str:
     """unit: what a label is (file, container, script); links: (label, url) in the header; sections: (title, text)
     shown as is after the findings (the last lines of a failed CI script...); viewers: label -> page of the file
     (log_viewer), the labels and line numbers link to it"""
@@ -6253,7 +6291,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body = [verdict_html(*verdict(res, levels, unit)), QUICK_LINKS, incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
             cfk_sections_html(res.get("_cfk_bundles") or [], unit),
             compare_html(res.get("comparison")), trend_html(res.get("trend")),
-            filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
+            filter_html(s["by_level"], s["by_connector"], without_connector, res["files"], period_picker(res)),
+            log_search.search_html(search_index), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")
@@ -6387,6 +6426,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body.append("<script type='application/json' id='pg-occurrences'>"
                 + occurrences_json(res["root_causes"], res["files"]).replace("<", "\\u003c") + "</script>")
     body.append(FILTER_SCRIPT)
+    # 🕐 the period picker and 🔎 Search every log line: after the filters, whose functions they call
+    body.append(log_search.scripts(TIME_CHART_ID))
     body.append(SECTION_TOGGLE)
     body.append(KPI_LINKS)
     sanitized = any(t.startswith("🔒") for t, _ in sections)
@@ -6598,8 +6639,17 @@ def main() -> int:
                 with open(path, encoding="utf-8", errors="replace") as sf:
                     html_sections.append((title, sf.read()))
             viewers = write_viewers(args.html_out, files, res, args.sources) if args.sources else {}
+            search_index = None
+            if args.sources:
+                if any(t.startswith("🔒") for t, _ in sections):
+                    search_index = {"reason": "the report is sanitized (--sanitize): the search would hold the raw lines"}
+                else:
+                    search_index = log_search.write_index(
+                        args.html_out, log_search.entries_from(args.sources, res["files"], viewers, file_component),
+                        bool((res["summary"].get("time_zone") or {}).get("converted_to_utc")))
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
-                                 [tuple(l) for l in args.link], sections, viewers, html_sections, args.share_zip))
+                                 [tuple(l) for l in args.link], sections, viewers, html_sections, args.share_zip,
+                                 search_index))
         os.replace(tmp_out, args.html_out)
     return 0
 

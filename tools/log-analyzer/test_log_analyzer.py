@@ -510,6 +510,68 @@ def test_kb_articles_of_variants():
     check("unknown cause", kc.links("no such cause") == {})
 
 
+def test_log_search_index():
+    """🔎 the shards of Search every log line: every line, the time index (a stack trace takes the time of the line
+    before, also across a shard), a .gz read decompressed, the budget leaves a file out"""
+    import base64
+    import gzip
+    import log_search
+    with tempfile.TemporaryDirectory() as d:
+        plain = os.path.join(d, "connect.log")
+        with open(plain, "w") as fh:
+            fh.write("[2026-10-14 09:00:00,001] INFO start (x)\n"
+                     "[2026-10-14 09:00:05,002] ERROR boom (x)\n"
+                     "java.lang.IllegalStateException: boom\n"
+                     "\tat a.b.C(C.java:1)\n"
+                     "[2026-10-14 09:01:00,003] WARN later (x)\n")
+        zipped = os.path.join(d, "server.log.gz")
+        with gzip.open(zipped, "wt") as fh:
+            fh.write("2026-10-14T08:59:00.000Z INFO broker up\n")
+        big = os.path.join(d, "big.log")
+        with open(big, "w") as fh:
+            fh.write("x" * 5000 + "\n")
+        report = os.path.join(d, "r-log-report.html")
+        entries = [{"label": "connect.log", "path": plain, "comp": "connect", "href": "", "occurrences": 1},
+                   {"label": "server.log.gz", "path": zipped, "comp": "kafka", "href": "", "occurrences": 0},
+                   {"label": "big.log", "path": big, "comp": "other", "href": "", "occurrences": 0}]
+        saved = log_search.SHARD_BYTES
+        log_search.SHARD_BYTES = 100  # a shard per ~2 lines: the stack trace is cut
+        try:
+            ix = log_search.write_index(report, entries, False, budget=1000)
+        finally:
+            log_search.SHARD_BYTES = saved
+        check("two files searched", [f["label"] for f in ix["files"]] == ["connect.log", "server.log.gz"], ix["files"])
+        check("the big one left out", [s["label"] for s in ix["skipped"]] == ["big.log"], ix["skipped"])
+        check("lines", ix["lines"] == 6, ix["lines"])
+        check("period", ix["t0"] == 1791968340 and ix["t1"] == 1791968460, (ix["t0"], ix["t1"]))
+        folder = os.path.join(d, "r-log-report-files", "search")
+
+        def shard(name):
+            js = open(os.path.join(folder, name)).read()
+            o = json.loads(gzip.decompress(base64.b64decode(js.split('","', 1)[1].rsplit('"', 1)[0])))
+            pairs, l, t = [], 0, 0
+            for i in range(0, len(o["t"]), 2):
+                l += o["t"][i]
+                t += o["t"][i + 1]
+                pairs.append((l, t))
+            return o["x"].split("\n"), pairs
+        texts, times = [], []
+        for name, first, n, _, _ in ix["files"][0]["shards"]:
+            x, pairs = shard(name)
+            check("lines of the shard", len(x) == n, (name, x))
+            texts += x
+            times.append((first, pairs))
+        check("every line, in order", texts[2] == "java.lang.IllegalStateException: boom" and len(texts) == 5, texts)
+
+        def time_of(line):
+            for first, pairs in times:
+                local = line - first
+                if 0 <= local and (first, pairs) == max((f, p) for f, p in times if f <= line):
+                    return max((t for l, t in pairs if l <= local), default=None)
+        check("stack trace takes the time before", time_of(2) == 1791968405 and time_of(3) == 1791968405, [time_of(i) for i in range(5)])
+        check("next record", time_of(4) == 1791968460, time_of(4))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

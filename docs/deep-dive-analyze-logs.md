@@ -253,11 +253,30 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 - **Levels** (`💀 FATAL`, `🔴 ERROR`, `🟠 WARN`), **components** (`🔌 Connect`, `🗄️ Kafka`, `📡 Clients`…, from the file
   names: `server.log` → Kafka), **connector** (the `[connector|task-0]` context of the line) and **period** (drag over
   📈) combine; the charts, root causes, files, records and timeline follow.
+- **🕐 Period**, a row of the filter bar, as the time picker of Grafana: **⏱ Quick ranges** relative to the **end of
+  the logs** (not to now: `Last 15 min of the logs`, `First 1 h of the logs`) and the times of the analysis (`± 5 min
+  around the first ERROR`, `the peak`, `± 5 min around the first <known cause>`), **from → to** (type them, or paste
+  `2026-10-14 09:02 → 09:08` in from; `HH:MM` alone is the last day of the logs with that time), **Around** a time
+  the customer gives (`09:05`, `± 5 min`), **⊖** zoom out, **◀ ▶** half a period earlier / later (keys `t ←`,
+  `t →`, `t z`), ⤺ whole period, and the recent periods. **⏱️** on a row of the 🗓️ incident timeline: ± 2 min
+  around that event. The period may go past the last record (the chart stops there; the records and 🔎 Search every
+  log line use the whole period).
 - **Search**: words that must all be there, `-word` to exclude, `"a phrase"`, `/regex/`. The matches are highlighted.
   `ora- -xout` keeps the Oracle errors that do not mention the outbound server; `/ORA-0101[0-9]/` the login errors.
+  It searches the ERROR / WARN records; **🔎 Every log line** next to it searches the same text in every line.
+- **🔎 Search every log line**, a section of its own, as OpenSearch Discover: **every line of every file**, INFO and
+  DEBUG included (a `client.id`, `Revoking previously assigned partitions`, a `startTimeMs` that no ERROR has),
+  searched in the browser, offline: the lines are written next to the report (`<report>-files/search/`, compressed,
+  in the 📤 Share `.zip`). Same syntax plus fields: `level:INFO` (`level:ERROR,FATAL`, `-level:DEBUG`),
+  `file:connect-0` (part of the path), `comp:connect`. It follows the 🕐 period and the component chips; a histogram
+  of the matches over time (drag over it, or click a bar: the period of the report), the counts per level and per
+  file (a click adds it to the query), the lines sorted by time with their file:line (📄 to the page of the file),
+  and a click on a line shows the 8 lines around it. A budget bounds the lines written:
+  `PLAYGROUND_LOG_SEARCH_MAX_MB` (200 MB of lines by default, the files with findings first; `0` turns it off); the
+  files left out are listed. Not written with `--sanitize` (the lines are raw).
 - **🔗 Link to this view** copies the URL, which holds the filters:
   `…/support_bundle-log-report.html#pg:comp=connect&q=ora-&t=1791972240-1791972360` opens the report on the Connect
-  files, the Oracle errors, between 10:04 and 10:06.
+  files, the Oracle errors, between 10:04 and 10:06 (`&lq=<query>`: 🔎 Search every log line runs it too).
 - The component you pick is remembered for the next reports; a link wins over it.
 
 > [!NOTE]

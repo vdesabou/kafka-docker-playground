@@ -447,8 +447,25 @@ drawn again for it on load) and the search box (`pgCompile()`: words that must a
 `-/regex/`, an invalid regex searched as text; the records whose block passes it, `pgMatch` in `pgKeeps()`; the matches
 highlighted with the CSS Custom Highlight API, `pgHighlight()`, the page itself untouched; a
 finding card that does not contain it gets `.pg-nomatch`, never the `hidden` attribute of the severity chips). The filters are written in the URL of the page (`#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>`,
-`pgStateWrite()` / `pgStateRead()`, the URL wins over the component remembered in `localStorage`): 🔗 **Link to this view**
-copies it, and the link opens the report on the same view. These
+`pgStateWrite()` / `pgStateRead()`, the URL wins over the component remembered in `localStorage`; `t` is the period asked,
+`lq` the query of 🔎 Search every log line): 🔗 **Link to this view**
+copies it, and the link opens the report on the same view. The 🕐 **period picker** and 🔎 **Search every log line** live
+in `tools/report-common/log_search.py` (`period_row()` + `PERIOD_SCRIPT`, `write_index()` + `search_html()` +
+`SEARCH_SCRIPT`, emitted right after `FILTER_SCRIPT`). Every way of picking a period ends in `pgSetPeriod(from, to)`: it
+zooms the occurrences chart on the part of the period the chart holds (`box.range()` of `zoom_chart.js`: `show()` would
+shift a period that goes past an end) and sets `pgWindow` to the whole period; `pgPeriod` keeps the period asked and a
+`pgperiod` event tells the search. The quick ranges are relative to the end of the logs (`data-lo` / `data-hi` of
+`.pg-period`, the first and last timestamped line), the times of the analysis come from `period_picker()` of
+`log_report.py`. The search: `write_index()` writes every line of the files of the sources file (`entries_from()`) to
+`<report>-files/search/s<n>.js`, about 4 MB of lines each, a `.js` that calls `pgLogShard(name, "<base64 of gzip of
+{x: lines, t: time index}>")` (a page opened from `file://` cannot `fetch()` a file next to it, a `<script>` can); the
+time index is (line, epoch) pairs where the time changes, delta encoded, the lines without a timestamp of their own
+taking the time before (also across shards), offsets converted to UTC like the digest when the files mix them. The
+files with findings first, then the smallest, within `PLAYGROUND_LOG_SEARCH_MAX_MB` (200 by default, `0` off); not
+written for a sanitized report. In the page the shards are loaded on the first search, inflated with
+`DecompressionStream`, kept while they fit in about 260 M characters (least recently used out), scanned with the first
+positive term as a global regex then each candidate line tested against the others (a newer search stops an older one
+between shards); up to 200,000 matches kept, sorted by time, shown 200 at a time. These
 filters drive **everything below the filter bar**
 from one index of records written once in the page, `occurrences_json()`: `<script type="application/json"
 id="pg-occurrences">` holds `[root cause index, level, connector index, occurrences, epoch seconds, record index, file

@@ -135,6 +135,9 @@
     self.show = show;
     // draw the chart again with other series (events): the x axis and the visible window do not move
     box.setTimes = function (arrays) { c.times = arrays; c._cums = null; draw(); };
+    // the x range the chart can show [lo, hi): a period picker clamps to it before zoomTo (show() would shift a
+    // period that goes past an end instead of cutting it)
+    box.range = function () { return [lo, hi]; };
     // zoom on [from, to): x values (ISO days of a columns chart); false when nothing of the chart is in that range
     box.zoomTo = function (from, to) {
       if (type !== "columns") { if (+to <= lo || +from >= hi) return false; show(+from, +to); return true; }
