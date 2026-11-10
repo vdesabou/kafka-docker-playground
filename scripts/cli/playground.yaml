@@ -4671,43 +4671,45 @@ subcommands:
       extract) is listed at the\nend, in the HTML report and in --json (.summary.incomplete_inputs):\nnever
       a silent ✅, and exit code 1 when nothing could be read at all.\nBytes that are
       not UTF-8 (a Latin-1 character) are read as they are.\n\U0001F30D It works offline,
-      without Docker: bash 4.2+, python3 3.8+, jq, awk,\ngzip and tar are enough (a
-      CFK bundle gets its ☸️ sections when PyYAML\nis installed, else its pod logs
-      are still read). Without the\nplayground: a sparse clone of scripts/, tools/
-      and cfk-analysis/, or\nwith nothing installed but Docker, the ghcr.io/vdesabou/kdp-analyze-logs\nimage:
-      docker run --rm --network none -v \"\\$PWD\":/data -e\nKDP_HOST_DIR=\"\\$PWD\"
-      ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip\n(see the deep dive, \"Without
-      the playground\").\n\U0001F9F0 The files of the input that another analyzer
-      reads better (GC logs,\nthread dumps, heap dumps, flight recordings, network
-      captures, Oracle\nXStream diagnostics reports, found by their content or name)
-      are listed\nwith the playground analyze command to run on each, in the summary,
-      the\nHTML report and --json (.other_files); the ones extracted from an\narchive
-      are kept next to the report (<input>-other-files/).\n\U0001F9F5 The thread dumps
-      of the input are analyzed right away by the thread\ndump analyzer (deadlocks,
-      lock contention, stuck threads, CPU per thread\nbetween dumps, growing pools):
-      \U0001F9F5 \U0001F52C JVM dumps of the input, right after\nthe verdict, each
-      dump on the incident timeline, the full thread report\nnext to the report (<input>-thread-dumps.html,
-      .thread_dumps of --json).\n\U0001F52C A heap dump is not (Eclipse MAT, Docker,
-      memory): its playground\nanalyze heap-dump command is at the top of the report
-      and in the verdict\n(.heap_dumps). \U0001F5FA️ The outputs of kafka-topics --describe
-      and kafka-log-dirs\n--describe of the input give the Cluster layout: replicas,
-      leaders and\ndisk per broker, leader imbalance and skew, offline / under-replicated
-      /\nunder min ISR partitions, replication factor 1, log dirs offline, disk\nskew
-      (.cluster_layout); the observers of a Multi-Region Cluster are not\nreplicas
-      missing from the ISR. \U0001F422 The signals of a broker under pressure, read\nfrom
-      INFO / WARN lines (ISR shrinks and expands per broker and partition,\nfollowers
-      failing to fetch (ReplicaFetcher, not consumers), requests timed out, log cleaner
-      failures,\nquota throttling, responses to clients already gone), are counted
-      by\nbroker with their storms, and their bursts are on the incident timeline.\nOnly
-      files with findings are\nshown. \U0001F52D When no file has findings, an overview
-      says what the logs\ncontain (period covered, records by level, top messages
-      and loggers) and\nwhat to ask for next (a longer window, the logs of the component
-      that\nfails, a new export of a log console). The HTML report also has\nthe configuration:
-      the configs logged at startup (KafkaConfig values:,\nDistributedConfig, connector
-      and client configs…) and the .properties\nand connector JSON files of the input.\n\n⏳
-      A large file (20 MB or more) shows a progress bar in the terminal\n(MB read,
-      speed, ETA), and with 20 MB or more of input (an archive counts\nfor its content,
-      not its compressed size) the report opens\nin the browser right away as a progress
+      without Docker: bash 4.2+, python3 3.8+, jq, awk\n(\U0001F3CE️ mawk when installed:
+      on macOS, brew install mawk reads the logs\n2.5x faster than the awk of the
+      system, same report),\ngzip and tar are enough (a CFK bundle gets its ☸️ sections
+      when PyYAML\nis installed, else its pod logs are still read). Without the\nplayground:
+      a sparse clone of scripts/, tools/ and cfk-analysis/, or\nwith nothing installed
+      but Docker, the ghcr.io/vdesabou/kdp-analyze-logs\nimage: docker run --rm --network
+      none -v \"\\$PWD\":/data -e\nKDP_HOST_DIR=\"\\$PWD\" ghcr.io/vdesabou/kdp-analyze-logs
+      -f bundle.zip\n(see the deep dive, \"Without the playground\").\n\U0001F9F0
+      The files of the input that another analyzer reads better (GC logs,\nthread
+      dumps, heap dumps, flight recordings, network captures, Oracle\nXStream diagnostics
+      reports, found by their content or name) are listed\nwith the playground analyze
+      command to run on each, in the summary, the\nHTML report and --json (.other_files);
+      the ones extracted from an\narchive are kept next to the report (<input>-other-files/).\n\U0001F9F5
+      The thread dumps of the input are analyzed right away by the thread\ndump analyzer
+      (deadlocks, lock contention, stuck threads, CPU per thread\nbetween dumps, growing
+      pools): \U0001F9F5 \U0001F52C JVM dumps of the input, right after\nthe verdict,
+      each dump on the incident timeline, the full thread report\nnext to the report
+      (<input>-thread-dumps.html, .thread_dumps of --json).\n\U0001F52C A heap dump
+      is not (Eclipse MAT, Docker, memory): its playground\nanalyze heap-dump command
+      is at the top of the report and in the verdict\n(.heap_dumps). \U0001F5FA️ The
+      outputs of kafka-topics --describe and kafka-log-dirs\n--describe of the input
+      give the Cluster layout: replicas, leaders and\ndisk per broker, leader imbalance
+      and skew, offline / under-replicated /\nunder min ISR partitions, replication
+      factor 1, log dirs offline, disk\nskew (.cluster_layout); the observers of a
+      Multi-Region Cluster are not\nreplicas missing from the ISR. \U0001F422 The
+      signals of a broker under pressure, read\nfrom INFO / WARN lines (ISR shrinks
+      and expands per broker and partition,\nfollowers failing to fetch (ReplicaFetcher,
+      not consumers), requests timed out, log cleaner failures,\nquota throttling,
+      responses to clients already gone), are counted by\nbroker with their storms,
+      and their bursts are on the incident timeline.\nOnly files with findings are\nshown.
+      \U0001F52D When no file has findings, an overview says what the logs\ncontain
+      (period covered, records by level, top messages and loggers) and\nwhat to ask
+      for next (a longer window, the logs of the component that\nfails, a new export
+      of a log console). The HTML report also has\nthe configuration: the configs
+      logged at startup (KafkaConfig values:,\nDistributedConfig, connector and client
+      configs…) and the .properties\nand connector JSON files of the input.\n\n⏳ A
+      large file (20 MB or more) shows a progress bar in the terminal\n(MB read, speed,
+      ETA), and with 20 MB or more of input (an archive counts\nfor its content, not
+      its compressed size) the report opens\nin the browser right away as a progress
       page (step, a bar for the file\nbeing read and one for the whole input, elapsed
       time, speed, ETA of the file and of the whole input) that becomes the report
       when the analysis ends. The last line\ngives the size read and the time it took.

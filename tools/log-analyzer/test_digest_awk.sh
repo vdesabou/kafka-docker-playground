@@ -9,9 +9,12 @@ shopt -s nullglob
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-sed -n '/^function summarize_log_errors/,/^}/p' "$root/scripts/cli/src/lib/cli_function.sh" > "$tmp/digest.sh"
+# log_awk picks mawk when it is installed: PLAYGROUND_AWK=awk makes it run the awk wrapper of each test below
+export PLAYGROUND_AWK=awk
+sed -n '/^function log_awk/,/^}/p' "$root/scripts/cli/src/lib/cli_function.sh" > "$tmp/log_awk.sh"
+{ cat "$tmp/log_awk.sh"; sed -n '/^function summarize_log_errors/,/^}/p' "$root/scripts/cli/src/lib/cli_function.sh"; } > "$tmp/digest.sh"
 # the --since / --until window of analyze logs (log_window_filter of scripts/cli/src/commands/analyze/logs.sh)
-sed -n '/^function window_epoch/,/^}/p;/^function log_window_filter/,/^}/p' "$root/scripts/cli/src/commands/analyze/logs.sh" > "$tmp/window.sh"
+{ cat "$tmp/log_awk.sh"; sed -n '/^function window_epoch/,/^}/p;/^function log_window_filter/,/^}/p' "$root/scripts/cli/src/commands/analyze/logs.sh"; } > "$tmp/window.sh"
 printf '%s\n' 'header' '[2026-11-01 10:00:00,000] ERROR old' '  at a.b(C.java:1)' '[2026-11-08 10:00:00,000] ERROR new' '  at a.b(C.java:2)' > "$tmp/window-iso.log"
 printf '%s\n' '%3|1793896102.923|FAIL|rdkafka#producer-1| new' '%3|1700000000.000|FAIL|rdkafka#producer-1| old' > "$tmp/window-epoch.log"
 printf '%s\n' 'no time on this line' 'ERROR nor on this one' > "$tmp/window-none.log"

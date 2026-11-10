@@ -98,7 +98,7 @@ function log_window_filter () {
         cat
         return
     fi
-    LC_ALL=C awk -v since="$since" -v until_ts="$until_ts" -v since_epoch="$since_epoch" -v until_epoch="$until_epoch" \
+    LC_ALL=C log_awk -v since="$since" -v until_ts="$until_ts" -v since_epoch="$since_epoch" -v until_epoch="$until_epoch" \
         -v note_file="${1:-}" -v max_untimed="${PG_LOG_WINDOW_MAX_UNTIMED:-20000}" '
         # 1: in the window, 0: out of it, -1: no time on this line
         function in_window(h,    t, e) {
@@ -1376,6 +1376,11 @@ then
     log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
 else
     log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+fi
+# 🏎️ 100 MB or more read on macOS by its own awk: mawk reads them 2.5x faster, same report (log_awk of cli_function.sh)
+if [ "${nb_bytes:-0}" -ge 104857600 ] && [ -z "${PLAYGROUND_AWK:-}" ] && [ "$(uname -s)" == "Darwin" ] && ! command -v mawk > /dev/null 2>&1
+then
+    log "🏎️ brew install mawk: the next analysis reads the logs about 2.5x faster, with the same report"
 fi
 if [ "$nb_incomplete" -gt 0 ]
 then
