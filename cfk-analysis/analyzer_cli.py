@@ -468,7 +468,10 @@ def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, ht
     raw_issues = results["issues"]
     if sanitize:
         results = DataSanitizer().sanitize_results(results)
-    if html_out:
+    # the file pages hold the raw lines of the bundle: none for a sanitized report (nor the ones of a previous run)
+    if html_out and sanitize:
+        log_viewer.remove_pages(html_out)
+    elif html_out:
         write_viewers(html_out, bundle_dir, raw_issues, results["issues"])
 
     if severity or components:

@@ -2843,6 +2843,8 @@ def jvm_dumps_text(res: dict) -> List[str]:
             out.append("   🔥 CPU between the dumps: " + ", ".join(f"{c['name']} {c['cpu_pct']}%" for c in busy[:3]))
         if g.get("report"):
             out.append(f"   🌐 full thread report: {g['report']}")
+        elif g.get("no_report"):
+            out.append(f"   🔒 no full thread report ({g['no_report']}): {g['command']}")
     heaps = res.get("heap_dumps") or []
     if heaps:
         out.append(f"🔬 {len(heaps)} heap dump(s) in the input, not analyzed here (Eclipse MAT in Docker, about as much memory as the dump): run")
@@ -2948,7 +2950,8 @@ def jvm_dumps_html(res: dict) -> str:
         same = (f", {g['same_jvm']} of the same JVM {g['interval_s']} s apart" if g.get("same_jvm", 1) > 1 and g.get("interval_s") else
                 " (a single dump: take 3, a few seconds apart, to see stuck threads and CPU)" if n == 1 else "")
         link = (f" · <a href='{e(quote(os.path.basename(g['report'])))}' target='_blank' rel='noopener'>🌐 open the full thread report</a>"
-                if g.get("report") else "")
+                if g.get("report") else
+                f" · 🔒 no full thread report ({e(g['no_report'])}): its command is under ‘the same analysis in a terminal’" if g.get("no_report") else "")
         items = "".join(f"<li><span class='jd-sev jd-{e(f['severity'])}'>{e(f['severity'])}</span>{e(f['text'])}</li>"
                         for f in g.get("findings") or [])
         more = (f"<p class='fi-meta'>… {g['findings_total'] - len(g['findings'])} more finding(s) in the thread report</p>"
@@ -4584,7 +4587,8 @@ def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket
         return (f"<{tag} class='share-card {cls}' {attrs}><span class='sc-icon'>{icon}</span><span class='sc-body'>"
                 f"<b>{what}</b><small>{why}</small></span><span class='sc-go' aria-hidden='true'>›</span></{tag}>")
     zip_item = ((card("a", f"href='{e(quote(share_zip))}' download", "📦", "Download the report (.zip)",
-                      "the report and its file pages: your colleague unzips it and opens the .html, 📄 and the line links keep working",
+                      ("the report alone (🔒 sanitized: no file pages, they hold the raw lines)" if sanitized else
+                       "the report and its file pages: your colleague unzips it and opens the .html, 📄 and the line links keep working"),
                       "sc-primary")
                  + "<p class='sc-note'>No .zip next to the report? Its file pages are larger than 200 MB (a page holds a whole log "
                  "file): <button type='button' class='sc-link' data-share='zipcmd'>📋 copy the zip command</button> and run it in a "
@@ -7635,6 +7639,10 @@ def main() -> int:
     ap.add_argument("--compare", metavar="JSON", action="append", default=[],
                     help="the JSON of analyze logs of another input, to compare with (repeatable, oldest first: a trend)")
     ap.add_argument("--ticket-out", metavar="PATH", help="also write the summary for a ticket (Markdown, sanitized) there")
+    ap.add_argument("--sanitize-state", metavar="JSON",
+                    help="the report is sanitized (--sanitize of analyze logs): the state file of tools/report-common/"
+                         "sanitizer.py (same placeholders as the records). The thread dumps are sanitized with it, and "
+                         "nothing that holds raw lines is written next to the report (file pages, search, thread report)")
     ap.add_argument("--compare-label", metavar="LABEL", action="append", default=[],
                     help="what that other input is, for the report (one per --compare)")
     ap.add_argument("--records-under", metavar="PREFIX", action="append", default=[],
@@ -7736,8 +7744,14 @@ def main() -> int:
     # the timeline; 🔬 the heap dumps listed with their command (MAT is not run here)
     if res.get("other_files"):
         stem = re.sub(r"(?:-log-report)?\.html$", "", os.path.basename(args.html_out)) if args.html_out else "report"
+        # sanitized: no full thread report (raw thread names, stacks), the summary of each dump through the sanitizer
         res["thread_dumps"] = jvm_dumps.thread_dumps(res["other_files"], os.path.dirname(os.path.abspath(args.html_out))
-                                                     if args.html_out else None, stem)
+                                                     if args.html_out and not args.sanitize_state else None, stem)
+        if args.sanitize_state:
+            res["thread_dumps"] = sanitized_dicts(res["thread_dumps"], args.sanitize_state)
+            for g in res["thread_dumps"]:
+                if not g.get("error") and args.html_out:
+                    g["no_report"] = "--sanitize: it holds the raw thread names and stacks"
         res["heap_dumps"] = jvm_dumps.heap_dumps(res["other_files"])
         # 🗺️ 💽 the kafka-topics --describe and kafka-log-dirs outputs of the input
         layout_files = [(f["label"], f["path"]) for f in res["other_files"].get("files") or []
@@ -7795,10 +7809,14 @@ def main() -> int:
             for title, path in args.html_section:
                 with open(path, encoding="utf-8", errors="replace") as sf:
                     html_sections.append((title, sf.read()))
-            viewers = write_viewers(args.html_out, files, res, args.sources) if args.sources else {}
+            # sanitized: no file page (they hold the raw lines, and go in the 📦 .zip), nor the ones of a previous run
+            sanitized = bool(args.sanitize_state) or any(t.startswith("🔒") for t, _ in sections)
+            if sanitized:
+                log_viewer.remove_pages(args.html_out)
+            viewers = write_viewers(args.html_out, files, res, args.sources) if args.sources and not sanitized else {}
             search_index = None
             if args.sources:
-                if any(t.startswith("🔒") for t, _ in sections):
+                if sanitized:
                     search_index = {"reason": "the report is sanitized (--sanitize): the search would hold the raw lines"}
                 else:
                     search_index = log_search.write_index(
@@ -7809,6 +7827,15 @@ def main() -> int:
                                  search_index))
         os.replace(tmp_out, args.html_out)
     return 0
+
+
+def sanitized_dicts(rows: List[dict], state_path: str) -> List[dict]:
+    """rows through tools/report-common/sanitizer.py, with the placeholders of the state file of the run (read only:
+    log_report.py runs several times on the same input, the redaction summary of analyze logs counts the records)"""
+    from sanitizer import DataSanitizer, _load_state
+    sanitizer = DataSanitizer()
+    _load_state(sanitizer, state_path)
+    return [sanitizer.sanitize_dict(r) for r in rows]
 
 
 if __name__ == "__main__":

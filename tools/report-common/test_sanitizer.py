@@ -227,6 +227,46 @@ def test_support_clients_community_connectors():
           all(row in support_dates.CONNECTOR_MIN[cp] for row in set(support_dates.CONNECTOR_ROWS.values()) for cp in ("8.1", "8.2", "8.3", "8.4")))
 
 
+def test_escaped_json_jaas_users_xml_and_key_names():
+    """secrets that leaked: JSON inside a JSON log line, the users of a broker JAAS config, Hadoop / Hive XML properties,
+    *.master.key / encryption.key, a query string (and what must stay: user_id, primary.key, the next key)"""
+    for text, leaked, kept in [
+            ('{"log":"config: {\\"connection.password\\":\\"Sup3rS3cret\\"}"}', "Sup3rS3cret", '\\"connection.password\\":'),
+            ('{"log":"jaas: password=\\"my secret pass\\" done"}', "secret pass", "done"),
+            ('PlainLoginModule required username="admin" password="admin-pw" user_admin="admin-pw" user_alice="alice-pw";',
+             "-pw", 'username="admin"'),
+            ('PlainLoginModule required username=\\"admin\\" password=\\"x1\\" user_bob=\\"bob-pw\\";', "bob-pw", "user_bob="),
+            ("<name>fs.s3a.secret.key</name><value>s3-secret</value>", "s3-secret", "fs.s3a.secret.key"),
+            ("<name>javax.jdo.option.ConnectionPassword</name>\n  <value>hive-pw</value>", "hive-pw", "ConnectionPassword"),
+            ('<property name="password" value="prop-pw"/> next', "prop-pw", "/> next"),
+            ('<entry key="password">entry-pw</entry>', "entry-pw", "</entry>"),
+            ("cosmos.master.key=cosmos-k1 encryption.key=enc-k1 primary.key=id", "-k1", "primary.key=id"),
+            ("client_secret=cs-1&scope=read&grant_type=client_credentials", "cs-1", "scope=read&grant_type=client_credentials"),
+            ("redis://:redis-pw@cache:6379", "redis-pw", "redis://"),
+            ("user_id=42 user_name=bob", "<REDACTED>", "user_id=42 user_name=bob")]:
+        out = DataSanitizer().sanitize_text(text)
+        check("leak", leaked not in out and kept in out, f"{text!r} became {out!r}")
+
+
+def test_key_at_end_of_line_keeps_the_next_line():
+    out = DataSanitizer().sanitize_text("ERROR Failed to refresh token:\n[2026-01-01 10:00:01,000] INFO next line")
+    check("next line", out.endswith("\n[2026-01-01 10:00:01,000] INFO next line"), repr(out))
+
+
+def test_paths_names_and_java_versions_are_kept():
+    for text in ["/usr/share/java/confluentinc/kafkaconnectjdbc/lib/postgresql42",
+                 "io/confluent/connect/jdbc/dialect/PostgreSqlDatabaseDialect2",
+                 "connector MyVeryLongConnectorNameForOrdersTopicV2Production failed",
+                 "OpenJDK 64-Bit Server VM (21.0.12.1+1-LTS mixed mode, sharing)"]:
+        out = DataSanitizer().sanitize_text(text)
+        check("over-redaction", out == text, f"{text!r} became {out!r}")
+    for text in ["dGhpcyBpcyBhIHNlY3JldCB2YWx1ZSB0aGF0IHNob3VsZCBiZSByZWRhY3RlZA==",
+                 "aB3dE5fG7hI9jK1lM3nO5pQ7rS9tU1vW3xY5zA7bC9dE", "abcdefghijklmnopqrstuvwxyz0123456789abcdefghij",
+                 "3f786850e387550fdab836ed7e6dc881de23001b3f786850e387550fdab836ed"]:
+        out = DataSanitizer().sanitize_text(f"value {text}")
+        check("base64", out == "value <BASE64-REDACTED>", f"{text!r} became {out!r}")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
