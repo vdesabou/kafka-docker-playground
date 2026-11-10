@@ -1428,7 +1428,7 @@
     },
     {
       "name": "remove-cp-docker-images",
-      "description": "🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)\n\nEach Confluent Platform version you have ever run keeps a dozen images on\ndisk, so this is usually where the space went. You are asked before every\nversion, unless you name one with --version.\n\nThe default version used by the playground is never proposed for removal.",
+      "description": "🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)\n\nEach Confluent Platform version you have ever run keeps a dozen images on\ndisk, so this is usually where the space went. You are asked before every\nversion (y remove, n skip it, a all remaining, q quit), unless you name one\nwith --version.\n\nNever proposed for removal: the default version used by the playground, the\nversion of the current run (--tag), and any version used by a container,\nrunning or stopped (another session, for example).",
       "usage": "playground remove-cp-docker-images [OPTIONS]",
       "options": [
         {
@@ -1436,7 +1436,7 @@
             "--version"
           ],
           "argument": "VERSION",
-          "description": "🔢 Specific version to remove"
+          "description": "🔢 Specific version to remove (refused when a container uses it)"
         }
       ]
     },

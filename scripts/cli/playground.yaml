@@ -1644,15 +1644,18 @@ subcommands:
   description: "\U0001F9F9 Remove all Confluent Platform docker images related to
     a version installed locally (a confirmation will be required for every version
     present)\n\nEach Confluent Platform version you have ever run keeps a dozen images
-    on\ndisk, so this is usually where the space went. You are asked before every\nversion,
-    unless you name one with --version.\n\nThe default version used by the playground
-    is never proposed for removal."
+    on\ndisk, so this is usually where the space went. You are asked before every\nversion
+    (y remove, n skip it, a all remaining, q quit), unless you name one\nwith --version.\n\nNever
+    proposed for removal: the default version used by the playground, the\nversion
+    of the current run (--tag), and any version used by a container,\nrunning or stopped
+    (another session, for example)."
   usage: playground remove-cp-docker-images [OPTIONS]
   options:
   - names:
     - "--version"
     argument: VERSION
-    description: "\U0001F522 Specific version to remove"
+    description: "\U0001F522 Specific version to remove (refused when a container
+      uses it)"
 - name: refresh-cp-docker-images
   description: "\U0001F504 Refresh (pull from Docker) all Confluent Platform docker
     images related to a version installed locally\n\nUseful when a version tag has
