@@ -352,7 +352,7 @@ function get_connect_url_and_security() {
       connect_reachable=0
       for candidate_port in 8083 8283 8383
       do
-        if curl -s "http://localhost:${candidate_port}" > /dev/null 2>&1
+        if curl -s --max-time 5 "http://localhost:${candidate_port}" > /dev/null 2>&1
         then
           connect_port="$candidate_port"
           connect_reachable=1
@@ -371,7 +371,7 @@ function get_connect_url_and_security() {
 
         for _ in 1 2 3 4 5
         do
-          if curl -s "http://localhost:8083" > /dev/null 2>&1
+          if curl -s --max-time 5 "http://localhost:8083" > /dev/null 2>&1
           then
             connect_reachable=1
             connect_port="8083"
@@ -391,7 +391,7 @@ function get_connect_url_and_security() {
           kubectl -n confluent port-forward svc/connect 8083:8083 > /tmp/playground-cfk-connect-port-forward.log 2>&1 &
           for _ in 1 2 3 4 5
           do
-            if curl -s "http://localhost:8083" > /dev/null 2>&1
+            if curl -s --max-time 5 "http://localhost:8083" > /dev/null 2>&1
             then
               connect_reachable=1
               connect_port="8083"
@@ -445,14 +445,14 @@ function get_connect_url_and_security() {
       # Fallback for CFK-like runs where connect is not a local docker container.
       for candidate_port in 8083 8283 8383
       do
-        if curl -s "http://localhost:${candidate_port}" > /dev/null 2>&1
+        if curl -s --max-time 5 "http://localhost:${candidate_port}" > /dev/null 2>&1
         then
           connect_port="$candidate_port"
           break
         fi
       done
 
-      if [[ "$connect_port" == "8083" ]] && ! curl -s "http://localhost:8083" > /dev/null 2>&1
+      if [[ "$connect_port" == "8083" ]] && ! curl -s --max-time 5 "http://localhost:8083" > /dev/null 2>&1
       then
         if verify_installed "kubectl" >/dev/null 2>&1 && kubectl -n confluent get svc connect >/dev/null 2>&1
         then
@@ -465,7 +465,7 @@ function get_connect_url_and_security() {
 
           for _ in 1 2 3 4 5
           do
-            if curl -s "http://localhost:8083" > /dev/null 2>&1
+            if curl -s --max-time 5 "http://localhost:8083" > /dev/null 2>&1
             then
               connect_port="8083"
               break
@@ -475,7 +475,7 @@ function get_connect_url_and_security() {
         fi
       fi
 
-      if ! curl -s "http://localhost:${connect_port}" > /dev/null 2>&1
+      if ! curl -s --max-time 5 "http://localhost:${connect_port}" > /dev/null 2>&1
       then
         logerror "❌ No available port found for connect rest api, none of containers connect, connect2 or connect3 are running!"
         exit 1
