@@ -170,7 +170,7 @@
   required: false
   arg: sections
   help: |-
-    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint, other_files, thread_dumps, heap_dumps, cluster_layout, fixed_bugs, task_workers, data_to_request, config_drift (default: all). For example --json-sections summary,findings,root_causes
+    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint, other_files, thread_dumps, heap_dumps, cluster_layout, fixed_bugs, task_workers, data_to_request, config_drift, harmless, redaction_summary, kafka_streams, overview, cfk_bundles, cfk_comparison (default: all). For example --json-sections summary,findings,root_causes
 - long: --component
   required: false
   repeatable: true

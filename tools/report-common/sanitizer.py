@@ -59,6 +59,8 @@ _SECRET_KV_RE = re.compile(
 # with a LoginModule only (user_id=42 elsewhere is not a secret)
 _JAAS_LINE_RE = re.compile(r'LoginModule[^\n]*')
 _JAAS_USER_RE = re.compile(r'(?<![\w.-])(user_[\w.-]+[ \t]*=[ \t]*)(\\?"(?:[^"\\]|\\[^"])*?\\?"|[^\s;"]+)')
+# a Kerberos principal with a host: service/host@REALM (the realm in capitals, by convention and in every krb5.conf)
+_PRINCIPAL_RE = re.compile(r'(?<![\w.-])([A-Za-z][\w-]*)/((?:[A-Za-z0-9-]+\.)*[A-Za-z0-9-]+)@([A-Z0-9][A-Z0-9-]*(?:\.[A-Z0-9-]+)+)(?![\w.-])')
 _SECRET_KEY_KEEP_RE = re.compile(r'(?:ref|refs|name|file|path|location|type|mechanisms?|enabled?|algorithm|provider|source|'
                                  r'class|\.ms|seconds|length|iterations|url|uri|property|region)$', re.IGNORECASE)
 # values that are not a secret: unset (null, ""), a boolean, the type of a config key in a validate / config-def output
@@ -187,6 +189,8 @@ class DataSanitizer:
         self.hostname_map = {}
         self.email_map = {}
         self.dn_map = {}
+        # Kerberos realms of the principals (kafka/broker-1.acme.corp@ACME.CORP)
+        self.realm_map = {}
         self.secrets_redacted = 0
         # domains of the hostnames seen in a URL / with a port (emh-irdc.test.anz -> test.anz): another name in
         # them is a hostname too, whatever its TLD
@@ -285,6 +289,7 @@ class DataSanitizer:
             self.secrets_redacted += n
 
         if 'emails' not in self.keep:
+            sanitized = self._redact_principals(sanitized)
             sanitized = self._redact_with_map(sanitized, self.patterns['email'], self.email_map, 'EMAIL')
         if 'ldap-dns' not in self.keep:
             sanitized = self._redact_with_map(sanitized, self.patterns['ldap_dn'], self.dn_map, 'LDAP-DN')
@@ -358,6 +363,28 @@ class DataSanitizer:
         if 'LoginModule' in text:
             text = _JAAS_LINE_RE.sub(lambda m: _JAAS_USER_RE.sub(jaas_user, m.group(0)), text)
         return text
+
+    def _host_placeholder(self, host: str) -> str:
+        key = host.lower()
+        if key not in self.hostname_map:
+            self.hostname_map[key] = f'<HOST-{self.counter["host"]}>'
+            self.counter['host'] += 1
+        return self.hostname_map[key]
+
+    def _redact_principals(self, text: str) -> str:
+        """a Kerberos principal (kafka/broker-1.acme.corp@ACME.CORP) is not an email: the service kept, the host with the
+        placeholder it has everywhere else, the realm with its own (kafka/<HOST-1>@<REALM-1>)"""
+        def replacer(match):
+            service, host, realm = match.group(1), match.group(2), match.group(3)
+            # a name without a dot (localhost) is not redacted by the hostname rule either
+            if 'hostnames' not in self.keep and "." in host and not host.lower().endswith(_KEEP_HOST_SUFFIXES):
+                host = self._host_placeholder(host)
+            if realm not in self.realm_map:
+                self.realm_map[realm] = f'<REALM-{self.counter["realm"]}>'
+                self.counter['realm'] += 1
+            return f"{service}/{host}@{self.realm_map[realm]}"
+
+        return _PRINCIPAL_RE.sub(replacer, text)
 
     def _redact_with_map(self, text: str, pattern, mapping: Dict, prefix: str) -> str:
         """Redact matches with consistent placeholders"""
@@ -435,11 +462,7 @@ class DataSanitizer:
             if not is_hostname(match):
                 return hostname
             # one placeholder per name whatever its case (DB.ACME.CORP and db.acme.corp)
-            key = hostname.lower()
-            if key not in self.hostname_map:
-                self.hostname_map[key] = f'<HOST-{self.counter["host"]}>'
-                self.counter['host'] += 1
-            return self.hostname_map[key]
+            return self._host_placeholder(hostname)
 
         return self.patterns['hostname'].sub(replacer, text)
 
@@ -464,6 +487,7 @@ def _load_state(sanitizer: DataSanitizer, path: str):
     sanitizer.hostname_map = state.get("hostname_map", {})
     sanitizer.email_map = state.get("email_map", {})
     sanitizer.dn_map = state.get("dn_map", {})
+    sanitizer.realm_map = state.get("realm_map", {})
     sanitizer.secrets_redacted = state.get("secrets_redacted", 0)
     sanitizer.counter.update(state.get("counter", {}))
     sanitizer.learned_suffixes = set(state.get("learned_suffixes", []))
@@ -472,7 +496,7 @@ def _load_state(sanitizer: DataSanitizer, path: str):
 def _save_state(sanitizer: DataSanitizer, path: str):
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"ip_map": sanitizer.ip_map, "hostname_map": sanitizer.hostname_map, "email_map": sanitizer.email_map,
-                   "dn_map": sanitizer.dn_map, "secrets_redacted": sanitizer.secrets_redacted,
+                   "dn_map": sanitizer.dn_map, "realm_map": sanitizer.realm_map, "secrets_redacted": sanitizer.secrets_redacted,
                    "counter": dict(sanitizer.counter), "learned_suffixes": sorted(sanitizer.learned_suffixes)}, f)
 
 

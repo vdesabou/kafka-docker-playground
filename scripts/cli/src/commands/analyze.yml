@@ -121,8 +121,9 @@ commands:
     delivered in time, producer buffer full, max.poll.interval.ms exceeded,
     wrong security.protocol, idle connection closed by the broker).
 
-    📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
-    are extracted in a temporary folder, .gz files are decompressed on the
+    📂 Folders are scanned recursively. .zip, .tar, .tar.gz, .tgz,
+    .tar.bz2, .tbz2, .tar.xz, .txz and .7z (bsdtar or 7-Zip) files are
+    extracted in a temporary folder, .gz files are decompressed on the
     fly, binary files are skipped, and so are the copies of a file or of a
     CFK support bundle already analyzed (an archive next to its extracted
     folder). A JSON export of log events (.json, .jsonl, .ndjson, also

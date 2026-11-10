@@ -41,6 +41,20 @@ def _paths(of: dict, labels: List[str]) -> List[Tuple[str, str]]:
     return out
 
 
+def _size(path: str) -> int:
+    """the size of a dump once read: for a .gz, the uncompressed size of its trailer (modulo 4 GB, never less than the
+    file), not the compressed one (a 50 MB .gz of thread dumps is 500 MB to parse)"""
+    size = os.path.getsize(path)
+    if path.endswith(".gz") and size >= 18:
+        try:
+            with open(path, "rb") as fh:
+                fh.seek(-4, os.SEEK_END)
+                return max(size, int.from_bytes(fh.read(4), "little"))
+        except OSError:
+            pass
+    return size
+
+
 def _import_analyzer():
     if THREAD_ANALYZER not in sys.path:
         sys.path.insert(0, THREAD_ANALYZER)
@@ -75,7 +89,7 @@ def thread_dumps(of: Optional[dict], html_dir: Optional[str] = None, stem: str =
         if not paths:
             g["error"] = "the files are no longer on disk"
             continue
-        if sum(os.path.getsize(p) for p in paths) > MAX_INLINE_BYTES:
+        if sum(_size(p) for p in paths) > MAX_INLINE_BYTES:
             g["error"] = "too large to analyze inline: run the command"
             continue
         dumps = []
@@ -129,7 +143,7 @@ def thread_dumps(of: Optional[dict], html_dir: Optional[str] = None, stem: str =
                 with open(path, "w", encoding="utf-8") as fh:
                     fh.write(page)
                 g["report"] = path
-            except OSError as ex:
+            except Exception as ex:  # the page of a dump the analyzer does not expect: never break the log report for it
                 g["error"] = f"cannot write the thread report: {ex}"
     return out
 

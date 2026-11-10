@@ -4500,12 +4500,13 @@ subcommands:
       lines of the\nRust client. The known causes include the client ones (records
       not\ndelivered in time, producer buffer full, max.poll.interval.ms exceeded,\nwrong
       security.protocol, idle connection closed by the broker).\n\n\U0001F4C2 Folders
-      are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted in
-      a temporary folder, .gz files are decompressed on the\nfly, binary files are
-      skipped, and so are the copies of a file or of a\nCFK support bundle already
-      analyzed (an archive next to its extracted\nfolder). A JSON export of log events
-      (.json, .jsonl, .ndjson, also\ngzipped: AWS CloudWatch Logs Insights @timestamp/@message,
-      CloudWatch\nevents, Elasticsearch / OpenSearch hits, structured JSON logs with\nlevel/logger_name/message/stack_trace)
+      are scanned recursively. .zip, .tar, .tar.gz, .tgz,\n.tar.bz2, .tbz2, .tar.xz,
+      .txz and .7z (bsdtar or 7-Zip) files are\nextracted in a temporary folder, .gz
+      files are decompressed on the\nfly, binary files are skipped, and so are the
+      copies of a file or of a\nCFK support bundle already analyzed (an archive next
+      to its extracted\nfolder). A JSON export of log events (.json, .jsonl, .ndjson,
+      also\ngzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\nevents,
+      Elasticsearch / OpenSearch hits, structured JSON logs with\nlevel/logger_name/message/stack_trace)
       and a CSV export of log events\n(.csv, also gzipped: Kibana / OpenSearch Dashboards
       Discover, Splunk,\nDatadog, Grafana: one event per row, a cell holding the JSON
       log line of\nthe container is parsed) are converted back to log lines, oldest
@@ -4924,8 +4925,9 @@ subcommands:
         summary, findings, known_causes, root_causes, files, files_without_findings,
         coverage, configuration, timeline, connectors, comparison, trend, lifecycle,
         config_lint, other_files, thread_dumps, heap_dumps, cluster_layout, fixed_bugs,
-        task_workers, data_to_request, config_drift (default: all). For example --json-sections
-        summary,findings,root_causes"
+        task_workers, data_to_request, config_drift, harmless, redaction_summary,
+        kafka_streams, overview, cfk_bundles, cfk_comparison (default: all). For example
+        --json-sections summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT

@@ -730,7 +730,8 @@ timeline and the connectors as Markdown tables, ready for Zendesk or Jira. It is
 ```
 
 Passwords, JAAS configs, tokens, API keys (AWS, GCP, Azure `AccountKey` and SAS `sig`), credentials in URLs (JDBC,
-Oracle `user/password@`), PEM blocks, cookies, IPs (v4 and v6), hostnames, emails and LDAP DNs; the same placeholder
+Oracle `user/password@`), PEM blocks, cookies, IPs (v4 and v6), hostnames, emails, LDAP DNs and the host and realm of
+Kerberos principals (`kafka/<HOST-1>@<REALM-1>`); the same placeholder
 for a value everywhere (`<HOST-1>` in the digest, the report and the JSON), also on both sides of `--compare`. Best
 effort: review before sharing.
 

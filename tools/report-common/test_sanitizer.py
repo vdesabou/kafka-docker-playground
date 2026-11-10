@@ -267,6 +267,16 @@ def test_paths_names_and_java_versions_are_kept():
         check("base64", out == "value <BASE64-REDACTED>", f"{text!r} became {out!r}")
 
 
+def test_kerberos_principals():
+    """service/host@REALM: the host with its placeholder of everywhere else, the realm with its own, not an email"""
+    s = DataSanitizer()
+    out = s.sanitize_text("Authenticated kafka/broker1.acme.corp@ACME.CORP to broker1.acme.corp:9092 as user@acme.com; "
+                          "HTTP/mds.acme.corp@ACME.CORP, zookeeper/localhost@EXAMPLE.COM")
+    check("principal", out.startswith("Authenticated kafka/<HOST-1>@<REALM-1> to <HOST-1>:9092 as <EMAIL-1>"), out)
+    check("same realm", "HTTP/<HOST-2>@<REALM-1>" in out, out)
+    check("host without a dot kept", "zookeeper/localhost@<REALM-2>" in out, out)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

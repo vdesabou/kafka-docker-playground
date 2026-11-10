@@ -3780,7 +3780,7 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
                    + ", ".join(f"{c['connector']} {c['versions'][-1]} < {c['support']['minimum']}" for c in bad[:5])
                    + (" …" if len(bad) > 5 else "") + f" ({bad[0]['support']['doc']})")
     # 🧵 🔬 the JVM dumps of the input, right under the header: the thread dumps analyzed, the heap dumps to analyze
-    out += ["   " + x if not x.startswith("   ") else "   " + x for x in jvm_dumps_text(res)]
+    out += ["   " + x for x in jvm_dumps_text(res)]
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -4604,7 +4604,7 @@ def share_dialog_embed(text: str) -> str:
     return (text or "").replace("\\", "\\u005c").replace("<", "\\u003c")
 
 
-def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket: str = "") -> str:
+def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket: str = "", share_extra: Sequence[str] = ()) -> str:
     """📤 Share, in the header: the .zip of the report and its file pages (written next to it by analyze logs), the text
     summary to paste in Slack or a ticket, the path, an email with the summary; the sanitization state first"""
     # every < encoded, not only </: a log line with <!--<script> would put the parser in the double escaped state of a
@@ -4623,7 +4623,7 @@ def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket
                        "the report and its file pages: your colleague unzips it and opens the .html, 📄 and the line links keep working"),
                       "sc-primary")
                  + "<p class='sc-note'>No .zip next to the report? Its file pages are larger than 200 MB (a page holds a whole log "
-                 "file): <button type='button' class='sc-link' data-share='zipcmd'>📋 copy the zip command</button> and run it in a "
+                 f"file): <button type='button' class='sc-link' data-share='zipcmd' data-extra='{e(json.dumps(list(share_extra)))}'>📋 copy the zip command</button> and run it in a "
                  "terminal, or send the .html alone (everything but 📄 works).</p>")
                 if share_zip else
                 "<p class='sc-note'>📦 No .zip was written with this report: send the .html together with its "
@@ -4765,16 +4765,20 @@ document.addEventListener("DOMContentLoaded", function () {
     dlg.appendChild(box);
     const range = document.createRange(), sel = window.getSelection();
     range.selectNodeContents(box); sel.removeAllRanges(); sel.addRange(range);
-    try { document.execCommand("copy"); done.textContent = "✅ " + what + " copied to the clipboard"; }
-    catch (e) { done.textContent = "the copy failed: use 🎫 Copy for a ticket"; }
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+    done.textContent = copied ? "✅ " + what + " copied to the clipboard" : "the copy failed: use 🎫 Copy for a ticket";
     sel.removeAllRanges();
     box.remove();
   }
   function fallback(text, what) {
     const ta = document.createElement("textarea");
     ta.value = text; dlg.appendChild(ta); ta.select();
-    try { document.execCommand("copy"); done.textContent = "✅ " + what + " copied to the clipboard"; }
-    catch (e) { done.textContent = "select the text below and copy it"; return; }
+    // execCommand returns false when the copy is refused (it does not always throw): the text stays there to copy by hand
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+    if (!copied) { done.textContent = "select the text below and copy it"; return; }
+    done.textContent = "✅ " + what + " copied to the clipboard";
     ta.remove();
   }
   dlg.addEventListener("click", function (ev) {
@@ -4789,7 +4793,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const q = x => "'" + x.replace(/'/g, "'\\''") + "'";
     if (b.dataset.share === "zipcmd") {
       const zip = dlg.querySelector("a[download]").getAttribute("href");
-      copy("cd " + q(dir) + " && zip -qr " + q(zip) + " " + q(page) + " " + q(page.replace(/\\.html$/, "-files")), "the zip command");
+      // the pages it links to by their name too (thread reports, CFK pages): --share-extra of log_report.py
+      const extra = JSON.parse(b.dataset.extra || "[]").map(x => " " + q(x)).join("");
+      copy("cd " + q(dir) + " && zip -qr " + q(zip) + " " + q(page) + " " + q(page.replace(/\\.html$/, "-files")) + extra, "the zip command");
     }
     else if (b.dataset.share === "summary") copy(summary, "the summary");
     else if (b.dataset.share === "ticket") copy(embedded("pg-share-ticket"), "the summary for a ticket");
@@ -6908,6 +6914,9 @@ def dumps_verdict(res: dict, cls: str, text: str) -> Tuple[str, str]:
         first = re.split(r" \(|: (?=[A-Z(])", bad[0]["text"], maxsplit=1)[0]
         clauses.append(f"🗺️ cluster layout: {first[:110]}" + (f" (+{len(bad) - 1})" if len(bad) > 1 else "") + ".")
         cls = "danger" if any(f["severity"] == "CRITICAL" for f in bad) or cls == "danger" else "warn"
+    # "✅ No ERROR record…" followed by a critical finding of the dumps or of the layout: not a ✅ any more
+    if cls != "ok" and text.startswith("✅ "):
+        text = "🔎 " + text[2:]
     return cls, " ".join([text] + clauses)
 
 
@@ -7384,7 +7393,8 @@ def coverage_html(cov: dict, viewers: Optional[Dict[str, str]], unit: str = "fil
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
                 sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
-                html_sections: List[Tuple[str, str]] = (), share_zip: str = "", search_index: Optional[dict] = None) -> str:
+                html_sections: List[Tuple[str, str]] = (), share_zip: str = "", search_index: Optional[dict] = None,
+                share_extra: Sequence[str] = ()) -> str:
     """unit: what a label is (file, container, script); links: (label, url) in the header; sections: (title, text)
     shown as is after the findings (the last lines of a failed CI script...); viewers: label -> page of the file
     (log_viewer), the labels and line numbers link to it"""
@@ -7591,7 +7601,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body.append(SECTION_TOGGLE)
     body.append(KPI_LINKS)
     sanitized = any(t.startswith("🔒") for t, _ in sections)
-    body.append(share_html(text_summary(res, []), share_zip, sanitized, title, ticket_markdown(res, title, levels, unit)))
+    body.append(share_html(text_summary(res, []), share_zip, sanitized, title, ticket_markdown(res, title, levels, unit), share_extra))
     bundles = res.get("_cfk_bundles") or []
     meta = [f"🕐 {e(span)}", f"🎚️ {e(levels)}"]
     if bundles:
@@ -7673,6 +7683,12 @@ def main() -> int:
     ap.add_argument("--compare", metavar="JSON", action="append", default=[],
                     help="the JSON of analyze logs of another input, to compare with (repeatable, oldest first: a trend)")
     ap.add_argument("--ticket-out", metavar="PATH", help="also write the summary for a ticket (Markdown, sanitized) there")
+    ap.add_argument("--analysis-cache", metavar="JSON",
+                    help="the thread dumps, heap dumps and cluster layout of the input: written by the first run, read by "
+                         "the next ones on the same input (analyze logs runs this script 2 to 4 times)")
+    ap.add_argument("--thread-reports", metavar="HTML",
+                    help="the HTML report the full thread reports go next to (<stem>-thread-dumps.html), for a run "
+                         "without --html-out (the summary, written before the report)")
     ap.add_argument("--sanitize-state", metavar="JSON",
                     help="the report is sanitized (--sanitize of analyze logs): the state file of tools/report-common/"
                          "sanitizer.py (same placeholders as the records). The thread dumps are sanitized with it, and "
@@ -7697,6 +7713,9 @@ def main() -> int:
     ap.add_argument("--html-section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
                     help="HTML fragment written by another playground tool (the 🌊 Kafka Streams view of "
                          "tools/streams-analyzer), shown after the findings and the text sections")
+    ap.add_argument("--share-extra", metavar="NAME", action="append", default=[],
+                    help="a page next to the report that it links to by its name (thread report, CFK pages): in the zip "
+                         "command of 📤 Share (repeatable)")
     ap.add_argument("--share-zip", metavar="NAME", default="",
                     help="name of the .zip of the report and its file pages, next to it: the 📤 Share panel links to it")
     ap.add_argument("--sources", metavar="FILE",
@@ -7776,15 +7795,30 @@ def main() -> int:
             print(f"⚠️ --other-files: cannot read {args.other_files}: {ex}", file=sys.stderr)
     # 🧵 the thread dumps of the input analyzed right away (the full thread report next to the HTML report), each dump on
     # the timeline; 🔬 the heap dumps listed with their command (MAT is not run here)
-    if res.get("other_files"):
-        stem = re.sub(r"(?:-log-report)?\.html$", "", os.path.basename(args.html_out)) if args.html_out else "report"
+    # --analysis-cache: computed by the first run of analyze logs (the summary), read by the next ones (--show-config, the
+    # HTML report): up to 512 MB of thread dumps are analyzed once. --thread-reports: the report the full thread reports go
+    # next to, given to every run (the summary writes them, the HTML report links them)
+    cached = None
+    if res.get("other_files") and args.analysis_cache and os.path.isfile(args.analysis_cache):
+        try:
+            with open(args.analysis_cache, encoding="utf-8") as fh:
+                cached = json.load(fh)
+        except (OSError, ValueError):
+            cached = None
+    if cached:
+        for key in ("thread_dumps", "heap_dumps", "cluster_layout"):
+            if cached.get(key) is not None:
+                res[key] = cached[key]
+    elif res.get("other_files"):
+        report_html = args.html_out or args.thread_reports
+        stem = re.sub(r"(?:-log-report)?\.html$", "", os.path.basename(report_html)) if report_html else "report"
         # sanitized: no full thread report (raw thread names, stacks), the summary of each dump through the sanitizer
-        res["thread_dumps"] = jvm_dumps.thread_dumps(res["other_files"], os.path.dirname(os.path.abspath(args.html_out))
-                                                     if args.html_out and not args.sanitize_state else None, stem)
+        res["thread_dumps"] = jvm_dumps.thread_dumps(res["other_files"], os.path.dirname(os.path.abspath(report_html))
+                                                     if report_html and not args.sanitize_state else None, stem)
         if args.sanitize_state:
             res["thread_dumps"] = sanitized_dicts(res["thread_dumps"], args.sanitize_state)
             for g in res["thread_dumps"]:
-                if not g.get("error") and args.html_out:
+                if not g.get("error") and report_html:
                     g["no_report"] = "--sanitize: it holds the raw thread names and stacks"
         res["heap_dumps"] = jvm_dumps.heap_dumps(res["other_files"])
         # 🗺️ 💽 the kafka-topics --describe and kafka-log-dirs outputs of the input
@@ -7799,6 +7833,14 @@ def main() -> int:
                 res["cluster_layout"] = cluster_layout.analyze(layout_files)
             except Exception as ex:  # an output the parser does not expect: never break the log report for it
                 print(f"⚠️ cluster layout: {ex}", file=sys.stderr)
+        if args.analysis_cache:
+            try:
+                with open(args.analysis_cache, "w", encoding="utf-8") as fh:
+                    json.dump({k: res.get(k) for k in ("thread_dumps", "heap_dumps", "cluster_layout")}, fh)
+            except OSError:
+                pass
+    # each thread dump on the timeline (also when the analysis comes from --analysis-cache)
+    if res.get("thread_dumps"):
         dump_events = [{"time": x["time"], "kind": "lifecycle", "level": None, "text": x["text"], "file": x["file"],
                         "line": x["line"], "connector": None, "count": None, "record": None}
                        for x in jvm_dumps.timeline_events(res["thread_dumps"])]
@@ -7865,7 +7907,7 @@ def main() -> int:
                         bool((res["summary"].get("time_zone") or {}).get("converted_to_utc")))
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
                                  [tuple(l) for l in args.link], sections, viewers, html_sections, args.share_zip,
-                                 search_index))
+                                 search_index, share_extra=args.share_extra))
         os.replace(tmp_out, args.html_out)
     return 0
 

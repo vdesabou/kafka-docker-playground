@@ -269,7 +269,9 @@ def search_html(index: Optional[dict]) -> str:
         left_out = (f"<details class='ls-help'><summary>⚠️ {len(skipped)} file(s) not searched, or only in part (budget "
                     f"{index['max_mb']} MB: PLAYGROUND_LOG_SEARCH_MAX_MB=… playground analyze logs … for more)</summary><ul>{items}"
                     + (f"<li>… {len(skipped) - 50} more</li>" if len(skipped) > 50 else "") + "</ul></details>")
-    data = json.dumps(index, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    # every < escaped (valid JSON), not only </: a file name of a bundle with <!--<script> would put the parser in the
+    # double escaped state of the script element, and the rest of the page would become its text
+    data = json.dumps(index, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
     return (SEARCH_CSS + head
             + f"<p class='legend'>Every line of {len(index['files'])} file(s), {index['lines']:,} lines ({_mb(index['bytes'])}, "
             f"{_mb(index['stored'])} compressed next to the report), INFO and DEBUG included, not only the ERROR / WARN records: "
