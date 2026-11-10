@@ -91,12 +91,15 @@ jobs:
 
       # headless Chrome takes the screenshots: its sandbox needs unprivileged user namespaces, which the AppArmor profile
       # of the Ubuntu runners restricts; the emojis of the reports need a color emoji font
-      - name: Install the screenshot dependencies
+      - name: Install the dependencies
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           sudo apt-get update -qq
           sudo apt-get install -y -qq fonts-noto-color-emoji > /dev/null
           google-chrome --version
+          # playground cloud-resources ccloud costs-history checks for the confluent CLI, even with --sample (no call is made)
+          curl -sL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin > /dev/null
+          confluent version | head -2
 
       # every report of the gallery from the samples (analyze logs, thread-dump, gc-logs, heap-dump with Eclipse MAT in
       # Docker, flight-recorder, tcp-dump, oracle-xstream-report, jscissors, CFK bundles, streams status, cloud costs); the
