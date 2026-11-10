@@ -1133,7 +1133,18 @@ def main():
             json.dump(a, f)
     if args.html_out:
         with open(args.html_out, "w") as f:
-            f.write((report_html.brand_page(standalone_html(a, args.recording_link)) if report_html else standalone_html(a, args.recording_link)))
+            page = standalone_html(a, args.recording_link)
+            if report_html:
+                # 📤 Share: the digest of the terminal as the summary, the findings (title, text, next step) for a ticket
+                sd = getattr(report_html, "share_dialog", None)
+                ticket = (sd.ticket_markdown("🛩️ Flight recording analysis" + (f" — {a['connector_class']}" if a.get("connector_class") else ""),
+                                             html.unescape(verdict_html(a).split(">", 1)[1].rsplit("<", 1)[0]),
+                                             [(f["severity"], f["title"] + " " + f["text"] + (f" → {f['next']}" if f.get("next") else ""))
+                                              for f in a["findings"]], command="playground analyze flight-recorder")
+                          if sd else None)
+                page = report_html.brand_page(page, share_summary=text_report(a, args.top), share_ticket=ticket,
+                                              command="playground analyze flight-recorder")
+            f.write(page)
     if args.json:
         print(json.dumps(a, indent=2))
     else:

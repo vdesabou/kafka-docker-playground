@@ -918,7 +918,9 @@ def main() -> int:
         print(text_report(res, args.title, top))
     if args.html_out:
         with open(args.html_out, "w", encoding="utf-8") as fh:
-            fh.write(html_report(res, args.title))
+            # 📤 Share: the digest of the terminal as the summary, the findings of the page for a ticket
+            fh.write(report_html.with_share(html_report(res, args.title), summary=text_report(res, args.title, top),
+                                            command="playground analyze tcp-dump"))
     return 0
 
 

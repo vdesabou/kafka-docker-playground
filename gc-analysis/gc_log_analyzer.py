@@ -1510,7 +1510,10 @@ def main() -> int:
         out = args.html_out or (os.path.splitext(files[0])[0] + "-gc-report.html")
         title = os.path.basename(files[0]) + (f" (+{len(files) - 1} files)" if len(files) > 1 else "")
         with open(out, "w", encoding="utf-8") as fh:
-            fh.write(html_report(stats, runs_summary, warnings, run, top, title))
+            # 📤 Share: the digest of the terminal as the summary, the recommendations of the page for a ticket
+            fh.write(report_html.with_share(html_report(stats, runs_summary, warnings, run, top, title),
+                                            summary=text_report(stats, runs_summary, warnings, top),
+                                            command="playground analyze gc-logs"))
         print(f"HTML report: {out}", file=sys.stderr)
 
     if "error" in stats:

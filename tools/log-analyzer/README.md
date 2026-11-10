@@ -121,6 +121,44 @@ path, kind, bytes, kept) and `commands[]`, one per kind and folder for `gc-logs`
 (`--sources`), moved otherwise, so the commands still work after the tmp dir is deleted. `analyze logs` keeps them in
 `<stem>-other-files/` next to the report; not with `--json` (the command then says to extract the archive first).
 `log_report.py --other-files <json>` adds the 🧰 section to the summary, the HTML report and `.other_files` of `--json`.
+Each file also has `read_path`, where it is in this run (the tmp dir is still there when `log_report.py` runs, also with
+`--json`): the inline analyzers below read it when no copy is kept.
+
+### 🧵 🔬 JVM dumps analyzed in the report (`jvm_dumps.py`)
+
+`log_report.py` analyzes the `thread_dump` commands of the triage right away, in its process, with
+`tools/thread-analyzer/thread_dump_analyzer.py` (imported: `parse_file`, `analyze`, `html_report`; files over 512 MB are
+left to the command): `.thread_dumps` (one group per command: dumps, findings, CPU between the dumps, deadlocks, stuck
+threads, Connect task threads), the 🧵 🔬 **JVM dumps of the input** card right after the verdict, the worst finding in
+the verdict, a `lifecycle` event per dump on the 🗓️ timeline (the time the JVM printed, without time zone), and the full
+thread report `<stem>-thread-dumps.html` next to the report (in the 📤 `.zip`). The heap dumps are only listed
+(`.heap_dumps`, with their `playground analyze heap-dump` command, in the same card and the verdict): MAT needs Docker
+and about as much memory as the dump. The `kdp-analyze-logs` image copies `tools/thread-analyzer`.
+
+### 🗺️ Cluster layout (`cluster_layout.py`)
+
+The triage recognizes, by content, the output of `kafka-topics --describe` (`Topic: … Partition: … Leader: … Replicas:`)
+and of `kafka-log-dirs --describe` (the JSON with `"brokers"` and `"logDirs"`): kinds `topic_describe` and `log_dirs`,
+`inline` (no command, not in 🧰). `cluster_layout.py` reads them: replicas, leaders, preferred leaders per broker,
+partitions led by a non-preferred replica (above `leader.imbalance.per.broker.percentage`, 10%), leader and partition
+skew (25% above the average and 5 more), offline / under-replicated / under `min.insync.replicas` partitions (from
+`Configs:`), topics with replication factor 1, a broker in no ISR; the disk per broker and log dir, a log dir with an
+`error`, the disk skew (50% above the average and 1 GB more), biggest partitions and topics, `isFuture` replicas.
+`.cluster_layout` of `--json`, 🗺️ in the summary, the report and the summary for a ticket. Alone:
+`python3 -I cluster_layout.py topics.txt log-dirs.txt`.
+
+### 🐢 Broker signals
+
+The digest (`summarize_log_errors`) notes INFO / WARN lines of a broker under pressure as `@@PGEVT@@` events, 300 per kind
+and file, keyed by broker: `isr_shrink` / `isr_expand` (`[Partition orders-0 broker=1] Shrinking ISR from 1,2,3 to
+1,3`), `replica_fetch_error` (`Error sending fetch request`, `Error in response for fetch request`: the leader it fetches
+from), `request_timeout` (`Disconnecting from node 2 due to request timeout`: the broker that did not answer),
+`log_cleaner` (`kafka-log-cleaner-thread-0]: Error due to`, `uncleanable`), `quota_throttle` (librdkafka `|THROTTLE|`,
+`ThrottlingQuotaExceeded`), `response_dropped` (`no open connection, connection id`). `log_report.py` counts them in
+`.lifecycle` (`BROKER_KINDS`, a line without broker id: `broker (<file>)`), with the partitions or peers they happen to
+most as reason and a 🌀 storm as the rebalances, prints them in their own 🐢 block, groups them in bursts on the
+timeline (`broker_bursts`: less than 5 min apart, from 1 ISR shrink or log cleaner failure, 3 of the others, 20 per kind),
+and asks for the JMX metrics of the brokers in 📥.
 
 ## Comparison with another input
 
@@ -535,6 +573,8 @@ Real logs of `connect/connect-cdc-xstream-oracle19-source`, CP 8.3.2, Oracle XSt
 | `connect_task_failure` | `samples/connect-oracle-xstream-task-failure.log` | 5 minutes of Connect worker log (10:01:03 → 10:05:55): a connector created with a wrong password (`ORA-01017`), one with an unknown outbound server, then a task failing after the outbound server was stopped with `DBMS_XSTREAM_ADM.STOP_OUTBOUND` |
 | `connect_many_connectors` | `samples/connect-many-connectors.log` | written by hand in the formats of Connect (2026-11-06, 14 min, CP 8.1.2): 8 connectors on one worker, the JDBC Oracle sink killed on `ORA-00942`, the JDBC PostgreSQL source refused, S3 `Access Denied` with consumer rejoins, Elasticsearch malformed documents, the Debezium MySQL binlog purged (task killed), HTTP 503 retries exhausted (task killed), ServiceNow 429, a custom `com.acme` connector; 3 of them below the minimum version supported on CP 8.1: the 🔌 cards with their icons and 🛟 support, the ⛔ banner |
 | `support_bundle` | `samples/support-bundle.zip` | that log and the broker log of the same period (gzipped), as a customer would attach them: shows the archive extraction and that only files with findings are listed |
+| `broker_pressure` | `samples/broker-pressure/` | written by hand in the formats of a KRaft broker (CP 8.1, 2026-11-09, 1 h): the `server.log` of 3 brokers while broker 3 falls behind (40 ISR shrinks on brokers 1 and 2, fetch errors and request timeouts of follower 3, responses to clients already gone, the log cleaner of broker 2 dying on a segment too large), with `kafka-topics-describe.txt` (4 topics, broker 2 leading 4 of its 10 preferred partitions, 3 under-replicated, a topic with replication factor 1) and `kafka-log-dirs.txt` (broker 1 using 18 GB, a second log dir of broker 3 offline): the 🐢 broker signals and the 🗺️ cluster layout |
+| `jvm_dumps` | `samples/connect-oracle-xstream-task-failure.log`, `../thread-analyzer/samples/jdk21-scenario-{1,2,3}.txt`, `../heap-analyzer/samples/session-cache-leak-1.hprof.gz` | the Connect log of `connect_task_failure` with the 3 thread dumps of the thread analyzer (a deadlock, 8 threads on one lock, a stuck task thread, a thread using a whole CPU, a growing pool) and a heap dump of the heap analyzer (not copied): the 🧵 🔬 JVM dumps card |
 | `kafka_streams` | `samples/kafka-streams/` | the logs of the 3 instances of `other/kafka-streams/serde-errors.sh` (Kafka Streams 4.4.0): a demo application in ERROR after a poison pill, its dead stream thread, deserialization and production handler errors: the 🌊 Kafka Streams section of the report, and the Kafka Streams known causes (also `playground streams status --sample kafka_streams`) |
 
 | `kafka_clients` | `samples/kafka-clients/` | real logs of the non-Java clients of `other/client-*` (2026-11-05, librdkafka 2.16.0, confluent-kafka-python 2.16.1, confluent-kafka-go 2.16.1, Confluent.Kafka 2.16.0, @confluentinc/kafka-javascript 1.11.0, kafkajs 2.2.4, Rust confluent-kafka): each client image run alone (`docker run --add-host broker:127.0.0.1`) against a port that refuses connections, a broker name that does not resolve (Go), with `message.timeout.ms=8000`, then with an unknown property (`bogus.property=1`). `synthetic-crashes/` are hand-written in the documented formats of the crashes the clients did not produce: .NET console logger and unhandled exception with an inner exception, Go panic, Rust panic, uncaught Node.js error with `[cause]`, chained Python tracebacks after a `logging.exception()` |

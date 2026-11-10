@@ -35,11 +35,16 @@ KINDS = {
     "flight_recording": ("🛩️", "flight recording", "playground analyze flight-recorder", False),
     "network_capture": ("🦈", "network capture", "playground analyze tcp-dump", False),
     "xstream_report": ("🅾️", "Oracle XStream diagnostics report", "playground analyze oracle-xstream-report", True),
+    # read by analyze logs itself (cluster_layout.py: partitions and leaders per broker, disk per log dir): no command
+    "topic_describe": ("🗺️", "kafka-topics --describe output", "", True),
+    "log_dirs": ("💽", "kafka-log-dirs --describe output", "", True),
     # no analyzer reads them: what to do instead (command_of)
     "screenshot": ("🖼️", "screenshot / picture (not analyzed)", "open", True),
     "document": ("📄", "document (not analyzed)", "", False),
 }
 ORDER = list(KINDS)
+# the kinds analyze logs reads itself (🗺️ Cluster layout of the report): not listed in 🧰 Other files
+INLINE = ("topic_describe", "log_dirs")
 
 SNIFF_BYTES = 64 * 1024
 # a thread dump printed by kill -3 lands anywhere in the stdout of a container: the whole file is searched (mmap, a few
@@ -52,6 +57,10 @@ GC_NAME = re.compile(r"(?:^|[-_.])gc(?:[-_.]|$)|gc\.log|garbage", re.I)
 # legacy -XX:+PrintGCDetails: "[GC (Allocation Failure)", "[Full GC", "[GC pause (G1 Evacuation Pause)"
 GC_CONTENT = re.compile(rb"\]\[gc[\],]|\[gc,[a-z]+ *\]|\bGC\(\d+\) (?:Pause|Concurrent)|\[(?:Full )?GC \(|\[GC pause \(|\[Full GC\b")
 THREAD_DUMP = (b"Full thread dump ", b"java.lang.Thread.State: ")
+# kafka-topics --describe: "\tTopic: orders\tPartition: 0\tLeader: 1\tReplicas: 1,2,3\tIsr: 1,2,3" (TopicId with recent versions)
+TOPIC_DESCRIBE = re.compile(rb"(?m)^\s*Topic: *\S+\s+(?:TopicId: *\S+\s+)?Partition: *\d+\s+Leader: *\S+\s+Replicas: ")
+# kafka-log-dirs --describe: {"brokers":[{"broker":1,"logDirs":[{"logDir":"/var/lib/kafka/data","error":null,"partitions":[…
+LOG_DIRS = (b'"brokers"', b'"logDirs"')
 PCAP_MAGIC = (b"\xd4\xc3\xb2\xa1", b"\xa1\xb2\xc3\xd4", b"\x4d\x3c\xb2\xa1", b"\xa1\xb2\x3c\x4d", b"\x0a\x0d\x0d\x0a")
 
 
@@ -112,6 +121,10 @@ def kind_of(label: str, path: str) -> Optional[str]:
         return None
     if name.endswith((".html", ".htm")):
         return "xstream_report" if (b"orclcdc" in data.lower() or "orclcdc" in name) else None
+    if TOPIC_DESCRIBE.search(data):
+        return "topic_describe"
+    if all(n in data for n in LOG_DIRS):
+        return "log_dirs"
     if GC_CONTENT.search(data) and (GC_NAME.search(name) or len(GC_CONTENT.findall(data)) >= 5):
         return "gc_log"
     if contains(path, THREAD_DUMP):
@@ -158,6 +171,13 @@ def triage(walked: str, keep_dir: Optional[str], tmp_dir: Optional[str], linked_
             if not kind:
                 continue
             entry = {"label": label, "path": path, "kind": kind, "bytes": os.path.getsize(path), "kept": False}
+            if kind in INLINE:
+                # read by analyze logs in this run (from the tmp dir when extracted): not kept, no command
+                entry["inline"] = True
+                files.append(entry)
+                continue
+            # where analyze logs reads it in this run (thread dumps analyzed inline): the tmp dir is still there
+            entry["read_path"] = path
             if tmp_dir and path.startswith(tmp_dir.rstrip("/") + "/"):
                 if keep_dir:
                     try:
@@ -182,7 +202,9 @@ def triage(walked: str, keep_dir: Optional[str], tmp_dir: Optional[str], linked_
         icon, what, cmd, _ = KINDS[kind]
         items.sort(key=lambda f: f["label"])
         paths = [f["path"] for f in items]
-        if kind in ("screenshot", "document"):
+        if kind in INLINE:
+            command = ""
+        elif kind in ("screenshot", "document"):
             command = command_of(kind, items, paths)
         elif all(paths):
             command = cmd + "".join(f" -f {shlex.quote(p)}" for p in paths[:20])
@@ -190,7 +212,7 @@ def triage(walked: str, keep_dir: Optional[str], tmp_dir: Optional[str], linked_
             command = f"{cmd} -f <extract {items[0]['label'].split(':', 1)[0]} first>"
         commands.append({"kind": kind, "icon": icon, "what": what,
                          "folder": folder if KINDS[kind][3] else os.path.dirname(folder),
-                         "files": [f["label"] for f in items], "command": command})
+                         "files": [f["label"] for f in items], "command": command, **({"inline": True} if kind in INLINE else {})})
     return {"files": files, "commands": commands}
 
 

@@ -53,7 +53,7 @@
   repeatable: true
   conflicts: [--from-containers]
   arg: sample
-  allowed: [connect_task_failure, connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after]
+  allowed: [connect_task_failure, connect_many_connectors, support_bundle, broker_pressure, jvm_dumps, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after]
   help: |-
     🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples
 
@@ -64,6 +64,14 @@
                              Debezium MySQL binlog purged, HTTP 503, ServiceNow 429, a custom connector; 3 of them
                              below the minimum version supported on CP 8.1 (🛟), icons, connector cards
       support_bundle         .zip with that log and a gzipped broker log
+      broker_pressure        logs of 3 brokers while broker 3 falls behind (ISR shrink storm, fetch errors and
+                             request timeouts of its followers, log cleaner died, responses to clients already
+                             gone) with their kafka-topics --describe and kafka-log-dirs outputs: 🐢 broker
+                             signals on the timeline, 🗺️ cluster layout (leader skew, under-replicated
+                             partitions, a log dir offline, disk skew)
+      jvm_dumps              that Connect log with 3 thread dumps of a JVM (deadlock, contention, stuck task,
+                             CPU-hungry thread, growing pool) and a heap dump: 🧵 thread dumps analyzed in the
+                             report, 🔬 the heap dump command at the top
       kafka_streams          logs of the 3 instances of other/kafka-streams (serde-errors.sh): an application in
                              ERROR after a poison pill, its dead stream thread, deserialization and production
                              handler errors, the 🌊 Kafka Streams section (state, rebalances, tasks, timeline)
@@ -161,7 +169,7 @@
   required: false
   arg: sections
   help: |-
-    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint, other_files, fixed_bugs, task_workers, data_to_request, config_drift (default: all). For example --json-sections summary,findings,root_causes
+    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint, other_files, thread_dumps, heap_dumps, cluster_layout, fixed_bugs, task_workers, data_to_request, config_drift (default: all). For example --json-sections summary,findings,root_causes
 - long: --component
   required: false
   repeatable: true

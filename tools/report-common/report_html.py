@@ -23,6 +23,11 @@ that tints the gradient (red, amber, green: TINTS maps the verdict classes of ea
 and the reports with a <header> of their own (benchmark, flight recorder, SMT test, CFK bundle) pass their page through
 brand_page() (banner_css(): the same gradients). style() also brings the polish of every report (POLISH_CSS: rounder
 cards, an accent under the titles; PROGRESS_SCRIPT: a reading-progress bar at the top of the window).
+
+📤 Share (share_dialog.py) on all of them: page() and brand_page() add it (the summary and the Markdown for a ticket read
+from the verdict and the findings of the page, unless the generator passes its own: share_summary / share_ticket), the
+older reports call with_share() with the digest they print in the terminal. Not on the analyze logs report, which has a
+dialog of its own (its .zip, the sanitization state).
 """
 
 import html
@@ -32,6 +37,11 @@ import os
 import re
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
+
+try:  # 📤 Share (share_dialog.py, next to this file): a report renders without it
+    import share_dialog
+except ImportError:  # pragma: no cover
+    share_dialog = None
 
 SEVERITY_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "OK"]
 SEVERITY_ICONS = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢", "INFO": "ℹ️", "OK": "✅"}
@@ -708,10 +718,23 @@ TINTS = {"danger": "danger", "critical": "danger", "bad": "danger", "error": "da
          "high": "warn", "medium": "warn", "ok": "ok", "good": "ok", "success": "ok", "low": "ok", "info": "ok"}
 
 
-def brand_page(page_html: str) -> str:
+def with_share(page_html: str, title: Optional[str] = None, summary: Optional[str] = None, ticket: Optional[str] = None,
+               command: str = "") -> str:
+    """the page with the 📤 Share dialog of share_dialog.py (download it, copy the summary, Markdown for a ticket / Slack /
+    rich text, the path, an email): summary = the digest the command prints, ticket = Markdown; None = read from the
+    verdict and the findings of the page. The page as it is without share_dialog.py"""
+    if share_dialog is None:
+        return page_html
+    return share_dialog.add_share(page_html, title, summary, ticket, command)
+
+
+def brand_page(page_html: str, share: bool = True, share_summary: Optional[str] = None, share_ticket: Optional[str] = None,
+               command: str = "") -> str:
     """a report with a <header> of its own (jfr, benchmark, smt tester, cfk-analysis): the gradient banner (banner_css), the
-    🐳 badge at the top of the header, tinted from the class of its first verdict (TINTS); the page as it is without a
-    <header>"""
+    🐳 badge at the top of the header, tinted from the class of its first verdict (TINTS), and the 📤 Share dialog
+    (with_share; share=False: without); the page as it is (with its Share dialog) without a <header>"""
+    if share:
+        page_html = with_share(page_html, None, share_summary, share_ticket, command)
     m = re.search(r"<header(\s[^>]*)?>", page_html)
     if not m or "</head>" not in page_html:
         return page_html
@@ -751,18 +774,25 @@ def header_html(h1: str, meta: List[str], status: Tuple[str, str] = ("", ""), su
             + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>" + HEADER_CSS)
 
 
-def page(title: str, h1: str, meta: List[str], body: str, footer: str) -> str:
+def page(title: str, h1: str, meta: List[str], body: str, footer: str, share: bool = True,
+         share_summary: Optional[str] = None, share_ticket: Optional[str] = None) -> str:
     """meta: HTML snippets of the header line (escape them with e()); h1: the title (trusted HTML), in the header of
-    header_html() with the status pill of the verdict of the body, or a whole header already (.lr-title: the log report)"""
+    header_html() with the status pill of the verdict of the body, or a whole header already (.lr-title: the log report,
+    which has a Share dialog of its own). share: the 📤 Share dialog (with_share(): share_summary / share_ticket, else
+    the verdict and the findings of the body; the footer as the command), not on the log report"""
     meta = meta + [f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
     if "lr-title" in h1:
         header = (f"<div class='header'><h1>{h1}</h1><div class='header-meta'>"
                   + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>")
     else:
         header = header_html(h1, meta, status_of(body))
-    return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
-            f"<title>{e(title)}</title>{HTML_CSS}</head><body><div class='page'>"
-            + header + body + f"<div class='footer'>{footer}</div></div></body></html>")
+    out = ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+           f"<title>{e(title)}</title>{HTML_CSS}</head><body><div class='page'>"
+           + header + body + f"<div class='footer'>{footer}</div></div></body></html>")
+    if share and "lr-title" not in h1:
+        command = html.unescape(re.sub(r"<[^>]+>", "", footer)).strip()
+        out = with_share(out, title, share_summary, share_ticket, command if command.startswith("playground") else "")
+    return out
 
 
 # connector config keys holding a secret, and the ones that only look like it

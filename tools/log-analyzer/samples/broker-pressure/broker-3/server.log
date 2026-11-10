@@ -1,0 +1,72 @@
+[2026-11-09 14:00:00,000] INFO [BrokerServer id=3] Transition from STARTING to STARTED (kafka.server.BrokerServer)
+[2026-11-09 14:00:01,037] INFO Kafka version: 8.1.0-ce (org.apache.kafka.common.utils.AppInfoParser)
+[2026-11-09 14:20:32,584] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=88770, epoch=100) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:20:32,584] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:20:35,695] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Disconnecting from node 2 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:22:19,543] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=88772, epoch=102) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:22:19,543] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:24:50,130] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=88774, epoch=104) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:24:50,130] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:25:30,610] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:26:15,275] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=88776, epoch=106) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:26:15,275] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:28:24,048] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=88778, epoch=108) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:28:24,048] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:30:22,414] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887710, epoch=110) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:30:22,414] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:30:25,525] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:32:09,373] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887712, epoch=112) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:32:09,373] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:34:40,960] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887714, epoch=114) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:34:40,960] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:35:20,440] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:36:05,105] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887716, epoch=116) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:36:05,105] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:38:14,878] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887718, epoch=118) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:38:14,878] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:40:12,244] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887720, epoch=120) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:40:12,244] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:40:15,355] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Disconnecting from node 2 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:41:59,203] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887722, epoch=122) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:41:59,203] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:43:20,200] ERROR [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error for partition orders-4 at offset 1450 (kafka.server.ReplicaFetcherThread)
+org.apache.kafka.common.errors.NotLeaderOrFollowerException: For requests intended only for the leader, this error indicates that the broker is not the current leader.
+[2026-11-09 14:44:30,790] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887724, epoch=124) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:44:30,790] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:45:10,270] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:45:55,935] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887726, epoch=126) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:45:55,935] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:48:04,708] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887728, epoch=128) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:48:04,708] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:50:02,074] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887730, epoch=130) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:50:02,074] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:50:05,185] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:51:49,033] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887732, epoch=132) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:51:49,033] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:54:20,620] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887734, epoch=134) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:54:20,620] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:55:00,100] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-09 14:55:45,765] INFO [ReplicaFetcher replicaId=3, leaderId=2, fetcherId=0] Error sending fetch request (sessionId=887736, epoch=136) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:55:45,765] java.io.IOException: Connection to 2 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)
+[2026-11-09 14:57:54,538] INFO [ReplicaFetcher replicaId=3, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=887738, epoch=138) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-09 14:57:54,538] java.io.IOException: Connection to 1 was disconnected before the response was read
+	at org.apache.kafka.clients.NetworkClientUtils.sendAndReceive(NetworkClientUtils.java:99)

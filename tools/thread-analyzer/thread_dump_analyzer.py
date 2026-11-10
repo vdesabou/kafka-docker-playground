@@ -852,7 +852,9 @@ def main() -> int:
     if args.html_out:
         title = os.path.basename(files[0]) + (f" (+{len(files) - 1} files)" if len(files) > 1 else "")
         with open(args.html_out, "w", encoding="utf-8") as fh:
-            fh.write(html_report(res, title))
+            # 📤 Share: the digest of the terminal as the summary, the findings of the page for a ticket
+            fh.write(report_html.with_share(html_report(res, title), summary=text_report(res, max(1, args.top)),
+                                            command="playground analyze thread-dump"))
         print(f"HTML report: {args.html_out}", file=sys.stderr)
     return 0
 

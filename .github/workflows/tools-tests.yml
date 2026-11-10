@@ -9,6 +9,7 @@ on:
       - "tools/report-common/**"
       - "tools/log-analyzer/**"
       - "tools/streams-analyzer/**"
+      - "tools/thread-analyzer/**"
       - "cfk-analysis/**"
       - "scripts/cli/src/lib/cli_function.sh"
       - ".github/workflows/tools-tests.yml"
@@ -19,6 +20,7 @@ on:
       - "tools/report-common/**"
       - "tools/log-analyzer/**"
       - "tools/streams-analyzer/**"
+      - "tools/thread-analyzer/**"
       - "cfk-analysis/**"
       - "scripts/cli/src/lib/cli_function.sh"
       - ".github/workflows/tools-tests.yml"
@@ -41,6 +43,9 @@ jobs:
       - name: Sanitizer and known causes (leaks, over-redaction, speed on adversarial lines)
         run: python3 -I tools/report-common/test_sanitizer.py
 
+      - name: Share dialog of the HTML reports
+        run: python3 -I tools/report-common/test_share_dialog.py
+
       - name: Exports of log events, overview, progress
         run: python3 -I tools/log-analyzer/test_log_analyzer.py
 
@@ -50,8 +55,9 @@ jobs:
       - name: Python 3.8, the oldest supported version
         run: |
           docker run --rm -v "$PWD":/src:ro -w /src -e PYTHONPYCACHEPREFIX=/tmp/pyc python:3.8-slim sh -ec '
-            python -m compileall -q tools/log-analyzer tools/report-common tools/streams-analyzer cfk-analysis
+            python -m compileall -q tools/log-analyzer tools/report-common tools/streams-analyzer tools/thread-analyzer cfk-analysis
             python -I tools/report-common/test_sanitizer.py
+            python -I tools/report-common/test_share_dialog.py
             python -I tools/log-analyzer/test_log_analyzer.py
           '
 
