@@ -13,6 +13,10 @@ report and click around: this is what you get on your own data.
 > reports before running it on real data. `playground analyze <command> --help` lists the samples.
 
 > [!TIP]
+> 📤 Every report has a **Share** button (or the S key): download the self-contained `.html`, copy its summary, copy it
+> for a ticket, for Slack or as rich text, copy its path, or email the summary.
+
+> [!TIP]
 > 🔍 The charts over time zoom: drag over a range to zoom on it, ◀ ▶ to move the window, double-click to zoom out.
 > Occurrences of the log analysis, arrivals in the dead letter queue and jscissors calls are counted again for the
 > zoomed range (a burst of a few seconds in a 3-day bundle shows per second). The GC pause and heap charts zoom together,
@@ -76,6 +80,22 @@ A customer sends a support bundle, a CFK bundle, a CloudWatch / Kibana / Splunk 
       <h3><a href="reports/logs-compare.html" target="_blank" rel="noopener">🔁 Did the fix work?</a></h3>
       <p>The day after a fix compared with the day before: what is new, gone, growing or shrinking, per hour when the periods differ.</p>
       <p><code>playground analyze logs --sample compare_fix</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-jvm-dumps.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-jvm-dumps.png" alt="🧵 Thread dumps and a heap dump in the bundle" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-jvm-dumps.html" target="_blank" rel="noopener">🧵 Thread dumps and a heap dump in the bundle</a></h3>
+      <p>The thread dumps sent with the logs analyzed in the report, right after the verdict: the deadlock, the lock everyone waits for, the stuck task thread, the thread burning a CPU, each dump on the timeline and the full thread report one click away; the command to analyze the heap dump at the top.</p>
+      <p><code>playground analyze logs --sample jvm_dumps</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-broker-pressure.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-cluster-layout.png" alt="🐢 A broker that falls behind" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-broker-pressure.html" target="_blank" rel="noopener">🐢 A broker that falls behind</a></h3>
+      <p>Three broker logs with their <code>kafka-topics --describe</code> and <code>kafka-log-dirs</code> outputs: the ISR shrink storms per broker and partition, the fetch errors and request timeouts of the follower, the log cleaner that died, and the 🗺️ cluster layout (leader imbalance, disk skew, a log dir offline).</p>
+      <p><code>playground analyze logs --sample broker_pressure</code></p>
     </div>
   </div>
   <div class="report-card">
