@@ -390,7 +390,8 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
   DEBUG included (a `client.id`, `Revoking previously assigned partitions`, a `startTimeMs` that no ERROR has),
   searched in the browser, offline: the lines are written next to the report (`<report>-files/search/`, compressed,
   in the 📤 Share `.zip`). Same syntax plus fields: `level:INFO` (`level:ERROR,FATAL`, `-level:DEBUG`),
-  `file:connect-0` (part of the path), `comp:connect`. It follows the 🕐 period and the component chips; a histogram
+  `file:connect-0` (part of the path), `comp:connect`. It follows the 🕐 period and the component chips, and says how many lines match outside them and in which
+  files (a thread dump taken hours after the logs is outside the period of the logs), with 🔎 search them too; a histogram
   of the matches over time (drag over it, or click a bar: the period of the report), the counts per level and per
   file (a click adds it to the query), the lines sorted by time with their file:line (📄 to the page of the file),
   and a click on a line shows the 8 lines around it. A budget bounds the lines written:

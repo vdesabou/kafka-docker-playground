@@ -275,7 +275,8 @@ def search_html(index: Optional[dict]) -> str:
     return (SEARCH_CSS + head
             + f"<p class='legend'>Every line of {len(index['files'])} file(s), {index['lines']:,} lines ({_mb(index['bytes'])}, "
             f"{_mb(index['stored'])} compressed next to the report), INFO and DEBUG included, not only the ERROR / WARN records: "
-            "searched in your browser. It follows the 🕐 period and the component of the filter bar. Click a line for the "
+            "searched in your browser. It follows the 🕐 period and the component of the filter bar, and says how many lines "
+            "match outside them (a thread dump taken at another time) with a button to search them too. Click a line for the "
             "lines around it, drag over the histogram to make it the period of the report.</p>"
             "<div class='ls-bar'><input class='ls-q' type='search' spellcheck='false' autocomplete='off' "
             "placeholder='Search every line: words, \"a phrase\", /regex/, -exclude, level:INFO, file:connect-0, comp:connect' "
@@ -653,20 +654,22 @@ SEARCH_SCRIPT = r"""<script>
     const textTerms = terms.filter(t => !t.field), levelTerms = terms.filter(t => t.field === "level");
     const anchor = textTerms.find(t => !t.neg);
     const anchorRx = anchor ? new RegExp(anchor.rx ? anchor.rx.source : escRx(anchor.word), "gi") : null;
-    const files = [];
+    // the files of the period and component of the filter bar, and the ones they leave out (out): read too, their
+    // matches only counted (res.outside), so that "0 line(s)" says when the lines are elsewhere (thread dumps taken
+    // hours after the logs, another component) instead of looking like no line matches
+    const files = [], outFiles = new Set();
     IDX.files.forEach(function (f, i) {
-      if (comp && f.comp !== comp) return;
       const lab = f.label.toLowerCase();
       for (const t of terms.filter(t => t.field === "file" || t.field === "comp")) {
         const hit = t.values.some(v => t.field === "file" ? lab.includes(v) : f.comp === v);
         if (hit === t.neg) return;
       }
-      if (period && f.t0 !== null && (f.t1 < period[0] || f.t0 >= period[1])) return;
+      if ((comp && f.comp !== comp) || (period && f.t0 !== null && (f.t1 < period[0] || f.t0 >= period[1]))) outFiles.add(i);
       files.push(i);
     });
     const r0 = period ? period[0] : IDX.t0, r1 = period ? period[1] : (IDX.t1 === null ? null : IDX.t1 + 1);
     const res = {rows: [], count: 0, bins: new Array(BINS).fill(0), byLevel: {}, byFile: {}, r0: r0, r1: r1, terms: terms,
-                 period: period, comp: comp, files: files.length, untimed: 0};
+                 period: period, comp: comp, files: files.length - outFiles.size, untimed: 0, outside: 0, outsideByFile: {}};
     const nbShards = files.reduce((n, i) => n + IDX.files[i].shards.length, 0);
     let done = 0, scanned = 0;
     const started = performance.now();
@@ -675,7 +678,8 @@ SEARCH_SCRIPT = r"""<script>
       const f = IDX.files[fi];
       for (let si = 0; si < f.shards.length; si++) {
         const meta = f.shards[si];
-        if (period && meta[3] !== null && meta[4] !== null && (meta[4] < period[0] || meta[3] >= period[1])) { done++; continue; }
+        // a part outside the period: only its matches counted
+        const shardOut = outFiles.has(fi) || (period && meta[3] !== null && meta[4] !== null && (meta[4] < period[0] || meta[3] >= period[1]));
         let sh;
         try { sh = await load(fi, si); } catch (err) { status.textContent = "⚠️ " + err.message; return; }
         if (my !== gen) return;
@@ -693,7 +697,7 @@ SEARCH_SCRIPT = r"""<script>
           const lvl = levelOf(line);
           for (const t of levelTerms) { if (t.values.some(v => { const V = v.toUpperCase(); return lvl && (lvl.startsWith(V) || V.startsWith(lvl)); }) === t.neg) return; }
           const tm = timeOf(sh, cntLine);
-          if (!inPeriod(tm, period)) return;
+          if (shardOut || !inPeriod(tm, period)) { res.outside++; res.outsideByFile[fi] = (res.outsideByFile[fi] || 0) + 1; return; }
           res.count++;
           res.byLevel[lvl || "—"] = (res.byLevel[lvl || "—"] || 0) + 1;
           res.byFile[fi] = (res.byFile[fi] || 0) + 1;
@@ -758,7 +762,8 @@ SEARCH_SCRIPT = r"""<script>
     status.innerHTML = "<b>" + res.count.toLocaleString() + "</b> line(s) in " + res.files + " file(s)" + (scope.length ? " · " + esc(scope.join(" · ")) : "")
       + " · " + (res.scanned / 1048576).toFixed(0) + " MB searched in " + (res.ms / 1000).toFixed(1) + " s"
       + (res.count > MAX_ROWS ? " · the first " + MAX_ROWS.toLocaleString() + " listed" : "")
-      + (res.untimed ? " · " + res.untimed.toLocaleString() + " without a time (not in the histogram)" : "");
+      + (res.untimed ? " · " + res.untimed.toLocaleString() + " without a time (not in the histogram)" : "")
+      + (res.outside ? " · <b>" + res.outside.toLocaleString() + "</b> more outside this " + (res.period && res.comp ? "period / component" : res.period ? "period" : "component") : "");
     // the field stats: a click adds the field to the query
     const lv = Object.entries(res.byLevel).sort((a, b) => b[1] - a[1]);
     const fl = Object.entries(res.byFile).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -766,7 +771,18 @@ SEARCH_SCRIPT = r"""<script>
       + fl.map(([fi, n]) => { const f = IDX.files[fi], term = v => "file:" + (/\s/.test(v) ? '"' + v + '"' : v); return "<span class='ls-stat' data-add='" + esc(term(f.short) + (f.tag ? " " + term(f.tag) : "")) + "' title='" + esc(f.label) + ": only this file'>📄 " + esc(f.short) + (f.tag ? " <i>" + esc(f.tag) + "</i>" : "") + "<b>" + n.toLocaleString() + "</b></span>"; }).join("");
     drawHist(res);
     out.textContent = "";
-    if (!res.count) { out.innerHTML = "<p class='legend'>No line matches" + (res.period || res.comp ? " in this period / component (⤺ whole period, 🧩 All components to search everything)" : "") + ".</p>"; return; }
+    if (res.outside) {
+      // where the other matches are (a thread dump of another time, the logs of another component), one click to see them
+      const where = Object.entries(res.outsideByFile).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        .map(([fi, n]) => esc(IDX.files[fi].short) + " ×" + n.toLocaleString()).join(", ");
+      const p = document.createElement("p");
+      p.className = "legend";
+      p.innerHTML = (res.count ? "" : "No line matches in this " + (res.period && res.comp ? "period / component" : res.period ? "period" : "component") + ". ")
+        + res.outside.toLocaleString() + " line(s) match outside it: " + where + (Object.keys(res.outsideByFile).length > 5 ? " …" : "")
+        + " <button type='button' class='pill ls-everything'>🔎 search them too (⤺ whole period, all components)</button>";
+      out.appendChild(p);
+      if (!res.count) return;
+    } else if (!res.count) { out.innerHTML = "<p class='legend'>No line matches" + (res.period || res.comp ? " in this period / component (⤺ whole period, 🧩 All components to search everything)" : "") + ".</p>"; return; }
     const table = document.createElement("table");
     table.className = "ls-table";
     table.innerHTML = "<colgroup><col style='width:13em'><col style='width:4.2em'><col style='width:17em'><col></colgroup><tr><th>Time</th><th>Level</th><th>File:line</th><th>Line (click: the lines around it)</th></tr>";
@@ -864,6 +880,13 @@ SEARCH_SCRIPT = r"""<script>
   q.addEventListener("input", function () { clearTimeout(timer); if (!q.value.trim()) run(""); else if (q.value.trim().length >= 3) timer = setTimeout(() => run(q.value), 700); });
   card.addEventListener("click", function (ev) {
     if (ev.target.closest(".ls-go")) { run(q.value); return; }
+    if (ev.target.closest(".ls-everything")) {
+      const all = document.querySelector(".comp-chip[data-component='']");
+      if (all && !all.classList.contains("active")) all.click();
+      if (typeof pgClearPeriod === "function") pgClearPeriod();
+      setTimeout(function () { run(q.value); }, 0);
+      return;
+    }
     if (ev.target.closest(".ls-from-bar")) { const bar = document.querySelector(".pg-search"); if (bar && bar.value.trim()) { q.value = bar.value; run(q.value); } return; }
     const add = ev.target.closest(".ls-stat");
     if (add && add.dataset.add) { q.value = (q.value.trim() + " " + add.dataset.add).trim(); run(q.value); return; }
