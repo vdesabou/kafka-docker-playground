@@ -1,0 +1,153 @@
+name: Update Reports Gallery
+
+# The reports gallery of the website (https://kafka-docker-playground.io/#/reports and the 📸 tour of the analyze logs deep
+# dive): the HTML reports and screenshots in docs/reports/ and docs/images/reports/ of vdesabou/kafka-docker-playground-docs,
+# generated from the samples shipped here by scripts/generate-reports-gallery.sh of that repository. A merged change to an
+# analyzer, a report or a sample regenerates them and pushes them there (no more hand-run generator and docs PR).
+# On a pull request that changes them: generated, not pushed (the reports are an artifact of the run, to look at).
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "generate the gallery without pushing it (artifact of the run)"
+        type: boolean
+        default: false
+  push:
+    branches:
+      - master
+    paths:
+      # the analyzers, their samples and the report code they share
+      - "tools/log-analyzer/**"
+      - "tools/report-common/**"
+      - "tools/thread-analyzer/**"
+      - "tools/heap-analyzer/**"
+      - "tools/jfr-analyzer/**"
+      - "tools/tcp-dump/**"
+      - "tools/xstream-analyzer/**"
+      - "tools/jscissors/**"
+      - "tools/streams-analyzer/**"
+      - "tools/cloud-costs/**"
+      - "gc-analysis/**"
+      - "cfk-analysis/**"
+      # the commands that write them, and the log digest (awk) of analyze logs
+      - "scripts/cli/src/commands/analyze.yml"
+      - "scripts/cli/src/commands/analyze/**"
+      - "scripts/cli/src/flags/analyze-*.yml"
+      - "scripts/cli/src/commands/streams/**"
+      - "scripts/cli/src/commands/cloud-resources/*/costs-history.sh"
+      - "scripts/cli/src/lib/cli_function.sh"
+      - ".github/workflows/update-reports-gallery.yml"
+  pull_request:
+    paths:
+      # the analyzers, their samples and the report code they share
+      - "tools/log-analyzer/**"
+      - "tools/report-common/**"
+      - "tools/thread-analyzer/**"
+      - "tools/heap-analyzer/**"
+      - "tools/jfr-analyzer/**"
+      - "tools/tcp-dump/**"
+      - "tools/xstream-analyzer/**"
+      - "tools/jscissors/**"
+      - "tools/streams-analyzer/**"
+      - "tools/cloud-costs/**"
+      - "gc-analysis/**"
+      - "cfk-analysis/**"
+      # the commands that write them, and the log digest (awk) of analyze logs
+      - "scripts/cli/src/commands/analyze.yml"
+      - "scripts/cli/src/commands/analyze/**"
+      - "scripts/cli/src/flags/analyze-*.yml"
+      - "scripts/cli/src/commands/streams/**"
+      - "scripts/cli/src/commands/cloud-resources/*/costs-history.sh"
+      - "scripts/cli/src/lib/cli_function.sh"
+      - ".github/workflows/update-reports-gallery.yml"
+
+# one generation at a time; a later merge regenerates everything a pending run would have
+concurrency:
+  group: update-reports-gallery-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
+  cancel-in-progress: true
+
+jobs:
+  update-reports-gallery:
+    name: Update Reports Gallery
+    # the push uses CI_GITHUB_TOKEN: not in forks (a pull request from a fork has no secret either)
+    if: github.repository == 'vdesabou/kafka-docker-playground' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      DRY_RUN: ${{ github.event_name == 'pull_request' || inputs.dry_run == true }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Checkout the docs repository
+        uses: actions/checkout@v5
+        with:
+          repository: vdesabou/kafka-docker-playground-docs
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          path: docs-repo
+          fetch-depth: 1
+
+      # headless Chrome takes the screenshots: its sandbox needs unprivileged user namespaces, which the AppArmor profile
+      # of the Ubuntu runners restricts; the emojis of the reports need a color emoji font
+      - name: Install the screenshot dependencies
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-color-emoji > /dev/null
+          google-chrome --version
+
+      # every report of the gallery from the samples (analyze logs, thread-dump, gc-logs, heap-dump with Eclipse MAT in
+      # Docker, flight-recorder, tcp-dump, oracle-xstream-report, jscissors, CFK bundles, streams status, cloud costs); the
+      # reports of real runs (diagnose, DLQ, benchmark…) are kept as they are. The script fails on a local path in a report
+      - name: Generate the reports gallery
+        run: bash docs-repo/scripts/generate-reports-gallery.sh "$GITHUB_WORKSPACE"
+
+      - name: Changes
+        id: changes
+        working-directory: docs-repo
+        run: |
+          git add -A docs/reports docs/images/reports
+          git diff --cached --stat | tail -20
+          if git diff --cached --quiet
+          then
+            echo "✅ the reports gallery is up to date"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload the reports gallery
+        if: steps.changes.outputs.changed == 'true' && env.DRY_RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-gallery
+          path: |
+            docs-repo/docs/reports
+            docs-repo/docs/images/reports
+          retention-days: 7
+
+      # the publication of the docs (publish-docs.sh) pushes to the same repository: rebase on it and retry
+      - name: Push the reports gallery
+        if: steps.changes.outputs.changed == 'true' && env.DRY_RUN != 'true'
+        working-directory: docs-repo
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git config user.email 'vincent.desaboulin@gmail.com'
+          git config user.name 'vdesabou'
+          git commit -q -m "📊 reports gallery regenerated from kafka-docker-playground ${SOURCE_SHA:0:9}"
+          for attempt in 1 2 3 4 5
+          do
+            if git push -q origin HEAD:main
+            then
+              echo "✅ pushed to vdesabou/kafka-docker-playground-docs"
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt): rebasing on the latest main"
+            sleep $((attempt * 5))
+            git pull -q --rebase origin main
+          done
+          echo "❌ could not push the reports gallery"
+          exit 1
