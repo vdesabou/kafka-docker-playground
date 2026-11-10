@@ -43,6 +43,10 @@ import connector_icons  # noqa: E402
 import log_viewer  # noqa: E402
 import log_search  # noqa: E402
 import share_formats  # noqa: E402
+# 🧵 🔬 the JVM dumps of the input (next to this file: python3 -I does not put the folder of the script on sys.path)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import jvm_dumps  # noqa: E402
+import cluster_layout  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
@@ -1124,6 +1128,9 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         ev = events.get((where, when))
         if ev:
             ev["cluster"] = True
+    # 🐢 the bursts of broker signals (ISR shrinks, fetch errors, request timeouts…): one row per burst, as the GC pauses
+    for b in broker_bursts(files):
+        add(b["time"], b["file"], b["line"], "infra", None, b["text"])
     # the longest GC pauses (1 s or more: the JVM stopped, its sessions and requests time out)
     pauses = [(f, ev) for f in files for ev in f.get("events") or [] if ev["kind"] == "gc_pause" and ev.get("time")]
     pauses.sort(key=lambda x: -gc_ms(x[1]))
@@ -1140,6 +1147,50 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
 
 
 GC_PAUSES_SHOWN = 20
+# a burst of broker signals: the events of a kind and broker less than BURST_GAP_SECONDS apart; on the timeline from
+# BURST_MIN of them (1 for an ISR shrink and the log cleaner: each one matters), BURSTS_SHOWN per kind at most
+BURST_GAP_SECONDS = 300
+BURST_MIN = {"isr_shrink": 1, "log_cleaner": 1}
+BURSTS_SHOWN = 20
+BURST_WORDS = {"isr_shrink": ("📉", "ISR shrink", "ISR shrinks"), "isr_expand": ("📈", "ISR expand", "ISR expands"),
+               "replica_fetch_error": ("🪝", "fetch error of a follower", "fetch errors of followers"),
+               "request_timeout": ("⏱️", "request timeout", "request timeouts"),
+               "log_cleaner": ("🧽", "log cleaner failure", "log cleaner failures"),
+               "quota_throttle": ("🚦", "throttled request", "throttled requests"),
+               "response_dropped": ("📭", "response to a client already gone", "responses to clients already gone")}
+
+
+def broker_bursts(files: List[dict]) -> List[dict]:
+    """the broker signals grouped in bursts per kind and broker: [{time, file, line, kind, who, count, text}], by time"""
+    by: Dict[Tuple[str, str], List[Tuple[str, str, int, str]]] = {}
+    for f in files:
+        for ev in f.get("events") or []:
+            if ev["kind"] in BROKER_KINDS and ev.get("time"):
+                who = broker_who((ev.get("detail") or "").split(" · ")[0], f["label"])
+                by.setdefault((ev["kind"], who), []).append((ev["time"], f["label"], ev.get("line") or 0, broker_reason(ev.get("detail") or "")))
+    out: List[dict] = []
+    for (kind, who), evs in by.items():
+        evs.sort()
+        bursts: List[List[Tuple[str, str, int, str]]] = []
+        for x in evs:
+            if bursts and epoch(x[0]) - epoch(bursts[-1][-1][0]) <= BURST_GAP_SECONDS:
+                bursts[-1].append(x)
+            else:
+                bursts.append([x])
+        shown = 0
+        for b in bursts:
+            if len(b) < BURST_MIN.get(kind, 3) or shown >= BURSTS_SHOWN:
+                continue
+            shown += 1
+            icon, one, many = BURST_WORDS[kind]
+            what = Counter(x[3] for x in b if x[3])
+            parts = ", ".join(k for k, _ in what.most_common(3)) + (f" +{len(what) - 3}" if len(what) > 3 else "")
+            span = epoch(b[-1][0]) - epoch(b[0][0])
+            text = (f"{icon} {len(b)} {one if len(b) == 1 else many} on {who}"
+                    + (f" in {human_duration(span)}" if len(b) > 1 and span > 0 else "")
+                    + (f" ({parts})" if parts else ""))
+            out.append({"time": b[0][0], "file": b[0][1], "line": b[0][2], "kind": kind, "who": who, "count": len(b), "text": text[:200]})
+    return sorted(out, key=lambda x: x["time"])
 
 
 def gc_ms(ev: dict) -> int:
@@ -1541,7 +1592,28 @@ LIFECYCLE_KINDS = {"worker_rebalance": "worker group rebalances", "consumer_rejo
                    "connector_start": "connector starts", "task_start": "task starts", "process_start": "process starts",
                    "process_stop": "process stops", "controller_change": "active controller changes",
                    "gc_pause": "GC pauses of 1 s or more",
-                   "member_eviction": "group members removed by the coordinator"}
+                   "member_eviction": "group members removed by the coordinator",
+                   "isr_shrink": "ISR shrinks", "isr_expand": "ISR expands",
+                   "replica_fetch_error": "followers failing to fetch from it",
+                   "request_timeout": "requests timed out (no answer in request.timeout.ms)",
+                   "log_cleaner": "log cleaner failures", "quota_throttle": "requests throttled by a quota",
+                   "response_dropped": "responses to clients already gone"}
+# the signals of a broker under pressure, read from INFO / WARN lines (the digest of the errors misses them): keyed by the
+# broker (the leader of the partition, the one that did not answer), with the partitions or peers as reason
+BROKER_KINDS = ("isr_shrink", "isr_expand", "replica_fetch_error", "request_timeout", "log_cleaner", "quota_throttle",
+                "response_dropped")
+# the broker kinds that make a storm when they repeat (STORM_MIN and STORM_PER_HOUR, as the rebalances)
+BROKER_STORM_KINDS = ("isr_shrink", "isr_expand", "replica_fetch_error", "request_timeout", "quota_throttle", "response_dropped")
+
+
+def broker_who(who: str, label: str) -> str:
+    """the broker of a signal: "broker 1" from the line, else the file it comes from (one file per broker in a bundle)"""
+    return f"broker ({worker_of(label)})" if who == "broker" else who
+
+
+def broker_reason(detail: str) -> str:
+    """the partition or the peer of a broker signal: "broker 1 · orders-0 (1,2,3 -> 1,3)" is orders-0"""
+    return re.sub(r" \(.*$", "", detail.split(" · ", 1)[1].strip()) if " · " in detail else ""
 
 
 def lifecycle(res: dict, files: List[dict]) -> dict:
@@ -1552,7 +1624,8 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     rows: Dict[Tuple[str, str], dict] = {}
     for f in files:
         for c in f.get("event_counts") or []:
-            r = rows.setdefault((c["kind"], c["who"]), {"kind": c["kind"], "who": c["who"], "count": 0, "first": None,
+            c_who = broker_who(c["who"], f["label"]) if c["kind"] in BROKER_KINDS else c["who"]
+            r = rows.setdefault((c["kind"], c_who), {"kind": c["kind"], "who": c_who, "count": 0, "first": None,
                                                        "last": None, "connectors": Counter(), "reasons": Counter(), "times": [],
                                                        "leaves": 0, "occ": []})
             r["count"] += c["count"]
@@ -1563,7 +1636,8 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
             group = (ev.get("detail") or "").split(" · ")[0]
             who = group if ev["kind"] in ("worker_rebalance", "consumer_rejoin", "member_eviction") else \
                 ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] in ("process_start", "process_stop") else \
-                "controller" if ev["kind"] == "controller_change" else "jvm" if ev["kind"] == "gc_pause" else ev.get("connector") or ""
+                "controller" if ev["kind"] == "controller_change" else "jvm" if ev["kind"] == "gc_pause" else \
+                broker_who(group, f["label"]) if ev["kind"] in BROKER_KINDS else ev.get("connector") or ""
             r = rows.get((ev["kind"], who))
             if not r:
                 continue
@@ -1576,12 +1650,20 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                 r["occ"].append((ev.get("time") or "", f["label"], ev["line"]))
             if ev.get("connector"):
                 r["connectors"][ev["connector"]] += 1
-            if " · " in (ev.get("detail") or ""):
+            if ev["kind"] in BROKER_KINDS:
+                if broker_reason(ev.get("detail") or ""):
+                    r["reasons"][broker_reason(ev["detail"])] += 1
+            elif " · " in (ev.get("detail") or ""):
                 r["reasons"][ev["detail"].split(" · ", 1)[1].strip()] += 1
     out = []
     for r in rows.values():
         per_hour = round(r["count"] / hours, 1) if hours > 0 else None
         reason = r["reasons"].most_common(1)[0][0] if r["reasons"] else None
+        if r["kind"] in BROKER_KINDS and r["reasons"]:
+            # the partitions (or peers) it happens to most: "orders-0 ×12, orders-1 ×9 (+40 more)"
+            top = r["reasons"].most_common(3)
+            reason = ", ".join(f"{k} ×{v:,}" if v > 1 else k for k, v in top) + \
+                (f" (+{len(r['reasons']) - 3} more)" if len(r["reasons"]) > 3 else "")
         # the rejoins of the group are mostly a consumer leaving on purpose, counted over the whole file: also when none
         # of its events is among the 300 noted per kind and file (100 groups of an Oracle CDC connector, each with a
         # consumer opened and closed every 30 s, the reason of most of them was unknown and every group was a storm)
@@ -1593,7 +1675,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                     "reason": reason, "leaving": leaving,
                     # a consumer that leaves on purpose (closed: "pro-actively leaving the group", the schema history
                     # consumer of Debezium every few seconds, the short-lived consumers of Oracle CDC) is not a storm
-                    "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") and r["count"] >= STORM_MIN
+                    "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") + BROKER_STORM_KINDS and r["count"] >= STORM_MIN
                              and per_hour is not None and per_hour >= STORM_PER_HOUR and not leaving
                              and "pro-actively leaving" not in (reason or ""),
                     # the times noted (300 per kind and file): the timeline of the 🔄 section of the HTML report only
@@ -1608,16 +1690,38 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
 
 
 def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
-    if not lc or not lc.get("rows"):
+    rows = [r for r in (lc or {}).get("rows") or [] if r["kind"] not in BROKER_KINDS]
+    if not rows:
         return []
     out = ["🔄 Restarts and rebalances (INFO lines)"]
-    for r in lc["rows"][:top]:
+    for r in rows[:top]:
         rate = f", {r['per_hour']:g}/h" if r.get("per_hour") is not None else ""
         out.append(f"   {'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
                    + (f" · {r['reason']}" if r.get("reason") else "")
                    + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
-    if len(lc["rows"]) > top:
-        out.append(f"   … {len(lc['rows']) - top} more in the HTML report and .lifecycle of --json")
+    if len(rows) > top:
+        out.append(f"   … {len(rows) - top} more in the HTML report and .lifecycle of --json")
+    return out
+
+
+def broker_signals_text(lc: Optional[dict], top: int = 8) -> List[str]:
+    """🐢 the signals of a broker under pressure (rows of the lifecycle of the broker kinds), storms first"""
+    # the log cleaner first (each failure matters, never a storm), then the storms
+    rows = sorted((r for r in (lc or {}).get("rows") or [] if r["kind"] in BROKER_KINDS),
+                  key=lambda r: (r["kind"] != "log_cleaner", not r["storm"]))
+    if not rows:
+        return []
+    out = ["🐢 Broker signals (INFO / WARN lines: ISR changes, fetch errors, request timeouts, log cleaner, quotas)"]
+    for r in rows[:top]:
+        rate = f", {r['per_hour']:g}/h" if r.get("per_hour") is not None else ""
+        out.append(f"   {'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
+                   + (f" · {r['reason']}" if r.get("reason") else "")
+                   + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
+    if len(rows) > top:
+        out.append(f"   … {len(rows) - top} more in the HTML report and .lifecycle of --json")
+    if any(r["kind"] in ("isr_shrink", "replica_fetch_error", "request_timeout") for r in rows):
+        out.append("   👉 a broker that falls behind: check its request handler / network idle ratio, disk latency, GC pauses "
+                   "and the network between brokers (playground broker metrics on a repro; the JMX metrics from the customer)")
     return out
 
 
@@ -1644,7 +1748,10 @@ def lifecycle_conn_attr(r: dict) -> str:
 # the look of each kind of row of the 🔄 table: icon and color (pill, count bar, activity span)
 LIFECYCLE_LOOK = {"worker_rebalance": ("🔁", "#7c3aed"), "consumer_rejoin": ("🔄", "#2563eb"), "connector_start": ("🔌", "#16a34a"),
                   "task_start": ("▶️", "#059669"), "process_start": ("🚀", "#d97706"), "process_stop": ("⏹️", "#b45309"),
-                  "controller_change": ("👑", "#0891b2"), "gc_pause": ("🧹", "#dc2626")}
+                  "controller_change": ("👑", "#0891b2"), "gc_pause": ("🧹", "#dc2626"),
+                  "member_eviction": ("🚪", "#9333ea"), "isr_shrink": ("📉", "#e11d48"), "isr_expand": ("📈", "#0d9488"),
+                  "replica_fetch_error": ("🪝", "#c2410c"), "request_timeout": ("⏱️", "#b91c1c"), "log_cleaner": ("🧽", "#7c2d12"),
+                  "quota_throttle": ("🚦", "#ca8a04"), "response_dropped": ("📭", "#6b7280")}
 
 LIFECYCLE_CSS = """<style>
 .lc-table{border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
@@ -1885,9 +1992,13 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
                        # the whole width of the card: a wider drawing keeps the time labels apart
                        extra={"W": 1000, "H": 200}) if len(points) > 1 else ""
     return (LIFECYCLE_CSS
-            + "<div class='table-card'><h2>🔄 Restarts and rebalances</h2><p class='legend'>From the INFO lines: the rebalances of "
+            + "<div class='table-card'><h2>🔄 Restarts and rebalances"
+            + (" · 🐢 broker signals" if any(r["kind"] in BROKER_KINDS for r in lc["rows"]) else "")
+            + "</h2><p class='legend'>From the INFO lines: the rebalances of "
             "the Connect worker groups, the rejoins of the consumer groups (a sink connector, a client), the connectors and tasks "
-            f"started, the workers and brokers (re)started. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
+            "started, the workers and brokers (re)started, and 🐢 the signals of a broker under pressure (INFO / WARN lines: ISR "
+            "shrinks and expands per partition, followers failing to fetch, requests timed out, log cleaner failures, quota "
+            "throttling, responses to clients already gone), by broker with the partitions they happen to most. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
             "per hour or more: each rebalance stops the processing (look at the members that join and leave, session.timeout.ms, "
             "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). The chart shows them over time (drag "
             "to zoom); the swimlane of When places each occurrence of a row on the period of the table (a tick per bucket, darker "
@@ -2432,6 +2543,19 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
                 and ("thread dumps" not in what or "thread_dump" in has_dump):
             continue
         ask(what, f"{hit[0]}: {why}")
+    # 🐢 a broker that falls behind (ISR shrinks, followers failing to fetch, requests timing out): its metrics say why
+    pressure = [r for r in (res.get("lifecycle") or {}).get("rows") or []
+                if r["kind"] in ("isr_shrink", "replica_fetch_error", "request_timeout") and (r["storm"] or r["count"] >= 3)]
+    if pressure:
+        who = ", ".join(OrderedDict((r["who"], True) for r in pressure))
+        ask(f"the JMX metrics of the brokers over the same period ({who[:120]})",
+            f"{pressure[0]['count']:,} {LIFECYCLE_KINDS[pressure[0]['kind']]} on {pressure[0]['who']}: the logs say that a "
+            "broker falls behind, not why (CPU, disk, network, request handlers, GC)",
+            "kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent, kafka.network:type=SocketServer,"
+            "name=NetworkProcessorAvgIdlePercent, kafka.network:type=RequestChannel,name=RequestQueueSize, "
+            "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce|FetchFollower, "
+            "kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions / IsrShrinksPerSec, the CPU, disk and network of "
+            "the hosts (Grafana / Control Center / Prometheus export), and the GC logs of the brokers")
     # 💥 bursts right after a broker event, without the broker logs
     if "kafka" not in components and any(ev.get("effects") for ev in res.get("timeline") or []):
         ask("the broker logs over the same period", "errors pile up right after an event of the cluster: the broker logs say what happened")
@@ -2650,7 +2774,8 @@ def fixed_bugs_html(items: List[dict], viewers: Dict[str, str]) -> str:
 
 def other_files_text(of: Optional[dict], top: int = 8) -> List[str]:
     """🧰 the files of the input for another analyzer (tools/log-analyzer/bundle_triage.py), with the command to run"""
-    cmds = (of or {}).get("commands") or []
+    # the kinds analyze logs reads itself (🗺️ topics, 💽 log dirs) have their own section
+    cmds = [c for c in (of or {}).get("commands") or [] if not c.get("inline")]
     if not cmds:
         return []
     out = ["🧰 Other files of the input, for another analyzer (.other_files of --json)"]
@@ -2665,7 +2790,8 @@ def other_files_text(of: Optional[dict], top: int = 8) -> List[str]:
 
 
 def other_files_html(of: Optional[dict]) -> str:
-    cmds = (of or {}).get("commands") or []
+    # the kinds analyze logs reads itself (🗺️ topics, 💽 log dirs) have their own section
+    cmds = [c for c in (of or {}).get("commands") or [] if not c.get("inline")]
     if not cmds:
         return ""
     kept = any(f.get("kept") for f in (of or {}).get("files") or [])
@@ -2694,6 +2820,159 @@ def other_files_html(of: Optional[dict]) -> str:
             "how. 📋 copy puts the command in the clipboard."
             + (" The ones extracted from an archive were kept next to this report (&lt;report&gt;-other-files/)." if kept else "")
             + "</p><table><tr><th>What</th><th>Files</th><th>Command</th></tr>" + rows + "</table></div>")
+
+
+def jvm_dumps_text(res: dict) -> List[str]:
+    """🧵 the thread dumps of the input, analyzed inline, and 🔬 the heap dumps, with the command to run (MAT)"""
+    out: List[str] = []
+    for g in res.get("thread_dumps") or []:
+        where = f" in {g['folder']}/" if g.get("folder") else ""
+        if g.get("error"):
+            out.append(f"🧵 Thread dumps{where}: not analyzed inline ({g['error']})")
+            out.append(f"   {g['command']}")
+            continue
+        n = len(g.get("dumps") or [])
+        same = f", {g['same_jvm']} of the same JVM {g['interval_s']}s apart" if g.get("same_jvm", 1) > 1 and g.get("interval_s") else ""
+        out.append(f"🧵 Thread dumps{where}: {n} dump(s) in {len(g['files'])} file(s){same}" + (f" · {g['jvm']}" if g.get("jvm") else ""))
+        for f in g.get("findings") or []:
+            out.append(f"   [{f['severity']}] {f['text']}")
+        if (g.get("findings_total") or 0) > len(g.get("findings") or []):
+            out.append(f"   … {g['findings_total'] - len(g['findings'])} more in the thread report")
+        busy = [c for c in g.get("cpu") or [] if (c.get("cpu_pct") or 0) >= 10]
+        if busy:
+            out.append("   🔥 CPU between the dumps: " + ", ".join(f"{c['name']} {c['cpu_pct']}%" for c in busy[:3]))
+        if g.get("report"):
+            out.append(f"   🌐 full thread report: {g['report']}")
+    heaps = res.get("heap_dumps") or []
+    if heaps:
+        out.append(f"🔬 {len(heaps)} heap dump(s) in the input, not analyzed here (Eclipse MAT in Docker, about as much memory as the dump): run")
+        for h in heaps[:5]:
+            out.append(f"   {h['command']}" + (f"   # {human_size(h['bytes'])}" if h.get("bytes") else ""))
+    return out
+
+
+def cluster_layout_text(cl: Optional[dict]) -> List[str]:
+    """🗺️ 💽 partitions, leaders and disk per broker from kafka-topics --describe / kafka-log-dirs, and the findings"""
+    if not cl:
+        return []
+    out = [f"🗺️ Cluster layout ({', '.join(x.split('/')[-1] for x in cl['sources'][:3])})"
+           + (f": {cl['topics']} topic(s), {cl['partitions']} partition(s)" if cl.get("partitions") else "")]
+    for b in cl.get("brokers") or []:
+        disk = f", 💽 {human_size(b['disk_bytes'])}" if b.get("disk_bytes") is not None else ""
+        out.append(f"   broker {b['id']}: {b['replicas']} replica(s), {b['leaders']} leader(s)"
+                   + (f" ({b['not_preferred']} of its preferred ones led elsewhere)" if b.get("not_preferred") else "") + disk)
+    for f in cl.get("findings") or []:
+        out.append(f"   [{f['severity']}] {f['text']}")
+    return out
+
+
+CLUSTER_LAYOUT_CSS = """<style>.cl-bar{display:inline-block;height:8px;border-radius:4px;background:#6366f1;vertical-align:middle;margin-right:6px}
+.cl-bar.cl-l{background:#0ea5e9}.cl-bar.cl-d{background:#f59e0b}.cl-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cl-err{color:#b91c1c;font-weight:600}html[data-theme=dark] .cl-err{color:#fca5a5}</style>"""
+
+
+def cluster_layout_html(cl: Optional[dict]) -> str:
+    if not cl:
+        return ""
+    brokers = cl.get("brokers") or []
+    mx = {k: max([b.get(k) or 0 for b in brokers] + [1]) for k in ("replicas", "leaders", "disk_bytes")}
+
+    def bar(v, k, cls=""):
+        return f"<span class='cl-bar {cls}' style='width:{max(2, 120 * (v or 0) / mx[k]):.0f}px'></span>"
+    rows = ""
+    for b in brokers:
+        dirs = "<br>".join(f"<span class='mono{' cl-err' if d.get('error') else ''}'>{e(d.get('dir') or '?')}</span> "
+                           f"{e(human_size(d['bytes']))}" + (f" <span class='cl-err'>⚠️ {e(d['error'])}</span>" if d.get("error") else "")
+                           for d in b.get("log_dirs") or [])
+        rows += (f"<tr><td><b>broker {b['id']}</b></td>"
+                 f"<td class='cl-num'>{bar(b['replicas'], 'replicas')}{b['replicas']:,}</td>"
+                 f"<td class='cl-num'>{bar(b['leaders'], 'leaders', 'cl-l')}{b['leaders']:,}"
+                 + (f" <span class='fi-meta'>({b['not_preferred']} preferred led elsewhere)</span>" if b.get("not_preferred") else "")
+                 + "</td>"
+                 + (f"<td class='cl-num'>{bar(b['disk_bytes'], 'disk_bytes', 'cl-d')}{e(human_size(b['disk_bytes']))}</td><td>{dirs}</td>"
+                    if any(x.get("disk_bytes") is not None for x in brokers) else "") + "</tr>")
+    disk_head = "<th>Disk used</th><th>Log dirs</th>" if any(x.get("disk_bytes") is not None for x in brokers) else ""
+    items = "".join(f"<li><span class='jd-sev jd-{e(f['severity'])}'>{e(f['severity'])}</span>{e(f['text'])}</li>" for f in cl.get("findings") or [])
+    lists = ""
+    for key, title in (("offline", "Offline partitions"), ("under_min_isr", "Under min.insync.replicas"),
+                       ("under_replicated", "Under-replicated partitions"), ("not_preferred_leader", "Led by a non-preferred replica")):
+        if cl.get(key):
+            n = cl.get(key + "_count") or cl.get(key.replace("_leader", "") + "_count") or len(cl[key])
+            lists += (f"<details><summary>{e(title)} ({n:,})</summary><p class='mono'>{e(', '.join(cl[key]))}"
+                      + (" …" if n > len(cl[key]) else "") + "</p></details>")
+    if cl.get("biggest_partitions"):
+        lists += ("<details><summary>Biggest partitions</summary><table><tr><th>Partition</th><th>Broker</th><th>Size</th></tr>"
+                  + "".join(f"<tr><td class='mono'>{e(x['partition'])}</td><td>{x['broker']}</td><td class='cl-num'>{e(human_size(x['bytes']))}</td></tr>"
+                            for x in cl["biggest_partitions"]) + "</table></details>")
+    if cl.get("topics_by_size"):
+        lists += ("<details><summary>Biggest topics (all replicas)</summary><table><tr><th>Topic</th><th>Size</th></tr>"
+                  + "".join(f"<tr><td class='mono'>{e(x['topic'])}</td><td class='cl-num'>{e(human_size(x['bytes']))}</td></tr>"
+                            for x in cl["topics_by_size"]) + "</table></details>")
+    return (CLUSTER_LAYOUT_CSS + JVM_DUMPS_CSS + "<div class='table-card' id='cluster-layout'><h2>🗺️ Cluster layout"
+            + (f" <span class='fi-meta'>· {cl['topics']} topic(s), {cl['partitions']:,} partition(s)</span>" if cl.get("partitions") else "")
+            + "</h2><p class='legend'>From the kafka-topics --describe and kafka-log-dirs --describe outputs of the input ("
+            + e(", ".join(x.replace(":", "/").split("/")[-1] for x in cl["sources"][:4])) + "): replicas and leaders per broker (a leader skew or partitions led by a "
+            "non-preferred replica put the load of the clients on fewer brokers), the disk each broker uses per log dir, and "
+            "the partitions that are offline, under-replicated or under min.insync.replicas.</p>"
+            f"<ul class='jd-find'>{items}</ul>"
+            f"<table><tr><th>Broker</th><th>Replicas</th><th>Leaders</th>{disk_head}</tr>{rows}</table>{lists}</div>")
+
+
+JVM_DUMPS_CSS = """<style>
+.jd-card{border-left:4px solid #6366f1}.jd-card h3{margin:12px 0 4px;font-size:.95rem}
+.jd-find{list-style:none;margin:6px 0;padding:0}.jd-find li{margin:4px 0;padding:6px 10px;border-radius:8px;background:#f8fafc;font-size:.85rem}
+.jd-sev{display:inline-block;min-width:68px;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:#fff;border-radius:999px;padding:1px 8px;margin-right:6px;text-align:center}
+.jd-CRITICAL{background:#dc2626}.jd-HIGH{background:#ea580c}.jd-MEDIUM{background:#ca8a04}.jd-LOW,.jd-OK{background:#16a34a}.jd-INFO{background:#2563eb}
+.jd-cmd{white-space:pre-wrap;word-break:break-all;font-size:.78rem}.jd-copy{float:right;margin:0 0 4px 8px;font-size:.72rem}
+html[data-theme=dark] .jd-find li{background:#1e293b}
+</style>"""
+
+
+def jvm_dumps_html(res: dict) -> str:
+    """🧵 🔬 right after the verdict: the findings of the thread dumps (analyzed inline, link to the full thread report) and
+    the heap dumps with the command to run, so that they are not missed in 🧰 at the bottom"""
+    groups, heaps = res.get("thread_dumps") or [], res.get("heap_dumps") or []
+    if not groups and not heaps:
+        return ""
+
+    def copy(cmd: str) -> str:
+        return (f"<button type='button' class='pill conn-changelog of-copy jd-copy' data-cmd='{e(cmd)}' title='copy the command, "
+                "then run it in a terminal'>📋 copy</button><code class='jd-cmd'>" + e(cmd) + "</code>")
+    parts = []
+    for g in groups:
+        where = f" <span class='fi-meta'>· {e(g['folder'])}/</span>" if g.get("folder") else ""
+        if g.get("error"):
+            parts.append(f"<h3>🧵 Thread dumps{where}</h3><p class='legend'>Not analyzed inline: {e(g['error'])}.</p>" + copy(g["command"]))
+            continue
+        n = len(g.get("dumps") or [])
+        same = (f", {g['same_jvm']} of the same JVM {g['interval_s']} s apart" if g.get("same_jvm", 1) > 1 and g.get("interval_s") else
+                " (a single dump: take 3, a few seconds apart, to see stuck threads and CPU)" if n == 1 else "")
+        link = (f" · <a href='{e(quote(os.path.basename(g['report'])))}' target='_blank' rel='noopener'>🌐 open the full thread report</a>"
+                if g.get("report") else "")
+        items = "".join(f"<li><span class='jd-sev jd-{e(f['severity'])}'>{e(f['severity'])}</span>{e(f['text'])}</li>"
+                        for f in g.get("findings") or [])
+        more = (f"<p class='fi-meta'>… {g['findings_total'] - len(g['findings'])} more finding(s) in the thread report</p>"
+                if (g.get("findings_total") or 0) > len(g.get("findings") or []) else "")
+        cpu = ""
+        if g.get("cpu"):
+            cpu = ("<table><tr><th>Thread</th><th>CPU between the dumps</th><th>State</th><th>Frame</th></tr>"
+                   + "".join(f"<tr><td class='mono'>{e(c['name'])}</td><td>{c.get('cpu_pct') or 0}%</td><td>{e(c.get('state') or '')}</td>"
+                             f"<td class='mono'>{e(c.get('frame') or '')}</td></tr>" for c in g["cpu"]) + "</table>")
+        parts.append(f"<h3>🧵 Thread dumps{where}</h3><p class='legend'>{n} dump(s) in {len(g['files'])} file(s){e(same)}"
+                     + (f" · {e(g['jvm'])}" if g.get("jvm") else "") + link + "</p>"
+                     f"<ul class='jd-find'>{items}</ul>{more}{cpu}"
+                     f"<details><summary class='fi-meta'>the same analysis in a terminal</summary>{copy(g['command'])}</details>")
+    if heaps:
+        rows = "".join(f"<tr><td class='mono'>{e(h['file'])}</td><td>{e(human_size(h['bytes'])) if h.get('bytes') else ''}</td>"
+                       f"<td>{copy(h['command'])}</td></tr>" for h in heaps)
+        parts.append("<h3>🔬 Heap dumps: run the analysis</h3><p class='legend'>Not analyzed in this report: Eclipse MAT runs in "
+                     "Docker and needs about as much memory as the dump (--max-memory to give it more). It gives the leak "
+                     "suspects, the retained heap by class and Kafka-aware hints; with a second dump of the same JVM, "
+                     "--compare shows what grows.</p><table><tr><th>File</th><th>Size</th><th>Command</th></tr>" + rows + "</table>")
+    return (JVM_DUMPS_CSS + "<div class='table-card jd-card' id='jvm-dumps'><h2>🧵 🔬 JVM dumps of the input</h2>"
+            "<p class='legend'>The thread dumps found in the input are analyzed by the thread dump analyzer of the "
+            "playground (deadlocks, lock contention, threads stuck on the same frames, CPU per thread between dumps, growing "
+            "pools; Kafka / Connect aware), each dump is on the 🗓️ incident timeline.</p>" + "".join(parts) + "</div>")
 
 
 def config_lint(res: dict) -> List[dict]:
@@ -3325,7 +3604,9 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "<div class='table-card' id='incident-timeline'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
             "logged at startup), the connectors (re)configured and the config keys changed between restarts, the processes "
-            "stopped, the active controller changes and the longest GC pauses (1 s or more); 💥 the bursts of ERROR / WARN of "
+            "stopped, the active controller changes, the longest GC pauses (1 s or more), 🐢 the bursts of broker signals (ISR "
+            "shrinks, fetch errors of followers, request timeouts, log cleaner failures) and 🧵 the thread dumps of the input "
+            "(their time is the one the JVM printed, without time zone); 💥 the bursts of ERROR / WARN of "
             f"every file in the {EFFECT_WINDOW_SECONDS} s after one of them. It follows the "
             "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
             "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
@@ -3336,8 +3617,8 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "<p class='legend tl-legend' hidden><span data-kind='fatal' style='color:#991b1b'>● first FATAL</span>"
             "<span data-kind='error' style='color:#dc2626'>● first ERROR</span><span data-kind='warn' style='color:#f59e0b'>● first WARN</span>"
             "<span data-kind='known' style='color:#ea580c'>◆ known cause</span><span data-kind='start' style='color:#2563eb'>▲ (re)start</span>"
-            "<span data-kind='lifecycle' style='color:#7c3aed'>○ rebalance / process start</span>"
-            "<span data-kind='infra' style='color:#a21caf'>✕ GC pause / stop / controller change</span>"
+            "<span data-kind='lifecycle' style='color:#7c3aed'>○ rebalance / process start / 🧵 thread dump</span>"
+            "<span data-kind='infra' style='color:#a21caf'>✕ GC pause / stop / controller change / 🐢 broker signals</span>"
             "<span data-kind='config' style='color:#0d9488'>■ connector (re)configured / config changed</span>"
             "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row, 🔍 drag over the chart to zoom, double-click to zoom out</span></p>"
             f"<table class='tl-first'>{head}{first}</table>{more}</div>")
@@ -3470,6 +3751,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append(f"   🛟 {len(bad)} connector(s) below the minimum version supported on CP {bad[0]['support']['cp']}: "
                    + ", ".join(f"{c['connector']} {c['versions'][-1]} < {c['support']['minimum']}" for c in bad[:5])
                    + (" …" if len(bad) > 5 else "") + f" ({bad[0]['support']['doc']})")
+    # 🧵 🔬 the JVM dumps of the input, right under the header: the thread dumps analyzed, the heap dumps to analyze
+    out += ["   " + x if not x.startswith("   ") else "   " + x for x in jvm_dumps_text(res)]
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -3512,6 +3795,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += connectors_text(res.get("connectors") or [])
     # rebalances and restarts of the INFO lines (🔄 of the HTML report, .lifecycle of --json)
     out += lifecycle_text(res.get("lifecycle"))
+    out += broker_signals_text(res.get("lifecycle"))
+    out += cluster_layout_text(res.get("cluster_layout"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
     # the keys of a Connector CR that differ from the config logged (🔀 on the 🔌 cards, .config_drift of --json)
@@ -4172,6 +4457,22 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
             reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
             out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
+    for g in res.get("thread_dumps") or []:
+        if not g.get("findings"):
+            continue
+        n = len(g.get("dumps") or [])
+        out += ["", f"### Thread dumps ({n} dump(s){', ' + str(g['same_jvm']) + ' of the same JVM' if g.get('same_jvm', 1) > 1 else ''})", "",
+                "| Severity | Finding |", "| --- | --- |"]
+        out += [f"| {f['severity']} | {md_cell(f['text'])} |" for f in g["findings"]]
+    cl = res.get("cluster_layout") or {}
+    if cl.get("findings"):
+        out += ["", "### Cluster layout (kafka-topics / kafka-log-dirs)", "", "| Broker | Replicas | Leaders | Disk |", "| --- | --- | --- | --- |"]
+        out += [f"| {b['id']} | {b['replicas']:,} | {b['leaders']:,} | {human_size(b['disk_bytes']) if b.get('disk_bytes') is not None else ''} |"
+                for b in cl.get("brokers") or []]
+        out += [""] + [f"- **{f['severity']}** {md_cell(f['text'])}" for f in cl["findings"]]
+    heaps = res.get("heap_dumps") or []
+    if heaps:
+        out += ["", "### Heap dumps (to analyze)", ""] + [f"- `{md_cell(h['file'])}`: `playground analyze heap-dump -f <file>`" for h in heaps[:5]]
     for b in res.get("_cfk_bundles") or []:
         out += cfk_ticket_lines(b)
     asks = res.get("data_to_request") or []
@@ -4238,11 +4539,18 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Connector CR and config logged differ", "", "| Connector | Key | In the CR | Logged by the worker |", "| --- | --- | --- | --- |"]
         for x in drift[:10]:
             out.append(f"| `{md_cell(x['connector'])}` | `{md_cell(x['key'])}` | `{md_cell(x['cr'][:120])}` | `{md_cell(x['logged'][:120])}` |")
-    lc_rows = (res.get("lifecycle") or {}).get("rows") or []
+    all_lc = (res.get("lifecycle") or {}).get("rows") or []
+    lc_rows = [r for r in all_lc if r["kind"] not in BROKER_KINDS]
     if lc_rows:
         out += ["", "### Restarts and rebalances", "", "| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]
         for r in lc_rows[:8]:
             out.append(f"| {'🌀 ' if r['storm'] else ''}{LIFECYCLE_KINDS[r['kind']]} | `{md_cell(r['who'] or '?')}` | {r['count']:,} | {rate_cell(r)} |")
+    br_rows = [r for r in all_lc if r["kind"] in BROKER_KINDS]
+    if br_rows:
+        out += ["", "### Broker signals", "", "| What | Broker | Count | Per hour | Partitions / peers |", "| --- | --- | --- | --- | --- |"]
+        for r in br_rows[:8]:
+            out.append(f"| {'🌀 ' if r['storm'] else ''}{LIFECYCLE_KINDS[r['kind']]} | `{md_cell(r['who'] or '?')}` | {r['count']:,} | "
+                       f"{rate_cell(r)} | {md_cell(r.get('reason') or '')} |")
     conns = res.get("connectors") or []
     if conns:
         out += ["", f"### Connectors ({len(conns)}, most errors first)", "", "| Connector | Version | ERROR/FATAL | WARN | Task kills | Known causes |", "| --- | --- | --- | --- | --- | --- |"]
@@ -6523,6 +6831,7 @@ def story_html(res: dict, levels: str) -> str:
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
     """the verdict of the logs, and of the CFK support bundles of the input in the same line (☸️, the worse of both)"""
     cls, text = logs_verdict(res, levels, unit)
+    cls, text = dumps_verdict(res, cls, text)
     bundles = res.get("_cfk_bundles") or []
     if not bundles:
         return cls, text
@@ -6540,6 +6849,28 @@ def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
     rank = {"ok": 0, "warn": 1, "danger": 2}
     kcls = "danger" if crit else "warn" if high or total else "ok"
     return (cls if rank.get(cls, 0) >= rank[kcls] else kcls), f"{text} {clause}"
+
+
+def dumps_verdict(res: dict, cls: str, text: str) -> Tuple[str, str]:
+    """🧵 the worst finding of the thread dumps of the input, 🔬 the heap dumps to analyze, added to the verdict"""
+    clauses = []
+    worst = [f for g in res.get("thread_dumps") or [] for f in g.get("findings") or [] if f.get("severity") in ("CRITICAL", "HIGH")]
+    if worst:
+        n = sum(1 for f in worst if f["severity"] == "CRITICAL")
+        clauses.append(f"🧵 thread dumps: {len(worst)} critical / high finding(s), {worst[0]['text'].split(':')[0].split('(')[0].strip()}"
+                       + (f" (+{len(worst) - 1})" if len(worst) > 1 else "") + ".")
+        cls = "danger" if n else ("danger" if cls == "danger" else "warn")
+    elif any(g.get("dumps") for g in res.get("thread_dumps") or []):
+        clauses.append("🧵 thread dumps: no deadlock nor stuck thread.")
+    heaps = res.get("heap_dumps") or []
+    if heaps:
+        clauses.append(f"🔬 {len(heaps)} heap dump(s): run playground analyze heap-dump (🧵 🔬 JVM dumps below).")
+    bad = [f for f in (res.get("cluster_layout") or {}).get("findings") or [] if f["severity"] in ("CRITICAL", "HIGH")]
+    if bad:
+        first = re.split(r" \(|: (?=[A-Z(])", bad[0]["text"], maxsplit=1)[0]
+        clauses.append(f"🗺️ cluster layout: {first[:110]}" + (f" (+{len(bad) - 1})" if len(bad) > 1 else "") + ".")
+        cls = "danger" if any(f["severity"] == "CRITICAL" for f in bad) or cls == "danger" else "warn"
+    return cls, " ".join([text] + clauses)
 
 
 def logs_verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
@@ -7072,7 +7403,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # one row of tiles: the logs, then the ☸️ CFK bundles; the quick links to the sections above them
     kpis += "".join(findings_severity_tiles(res.get("findings") or []) + cfk_kpi_tiles(res.get("_cfk_bundles") or []))
     body = [verdict_html(*verdict(res, levels, unit)), QUICK_LINKS, incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
-            cfk_sections_html(res.get("_cfk_bundles") or [], unit),
+            cfk_sections_html(res.get("_cfk_bundles") or [], unit), jvm_dumps_html(res),
             compare_html(res.get("comparison")), trend_html(res.get("trend")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"], period_picker(res)),
             log_search.search_html(search_index), FINDINGS_CSS,
@@ -7083,7 +7414,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             .replace("<div class='recs-list'>", findings_overview_html(findings_view, s["occurrences"]) + "<div class='recs-list'>", 1),
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
-            lifecycle_html(res.get("lifecycle"), viewers), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files")),
+            lifecycle_html(res.get("lifecycle"), viewers), cluster_layout_html(res.get("cluster_layout")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files")),
             harmless_html(res.get("harmless") or []), ocr_html(res["summary"].get("ocr_files") or [])]
     # the sanitization state (⚠️ Not sanitized, 🔒 Sanitization of analyze logs) is a line under the verdict, not a section
     notes = [(t, text) for t, text in sections if t.startswith(("⚠️ Not sanitized", "🔒 Sanitization"))]
@@ -7341,7 +7672,7 @@ def main() -> int:
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
                          "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
-                         "other_files,fixed_bugs,task_workers,data_to_request,config_drift,harmless (default: all)")
+                         "other_files,thread_dumps,heap_dumps,cluster_layout,fixed_bugs,task_workers,data_to_request,config_drift,harmless (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -7401,6 +7732,24 @@ def main() -> int:
                 res["other_files"] = json.load(fh)
         except (OSError, ValueError) as ex:
             print(f"⚠️ --other-files: cannot read {args.other_files}: {ex}", file=sys.stderr)
+    # 🧵 the thread dumps of the input analyzed right away (the full thread report next to the HTML report), each dump on
+    # the timeline; 🔬 the heap dumps listed with their command (MAT is not run here)
+    if res.get("other_files"):
+        stem = re.sub(r"(?:-log-report)?\.html$", "", os.path.basename(args.html_out)) if args.html_out else "report"
+        res["thread_dumps"] = jvm_dumps.thread_dumps(res["other_files"], os.path.dirname(os.path.abspath(args.html_out))
+                                                     if args.html_out else None, stem)
+        res["heap_dumps"] = jvm_dumps.heap_dumps(res["other_files"])
+        # 🗺️ 💽 the kafka-topics --describe and kafka-log-dirs outputs of the input
+        layout_files = [(f["label"], f["path"]) for f in res["other_files"].get("files") or []
+                        if f.get("kind") in ("topic_describe", "log_dirs") and f.get("path") and os.path.isfile(f["path"])]
+        if layout_files:
+            res["cluster_layout"] = cluster_layout.analyze(layout_files)
+        dump_events = [{"time": x["time"], "kind": "lifecycle", "level": None, "text": x["text"], "file": x["file"],
+                        "line": x["line"], "connector": None, "count": None, "record": None}
+                       for x in jvm_dumps.timeline_events(res["thread_dumps"])]
+        if dump_events:
+            res["timeline"] = sorted((res.get("timeline") or []) + dump_events,
+                                     key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))[:TIMELINE_LIMIT]
     # ⚠️ the Connect logs without connector context (MDC): read again from the sources file
     if args.sources:
         res["summary"]["connect_without_mdc"] = connect_without_mdc(args.sources, files)

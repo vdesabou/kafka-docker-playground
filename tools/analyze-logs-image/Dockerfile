@@ -17,6 +17,8 @@ COPY scripts/cli/playground /kdp/scripts/cli/playground
 COPY tools/log-analyzer /kdp/tools/log-analyzer
 COPY tools/report-common /kdp/tools/report-common
 COPY tools/streams-analyzer /kdp/tools/streams-analyzer
+# 🧵 the thread dumps of the input are analyzed in the log report (tools/log-analyzer/jvm_dumps.py)
+COPY tools/thread-analyzer /kdp/tools/thread-analyzer
 COPY cfk-analysis /kdp/cfk-analysis
 COPY tools/analyze-logs-image/entrypoint.sh /kdp/entrypoint.sh
 

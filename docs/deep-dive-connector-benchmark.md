@@ -119,7 +119,8 @@ Gotchas:
   smaller than the cv is noise.
 - The result JSON (`--json`, or the `📄 result:` file) has the warnings of the summary (`warnings`), and the
   `requested_records`, `record_size` and `tasks_max` of the run.
-- The HTML report (charts, setup, flight recorder digest) opens in the browser only in an interactive terminal.
+- The HTML report (charts, setup, flight recorder digest) opens in the browser only in an interactive terminal. Its
+  📤 Share button (`S`) downloads it as one `.html`, copies the verdict as text, Markdown, Slack or rich text, or opens an email.
 
 ---
 

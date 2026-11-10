@@ -79,7 +79,9 @@ Takes about 15 minutes to read and run.
    | `analyze jscissors` | `--output-dir`, default `./jscissors-analysis-output` (HTML report) |
 
    Running from the repository leaves these folders in it: use `--output-dir /tmp/<something>`. The HTML report is
-   opened in the browser only in an interactive terminal; otherwise its `file://` path is printed.
+   opened in the browser only in an interactive terminal; otherwise its `file://` path is printed. Its **📤 Share**
+   button (or the `S` key), like on every playground HTML report, downloads the report as one `.html`, copies the
+   digest of the terminal, the findings as Markdown for a ticket, for Slack or as rich text, the path, or opens an email.
 
 ---
 

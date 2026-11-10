@@ -867,7 +867,33 @@ def _configuration_html(results: Dict) -> str:
 def render(results: Dict, bundle_label: str = "") -> str:
     """the page, with the banner of the other playground reports when report_html is there (brand_page)"""
     page = _render(results, bundle_label)
-    return report_html.brand_page(page) if report_html is not None and hasattr(report_html, "brand_page") else page
+    if report_html is None or not hasattr(report_html, "brand_page"):
+        return page
+    summary, ticket = _share_texts(results, bundle_label)
+    return report_html.brand_page(page, share_summary=summary, share_ticket=ticket, command="playground analyze cfk-bundle")
+
+
+def _share_texts(results: Dict, bundle_label: str = "") -> tuple:
+    """📤 Share of the report: the plain-text summary (verdict, counts, the issues worst first) and the Markdown for a
+    ticket; (None, None) without share_dialog.py (the dialog then reads the verdict of the page)"""
+    sd = getattr(report_html, "share_dialog", None)
+    if sd is None:
+        return None, None
+    summary = results.get("summary", {})
+    issues = sorted(results.get("issues", []), key=lambda i: SEVERITY_ORDER.get(i.get("severity", "low"), 99))
+    title = "📦 CFK Bundle Analysis" + (f" — {bundle_label}" if bundle_label else "")
+    counts = ", ".join(f"{summary.get(s, 0)} {s}" for s in ("critical", "high", "medium", "low") if summary.get(s))
+    verdict = (f"{summary.get('total_issues', len(issues))} issues ({counts})" if issues
+               else "✅ Nothing alarming in this CFK support bundle.")
+    items = []
+    for i in issues:
+        where = " / ".join(x for x in (i.get("category"), i.get("component"), i.get("instance")) if x)
+        msg = str(i.get("message", "")).strip().splitlines()[0][:300] if i.get("message") else ""
+        items.append((i.get("severity", "low"), (f"[{where}] " if where else "") + msg
+                      + (f" (×{i['count']})" if i.get("count", 1) > 1 else "")))
+    meta = [f"Files analyzed: {summary.get('files_analyzed', 0)}"]
+    return (sd.summary_text(title, verdict, items, meta, limit=20),
+            sd.ticket_markdown(title, verdict, items[:40], meta, command="playground analyze cfk-bundle"))
 
 
 def _render(results: Dict, bundle_label: str = "") -> str:

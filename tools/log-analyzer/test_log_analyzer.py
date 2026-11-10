@@ -716,6 +716,100 @@ def test_member_eviction():
           log_report.lifecycle_text(res["lifecycle"]))
 
 
+def test_broker_signals():
+    """🐢 the signals of a broker under pressure (INFO / WARN lines): a row per kind and broker with the partitions they
+    happen to most, a storm when they repeat, the bursts on the timeline (💥 after-effects), their own text block and table"""
+    evs = "".join(f"@@PGEVT@@|isr_shrink|{10 + i}|2026-11-07T10:{i:02d}:00||broker 1 · orders-{i % 2} (1,2,3 -> 1,3)\n" for i in range(12))
+    text = ("@@PGFILE@@|broker-1/server.log|1000|1|1|2026-11-07T10:00:00|2026-11-07T11:00:00\n"
+            "@@PGREC@@|ERROR|1|1|1|2026-11-07T10:40:00|2026-11-07T10:40:00\n"
+            "[2026-11-07 10:40:00,000] ERROR boom (x)\n"
+            "@@PGTS@@|2026-11-07T10:40:00\n" + evs +
+            "@@PGEVT@@|log_cleaner|50|2026-11-07T10:30:00||log cleaner · thread died\n"
+            "@@PGEVT@@|response_dropped|51|2026-11-07T10:31:00||broker · client gone before the response\n"
+            "@@PGEVTN@@|isr_shrink|broker 1|12\n@@PGEVTN@@|log_cleaner|log cleaner|1\n@@PGEVTN@@|response_dropped|broker|1\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    rows = {(r["kind"], r["who"]): r for r in res["lifecycle"]["rows"]}
+    isr = rows.get(("isr_shrink", "broker 1"))
+    check("an ISR row for broker 1", isr and isr["count"] == 12, rows.keys())
+    check("its partitions as reason", isr and isr["reason"] == "orders-0 ×6, orders-1 ×6", isr)
+    check("12 in an hour: a storm", isr and isr["storm"], isr)
+    check("a broker without id: its file", any(k == "response_dropped" and w.startswith("broker (") and w.endswith("server.log)")
+                                              for k, w in rows), rows.keys())
+    check("the log cleaner, not a storm", not rows[("log_cleaner", "log cleaner")]["storm"], rows)
+    tl = [ev["text"] for ev in res["timeline"]]
+    check("ISR shrinks on the timeline, one burst", sum(t.startswith("📉") for t in tl) == 1
+          and any(t.startswith("📉 12 ISR shrinks on broker 1 in 11 min (orders-0, orders-1)") for t in tl), tl)
+    check("log cleaner on the timeline", any(t.startswith("🧽 1 log cleaner failure on log cleaner") for t in tl), tl)
+    check("a single response dropped is not on the timeline", not any(t.startswith("📭") for t in tl), tl)
+    bt = log_report.broker_signals_text(res["lifecycle"])
+    check("broker text block", bt and bt[0].startswith("🐢") and any("🌀 STORM broker 1: 12 ISR shrinks" in x for x in bt), bt)
+    check("not in the restarts block", not any("ISR" in x for x in log_report.lifecycle_text(res["lifecycle"])),
+          log_report.lifecycle_text(res["lifecycle"]))
+    md = log_report.ticket_markdown(res, "t", "ERROR")
+    check("broker table in the ticket", "### Broker signals" in md and "orders-0 ×6" in md, md[-800:])
+
+
+def test_cluster_layout():
+    """🗺️ kafka-topics --describe and 💽 kafka-log-dirs outputs (the broker_pressure sample): found by the triage, leaders
+    and disk per broker, the findings (offline log dir, under-replicated, non-preferred leaders, disk skew)"""
+    import bundle_triage
+    import cluster_layout
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "samples", "broker-pressure")
+    topics, dirs = os.path.join(here, "kafka-topics-describe.txt"), os.path.join(here, "kafka-log-dirs.txt")
+    check("triage: topics describe", bundle_triage.kind_of("topics.txt", topics) == "topic_describe")
+    check("triage: log dirs", bundle_triage.kind_of("dirs.txt", dirs) == "log_dirs")
+    check("triage: a broker log is neither", bundle_triage.kind_of("server.log", os.path.join(here, "broker-1", "server.log")) is None)
+    res = cluster_layout.analyze([("topics.txt", topics), ("dirs.txt", dirs)])
+    b = {x["id"]: x for x in res["brokers"]}
+    check("31 partitions of 4 topics", res["partitions"] == 31 and res["topics"] == 4, res)
+    check("leaders per broker", (b[1]["leaders"], b[2]["leaders"], b[3]["leaders"]) == (11, 4, 16), b)
+    check("non-preferred leaders of broker 2", b[2]["not_preferred"] == 6, b[2])
+    texts = [f["severity"] + " " + f["text"] for f in res["findings"]]
+    check("offline log dir first", texts[0].startswith("HIGH broker 3: log dir /var/lib/kafka/data2 has an error"), texts)
+    check("under-replicated", any(t.startswith("MEDIUM 3 under-replicated partition(s) of 31") for t in texts), texts)
+    check("disk skew", any("Disk usage skew: broker 1 uses 18.4 GB" in t for t in texts), texts)
+    check("rf 1", res["rf1_topics"] == ["audit"], res["rf1_topics"])
+    # an offline partition and a partition under min.insync.replicas
+    with tempfile.TemporaryDirectory() as tmp:
+        p = os.path.join(tmp, "t.txt")
+        with open(p, "w") as fh:
+            fh.write("Topic: t\tTopicId: x\tPartitionCount: 2\tReplicationFactor: 3\tConfigs: min.insync.replicas=2\n"
+                     "\tTopic: t\tPartition: 0\tLeader: none\tReplicas: 1,2,3\tIsr: \n"
+                     "\tTopic: t\tPartition: 1\tLeader: 1\tReplicas: 1,2,3\tIsr: 1\n")
+        r2 = cluster_layout.analyze([("t.txt", p)])
+    check("offline: critical", r2["findings"][0]["severity"] == "CRITICAL" and r2["offline"] == ["t-0"], r2["findings"])
+    check("under min ISR", r2["under_min_isr"] == ["t-0", "t-1"], r2)
+
+
+def test_jvm_dumps():
+    """🧵 the thread dumps of the triage analyzed in the log report (the read_path of the run when no copy is kept, the
+    full thread report written), each dump on the timeline; 🔬 the heap dumps listed with their command"""
+    import jvm_dumps
+    samples = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "thread-analyzer", "samples")
+    files = [os.path.join(samples, f"jdk21-scenario-{i}.txt") for i in (1, 2, 3)]
+    of = {"files": [{"label": f"b/td-{i}.txt", "path": None, "read_path": p, "kind": "thread_dump"} for i, p in enumerate(files, 1)]
+                   + [{"label": "b/heap.hprof", "path": "/x/heap.hprof", "kind": "heap_dump", "bytes": 2048}],
+          "commands": [{"kind": "thread_dump", "folder": "b", "files": ["b/td-1.txt", "b/td-2.txt", "b/td-3.txt"], "command": "playground analyze thread-dump -f …"},
+                       {"kind": "heap_dump", "folder": "b", "files": ["b/heap.hprof"], "command": "playground analyze heap-dump -f /x/heap.hprof"}]}
+    with tempfile.TemporaryDirectory() as tmp:
+        groups = jvm_dumps.thread_dumps(of, tmp, "case")
+        check("one group, 3 dumps of the same JVM", len(groups) == 1 and len(groups[0]["dumps"]) == 3 and groups[0]["same_jvm"] == 3, groups)
+        check("deadlock first", groups[0]["findings"][0]["severity"] == "CRITICAL" and "Deadlock" in groups[0]["findings"][0]["text"], groups[0]["findings"])
+        check("thread report written", os.path.isfile(os.path.join(tmp, "case-thread-dumps.html")), os.listdir(tmp))
+        check("labels of the dumps", groups[0]["dumps"][0]["file"] == "b/td-1.txt", groups[0]["dumps"][0])
+    tl = jvm_dumps.timeline_events(groups)
+    check("a timeline event per dump", len(tl) == 3 and tl[0]["text"].startswith("🧵 thread dump #1 (47 threads): CRITICAL Deadlock"), tl)
+    heaps = jvm_dumps.heap_dumps(of)
+    check("heap dump listed", heaps == [{"file": "b/heap.hprof", "bytes": 2048, "command": "playground analyze heap-dump -f /x/heap.hprof"}], heaps)
+    res = {"summary": {}, "thread_dumps": groups, "heap_dumps": heaps}
+    cls, text = log_report.dumps_verdict(res, "ok", "✅ fine.")
+    check("verdict", cls == "danger" and "🧵 thread dumps:" in text and "🔬 1 heap dump(s)" in text, (cls, text))
+    gone = jvm_dumps.thread_dumps({"files": [{"label": "x", "path": None, "read_path": "/nope"}],
+                                   "commands": [{"kind": "thread_dump", "files": ["x"], "command": "c"}]})
+    check("files gone: an error, not an exception", gone[0].get("error") == "the files are no longer on disk", gone)
+
+
 def test_connect_without_mdc():
     """⚠️ a Connect log whose task lines have no [connector|task-0] context is reported, not one that has it (also
     with a scope, [c|task-0|redoLog]), nor a broker log, nor a Connect log with too few task lines to tell"""

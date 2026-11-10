@@ -6855,6 +6855,10 @@ function install_confluent_plugin() {
 #   @@PGEVT@@<tab>member_eviction<tab>line<tab>timestamp<tab>connector<tab>group · timeout: members of a classic consumer group
 #              removed by the group coordinator of a broker (session timeout, rebalance timeout, pending sync expired)
 #   @@PGEVT@@<tab>gc_pause<tab>line<tab>timestamp<tab><tab><ms> <what>: a GC pause of 1 s or more (GC log, unified or legacy)
+#   @@PGEVT@@<tab>isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped<tab>line<tab>
+#              timestamp<tab><tab>broker <id> · partition, peer or what: the signals of a broker under pressure (INFO / WARN
+#              lines: ISR changes, followers failing to fetch, requests timing out, log cleaner stopped, quota throttling,
+#              responses to clients already gone), 300 of each kind at most
 #   @@PGEVTN@@<tab>kind<tab>connector or group<tab>count: how many of them in the whole file
 function summarize_log_errors() {
     local max_findings="${1:-40}"
@@ -7447,7 +7451,7 @@ function summarize_log_errors() {
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(/) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id/) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
             if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
@@ -7493,6 +7497,47 @@ function summarize_log_errors() {
                 else if (index($0, "pending sync request expiration")) lc_detail = lc_who " · rebalance timeout (joined, did not sync)"
                 else lc_detail = lc_who " · rebalance timeout (did not rejoin)"
                 if (lc_conn == "" && lc_who ~ /^connect-/) lc_conn = substr(lc_who, 9)
+            } else if ($0 ~ /Shrinking ISR from|Expanding ISR from/) {
+                # the ISR of a partition shrinks (a follower fell behind: slow disk, network, GC, an overloaded broker) or
+                # expands again (kafka.cluster.Partition, INFO): "[Partition orders-0 broker=1] Shrinking ISR from 1,2,3 to 1,3"
+                lc_kind = index($0, "Shrinking ISR") ? "isr_shrink" : "isr_expand"; lc_who = "broker"; lc_part = "?"
+                if (match($0, /\[Partition [^ ]+ broker=[0-9]+\]/)) {
+                    lc_part = substr($0, RSTART + 11, RLENGTH - 12)
+                    lc_who = lc_part; sub(/.* broker=/, "", lc_who); lc_who = "broker " lc_who
+                    sub(/ broker=.*/, "", lc_part)
+                }
+                lc_detail = lc_who " · " lc_part
+                if (match($0, /ISR from [0-9,]+ to [0-9,]*/)) {
+                    lc_isr = substr($0, RSTART + 9, RLENGTH - 9); sub(/ to /, " -> ", lc_isr); lc_detail = lc_detail " (" lc_isr ")"
+                }
+            } else if ($0 ~ /Error sending fetch request|Error in response for fetch request/) {
+                # a follower that cannot fetch from the leader (ReplicaFetcherThread): the ISR shrinks that follow have
+                # their cause here. Keyed by the leader it fetches from
+                lc_kind = "replica_fetch_error"; lc_who = "broker"
+                if (match($0, /leaderId=[0-9]+/)) lc_who = "broker " substr($0, RSTART + 9, RLENGTH - 9)
+                else if (match($0, /to node [0-9]+/)) lc_who = "broker " substr($0, RSTART + 8, RLENGTH - 8)
+                lc_detail = lc_who " · follower"
+                if (match($0, /replicaId=[0-9]+/)) lc_detail = lc_detail " " substr($0, RSTART + 10, RLENGTH - 10)
+            } else if (index($0, "due to request timeout") && match($0, /from node -?[0-9]+/)) {
+                # a client or a follower gave up waiting for a broker (NetworkClient, INFO): "Disconnecting from node 2 due to
+                # request timeout". Keyed by the broker that did not answer in request.timeout.ms
+                lc_kind = "request_timeout"; lc_who = "broker " substr($0, RSTART + 10, RLENGTH - 10)
+                lc_detail = lc_who " · " (match($0, /\[(Producer|Consumer|AdminClient|ReplicaFetcher)[^] ]*/) ? substr($0, RSTART + 1, RLENGTH - 1) : "client")
+            } else if (index($0, "kafka-log-cleaner-thread") && $0 ~ /Error due to|Unexpected exception/ || index($0, "uncleanable")) {
+                # the log cleaner died or gave up on a partition: compacted topics (__consumer_offsets, connect-offsets…)
+                # grow without bound and the disk fills
+                lc_kind = "log_cleaner"; lc_who = "log cleaner"
+                lc_detail = lc_who " · " (index($0, "Error due to") ? "thread died" : (index($0, "uncleanable") ? "partition marked uncleanable" : "error"))
+            } else if (index($0, "|THROTTLE|") || index($0, "ThrottlingQuotaExceeded")) {
+                # a client throttled by a broker quota: librdkafka "%5|…|THROTTLE|rdkafka#producer-1| [thrd:…]: …/2: ProduceRequest
+                # throttled by broker for 512ms", or the controller mutation quota of the admin client (topic creations)
+                lc_kind = "quota_throttle"; lc_who = "broker"
+                if (match($0, /\/[0-9]+: /)) { lc_who = "broker " substr($0, RSTART + 1, RLENGTH - 3) }
+                lc_detail = lc_who " · " (index($0, "ThrottlingQuotaExceeded") ? "controller mutation quota" : (match($0, /[A-Za-z]+Request throttled/) ? substr($0, RSTART, RLENGTH - 10) : "client quota"))
+            } else if (index($0, "no open connection, connection id")) {
+                # the broker finished a request after its client went away (it timed out first): the broker is slow to
+                # answer (kafka.network.Processor, INFO)
+                lc_kind = "response_dropped"; lc_who = "broker"; lc_detail = "broker · client gone before the response"
             } else if ($0 ~ /GC\([0-9]+\) .*Pause .*[0-9]ms *$/ && match($0, /[0-9.]+ms *$/)) {
                 # unified JVM logging: "[2026-…+0000][gc] GC(12) Pause Full (G1 Compaction Pause) 900M->850M(1G) 2345.678ms"
                 gc_ms = substr($0, RSTART, RLENGTH); sub(/ms *$/, "", gc_ms); gc_ms = gc_ms + 0
@@ -7508,7 +7553,7 @@ function summarize_log_errors() {
                 if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
             }
             if (lc_kind != "") {
-                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause|member_eviction)$/ ? lc_who : lc_conn)
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
                 # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):

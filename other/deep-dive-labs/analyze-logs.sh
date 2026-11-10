@@ -187,6 +187,27 @@ lab_expect_contains "📈 Trend over 3 inputs (oldest first: tools/log-analyzer/
 lab_expect_contains "FATAL 0 → 0 → 0 · ERROR 6 → 5 → 4 · WARN 4 → 9 → 5"
 lab_expect_contains "1 → 7 → 3 RebalanceInProgressException: Offset commit cannot be completed since the consumer is undergoing a rebalance"
 
+log "Section 4: thread dumps, broker signals, cluster layout"
+lab_run playground analyze logs --sample jvm_dumps --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "[CRITICAL] Deadlock between deadlock-1, deadlock-2 (dump 1): each one waits for a lock held by the next."
+lab_expect_contains "[HIGH] Thread \"cpu-burner\" used 99.7% of a CPU between the dumps (RUNNABLE, in TdLoad.lambda\$main\$4(TdLoad.java:20))."
+lab_expect_contains "[MEDIUM] Thread pool \"pool-#-thread-#\" grows across the dumps (14 -> 24 -> 34)"
+lab_expect_contains "🔥 CPU between the dumps: cpu-burner 99.7%"
+lab_expect_contains "🔬 1 heap dump(s) in the input, not analyzed here (Eclipse MAT in Docker, about as much memory as the dump): run"
+lab_run playground analyze logs --sample broker_pressure --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "log cleaner: 1 log cleaner failures, 1/h · thread died · 2026-11-09 14:50:00"
+lab_expect_contains "🌀 STORM broker 1: 30 ISR shrinks, 30.3/h · orders-4 ×10, orders-8 ×10, payments-3 ×7 (+1 more) · 2026-11-09 14:21:25 → 14:59:20"
+lab_expect_contains "🌀 STORM broker 2: 10 followers failing to fetch from it, 10.1/h · follower 3 ×10 · 2026-11-09 14:20:32 → 14:55:45"
+lab_expect_contains "broker 1: 6 requests timed out (no answer in request.timeout.ms), 6.1/h · ReplicaFetcher ×6 · 2026-11-09 14:25:30 → 14:55:00"
+lab_expect_contains "🗺️ Cluster layout (kafka-log-dirs.txt, kafka-topics-describe.txt): 4 topic(s), 31 partition(s)"
+lab_expect_contains "broker 2: 29 replica(s), 4 leader(s) (6 of its preferred ones led elsewhere), 💽 7.0 GB"
+lab_expect_contains "[HIGH] broker 3: log dir /var/lib/kafka/data2 has an error (org.apache.kafka.common.errors.KafkaStorageException)"
+lab_expect_contains "[MEDIUM] 3 under-replicated partition(s) of 31: orders-0, orders-4, orders-8"
+lab_expect_contains "[MEDIUM] Disk usage skew: broker 1 uses 18.4 GB, broker 3 6.6 GB (average 10.7 GB)"
+lab_expect_contains "📉 30 ISR shrinks on broker 1 in 37 min 55 s (orders-4, orders-8, payments-3 +1)"
+
 log "Section 7: JSON for scripts and agents"
 lab_run bash -c "playground analyze logs --sample support_bundle --json 2>/dev/null | jq -r '.known_causes[] | \"\(.severity) \(.title) ×\(.occurrences)\"'"
 lab_expect_contains "HIGH 🧨 A connector task was killed ×1"

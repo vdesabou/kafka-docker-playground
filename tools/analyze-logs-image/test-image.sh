@@ -70,6 +70,22 @@ rc=$?
 check "json: exit code 0" test $rc -eq 0
 check "json: stdout parses" python3 -c "import json, sys; d = json.load(open(sys.argv[1])); assert 'findings' in d" "$work/out5.json"
 
+# 5b. thread dumps in a zip: analyzed in the report by the thread analyzer of the image (🧵), and --json too (no copy
+# kept: read from the tmp dir of the run); the broker signals and the cluster layout of a folder of broker logs
+mkdir -p "$work/dumps/connect-0"
+cp "$repo/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log" "$work/dumps/connect-0/connect.log"
+for i in 1 2 3; do cp "$repo/tools/thread-analyzer/samples/jdk21-scenario-$i.txt" "$work/dumps/connect-0/thread-dump-$i.txt"; done
+(cd "$work" && python3 -c "import shutil; shutil.make_archive('dumps', 'zip', '.', 'dumps')")
+run "$image" -f dumps.zip --output-dir out5b > "$work/out5b.txt" 2>&1
+check "thread dumps: analyzed in the report" grep -q "\[CRITICAL\] Deadlock between deadlock-1, deadlock-2" "$work/out5b.txt"
+check "thread dumps: thread report written" bash -c "ls '$work'/out5b/dumps-thread-dumps.html > /dev/null 2>&1"
+run "$image" -f dumps.zip --json > "$work/out5c.json" 2> /dev/null
+check "thread dumps: .thread_dumps of --json" python3 -c "import json, sys; d = json.load(open(sys.argv[1])); assert d['thread_dumps'][0]['findings'][0]['severity'] == 'CRITICAL'" "$work/out5c.json"
+cp -r "$repo/tools/log-analyzer/samples/broker-pressure" "$work/"
+run "$image" -f broker-pressure --output-dir out5d > "$work/out5d.txt" 2>&1
+check "broker signals" grep -q "🌀 STORM broker 1: 30 ISR shrinks" "$work/out5d.txt"
+check "cluster layout" grep -q "🗺️ Cluster layout (kafka-log-dirs.txt, kafka-topics-describe.txt)" "$work/out5d.txt"
+
 # 6. no folder mounted: a hint, and the help without arguments
 docker run --rm --network none "$image" --sample connect_task_failure --output-dir /tmp/out > "$work/out6.txt" 2>&1
 check "sample without a mounted folder: exit code 0" test $? -eq 0

@@ -146,6 +146,13 @@ do
         connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
         connect_many_connectors) file_array+=("$root_folder/tools/log-analyzer/samples/connect-many-connectors.log") ;;
         support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
+        broker_pressure) file_array+=("$root_folder/tools/log-analyzer/samples/broker-pressure") ;;
+        # the dumps shipped with the thread and heap analyzers, not copied: the thread dumps are in one folder (one group)
+        jvm_dumps) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log"
+                                "$root_folder/tools/thread-analyzer/samples/jdk21-scenario-1.txt"
+                                "$root_folder/tools/thread-analyzer/samples/jdk21-scenario-2.txt"
+                                "$root_folder/tools/thread-analyzer/samples/jdk21-scenario-3.txt"
+                                "$root_folder/tools/heap-analyzer/samples/session-cache-leak-1.hprof.gz") ;;
         kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
         kafka_clients) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-clients") ;;
         # the day after a fix, compared with the day before (unless --compare names another input)
@@ -1694,6 +1701,8 @@ then
 fi
 # 📋 the summary for a ticket (Markdown, always sanitized), next to the report (also 📤 Share > Copy for a ticket)
 report_args+=(--ticket-out "$output_dir/${stem}-ticket.md")
+# 🧵 the thread reports of a previous run on the same input: written again by this one when the input has thread dumps
+rm -f "$output_dir/${stem}"-thread-dumps*.html
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
 if [ -s "$output_dir/${stem}-ticket.md" ]
 then
@@ -1723,6 +1732,14 @@ then
             if [ -d "${cfk_json%.json}-files" ]
             then
                 ln -s "${cfk_json%.json}-files" "$share_stage/$(basename "${cfk_json%.json}-files")"
+            fi
+        done
+        # 🧵 the thread reports of the thread dumps of the input (analyzed inline), linked from the report by their name
+        for thread_html in "$output_dir/${stem}"-thread-dumps*.html
+        do
+            if [ -f "$thread_html" ]
+            then
+                ln -s "$thread_html" "$share_stage/$(basename "$thread_html")"
             fi
         done
         # the comparison of the CFK bundles, linked from the report by its name

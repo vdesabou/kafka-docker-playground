@@ -37,6 +37,15 @@ KNOWN_CAUSES = [
      "title": "📜 License error",
      "advice": "the Confluent license is expired, invalid or cannot be verified: check confluent.license and the "
                "_confluent-command topic"},
+    # the log cleaner thread of a broker died (or gave up on a partition): before storage_error, its exception can be a
+    # KafkaStorageException. Nothing else is logged after it: compacted topics grow until the disk is full
+    {"name": "log_cleaner_died", "severity": "high", "category": "Storage Issues",
+     "pattern": r"kafka-log-cleaner-thread-\d+\]?:? *Error due to|marked as uncleanable|LogCleaner.{0,80}Unexpected exception",
+     "title": "🧽 Log cleaner stopped",
+     "advice": "the log cleaner of the broker died or skipped a partition (the exception of the record says why): "
+               "compacted topics (__consumer_offsets, connect-offsets, _schemas, changelogs) stop being compacted and "
+               "grow until the disk is full. Fix the cause, then restart the broker to restart its cleaner; watch "
+               "kafka.log:type=LogCleanerManager,name=time-since-last-run-ms and max-dirty-percent"},
     {"name": "storage_error", "severity": "critical", "category": "Storage Issues",
      "pattern": r"no space left on device|disk.{0,20}full|KafkaStorageException|log director(?:y|ies).{0,60}offline"
                 r"|PersistentVolumeClaim.{0,80}pending",

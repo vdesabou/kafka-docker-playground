@@ -46,6 +46,15 @@ WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf
 [2026-11-07 10:31:00,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId connect-s3-sink] Member connector-consumer-s3-sink-0-77aa has failed, removing it from the group. (org.apache.kafka.coordinator.group.GroupMetadataManager)
 [2026-11-07 10:31:05,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId connect-s3-sink] Removed dynamic members who haven't joined: [connector-consumer-s3-sink-1-88bb] (org.apache.kafka.coordinator.group.GroupMetadataManager)
 [2026-11-07 10:32:00,000] INFO [GroupCoordinator id=1 topic=__consumer_offsets partition=7] [GroupId payments] Preparing to rebalance the group in state CompletingRebalance with old generation 4 (reason: Removing [consumer-p-1] on pending sync request expiration). (org.apache.kafka.coordinator.group.GroupMetadataManager)
+[2026-11-07 10:40:00,000] INFO [Partition orders-0 broker=1] Shrinking ISR from 1,2,3 to 1,3. Leader: (highWatermark: 100, endOffset: 120). Out of sync replicas: (brokerId: 2, endOffset: 100, lastCaughtUpTimeMs: 1762508370000). (kafka.cluster.Partition)
+[2026-11-07 10:40:01,000] INFO [Partition orders-1 broker=1] Shrinking ISR from 1,2 to 1. Leader: (highWatermark: 5, endOffset: 9). (kafka.cluster.Partition)
+[2026-11-07 10:40:30,000] INFO [Partition orders-0 broker=1] Expanding ISR from 1,3 to 1,3,2 (kafka.cluster.Partition)
+[2026-11-07 10:40:02,000] INFO [ReplicaFetcher replicaId=2, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=123, epoch=45) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
+[2026-11-07 10:40:03,000] WARN [ReplicaFetcher replicaId=2, leaderId=1, fetcherId=0] Error in response for fetch request (type=FetchRequest, replicaId=2, maxWait=500) (kafka.server.ReplicaFetcherThread)
+[2026-11-07 10:40:04,000] INFO [Producer clientId=producer-1] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
+[2026-11-07 10:40:05,000] ERROR [kafka-log-cleaner-thread-0]: Error due to (kafka.log.LogCleaner)
+[2026-11-07 10:40:06,000] INFO Attempting to send response via channel for which there is no open connection, connection id 172.18.0.5:9092-172.18.0.9:51234-3 (kafka.network.Processor)
+%5|1762512007.000|THROTTLE|rdkafka#producer-1| [thrd:broker:9092/2]: broker:9092/2: ProduceRequest throttled by broker for 512ms
 EOF
 # a line of a log written on Windows (CRLF)
 printf '%s\r\n' '[2026-11-07 10:28:00,003] INFO [hdfs-sink|task-1] Starting commit and rotation (io.confluent.connect.hdfs3.TopicPartitionWriter:298)' >> "$tmp/events.log"
@@ -90,6 +99,14 @@ do
     if [ "$got" != "$(printf '%s\n' "$expected" | sort -r -k1,1)" ]
     then
         echo "❌ $awk_cmd: events of events.log: $(printf '%s' "$got" | tr '\n' ',') instead of $(printf '%s' "$expected" | tr '\n' ',')"
+        failed=1
+    fi
+    # the signals of a broker under pressure (ISR changes, followers that cannot fetch, requests timing out, log cleaner,
+    # responses to clients already gone, quota throttling): keyed by the broker, with the partition or the peer
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 ~ /^(isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/ {print $2 "=" $6}' "$out.records" | LC_ALL=C sort | tr '\n' ',')
+    if [ "$got" != "isr_expand=broker 1 · orders-0 (1,3 -> 1,3,2),isr_shrink=broker 1 · orders-0 (1,2,3 -> 1,3),isr_shrink=broker 1 · orders-1 (1,2 -> 1),log_cleaner=log cleaner · thread died,quota_throttle=broker 2 · ProduceRequest,replica_fetch_error=broker 1 · follower 2,replica_fetch_error=broker 1 · follower 2,request_timeout=broker 1 · Producer,response_dropped=broker · client gone before the response," ]
+    then
+        echo "❌ $awk_cmd: broker signal events of events.log: $got"
         failed=1
     fi
     # the loggers of the lines of the tasks (the plugin of a connector whose startup is not in the logs): each once, not the

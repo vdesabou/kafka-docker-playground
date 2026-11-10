@@ -161,6 +161,22 @@ commands:
     with the playground analyze command to run on each, in the summary, the
     HTML report and --json (.other_files); the ones extracted from an
     archive are kept next to the report (<input>-other-files/).
+    🧵 The thread dumps of the input are analyzed right away by the thread
+    dump analyzer (deadlocks, lock contention, stuck threads, CPU per thread
+    between dumps, growing pools): 🧵 🔬 JVM dumps of the input, right after
+    the verdict, each dump on the incident timeline, the full thread report
+    next to the report (<input>-thread-dumps.html, .thread_dumps of --json).
+    🔬 A heap dump is not (Eclipse MAT, Docker, memory): its playground
+    analyze heap-dump command is at the top of the report and in the verdict
+    (.heap_dumps). 🗺️ The outputs of kafka-topics --describe and kafka-log-dirs
+    --describe of the input give the Cluster layout: replicas, leaders and
+    disk per broker, leader imbalance and skew, offline / under-replicated /
+    under min ISR partitions, replication factor 1, log dirs offline, disk
+    skew (.cluster_layout). 🐢 The signals of a broker under pressure, read
+    from INFO / WARN lines (ISR shrinks and expands per broker and partition,
+    followers failing to fetch, requests timed out, log cleaner failures,
+    quota throttling, responses to clients already gone), are counted by
+    broker with their storms, and their bursts are on the incident timeline.
     Only files with findings are
     shown. 🔭 When no file has findings, an overview says what the logs
     contain (period covered, records by level, top messages and loggers) and

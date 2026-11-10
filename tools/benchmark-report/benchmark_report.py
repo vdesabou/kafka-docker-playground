@@ -212,6 +212,12 @@ __JFR__
 <script>
 (function () {
   const data = JSON.parse(document.getElementById("data").textContent);
+  // the containers this script fills, emptied first: the 💾 Download of 📤 Share saves the page as rendered, and this
+  // script draws it again when the copy is opened
+  ["tiles", "example-link", "chart-rate", "chart-cpu", "chart-batch", "chart-history", "chart-latency", "chart-latency-hist",
+   "latency-legend", "versions-table", "latency-slowest", "details", "setup", "connector-config", "history-table",
+   "samples-table"].forEach(id => { const x = document.getElementById(id); if (x) x.textContent = ""; });
+  document.querySelectorAll(".tooltip").forEach(t => t.remove());
   const r = data.result, samples = data.samples, history = data.history, versions = data.versions || [];
   const comparison = versions.length > 0;
   // what the runs of a comparison are grouped by: connector versions (--connector-tag) or phases (--shape a,b,c)

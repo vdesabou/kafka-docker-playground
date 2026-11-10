@@ -4534,11 +4534,26 @@ subcommands:
       captures, Oracle\nXStream diagnostics reports, found by their content or name)
       are listed\nwith the playground analyze command to run on each, in the summary,
       the\nHTML report and --json (.other_files); the ones extracted from an\narchive
-      are kept next to the report (<input>-other-files/).\nOnly files with findings
-      are\nshown. \U0001F52D When no file has findings, an overview says what the
-      logs\ncontain (period covered, records by level, top messages and loggers) and\nwhat
-      to ask for next (a longer window, the logs of the component that\nfails, a new
-      export of a log console). The HTML report also has\nthe configuration: the configs
+      are kept next to the report (<input>-other-files/).\n\U0001F9F5 The thread dumps
+      of the input are analyzed right away by the thread\ndump analyzer (deadlocks,
+      lock contention, stuck threads, CPU per thread\nbetween dumps, growing pools):
+      \U0001F9F5 \U0001F52C JVM dumps of the input, right after\nthe verdict, each
+      dump on the incident timeline, the full thread report\nnext to the report (<input>-thread-dumps.html,
+      .thread_dumps of --json).\n\U0001F52C A heap dump is not (Eclipse MAT, Docker,
+      memory): its playground\nanalyze heap-dump command is at the top of the report
+      and in the verdict\n(.heap_dumps). \U0001F5FA️ The outputs of kafka-topics --describe
+      and kafka-log-dirs\n--describe of the input give the Cluster layout: replicas,
+      leaders and\ndisk per broker, leader imbalance and skew, offline / under-replicated
+      /\nunder min ISR partitions, replication factor 1, log dirs offline, disk\nskew
+      (.cluster_layout). \U0001F422 The signals of a broker under pressure, read\nfrom
+      INFO / WARN lines (ISR shrinks and expands per broker and partition,\nfollowers
+      failing to fetch, requests timed out, log cleaner failures,\nquota throttling,
+      responses to clients already gone), are counted by\nbroker with their storms,
+      and their bursts are on the incident timeline.\nOnly files with findings are\nshown.
+      \U0001F52D When no file has findings, an overview says what the logs\ncontain
+      (period covered, records by level, top messages and loggers) and\nwhat to ask
+      for next (a longer window, the logs of the component that\nfails, a new export
+      of a log console). The HTML report also has\nthe configuration: the configs
       logged at startup (KafkaConfig values:,\nDistributedConfig, connector and client
       configs…) and the .properties\nand connector JSON files of the input.\n\n⏳ A
       large file (20 MB or more) shows a progress bar in the terminal\n(MB read, speed,
@@ -4762,7 +4777,17 @@ subcommands:
         MySQL binlog purged, HTTP 503, ServiceNow 429, a custom connector; 3 of them\n
         \                        below the minimum version supported on CP 8.1 (\U0001F6DF),
         icons, connector cards\n  support_bundle         .zip with that log and a
-        gzipped broker log\n  kafka_streams          logs of the 3 instances of other/kafka-streams
+        gzipped broker log\n  broker_pressure        logs of 3 brokers while broker
+        3 falls behind (ISR shrink storm, fetch errors and\n                         request
+        timeouts of its followers, log cleaner died, responses to clients already\n
+        \                        gone) with their kafka-topics --describe and kafka-log-dirs
+        outputs: \U0001F422 broker\n                         signals on the timeline,
+        \U0001F5FA️ cluster layout (leader skew, under-replicated\n                         partitions,
+        a log dir offline, disk skew)\n  jvm_dumps              that Connect log with
+        3 thread dumps of a JVM (deadlock, contention, stuck task,\n                         CPU-hungry
+        thread, growing pool) and a heap dump: \U0001F9F5 thread dumps analyzed in
+        the\n                         report, \U0001F52C the heap dump command at
+        the top\n  kafka_streams          logs of the 3 instances of other/kafka-streams
         (serde-errors.sh): an application in\n                         ERROR after
         a poison pill, its dead stream thread, deserialization and production\n                         handler
         errors, the \U0001F30A Kafka Streams section (state, rebalances, tasks, timeline)\n
@@ -4787,9 +4812,9 @@ subcommands:
         same cluster the next day (quota raised, KRaftController unblocked, roll\n
         \                        complete): --sample cfk_rollout --sample cfk_rollout_after
         compares the two\n\nRepeatable: ✓ Yes\nAllowed values: connect_task_failure,
-        connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix,
-        cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after\nConflicts
-        with: --from-containers"
+        connect_many_connectors, support_bundle, broker_pressure, jvm_dumps, kafka_streams,
+        kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout,
+        cfk_rollout_after\nConflicts with: --from-containers"
     - names:
       - "--errors-only"
       argument: ''
@@ -4896,8 +4921,9 @@ subcommands:
       description: "\U0001F5C2️ With --json, only these sections, comma separated:
         summary, findings, known_causes, root_causes, files, files_without_findings,
         coverage, configuration, timeline, connectors, comparison, trend, lifecycle,
-        config_lint, other_files, fixed_bugs, task_workers, data_to_request, config_drift
-        (default: all). For example --json-sections summary,findings,root_causes"
+        config_lint, other_files, thread_dumps, heap_dumps, cluster_layout, fixed_bugs,
+        task_workers, data_to_request, config_drift (default: all). For example --json-sections
+        summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT

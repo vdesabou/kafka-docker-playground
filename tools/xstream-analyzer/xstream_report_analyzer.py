@@ -15,7 +15,9 @@ Exit codes : 0 analysis done, 2 not an orclcdc_diag report, 1 usage error.
 """
 
 import argparse
+import contextlib
 import html as _html
+import io
 import json
 import os
 import re
@@ -1366,8 +1368,15 @@ def main() -> int:
         print_text(a, args.top)
     print_deltas(deltas)
     if args.html_out:
+        # 📤 Share: the digest printed above as the summary, the findings of the page for a ticket
+        digest = io.StringIO()
+        with contextlib.redirect_stdout(digest):
+            for a in analyses:
+                print_text(a, args.top)
+            print_deltas(deltas)
         with open(args.html_out, "w", encoding="utf-8") as fh:
-            fh.write(html_report(analyses, deltas))
+            fh.write(report_html.with_share(html_report(analyses, deltas), summary=digest.getvalue(),
+                                            command="playground analyze oracle-xstream-report"))
         print(f"HTML report: {args.html_out}", file=sys.stderr)
     return 0
 
