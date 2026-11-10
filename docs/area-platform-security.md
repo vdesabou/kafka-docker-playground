@@ -54,12 +54,14 @@ Every security example: `playground find-example --category security --limit 50`
 ### 🌐 Connectivity to Confluent Cloud
 
 The playground can't recreate PrivateLink, peering or private DNS. It covers the **client side** of a connectivity
-case, against a real Confluent Cloud cluster with any `ccloud/` example:
+case, against a real Confluent Cloud cluster with any `ccloud/` example. Start with the five checks (DNS of the
+bootstrap and of every broker, TCP, TLS and SNI, authentication) of the
+[client-side checklist](/deep-dive-network-traffic?id=_6-confluent-cloud-connectivity-a-client-side-checklist):
 
 | Question | Command or example |
 | --- | --- |
 | Is the TLS chain, SNI or hostname the problem? | `playground tools cert inspect --server <bootstrap host>:9092` |
-| Resets, retransmissions, TLS alerts on the wire | `playground debug tcp-dump`, then `playground analyze tcp-dump` |
+| Resets, retransmissions, TLS alerts on the wire | `playground debug tcp-dump`, then `playground analyze tcp-dump` (also on a capture sent by the customer: `-f ccloud.pcap`) |
 | Behaviour on a slow or lossy link | `playground debug degrade-traffic -c connect --latency 80ms --action start` |
 | The client goes through a proxy | [ccloud/haproxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy), the `*-proxy.sh` connector examples, `playground tcp-proxy` |
 | A fully managed connector loses an ACL | `playground run --ccloud-service-account`, `playground rbac acl delete --connector <c> …` |

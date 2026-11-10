@@ -21,6 +21,9 @@ changing the example or restarting anything. Takes about 15 minutes to read and 
 
 Both commands default to `--container connect`, and `-c` can be repeated to hit several containers at once.
 
+For a client that can't reach Confluent Cloud (PrivateLink, peering, private DNS: none of it can run locally), see
+[6. Confluent Cloud connectivity: a client-side checklist](/deep-dive-network-traffic?id=_6-confluent-cloud-connectivity-a-client-side-checklist).
+
 ---
 
 ## 1. Mental model (the 3 things to remember)
@@ -224,7 +227,68 @@ playground connector wait --connector jdbc-sink --state RUNNING --max-wait 120
 
 ---
 
-## 6. Cheat sheet
+## 6. Confluent Cloud connectivity: a client-side checklist
+
+PrivateLink, VPC peering, Transit Gateway and private DNS zones can't be recreated on a laptop. Most "the client
+can't reach Confluent Cloud" cases can still be narrowed down from the client side, in five checks, always in this
+order: each one only makes sense once the previous one passes.
+
+Three things to keep in mind:
+
+1. **The bootstrap is only the first connection.** The client then connects to every broker named in the metadata,
+   under its own hostname. A working bootstrap proves nothing about the brokers: DNS, routes and firewall rules must
+   cover all of them.
+2. **Everything is TLS, routed by SNI**: the Kafka endpoints on port 9092, and Schema Registry, the REST APIs and
+   the other HTTPS endpoints on 443. The endpoint picks the cluster from the name the client sends in the TLS
+   handshake. A client connecting to an IP address, or a proxy or load balancer that doesn't forward SNI (or
+   terminates TLS), can't work.
+3. **With private networking, names must resolve to the private endpoints of the customer's network.** If a name
+   resolves to a public address, or doesn't resolve at all, the client is using the wrong DNS zone.
+
+| # | Check | On the client host | Passes when | When it fails, the client logs |
+| --- | --- | --- | --- | --- |
+| 1 | DNS of the bootstrap | `nslookup <bootstrap host>` | it resolves; with private networking, to private addresses | `No resolvable bootstrap urls given in bootstrap.servers`, `java.net.UnknownHostException` |
+| 2 | DNS of **every** broker | `kafka-broker-api-versions --bootstrap-server <bootstrap>:9092 --command-config client.properties` lists the broker hostnames (or `kcat -L`), then `nslookup` each one | every broker hostname resolves like the bootstrap | the bootstrap works, then `Connection to node <id> (<broker host>/…:9092) could not be established. Node may not be available.` (`Broker may not be available` in older clients) for some or all brokers. An AdminClient: `Timed out waiting for a node assignment`. Only *some* brokers failing usually means a private DNS zone with missing records |
+| 3 | TCP to every host | `nc -vz <host> 9092` for the bootstrap and each broker, `nc -vz <host> 443` for Schema Registry and REST | the connection opens (`succeeded`, `open` or `Connected`, depending on the `nc` version) | the same `could not be established` warnings, repeated. In a capture: a SYN with no answer (a firewall or security group drops it) or a reset |
+| 4 | TLS and SNI | `openssl s_client -connect <host>:9092 -servername <host> -showcerts < /dev/null` | `Verify return code: 0 (ok)`, with a certificate for the cluster's domain | `SslAuthenticationException: SSL handshake failed`. With `PKIX path building failed`: the client's truststore doesn't hold the CA. Either `ssl.truststore.location` points to a truststore without the public CAs, or a TLS-inspecting proxy replaced the certificate (the issuer in `openssl s_client` is the company CA, not a public one) |
+| 5 | Authentication | the client config: `security.protocol=SASL_SSL`, `sasl.mechanism=PLAIN`, API key and secret | the client gets past `ApiVersions` | `SaslAuthenticationException: Authentication failed`: wrong secret, a deleted key, or a key of another cluster |
+
+`ssl.endpoint.identification.algorithm` must stay `https` (the default): disabling it hides a hostname problem
+instead of fixing it.
+
+### What the playground adds to the checklist
+
+| Situation | Command |
+| --- | --- |
+| The customer sent a capture of a failing start (`tcpdump -i any -w ccloud.pcap port 9092 or port 443 or port 53`) | `playground analyze tcp-dump -f ccloud.pcap --output-dir /tmp/ccloud-pcap`: SYN with no answer, refused and reset connections, the SNI of each TLS handshake, TLS alerts with their likely cause, DNS errors. The Kafka requests are encrypted, so they don't show up: this is a TCP, TLS and DNS view |
+| Is it the truststore, the chain or the hostname? | `playground tools cert inspect --server <bootstrap host>:9092 --truststore <their truststore> --truststore-password <password>` from a machine that reaches the endpoint (public networking). With private networking, ask for the `openssl s_client -showcerts` output, save the certificates as a PEM file and use `--file <pem> --truststore …` |
+| Reproduce with a real cluster: a slow or lossy link | any `ccloud/` example, then `playground debug degrade-traffic -c connect --latency 80ms --action start` (no `--destination`: the addresses of Confluent Cloud endpoints change) |
+| A client behind an SNI proxy, no direct route | [ccloud/haproxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy): `iptables` blocks the direct route, HAProxy forwards 9092 and 443 based on the SNI |
+
+`playground analyze tcp-dump` on the capture shipped with the playground shows what these findings look like:
+
+```bash
+playground analyze tcp-dump --sample kafka_and_network_errors --output-dir /tmp/tcp-dump-sample
+# 🟠 HIGH: 1 connection attempt(s) to sample-firewalled:8080 got no answer (SYN without SYN/ACK): the host is down or unreachable, a firewall drops the packets, or the address is wrong.
+# 🟠 HIGH: TLS fatal alert certificate_unknown sent by sample-client to sample-tls-server (1x). Likely: the certificate was rejected (often the CA is not in the truststore, or the hostname does not match).
+# 🟡 MEDIUM: DNS NXDOMAIN for schema-registry.does-not-exist.invalid (2x): the name does not resolve from this container.
+# 🔐 TLS
+#    1 handshake(s) (no SNI) → sample-tls-server
+```
+
+### What to ask the customer for
+
+1. The output of the five checks above, run **on the client host** (not from a laptop), for the bootstrap and
+   every broker hostname.
+2. The client configuration, with the secrets masked, and the client version.
+3. The client logs from its start, including the first failed connection (`org.apache.kafka.clients.NetworkClient`
+   at `DEBUG` shows each connection attempt and the address it resolved).
+4. A capture of a failing start, for `playground analyze tcp-dump`: DNS (port 53) included, otherwise the
+   resolution step can't be checked.
+
+---
+
+## 7. Cheat sheet
 
 ```bash
 playground debug block-traffic   -c <c> [-c <c2>] --destination <ip|container|host> [--port N] --action start|stop
@@ -251,5 +315,6 @@ playground debug degrade-traffic -c <c> [-c <c2>] [--destination <d> [--port N]]
   in the Reproduction toolkit
 - 🍪 Deep dive: [`playground tcp-proxy` (Zazkia)](/deep-dive-tcp-proxy.md) to act on one TCP connection of a connector
   (delay, break, close, cut one direction) instead of the whole container's network
+- 🦈 [playground analyze tcp-dump](/playground%20analyze%20tcp-dump) and [playground tools cert inspect](/playground%20tools%20cert%20inspect), the two commands of the Confluent Cloud checklist
 - 🧠 CLI reference: [playground debug degrade-traffic](/playground%20debug%20degrade-traffic),
   [playground debug block-traffic](/playground%20debug%20block-traffic), [playground connector wait](/playground%20connector%20wait)
