@@ -5659,7 +5659,7 @@ playground_refresh_cp_docker_images_usage() {
 playground_cleanup_cloud_details_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cleanup-cloud-details\n\n"
-    printf "  🧼 playground is actively caching ccloud details\n  (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n     use this command if you notice that the playground is using unexpected\n  ccloud details\n  \n  Drops the cached environment, cluster, endpoints and API keys, so the next\n  ccloud example re-discovers them from scratch. Typically needed after you\n  changed of Confluent Cloud organisation, or deleted the cluster from the UI\n  behind the playground's back.\n  \n  ❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n     the cloud resources themselves, see 'playground cloud-resources cleanup'.\n\n"
+    printf "  🧼 playground is actively caching ccloud details\n  (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n     use this command if you notice that the playground is using unexpected\n  ccloud details\n  \n  Drops the cached environment, cluster, endpoints and API keys (including\n  the configs cached for each cluster used, in .ccloud/clusters/), so the\n  next ccloud example re-discovers them from scratch. Typically needed after you\n  changed of Confluent Cloud organisation, or deleted the cluster from the UI\n  behind the playground's back.\n  \n  ❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n     the cloud resources themselves, see 'playground cloud-resources cleanup'.\n\n"
   else
     printf "playground cleanup-cloud-details - 🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n\n"
   fi
@@ -40043,6 +40043,124 @@ function check_expected_ccloud_details () {
   fi
 }
 
+# sha256 of $1 (credentials are never written to the cache info file, only their hash)
+function ccloud_cache_hash () {
+  if command -v shasum > /dev/null 2>&1
+  then
+    printf '%s' "$1" | shasum -a 256 | cut -d " " -f 1
+  else
+    printf '%s' "$1" | sha256sum | cut -d " " -f 1
+  fi
+}
+
+# value of key $2 in the cache info file $1 (key=value lines, never sourced)
+function ccloud_cache_info_get () {
+  grep "^$2=" "$1" 2>/dev/null | head -1 | cut -d "=" -f 2-
+}
+
+# Cache of the generated configs (.ccloud/*.delta) per Kafka cluster, in .ccloud/clusters/<lkc-id>/, so that going back
+# and forth between clusters (AWS_/GCP_/AZURE_/AWS_DATABRICKS_CLUSTER_NAME of the fully managed examples) does not run
+# the whole stack bootstrap each time: only the active .ccloud/*.delta files were kept, for one cluster.
+# Called at the end of a full bootstrap_ccloud_environment, with the cluster details it used.
+function ccloud_save_cluster_configs_cache () {
+  local cluster_id cache_dir file
+  get_kafka_docker_playground_dir
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  if [ -z "$cluster_id" ] || [ -z "$ENVIRONMENT" ] || [ -z "$CLUSTER_NAME" ] || [ -z "$CLUSTER_CREDS" ]
+  then
+    return 0
+  fi
+  cache_dir="$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/clusters/$cluster_id"
+  rm -rf "$cache_dir"
+  mkdir -p "$cache_dir"
+  chmod 0700 "$cache_dir"
+  for file in env.delta ak-tools-ccloud.delta librdkafka.delta
+  do
+    if [ ! -f "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/$file" ]
+    then
+      rm -rf "$cache_dir"
+      return 0
+    fi
+    cp -p "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/$file" "$cache_dir/$file"
+  done
+  {
+    echo "CLUSTER_ID=$cluster_id"
+    echo "ENVIRONMENT=$ENVIRONMENT"
+    echo "CLUSTER_NAME=$CLUSTER_NAME"
+    echo "CLUSTER_CLOUD=$CLUSTER_CLOUD"
+    echo "CLUSTER_REGION=$CLUSTER_REGION"
+    echo "CLUSTER_CREDS_SHA256=$(ccloud_cache_hash "$CLUSTER_CREDS")"
+    echo "SCHEMA_REGISTRY_CREDS_SHA256=$(ccloud_cache_hash "$SCHEMA_REGISTRY_CREDS")"
+  } > "$cache_dir/cache.info"
+  chmod 0600 "$cache_dir/cache.info"
+}
+
+# Use the cached configs of the cluster ENVIRONMENT / CLUSTER_NAME, when they were generated with the same CLUSTER_CREDS
+# (and the same SCHEMA_REGISTRY_CREDS, when set: without them, the Schema Registry key of the cache is reused instead
+# of creating a new service account and key). Makes the cluster the current one of the confluent CLI, copies its
+# configs to .ccloud/ and sources env.delta. Returns 1 (and drops the cache) when there is none or the cluster is gone.
+# $1 (optional): output of 'confluent kafka cluster list -o json' (clusters of the current environment), to skip the
+# 'environment use' / 'kafka cluster use' calls (about 1 second each) when they are already the current ones.
+function ccloud_restore_cluster_configs_cache () {
+  local cluster_list="$1"
+  local info cache_dir cluster_id="" kafka_api_key kafka_api_secret file in_current_env="false" is_current="false"
+  get_kafka_docker_playground_dir
+  for info in "$KAFKA_DOCKER_PLAYGROUND_DIR"/.ccloud/clusters/*/cache.info
+  do
+    [ -f "$info" ] || continue
+    if [ "$(ccloud_cache_info_get "$info" ENVIRONMENT)" == "$ENVIRONMENT" ] \
+      && [ "$(ccloud_cache_info_get "$info" CLUSTER_NAME)" == "$CLUSTER_NAME" ] \
+      && [ "$(ccloud_cache_info_get "$info" CLUSTER_CREDS_SHA256)" == "$(ccloud_cache_hash "$CLUSTER_CREDS")" ]
+    then
+      if [ -n "$SCHEMA_REGISTRY_CREDS" ] && [ "$(ccloud_cache_info_get "$info" SCHEMA_REGISTRY_CREDS_SHA256)" != "$(ccloud_cache_hash "$SCHEMA_REGISTRY_CREDS")" ]
+      then
+        continue
+      fi
+      cluster_id=$(ccloud_cache_info_get "$info" CLUSTER_ID)
+      cache_dir=$(dirname "$info")
+      break
+    fi
+  done
+  if [ -z "$cluster_id" ]
+  then
+    return 1
+  fi
+
+  if [ -n "$cluster_list" ] && [ -f "$cluster_list" ]
+  then
+    in_current_env=$(jq -r --arg id "$cluster_id" 'any(.[]; .id == $id)' "$cluster_list" 2>/dev/null || echo false)
+    is_current=$(jq -r --arg id "$cluster_id" 'any(.[]; .id == $id and .is_current == true)' "$cluster_list" 2>/dev/null || echo false)
+  fi
+  # also checks that the cluster still exists, in the organization the CLI is logged in to
+  if { [ "$in_current_env" != "true" ] && ! confluent environment use "$ENVIRONMENT" > /dev/null 2>&1; } \
+    || { [ "$is_current" != "true" ] && ! confluent kafka cluster use "$cluster_id" > /dev/null 2>&1; }
+  then
+    logwarn "🗑️ cached configs of cluster $CLUSTER_NAME ($cluster_id) are stale (cluster or environment not found), generating them again"
+    rm -rf "$cache_dir"
+    return 1
+  fi
+  kafka_api_key="${CLUSTER_CREDS%%:*}"
+  kafka_api_secret="${CLUSTER_CREDS#*:}"
+  # the key is stored in the confluent CLI config by the full bootstrap: store it again only when it is not there anymore
+  if ! confluent api-key use "$kafka_api_key" --resource "$cluster_id" > /dev/null 2>&1
+  then
+    confluent api-key store "$kafka_api_key" "$kafka_api_secret" --resource "$cluster_id" --force > /dev/null 2>&1
+    confluent api-key use "$kafka_api_key" --resource "$cluster_id" > /dev/null 2>&1
+  fi
+
+  for file in env.delta ak-tools-ccloud.delta librdkafka.delta
+  do
+    cp -p "$cache_dir/$file" "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/$file"
+  done
+  source "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta"
+  if [ -z "$SCHEMA_REGISTRY_CREDS" ]
+  then
+    SCHEMA_REGISTRY_CREDS="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
+  fi
+  log "⚡ using the cached configs of cluster $CLUSTER_NAME ($cluster_id), no bootstrap needed"
+  return 0
+}
+
 function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
@@ -40167,10 +40285,9 @@ function bootstrap_ccloud_environment () {
 
   if [ ! -z "$CLUSTER_NAME" ]
   then
-    if [ "$(playground state get "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
-    then
-      suggest_use_previous_example_ccloud=0
-    fi
+    # an explicit CLUSTER_NAME wins: no 'Use previously used ccloud cluster' question when the previous run used another
+    # one (a generic fully managed example on CLUSTER_NAME right after a fm-gcp-* one on GCP_CLUSTER_NAME)
+    suggest_use_previous_example_ccloud=0
   fi
 
   if [ "$(playground state get "ccloud.suggest_use_previous_example_ccloud")" == "0" ]
@@ -40292,6 +40409,27 @@ function bootstrap_ccloud_environment () {
 
     log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
 
+    if ccloud_restore_cluster_configs_cache "$ccloud_cluster_list"
+    then
+      if [ -n "$ccloud_cluster_list" ]
+      then
+        rm -f "$ccloud_cluster_list"
+      fi
+      playground state set ccloud.ENVIRONMENT "$ENVIRONMENT"
+      playground state set ccloud.CLUSTER_NAME "$CLUSTER_NAME"
+      playground state set ccloud.CLUSTER_CLOUD "$CLUSTER_CLOUD"
+      playground state set ccloud.CLUSTER_REGION "$CLUSTER_REGION"
+      playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
+      playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
+      log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+      if [[ ! -n "$connect_migration_utility" ]]
+      then
+        # trick
+        playground state set run.environment "ccloud"
+      fi
+      return
+    fi
+
     if [ -z "$ccloud_cluster_list" ]
     then
       ccloud_cluster_list=$(mktemp)
@@ -40343,6 +40481,8 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.CLUSTER_REGION "$CLUSTER_REGION"
   playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
+
+  ccloud_save_cluster_configs_cache
 
   if [[ ! -n "$connect_migration_utility" ]]
   then

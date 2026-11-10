@@ -1499,7 +1499,7 @@
     },
     {
       "name": "cleanup-cloud-details",
-      "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n\nDrops the cached environment, cluster, endpoints and API keys, so the next\nccloud example re-discovers them from scratch. Typically needed after you\nchanged of Confluent Cloud organisation, or deleted the cluster from the UI\nbehind the playground's back.\n\n❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n   the cloud resources themselves, see 'playground cloud-resources cleanup'.",
+      "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n\nDrops the cached environment, cluster, endpoints and API keys (including\nthe configs cached for each cluster used, in .ccloud/clusters/), so the\nnext ccloud example re-discovers them from scratch. Typically needed after you\nchanged of Confluent Cloud organisation, or deleted the cluster from the UI\nbehind the playground's back.\n\n❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n   the cloud resources themselves, see 'playground cloud-resources cleanup'.",
       "usage": "playground cleanup-cloud-details",
       "options": []
     },
