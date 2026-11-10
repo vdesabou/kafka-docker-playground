@@ -41,7 +41,11 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 1. **One cluster per machine, cached.** `bootstrap_ccloud_environment` (the first line of every `ccloud/fm-*` example,
    instead of `start-environment`) either reuses a cluster or creates a full stack:
    - **your cluster**: `CLUSTER_NAME`, `ENVIRONMENT`, `CLUSTER_CLOUD`, `CLUSTER_REGION` and `CLUSTER_CREDS`
-     (`<api key>:<secret>`, optionally `SCHEMA_REGISTRY_CREDS`) exported before the run;
+     (`<api key>:<secret>`, optionally `SCHEMA_REGISTRY_CREDS`) exported before the run. Without
+     `SCHEMA_REGISTRY_CREDS`, the Schema Registry key of another cached cluster of the same environment is reused
+     (`🔑 SCHEMA_REGISTRY_CREDS is not set: reusing the Schema Registry API key …`), else one key **owned by you** is
+     created (`kafka-docker-playground SCHEMA_REGISTRY_CREDS (<user>)`, no service account): store it with
+     `playground secrets set SCHEMA_REGISTRY_CREDS` to reuse it everywhere;
    - **otherwise a new stack**: a service account, an environment `pg-${USER}-<service account>-<example>`, a **basic**
      cluster `pg-${USER}-cluster-<service account>` on **AWS `eu-west-2`** unless `CLUSTER_CLOUD` / `CLUSTER_REGION`
      are set, its API keys with full ACLs, and Schema Registry;

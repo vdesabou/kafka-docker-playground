@@ -4211,7 +4211,7 @@ playground_cloud_resources_ccloud_usage() {
 playground_cloud_resources_ccloud_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources ccloud list\n\n"
-    printf "  📋 List what the playground left running for you in Confluent Cloud, across the\n  whole organization\n  \n  Read-only. Walks every environment and Kafka cluster of the\n  organization your confluent CLI is logged into (in parallel), which\n  matters in an org shared by a whole team, and shows:\n  \n    🤖 connectors named *_<user>, with their status, type, cluster and\n       age (from the local run records, ? when created elsewhere)\n    🌐 environments and 🎰 clusters named pg-<user>-*\n    🤖 service accounts named pg-<user>-*, and 🔑 the API keys they own\n    📝 topics recorded by your runs (playground-ccloud-created-topics),\n       and whether they still exist\n  \n  A running connector is what costs the most (billed per task-hour),\n  then a cluster: those are summed up at the end. The 🧹 column tells\n  what 'playground cloud-resources cleanup --resource ccloud' deletes.\n  \n  🎓 Tip: in a shared org, run it before leaving for the day.\n\n"
+    printf "  📋 List what the playground left running for you in Confluent Cloud, across the\n  whole organization\n  \n  Read-only. Walks every environment and Kafka cluster of the\n  organization your confluent CLI is logged into (in parallel), which\n  matters in an org shared by a whole team, and shows:\n  \n    🤖 connectors named *_<user>, with their status, type, cluster and\n       age (from the local run records, ? when created elsewhere)\n    🌐 environments and 🎰 clusters named pg-<user>-*\n    🤖 service accounts named pg-<user>-*, and 🔑 the API keys they own,\n       plus the Schema Registry keys created for you when\n       SCHEMA_REGISTRY_CREDS is not set\n    📝 topics recorded by your runs (playground-ccloud-created-topics),\n       and whether they still exist\n  \n  A running connector is what costs the most (billed per task-hour),\n  then a cluster: those are summed up at the end. The 🧹 column tells\n  what 'playground cloud-resources cleanup --resource ccloud' deletes.\n  \n  🎓 Tip: in a shared org, run it before leaving for the day.\n\n"
   else
     printf "playground cloud-resources ccloud list - 📋 List what the playground left running for you in Confluent Cloud, across the whole organization\n\n"
   fi
@@ -4580,7 +4580,7 @@ playground_ccloud_costs_history_usage() {
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n\n"
-    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --schema-registry-tag, --ksqldb-tag, --control-center-tag\n                      version for that component only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --enable-sql-datagen\n                      continuous realistic data for CDC source examples\n    --benchmark       benchmark the connector once the example succeeded\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --connect-log-level\n                      log levels set on connect before the connector is created\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  📄 Run log\n    The output is also written to a text file, passwords, api keys and\n    tokens masked, ready to share with a colleague: the\n    command to re-run, the versions, the host, the result and, for a\n    failure, the errors of the connect container. Its path is printed at\n    the end of the run. The last 50 are kept in\n    /tmp/playground-run-logs.\n  \n    --run-log-file    write it to that file\n    --no-run-log      don't write it\n    playground config run-log false | run-log-folder <folder>\n  \n    The masking is best-effort: review the file before sharing it\n    outside Confluent.\n  \n  ❗ the containers of the previous example are stopped first (\"playground\n  stop\"). To kill every container instead (\"playground container kill-all\"), run\n  \"playground config container-kill-all-before-run true\"\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B9%%EF%%B8%%8F-run-an-example-with-the-menu-or-with-flags\n\n"
+    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --schema-registry-tag, --ksqldb-tag, --control-center-tag\n                      version for that component only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --enable-sql-datagen\n                      continuous realistic data for CDC source examples\n    --benchmark       benchmark the connector once the example succeeded\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --connect-log-level\n                      log levels set on connect before the connector is created\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, the key of another cluster of the same\n  environment is reused, else a new one owned by you is created): The Schema\n  Registry api key and secret to use, it should be separated with colon\n  (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  📄 Run log\n    The output is also written to a text file, passwords, api keys and\n    tokens masked, ready to share with a colleague: the\n    command to re-run, the versions, the host, the result and, for a\n    failure, the errors of the connect container. Its path is printed at\n    the end of the run. The last 50 are kept in\n    /tmp/playground-run-logs.\n  \n    --run-log-file    write it to that file\n    --no-run-log      don't write it\n    playground config run-log false | run-log-folder <folder>\n  \n    The masking is best-effort: review the file before sharing it\n    outside Confluent.\n  \n  ❗ the containers of the previous example are stopped first (\"playground\n  stop\"). To kill every container instead (\"playground container kill-all\"), run\n  \"playground config container-kill-all-before-run true\"\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B9%%EF%%B8%%8F-run-an-example-with-the-menu-or-with-flags\n\n"
   else
     printf "playground run - 🕹️ Run any example !\n\n"
   fi
@@ -4790,7 +4790,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
-    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
+    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, the key of another cluster of the same environment\n    already used on this machine is reused, else a new API key owned by you is\n    created (no service account)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
     echo
 
     # :flag.usage
@@ -40208,6 +40208,34 @@ function ccloud_restore_cluster_configs_cache () {
   return 0
 }
 
+# Schema Registry is per environment: when SCHEMA_REGISTRY_CREDS is not set, reuse the key of another cluster of the same
+# ENVIRONMENT already cached in .ccloud/clusters/ (checked against Schema Registry: 200 or 403 means the key exists),
+# rather than creating one more key for each cluster. Exports SCHEMA_REGISTRY_CREDS and returns 0 when one is found.
+function ccloud_reuse_known_schema_registry_creds () {
+  local info delta creds url code
+  get_kafka_docker_playground_dir
+  for info in "$KAFKA_DOCKER_PLAYGROUND_DIR"/.ccloud/clusters/*/cache.info
+  do
+    [ -f "$info" ] || continue
+    [ "$(ccloud_cache_info_get "$info" ENVIRONMENT)" == "$ENVIRONMENT" ] || continue
+    delta="$(dirname "$info")/env.delta"
+    creds=$(grep '^export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=' "$delta" 2>/dev/null | cut -d '"' -f 2)
+    url=$(grep '^export SCHEMA_REGISTRY_URL=' "$delta" 2>/dev/null | cut -d '"' -f 2)
+    if [ -z "$creds" ] || [ "$creds" == ":" ] || [ -z "$url" ]
+    then
+      continue
+    fi
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -u "$creds" "$url/subjects")
+    if [[ "$code" =~ ^(200|403)$ ]]
+    then
+      export SCHEMA_REGISTRY_CREDS="$creds"
+      log "🔑 SCHEMA_REGISTRY_CREDS is not set: reusing the Schema Registry API key ${creds%%:*} of environment $ENVIRONMENT (cached for cluster $(ccloud_cache_info_get "$info" CLUSTER_NAME))"
+      return 0
+    fi
+  done
+  return 1
+}
+
 function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
@@ -40506,6 +40534,12 @@ function bootstrap_ccloud_environment () {
 
   check_expected_ccloud_details "$expected_cloud" "$expected_region"
 
+  if [ -z "$SCHEMA_REGISTRY_CREDS" ] && [ -n "$ENVIRONMENT" ] && [ -n "$CLUSTER_CREDS" ]
+  then
+    ccloud_reuse_known_schema_registry_creds || true
+  fi
+  local schema_registry_creds_given="$SCHEMA_REGISTRY_CREDS"
+
   ccloud::create_ccloud_stack false
 
   CCLOUD_CONFIG_FILE=/tmp/tmp.config
@@ -40530,6 +40564,12 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
   ccloud_save_cluster_configs_cache
+
+  if [ -z "$schema_registry_creds_given" ] && [ "$SCHEMA_REGISTRY_CREDS_CREATED_FOR_USER" == "1" ] && [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    log "🔑 created the Schema Registry API key ${SCHEMA_REGISTRY_CREDS%%:*} of environment $ENVIRONMENT, owned by you (no service account)"
+    log "🎓 to reuse it on every machine and cluster of this environment, store it: playground secrets set SCHEMA_REGISTRY_CREDS (value: ${SCHEMA_REGISTRY_CREDS%%:*}:<secret>, also in .ccloud/env.delta)"
+  fi
 
   if [[ ! -n "$connect_migration_utility" ]]
   then
@@ -42448,6 +42488,7 @@ function ccloud::setup_schema_registry() {
   local sr_creds="$SCHEMA_REGISTRY_CREDS"
   local sr_json=""
   local -i curr_wait=0
+  local sr_created_for_user=0
 
   # Schema Registry of a brand new environment may not be available right away
   until sr_json=$(confluent schema-registry cluster describe --environment "$ENVIRONMENT" -o json 2>/dev/null) && [ -n "$(echo "$sr_json" | jq -r '.cluster // empty')" ]
@@ -42467,7 +42508,15 @@ function ccloud::setup_schema_registry() {
   then
     # always a new key: the secret of an existing one cannot be retrieved, and looking for it means
     # listing every key of the org (slow)
-    sr_creds=$(ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $sr_cluster)
+    if [ -n "$SERVICE_ACCOUNT_ID" ]
+    then
+      sr_creds=$(ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $sr_cluster)
+    else
+      # owned by the logged-in user (who could create the role binding of a service account, so has the access):
+      # no service account left behind. Found again with 'playground cloud-resources ccloud list'
+      sr_creds=$(confluent api-key create --resource "$sr_cluster" --environment "$ENVIRONMENT" --description "kafka-docker-playground SCHEMA_REGISTRY_CREDS (${USER})" -o json | jq -r '"\(.api_key):\(.api_secret)"')
+      sr_created_for_user=1
+    fi
     if [[ -z "${sr_creds%%:*}" ]] || [[ "${sr_creds%%:*}" == "null" ]]
     then
       echo "ERROR: Could not create an API key for Schema Registry $sr_cluster"
@@ -42502,6 +42551,7 @@ function ccloud::setup_schema_registry() {
     printf 'SCHEMA_REGISTRY=%q\n' "$sr_cluster"
     printf 'SCHEMA_REGISTRY_ENDPOINT=%q\n' "$sr_endpoint"
     printf 'SCHEMA_REGISTRY_CREDS=%q\n' "$sr_creds"
+    printf 'SCHEMA_REGISTRY_CREDS_CREATED_FOR_USER=%q\n' "${sr_created_for_user:-0}"
   } > "$output_file"
 }
 
@@ -42714,9 +42764,12 @@ function ccloud::create_ccloud_stack() {
   fi
 
   # VINC: added
-  # a service account is needed as soon as one of the API keys has to be created
+  # a service account is needed when the Kafka API key has to be created (new stack, with its ACLs). A missing
+  # SCHEMA_REGISTRY_CREDS alone gets an API key owned by the logged-in user instead (ccloud::setup_schema_registry):
+  # a new pg-<user>-app-* service account on every bootstrap was never deleted outside CI. In CI, where the cleanup
+  # deletes those service accounts with their keys, a service account is still used.
   local need_role_binding=0
-  if [[ -z "$CLUSTER_CREDS" ]] || [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
+  if [[ -z "$CLUSTER_CREDS" ]] || { [[ -z "$SCHEMA_REGISTRY_CREDS" ]] && [ -n "$GITHUB_RUN_NUMBER" ]; }
   then
     need_role_binding=1
     if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
@@ -49455,10 +49508,11 @@ playground_cloud_resources_ccloud_list_command() {
       [(if type == "array" then . else [] end)[] | select(.name | startswith("pg-" + $u + "-"))
        | {id, name, description, cleanup: (if (.name | startswith("pg-" + $u + "-conn-")) then "yes" else "CI only" end)}]' \
       "$tmp_dir/service-accounts.json" > "$tmp_dir/service-accounts-user.json"
-  jq --slurpfile sas "$tmp_dir/service-accounts-user.json" '
+  # plus the Schema Registry keys created for the user himself when SCHEMA_REGISTRY_CREDS is not set (bootstrap_ccloud_environment)
+  jq --slurpfile sas "$tmp_dir/service-accounts-user.json" --arg d "kafka-docker-playground SCHEMA_REGISTRY_CREDS ($user)" '
       ([$sas[0][] | {key: .id, value: .name}] | from_entries) as $owners
-      | [(if type == "array" then . else [] end)[] | select($owners[.owner] != null)
-         | {key, owner, owner_name: $owners[.owner], resource_type, resource, created, description}]' \
+      | [(if type == "array" then . else [] end)[] | select($owners[.owner] != null or .description == $d)
+         | {key, owner, owner_name: ($owners[.owner] // "you (\(.owner_email // .owner))"), resource_type, resource, created, description}]' \
       "$tmp_dir/api-keys.json" > "$tmp_dir/api-keys-user.json"
 
   # topics recorded by this machine's runs: still there? (one topic list per cluster that still exists)
@@ -49590,7 +49644,7 @@ playground_cloud_resources_ccloud_list_command() {
   if [ "$nb" -gt 0 ]
   then
       echo ""
-      log "🔑 API keys owned by these service accounts ($nb)"
+      log "🔑 API keys owned by these service accounts, or created for you by the playground ($nb)"
       printf "%-18s %-16s %-14s %-40s %-5s\n" "Key" "Resource type" "Resource" "Owner" "Age"
       jq -r '.[] | [.key, .resource_type, .resource, .owner_name, (.created | fromdateiso8601? // "")] | map(tostring) | join("\u001f")' "$tmp_dir/api-keys-user.json" \
           | while IFS=$'\x1f' read -r key type resource owner created

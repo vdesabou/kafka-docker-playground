@@ -808,13 +808,14 @@ subcommands:
         \ \U0001F916 connectors named *_<user>, with their status, type, cluster and\n
         \    age (from the local run records, ? when created elsewhere)\n  \U0001F310
         environments and \U0001F3B0 clusters named pg-<user>-*\n  \U0001F916 service
-        accounts named pg-<user>-*, and \U0001F511 the API keys they own\n  \U0001F4DD
-        topics recorded by your runs (playground-ccloud-created-topics),\n     and
-        whether they still exist\n\nA running connector is what costs the most (billed
-        per task-hour),\nthen a cluster: those are summed up at the end. The \U0001F9F9
-        column tells\nwhat 'playground cloud-resources cleanup --resource ccloud'
-        deletes.\n\n\U0001F393 Tip: in a shared org, run it before leaving for the
-        day."
+        accounts named pg-<user>-*, and \U0001F511 the API keys they own,\n     plus
+        the Schema Registry keys created for you when\n     SCHEMA_REGISTRY_CREDS
+        is not set\n  \U0001F4DD topics recorded by your runs (playground-ccloud-created-topics),\n
+        \    and whether they still exist\n\nA running connector is what costs the
+        most (billed per task-hour),\nthen a cluster: those are summed up at the end.
+        The \U0001F9F9 column tells\nwhat 'playground cloud-resources cleanup --resource
+        ccloud' deletes.\n\n\U0001F393 Tip: in a shared org, run it before leaving
+        for the day."
       usage: playground cloud-resources ccloud list [OPTIONS]
       options:
       - names:
@@ -984,20 +985,20 @@ subcommands:
     (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or
     CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should
     be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds
-    (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one
-    will be created): The Schema Registry api key and secret to use, it should be
-    separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n\U0001F4C4
-    Run log\n  The output is also written to a text file, passwords, api keys and\n
-    \ tokens masked, ready to share with a colleague: the\n  command to re-run, the
-    versions, the host, the result and, for a\n  failure, the errors of the connect
-    container. Its path is printed at\n  the end of the run. The last 50 are kept
-    in\n  /tmp/playground-run-logs.\n\n  --run-log-file    write it to that file\n
-    \ --no-run-log      don't write it\n  playground config run-log false | run-log-folder
-    <folder>\n\n  The masking is best-effort: review the file before sharing it\n
-    \ outside Confluent.\n\n❗ the containers of the previous example are stopped first
-    (\"playground stop\"). To kill every container instead (\"playground container
-    kill-all\"), run \"playground config container-kill-all-before-run true\"\n\n\U0001F36A
-    Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, the key
+    of another cluster of the same environment is reused, else a new one owned by
+    you is created): The Schema Registry api key and secret to use, it should be separated
+    with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n\U0001F4C4 Run log\n
+    \ The output is also written to a text file, passwords, api keys and\n  tokens
+    masked, ready to share with a colleague: the\n  command to re-run, the versions,
+    the host, the result and, for a\n  failure, the errors of the connect container.
+    Its path is printed at\n  the end of the run. The last 50 are kept in\n  /tmp/playground-run-logs.\n\n
+    \ --run-log-file    write it to that file\n  --no-run-log      don't write it\n
+    \ playground config run-log false | run-log-folder <folder>\n\n  The masking is
+    best-effort: review the file before sharing it\n  outside Confluent.\n\n❗ the
+    containers of the previous example are stopped first (\"playground stop\"). To
+    kill every container instead (\"playground container kill-all\"), run \"playground
+    config container-kill-all-before-run true\"\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground run [OPTIONS]
   options:
@@ -1287,9 +1288,10 @@ subcommands:
     argument: CLUSTER-SCHEMA-REGISTRY-CREDS
     description: "\U0001F512 The Schema Registry api key and secret to use, it should
       be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\nℹ️ Optional,
-      if not set, new credentials will be created\n\n❣️ Only required if you want
-      to use your own existing cluster\n\n\U0001F393 Tip: you can also use SCHEMA_REGISTRY_CREDS
-      environment variable"
+      if not set, the key of another cluster of the same environment already used
+      on this machine is reused, else a new API key owned by you is created (no service
+      account)\n\n❣️ Only required if you want to use your own existing cluster\n\n\U0001F393
+      Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable"
   - names:
     - "--ccloud-service-account"
     argument: ''

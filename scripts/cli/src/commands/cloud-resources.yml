@@ -242,7 +242,9 @@ commands:
         🤖 connectors named *_<user>, with their status, type, cluster and
            age (from the local run records, ? when created elsewhere)
         🌐 environments and 🎰 clusters named pg-<user>-*
-        🤖 service accounts named pg-<user>-*, and 🔑 the API keys they own
+        🤖 service accounts named pg-<user>-*, and 🔑 the API keys they own,
+           plus the Schema Registry keys created for you when
+           SCHEMA_REGISTRY_CREDS is not set
         📝 topics recorded by your runs (playground-ccloud-created-topics),
            and whether they still exist
 

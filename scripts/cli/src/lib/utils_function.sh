@@ -2719,6 +2719,34 @@ function ccloud_restore_cluster_configs_cache () {
   return 0
 }
 
+# Schema Registry is per environment: when SCHEMA_REGISTRY_CREDS is not set, reuse the key of another cluster of the same
+# ENVIRONMENT already cached in .ccloud/clusters/ (checked against Schema Registry: 200 or 403 means the key exists),
+# rather than creating one more key for each cluster. Exports SCHEMA_REGISTRY_CREDS and returns 0 when one is found.
+function ccloud_reuse_known_schema_registry_creds () {
+  local info delta creds url code
+  get_kafka_docker_playground_dir
+  for info in "$KAFKA_DOCKER_PLAYGROUND_DIR"/.ccloud/clusters/*/cache.info
+  do
+    [ -f "$info" ] || continue
+    [ "$(ccloud_cache_info_get "$info" ENVIRONMENT)" == "$ENVIRONMENT" ] || continue
+    delta="$(dirname "$info")/env.delta"
+    creds=$(grep '^export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=' "$delta" 2>/dev/null | cut -d '"' -f 2)
+    url=$(grep '^export SCHEMA_REGISTRY_URL=' "$delta" 2>/dev/null | cut -d '"' -f 2)
+    if [ -z "$creds" ] || [ "$creds" == ":" ] || [ -z "$url" ]
+    then
+      continue
+    fi
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -u "$creds" "$url/subjects")
+    if [[ "$code" =~ ^(200|403)$ ]]
+    then
+      export SCHEMA_REGISTRY_CREDS="$creds"
+      log "🔑 SCHEMA_REGISTRY_CREDS is not set: reusing the Schema Registry API key ${creds%%:*} of environment $ENVIRONMENT (cached for cluster $(ccloud_cache_info_get "$info" CLUSTER_NAME))"
+      return 0
+    fi
+  done
+  return 1
+}
+
 function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
@@ -3014,6 +3042,12 @@ function bootstrap_ccloud_environment () {
 
   check_expected_ccloud_details "$expected_cloud" "$expected_region"
 
+  if [ -z "$SCHEMA_REGISTRY_CREDS" ] && [ -n "$ENVIRONMENT" ] && [ -n "$CLUSTER_CREDS" ]
+  then
+    ccloud_reuse_known_schema_registry_creds || true
+  fi
+  local schema_registry_creds_given="$SCHEMA_REGISTRY_CREDS"
+
   ccloud::create_ccloud_stack false
 
   CCLOUD_CONFIG_FILE=/tmp/tmp.config
@@ -3038,6 +3072,12 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
 
   ccloud_save_cluster_configs_cache
+
+  if [ -z "$schema_registry_creds_given" ] && [ "$SCHEMA_REGISTRY_CREDS_CREATED_FOR_USER" == "1" ] && [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    log "🔑 created the Schema Registry API key ${SCHEMA_REGISTRY_CREDS%%:*} of environment $ENVIRONMENT, owned by you (no service account)"
+    log "🎓 to reuse it on every machine and cluster of this environment, store it: playground secrets set SCHEMA_REGISTRY_CREDS (value: ${SCHEMA_REGISTRY_CREDS%%:*}:<secret>, also in .ccloud/env.delta)"
+  fi
 
   if [[ ! -n "$connect_migration_utility" ]]
   then
@@ -4968,6 +5008,7 @@ function ccloud::setup_schema_registry() {
   local sr_creds="$SCHEMA_REGISTRY_CREDS"
   local sr_json=""
   local -i curr_wait=0
+  local sr_created_for_user=0
 
   # Schema Registry of a brand new environment may not be available right away
   until sr_json=$(confluent schema-registry cluster describe --environment "$ENVIRONMENT" -o json 2>/dev/null) && [ -n "$(echo "$sr_json" | jq -r '.cluster // empty')" ]
@@ -4987,7 +5028,15 @@ function ccloud::setup_schema_registry() {
   then
     # always a new key: the secret of an existing one cannot be retrieved, and looking for it means
     # listing every key of the org (slow)
-    sr_creds=$(ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $sr_cluster)
+    if [ -n "$SERVICE_ACCOUNT_ID" ]
+    then
+      sr_creds=$(ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $sr_cluster)
+    else
+      # owned by the logged-in user (who could create the role binding of a service account, so has the access):
+      # no service account left behind. Found again with 'playground cloud-resources ccloud list'
+      sr_creds=$(confluent api-key create --resource "$sr_cluster" --environment "$ENVIRONMENT" --description "kafka-docker-playground SCHEMA_REGISTRY_CREDS (${USER})" -o json | jq -r '"\(.api_key):\(.api_secret)"')
+      sr_created_for_user=1
+    fi
     if [[ -z "${sr_creds%%:*}" ]] || [[ "${sr_creds%%:*}" == "null" ]]
     then
       echo "ERROR: Could not create an API key for Schema Registry $sr_cluster"
@@ -5022,6 +5071,7 @@ function ccloud::setup_schema_registry() {
     printf 'SCHEMA_REGISTRY=%q\n' "$sr_cluster"
     printf 'SCHEMA_REGISTRY_ENDPOINT=%q\n' "$sr_endpoint"
     printf 'SCHEMA_REGISTRY_CREDS=%q\n' "$sr_creds"
+    printf 'SCHEMA_REGISTRY_CREDS_CREATED_FOR_USER=%q\n' "${sr_created_for_user:-0}"
   } > "$output_file"
 }
 
@@ -5238,9 +5288,12 @@ function ccloud::create_ccloud_stack() {
   fi
 
   # VINC: added
-  # a service account is needed as soon as one of the API keys has to be created
+  # a service account is needed when the Kafka API key has to be created (new stack, with its ACLs). A missing
+  # SCHEMA_REGISTRY_CREDS alone gets an API key owned by the logged-in user instead (ccloud::setup_schema_registry):
+  # a new pg-<user>-app-* service account on every bootstrap was never deleted outside CI. In CI, where the cleanup
+  # deletes those service accounts with their keys, a service account is still used.
   local need_role_binding=0
-  if [[ -z "$CLUSTER_CREDS" ]] || [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
+  if [[ -z "$CLUSTER_CREDS" ]] || { [[ -z "$SCHEMA_REGISTRY_CREDS" ]] && [ -n "$GITHUB_RUN_NUMBER" ]; }
   then
     need_role_binding=1
     if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
