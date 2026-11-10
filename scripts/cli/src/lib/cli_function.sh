@@ -11621,3 +11621,10 @@ function jmx_digest_json () {
 function jmx_digest_value () {
     echo -n "$JMX_DIGEST_VALUES" | awk -F'|' -v id="$1" -v label="$2" '$1 == id && $2 == label { print $3 ; exit }'
 }
+
+# cp_image_refs_with_tag <tag>: repo:tag of the confluentinc images whose tag is exactly <tag> (a grep would also match
+# 7.4.10 for 7.4.1). Names, not ids: without -f, 'docker rmi <id>' refuses an image that has several tags.
+# Used by remove-cp-docker-images and refresh-cp-docker-images.
+function cp_image_refs_with_tag () {
+    docker image ls --format '{{.Repository}} {{.Tag}}' | awk -v v="$1" '{r = $1; sub(/^docker\.io\//, "", r)} r ~ /^confluentinc\// && $2 == v {print $1":"$2}' | sort -u
+}
