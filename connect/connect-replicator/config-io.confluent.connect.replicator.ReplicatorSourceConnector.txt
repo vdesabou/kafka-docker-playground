@@ -59,6 +59,36 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
+null
+==========================
+🔘 task.parallel.transform.enabled
+
+If true, transform and convert operations for this source task run on a per-task thread pool instead of on the task thread. Producer.send() remains sequential to preserve ordering. REQUIREMENT: every SMT and converter configured on the task must be thread-safe — they will be invoked concurrently from multiple worker threads on disjoint records. Leave disabled for connectors whose transforms or converters hold mutable per-instance state without synchronization. Disabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.parallel.transform.threads
+
+Number of threads in the per-task pool used when task.parallel.transform.enabled is true. Bounded to [1, 3] to prevent any single task from monopolizing CPU.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.parallel.transform.chunk.size
+
+Number of records processed per parallel chunk when task.parallel.transform.enabled is true. Caps in-flight memory: peak extra heap per chunk ≈ chunkSize × 2 × avg_record_size. Tune down for connectors shipping records larger than 20 KB. Bounded to [100, 50000].
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Confluent Platform
 ==========================
 🔘 confluent.license
@@ -505,18 +535,36 @@ The (optional) value in seconds to allow for differences between the time of the
 	 - Importance: LOW
 	 - Required: false
 
+🔘 src.kafka.sasl.oauthbearer.allow.unverified.audience
+
+The (optional) setting that allows the broker to validate JWTs without verifying the audience. By default the broker requires sasl.oauthbearer.expected.audience to be set whenever sasl.oauthbearer.jwks.endpoint.url is configured, and rejects any JWT whose "aud" claim does not match one of the expected audiences. When this is set to true that requirement is lifted: the "aud" claim is no longer checked and a JWT bearing any (or no) audience is accepted. Leaving the audience unverified is insecure and strongly discouraged; enable it only for deployments that intentionally accept tokens regardless of their intended audience. The default value is 'false'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 src.kafka.sasl.oauthbearer.expected.audience
 
-The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
+The comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and the broker will match the value(s) from the JWT's "aud" claim to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. Required if sasl.oauthbearer.jwks.endpoint.url is set, with the ability to opt-out using sasl.oauthbearer.allow.unverified.audience.
 
 	 - Type: LIST
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 src.kafka.sasl.oauthbearer.allow.unverified.issuer
+
+The (optional) setting that allows the broker to validate JWTs without verifying the issuer. By default the broker requires sasl.oauthbearer.expected.issuer to be set whenever sasl.oauthbearer.jwks.endpoint.url is configured, and rejects any JWT whose "iss" claim does not match the expected issuer. When this is set to true that requirement is lifted: the "iss" claim is no longer checked and a JWT bearing any (or no) issuer is accepted. Leaving the issuer unverified is insecure and strongly discouraged; enable it only for deployments that intentionally accept tokens regardless of which issuer minted them. The default value is 'false'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 src.kafka.sasl.oauthbearer.expected.issuer
 
-The (strongly recommended) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a JWT bearing any (or no) issuer, which is strongly discouraged.
+The setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. Required if sasl.oauthbearer.jwks.endpoint.url is set, with the ability to opt-out using sasl.oauthbearer.allow.unverified.issuer.
 
 	 - Type: STRING
 	 - Default: null
@@ -617,6 +665,14 @@ Setting this flag true, would mandate the presence of `iat` (Issued At) claim in
 
 <p>The number of seconds <em>in the future</em> for which the JWT is valid. The value is used to determine the JWT ``exp`` (Expiration) claim based on the current system time when the JWT is created.</p><p>The formula to generate the ``exp`` claim is very simple:</p><pre>Let:
 
+  x = the current timestamp in seconds, on client
+  y = the value of this configuration
+
+Then:
+
+  exp = x + y
+</pre><p><em>Note</em>: If a value for ``sasl.oauthbearer.assertion.file`` is provided, this configuration will be ignored.</p>
+
 	 - Type: INT
 	 - Default: 300
 	 - Importance: LOW
@@ -643,6 +699,14 @@ Setting this flag true, would mandate the presence of `iat` (Issued At) claim in
 🔘 src.kafka.sasl.oauthbearer.assertion.claim.nbf.seconds
 
 <p>The number of seconds <em>in the past</em> from which the JWT is valid. The value is used to determine the JWT ``nbf`` (Not Before) claim based on the current system time when the JWT is created.</p><p>The formula to generate the ``nbf`` claim is very simple:</p><pre>Let:
+
+  x = the current timestamp in seconds, on client
+  y = the value of this configuration
+
+Then:
+
+  nbf = x - y
+</pre><p><em>Note</em>: If a value for ``sasl.oauthbearer.assertion.file`` is provided, this configuration will be ignored.</p>
 
 	 - Type: INT
 	 - Default: 60
@@ -1165,18 +1229,36 @@ The (optional) value in seconds to allow for differences between the time of the
 	 - Importance: LOW
 	 - Required: false
 
+🔘 dest.kafka.sasl.oauthbearer.allow.unverified.audience
+
+The (optional) setting that allows the broker to validate JWTs without verifying the audience. By default the broker requires sasl.oauthbearer.expected.audience to be set whenever sasl.oauthbearer.jwks.endpoint.url is configured, and rejects any JWT whose "aud" claim does not match one of the expected audiences. When this is set to true that requirement is lifted: the "aud" claim is no longer checked and a JWT bearing any (or no) audience is accepted. Leaving the audience unverified is insecure and strongly discouraged; enable it only for deployments that intentionally accept tokens regardless of their intended audience. The default value is 'false'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 dest.kafka.sasl.oauthbearer.expected.audience
 
-The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
+The comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and the broker will match the value(s) from the JWT's "aud" claim to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. Required if sasl.oauthbearer.jwks.endpoint.url is set, with the ability to opt-out using sasl.oauthbearer.allow.unverified.audience.
 
 	 - Type: LIST
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 dest.kafka.sasl.oauthbearer.allow.unverified.issuer
+
+The (optional) setting that allows the broker to validate JWTs without verifying the issuer. By default the broker requires sasl.oauthbearer.expected.issuer to be set whenever sasl.oauthbearer.jwks.endpoint.url is configured, and rejects any JWT whose "iss" claim does not match the expected issuer. When this is set to true that requirement is lifted: the "iss" claim is no longer checked and a JWT bearing any (or no) issuer is accepted. Leaving the issuer unverified is insecure and strongly discouraged; enable it only for deployments that intentionally accept tokens regardless of which issuer minted them. The default value is 'false'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 dest.kafka.sasl.oauthbearer.expected.issuer
 
-The (strongly recommended) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a JWT bearing any (or no) issuer, which is strongly discouraged.
+The setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. Required if sasl.oauthbearer.jwks.endpoint.url is set, with the ability to opt-out using sasl.oauthbearer.allow.unverified.issuer.
 
 	 - Type: STRING
 	 - Default: null
@@ -1277,6 +1359,14 @@ Setting this flag true, would mandate the presence of `iat` (Issued At) claim in
 
 <p>The number of seconds <em>in the future</em> for which the JWT is valid. The value is used to determine the JWT ``exp`` (Expiration) claim based on the current system time when the JWT is created.</p><p>The formula to generate the ``exp`` claim is very simple:</p><pre>Let:
 
+  x = the current timestamp in seconds, on client
+  y = the value of this configuration
+
+Then:
+
+  exp = x + y
+</pre><p><em>Note</em>: If a value for ``sasl.oauthbearer.assertion.file`` is provided, this configuration will be ignored.</p>
+
 	 - Type: INT
 	 - Default: 300
 	 - Importance: LOW
@@ -1303,6 +1393,14 @@ Setting this flag true, would mandate the presence of `iat` (Issued At) claim in
 🔘 dest.kafka.sasl.oauthbearer.assertion.claim.nbf.seconds
 
 <p>The number of seconds <em>in the past</em> from which the JWT is valid. The value is used to determine the JWT ``nbf`` (Not Before) claim based on the current system time when the JWT is created.</p><p>The formula to generate the ``nbf`` claim is very simple:</p><pre>Let:
+
+  x = the current timestamp in seconds, on client
+  y = the value of this configuration
+
+Then:
+
+  nbf = x - y
+</pre><p><em>Note</em>: If a value for ``sasl.oauthbearer.assertion.file`` is provided, this configuration will be ignored.</p>
 
 	 - Type: INT
 	 - Default: 60
@@ -1620,7 +1718,7 @@ The maximum amount of data per-partition the server will return. Records are fet
 
 🔘 src.consumer.max.poll.interval.ms
 
-The maximum delay between invocations of poll() when using consumer group management. This places an upper bound on the amount of time that the consumer can be idle before fetching more records. If poll() is not called before expiration of this timeout, then the consumer is considered failed and the group will rebalance in order to reassign the partitions to another member. For consumers using a non-null ``group.instance.id`` which reach this timeout, partitions will not be immediately reassigned. Instead, the consumer will stop sending heartbeats and partitions will be reassigned after expiration of the session timeout (defined by the client config ``session.timeout.ms`` if using the Classic rebalance protocol, or by the broker config ``group.consumer.session.timeout.ms`` if using the Consumer protocol). This mirrors the behavior of a static consumer which has shutdown.
+The maximum delay between invocations of poll() when using consumer group management. This places an upper bound on the amount of time that the consumer can be idle before fetching more records. If poll() is not called before expiration of this timeout, then the consumer is considered failed and the group will rebalance in order to reassign the partitions to another member. For consumers using a non-null ``group.instance.id`` which reach this timeout, partitions will not be immediately reassigned. Instead, the consumer will stop sending heartbeats and partitions will be reassigned after expiration of the session timeout (defined by the client config ``session.timeout.ms`` if using the Classic rebalance protocol, or by the broker config ``group.consumer.session.timeout.ms`` if using the Consumer protocol). This mirrors the behavior of a static consumer which has shutdown. In the Classic consumer, ``connections.max.idle.ms`` should be set to a value greater than or equal to this timeout to avoid closing the connection to the group coordinator during an ongoing rebalance. This is particularly important in large groups, where a rebalance may take longer to complete while the coordinator waits for all members to rejoin.
 
 	 - Type: INT
 	 - Default: 300000
@@ -1753,6 +1851,7 @@ Destination Topics
 🔘 topic.rename.format
 
 A format string for the topic name in the destination cluster, which may contain '${topic}' as a placeholder for the originating topic name. For example, ``dc_${topic}`` for the topic 'orders' will map to the destination topic name 'dc_orders'.
+Be careful of the potential for topic name collisions when configuring replicators from multiple source clusters. We typically recommend that each cluster be given a distinct prefix or suffix (as in the example above).
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -2013,4 +2112,5 @@ How this converter will be used.
 	 - Default: null
 	 - Importance: LOW
 	 - Required: true
+
 
