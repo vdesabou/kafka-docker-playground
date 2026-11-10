@@ -1641,21 +1641,56 @@ subcommands:
   usage: playground remove-all-docker-images
   options: []
 - name: remove-cp-docker-images
-  description: "\U0001F9F9 Remove all Confluent Platform docker images related to
-    a version installed locally (a confirmation will be required for every version
-    present)\n\nEach Confluent Platform version you have ever run keeps a dozen images
-    on\ndisk, so this is usually where the space went. You are asked before every\nversion
-    (y remove, n skip it, a all remaining, q quit), unless you name one\nwith --version.\n\nNever
+  description: "\U0001F9F9 Remove the Confluent Platform docker images of the versions
+    you no longer use (a table of the versions installed locally, then a selection)\n\nEach
+    Confluent Platform version you have ever run keeps a dozen images on\ndisk, so
+    this is usually where the space went. The command first prints a\ntable of the
+    versions installed locally: number of images, size, last used\n(last run with
+    --tag, or last pull), and why a version is kept.\n\nWithout a selection flag,
+    you pick the versions to remove in a list\n(fzf, tab to select several), or are
+    asked before every version\n(y remove, n skip it, a all remaining, q quit) when
+    fzf is not installed.\nWith a selection flag (--version, --all, --keep-latest-patch,
+    --older-than),\none confirmation is asked for the whole plan, none with --yes.\n\nNever
     proposed for removal: the default version used by the playground, the\nversion
     of the current run (--tag), and any version used by a container,\nrunning or stopped
-    (another session, for example)."
+    (another session, for example). Only the tags x.y.z are\nlisted, the Control Center
+    next-gen images (cp-enterprise-*) are left out.\n\nAt the end, the space freed
+    is reported (docker system df).\n\n\U0001F393 Tip: 'playground remove-cp-docker-images
+    --keep-latest-patch --dry-run'\nshows what keeping only the last patch of each
+    minor version would remove."
   usage: playground remove-cp-docker-images [OPTIONS]
   options:
   - names:
     - "--version"
     argument: VERSION
-    description: "\U0001F522 Specific version to remove (refused when a container
-      uses it)"
+    description: "\U0001F522 Version to remove, exact (7.9.1) or a prefix selecting
+      every patch (7.9 = all 7.9.x). Can be repeated.\n\nAn exact version is removed
+      even if it is the default or the current run TAG, never when a container uses
+      it.\n\nRepeatable: ✓ Yes"
+  - names:
+    - "--all"
+    argument: ''
+    description: "\U0001F9F9 Remove every version except the protected ones (default
+      TAG, current run TAG, used by a container)"
+  - names:
+    - "--keep-latest-patch"
+    argument: ''
+    description: "\U0001F51D Keep only the highest patch installed of each major.minor
+      version (7.9.10 is kept, 7.9.0 to 7.9.9 are removed)"
+  - names:
+    - "--older-than"
+    argument: DAYS
+    description: "\U0001F4C5 Only versions not used for this number of days (last
+      run with --tag in playground-run-history, or last pull)"
+  - names:
+    - "--dry-run"
+    argument: ''
+    description: "\U0001F50E Print the plan and the docker rmi commands, remove nothing"
+  - names:
+    - "--yes"
+    - "-y"
+    argument: ''
+    description: "✅ Do not ask for confirmation"
 - name: refresh-cp-docker-images
   description: "\U0001F504 Refresh (pull from Docker) all Confluent Platform docker
     images related to a version installed locally\n\nUseful when a version tag has

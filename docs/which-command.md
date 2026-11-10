@@ -178,6 +178,7 @@ keeps working across environments where the raw command only works on `plaintext
 | --- | --- |
 | `docker compose up/down`, `docker compose -f ...` | `playground start-environment` / `playground stop` |
 | `docker ps`, checking what runs | `playground status` |
+| `docker image ls` + `docker rmi` to free disk space taken by old Confluent Platform versions | `playground remove-cp-docker-images` (a table with images, size and last use per version, then a selection; `--keep-latest-patch`, `--older-than <days>`, `--version 7.9` for every 7.9.x, `--all`, `--dry-run`, `--yes`; never removes the default TAG, the current run TAG or a version used by a container) |
 | `docker logs <c>`, `docker logs -f <c> \| grep X` | `playground container logs -c <c>` (`--errors`, `--no-follow --tail N`, `--since 10m`, `--grep X --no-follow`, `--wait-for-log "X" --max-wait 120`, `--open`) |
 | `docker exec <c> <cmd>` | `playground container exec -c <c> --command "<cmd>"` (`--root`, `--shell`) |
 | `docker restart <c>`, `docker kill $(docker ps -q)` | `playground container restart\|recreate\|kill\|kill-all -c <c>` |

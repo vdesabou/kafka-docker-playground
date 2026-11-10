@@ -9,8 +9,7 @@ then
     docker pull google/cloud-sdk:latest
 fi
 
-# confluentinc images whose tag is exactly $version (a grep would also match 7.4.10 for 7.4.1)
-images=$(docker image ls --format '{{.Repository}} {{.Tag}}' | awk -v v="$version" '$1 ~ /^confluentinc\// && $2 == v {print $1":"$2}' | sort -u)
+images=$(cp_image_refs_with_tag "$version")
 if [ -z "$images" ]
 then
     logwarn "no Confluent Platform docker image with tag $version installed locally"
