@@ -79,4 +79,12 @@ lab_expect_exit 0
 lab_run playground connector wait --connector filestream-sink --max-wait 120
 lab_expect_exit 0
 
+log "Step 5: the findings of analyze tcp-dump, on the capture shipped with the playground (section 6, Confluent Cloud checklist)"
+lab_run playground analyze tcp-dump --sample kafka_and_network_errors --output-dir /tmp/lab-network-traffic-tcp-dump
+lab_expect_exit 0
+lab_expect_contains "🟠 HIGH: 1 connection attempt(s) to sample-firewalled:8080 got no answer (SYN without SYN/ACK)"
+lab_expect_contains "🟠 HIGH: TLS fatal alert certificate_unknown sent by sample-client to sample-tls-server (1x). Likely: the certificate was rejected"
+lab_expect_contains "🟡 MEDIUM: DNS NXDOMAIN for schema-registry.does-not-exist.invalid (2x)"
+lab_expect_contains "1 handshake(s) (no SNI) → sample-tls-server"
+
 log "✅ all the outputs of the page are as expected"
