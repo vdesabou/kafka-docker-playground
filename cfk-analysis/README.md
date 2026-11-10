@@ -22,6 +22,15 @@ scheduling, …) with concrete remediation steps per category:
 - Recent changes, newest first: `metadata.managedFields` of the CRs (who changed which part of the spec, e.g.
   `Update by kubectl-edit: spec.image, spec.podTemplate`) and StatefulSets (operator rollouts), pod creation and
   container terminations. Pods and StatefulSets written without `kind` (`pods/pod-<name>.yaml`) are recognized.
+- `kubectl get pods` tables saved as text (`pods.txt` of a flat bundle, no pod manifest): a pod restarted 3 times or
+  more (`6 (16m ago)`: medium, high from 10) and a STATUS that is a failure (`OOMKilled`, `CrashLoopBackOff`,
+  `Error`, `ImagePullBackOff`, `Init:…`) are findings of the pod. A pod that also has a manifest is left to it.
+- Operator reconcile loops (`Reconcile Loop` category): a CR that the operator fails to delete or apply 50 times or
+  more, at 10 a minute or more over its log (a permanent error: the invalid MDS scope of a `Subject`
+  ConfluentRolebinding, `forbidden to update role or principal`), is one finding with the rate, the error (the False
+  condition of the CR, not cut) and the restarts and memory limit of the operator pod, `critical` when the operator
+  restarted 3 times or was OOMKilled. CFK retries it with no back-off and each retry grows the operator memory until
+  it is OOMKilled. A CR requeued every few seconds is the normal reconcile of an error, not a loop.
 - Configuration (`.configuration` of `--json`, ⚙️ section of the HTML report, with a key / value filter): per Kafka,
   ZooKeeper, Schema Registry, Connect and Control Center CR, the `kafka.properties` / `zookeeper.properties` /
   `schemaregistry.properties` / `connect.properties` / `controlcenter.properties`, `jvm.config`, `log4j.properties`
@@ -47,7 +56,8 @@ scheduling, …) with concrete remediation steps per category:
 - Known CFK issues (`runbooks.py`, 📕 section on top of the text digest and of the HTML report, `.runbooks` and
   `issues[].runbooks` of `--json`): the log messages and events of the CFK triage table of Confluent support (roll
   blocked by the pre-roll checks, expired certificate, `INCONSISTENT_CLUSTER_ID`, ZooKeeper to KRaft migration,
-  authorizer timeout, license secret, JAAS context, cluster shrink, PVC resize, Multi-Attach…), matched on the message
+  authorizer timeout, license secret, JAAS context, cluster shrink, PVC resize, Multi-Attach, ConfluentRolebinding
+  retry loop…), matched on the message
   and `Caused by:` chain of every issue (and on the INFO lines of the operator logs for the states it logs at INFO: `cluster not rollable from roll pre checks`, `Migration current status …/SubPhase… requeuing`), with what they mean and the public KB / docs links. The internal runbook
   links of Confluent support come from an optional private JSON file, in `$CFK_RUNBOOKS_PRIVATE` (mounted by
   `playground analyze logs` from `PLAYGROUND_CFK_RUNBOOKS_FILE`, default
@@ -132,6 +142,8 @@ sharing it.
 - `tools/report-common/sanitizer.py` (shared with the plain log digest of `playground analyze logs`) — redacts
   secrets first, then emails / LDAP DNs / IPs / hostnames.
 - `recommendations.py` — category → concrete CFK remediation steps mapping.
+- `test_analyzer.py` — regression tests on small bundles written in a temporary folder (plain asserts, PyYAML):
+  `python3 -I cfk-analysis/test_analyzer.py`, run by `.github/workflows/tools-tests.yml`.
 - `html_report.py` — self-contained offline HTML report (no CDN dependency). The location of each issue links to a
   page of its file in `<report>-files/` (`tools/report-common/log_viewer.py`, written by `analyzer_cli.py` while the
   bundle is still extracted; a YAML file without line number opens at the `name:` of the pod or CR), and a ✏️ opens the

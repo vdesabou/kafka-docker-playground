@@ -45,7 +45,7 @@ SYMPTOMS: Dict[str, tuple] = {
           "kubectl confluent support-bundle --namespace <namespace>   # then: playground analyze logs -f before.tar.gz -f after.tar.gz")]),
     "crash / restarts": (
         r"\bcrash|\brestart|\bcrashloop|\bbackoff\b|\bback-off\b|\bkeeps? (?:dying|failing)\b|\bnot (?:starting|ready|coming up)\b|\bdown\b",
-        {"Pod Failures", "Container Status", "Pod Status", "Health Check Issues", "Resource Issues", "Init Container Issues",
+        {"Reconcile Loop", "Pod Failures", "Container Status", "Pod Status", "Health Check Issues", "Resource Issues", "Init Container Issues",
          "Image Issues", "Configuration", "Storage Issues", "Volume Issues"},
         [("previous-logs", "the log of each container before its last restart", "the crash itself is in the previous container, not in the current one",
           "kubectl logs <pod> -c <container> -n <namespace> --previous > <pod>-previous.log"),
@@ -58,7 +58,7 @@ SYMPTOMS: Dict[str, tuple] = {
           "kubectl describe nodes > nodes.txt; kubectl get pvc,pv -n <namespace> -o wide")]),
     "memory / OOM": (
         r"\bmemory\b|\boom|\bout of memory\b|\bheap\b|\bgc\b|\bgarbage",
-        {"Resource Issues", "Pod Failures", "Container Status"},
+        {"Resource Issues", "Pod Failures", "Container Status", "Reconcile Loop"},
         [("heap", "the resources and JVM settings of the pods", "the heap must fit in the memory limit of the container",
           "kubectl get <kind> <name> -n <namespace> -o yaml   # spec.podTemplate.resources, configOverrides.jvm"),
          ("heap-dump", "a heap dump and the GC log of the JVM", "what fills the heap (playground analyze heap-dump / gc-logs)",
@@ -119,9 +119,9 @@ SYMPTOMS: Dict[str, tuple] = {
 # refused" issues is not explained): only they make the verdict "explained"
 MAIN_CATEGORIES: Dict[str, set] = {
     "roll / upgrade stuck": {"Rollout Issues", "Reconciliation Blocked", "Operator Issues", "Compatibility"},
-    "crash / restarts": {"Pod Failures", "Container Status", "Pod Status", "Init Container Issues", "Image Issues"},
+    "crash / restarts": {"Pod Failures", "Container Status", "Pod Status", "Init Container Issues", "Image Issues", "Reconcile Loop"},
     "pending / scheduling": {"Scheduling Issues", "Pod Status", "Volume Issues"},
-    "memory / OOM": {"Resource Issues"},
+    "memory / OOM": {"Resource Issues", "Reconcile Loop"},
     "TLS / certificate": {"Certificate/TLS Issues", "JVM Truststore Issues"},
     "auth / RBAC": {"Authentication Issues", "RBAC Issues", "MDS/RBAC Issues", "License Issues"},
     "KRaft migration": {"KRaft Migration"},

@@ -88,6 +88,19 @@ _GOOD_CR_STATES = {'RUNNING', 'CREATED', 'SUCCEEDED', 'SUCCESS', 'READY', 'ACTIV
 
 # Waiting reasons that are normal transients, not problems
 _TRANSIENT_WAITING = {'ContainerCreating', 'PodInitializing'}
+# the header of a `kubectl get pods` table saved as text (pods.txt of a flat bundle): -A adds NAMESPACE, -o wide more columns
+_POD_TABLE_HEADER_RE = re.compile(r'^(?:NAMESPACE\s+)?NAME\s+READY\s+STATUS\s+RESTARTS\s+AGE\b')
+_POD_TABLE_OK_STATUS = {'Running', 'Completed', 'Succeeded', 'ContainerCreating', 'PodInitializing', 'Terminating'}
+# a failure of the operator on one CR, retried in a loop (JSON lines of the operator log): the logger (CR kind), the CR
+_OPERATOR_FAILURE_RE = re.compile(
+    r'"name":"(?P<logger>[a-z]+)","caller":"[^"]*","msg":"(?P<msg>failed to delete [A-Za-z]+|[a-z]+ \S+ delete failed|'
+    r'apply failed|forbidden to role or principal)","name":"(?P<cr>[^"]+)"')
+_OPERATOR_ERROR_RE = re.compile(r'"error":"((?:[^"\\]|\\.){1,300})')
+# from this number of failures of the same CR in the operator log: a reconcile loop (the operator retries with no back-off)
+_RECONCILE_LOOP_MIN = 50
+_RECONCILE_LOOP_PER_MINUTE = 10
+_KIND_NAMES = {'confluentrolebinding': 'ConfluentRolebinding', 'kafkatopic': 'KafkaTopic', 'schema': 'Schema',
+               'connector': 'Connector', 'clusterlink': 'ClusterLink', 'schemaexporter': 'SchemaExporter'}
 
 # Components an issue is attributed to (--component, HTML filter). `other` = not a CFK component
 # (nodes, PVs, unknown pods). Folder names of `kubectl confluent support-bundle`: cluster-resources/<type>/<name>/
@@ -226,6 +239,8 @@ class CFKBundleAnalyzer:
         self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
         self.pod_health = {}  # pod name -> (Running and every container ready, highest restart count)
         self.statefulset_ready = {}  # StatefulSet name -> every replica ready and updated, for bundles without pod manifests
+        self.pod_tables = []  # `kubectl get pods` tables saved as text (pods.txt): (relative path, lines)
+        self.operator_limits = {}  # memory limit / request of the operator container (its Deployment)
         # what the CRs ask for and what runs (_check_rollouts): CR name -> {kind, image, file}, StatefulSet name ->
         # {images, replicas, ready, updated, revisions, file}, pod -> image of its main container, log file stem ->
         # (CP version logged at startup, file, line), CRs with platform.confluent.io/block-reconcile
@@ -418,6 +433,8 @@ class CFKBundleAnalyzer:
         self._check_stale_block_conditions()
         self._check_log_coverage()
         self._check_connect_plugins()
+        self._check_pod_tables()
+        self._check_reconcile_loops()
         for issue in self.issues:
             self._assign_component(issue)
         self._mark_transient()
@@ -731,6 +748,9 @@ class CFKBundleAnalyzer:
         self.coverage['log_files'] += 1
         self.coverage['log_lines'] += len(lines)
         rel = self._rel(file_path)
+        first = next((line for line in lines[:5] if line.strip()), '')
+        if _POD_TABLE_HEADER_RE.match(first):
+            self.pod_tables.append((rel, lines))
         # a log file the log digest read: its records come from it (after the loop), the loop still follows the records
         # to leave their stack traces out of the Kubernetes and operator checks
         # (not the operator log: JSON lines that the digest converts, its line numbers would not be those of the file)
@@ -1167,6 +1187,11 @@ class CFKBundleAnalyzer:
                 for container in ((obj.get('spec') or {}).get('template') or {}).get('spec', {}).get('containers') or []:
                     if 'confluent-operator' in str(container.get('image', '')) or name == 'confluent-operator':
                         self.environment.setdefault('operator_image_tag', environment.image_tag(container.get('image', '')))
+                        resources = container.get('resources') or {}
+                        for key in ('limits', 'requests'):
+                            memory = (resources.get(key) or {}).get('memory')
+                            if memory:
+                                self.operator_limits[key] = str(memory)
 
     @staticmethod
     def _infer_kind(obj: Dict) -> str:
@@ -1624,6 +1649,117 @@ class CFKBundleAnalyzer:
             self._assign_component(issue)
             if issue.get('component') in (None, 'other', 'operator'):
                 issue['component'] = 'kraftcontroller'
+
+    def _check_pod_tables(self):
+        """The pods of a `kubectl get pods` table saved as text (pods.txt of a flat bundle, no pod manifest): restarts,
+        and a STATUS that is a failure (OOMKilled, CrashLoopBackOff, Error, ImagePullBackOff, Pending…). A pod that
+        also has a manifest is left to it (_check_pod_config reads the same and more)."""
+        for rel, lines in self.pod_tables:
+            header = next(line for line in lines if line.strip())
+            # columns at the positions of the header: RESTARTS holds spaces ("6 (16m ago)")
+            starts = [m.start() for m in re.finditer(r'\S+', header)]
+            names = header.split()
+            for line_number, line in enumerate(lines, 1):
+                if not line.strip() or _POD_TABLE_HEADER_RE.match(line):
+                    continue
+                cols = {}
+                for i, name in enumerate(names):
+                    end = starts[i + 1] if i + 1 < len(starts) else None
+                    cols[name] = line[starts[i]:end].strip()
+                pod, status, ready = cols.get('NAME', ''), cols.get('STATUS', ''), cols.get('READY', '')
+                if not pod or pod in self.pod_health:
+                    continue
+                self.coverage['pods'] += 1
+                found = re.match(r'(\d+)(?:\s*\((.+?)\))?', cols.get('RESTARTS', ''))
+                restarts, last = (int(found.group(1)), found.group(2)) if found else (0, None)
+                up, _, total = ready.partition('/')
+                self.pod_health[pod] = (status == 'Running' and up.isdigit() and up == total, restarts)
+                context = line.rstrip()
+                if status and status not in _POD_TABLE_OK_STATUS:
+                    reason = status.split(':')[-1]
+                    match = self._classify(self._k8s_re, reason)
+                    severity, category = (match[0], match[1]) if match else ('medium', 'Pod Status')
+                    if status.startswith('Init:') and category == 'Pod Failures':
+                        category = 'Init Container Issues'
+                    self._add_issue(severity=severity, category=category,
+                                    message=f"Container {pod} status {status} (kubectl get pods, restarts={restarts})",
+                                    file_path=rel, line_number=line_number, context=context,
+                                    resource=pod, resource_kind='Pod')
+                if restarts >= 3:
+                    self._add_issue(severity='high' if restarts >= 10 else 'medium', category='Pod Failures',
+                                    message=f"Container {pod} restarted {restarts} times"
+                                            + (f" (last {last}, kubectl get pods)" if last else " (kubectl get pods)"),
+                                    file_path=rel, line_number=line_number, context=context,
+                                    resource=pod, resource_kind='Pod')
+
+    def _check_reconcile_loops(self):
+        """A CR that the operator fails to delete or apply again and again (a permanent error: invalid MDS scope,
+        forbidden change of role or principal): CFK retries it with no back-off, and each retry grows the memory of the
+        operator until it is OOMKilled (CFK-4654, made fast by the loop). One finding per CR, with the rate over the
+        operator log and the restarts and memory limit of the operator pod."""
+        loops = {}
+        for issue in self.issues:
+            if not _is_operator_log(issue['file']):
+                continue
+            found = _OPERATOR_FAILURE_RE.search(issue['message'])
+            if not found:
+                continue
+            key = (found.group('logger'), found.group('cr'), issue['file'])
+            entry = loops.setdefault(key, {'by_msg': {}, 'errors': {}})
+            # each failure logs a pair of lines ("x delete failed" + "failed to delete X", "forbidden…" + "apply
+            # failed"): the failures are the count of the most frequent message, not the sum
+            msg = 'delete failed' if found.group('msg').endswith('delete failed') else found.group('msg')
+            entry['by_msg'][msg] = entry['by_msg'].get(msg, 0) + issue.get('count', 1)
+            # the message and its context are cut at 300 characters: the longest error of the two
+            errors = [e.group(1) for e in _OPERATOR_ERROR_RE.finditer(issue['message'] + '\n' + (issue.get('context') or ''))]
+            if errors:
+                error = max(errors, key=len)
+                entry['errors'][error] = entry['errors'].get(error, 0) + issue.get('count', 1)
+        operator_pods = {pod: health for pod, health in self.pod_health.items() if pod.startswith('confluent-operator')}
+        restarts = max((h[1] for h in operator_pods.values()), default=0)
+        oom = any('OOMKilled' in i['message'] and i.get('_resource', ('', ''))[1] in operator_pods for i in self.issues)
+        for (logger, cr, rel), entry in sorted(loops.items()):
+            entry['failures'] = max(entry['by_msg'].values())
+            if entry['failures'] < _RECONCILE_LOOP_MIN:
+                continue
+            window = self.log_windows.get(rel)
+            rate = ''
+            if window and window['last'] > window['first']:
+                minutes = (window['last'] - window['first']).total_seconds() / 60
+                per_minute = entry['failures'] / max(minutes, 1)
+                # a CR requeued every few seconds is the normal reconcile of an error, not the loop
+                if per_minute < _RECONCILE_LOOP_PER_MINUTE:
+                    continue
+                rate = f" in {kraft_migration._duration(window['first'], window['last'])} (about {per_minute:.0f} per minute)"
+            elif entry['failures'] < 4 * _RECONCILE_LOOP_MIN:
+                continue
+            kind = _KIND_NAMES.get(logger, logger)
+            # the error in full: the False condition of the CR (its message is not cut), else the one of the log
+            condition = next((i['message'].split(' is False: ', 1)[1] for i in self.issues
+                              if i['message'].startswith(f"{kind}/{cr} condition ") and ' is False: ' in i['message']), '')
+            error = condition or (max(entry['errors'], key=entry['errors'].get) if entry['errors'] else '')
+            pod_part = []
+            if operator_pods:
+                pod_part.append(f"operator pod {', '.join(sorted(operator_pods))}: {restarts} restart(s)" + (", OOMKilled" if oom else ""))
+            if self.operator_limits.get('limits'):
+                pod_part.append(f"memory limit {self.operator_limits['limits']}")
+            self._add_issue(
+                severity='critical' if oom or restarts >= 3 else 'high',
+                category='Reconcile Loop',
+                message=f"Operator reconcile loop: {kind}/{cr} failed {entry['failures']} times{rate}"
+                        + (f": {error}" if error else "")
+                        + ". A permanent error retried with no back-off grows the memory of the operator, up to "
+                          "OOMKilled restarts" + (f" ({'; '.join(pod_part)})" if pod_part else ""),
+                file_path=rel, dedupe_key=f"reconcile-loop:{logger}:{cr}", count=entry['failures'],
+            )
+            self.issues[-1]['next_steps'] = [
+                f"kubectl get {logger} {cr} -n <namespace> -o yaml: deletionTimestamp, finalizers, the scope in spec and in status",
+                "fix the cause, or (the CR is meant to be deleted, its YAML saved) remove its finalizer: "
+                f"kubectl patch {logger} {cr} -n <namespace> --type=merge -p '{{\"metadata\":{{\"finalizers\":[]}}}}'",
+                "then restart the operator, the memory stays pinned in the old process: "
+                "kubectl rollout restart deployment/confluent-operator -n <namespace>",
+                "kubectl logs <operator pod> -n <namespace> --previous and kubectl describe pod <operator pod>: the OOMKilled",
+            ]
 
     def _mark_transient(self):
         """Probe failures and back-offs of the events / kubectl output of a pod that is Running and Ready in the bundle,
