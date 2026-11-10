@@ -768,6 +768,13 @@ function collect_digests () {
 # digest of a .gz file: decompressed on the fly (a truncated or corrupt one is read up to the error, and said so)
 # $1: label, $2: path
 function analyze_logs_gzip () {
+    # a gzipped binary (a heap dump .hprof.gz, a .jfr.gz): skipped as binary, not read as log lines (its file page was
+    # MBs of bytes); 🧰 / 🧵 🔬 JVM dumps still list it (the walked file is written before)
+    if ! gzip -dc "$2" 2>/dev/null | head -c 8192 | LC_ALL=C grep -Iq .
+    then
+        nb_skipped=$((nb_skipped+1))
+        return
+    fi
     analyze_logs_digest "$1" "$2" "$2" gz
 }
 

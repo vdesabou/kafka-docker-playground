@@ -1998,7 +1998,7 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
             "the Connect worker groups, the rejoins of the consumer groups (a sink connector, a client), the connectors and tasks "
             "started, the workers and brokers (re)started, and 🐢 the signals of a broker under pressure (INFO / WARN lines: ISR "
             "shrinks and expands per partition, followers failing to fetch, requests timed out, log cleaner failures, quota "
-            "throttling, responses to clients already gone), by broker with the partitions they happen to most. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
+            f"throttling, responses to clients already gone), by broker with the partitions they happen to most. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
             "per hour or more: each rebalance stops the processing (look at the members that join and leave, session.timeout.ms, "
             "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). The chart shows them over time (drag "
             "to zoom); the swimlane of When places each occurrence of a row on the period of the table (a tick per bucket, darker "
