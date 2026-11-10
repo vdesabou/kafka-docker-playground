@@ -513,6 +513,7 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 - 🗃️ [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs) :other/audit-logs:
 - 🚦 [MDS centralized ACLs with RBAC](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-centralized-acls) centralized ACLs vs kafka-acls, DENY over a role binding, LDAP group ACLs :other/rbac-centralized-acls:
+- 🪪 [mTLS: a certificate renewal breaks the ACLs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mtls-principal-mapping) `ssl.principal.mapping.rules`, the principal of a renewed certificate falls back to the full DN :other/mtls-principal-mapping:
 - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-registry-security-plugin) with Confluent Platform :other/schema-registry-security-plugin:
 - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/schema-registry-security-plugin) with Confluent Cloud :ccloud/schema-registry-security-plugin:
 - 🔒️ [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with Confluent Platform, SASL/SSL and 2WAY/SSL Principal Propagation :other/rest-proxy-security-plugin:

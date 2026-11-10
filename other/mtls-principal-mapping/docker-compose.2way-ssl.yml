@@ -1,0 +1,31 @@
+---
+services:
+
+  # ACLs stored in the KRaft metadata log (StandardAuthorizer), on the broker and on the controller: the broker
+  # forwards CreateTopics and CreateAcls to the controller, which authorizes them with the principal of the client.
+  # The controller listener is PLAINTEXT: the broker connects to it as User:ANONYMOUS
+  controller:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_SUPER_USERS: User:broker;User:controller;User:ANONYMOUS;User:client;User:connect;User:schema-registry;User:control-center
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+
+  broker:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      # the components of the environment (CN=<container>,OU=TEST,… mapped to <container> by the rule below) and
+      # client, the identity the playground CLI uses for its admin commands. Not orders-app: its ACLs must apply
+      KAFKA_SUPER_USERS: User:broker;User:controller;User:ANONYMOUS;User:client;User:connect;User:schema-registry;User:control-center
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      # the rule of the 2way-ssl environment, repeated here so that the example reads on its own:
+      # CN=orders-app,OU=TEST,O=CONFLUENT,… → orders-app, anything else → DEFAULT (the full distinguished name)
+      KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
+      # denied requests are logged at INFO by the authorizer, with the principal the broker computed
+      KAFKA_LOG4J_LOGGERS: kafka.authorizer.logger=INFO
+
+  connect:
+    volumes:
+      # the certificates of the application, created by the example (create-client-cert.bash). playground topic
+      # produce runs the console producer in the connect container
+      - ../../environment/2way-ssl/security:/etc/kafka/secrets
+      - ../../other/mtls-principal-mapping/security:/etc/kafka/app-secrets
