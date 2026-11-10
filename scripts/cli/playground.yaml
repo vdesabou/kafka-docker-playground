@@ -4961,10 +4961,13 @@ subcommands:
       argument: ''
       description: "\U0001F512 Replace passwords and other secrets, IPs, hostnames,
         emails and LDAP DNs by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the
-        digest, the HTML report, the JSON and the CFK bundle analysis\n\n⚠️ Use it
-        before sharing the output outside Confluent (best effort: review it anyway).
-        Off by default: it can hide evidence (a dump of bytes taken for a secret,
-        the IP of the broker) and doubles the time on large bundles"
+        digest, the HTML report, the JSON and the CFK bundle analysis. What holds
+        the raw lines is not written, so it is not in the \U0001F4E6 .zip of the report
+        either: the file pages, \U0001F50E the search of every line, the full \U0001F9F5
+        thread reports (their summary in the report is sanitized)\n\n⚠️ Use it before
+        sharing the output outside Confluent (best effort: review it anyway). Off
+        by default: it can hide evidence (a dump of bytes taken for a secret, the
+        IP of the broker) and doubles the time on large bundles"
   - name: gc-logs
     description: "\U0001F4C8 Analyze JVM Garbage Collection logs\n\n\U0001F4CA Parses
       GC logs from local files / folders or a running container: pause statistics,

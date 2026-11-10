@@ -1458,6 +1458,12 @@ report_args=(--records "$records_file" --title "$title" --levels "$levels" --ski
 # the files of the input, read again by the report: the file pages and 🔎 Search every log line of the HTML report, and
 # the check of the connector context (MDC) of the Connect logs, also in the summary and --json
 report_args+=(--sources "$sources_file")
+# 🔒 --sanitize: the thread dumps of the input sanitized with the same placeholders, and nothing that holds raw lines next
+# to the report (file pages, search, full thread report), so that none of it ends up in the 📦 .zip of the report
+if [[ -n "$sanitize" ]]
+then
+    report_args+=(--sanitize-state "$sanitize_state")
+fi
 # the changes of the cluster of each CFK bundle (pods terminated or restarted, custom resources edited, rollouts) join the
 # incident timeline of the log report: 🔗 and 💥 link the errors of the pod logs to them
 for cfk_events_json in "${cfk_json_files[@]}" "${cfk_compare_files[@]}"
@@ -1656,7 +1662,7 @@ then
 fi
 if [[ -n "$sanitize" ]]
 then
-    jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
+    jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s). The file pages, the search of every line and the full thread reports hold the raw lines: not written."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
     report_args+=(--section "🔒 Sanitization" "$tmp_dir/sanitization.txt")
 else
     echo "Not sanitized (--sanitize to redact them): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
@@ -1756,7 +1762,12 @@ then
         fi
         if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
         then
-            log "📤 To share it: $(shown_path "$output_dir/$share_zip") (the report and its file pages, 📤 Share in the report)"
+            if [[ -n "$sanitize" ]]
+            then
+                log "📤 To share it: $(shown_path "$output_dir/$share_zip") (the report alone, 🔒 sanitized: no file pages nor thread report, 📤 Share in the report)"
+            else
+                log "📤 To share it: $(shown_path "$output_dir/$share_zip") (the report and its file pages, 📤 Share in the report)"
+            fi
         fi
     else
         log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$(shown_path "$output_dir")\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""

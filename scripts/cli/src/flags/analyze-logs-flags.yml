@@ -194,7 +194,7 @@
 - long: --sanitize
   required: false
   help: |-
-    🔒 Replace passwords and other secrets, IPs, hostnames, emails and LDAP DNs by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the digest, the HTML report, the JSON and the CFK bundle analysis
+    🔒 Replace passwords and other secrets, IPs, hostnames, emails and LDAP DNs by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the digest, the HTML report, the JSON and the CFK bundle analysis. What holds the raw lines is not written, so it is not in the 📦 .zip of the report either: the file pages, 🔎 the search of every line, the full 🧵 thread reports (their summary in the report is sanitized)
 
     ⚠️ Use it before sharing the output outside Confluent (best effort: review it anyway). Off by default: it can hide evidence (a dump of bytes taken for a secret, the IP of the broker) and doubles the time on large bundles
 - long: --no-sanitize

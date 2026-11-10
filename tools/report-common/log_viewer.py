@@ -4,7 +4,8 @@ Log viewer pages of the HTML reports of playground analyze logs (tools/log-analy
 report cfk-analysis/html_report.py): one page per file with findings, written next to the report in a
 <report>-files/ folder, with line numbers, a #L<n> anchor per line, the lines of the findings highlighted and
 "previous / next finding" buttons. A location of the report (connect-0.log:33) links to <report>-files/<page>#L33.
-The pages hold the raw lines (the reports stay inside Confluent); a big file keeps only the lines around the findings.
+The pages hold the raw lines (the reports stay inside Confluent), so a sanitized report (--sanitize) has none; a big
+file keeps only the lines around the findings.
 
 The ✏️ links open the file at the line in the editor of `playground config editor` (PLAYGROUND_EDITOR, code by default)
 through its URL scheme (vscode://file/<path>:<line>…), VS Code for an editor without one (vi, nano…): the input file
@@ -288,16 +289,29 @@ class Viewers(dict):
         self.editor_paths: Dict[str, str] = {}
 
 
+def pages_folder(report_path: str) -> str:
+    """the <report stem>-files/ folder of the pages of a report, next to it"""
+    return os.path.join(os.path.dirname(os.path.abspath(report_path)),
+                        os.path.splitext(os.path.basename(report_path))[0] + "-files")
+
+
+def remove_pages(report_path: str) -> None:
+    """removes the pages of a previous report with the same name: a sanitized report (--sanitize) writes none, as they
+    hold the raw lines, and must not leave the raw pages of an earlier run next to it (or in its 📦 .zip)"""
+    shutil.rmtree(pages_folder(report_path), ignore_errors=True)
+
+
 def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int], Optional[str]]]) -> Viewers:
     """writes the viewer pages of the files of a report, in <report stem>-files/ next to it.
     files: (label, path, line numbers of the findings, path of the file on the host when it stays there after the
-    command, else None: copied next to its page for the editor)."""
+    command, else None: copied next to its page for the editor). Never for a sanitized report: the pages hold the raw
+    lines (remove_pages)."""
     report_dir = os.path.dirname(os.path.abspath(report_path))
     report_name = os.path.basename(report_path)
-    folder = os.path.splitext(report_name)[0] + "-files"
+    folder = os.path.basename(pages_folder(report_path))
     host_dir = os.environ.get("PLAYGROUND_REPORT_HOST_DIR") or report_dir
     # the pages of a previous report with the same name
-    shutil.rmtree(os.path.join(report_dir, folder), ignore_errors=True)
+    remove_pages(report_path)
     hrefs = Viewers()
     for i, (label, path, hits, original) in enumerate(files, start=1):
         if label in hrefs or not path or not os.path.isfile(path):

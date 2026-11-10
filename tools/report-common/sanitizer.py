@@ -38,17 +38,27 @@ from typing import Dict, Any, Tuple
 # token.max.lifetime.ms…).
 _SECRET_KEY = (
     r'[\w.-]*(?:password|passwd|pwd|secret|token|api[_.-]?key|apikey|credentials?|'
-    r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key|account[_.-]?key|consumer[_.-]?(?:key|secret))[\w.-]*'
+    r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key|account[_.-]?key|consumer[_.-]?(?:key|secret)|'
+    r'master[_.-]?key|encryption[_.-]?key|signing[_.-]?key|shared[_.-]?key|sas[_.-]?key)[\w.-]*'
 )
 # (?<![\w.-]): a key starts at the beginning of a token. Without it, a long run of word characters (a base64 payload of
 # 100 KB on one line) was scanned again from each of its characters: quadratic, 10 s for 20,000 characters
+# The key may be quoted with an escaped quote (\"password\": \"x\"), the JSON of a JSON log line (fluentd, Kubernetes,
+# a log4j JSON layout, a CloudWatch export). Spaces and tabs only around the : or =, never a newline: a key at the end
+# of a line ("Failed to refresh token:") must not take the start of the next line as its value.
 _SECRET_KV_RE = re.compile(
-    r'(?<![\w.-])(["\']?)(' + _SECRET_KEY + r')\1(\s*[:=]\s*|\t+)'
-    # an unquoted value goes on after a , or a ; that does not start the next key (password=abc,def;ghi is one value,
-    # password=abc, retries=3 stops at the comma); a tab separates the key of a TSV export from its value
-    r'("(?:[^"\\]|\\.)*"|\'[^\']*\'|\[hidden\]|(?:[^\s,;}\]\)]|[,;](?![\s\w.-]*[=:]|\s|$))+)',
+    r'(?<![\w.-])(\\?["\']|)(' + _SECRET_KEY + r')\1([ \t]*[:=][ \t]*|\t+)'
+    # an unquoted value goes on after a , a ; or a & that does not start the next key (password=abc,def;ghi is one
+    # value, password=abc, retries=3 stops at the comma, client_secret=abc&scope=read at the &); a tab separates the
+    # key of a TSV export from its value; an escaped quoted value (\"my secret\") is a value with its spaces
+    r'(\\"(?:[^"\\]|\\[^"])*\\"|"(?:[^"\\]|\\.)*"|\'[^\']*\'|\[hidden\]|'
+    r'(?:[^\s,;&}\]\)]|[,;&](?![\s\w.-]*[=:]|\s|$))+)',
     re.IGNORECASE,
 )
+# the users of a broker-side JAAS PlainLoginModule (user_alice="alice-secret"): their value is the password, on a line
+# with a LoginModule only (user_id=42 elsewhere is not a secret)
+_JAAS_LINE_RE = re.compile(r'LoginModule[^\n]*')
+_JAAS_USER_RE = re.compile(r'(?<![\w.-])(user_[\w.-]+[ \t]*=[ \t]*)(\\?"(?:[^"\\]|\\[^"])*?\\?"|[^\s;"]+)')
 _SECRET_KEY_KEEP_RE = re.compile(r'(?:ref|refs|name|file|path|location|type|mechanisms?|enabled?|algorithm|provider|source|'
                                  r'class|\.ms|seconds|length|iterations|url|uri|property|region)$', re.IGNORECASE)
 # values that are not a secret: unset (null, ""), a boolean, the type of a config key in a validate / config-def output
@@ -66,7 +76,7 @@ _SIMPLE_RULES = [
     # Credentials embedded in URLs: scheme://user:pass@host
     # (the password may hold a @: up to the last @ before the host). The scheme starts at the beginning of a token, not
     # at each \b of a dotted run (a.a.a.… of 50,000 characters took 3 s)
-    (re.compile(r'((?<![a-z0-9+.-])[a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/]+@', re.IGNORECASE), r'\1<REDACTED>@'),
+    (re.compile(r'((?<![a-z0-9+.-])[a-z][a-z0-9+.-]*://)[^\s/:@]*:[^\s/]+@', re.IGNORECASE), r'\1<REDACTED>@'),
     # Oracle thin URLs: jdbc:oracle:thin:scott/tiger@//host:1521/ORCL, jdbc:oracle:thin:scott/tiger@host:1521:ORCL
     (re.compile(r'(jdbc:oracle:[a-z0-9]+:)[^/\s@"\']+/[^@\s"\']+@', re.IGNORECASE), r'\1<REDACTED>@'),
     # the signature of an Azure SAS URL or token (…?sv=2022-11-02&ss=b&sig=AbCd%2B…%3D)
@@ -74,6 +84,14 @@ _SIMPLE_RULES = [
     # XML elements of a secret: <password>x</password>, <ns:clientSecret>…</ns:clientSecret>
     (re.compile(r'(<(?:[\w.-]+:)?[\w.-]*(?:password|passwd|secret|token|api[_.-]?key|credentials?|private[_.-]?key)[\w.-]*>)'
                 r'([^<]+)(</)', re.IGNORECASE), r'\1<REDACTED>\3'),
+    # a property of a Hadoop / Hive XML config (<name>fs.s3a.secret.key</name><value>x</value>), an attribute pair
+    # (<property name="password" value="x"/>) or a keyed entry (<entry key="password">x</entry>)
+    (re.compile(r'(<name>[ \t]*' + _SECRET_KEY + r'[ \t]*</name>\s*<value>)([^<]+)(</value>)', re.IGNORECASE),
+     r'\1<REDACTED>\3'),
+    (re.compile(r'(\b(?:name|key)=(["\'])' + _SECRET_KEY + r'\2[ \t]+value=(["\']))([^"\']*)(\3)', re.IGNORECASE),
+     r'\1<REDACTED>\5'),
+    (re.compile(r'(<(?:entry|property)\b[^<>]*\b(?:name|key)=(["\'])' + _SECRET_KEY + r'\2[^<>/]*>)([^<]+)(<)', re.IGNORECASE),
+     r'\1<REDACTED>\4'),
     # cookies of an HTTP request or response, and curl -u / --user user:password
     (re.compile(r'\b((?:Set-)?Cookie:)[ \t]*[^\r\n]+', re.IGNORECASE), r'\1 <REDACTED>'),
     (re.compile(r'(\bcurl\b[^\n]*?\s(?:-u|--user)[ \t=]+)[^\s:]+:\S+'), r'\1<REDACTED>'),
@@ -90,6 +108,27 @@ _SIMPLE_RULES = [
 # path without digit (java.lang.NoClassDefFoundError: org/apache/kafka/common/utils/AppInfoParser)
 _BASE64_RE = re.compile(r'(?<![\w/+=.-])(?![A-Za-z-]*/?SubPhase[A-Za-z]+(?![\w/+=.-]))(?=[A-Za-z+/]*[0-9])'
                         r'[A-Za-z0-9+/]{40,}={0,2}(?![\w/+=.-])')
+# what the base64 rule matches but is not a secret: a path of lower case or capitalized words
+# (/usr/share/java/confluentinc/kafkaconnectjdbc/lib/postgresql42, io/confluent/connect/jdbc/dialect/PostgreSqlDialect2),
+# a CamelCase name (MyVeryLongConnectorNameForOrdersTopicV2Production: never two capitals in a row, at most one capital
+# in 4 characters, one digit in 8, lower case words of 3 letters on average). A random base64 value of 40 characters or
+# more has about 40 % of capitals placed at random: about 1 in a million looks like one
+_PATH_SEGMENT_RE = re.compile(r'[a-z][a-z0-9]*|(?:[A-Z][a-z]{2,}[0-9]*)+')
+# letters and digits only, a capital always followed by a lower case letter or a digit (no nested quantifier: linear)
+_CAMEL_CASE_RE = re.compile(r'[A-Za-z0-9]+')
+_TWO_CAPITALS_RE = re.compile(r'[A-Z](?:[A-Z]|$)')
+
+
+def _not_base64(token: str) -> bool:
+    if '/' in token and not _HEX_RE.fullmatch(token.replace('/', '')):
+        return all(_PATH_SEGMENT_RE.fullmatch(x) for x in token.split('/') if x)
+    capitals = sum(c.isupper() for c in token)
+    digits = sum(c.isdigit() for c in token)
+    words = re.findall(r'[a-z]+', token)
+    # words of 3 letters or more on average, few digits: random characters have lower case runs of less than 2
+    return (capitals >= 2 and capitals * 4 <= len(token) and digits * 8 <= len(token)
+            and sum(map(len, words)) >= 3 * len(words) and bool(_CAMEL_CASE_RE.fullmatch(token))
+            and not _TWO_CAPITALS_RE.search(token))
 _SIMPLE_RULES.append((_BASE64_RE, '<BASE64-REDACTED>'))
 # checksums, image digests, container ids, commit ids: kept with --keep hashes (CI logs, whose real secrets are
 # redacted by value)
@@ -156,7 +195,8 @@ class DataSanitizer:
         self.counter = defaultdict(lambda: 1)
 
         self.patterns = {
-            'ipv4': re.compile(r'(?<![\w.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![\w.])'),
+            # not a Java version with its build number (OpenJDK 21.0.12.1+1-LTS)
+            'ipv4': re.compile(r'(?<![\w.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![\w.]|\+\d)'),
             'ipv6': re.compile(r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b'),
             # compressed (2001:db8::1, fe80::1%eth0, [fe80::1ff:fe23:4567:890a]): a :: and a digit, never inside a token
             # (a C++ / Rust path like Foo::bar has no digit, a timestamp has no ::)
@@ -239,8 +279,8 @@ class DataSanitizer:
                 self.secrets_redacted += n
         sanitized = self._redact_secret_values(sanitized)
         for pattern, repl in _SIMPLE_RULES:
-            if 'hashes' in self.keep and pattern is _BASE64_RE:
-                repl = self._redact_base64_but_hex
+            if pattern is _BASE64_RE:
+                repl = self._redact_base64
             sanitized, n = pattern.subn(repl, sanitized)
             self.secrets_redacted += n
 
@@ -286,10 +326,12 @@ class DataSanitizer:
                 sanitized[key] = value
         return sanitized
 
-    def _redact_base64_but_hex(self, match) -> str:
-        if _HEX_RE.fullmatch(match.group(0).lstrip('/')):  # containerd://<id>
+    def _redact_base64(self, match) -> str:
+        token = match.group(0)
+        # a checksum, an image digest or a container id with --keep hashes (containerd://<id>), a path, a CamelCase name
+        if ('hashes' in self.keep and _HEX_RE.fullmatch(token.lstrip('/'))) or _not_base64(token):
             self.secrets_redacted -= 1  # counted by subn
-            return match.group(0)
+            return token
         return '<BASE64-REDACTED>'
 
     def _redact_secret_values(self, text: str) -> str:
@@ -306,7 +348,16 @@ class DataSanitizer:
             self.secrets_redacted += 1
             return f"{quote}{key}{quote}{sep}<REDACTED>"
 
-        return _SECRET_KV_RE.sub(replacer, text)
+        def jaas_user(match):
+            if match.group(2).lstrip('\\').startswith('"<') or match.group(2).startswith(('<', '${')):
+                return match.group(0)
+            self.secrets_redacted += 1
+            return f"{match.group(1)}<REDACTED>"
+
+        text = _SECRET_KV_RE.sub(replacer, text)
+        if 'LoginModule' in text:
+            text = _JAAS_LINE_RE.sub(lambda m: _JAAS_USER_RE.sub(jaas_user, m.group(0)), text)
+        return text
 
     def _redact_with_map(self, text: str, pattern, mapping: Dict, prefix: str) -> str:
         """Redact matches with consistent placeholders"""

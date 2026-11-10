@@ -733,6 +733,10 @@ Oracle `user/password@`), PEM blocks, cookies, IPs (v4 and v6), hostnames, email
 for a value everywhere (`<HOST-1>` in the digest, the report and the JSON), also on both sides of `--compare`. Best
 effort: review before sharing.
 
+What holds the raw lines is **not written** with `--sanitize`, so it is not in the 📦 `.zip` of the report either: the
+file pages (a location of the report is then plain text), 🔎 the search of every line and the full 🧵 thread reports
+(the summary of the thread dumps in the report is sanitized, and gives the `playground analyze thread-dump` command).
+
 ---
 
 ## 9. Hands-on lab (≈5 min)
