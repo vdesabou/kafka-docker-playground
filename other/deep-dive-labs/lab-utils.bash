@@ -15,6 +15,11 @@ function lab_require_plaintext () {
 # starts the plaintext environment with the FileStream connectors, and 5 records in topic filestream
 function lab_start_environment () {
     playground start-environment --environment plaintext --docker-compose-override-file "${DIR}/docker-compose.plaintext.yml"
+    if [ -n "$ENABLE_KAFKA_NODES" ]
+    then
+        # with 3 brokers (broker.sh kills one): 3 replicas, topic produce would create it with the broker default (1)
+        playground topic create --topic filestream --nb-partitions 1 --replication-factor 3
+    fi
     playground topic produce -t filestream --nb-messages 5 --value '{"id": %g, "name": "name-%g"}'
 }
 
