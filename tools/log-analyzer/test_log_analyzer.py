@@ -1141,6 +1141,48 @@ def test_host_path_map():
             os.environ["PLAYGROUND_HOST_PATH_MAP"] = saved
 
 
+def test_cluster_layout_observers_and_broker_down():
+    """observers of a Multi-Region Cluster are not replicas missing from the ISR; a broker in Replicas but missing from
+    kafka-log-dirs (down) does not break the HTML report"""
+    import cluster_layout
+    with tempfile.TemporaryDirectory() as tmp:
+        describe = os.path.join(tmp, "topics.txt")
+        with open(describe, "w") as fh:
+            fh.write("Topic: orders\tTopicId: abc\tPartitionCount: 2\tReplicationFactor: 5\tConfigs: min.insync.replicas=2\n"
+                     "\tTopic: orders\tPartition: 0\tLeader: 1\tReplicas: 1,2,3,4,5\tIsr: 1,2,3\tOffline: \tObservers: 4,5\n"
+                     "\tTopic: orders\tPartition: 1\tLeader: 2\tReplicas: 2,3,1,5,4\tIsr: 2,3,1\tOffline: \tObservers: 5,4\n")
+        res = cluster_layout.analyze([("topics.txt", describe)])
+        check("observers: no under-replicated", res["under_replicated_count"] == 0, res["findings"])
+        check("observers: no broker in no ISR", not any("in no ISR" in f["text"] for f in res["findings"]), res["findings"])
+        check("observers counted", {b["id"]: b["observers"] for b in res["brokers"]} == {1: 0, 2: 0, 3: 0, 4: 2, 5: 2}, res["brokers"])
+        # a sync replica out of the ISR is still under-replicated, an observer promoted into it changes nothing
+        with open(describe, "w") as fh:
+            fh.write("\tTopic: orders\tPartition: 0\tLeader: 1\tReplicas: 1,2,3,4\tIsr: 1,3,4\tOffline: 2\tObservers: 4\n")
+        res = cluster_layout.analyze([("topics.txt", describe)])
+        check("sync replica out of the ISR", res["under_replicated_count"] == 1, res)
+        check("parsed without Observers", cluster_layout.parse_describe(
+            "Topic: t\tPartition: 0\tLeader: 1\tReplicas: 1,2\tIsr: 1")[1][("t", 0)]["observers"] == [])
+        # broker 3 is in Replicas but not in kafka-log-dirs (down)
+        with open(describe, "w") as fh:
+            fh.write("\tTopic: orders\tPartition: 0\tLeader: 1\tReplicas: 1,2,3\tIsr: 1,2\n")
+        log_dirs = os.path.join(tmp, "log-dirs.txt")
+        with open(log_dirs, "w") as fh:
+            fh.write("Querying brokers for log directories information\nReceived log directory information from brokers 1,2\n"
+                     + json.dumps({"version": 1, "brokers": [
+                         {"broker": b, "logDirs": [{"logDir": "/var/lib/kafka", "error": None,
+                                                    "partitions": [{"partition": "orders-0", "size": 1000, "offsetLag": 0, "isFuture": False}]}]}
+                         for b in (1, 2)]}) + "\n")
+        cl = cluster_layout.analyze([("topics.txt", describe), ("log-dirs.txt", log_dirs)])
+        page = log_report.cluster_layout_html(cl)
+        check("broker down: a row", "broker 3" in page and "not in kafka-log-dirs" in page, page[:300])
+        check("broker down: text", "broker 3" in "\n".join(log_report.cluster_layout_text(cl)))
+        # a truncated .gz is skipped, not an exception
+        broken = os.path.join(tmp, "topics.txt.gz")
+        with open(broken, "wb") as fh:
+            fh.write(b"\x1f\x8b\x08\x00garbage")
+        check("truncated gz", cluster_layout.analyze([("topics.txt.gz", broken)]) is None)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

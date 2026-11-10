@@ -5,7 +5,8 @@
 
 - kafka-topics --describe: partitions and leaders per broker, partitions led by a replica that is not the preferred one
   (leader imbalance), offline, under-replicated and under min.insync.replicas partitions, topics with replication factor 1,
-  a broker out of every ISR;
+  a broker out of every ISR; the observers of a Multi-Region Cluster (Observers:) are counted apart, never as replicas
+  missing from the ISR;
 - kafka-log-dirs --describe (JSON): the disk used per broker and log dir, the log dirs with an error (offline), the skew
   of the disk usage between brokers, the biggest partitions and topics, the replicas being moved (future).
 
@@ -21,7 +22,10 @@ import sys
 from collections import Counter, OrderedDict, defaultdict
 from typing import Dict, List, Optional, Tuple
 
-PARTITION_RE = re.compile(r"Topic:\s*(\S+)\s+(?:TopicId:\s*\S+\s+)?Partition:\s*(\d+)\s+Leader:\s*(\S+)\s+Replicas:\s*([\d,]*)\s+Isr:\s*([\d,]*)")
+# the observers of a Confluent Multi-Region Cluster are in Replicas and, until promoted, not in Isr:
+# "Replicas: 1,2,3,4,5 Isr: 1,2,3 Offline: Observers: 4,5"
+PARTITION_RE = re.compile(r"Topic:\s*(\S+)\s+(?:TopicId:\s*\S+\s+)?Partition:\s*(\d+)\s+Leader:\s*(\S+)\s+Replicas:\s*([\d,]*)\s+Isr:\s*([\d,]*)"
+                          r"(?:\s+Offline:(?:[ \t]*([\d,]+))?)?(?:\s+Observers:(?:[ \t]*([\d,]+))?)?")
 TOPIC_RE = re.compile(r"^Topic:\s*(\S+)\s.*?PartitionCount:\s*(\d+)\s+ReplicationFactor:\s*(\d+)(?:\s+Configs:\s*(.*))?$")
 MIN_ISR_RE = re.compile(r"(?:^|,)\s*min\.insync\.replicas=(\d+)")
 
@@ -47,16 +51,17 @@ def read_text(path: str) -> str:
 
 
 def parse_describe(text: str) -> Tuple[Dict[str, dict], Dict[Tuple[str, int], dict]]:
-    """topics {name: {partitions, rf, configs}} and partitions {(topic, p): {leader, replicas, isr}}"""
+    """topics {name: {partitions, rf, configs}} and partitions {(topic, p): {leader, replicas, isr, offline, observers}}"""
     topics: Dict[str, dict] = OrderedDict()
     parts: Dict[Tuple[str, int], dict] = OrderedDict()
     for line in text.splitlines():
         line = line.rstrip()
         m = PARTITION_RE.search(line)
         if m:
-            topic, p, leader, replicas, isr = m.groups()
+            topic, p, leader, replicas, isr, offline, observers = m.groups()
             lid = int(leader) if leader.lstrip("-").isdigit() else -1
-            parts[(topic, int(p))] = {"leader": lid, "replicas": _ids(replicas), "isr": _ids(isr)}
+            parts[(topic, int(p))] = {"leader": lid, "replicas": _ids(replicas), "isr": _ids(isr),
+                                      "offline": _ids(offline or ""), "observers": _ids(observers or "")}
             continue
         m = TOPIC_RE.match(line.strip())
         if m:
@@ -98,7 +103,7 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
     for label, path in sources:
         try:
             text = read_text(path)
-        except OSError:
+        except (OSError, EOFError, ValueError):  # a truncated .gz, a file that is not gzip
             continue
         t, p = parse_describe(text)
         if p:
@@ -118,13 +123,15 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
     def add(sev: str, text: str) -> None:
         findings.append({"severity": sev, "text": text})
 
-    brokers: Dict[int, dict] = defaultdict(lambda: {"replicas": 0, "leaders": 0, "preferred": 0, "not_preferred": 0,
-                                                    "in_isr": 0, "disk_bytes": None, "log_dirs": []})
+    brokers: Dict[int, dict] = defaultdict(lambda: {"replicas": 0, "observers": 0, "leaders": 0, "preferred": 0,
+                                                    "not_preferred": 0, "in_isr": 0, "disk_bytes": None, "log_dirs": []})
     if parts:
         offline, urp, under_min, not_pref = [], [], [], []
         for (topic, p), x in parts.items():
             for b in x["replicas"]:
                 brokers[b]["replicas"] += 1
+            for b in x["observers"]:
+                brokers[b]["observers"] += 1
             for b in x["isr"]:
                 brokers[b]["in_isr"] += 1
             if x["replicas"]:
@@ -136,13 +143,15 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
                 if x["replicas"] and x["leader"] != x["replicas"][0]:
                     brokers[x["replicas"][0]]["not_preferred"] += 1
                     not_pref.append(f"{topic}-{p}")
-            if len(x["isr"]) < len(x["replicas"]):
+            # the sync replicas missing from the ISR: an observer out of it is the normal state (asynchronous)
+            if set(x["replicas"]) - set(x["observers"]) - set(x["isr"]):
                 urp.append(f"{topic}-{p}")
             m = MIN_ISR_RE.search((topics.get(topic) or {}).get("configs") or "")
             if m and len(x["isr"]) < int(m.group(1)):
                 under_min.append(f"{topic}-{p}")
-        rf1 = sorted({t for (t, _), x in parts.items() if len(x["replicas"]) == 1})
-        res.update(topics=len({t for t, _ in parts}), partitions=len(parts), offline=offline[:LISTED], offline_count=len(offline),
+        rf1 = sorted({t for (t, _), x in parts.items() if len(set(x["replicas"]) - set(x["observers"])) == 1})
+        res.update(topics=len({t for t, _ in parts}), partitions=len(parts),
+                   observer_partitions=sum(1 for x in parts.values() if x["observers"]), offline=offline[:LISTED], offline_count=len(offline),
                    under_replicated=urp[:LISTED], under_replicated_count=len(urp), under_min_isr=under_min[:LISTED],
                    under_min_isr_count=len(under_min), not_preferred_leader=not_pref[:LISTED], not_preferred_count=len(not_pref),
                    rf1_topics=rf1[:LISTED], rf1_count=len(rf1))
@@ -156,8 +165,9 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
             add("HIGH" if len(urp) * 10 >= len(parts) else "MEDIUM",
                 f"{len(urp)} under-replicated partition(s) of {len(parts)}: {', '.join(urp[:5])}{' …' if len(urp) > 5 else ''}")
         for b, x in sorted(brokers.items()):
-            if x["replicas"] and not x["in_isr"]:
-                add("HIGH", f"broker {b} hosts {x['replicas']} replica(s) but is in no ISR: down, fenced or not fetching")
+            # a broker that only hosts observers is in no ISR by design
+            if x["replicas"] > x["observers"] and not x["in_isr"]:
+                add("HIGH", f"broker {b} hosts {x['replicas'] - x['observers']} replica(s) but is in no ISR: down, fenced or not fetching")
         live = [b for b, x in brokers.items() if x["in_isr"]]
         if len(live) > 1:
             def skew(key: str, what: str) -> None:

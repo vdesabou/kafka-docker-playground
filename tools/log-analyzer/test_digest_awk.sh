@@ -51,6 +51,7 @@ WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf
 [2026-11-07 10:40:30,000] INFO [Partition orders-0 broker=1] Expanding ISR from 1,3 to 1,3,2 (kafka.cluster.Partition)
 [2026-11-07 10:40:02,000] INFO [ReplicaFetcher replicaId=2, leaderId=1, fetcherId=0] Error sending fetch request (sessionId=123, epoch=45) to node 1: (org.apache.kafka.clients.FetchSessionHandler)
 [2026-11-07 10:40:03,000] WARN [ReplicaFetcher replicaId=2, leaderId=1, fetcherId=0] Error in response for fetch request (type=FetchRequest, replicaId=2, maxWait=500) (kafka.server.ReplicaFetcherThread)
+[2026-11-07 10:40:04,000] INFO [Consumer clientId=connector-consumer-s3-sink-0, groupId=connect-s3-sink] Error sending fetch request (sessionId=INVALID, epoch=INITIAL) to node 2: (org.apache.kafka.clients.FetchSessionHandler)
 [2026-11-07 10:40:04,000] INFO [Producer clientId=producer-1] Disconnecting from node 1 due to request timeout. (org.apache.kafka.clients.NetworkClient)
 [2026-11-07 10:40:05,000] ERROR [kafka-log-cleaner-thread-0]: Error due to (kafka.log.LogCleaner)
 [2026-11-07 10:40:06,000] INFO Attempting to send response via channel for which there is no open connection, connection id 172.18.0.5:9092-172.18.0.9:51234-3 (kafka.network.Processor)
@@ -80,7 +81,9 @@ do
     name=$(printf '%s' "$awk_cmd" | tr -c 'A-Za-z0-9' '-')
     bin="$tmp/bin-$name"
     mkdir -p "$bin"
-    printf '#!/bin/sh\nexec %s "$@"\n' "$awk_cmd" > "$bin/awk"
+    # the awk given by its path: the wrapper is named awk and comes first on PATH, "exec awk" would run itself forever
+    awk_bin=$(command -v "${awk_cmd%% *}") || { echo "❌ $awk_cmd: not found"; failed=1; continue; }
+    printf '#!/bin/sh\nexec %s%s "$@"\n' "$awk_bin" "${awk_cmd#"${awk_cmd%% *}"}" > "$bin/awk"
     chmod +x "$bin/awk"
     out="$tmp/out-$name"
     : > "$out"
@@ -102,7 +105,8 @@ do
         failed=1
     fi
     # the signals of a broker under pressure (ISR changes, followers that cannot fetch, requests timing out, log cleaner,
-    # responses to clients already gone, quota throttling): keyed by the broker, with the partition or the peer
+    # responses to clients already gone, quota throttling): keyed by the broker, with the partition or the peer. The fetch
+    # error of a consumer (same FetchSessionHandler line) is not a follower that cannot fetch
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 ~ /^(isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/ {print $2 "=" $6}' "$out.records" | LC_ALL=C sort | tr '\n' ',')
     if [ "$got" != "isr_expand=broker 1 · orders-0 (1,3 -> 1,3,2),isr_shrink=broker 1 · orders-0 (1,2,3 -> 1,3),isr_shrink=broker 1 · orders-1 (1,2 -> 1),log_cleaner=log cleaner · thread died,quota_throttle=broker 2 · ProduceRequest,replica_fetch_error=broker 1 · follower 2,replica_fetch_error=broker 1 · follower 2,request_timeout=broker 1 · Producer,response_dropped=broker · client gone before the response," ]
     then
