@@ -4597,29 +4597,30 @@ subcommands:
       the configs logged at startup (KafkaConfig values:,\nDistributedConfig, connector
       and client configs…) and the .properties\nand connector JSON files of the input.\n\n⏳
       A large file (20 MB or more) shows a progress bar in the terminal\n(MB read,
-      speed, ETA), and with 20 MB or more of input the report opens\nin the browser
-      right away as a progress page (step, a bar for the file\nbeing read and one
-      for the whole input, elapsed time, speed, ETA of the file and of the whole input)
-      that becomes the report when the analysis ends. The last line\ngives the size
-      read and the time it took. \U0001F4E4 Share in the report: the\n.zip of the
-      report and its file pages (written next to it when they are\nunder 200 MB),
-      the summary to paste, an email. An archive (.tar, .tar.gz,\n.tgz…) shows a bar
-      while it is extracted.\n\n\U0001F5C2️ One report: the sections of each CFK support
-      bundle of the input\n(pods, custom resources, events, versions, recent changes,
-      issues by\ncategory) are in the log report, right after its verdict; the comparison\nof
-      several bundles is linked from it. Several CFK bundles are analyzed in\nparallel,
-      4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\noutput printed
-      in order.\n\n☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent
-      support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt,
-      or with cluster-resources/ and operator/; or a flat collection of kubectl outputs
-      with a confluent-operator-*.log or the YAML of a platform.confluent.io custom
-      resource at its top), alone or inside a folder or an archive, is detected and
-      analyzed as a whole by the CFK analyzer (a container image built on first use):
-      Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io
-      custom resource (phase/state, ready replicas, False conditions, failed connector
-      tasks), the environment checked against the CFK support matrix (Kubernetes,
-      CFK operator, CP and init container versions), the recent changes (who edited
-      which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
+      speed, ETA), and with 20 MB or more of input (an archive counts\nfor its content,
+      not its compressed size) the report opens\nin the browser right away as a progress
+      page (step, a bar for the file\nbeing read and one for the whole input, elapsed
+      time, speed, ETA of the file and of the whole input) that becomes the report
+      when the analysis ends. The last line\ngives the size read and the time it took.
+      \U0001F4E4 Share in the report: the\n.zip of the report and its file pages (written
+      next to it when they are\nunder 200 MB), the summary to paste, an email. An
+      archive (.tar, .tar.gz,\n.tgz…) shows a bar while it is extracted.\n\n\U0001F5C2️
+      One report: the sections of each CFK support bundle of the input\n(pods, custom
+      resources, events, versions, recent changes, issues by\ncategory) are in the
+      log report, right after its verdict; the comparison\nof several bundles is linked
+      from it. Several CFK bundles are analyzed in\nparallel, 4 at a time (PLAYGROUND_CFK_PARALLELISM
+      to change it), their\noutput printed in order.\n\n☸️ A Confluent for Kubernetes
+      (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk
+      generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
+      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
+      or the YAML of a platform.confluent.io custom resource at its top), alone or
+      inside a folder or an archive, is detected and analyzed as a whole by the CFK
+      analyzer (a container image built on first use): Warning events, pods (phase,
+      waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource
+      (phase/state, ready replicas, False conditions, failed connector tasks), the
+      environment checked against the CFK support matrix (Kubernetes, CFK operator,
+      CP and init container versions), the recent changes (who edited which CR and
+      when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
       zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
       rendered by CFK, configOverrides, config logged at startup, connector configs
       from the Connector CRs and the config dumps of the logs), a JVM default truststore
