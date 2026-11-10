@@ -72,15 +72,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -91,6 +82,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
@@ -262,19 +262,6 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 Requires Couchbase Server 7.0 or later.
 
 	 - Type: STRING
-	 - Default: 
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.collections
-
-If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-Requires Couchbase Server 7.0 or later.
-
-	 - Type: LIST
 	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
@@ -498,22 +485,22 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-Schema
-==========================
-🔘 couchbase.dlq.topic
+🔘 couchbase.collections
 
-This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
 
-If `couchbase.schema.failure.action` is set to DLQ then documents that encounter any Schema failures will be sent to this topic. Headers will be added for future investigation such as the intended destination and the reason it was sent to the DLQ
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
 
-UNCOMMITTED; this feature may change in a patch release without notice.
+Requires Couchbase Server 7.0 or later.
 
-	 - Type: STRING
-	 - Default: couchbase.dlq
+	 - Type: LIST
+	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
 
+==========================
+Schema
+==========================
 🔘 couchbase.schema.failure.action
 
 Determines the behaviour when a Schema Mismatch or Missing Schema is encountered for a document using the Schema Registry. This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
@@ -545,6 +532,19 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 
 	 - Type: STRING
 	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.dlq.topic
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+
+If `couchbase.schema.failure.action` is set to DLQ then documents that encounter any Schema failures will be sent to this topic. Headers will be added for future investigation such as the intended destination and the reason it was sent to the DLQ
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+	 - Type: STRING
+	 - Default: couchbase.dlq
 	 - Importance: MEDIUM
 	 - Required: false
 
