@@ -64,6 +64,7 @@ The InfluxDB database name in which connector will write records from Apache Kaf
 🔘 measurement.name.format
 
 A format string for the destination measurement name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the measurement name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: null
@@ -114,4 +115,5 @@ The maximum number of times to retry on errors before failing the task.
 	 - Default: 10
 	 - Importance: MEDIUM
 	 - Required: false
+
 
