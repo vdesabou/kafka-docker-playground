@@ -4,6 +4,7 @@ null
 🔘 errors.tolerance
 
 Error tolerance level.
+'none' for fail on error. 'all' for log and continue
 
 	 - Type: STRING
 	 - Default: none
@@ -163,6 +164,7 @@ Cosmos target database to write records into.
 🔘 connect.cosmos.containers.topicmap
 
 A comma delimited list of Kafka topics mapped to Cosmos containers.
+For example: topic1#con1,topic2#con2.
 
 	 - Type: STRING
 	 - Default: null
@@ -378,4 +380,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 
