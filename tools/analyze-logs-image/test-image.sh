@@ -86,6 +86,12 @@ run "$image" -f broker-pressure --output-dir out5d > "$work/out5d.txt" 2>&1
 check "broker signals" grep -q "🌀 STORM broker 1: 30 ISR shrinks" "$work/out5d.txt"
 check "cluster layout" grep -q "🗺️ Cluster layout (kafka-log-dirs.txt, kafka-topics-describe.txt)" "$work/out5d.txt"
 
+# 5e. --sample jvm_dumps: its thread dumps and heap dump are shipped in the image
+run "$image" --sample jvm_dumps --output-dir out5e > "$work/out5e.txt" 2>&1
+check "sample jvm_dumps: exit code 0" test $? -eq 0
+check "sample jvm_dumps: thread dumps analyzed" grep -q "\[CRITICAL\] Deadlock between deadlock-1, deadlock-2" "$work/out5e.txt"
+check "sample jvm_dumps: heap dump listed" grep -q "session-cache-leak-1.hprof.gz" "$work/out5e.txt"
+
 # 6. no folder mounted: a hint, and the help without arguments
 docker run --rm --network none "$image" --sample connect_task_failure --output-dir /tmp/out > "$work/out6.txt" 2>&1
 check "sample without a mounted folder: exit code 0" test $? -eq 0

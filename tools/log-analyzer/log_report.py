@@ -1128,9 +1128,14 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         ev = events.get((where, when))
         if ev:
             ev["cluster"] = True
-    # 🐢 the bursts of broker signals (ISR shrinks, fetch errors, request timeouts…): one row per burst, as the GC pauses
+    # 🐢 the bursts of broker signals (ISR shrinks, fetch errors, request timeouts…): one row per burst, as the GC pauses.
+    # Only the ones that break what follows are a cause (🔗) of the next errors: the others are symptoms of the same
+    # incident (a client's own request timeouts), or its recovery (ISR expands), and would hide the real change before
     for b in broker_bursts(files):
         add(b["time"], b["file"], b["line"], "infra", None, b["text"])
+        ev = events.get((b["file"], b["line"] or b["time"]))
+        if ev and ev["text"] == b["text"] and b["kind"] not in BURST_CAUSE_KINDS:
+            ev["not_a_cause"] = True
     # the longest GC pauses (1 s or more: the JVM stopped, its sessions and requests time out)
     pauses = [(f, ev) for f in files for ev in f.get("events") or [] if ev["kind"] == "gc_pause" and ev.get("time")]
     pauses.sort(key=lambda x: -gc_ms(x[1]))
@@ -1158,6 +1163,11 @@ BURST_WORDS = {"isr_shrink": ("📉", "ISR shrink", "ISR shrinks"), "isr_expand"
                "log_cleaner": ("🧽", "log cleaner failure", "log cleaner failures"),
                "quota_throttle": ("🚦", "throttled request", "throttled requests"),
                "response_dropped": ("📭", "response to a client already gone", "responses to clients already gone")}
+
+
+# the broker signals that can cause the errors that follow them: a partition whose ISR shrank (NotEnoughReplicas for the
+# acks=all producers), a log cleaner that died (compacted topics grow, the disk fills)
+BURST_CAUSE_KINDS = {"isr_shrink", "log_cleaner"}
 
 
 def broker_bursts(files: List[dict]) -> List[dict]:
@@ -1284,7 +1294,8 @@ def link_causes(events: List[dict]) -> None:
         # a change: a config key changed, or a worker / broker restarted (not its first start in a file, nor a connector
         # created: everything after the creation of a connector would follow it)
         if ev["kind"] in ("config_change", "infra"):
-            changes.append(ev)
+            if not ev.get("not_a_cause"):
+                changes.append(ev)
             continue
         if ev["kind"] == "lifecycle" and ev["text"].startswith("🚀"):
             if ev["file"] in started:
@@ -4583,12 +4594,19 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     return text
 
 
+def share_dialog_embed(text: str) -> str:
+    """a text for a <script type='text/plain'> element of the 📤 Share dialog, read back by unembed() of its script: every
+    < written \\u003c (not only </: <!--<script> in a log line would make the rest of the page text of this element), every
+    \\ first written \\u005c (a \\u003c of the text itself must come back as it was, never as a live < in the rich text)"""
+    return (text or "").replace("\\", "\\u005c").replace("<", "\\u003c")
+
+
 def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket: str = "") -> str:
     """📤 Share, in the header: the .zip of the report and its file pages (written next to it by analyze logs), the text
     summary to paste in Slack or a ticket, the path, an email with the summary; the sanitization state first"""
     # every < encoded, not only </: a log line with <!--<script> would put the parser in the double escaped state of a
     # script element, and the rest of the page (the dialog, its script, the footer) would become text of this one
-    safe = summary.replace("<", "\\u003c")
+    safe = share_dialog_embed(summary)
     state = ("<p class='share-ok'>🔒 Sanitized (--sanitize): secrets, IPs and hostnames are replaced by placeholders. Review it "
              "before sending it outside Confluent.</p>" if sanitized else
              "<p class='share-warn'>⚠️ Not sanitized: it can contain passwords, IPs and hostnames of the logs. For someone outside "
@@ -4609,7 +4627,7 @@ def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket
                 "<span class='mono'>-files/</span> folder.</p>")
     # the summary for a ticket in the other formats of the dialog: Slack mrkdwn, and HTML copied as rich text
     def embed(id_: str, text: str) -> str:
-        return f"<script type='text/plain' id='{id_}'>{text.replace('<', chr(92) + 'u003c')}</script>"
+        return f"<script type='text/plain' id='{id_}'>{share_dialog_embed(text)}</script>"
     formats = (embed("pg-share-ticket", ticket) + embed("pg-share-slack", share_formats.md_to_slack(ticket))
                + embed("pg-share-html", share_formats.md_to_html(ticket))) if ticket else ""
     return (SHARE_CSS + f"<script type='text/plain' id='pg-share-summary'>{safe}</script>" + formats +
@@ -4717,14 +4735,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
   const done = dlg.querySelector(".share-done");
-  const summary = document.getElementById("pg-share-summary").textContent.replace(/\\\\u003c/g, "<");
+  // share_dialog_embed() back: \\u003c is <, \\u005c is \\ (in one pass: a \\u003c of the text, written \\u005cu003c, stays)
+  function unembed(t) { return t.replace(/\\\\u00(3c|5c)/g, (m, h) => h === "3c" ? "<" : "\\\\"); }
+  const summary = unembed(document.getElementById("pg-share-summary").textContent);
   function copy(text, what) {
     const ok = () => { done.textContent = "✅ " + what + " copied to the clipboard"; };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(ok, () => fallback(text, what));
     } else fallback(text, what);
   }
-  function embedded(id) { return document.getElementById(id).textContent.replace(/\\\\u003c/g, "<"); }
+  function embedded(id) { return unembed(document.getElementById(id).textContent); }
   // rich text: text/html for the editors that take it (Zendesk, Gmail, Confluence, Docs), the Markdown as text/plain
   function copyRich(htmlText, plain, what) {
     const ok = () => { done.textContent = "✅ " + what + " copied to the clipboard"; };

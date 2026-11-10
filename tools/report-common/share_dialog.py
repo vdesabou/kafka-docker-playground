@@ -45,8 +45,14 @@ def _text(fragment: str) -> str:
 
 def _embed(id_: str, text: str) -> str:
     # every < encoded, not only </: a log line with <!--<script> would put the parser in the double escaped state of a
-    # script element, and the rest of the page would become text of this one
-    return f"<script type='text/plain' id='{id_}'>{(text or '').replace('<', chr(92) + 'u003c')}</script>"
+    # script element, and the rest of the page would become text of this one. Every \ first (\u005c): a \u003c of the
+    # text itself (a Jackson-escaped log line) must come back as it was, never as a live < in the HTML copied as rich text
+    return f"<script type='text/plain' id='{id_}'>{embed_text(text)}</script>"
+
+
+def embed_text(text: str) -> str:
+    """a text for a <script type='text/plain'> element, read back by unembed() of SHARE_SCRIPT"""
+    return (text or "").replace("\\", "\\u005c").replace("<", "\\u003c")
 
 
 def md_cell(s) -> str:
@@ -274,7 +280,9 @@ SHARE_SCRIPT = """<script>
     }
   });
   const done = dlg.querySelector(".share-done");
-  function embedded(id) { const el = document.getElementById(id); return el ? el.textContent.replace(/\\\\u003c/g, "<") : ""; }
+  // embed_text() back: \\u003c is <, \\u005c is \\ (in one pass: a \\u003c of the text, written \\u005cu003c, stays as it was)
+  function unembed(t) { return t.replace(/\\\\u00(3c|5c)/g, (m, h) => h === "3c" ? "<" : "\\\\"); }
+  function embedded(id) { const el = document.getElementById(id); return el ? unembed(el.textContent) : ""; }
   const summary = embedded("pg-share-summary");
   const said = what => { done.textContent = "✅ " + what; };
   function fallback(text, what) {

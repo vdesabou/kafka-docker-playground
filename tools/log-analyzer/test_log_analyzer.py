@@ -1183,6 +1183,30 @@ def test_cluster_layout_observers_and_broker_down():
         check("truncated gz", cluster_layout.analyze([("topics.txt.gz", broken)]) is None)
 
 
+def test_broker_signal_bursts_are_not_causes():
+    """🔗 a burst of request timeouts of the worker itself (a symptom) is not the cause of the next error: the stop
+    30 s before it stays the cause; an ISR shrink burst can be one"""
+    timeouts = "".join(f"@@PGEVT@@|request_timeout|{20 + i}|2026-11-07T10:00:{30 + i:02d}||broker 2 · Producer\n" for i in range(5))
+    def first_error_after(signals):
+        text = ("@@PGFILE@@|connect.log|100|1|0|2026-11-07T09:59:00|2026-11-07T10:01:00\n"
+                "@@PGREC@@|ERROR|1|1|60|2026-11-07T10:00:40|2026-11-07T10:00:40\n"
+                "[2026-11-07 10:00:40,000] ERROR [s3-sink|task-0] Task threw an uncaught exception (org.apache.kafka.connect.runtime.WorkerTask)\n"
+                "@@PGTS@@|2026-11-07T10:00:40\n"
+                "@@PGEVT@@|process_stop|10|2026-11-07T10:00:00||Kafka Connect worker stopping\n"
+                + signals)
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        first = [ev for ev in res["timeline"] if ev["kind"] == "first_error"]
+        check("one first error", len(first) == 1, res["timeline"])
+        return (first[0].get("after") or {}).get("text", ""), res
+    after, res = first_error_after(timeouts)
+    check("the burst is on the timeline", any((ev.get("text") or "").startswith("⏱️") for ev in res["timeline"]), res["timeline"])
+    check("request timeouts: not the cause", after.startswith("🛑"), after)
+    shrinks = "".join(f"@@PGEVT@@|isr_shrink|{20 + i}|2026-11-07T10:00:{30 + i:02d}||broker 1 · orders-{i} (1,2,3 -> 1)\n" for i in range(5))
+    after, _ = first_error_after(shrinks)
+    check("ISR shrinks: the cause", after.startswith("📉"), after)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

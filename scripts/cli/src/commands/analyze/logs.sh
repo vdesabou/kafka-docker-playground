@@ -282,9 +282,30 @@ fi
 export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
 export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
-# bytes of a file (0 when it cannot be read)
+# bytes of a file (0 when it cannot be read: the braces keep the error of the < redirection quiet)
 function file_size () {
-    wc -c < "$1" 2>/dev/null | tr -d ' ' || echo 0
+    local n
+    n=$({ wc -c < "$1"; } 2>/dev/null | tr -d ' ')
+    echo "${n:-0}"
+}
+
+# the name of the reports of an input: its file or folder name without its extensions (orders.log.gz -> orders). For a
+# folder given as . or .. its real name, the leading dots of a hidden one dropped (.logs -> logs), "logs" when nothing is
+# left: an empty name gave -log-report.html, and a zip of "-log-report" that zip took for options
+function input_stem () {
+    local name="${1%/}"
+    if [ -d "$name" ]
+    then
+        name=$(cd "$name" 2>/dev/null && pwd || printf '%s' "$name")
+    fi
+    name=$(basename -- "$name")
+    while [[ "$name" == .* ]]
+    do
+        name="${name#.}"
+    done
+    name="${name%%.*}"
+    [[ "$name" == "/" ]] && name=""
+    printf '%s\n' "${name:-logs}"
 }
 
 function file_size_human () {
@@ -341,7 +362,7 @@ function stop_digest_jobs () {
 }
 if [ -z "$PG_VERBOSE_MODE" ]
 then
-    trap 'stop_digest_jobs; finish_progress_page; rm -rf $tmp_dir' EXIT
+    trap 'stop_digest_jobs; finish_progress_page; rm -rf "$tmp_dir"' EXIT
 else
     trap 'stop_digest_jobs; finish_progress_page' EXIT
     log "🐛📂 not deleting tmp dir $tmp_dir"
@@ -353,8 +374,7 @@ then
     if [ "${input_total_bytes:-0}" -ge $((20 * 1024 * 1024)) ]
     then
         mkdir -p "$output_dir"
-        report_stem=$(basename "${file_array[0]%/}")
-        report_stem="${report_stem%%.*}"
+        report_stem=$(input_stem "${file_array[0]}")
         progress_page="$(cd "$output_dir" && pwd)/${report_stem}-log-report.html"
         export PG_PROGRESS_HTML="$progress_page" PG_PROGRESS_TITLE="playground analyze logs ${file_array[*]}" PG_PROGRESS_STARTED="$(date +%s)"
         # the whole input: an archive counts for its size until it is extracted, then for the size of its content
@@ -645,7 +665,7 @@ function analyze_logs_digest () {
     then
         while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$log_parallelism" ]
         do
-            wait -n 2> /dev/null || true
+            wait -n 2> /dev/null || sleep 0.2
             progress_digests
         done
         digest_one "$label" "$path" "$origin" "$gz" "$part" "" &
@@ -753,7 +773,7 @@ function progress_digests () {
 function collect_digests () {
     while [ -n "$(jobs -rp)" ]
     do
-        wait -n 2> /dev/null || true
+        wait -n 2> /dev/null || sleep 0.2
         progress_digests
     done
     wait
@@ -881,12 +901,12 @@ function walk_cfk_bundle_logs () {
     while IFS= read -r -d '' f
     do
         nb_cfk_log_files=$((nb_cfk_log_files+1))
-        printf '%s\t%s\n' "${label%/}/${f#$path/}" "$f" >> "$walked_file"
+        printf '%s\t%s\n' "${label%/}/${f#"$path"/}" "$f" >> "$walked_file"
         if [[ "$label" == *":" ]]
         then
-            analyze_logs_path_entry "$f" "${label}${f#$path/}"
+            analyze_logs_path_entry "$f" "${label}${f#"$path"/}"
         else
-            analyze_logs_path_entry "$f" "${label%/}/${f#$path/}"
+            analyze_logs_path_entry "$f" "${label%/}/${f#"$path"/}"
         fi
     done < <(find "$path" -type f \( -name '*.log' -o -name '*.log.gz' -o -name '*.log.[0-9]*' \) ! -path "*/__MACOSX/*" -print0 | sort -z)
     in_cfk_walk=""
@@ -943,9 +963,9 @@ function analyze_logs_path_entry () {
                     prune+=(-path "$bundle_dir")
                     if [[ "$label" == *":" ]]
                     then
-                        analyze_logs_path "$bundle_dir" "${label}${bundle_dir#$path/}"
+                        analyze_logs_path "$bundle_dir" "${label}${bundle_dir#"$path"/}"
                     else
-                        analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#$path/}"
+                        analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#"$path"/}"
                     fi
                 fi
             # the support bundles first, then the flat collections of kubectl outputs (operator log, CR yamls), so that the
@@ -961,9 +981,9 @@ function analyze_logs_path_entry () {
         do
             if [[ "$label" == *":" ]]
             then
-                analyze_logs_path "$f" "${label}${f#$path/}"
+                analyze_logs_path "$f" "${label}${f#"$path"/}"
             else
-                analyze_logs_path "$f" "${label%/}/${f#$path/}"
+                analyze_logs_path "$f" "${label%/}/${f#"$path"/}"
             fi
         done < <(find "$path" "${prune[@]}" -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -print0 | sort -z)
         return
@@ -1249,7 +1269,7 @@ do
     # at most cfk_parallelism jobs: wait for one to end (the jobs always exit 0, their result is in a file)
     while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$cfk_parallelism" ]
     do
-        wait -n 2> /dev/null || true
+        wait -n 2> /dev/null || sleep 0.2
         flush_cfk_bundles
     done
     (
@@ -1591,8 +1611,7 @@ fi
 triage_args=(--walked "$walked_file" --tmp-dir "$tmp_dir" --sources "$sources_file")
 if [[ -z "$json_out" ]]
 then
-    triage_stem=$(basename "${file_array[0]%/}")
-    triage_stem="${triage_stem%%.*}"
+    triage_stem=$(input_stem "${file_array[0]}")
     if [[ ${#sample_array[@]} -gt 0 ]]
     then
         triage_stem="${sample_array[0]}"
@@ -1654,8 +1673,7 @@ fi
 
 mkdir -p "$output_dir"
 output_dir=$(cd "$output_dir" && pwd)
-stem=$(basename "${file_array[0]%/}")
-stem="${stem%%.*}"
+stem=$(input_stem "${file_array[0]}")
 if [[ ${#sample_array[@]} -gt 0 ]]
 then
     stem="${sample_array[0]}"
@@ -1760,7 +1778,7 @@ then
         then
             ln -s "$CFK_COMPARISON_HTML" "$share_stage/$(basename "$CFK_COMPARISON_HTML")"
         fi
-        if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
+        if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "./${stem}-log-report") 2>/dev/null
         then
             if [[ -n "$sanitize" ]]
             then
