@@ -233,7 +233,7 @@ Gotchas:
 
 ---
 
-## 5. Hands-on lab (≈15 min)
+## 5. Hands-on lab (≈20 min)
 
 **Step 1: an older CP version**
 
@@ -298,6 +298,22 @@ playground history --run                 # or: eval "$(tail -1 playground-run-hi
 # ⛳ Flags used are --connect-log-level=org.apache.kafka.connect.file=TRACE        <- the same run, flags included
 ```
 
+**Step 7: a hotfix image from engineering** (a local retag stands in for it)
+
+```bash
+docker tag confluentinc/cp-server:8.4.1 localhost/playground-lab/cp-server:8.4.1-hotfix1
+export CP_KAFKA_IMAGE=localhost/playground-lab/cp-server CP_KAFKA_TAG=8.4.1-hotfix1
+playground container recreate
+#  Container controller Recreate … Container broker Recreate …           <- connect keeps running
+playground status
+# broker … localhost/playground-lab/cp-server:8.4.1-hotfix1   connect … confluentinc/cp-server-connect:8.4.1
+unset CP_KAFKA_IMAGE CP_KAFKA_TAG
+playground container recreate
+# … docker.io/confluentinc/cp-server:8.4.1-hotfix1: not found              <- the exports are needed while the hotfix runs
+playground update-version --tag 8.4.1
+# broker … confluentinc/cp-server:8.4.1                                    <- back on the public image
+```
+
 ```bash
 playground stop
 ```
@@ -315,6 +331,7 @@ playground stop
 | "is this Schema Registry / ksqlDB / Kafka bug fixed after our CP version? which patch bumped Netty?" | `playground cp-changelog --from <their version> --component schema-registry --grep <symptom>` (or `--security`), then `update-version --tag <the version with the fix>` to check. The feeds only cover the community components (no Confluent Server, Control Center) and list commit titles, without CVE ids |
 | "which version broke it?" | keep the example running, `update-version --connector-tag` (or `--tag`) on each candidate: a bisect without re-running the scenario |
 | "engineering sent a SNAPSHOT build" | `--connector-zip <zip>` (whole plugin) or `--connector-jar <jar>` (one jar of the installed plugin) |
+| "engineering sent a hotfix image of the broker (`cp-server:7.9.1-hotfix1`): does it fix the case?" | `export CP_KAFKA_IMAGE=<repo>` + `export CP_KAFKA_TAG=<hotfix tag>`, `--tag` = the release the hotfix is based on; on a running repro, `playground container recreate` with the exports switches only the broker and controller. See [🧪 Validate a hotfix image from engineering](/deep-dive-run-and-versions?id=🧪-validate-a-hotfix-image-from-engineering) |
 | "it only fails with SASL_SSL / mTLS / Kerberos" | `--environment sasl-ssl` / `2way-ssl` / `kerberos` on the same example |
 | "logs from the very start of the connector" | `--connect-log-level "<package>=TRACE"` (set before the example creates its connector) |
 | "the example is skipped" | `⏭ RESULT: SKIPPED`: read the top of the script, a version guard refused the combination (`exit 111`) |
@@ -323,6 +340,58 @@ playground stop
 
 In a repro model, write the versions in the run line you share (`playground repro export` takes it from
 `playground-run-history`), so the next person reproduces with the same ones.
+
+### 🧪 Validate a hotfix image from engineering
+
+An escalation often ends with engineering sending a patched image, for example `cp-server:7.9.1-hotfix1`, in an
+internal registry or as a `docker save` tarball. Run the same repro model on it, then on the public image, and
+compare. No new flag is needed: every image and tag is an environment variable (list in
+[Overriding Confluent Platform Docker images and tags](/how-to-use?id=🐳-overriding-confluent-platform-docker-images-and-tags)).
+
+```bash
+# 1. get the image into the local engine first (a missing image is pulled in the middle of the run, after the previous example was stopped)
+docker pull <registry>/confluentinc/cp-server:7.9.1-hotfix1        # after docker login / aws ecr get-login-password
+docker load -i cp-server-7.9.1-hotfix1.tar                          # or the tarball engineering sent
+
+# 2. the same repro model, broker and controller on the hotfix
+export CP_KAFKA_IMAGE=<registry>/confluentinc/cp-server
+export CP_KAFKA_TAG=7.9.1-hotfix1
+playground run -f "$PWD/reproduction-models/<model>.sh" --tag 7.9.1   # --tag = the release the hotfix is based on
+
+# 3. prove which image runs: there is no banner for it
+playground status
+# connect              Up 41 seconds   confluentinc/cp-server-connect:7.9.1
+# broker               Up 41 seconds   <registry>/confluentinc/cp-server:7.9.1-hotfix1
+```
+
+**Before / after on one running repro**, without running the scenario again (topics, data and connectors stay):
+
+```bash
+# public image → hotfix: only the containers that use CP_KAFKA_IMAGE are recreated
+export CP_KAFKA_IMAGE=<registry>/confluentinc/cp-server CP_KAFKA_TAG=7.9.1-hotfix1
+playground container recreate
+#  Container connect Running
+#  Container controller Recreate … Container controller Recreated
+#  Container broker Recreate … Container broker Recreated
+
+# hotfix → public image
+unset CP_KAFKA_IMAGE CP_KAFKA_TAG
+playground update-version --tag 7.9.1
+# 💣 Detected confluent version change, restarting containers
+#  Container controller Recreate …  Container broker Recreate …          <- connect and schema-registry keep running
+```
+
+| Gotcha | What you see | Rule |
+| --- | --- | --- |
+| The hotfix tag in `--tag` | every component takes `--tag` (`cp-server-connect:7.9.1-hotfix1`, `cp-schema-registry:7.9.1-hotfix1`… don't exist: pull error), and the version guards read it | the hotfix tag goes in `CP_KAFKA_TAG` only, `--tag` is the base release |
+| The KRaft controller runs it too | `controller` and `broker` both use `CP_KAFKA_IMAGE` | expected: a customer installs the hotfix on every `cp-server` node. For a broker-only patch, ask engineering whether the controllers need it |
+| No banner | with `CP_KAFKA_IMAGE` set, the `💫 Using default CP version` / `🚀 Using specified CP version` lines are not printed, and nothing replaces them | check with `playground status`, and paste its broker line in the `# 📋 run output` block of the model |
+| Not recorded, not replayed | `playground-run-history` and the `📄 masked log` only have the flags (`command: playground run -f … --tag=7.9.1`, `CP version: 7.9.1`): `history --run`, `re-run` and `repro export` go back to the public image | write the two `export` lines in the model, above its run line, and say so when you hand it over |
+| `container recreate` / `update-version` while the hotfix runs | without the exports in the shell, the version is read from the broker (`7.9.1-hotfix1`) and given to every component: `docker.io/confluentinc/cp-server:7.9.1-hotfix1: not found`, the containers are left as they were | keep the two exports in the shell for any `recreate` / `update-version`, until you switch back with `unset` + `update-version --tag <base>` |
+| A Connect hotfix (`CP_CONNECT_IMAGE` / `CP_CONNECT_TAG`) | `🧰 Checking if Docker image … contains additional tools`: kdp rebuilds the image **under the same name and tag** with its tools added, so `connect` runs a derived image and the local tag no longer points at what engineering sent | fine to test a fix; `docker pull` / `docker load` again to get the original image back (to scan it, or to hand it on) |
+
+Other components work the same way: `CP_SCHEMA_REGISTRY_IMAGE` / `_TAG`, `CP_KSQL_IMAGE` / `_TAG`,
+`CP_REST_PROXY_IMAGE` / `_TAG`, `CP_CONTROL_CENTER_IMAGE` / `_TAG`.
 
 ---
 

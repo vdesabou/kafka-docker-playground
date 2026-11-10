@@ -92,4 +92,39 @@ lab_run playground history zzz-no-such-run --json
 lab_expect_exit 1
 lab_expect_equals "$LAB_OUTPUT" "[]" "no run: an empty array"
 
+log "Step 7: a hotfix image from engineering (a local retag stands in for it)"
+# the environment is on 8.4.1 since step 4. localhost/: a registry that is never pulled from, by docker or podman
+hotfix_image="localhost/playground-lab/cp-server"
+hotfix_tag="8.4.1-hotfix1"
+lab_run docker tag confluentinc/cp-server:8.4.1 "${hotfix_image}:${hotfix_tag}"
+lab_expect_exit 0
+export CP_KAFKA_IMAGE="$hotfix_image" CP_KAFKA_TAG="$hotfix_tag"
+lab_run playground container recreate
+lab_expect_exit 0
+lab_expect_contains "Container broker Recreate"
+lab_expect_contains "Container controller Recreate"
+lab_expect_not_contains "Container connect Recreate" "connect keeps running"
+lab_run_inspect_images controller broker connect
+lab_expect_contains "/controller ${hotfix_image}:${hotfix_tag}"
+lab_expect_contains "/broker ${hotfix_image}:${hotfix_tag}"
+lab_expect_contains "/connect confluentinc/cp-server-connect:8.4.1"
+lab_run playground connector wait --connector filestream-sink --max-wait 180
+lab_expect_exit 0
+# without the exports, recreate reads the version from the broker (8.4.1-hotfix1) and gives it to every component
+unset CP_KAFKA_IMAGE CP_KAFKA_TAG
+lab_run playground container recreate
+lab_expect_contains "confluentinc/cp-server:${hotfix_tag}"
+lab_run_inspect_images broker
+lab_expect_contains "/broker ${hotfix_image}:${hotfix_tag}" "the failed pull leaves the containers as they were"
+lab_run playground update-version --tag 8.4.1
+lab_expect_exit 0
+lab_expect_contains "💣 Detected confluent version change, restarting containers"
+lab_expect_not_contains "Container connect Recreate" "connect keeps running"
+lab_run_inspect_images controller broker
+lab_expect_contains "/controller confluentinc/cp-server:8.4.1"
+lab_expect_contains "/broker confluentinc/cp-server:8.4.1"
+lab_run playground connector wait --connector filestream-sink --max-wait 180
+lab_expect_exit 0
+docker rmi "${hotfix_image}:${hotfix_tag}" > /dev/null 2>&1 || true
+
 log "✅ all the outputs of the page are as expected"

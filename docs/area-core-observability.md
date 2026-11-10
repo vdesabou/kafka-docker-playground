@@ -43,7 +43,7 @@ Every broker and replication example: `playground find-example --category broker
 | Control Center | `--enable-control-center` (Next Gen, http://127.0.0.1:9021), `--enable-legacy-control-center` for CP < 8, `--control-center-tag`, examples [other/control-center-ldap-auth](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-ldap-auth), [other/control-center-readonly-mode](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-readonly-mode); see the [📊 Observability deep dive](/deep-dive-observability.md) |
 | Metrics and dashboards | `--enable-jmx-grafana`: Prometheus and Grafana (Kafka cluster, topics, quotas, clients… dashboards), see [Enabling JMX Grafana](/how-to-use?id=📊-enabling-jmx-grafana), also with `mdc-plaintext` (both clusters); see the [📊 Observability deep dive](/deep-dive-observability.md) |
 | Which CP version changed this? | `--tag` on any run, `playground update-version --tag` on the running environment, `playground cp-changelog --from <version> --grep <symptom>` |
-| Run a patched image from engineering | the `CP_KAFKA_IMAGE` / `CP_KAFKA_TAG` variables, see [Overriding Confluent Platform Docker images and tags](/how-to-use?id=🐳-overriding-confluent-platform-docker-images-and-tags) |
+| Engineering sent a hotfix image (`cp-server:7.9.1-hotfix1`): does it fix the customer's case? | `export CP_KAFKA_IMAGE=<repo> CP_KAFKA_TAG=<hotfix tag>`, then the same repro model with `--tag <base release>`, or `playground container recreate` on the running repro to switch the broker only; `playground status` proves which image runs. See [🧪 Validate a hotfix image from engineering](/deep-dive-run-and-versions?id=🧪-validate-a-hotfix-image-from-engineering) |
 
 ## 🍪 Deep dives
 
