@@ -5,8 +5,11 @@
 !tools/report-common
 !tools/streams-analyzer
 !tools/thread-analyzer
-# the samples of the thread analyzer are only for its --sample
+# the samples of the thread analyzer are only for its --sample, but the 3 dumps and the heap dump of
+# playground analyze logs --sample jvm_dumps
 tools/thread-analyzer/samples
+!tools/thread-analyzer/samples/jdk21-scenario-*.txt
+!tools/heap-analyzer/samples/session-cache-leak-1.hprof.gz
 !cfk-analysis
 !tools/analyze-logs-image/entrypoint.sh
 **/__pycache__

@@ -68,6 +68,20 @@ class ShareDialogTest(unittest.TestCase):
         self.assertIn("Verdict: 🚀 1 records/s", out)
         self.assertNotIn("share-dlg", rh.brand_page(page, share=False))
 
+    def test_embedded_text_round_trip(self):
+        """a \\u003c of the text itself (a Jackson-escaped log line) comes back as it was, never as a live <"""
+        import re
+        fn = re.search(r'function unembed\(t\) \{ return t\.replace\(/(.*?)/g, .*?\); \}', sd.SHARE_SCRIPT)
+        self.assertIsNotNone(fn, "unembed() of the dialog script")
+        # the same replacement as the script, in Python (the regex of the script is valid for re as it is)
+        js_regex = re.compile(fn.group(1))
+        unembed = lambda t: js_regex.sub(lambda m: "<" if m.group(1) == "3c" else "\\", t)  # noqa: E731
+        for text in ["thread \\u003cimg src=x onerror=alert(1)// x", "a <b> & </script> <!--<script>",
+                     "C:\\path\\u005c\\\\x", "\\u003c\\u005c\\\\u003c"]:
+            embedded = sd.embed_text(text)
+            self.assertNotIn("<", embedded)
+            self.assertEqual(unembed(embedded), text)
+
 
 if __name__ == "__main__":
     unittest.main()
