@@ -133,6 +133,28 @@ def test_human():
     check("human MB", progress.human(5 * 1024 * 1024) == "5.0 MB", progress.human(5 * 1024 * 1024))
 
 
+def test_expanded_size():
+    # a 5 MB .zip of a 250 MB support bundle is a large input: the progress page opens for it (20 MB threshold)
+    import gzip
+    import zipfile
+    with tempfile.TemporaryDirectory() as d:
+        data = b"2026-11-06 10:00:00 INFO the same line\n" * 50000
+        z, g, t = os.path.join(d, "b.zip"), os.path.join(d, "b.log.gz"), os.path.join(d, "b.tar")
+        with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("a.log", data)
+            zf.writestr("b.log", data)
+        with gzip.open(g, "wb") as fh:
+            fh.write(data)
+        open(t, "wb").write(data)
+        zs, gs, ts = os.path.getsize(z), os.path.getsize(g), os.path.getsize(t)
+        check("zip content", progress.expanded_size(z, zs) == 2 * len(data), (zs, progress.expanded_size(z, zs)))
+        check("gzip content", progress.expanded_size(g, gs) == len(data), (gs, progress.expanded_size(g, gs)))
+        check("tar as is", progress.expanded_size(t, ts) == ts, progress.expanded_size(t, ts))
+        bad = os.path.join(d, "bad.zip")
+        open(bad, "wb").write(b"not a zip")
+        check("bad zip", progress.expanded_size(bad, 9) == 9 * progress.COMPRESSION_RATIO, progress.expanded_size(bad, 9))
+
+
 def test_no_syntax_warning():
     # an invalid escape in a Python string (the JavaScript of a report: "\/" instead of "\\/") is a SyntaxWarning
     # today and an error in a future Python, and it can change what the browser gets

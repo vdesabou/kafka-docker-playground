@@ -10,7 +10,9 @@
   progress.py human <bytes>
       prints 2.4 GB, 168.1 MB, 12 KB
   progress.py size <path>…
-      prints "<bytes> <files> <1 when there is an archive, else 0>" of files and folders (recursively)
+      prints "<bytes> <files> <1 when there is an archive, else 0> <expanded bytes>" of files and folders
+      (recursively): the expanded bytes count an archive for the size of its content (estimated, see expanded_size),
+      so a 5 MB .zip of 250 MB of logs is a large input
 
 The page and the overall progress come from the environment, exported once by analyze logs:
   PG_PROGRESS_HTML         the progress page (the path of the report), none: no page
@@ -331,21 +333,49 @@ class Progress:
 ARCHIVES = (".zip", ".tar", ".tgz", ".tar.gz", ".tbz2", ".tar.bz2", ".txz", ".tar.xz", ".7z")
 
 
+# the content of an archive that cannot be listed cheaply (bzip2, xz, 7z): about 10 times its size for logs
+COMPRESSION_RATIO = 10
+
+
+def expanded_size(path: str, size: int) -> int:
+    """the bytes of the content of an archive, without extracting it: the members of a .zip (a .tar in it counts
+    for its size), the size in the trailer of a gzip (modulo 4 GB: never less than the archive), an estimate for the
+    others. A file that is not an archive: its size"""
+    name = path.lower()
+    try:
+        if name.endswith(".zip"):
+            import zipfile
+            with zipfile.ZipFile(path) as z:
+                return max(size, sum(i.file_size for i in z.infolist()))
+        if name.endswith((".tar.gz", ".tgz", ".gz")):
+            with open(path, "rb") as f:
+                f.seek(-4, os.SEEK_END)
+                isize = int.from_bytes(f.read(4), "little")
+            return max(size, isize)
+    except (OSError, ValueError, RuntimeError, EOFError, __import__("zipfile").BadZipFile):
+        pass
+    if name.endswith(ARCHIVES) and not name.endswith(".tar"):
+        return size * COMPRESSION_RATIO
+    return size
+
+
 def cmd_size(paths) -> int:
-    total = files = 0
+    total = files = expanded = 0
     archive = 0
     for path in paths:
         walk = [(os.path.dirname(path), [], [os.path.basename(path)])] if os.path.isfile(path) else os.walk(path)
         for root, _, names in walk:
             for name in names:
                 try:
-                    total += os.path.getsize(os.path.join(root, name))
+                    size = os.path.getsize(os.path.join(root, name))
                 except OSError:
                     continue
+                total += size
                 files += 1
+                expanded += expanded_size(os.path.join(root, name), size)
                 if name.lower().endswith(ARCHIVES):
                     archive = 1
-    print(total, files, archive)
+    print(total, files, archive, expanded)
     return 0
 
 

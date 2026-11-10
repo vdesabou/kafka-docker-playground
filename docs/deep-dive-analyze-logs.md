@@ -465,7 +465,7 @@ change (everything after it would follow it), nor the first start of a worker.
   file, the 10 most frequent messages with numbers and ids masked, the top loggers) and 👉 what to ask for next (a
   longer window, the logs of the component that fails, a new export of a console cut at its size limit). Also the 🔭
   Overview section of the report and `.overview` of `--json`.
-- **Large inputs**: from 20 MB, a progress bar in the terminal and, in an interactive terminal, the report opens right
+- **Large inputs**: from 20 MB (an archive counts for its content: a 5 MB `.zip` of 250 MB of logs is large), a progress bar in the terminal and, in an interactive terminal, the report opens right
   away as a progress page (the phase, the file being read or the digests done when they run in parallel, the whole input, speed, ETA) that becomes the report. 2.4 GB of JSON
   lines take about 30 s.
 - **Many files**: their digests run in parallel, 4 at a time (`PLAYGROUND_LOG_PARALLELISM`, `1` for one at a time with

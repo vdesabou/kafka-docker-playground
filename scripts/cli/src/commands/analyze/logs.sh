@@ -371,8 +371,9 @@ fi
 if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \
     && command -v python3 > /dev/null 2>&1 && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
 then
-    read -r input_total_bytes input_total_files input_has_archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "${file_array[@]}" 2>/dev/null || echo "0 0 1")
-    if [ "${input_total_bytes:-0}" -ge $((20 * 1024 * 1024)) ]
+    read -r input_total_bytes input_total_files input_has_archive input_expanded_bytes < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "${file_array[@]}" 2>/dev/null || echo "0 0 1 0")
+    # the expanded size: a 5 MB .zip of a 250 MB CFK support bundle is a large input
+    if [ "${input_expanded_bytes:-0}" -ge $((20 * 1024 * 1024)) ]
     then
         mkdir -p "$output_dir"
         report_stem=$(input_stem "${file_array[0]}")
@@ -869,8 +870,8 @@ function progress_add_done () {
 function progress_add_done_folder () {
     if [ -n "${PG_PROGRESS_HTML:-}" ]
     then
-        local bytes files archive
-        read -r bytes files archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "$1" 2>/dev/null || echo "0 0 0")
+        local bytes files archive expanded
+        read -r bytes files archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "$1" 2>/dev/null || echo "0 0 0 0")
         progress_add_done "$bytes" "$files"
     fi
 }
@@ -879,8 +880,8 @@ function progress_add_done_folder () {
 function progress_add_extracted () {
     if [ -n "${PG_PROGRESS_HTML:-}" ]
     then
-        local bytes files archive
-        read -r bytes files archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "$2" 2>/dev/null || echo "0 0 0")
+        local bytes files archive expanded
+        read -r bytes files archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "$2" 2>/dev/null || echo "0 0 0 0")
         export PG_PROGRESS_TOTAL_BYTES=$(( ${PG_PROGRESS_TOTAL_BYTES:-0} - $(file_size "$1") + bytes )) \
                PG_PROGRESS_TOTAL=$(( ${PG_PROGRESS_TOTAL:-0} - 1 + files ))
     fi
