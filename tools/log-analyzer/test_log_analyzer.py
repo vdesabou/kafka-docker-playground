@@ -736,11 +736,13 @@ def test_broker_signals():
     check("12 in an hour: a storm", isr and isr["storm"], isr)
     check("a broker without id: its file", any(k == "response_dropped" and w.startswith("broker (") and w.endswith("server.log)")
                                               for k, w in rows), rows.keys())
-    check("the log cleaner, not a storm", not rows[("log_cleaner", "log cleaner")]["storm"], rows)
+    # the log cleaner lines name no broker: its file (two brokers, two rows)
+    cleaner = [r for (k, w), r in rows.items() if k == "log_cleaner" and w.startswith("log cleaner (") and w.endswith("server.log)")]
+    check("the log cleaner, not a storm", cleaner and not cleaner[0]["storm"], rows.keys())
     tl = [ev["text"] for ev in res["timeline"]]
     check("ISR shrinks on the timeline, one burst", sum(t.startswith("📉") for t in tl) == 1
           and any(t.startswith("📉 12 ISR shrinks on broker 1 in 11 min (orders-0, orders-1)") for t in tl), tl)
-    check("log cleaner on the timeline", any(t.startswith("🧽 1 log cleaner failure on log cleaner") for t in tl), tl)
+    check("log cleaner on the timeline", any(t.startswith("🧽 1 log cleaner failure on log cleaner (") for t in tl), tl)
     check("a single response dropped is not on the timeline", not any(t.startswith("📭") for t in tl), tl)
     bt = log_report.broker_signals_text(res["lifecycle"])
     check("broker text block", bt and bt[0].startswith("🐢") and any("🌀 STORM broker 1: 12 ISR shrinks" in x for x in bt), bt)
@@ -1205,6 +1207,55 @@ def test_broker_signal_bursts_are_not_causes():
     shrinks = "".join(f"@@PGEVT@@|isr_shrink|{20 + i}|2026-11-07T10:00:{30 + i:02d}||broker 1 · orders-{i} (1,2,3 -> 1)\n" for i in range(5))
     after, _ = first_error_after(shrinks)
     check("ISR shrinks: the cause", after.startswith("📉"), after)
+
+
+def test_describe_then_thread_dump_and_log_dirs_merge():
+    """a commands output with a kafka-topics --describe then a jstack is a thread dump whose describe is still read; a
+    truncated kafka-log-dirs output is parsed in linear time; two log-dirs snapshots are not added up"""
+    import time
+    import cluster_layout
+    with tempfile.TemporaryDirectory() as tmp:
+        both = os.path.join(tmp, "commands-output.txt")
+        with open(both, "w") as fh:
+            fh.write("$ kafka-topics --describe\n\tTopic: orders\tPartition: 0\tLeader: 1\tReplicas: 1,2\tIsr: 1,2\n"
+                     "$ jstack 1\nFull thread dump OpenJDK 64-Bit Server VM (21.0.1+12-LTS mixed mode):\n\n"
+                     '"main" #1 prio=5 os_prio=0 tid=0x1 nid=0x2 runnable\n   java.lang.Thread.State: RUNNABLE\n')
+        check("thread dump first", bundle_triage.kind_of("commands-output.txt", both) == "thread_dump")
+        check("its describe", bundle_triage.layout_kinds(both) == ["topic_describe"], bundle_triage.layout_kinds(both))
+        walked = os.path.join(tmp, "walked")
+        with open(walked, "w") as fh:
+            fh.write(f"commands-output.txt\t{both}\n")
+        of = bundle_triage.triage(walked, None, None, set())
+        check("also in the triage", of["files"][0].get("also") == ["topic_describe"], of)
+        # truncated: a { at each partition, no end
+        cut = os.path.join(tmp, "log-dirs-cut.txt")
+        with open(cut, "w") as fh:
+            fh.write('{"version":1,"brokers":[{"broker":1,"logDirs":[{"logDir":"/d","error":null,"partitions":['
+                     + ",".join('{"partition":"t-%d","size":1,"offsetLag":0,"isFuture":false}' % i for i in range(100000)))
+        started = time.time()
+        check("truncated log-dirs", cluster_layout.parse_log_dirs(open(cut).read()) is None)
+        check("in linear time", time.time() - started < 2, f"{time.time() - started:.1f} s")
+        snaps = []
+        for n, size in enumerate((1000, 3000)):
+            path = os.path.join(tmp, f"log-dirs-{n}.txt")
+            with open(path, "w") as fh:
+                fh.write(json.dumps({"version": 1, "brokers": [{"broker": 1, "logDirs": [{"logDir": "/d", "error": None,
+                         "partitions": [{"partition": "t-0", "size": size, "offsetLag": 0, "isFuture": False}]}]}]}))
+            snaps.append((f"log-dirs-{n}.txt", path))
+        res = cluster_layout.analyze(snaps)
+        b1 = [b for b in res["brokers"] if b["id"] == 1][0]
+        check("the last snapshot, not the sum", b1["disk_bytes"] == 3000 and len(b1["log_dirs"]) == 1, b1)
+        check("merge said", any("merged" in f["text"] for f in res["findings"]), res["findings"])
+
+
+def test_thread_dump_labels_after_a_missing_file():
+    """a dump file gone from the disk does not shift the labels of the next ones"""
+    import jvm_dumps
+    with tempfile.TemporaryDirectory() as tmp:
+        kept = os.path.join(tmp, "b.txt")
+        open(kept, "w").close()
+        of = {"files": [{"label": "a.txt", "path": os.path.join(tmp, "gone.txt")}, {"label": "b.txt", "path": kept}]}
+        check("label kept with its path", jvm_dumps._paths(of, ["a.txt", "b.txt"]) == [("b.txt", kept)])
 
 
 if __name__ == "__main__":

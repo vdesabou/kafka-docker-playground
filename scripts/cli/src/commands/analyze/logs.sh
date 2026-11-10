@@ -362,7 +362,8 @@ function stop_digest_jobs () {
 }
 if [ -z "$PG_VERBOSE_MODE" ]
 then
-    trap 'stop_digest_jobs; finish_progress_page; rm -rf "$tmp_dir"' EXIT
+    # the JVM versions of --from-containers, next to the logs it saved (kept): only for this run
+    trap 'stop_digest_jobs; finish_progress_page; rm -rf "$tmp_dir"; [ -n "${jvm_versions_file:-}" ] && rm -f "$jvm_versions_file"' EXIT
 else
     trap 'stop_digest_jobs; finish_progress_page' EXIT
     log "🐛📂 not deleting tmp dir $tmp_dir"
@@ -1548,13 +1549,18 @@ do
         [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
         [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
         [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+        [[ -n "$ocr" ]] && compare_cmd+=(--ocr)
+        [[ -n "$cfk_include_warnings" ]] && compare_cmd+=(--include-warnings)
+        # not --since / --until: the other input covers another period (the day before a fix)
         for connector in "${connector_array[@]}"
         do
             compare_cmd+=(--connector "$connector")
         done
-        # no progress page of its own, the sanitizer state of this run
-        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" \
-            || ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
+        # no progress page of its own, the sanitizer state of this run. Its exit code is not what decides: a run whose CFK
+        # part failed (no container engine for the CFK image, one bundle cfk-analysis could not read) exits non-zero
+        # after writing a good JSON, the log analysis of the other input is still there
+        PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" || true
+        if ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
         then
             logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
             tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
@@ -1622,6 +1628,19 @@ if python3 -I "$root_folder/tools/log-analyzer/bundle_triage.py" "${triage_args[
     && [ "$(jq '.files | length' "$other_files_json" 2>/dev/null)" -gt 0 ] 2>/dev/null
 then
     report_args+=(--other-files "$other_files_json")
+    # 🧵 the thread dumps, heap dumps and cluster layout analyzed once, by the first run of log_report.py (the summary)
+    report_args+=(--analysis-cache "$tmp_dir/other-files-analysis.json")
+    if [[ -z "$json_out" ]]
+    then
+        # where the HTML report goes (the summary writes the full thread reports next to it, the report links them),
+        # without the thread reports of a previous run on the same input
+        mkdir -p "$output_dir"
+        output_dir=$(cd "$output_dir" && pwd)
+        report_stem_for_dumps=$(input_stem "${file_array[0]}")
+        [[ ${#sample_array[@]} -gt 0 ]] && report_stem_for_dumps="${sample_array[0]}"
+        rm -f "$output_dir/${report_stem_for_dumps}"-thread-dumps*.html
+        report_args+=(--thread-reports "$output_dir/${report_stem_for_dumps}-log-report.html")
+    fi
 else
     rm -f "$other_files_json"
 fi
@@ -1648,7 +1667,9 @@ then
     fi
     python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
     # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
-    jq --argjson redaction "$redaction" --argjson streams "$streams_json" --argjson overview "$overview_json" '. + {redaction_summary: $redaction} + (if $streams != null then {kafka_streams: $streams} else {} end) + (if $overview != null then {overview: $overview} else {} end)' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
+    # --json-sections applies to the keys added here too (want)
+    jq_want='def want(k): ($sections == "") or ($sections | split(",") | map(gsub("^ +| +$"; "")) | any(.[]; . == k));'
+    jq --arg sections "$json_sections" --argjson redaction "$redaction" --argjson streams "$streams_json" --argjson overview "$overview_json" "$jq_want"' . + (if want("redaction_summary") then {redaction_summary: $redaction} else {} end) + (if $streams != null and want("kafka_streams") then {kafka_streams: $streams} else {} end) + (if $overview != null and want("overview") then {overview: $overview} else {} end)' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
     if [ -n "$cfk_only" ] && [ ${#cfk_json_files[@]} -eq 1 ] && [ ${#cfk_bundles[@]} -eq 1 ]
     then
         # one CFK bundle: its JSON as before, the log analysis of its pod logs in .log_analysis
@@ -1664,8 +1685,8 @@ then
     then
         cat "$tmp_dir/logs-redacted.json" >&3
     else
-        jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") --slurpfile comparison "$cfk_comparison" \
-            '. + {cfk_bundles: $cfk[0]} + (if ($comparison[0] | length) > 0 then {cfk_comparison: $comparison[0]} else {} end)' \
+        jq --arg sections "$json_sections" --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") --slurpfile comparison "$cfk_comparison" \
+            "$jq_want"' . + (if want("cfk_bundles") then {cfk_bundles: $cfk[0]} else {} end) + (if ($comparison[0] | length) > 0 and want("cfk_comparison") then {cfk_comparison: $comparison[0]} else {} end)' \
             "$tmp_dir/logs-redacted.json" >&3
     fi
     exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))
@@ -1732,8 +1753,34 @@ then
 fi
 # 📋 the summary for a ticket (Markdown, always sanitized), next to the report (also 📤 Share > Copy for a ticket)
 report_args+=(--ticket-out "$output_dir/${stem}-ticket.md")
-# 🧵 the thread reports of a previous run on the same input: written again by this one when the input has thread dumps
-rm -f "$output_dir/${stem}"-thread-dumps*.html
+# 🧵 the thread reports of a previous run on the same input: removed before the summary, which writes the ones of this
+# run when the input has thread dumps (--thread-reports)
+if [ ! -f "$other_files_json" ]
+then
+    rm -f "$output_dir/${stem}"-thread-dumps*.html
+fi
+# the pages next to the report that it links to by their name, besides its file pages: in its 📦 .zip, and in the zip
+# command of a report too large to zip (here and in 📤 Share > copy the zip command)
+share_extra=()
+for cfk_json in "${cfk_compare_files[@]}"
+do
+    # the file pages of the issues of the CFK bundles (their sections are in the report)
+    [ -d "${cfk_json%.json}-files" ] && share_extra+=("${cfk_json%.json}-files")
+done
+# 🧵 the thread reports of the thread dumps of the input (analyzed inline)
+for thread_html in "$output_dir/${stem}"-thread-dumps*.html
+do
+    [ -f "$thread_html" ] && share_extra+=("$thread_html")
+done
+# the comparison of the CFK bundles
+if [ -n "${CFK_COMPARISON_HTML:-}" ] && [ -f "$CFK_COMPARISON_HTML" ]
+then
+    share_extra+=("$CFK_COMPARISON_HTML")
+fi
+for extra in "${share_extra[@]}"
+do
+    report_args+=(--share-extra "$(basename "$extra")")
+done
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
 if [ -s "$output_dir/${stem}-ticket.md" ]
 then
@@ -1757,27 +1804,10 @@ then
         then
             ln -s "$output_dir/$share_files" "$share_stage/$share_files"
         fi
-        # the file pages of the issues of the CFK bundles (their sections are in the report)
-        for cfk_json in "${cfk_compare_files[@]}"
+        for extra in "${share_extra[@]}"
         do
-            if [ -d "${cfk_json%.json}-files" ]
-            then
-                ln -s "${cfk_json%.json}-files" "$share_stage/$(basename "${cfk_json%.json}-files")"
-            fi
+            ln -s "$extra" "$share_stage/$(basename "$extra")"
         done
-        # 🧵 the thread reports of the thread dumps of the input (analyzed inline), linked from the report by their name
-        for thread_html in "$output_dir/${stem}"-thread-dumps*.html
-        do
-            if [ -f "$thread_html" ]
-            then
-                ln -s "$thread_html" "$share_stage/$(basename "$thread_html")"
-            fi
-        done
-        # the comparison of the CFK bundles, linked from the report by its name
-        if [ -n "${CFK_COMPARISON_HTML:-}" ] && [ -f "$CFK_COMPARISON_HTML" ]
-        then
-            ln -s "$CFK_COMPARISON_HTML" "$share_stage/$(basename "$CFK_COMPARISON_HTML")"
-        fi
         if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "./${stem}-log-report") 2>/dev/null
         then
             if [[ -n "$sanitize" ]]
@@ -1788,7 +1818,12 @@ then
             fi
         fi
     else
-        log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$(shown_path "$output_dir")\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+        share_cmd="cd \"$(shown_path "$output_dir")\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+        for extra in "${share_extra[@]}"
+        do
+            share_cmd+=" \"$(basename "$extra")\""
+        done
+        log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): $share_cmd"
     fi
 fi
 exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))

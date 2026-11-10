@@ -197,7 +197,7 @@ lab_expect_contains "🔥 CPU between the dumps: cpu-burner 99.7%"
 lab_expect_contains "🔬 1 heap dump(s) in the input, not analyzed here (Eclipse MAT in Docker, about as much memory as the dump): run"
 lab_run playground analyze logs --sample broker_pressure --output-dir "$report_dir"
 lab_expect_exit 0
-lab_expect_contains "log cleaner: 1 log cleaner failures, 1/h · thread died · 2026-11-09 14:50:00"
+lab_expect_contains "log cleaner (broker-2/server.log): 1 log cleaner failures, 1/h · thread died · 2026-11-09 14:50:00"
 lab_expect_contains "🌀 STORM broker 1: 30 ISR shrinks, 30.3/h · orders-4 ×10, orders-8 ×10, payments-3 ×7 (+1 more) · 2026-11-09 14:21:25 → 14:59:20"
 lab_expect_contains "🌀 STORM broker 2: 10 followers failing to fetch from it, 10.1/h · follower 3 ×10 · 2026-11-09 14:20:32 → 14:55:45"
 lab_expect_contains "broker 1: 6 requests timed out (no answer in request.timeout.ms), 6.1/h · ReplicaFetcher ×6 · 2026-11-09 14:25:30 → 14:55:00"

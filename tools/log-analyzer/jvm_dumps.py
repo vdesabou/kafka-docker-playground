@@ -14,7 +14,7 @@ Python 3.8, stdlib only.
 
 import os
 import sys
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 THREAD_ANALYZER = os.path.join(HERE, "..", "thread-analyzer")
@@ -28,7 +28,8 @@ CPU_SHOWN = 5
 MAX_INLINE_BYTES = 512 * 1024 * 1024
 
 
-def _paths(of: dict, labels: List[str]) -> List[str]:
+def _paths(of: dict, labels: List[str]) -> List[Tuple[str, str]]:
+    """(label, path) of the files still on disk: the label of each path kept with it, whatever was skipped before"""
     out = []
     by_label = {f.get("label"): f for f in of.get("files") or []}
     for x in labels:
@@ -36,8 +37,22 @@ def _paths(of: dict, labels: List[str]) -> List[str]:
         # the copy kept next to the report, else where analyze logs read it in this run (the tmp dir, with --json)
         p = next((c for c in (f.get("path"), f.get("read_path")) if c and os.path.isfile(c)), None)
         if p:
-            out.append(p)
+            out.append((x, p))
     return out
+
+
+def _size(path: str) -> int:
+    """the size of a dump once read: for a .gz, the uncompressed size of its trailer (modulo 4 GB, never less than the
+    file), not the compressed one (a 50 MB .gz of thread dumps is 500 MB to parse)"""
+    size = os.path.getsize(path)
+    if path.endswith(".gz") and size >= 18:
+        try:
+            with open(path, "rb") as fh:
+                fh.seek(-4, os.SEEK_END)
+                return max(size, int.from_bytes(fh.read(4), "little"))
+        except OSError:
+            pass
+    return size
 
 
 def _import_analyzer():
@@ -69,11 +84,12 @@ def thread_dumps(of: Optional[dict], html_dir: Optional[str] = None, stem: str =
     for n, c in enumerate(cmds, 1):
         g = {"folder": c.get("folder") or "", "files": c.get("files") or [], "command": c.get("command") or ""}
         out.append(g)
-        paths = _paths(of, g["files"])
+        found = _paths(of, g["files"])
+        paths = [p for _, p in found]
         if not paths:
             g["error"] = "the files are no longer on disk"
             continue
-        if sum(os.path.getsize(p) for p in paths) > MAX_INLINE_BYTES:
+        if sum(_size(p) for p in paths) > MAX_INLINE_BYTES:
             g["error"] = "too large to analyze inline: run the command"
             continue
         dumps = []
@@ -96,8 +112,8 @@ def thread_dumps(of: Optional[dict], html_dir: Optional[str] = None, stem: str =
             g["error"] = f"analysis failed: {ex}"
             continue
         # the analyzer gives the file of a dump by its path or its name: back to its label in the input
-        label_of = dict(zip(paths, g["files"]))
-        label_of.update({os.path.basename(p): x for p, x in zip(paths, g["files"])})
+        label_of = {p: x for x, p in found}
+        label_of.update({os.path.basename(p): x for x, p in found})
         g["dumps"] = [{"index": d["index"], "time": (d.get("timestamp") or "").replace(" ", "T")[:19] or None,
                        "file": label_of.get(d.get("source"), os.path.basename(d.get("source") or "")), "line": d.get("line"),
                        "threads": d.get("threads"), "states": d.get("states") or {}} for d in res["dumps"]]
@@ -127,7 +143,7 @@ def thread_dumps(of: Optional[dict], html_dir: Optional[str] = None, stem: str =
                 with open(path, "w", encoding="utf-8") as fh:
                     fh.write(page)
                 g["report"] = path
-            except OSError as ex:
+            except Exception as ex:  # the page of a dump the analyzer does not expect: never break the log report for it
                 g["error"] = f"cannot write the thread report: {ex}"
     return out
 

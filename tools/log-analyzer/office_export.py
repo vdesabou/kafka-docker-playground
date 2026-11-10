@@ -115,12 +115,18 @@ def writer_lines(root: ET.Element) -> List[str]:
 
 
 # ── Excel ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# the last column of Excel (XFD): a crafted cell reference (r="ZZZZZZZZZZ1") made a row of 10^14 cells
+MAX_COLUMNS = 16384
+
+
 def col_index(ref: str) -> int:
     n = 0
     for ch in ref:
-        if not ch.isalpha():
+        if not ("A" <= ch.upper() <= "Z"):
             break
         n = n * 26 + ord(ch.upper()) - 64
+        if n > MAX_COLUMNS:
+            return MAX_COLUMNS - 1
     return n - 1
 
 

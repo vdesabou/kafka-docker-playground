@@ -53,6 +53,22 @@ NUM_RE = re.compile(r"(?<![A-Za-z0-9])\d+")
 MAX_PATTERN = 160
 
 
+# distinct messages kept while reading: past it, the ones seen once are dropped (multi-GB logs with ids that mask() does
+# not catch made millions of keys, an example of 400 characters and a set each)
+MAX_PATTERNS = 50000
+
+
+def prune(patterns: Counter, *side: dict) -> None:
+    """drops the rarest messages (the top messages are the frequent ones) from the counts and their side maps: seen once,
+    then twice… until half of MAX_PATTERNS is left, so that the next prune comes MAX_PATTERNS / 2 new messages later"""
+    seen = 1
+    while len(patterns) > MAX_PATTERNS // 2:
+        for key in [k for k, c in patterns.items() if c <= seen]:
+            del patterns[key]
+            for d in side:
+                d.pop(key, None)
+        seen *= 2
+
 def open_text(path: str):
     if path.endswith(".gz"):
         return gzip.open(path, "rt", encoding="utf-8", errors="replace")
@@ -158,6 +174,8 @@ def overview(records: str, sources: str, exports: Optional[str], top: int) -> di
                         pattern_level.setdefault(key, Counter())[level or "no level"] += 1
                         pattern_example.setdefault(key, message.strip()[:400])
                         pattern_files.setdefault(key, set()).add(label)
+                        if len(patterns) > MAX_PATTERNS:
+                            prune(patterns, pattern_level, pattern_example, pattern_files)
                         if logger:
                             loggers[logger] += 1
             except OSError:

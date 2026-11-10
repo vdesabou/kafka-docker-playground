@@ -288,8 +288,11 @@ SHARE_SCRIPT = """<script>
   function fallback(text, what) {
     const ta = document.createElement("textarea");
     ta.value = text; dlg.appendChild(ta); ta.select();
-    try { document.execCommand("copy"); said(what + " copied to the clipboard"); }
-    catch (e) { done.textContent = "the copy failed: select the text and copy it"; return; }
+    // execCommand returns false when the copy is refused (it does not always throw): the text stays there to copy by hand
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+    if (!copied) { done.textContent = "the copy failed: select the text and copy it"; return; }
+    said(what + " copied to the clipboard");
     ta.remove();
   }
   function copy(text, what) {
@@ -305,8 +308,10 @@ SHARE_SCRIPT = """<script>
     dlg.appendChild(box);
     const range = document.createRange(), sel = window.getSelection();
     range.selectNodeContents(box); sel.removeAllRanges(); sel.addRange(range);
-    try { document.execCommand("copy"); said(what + " copied to the clipboard"); }
-    catch (e) { done.textContent = "the copy failed: use 🎫 Copy for a ticket"; }
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+    if (copied) said(what + " copied to the clipboard");
+    else done.textContent = "the copy failed: use 🎫 Copy for a ticket";
     sel.removeAllRanges();
     box.remove();
   }

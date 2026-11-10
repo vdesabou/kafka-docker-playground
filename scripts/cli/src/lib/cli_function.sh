@@ -7565,6 +7565,12 @@ function summarize_log_errors() {
                     # read before timestamp_of(), whose match() changes RSTART / RLENGTH
                     lc_line = NR
                     ev[++nev] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
+                } else if (lc_kind ~ /^(isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/) {
+                    # the signals of a broker after the first 300: the last 150 kept too (a ring, written at the end),
+                    # so that the incident at the end of a log of thousands of ISR shrinks has its bursts
+                    lc_line = NR
+                    if (!(lc_kind in lc_ring_seen)) { lc_ring_seen[lc_kind] = 1; lc_ring_kinds[++nlc_ring] = lc_kind }
+                    lc_ring[lc_kind, (lc_noted[lc_kind] - 301) % 150] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
                 }
             }
         }
@@ -7621,6 +7627,11 @@ function summarize_log_errors() {
                 for (j = 1; j < n; j++) printf "@@PGCFGL@@\t%s\n", cl[j] >> records_file
                 n = split(cfg_chg[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
+            }
+            # the last signals of a broker after the first 300 (lc_ring), oldest first
+            for (i = 1; i <= nlc_ring; i++) {
+                lc_k = lc_ring_kinds[i]; lc_n = lc_noted[lc_k] - 300
+                for (j = 0; j < (lc_n < 150 ? lc_n : 150); j++) ev[++nev] = lc_ring[lc_k, ((lc_n < 150 ? 0 : lc_n % 150) + j) % 150]
             }
             for (i = 1; i <= nev; i++) printf "@@PGEVT@@\t%s\n", ev[i] >> records_file
             for (i = 1; i <= nlc_keys; i++) printf "@@PGEVTN@@\t%s\t%d\t%d\n", lc_keys[i], lc_count[lc_keys[i]], lc_leave[lc_keys[i]] + 0 >> records_file
