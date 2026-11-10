@@ -118,7 +118,7 @@
     "transaction.boundary.interval.ms": "",
     "transaction.metadata.factory": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
     "transforms.addTopicSuffix.negate": "false",
-    "transforms.addTopicSuffix.plugin.version": "8.4.0-ce",
+    "transforms.addTopicSuffix.plugin.version": "8.4.1-ce",
     "transforms.addTopicSuffix.predicate": "",
     "transforms.addTopicSuffix.regex": "",
     "transforms.addTopicSuffix.replacement": "",
