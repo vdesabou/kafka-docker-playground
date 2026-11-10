@@ -618,6 +618,80 @@ subcommands:
         private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied
         into the Salesforce example folders.\ncheck: default is your keystore, else
         connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
+- name: ccloud
+  description: "\U0001F324️ Set up your own Confluent Cloud clusters for the fully
+    managed examples\n\n  ccloud setup        a personal environment, one Basic cluster
+    per cloud,\n                      their API keys, stored in a secrets profile\n\nThe
+    examples then run on these clusters with no bootstrap to wait for. To\nsee what
+    is still running, or delete it: 'playground cloud-resources ccloud\nlist' and
+    'playground cloud-resources cleanup --resource ccloud'."
+  usage: playground ccloud COMMAND
+  options: []
+  subcommands:
+  - name: setup
+    description: "\U0001F3D7️ Create (or complete) your personal environment and clusters,
+      and store them in a secrets profile\n\nFor an organization shared by a team,
+      or your own: rather than a cluster\ncreated on every run, or a team cluster
+      where everybody's topics collide,\nyou get, in the organization your confluent
+      CLI is logged into:\n\n  \U0001F310 an environment pg-<user> (Stream Governance
+      essentials)\n  \U0001F3B0 one Basic cluster pg-<user>-<cloud> per --cloud (aws,
+      gcp, azure)\n  \U0001F511 one Kafka API key per cluster and one Schema Registry
+      API key, owned\n     by you (no service account)\n\nand the secrets profile
+      (--profile, default: the active one) gets\nENVIRONMENT, SCHEMA_REGISTRY_CREDS,
+      AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n_CLOUD, _REGION, _CREDS, and CLUSTER_* for
+      --default-cloud: what\n'playground run' loads for the fully managed examples
+      (fm-aws-* on the\nAWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure
+      one, the\nothers on --default-cloud).\n\nRun it again any time: what exists
+      is reused (same names), API keys\nalready stored in the profile are kept when
+      they still belong to the\ncluster, and only what is missing is created. --dry-run
+      shows the plan.\n\nNames matter for the cleanup: 'cloud-resources cleanup --resource
+      ccloud'\ndeletes all the topics of clusters named pg-<user>-* (yours), never
+      the\nclusters, and never the environment pg-<user> nor the keys stored here.\n\n\U0001F393
+      Tip: one profile per organization (--profile emea, --profile personal),\nthen
+      'playground secrets profile <name>' to switch, and 'confluent login\n--organization
+      <id> --save' for the confluent CLI."
+    usage: playground ccloud setup [OPTIONS]
+    options:
+    - names:
+      - "--cloud"
+      argument: CLOUD
+      description: "\U0001F324️ Cloud provider of a cluster to create (repeat it for
+        several)\n\nRepeatable: ✓ Yes\nDefault value: [\"aws\", \"gcp\", \"azure\"]\nAllowed
+        values: aws, gcp, azure"
+    - names:
+      - "--aws-region"
+      argument: REGION
+      description: "\U0001F5FA️ Region of the AWS cluster (default: AWS_REGION, else
+        eu-west-2)\n\nExamples that need a given region stop when the cluster is elsewhere:\nkeep
+        AWS_REGION equal to it."
+    - names:
+      - "--gcp-region"
+      argument: REGION
+      description: "\U0001F5FA️ Region of the GCP cluster (default: europe-west2)"
+    - names:
+      - "--azure-region"
+      argument: REGION
+      description: "\U0001F5FA️ Region of the Azure cluster (default: AZURE_REGION,
+        else westeurope)"
+    - names:
+      - "--default-cloud"
+      argument: CLOUD
+      description: "\U0001F3AF Cluster used by the examples that need no specific
+        cloud (CLUSTER_*), default: the first --cloud\n\nAllowed values: aws, gcp,
+        azure"
+    - names:
+      - "--environment-name"
+      argument: NAME
+      description: "\U0001F310 Name of the environment (default: pg-<user>)"
+    - names:
+      - "--profile"
+      argument: PROFILE
+      description: "\U0001F5C2️ Secrets profile to write (default: the active one)"
+    - names:
+      - "--dry-run"
+      argument: ''
+      description: "\U0001F50E Show what would be created and stored, without creating
+        nor storing anything"
 - name: cloud-resources
   description: "☁️ What the playground left behind in your cloud accounts, what it
     costs, and cleaning it up\n\nExamples that talk to a real cloud create real resources,
