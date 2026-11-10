@@ -27,7 +27,7 @@
     "transforms.createKey.field.syntax.version": "V1",
     "transforms.createKey.fields": "",
     "transforms.createKey.negate": "false",
-    "transforms.createKey.plugin.version": "8.4.0-ce",
+    "transforms.createKey.plugin.version": "8.4.1-ce",
     "transforms.createKey.predicate": "",
     "transforms.createKey.replace.null.with.default": "true",
     "transforms.createKey.type": "",

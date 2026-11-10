@@ -72,17 +72,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bucket
-
-Name of the Couchbase bucket to use.
-
-This property is required unless using the experimental AnalyticsSinkHandler.
-
-	 - Type: STRING
-	 - Default: 
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 couchbase.username
 
 Name of the Couchbase user to authenticate as.
@@ -92,13 +81,15 @@ Name of the Couchbase user to authenticate as.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bootstrap.timeout
+🔘 couchbase.bucket
 
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+Name of the Couchbase bucket to use.
+
+This property is required unless using the experimental AnalyticsSinkHandler.
 
 	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
+	 - Default: 
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 couchbase.seed.nodes
@@ -122,6 +113,15 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 
 	 - Type: STRING
 	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -262,6 +262,19 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 Requires Couchbase Server 7.0 or later.
 
 	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.collections
+
+If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+Requires Couchbase Server 7.0 or later.
+
+	 - Type: LIST
 	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
@@ -485,22 +498,22 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.collections
-
-If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-Requires Couchbase Server 7.0 or later.
-
-	 - Type: LIST
-	 - Default: 
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Schema
 ==========================
+🔘 couchbase.dlq.topic
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+
+If `couchbase.schema.failure.action` is set to DLQ then documents that encounter any Schema failures will be sent to this topic. Headers will be added for future investigation such as the intended destination and the reason it was sent to the DLQ
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+	 - Type: STRING
+	 - Default: couchbase.dlq
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.schema.failure.action
 
 Determines the behaviour when a Schema Mismatch or Missing Schema is encountered for a document using the Schema Registry. This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
@@ -535,31 +548,9 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.dlq.topic
-
-This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
-
-If `couchbase.schema.failure.action` is set to DLQ then documents that encounter any Schema failures will be sent to this topic. Headers will be added for future investigation such as the intended destination and the reason it was sent to the DLQ
-
-UNCOMMITTED; this feature may change in a patch release without notice.
-
-	 - Type: STRING
-	 - Default: couchbase.dlq
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Database Change Protocol
 ==========================
-🔘 couchbase.compression
-
-To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
-
-	 - Type: STRING
-	 - Default: ENABLED
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.persistence.polling.interval
 
 When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
@@ -622,6 +613,15 @@ Ignored if `couchbase.enable.dcp.trace` is false.
 
 	 - Type: STRING
 	 - Default: .*
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.compression
+
+To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
+
+	 - Type: STRING
+	 - Default: ENABLED
 	 - Importance: MEDIUM
 	 - Required: false
 
