@@ -105,10 +105,11 @@ jq --arg u "$user" '
     [(if type == "array" then . else [] end)[] | select(.name | startswith("pg-" + $u + "-"))
      | {id, name, description, cleanup: (if (.name | startswith("pg-" + $u + "-conn-")) then "yes" else "CI only" end)}]' \
     "$tmp_dir/service-accounts.json" > "$tmp_dir/service-accounts-user.json"
-jq --slurpfile sas "$tmp_dir/service-accounts-user.json" '
+# plus the Schema Registry keys created for the user himself when SCHEMA_REGISTRY_CREDS is not set (bootstrap_ccloud_environment)
+jq --slurpfile sas "$tmp_dir/service-accounts-user.json" --arg d "kafka-docker-playground SCHEMA_REGISTRY_CREDS ($user)" '
     ([$sas[0][] | {key: .id, value: .name}] | from_entries) as $owners
-    | [(if type == "array" then . else [] end)[] | select($owners[.owner] != null)
-       | {key, owner, owner_name: $owners[.owner], resource_type, resource, created, description}]' \
+    | [(if type == "array" then . else [] end)[] | select($owners[.owner] != null or .description == $d)
+       | {key, owner, owner_name: ($owners[.owner] // "you (\(.owner_email // .owner))"), resource_type, resource, created, description}]' \
     "$tmp_dir/api-keys.json" > "$tmp_dir/api-keys-user.json"
 
 # topics recorded by this machine's runs: still there? (one topic list per cluster that still exists)
@@ -240,7 +241,7 @@ nb=$(jq length "$tmp_dir/api-keys-user.json")
 if [ "$nb" -gt 0 ]
 then
     echo ""
-    log "🔑 API keys owned by these service accounts ($nb)"
+    log "🔑 API keys owned by these service accounts, or created for you by the playground ($nb)"
     printf "%-18s %-16s %-14s %-40s %-5s\n" "Key" "Resource type" "Resource" "Owner" "Age"
     jq -r '.[] | [.key, .resource_type, .resource, .owner_name, (.created | fromdateiso8601? // "")] | map(tostring) | join("\u001f")' "$tmp_dir/api-keys-user.json" \
         | while IFS=$'\x1f' read -r key type resource owner created
