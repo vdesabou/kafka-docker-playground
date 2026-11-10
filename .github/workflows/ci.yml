@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["8.4.0"]
+        tag: ["8.4.1"]
         playground_environment: ["plaintext", "cfk"]
         test_list : [
                       # requiring ngrok
@@ -413,7 +413,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["8.4.0"]
+        tag: ["8.4.1"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -869,7 +869,7 @@ jobs:
       - name: Update README
         run: |
           cd ./scripts/cli
-          ./playground update-readme --tags "8.4.0"
+          ./playground update-readme --tags "8.4.1"
           
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
