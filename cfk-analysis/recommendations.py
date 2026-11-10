@@ -340,6 +340,16 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "Confluent only: playground debug cfk sourcecode --bundle <bundle> --grep \"<message>\" shows the operator code that logs it, at the version of the bundle.",
         ],
     },
+    "Reconcile Loop": {
+        "summary": "The operator retries a CR it cannot delete or apply (a permanent error) with no back-off: its memory grows until it is OOMKilled.",
+        "steps": [
+            "kubectl -n <ns> get <kind> <name> -o yaml — deletionTimestamp, finalizers, and the scope in spec vs status (a Subject binding without the Schema Registry cluster in status is refused by MDS on delete).",
+            "Fix the cause; or, when the CR is meant to be deleted (YAML saved), remove its finalizer: kubectl patch <kind> <name> -n <ns> --type=merge -p '{\"metadata\":{\"finalizers\":[]}}'.",
+            "'forbidden to update role or principal': the role / principal of an existing binding cannot change in place — delete it and create a new one.",
+            "Restart the operator once no CR loops anymore (the memory stays pinned in the old process): kubectl -n <operator-ns> rollout restart deployment/confluent-operator.",
+            "Check the loop stopped: kubectl -n <operator-ns> logs deployment/confluent-operator | grep -c 'failed to delete'.",
+        ],
+    },
     "Component Status": {
         "summary": "A Confluent CR is not healthy: phase/state not RUNNING, ready replicas below spec, or a False condition.",
         "steps": [

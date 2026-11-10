@@ -65,6 +65,7 @@ CATEGORY_EMOJI = {
     "REST Proxy Issues": "🔗",
     "KsqlDB Issues": "🧮",
     "Operator Issues": "🤖",
+    "Reconcile Loop": "🔁",
     "Configuration": "⚙️",
     "Finalizer Issues": "🧹",
     "Reconciliation Blocked": "🧊",

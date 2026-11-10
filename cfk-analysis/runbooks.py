@@ -209,6 +209,18 @@ RUNBOOKS = [
      "advice": "a KafkaTopic CR stuck on its finalizer, in ERROR after a change made outside CFK, or with an invalid "
                "name. spec.replicas and spec.partitionCount cannot be changed through the CR",
      "links": [{"title": "Manage Kafka topics", "url": DOCS + "co-manage-topics.html"}]},
+    {"name": "rolebinding_retry_loop",
+     "title": "CFK operator OOMs: a ConfluentRolebinding it cannot delete or update, retried in a loop",
+     "pattern": r"reconcile loop: ConfluentRolebinding/|failed to delete ConfluentRolebinding"
+                r"|Invalid scope resource type binding with cluster type|forbidden to update role or principal",
+     "operator_info": True,
+     "advice": "the operator retries a permanent error on a ConfluentRolebinding with no back-off (MDS refuses the "
+               "delete of a Subject binding sent under the kafka-cluster scope; the role or principal of a binding "
+               "cannot change in place), and each retry grows its memory until it is OOMKilled. Save the CR, remove "
+               "its finalizer when it is meant to be deleted (or recreate the binding under a new name), then restart "
+               "the operator: the memory stays pinned in the old process. Upgrade CFK for the connection leak fix",
+     "links": [{"title": "Confluent for Kubernetes release notes", "url": DOCS + "release-notes.html"},
+               {"title": "Manage RBAC with ConfluentRolebinding", "url": DOCS + "co-manage-rbac.html"}]},
 ]
 
 

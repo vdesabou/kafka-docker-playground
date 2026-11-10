@@ -49,6 +49,11 @@ jobs:
       - name: Exports of log events, overview, progress
         run: python3 -I tools/log-analyzer/test_log_analyzer.py
 
+      - name: CFK analyzer (reconcile loops, kubectl get pods tables)
+        run: |
+          pip install -q -r cfk-analysis/requirements.txt
+          python3 -I cfk-analysis/test_analyzer.py
+
       # python3 3.8 is the oldest version analyze logs supports (Ubuntu 20.04; also UBI 9 and macOS /usr/bin/python3 are
       # 3.9): a construct of a newer Python (a 3.12 f-string with nested quotes, a match statement) made every run fail
       # there with a SyntaxError, the tests above use 3.12. Every file must compile with 3.8, and the tests pass with it
@@ -59,6 +64,8 @@ jobs:
             python -I tools/report-common/test_sanitizer.py
             python -I tools/report-common/test_share_dialog.py
             python -I tools/log-analyzer/test_log_analyzer.py
+            pip install -q --root-user-action=ignore -r cfk-analysis/requirements.txt
+            python -I cfk-analysis/test_analyzer.py
           '
 
       # the digest of analyze logs, container logs --errors, get-ci-result: mawk is the default awk of Debian / Ubuntu, a
