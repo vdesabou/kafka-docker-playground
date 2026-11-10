@@ -185,7 +185,7 @@ playground cloud-resources ccloud costs-history  # total per month since last ye
 playground cloud-resources ccloud costs --start-date 2026-10-01 --end-date 2026-10-23   # one range of dates (one month max) + HTML report
 playground connector delete --connector DatagenSource_$USER
 playground stop                                 # in the example folder: maybe_delete_ccloud_environment
-playground cloud-resources cleanup              # resources left behind by examples (buckets, functions, connectors…)
+playground cloud-resources cleanup              # resources left behind by examples (buckets, functions, connectors…); --resource ccloud: the whole org, --dry-run first
 ```
 
 Gotchas:
@@ -212,6 +212,14 @@ Gotchas:
 - **External resources are the example's job**: buckets, tables, queues created by an `fm-*` example are deleted by
   its `cleanup_cloud_resources` trap at the end; an interrupted run can leave them: `playground cloud-resources cleanup`
   (needs the cloud credentials of each provider).
+- **`playground cloud-resources cleanup --resource ccloud` covers the whole organization**: like `cloud-resources
+  ccloud list`, it scans every environment and cluster (no bootstrap, so `--dry-run` always works and no cluster is
+  ever created) and deletes, after a confirmation each: connectors `*_<user>` on any cluster with their
+  dlq/success/error topics, `pg-<user>-sa-*` environments, all topics of your other `pg-<user>-*` clusters, only the
+  topics recorded by your runs on any other (shared) cluster, `pg-<user>-conn-*` service accounts, and
+  `pg-<user>-app-*` service accounts and the Schema Registry keys created for you **unless one of their keys is used
+  on this machine** (`*_CLUSTER_CREDS`, `SCHEMA_REGISTRY_CREDS`, exported or in the secrets store, `playground.ini`,
+  `.ccloud/`). In CI, the clusters of the variables are cleaned up one by one instead.
 - The connector is billed while it exists, RUNNING or not: delete it, don't just pause it.
 
 ---

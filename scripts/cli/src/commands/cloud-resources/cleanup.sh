@@ -300,6 +300,165 @@ function cleanup_gcp () {
 }
 
 function cleanup_ccloud () {
+    if [ -n "$GITHUB_RUN_NUMBER" ]
+    then
+        # CI: the clusters of its variables, all their topics, subjects and pg-<user>-* service accounts
+        cleanup_ccloud_per_cluster
+    else
+        cleanup_ccloud_org_wide
+    fi
+}
+
+# delete a topic of any cluster of the org (no API key needed with a user login)
+function delete_ccloud_topic_of_cluster () {
+    local topic="$1" env="$2" cluster="$3"
+    log "❌ deleting topic $topic of cluster $cluster"
+    confluent kafka topic delete "$topic" --environment "$env" --cluster "$cluster" --force > /dev/null 2>&1 < /dev/null || logwarn "❌ failed to delete topic $topic of cluster $cluster"
+}
+
+# Everything 'playground cloud-resources ccloud list' shows, across every environment and cluster of the organization,
+# with no bootstrap (no cluster is ever created, works in a dry-run), each deletion confirmed (--force: none asked)
+function cleanup_ccloud_org_wide () {
+    local scan_dir="$tmp_dir/ccloud"
+    local env cluster cluster_name id name status cleanup topics existing t nb deleted_envs="" owner keys key config connectors
+    mkdir -p "$scan_dir"
+    if ! ccloud_scan_org "$scan_dir" "$user"
+    then
+        logerror "❌ skipping Confluent Cloud"
+        return
+    fi
+
+    # 1. connectors *_<user> on any cluster, with their dlq/success/error topics
+    # (lists are read from fd 3: confirm_deletion reads the answer from stdin)
+    while IFS=$'\x1f' read -r env cluster cluster_name id name status <&3
+    do
+        [ -n "$id" ] || continue
+        if confirm_deletion "Delete $status connector $name ($id) of cluster $cluster_name ($cluster, $env), with its dlq/success/error topics?"
+        then
+            config=$(confluent connect cluster describe "$id" --environment "$env" --cluster "$cluster" -o json 2> /dev/null < /dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2> /dev/null)
+            topics=$(get_ccloud_connector_related_topics "$id" "$config")
+            log "❌ deleting connector $name ($id)"
+            confluent connect cluster delete "$id" --environment "$env" --cluster "$cluster" --force > /dev/null 2>&1 < /dev/null || logwarn "❌ failed to delete connector $name ($id)"
+            existing=$(confluent kafka topic list --environment "$env" --cluster "$cluster" -o json 2> /dev/null < /dev/null | jq -r '.[].name' 2> /dev/null)
+            for t in $topics
+            do
+                if echo "$existing" | grep -qFx -- "$t"
+                then
+                    delete_ccloud_topic_of_cluster "$t" "$env" "$cluster"
+                fi
+            done
+            forget_ccloud_recorded_topic "$cluster" "connector:$name"
+        fi
+    done 3< <(jq -r '.[] | [.environment, .cluster, .cluster_name, .id, .name, .status] | map(tostring) | join("\u001f")' "$scan_dir/connectors.json")
+
+    # 2. environments pg-<user>-sa-*: the stacks created by the playground, with their clusters
+    while IFS=$'\x1f' read -r id name <&3
+    do
+        [ -n "$id" ] || continue
+        if confirm_deletion "Delete environment $name ($id), created by the playground, with all its clusters, connectors and topics?"
+        then
+            log "❌ deleting environment $name ($id)"
+            confluent environment delete "$id" --force > /dev/null 2>&1 < /dev/null || logwarn "❌ failed to delete environment $id"
+            deleted_envs="$deleted_envs $id"
+        fi
+    done 3< <(jq -r '.[] | select(.cleanup) | [.id, .name] | map(tostring) | join("\u001f")' "$scan_dir/environments-user.json")
+
+    # 3. other clusters named pg-<user>-* (yours: a personal standing cluster): all their topics, the cluster is kept
+    while IFS=$'\x1f' read -r env cluster cluster_name <&3
+    do
+        [ -n "$cluster" ] || continue
+        existing=$(confluent kafka topic list --environment "$env" --cluster "$cluster" -o json 2> /dev/null < /dev/null | jq -r '.[].name' 2> /dev/null)
+        nb=$(echo "$existing" | grep -cv '^$')
+        if [ "$nb" -eq 0 ]
+        then
+            continue
+        fi
+        if confirm_deletion "Delete all $nb topic(s) of your cluster $cluster_name ($cluster): $(echo "$existing" | head -5 | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb" -gt 5 ] && echo ", …")?"
+        then
+            for t in $existing
+            do
+                delete_ccloud_topic_of_cluster "$t" "$env" "$cluster"
+            done
+        fi
+    done 3< <(jq -r '.[] | select(.cleanup == "all its topics") | [.environment, .id, .name] | map(tostring) | join("\u001f")' "$scan_dir/clusters-user.json")
+
+    # 4. topics recorded by your runs on the other clusters (shared): only those, never the others
+    while IFS=$'\x1f' read -r cluster cluster_name topics <&3
+    do
+        [ -n "$cluster" ] || continue
+        env=$(jq -r --arg id "$cluster" '.[] | select(.id == $id) | .environment' "$scan_dir/all-clusters.json")
+        nb=$(echo "$topics" | wc -w | tr -d ' ')
+        if confirm_deletion "Delete the $nb topic(s) recorded by your runs on cluster $cluster_name ($cluster): $(echo $topics | sed 's/ /, /g')?"
+        then
+            for t in $topics
+            do
+                delete_ccloud_topic_of_cluster "$t" "$env" "$cluster"
+            done
+        fi
+    done 3< <(jq -r --slurpfile mine "$scan_dir/clusters-user.json" '([$mine[0][] | select(.cleanup != "no") | .id]) as $skip
+        | .[] | select(.cluster_exists and .checked and (.existing | length > 0) and (.cluster as $c | $skip | index($c) | not))
+        | [.cluster, (.cluster_name // ""), (.existing | join(" "))] | join("\u001f")' "$scan_dir/recorded-topics.json")
+
+    # 5. service accounts pg-<user>-*: pg-<user>-conn-* (--ccloud-service-account), and pg-<user>-app-* when none of
+    # their API keys is in use on this machine (variables, secrets store, playground.ini, .ccloud/)
+    while IFS=$'\x1f' read -r id name keys <&3
+    do
+        [ -n "$id" ] || continue
+        if [[ $name == pg-${user}-conn-* ]]
+        then
+            if confirm_deletion "Delete service account $name ($id) and its ACLs?"
+            then
+                delete_ccloud_connector_service_account "$id"
+            fi
+        elif confirm_deletion "Delete service account $name ($id) and its $keys API key(s), none of them used by the playground here?"
+        then
+            for key in $(jq -r --arg o "$id" '.[] | select(.owner == $o) | .key' "$scan_dir/api-keys-user.json")
+            do
+                log "❌ deleting API key $key"
+                confluent api-key delete "$key" --force > /dev/null 2>&1 < /dev/null || logwarn "❌ failed to delete API key $key"
+            done
+            log "❌ deleting service account $name ($id)"
+            confluent iam service-account delete "$id" --force > /dev/null 2>&1 < /dev/null || logwarn "❌ failed to delete service account $id"
+        fi
+    done 3< <(jq -r --slurpfile keys "$scan_dir/api-keys-user.json" '.[] | select(.cleanup == "yes") | .id as $id
+        | [.id, .name, ([$keys[0][] | select(.owner == $id)] | length)] | map(tostring) | join("\u001f")' "$scan_dir/service-accounts-user.json")
+
+    # 6. Schema Registry keys created for you (no service account) and not used here anymore
+    while IFS=$'\x1f' read -r key resource <&3
+    do
+        [ -n "$key" ] || continue
+        if confirm_deletion "Delete Schema Registry API key $key ($resource), created for you by the playground and not used here?"
+        then
+            log "❌ deleting API key $key"
+            confluent api-key delete "$key" --force > /dev/null 2>&1 < /dev/null || logwarn "❌ failed to delete API key $key"
+        fi
+    done 3< <(jq -r --slurpfile sas "$scan_dir/service-accounts-user.json" '([$sas[0][] | .id]) as $sa_ids
+        | .[] | select((.owner as $o | $sa_ids | index($o) | not) and (.in_use | not)) | [.key, .resource] | join("\u001f")' "$scan_dir/api-keys-user.json")
+
+    # 7. forget the records of clusters that are gone, and of topics and connectors that are gone
+    if [[ -z "$dry_run" ]]
+    then
+        for cluster in $(jq -r '[.[].cluster] | unique | .[]' "$scan_dir/records.json")
+        do
+            env=$(jq -r --arg id "$cluster" '.[] | select(.id == $id) | .environment' "$scan_dir/all-clusters.json")
+            if [ -z "$env" ] || [[ " $deleted_envs " == *" $env "* ]]
+            then
+                for t in $(get_ccloud_recorded_entries "$cluster")
+                do
+                    forget_ccloud_recorded_topic "$cluster" "$t"
+                done
+            elif existing=$(confluent kafka topic list --environment "$env" --cluster "$cluster" -o json 2> /dev/null < /dev/null | jq -r '.[].name') \
+                && connectors=$(confluent connect cluster list --environment "$env" --cluster "$cluster" -o json 2> /dev/null < /dev/null | jq -r '.[].name')
+            then
+                prune_ccloud_recorded_entries "$cluster" "$existing" "$connectors"
+            fi
+        done
+    fi
+    log "🧹 Confluent Cloud done: 'playground cloud-resources ccloud list' shows what is left"
+}
+
+# the clusters of the variables, each reached with bootstrap_ccloud_environment (CI)
+function cleanup_ccloud_per_cluster () {
     if [[ -n "$dry_run" ]] && [ -z "$CLUSTER_NAME" ] && [ -z "$(playground state get ccloud.CLUSTER_NAME)" ]
     then
         # bootstrap_ccloud_environment would create a cluster: not in a dry-run

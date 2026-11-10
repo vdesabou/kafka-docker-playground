@@ -814,8 +814,10 @@ subcommands:
         \    and whether they still exist\n\nA running connector is what costs the
         most (billed per task-hour),\nthen a cluster: those are summed up at the end.
         The \U0001F9F9 column tells\nwhat 'playground cloud-resources cleanup --resource
-        ccloud' deletes.\n\n\U0001F393 Tip: in a shared org, run it before leaving
-        for the day."
+        ccloud' deletes:\nit scans the same way, and never deletes a service account
+        or an API\nkey in use on this machine (*_CLUSTER_CREDS, SCHEMA_REGISTRY_CREDS,\nexported
+        or in the secrets store, playground.ini, .ccloud/).\n\n\U0001F393 Tip: in
+        a shared org, run it before leaving for the day."
       usage: playground cloud-resources ccloud list [OPTIONS]
       options:
       - names:
@@ -912,19 +914,27 @@ subcommands:
       . _ like the examples write it), across AWS, GCP and Azure. Restrict the\nscope
       with --resource, and run it regularly.\n\nSalesforce: the accounts of the playground
       are dedicated test orgs, every\nLead, Contact and PushTopic of them is deleted.\n\nConfluent
-      Cloud: connectors whose name contains your username are deleted,\nwith their
-      dlq, success and error topics. All topics of the cluster are\ndeleted only when
-      the cluster was created by the playground for you\n(pg-<user>-*). On a cluster
-      you provided with CLUSTER_NAME, which may be\nshared with your team, only the
-      topics recorded as created by your own\nruns are deleted (local file playground-ccloud-created-topics):
-      topics\ncreated with playground topic create / produce, and topics your fully\nmanaged
-      source connectors write to, as set in their config (kafka.topic,\napi1.topics,
-      topic.prefix...).\n\nIn CI, the service accounts created by the playground (pg-<user>-*)
-      and the\nsubjects of the deleted topics (<topic>-key, <topic>-value) are deleted
-      too.\n\nYou are asked to confirm every deletion, unless --force is given. Use\n--dry-run
-      first to see what would be deleted.\n\n☢️ Deletions are permanent. Use a dedicated
-      cloud account for the\n   playground rather than one that also hosts resources
-      you care about."
+      Cloud: every environment and cluster of the organization your\nconfluent CLI
+      is logged into is scanned, like 'playground cloud-resources\nccloud list' (no
+      cluster needed, none is ever created):\n  - connectors named *_<user>, on any
+      cluster, with their dlq, success\n    and error topics\n  - environments pg-<user>-sa-*
+      (the stacks the playground created), with\n    their clusters\n  - all topics
+      of your other clusters named pg-<user>-* (the cluster is\n    kept)\n  - on
+      any other cluster, which may be shared with your team, only the\n    topics
+      recorded as created by your own runs (local file\n    playground-ccloud-created-topics):
+      topics created with playground\n    topic create / produce, and topics your
+      fully managed source\n    connectors write to, as set in their config (kafka.topic,\n
+      \   api1.topics, topic.prefix...)\n  - service accounts pg-<user>-conn-* (--ccloud-service-account),
+      and\n    pg-<user>-app-* with their API keys, plus the Schema Registry keys\n
+      \   created for you, unless one of these keys is used on this machine\n    (*_CLUSTER_CREDS,
+      SCHEMA_REGISTRY_CREDS, exported or in the secrets\n    store, playground.ini,
+      .ccloud/)\n\nIn CI, the clusters of CLUSTER_NAME and AWS_ / GCP_ / AZURE_ /\nAWS_DATABRICKS_CLUSTER_NAME
+      are cleaned up one by one instead, and the\nservice accounts created by the
+      playground (pg-<user>-*) and the subjects\nof the deleted topics (<topic>-key,
+      <topic>-value) are deleted too.\n\nYou are asked to confirm every deletion,
+      unless --force is given. Use\n--dry-run first to see what would be deleted.\n\n☢️
+      Deletions are permanent. Use a dedicated cloud account for the\n   playground
+      rather than one that also hosts resources you care about."
     usage: playground cloud-resources cleanup [OPTIONS]
     options:
     - names:
@@ -946,9 +956,9 @@ subcommands:
       - "--dry-run"
       argument: ''
       description: "\U0001F50E List what would be deleted (the commands), without
-        deleting anything nor asking\n\nThe Confluent Cloud part is skipped when no
-        cluster is known (CLUSTER_NAME, or a previous ccloud run): finding\none would
-        create it.\n\nConflicts with: --recorded-topics-only"
+        deleting anything nor asking\n\nIn CI, the Confluent Cloud part is skipped
+        when no cluster is known (CLUSTER_NAME, or a previous ccloud run):\nfinding
+        one would create it.\n\nConflicts with: --recorded-topics-only"
 - name: run
   description: "\U0001F579️ Run any example !\n\n\U0001F525 It start an interactive
     mode where you'll be fully guided !\n\n  playground run                       \U0001F50D
