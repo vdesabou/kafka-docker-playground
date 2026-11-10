@@ -12,8 +12,7 @@ help: |-
     cloud-resources aws costs           spend over a range of dates
     cloud-resources aws costs-history   spend per month over the last year
 
-  The same three exist for azure, and costs / costs-history for ccloud
-  (Confluent Cloud).
+  The same three exist for azure and ccloud (Confluent Cloud).
 
   🧹 Only one command deletes anything:
 
@@ -220,15 +219,55 @@ commands:
 
 - name: ccloud
   help: |
-    ☁️ What Confluent Cloud costs you
+    ☁️ What is still running in Confluent Cloud, and what it costs
 
+      list            your connectors, environments, clusters, service
+                      accounts, API keys and recorded topics, org-wide
       costs           spend over a range of dates, by product
       costs-history   spend per month over the last year
 
-    Uses the organization your confluent CLI is logged into. Leftovers of
-    the examples (connectors, topics) are shown by 'playground status'; to
-    delete them, use 'playground cloud-resources cleanup'.
+    Uses the organization your confluent CLI is logged into. Nothing is
+    deleted here, use 'playground cloud-resources cleanup' for that.
   commands:
+  - name: list
+    dependencies:
+      confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    help: |-
+      📋 List what the playground left running for you in Confluent Cloud, across the whole organization
+
+      Read-only. Walks every environment and Kafka cluster of the
+      organization your confluent CLI is logged into (in parallel), which
+      matters in an org shared by a whole team, and shows:
+
+        🤖 connectors named *_<user>, with their status, type, cluster and
+           age (from the local run records, ? when created elsewhere)
+        🌐 environments and 🎰 clusters named pg-<user>-*
+        🤖 service accounts named pg-<user>-*, and 🔑 the API keys they own
+        📝 topics recorded by your runs (playground-ccloud-created-topics),
+           and whether they still exist
+
+      A running connector is what costs the most (billed per task-hour),
+      then a cluster: those are summed up at the end. The 🧹 column tells
+      what 'playground cloud-resources cleanup --resource ccloud' deletes.
+
+      🎓 Tip: in a shared org, run it before leaving for the day.
+    flags:
+    - long: --user
+      private: true
+      arg: user
+      help: |-
+        ☢️ force user
+    - long: --json
+      help: |-
+        📗 Print everything as one JSON object, and nothing else
+
+        Keys: user, scanned (number of environments and clusters),
+        connectors, environments, clusters, service_accounts, api_keys and
+        recorded_topics.
+    examples:
+      - playground cloud-resources ccloud list
+      - playground cloud-resources ccloud list --json | jq '.connectors[] | select(.status == "RUNNING")'
+
   - name: costs
     dependencies:
       confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
