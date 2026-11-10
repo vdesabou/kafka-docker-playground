@@ -11628,3 +11628,175 @@ function jmx_digest_value () {
 function cp_image_refs_with_tag () {
     docker image ls --format '{{.Repository}} {{.Tag}}' | awk -v v="$1" '{r = $1; sub(/^docker\.io\//, "", r)} r ~ /^confluentinc\// && $2 == v {print $1":"$2}' | sort -u
 }
+
+# Walk every environment and Kafka cluster of the Confluent Cloud organization the confluent CLI is logged into (8 calls
+# at a time) and write, in $1, what the playground left for user $2: connectors.json (*_<user>), environments-user.json,
+# clusters-user.json (pg-<user>-*), service-accounts-user.json, api-keys-user.json (owned by those service accounts, or
+# the Schema Registry keys created for the user, with in_use when a playground variable, the secrets store,
+# playground.ini or .ccloud/ uses them), recorded-topics.json (playground-ccloud-created-topics), plus all-clusters.json
+# and records.json. Read-only. $3 = 1 to log nothing (--json). Used by 'cloud-resources ccloud list' and 'cleanup'.
+function ccloud_scan_org () {
+  local scan_dir="$1"
+  local user="$2"
+  local quiet="$3"
+  local user_normalized nb_environments nb_clusters env_id env_name cluster_id checked sa_pid keys_pid
+  user_normalized=$(tr '[:upper:]' '[:lower:]' <<< "${user//[-._]/}")
+
+  scan_log () {
+    if [ "$quiet" != "1" ]
+    then
+      log "$@"
+    fi
+  }
+
+  if ! confluent environment list -o json > "$scan_dir/environments.json" 2> "$scan_dir/error.txt"
+  then
+      if grep -q -e "You must login" -e "Your session has expired" "$scan_dir/error.txt"
+      then
+          logerror "❌ the confluent CLI is not logged in: run 'confluent login --save' and try again"
+      else
+          logerror "❌ could not list the Confluent Cloud environments: $(cat "$scan_dir/error.txt")"
+      fi
+      return 1
+  fi
+
+  nb_environments=$(jq length "$scan_dir/environments.json")
+  scan_log "🔎 Looking for what $user left in Confluent Cloud, in the $nb_environments environment(s) of the organization"
+
+  # every call below only reads: run them 8 at a time, an org shared by a whole team has many environments and clusters
+  export PG_CCLOUD_LIST_TMP="$scan_dir"
+  jq -r '.[].id' "$scan_dir/environments.json" | xargs -P 8 -I {} sh -c \
+      'confluent kafka cluster list --environment "$1" -o json > "$PG_CCLOUD_LIST_TMP/clusters-$1.json" 2> /dev/null || echo "[]" > "$PG_CCLOUD_LIST_TMP/clusters-$1.json"' _ {}
+
+  # service accounts and API keys are org-wide: fetched while the connectors are listed
+  confluent iam service-account list -o json > "$scan_dir/service-accounts.json" 2> /dev/null &
+  sa_pid=$!
+  confluent api-key list -o json > "$scan_dir/api-keys.json" 2> /dev/null &
+  keys_pid=$!
+
+  # all clusters, with their environment
+  for env_id in $(jq -r '.[].id' "$scan_dir/environments.json")
+  do
+      env_name=$(jq -r --arg id "$env_id" '.[] | select(.id == $id) | .name' "$scan_dir/environments.json")
+      jq -c --arg env "$env_id" --arg env_name "$env_name" \
+          '(if type == "array" then . else [] end)[] | {environment: $env, environment_name: $env_name, id, name, type, cloud, region, status}' \
+          "$scan_dir/clusters-$env_id.json" 2> /dev/null
+  done | jq -s '.' > "$scan_dir/all-clusters.json"
+  nb_clusters=$(jq length "$scan_dir/all-clusters.json")
+  scan_log "🔎 Listing the connectors of the $nb_clusters Kafka cluster(s)"
+
+  jq -r '.[] | "\(.environment) \(.id)"' "$scan_dir/all-clusters.json" | xargs -P 8 -L 1 sh -c \
+      'confluent connect cluster list --environment "$0" --cluster "$1" -o json > "$PG_CCLOUD_LIST_TMP/connectors-$1.json" 2> /dev/null || echo "[]" > "$PG_CCLOUD_LIST_TMP/connectors-$1.json"'
+
+  wait $sa_pid || echo "[]" > "$scan_dir/service-accounts.json"
+  wait $keys_pid || echo "[]" > "$scan_dir/api-keys.json"
+
+  # local run records: "<cluster id> <topic|prefix:<prefix>|connector:<name>> <run id = epoch of the run>"
+  get_ccloud_created_topics_file
+  if [ -f "$ccloud_created_topics_file" ]
+  then
+      jq -Rn '[inputs | split(" ") | select(length >= 2) | {cluster: .[0], entry: .[1], run_id: (.[2] // "")}]' "$ccloud_created_topics_file" > "$scan_dir/records.json"
+  else
+      echo "[]" > "$scan_dir/records.json"
+  fi
+
+  # connectors *_<user> (as matched by 'cloud-resources cleanup'), with the epoch of the run that created them when recorded
+  for cluster_id in $(jq -r '.[].id' "$scan_dir/all-clusters.json")
+  do
+      jq -c --arg cluster "$cluster_id" --arg user "$user" --slurpfile clusters "$scan_dir/all-clusters.json" --slurpfile records "$scan_dir/records.json" '
+          ($clusters[0][] | select(.id == $cluster)) as $c
+          | (if type == "array" then . else [] end)[]
+          | select(.name | contains("_" + $user))
+          | . as $conn
+          | {environment: $c.environment, environment_name: $c.environment_name, cluster: $cluster, cluster_name: $c.name,
+             id, name, status, type,
+             created: ([$records[0][] | select(.cluster == $cluster and .entry == ("connector:" + $conn.name)) | .run_id | tonumber? ] | max)}' \
+          "$scan_dir/connectors-$cluster_id.json" 2> /dev/null
+  done | jq -s '.' > "$scan_dir/connectors.json"
+
+  # environments and clusters named pg-<user>-*: what the playground created for this user
+  jq --arg u "$user" --arg n "$user_normalized" '
+      [.[] | select((.name == "pg-" + $u) or (.name | startswith("pg-" + $u + "-")) or (.name | ascii_downcase | . == "pg-" + $n or startswith("pg-" + $n + "-")))
+       | {id, name, cleanup: (.name | startswith("pg-" + $u + "-sa-"))}]' "$scan_dir/environments.json" > "$scan_dir/environments-user.json"
+  jq --arg u "$user" --arg n "$user_normalized" --slurpfile envs "$scan_dir/environments-user.json" '
+      ([$envs[0][] | .id]) as $env_ids
+      | ([$envs[0][] | select(.cleanup) | .id]) as $cleanup_env_ids
+      | [.[] | select((.environment as $e | $env_ids | index($e)) or (.name | startswith("pg-" + $u + "-")) or (.name | ascii_downcase | startswith("pg-" + $n + "-")))
+         | . + {cleanup: (if (.environment as $e | $cleanup_env_ids | index($e)) then "deleted with its environment" elif (.name | startswith("pg-" + $u + "-")) then "all its topics" else "no" end)}]' \
+      "$scan_dir/all-clusters.json" > "$scan_dir/clusters-user.json"
+
+  # service accounts pg-<user>-* and the API keys they own
+  jq --arg u "$user" '
+      [(if type == "array" then . else [] end)[] | select(.name | startswith("pg-" + $u + "-"))
+       | {id, name, description, cleanup: (if (.name | startswith("pg-" + $u + "-conn-")) then "yes" else "CI only" end)}]' \
+      "$scan_dir/service-accounts.json" > "$scan_dir/service-accounts-user.json"
+  # plus the Schema Registry keys created for the user himself when SCHEMA_REGISTRY_CREDS is not set (bootstrap_ccloud_environment)
+  jq --slurpfile sas "$scan_dir/service-accounts-user.json" --arg d "kafka-docker-playground SCHEMA_REGISTRY_CREDS ($user)" '
+      ([$sas[0][] | {key: .id, value: .name}] | from_entries) as $owners
+      | [(if type == "array" then . else [] end)[] | select($owners[.owner] != null or .description == $d)
+         | {key, owner, owner_name: ($owners[.owner] // "you (\(.owner_email // .owner))"), resource_type, resource, created, description}]' \
+      "$scan_dir/api-keys.json" > "$scan_dir/api-keys-user.json"
+
+  # topics recorded by this machine's runs: still there? (one topic list per cluster that still exists)
+  for cluster_id in $(jq -r '[.[] | select(.entry | startswith("connector:") | not) | .cluster] | unique | .[]' "$scan_dir/records.json")
+  do
+      env_id=$(jq -r --arg id "$cluster_id" '.[] | select(.id == $id) | .environment' "$scan_dir/all-clusters.json")
+      if [ -n "$env_id" ]
+      then
+          if confluent kafka topic list --environment "$env_id" --cluster "$cluster_id" -o json > "$scan_dir/topics-$cluster_id.json" 2> /dev/null < /dev/null
+          then
+              checked=true
+          else
+              echo "[]" > "$scan_dir/topics-$cluster_id.json"
+              checked=false
+          fi
+      else
+          echo "[]" > "$scan_dir/topics-$cluster_id.json"
+          checked=false
+      fi
+      jq -c --arg cluster "$cluster_id" --arg env "$env_id" --argjson checked "$checked" --slurpfile records "$scan_dir/records.json" --slurpfile clusters "$scan_dir/all-clusters.json" '
+          ([.[].name]) as $existing
+          | ([$records[0][] | select(.cluster == $cluster and (.entry | startswith("connector:") | not)) | .entry] | unique) as $entries
+          | {cluster: $cluster,
+             cluster_name: ([$clusters[0][] | select(.id == $cluster) | .name] | first),
+             cluster_exists: ($env != ""),
+             checked: $checked,
+             recorded: ($entries | length),
+             existing: [$existing[] as $t | select($entries | any(. as $e | $e == $t or (($e | startswith("prefix:")) and ($t | startswith($e[7:]))))) | $t]}' \
+          "$scan_dir/topics-$cluster_id.json"
+  done | jq -s '.' > "$scan_dir/recorded-topics.json"
+
+  ccloud_in_use_api_keys > "$scan_dir/in-use-keys.txt"
+  jq -R . "$scan_dir/in-use-keys.txt" | jq -s . > "$scan_dir/in-use-keys.json"
+  # the cleanup deletes a service account or a key only when none of its keys is in use
+  jq --slurpfile used "$scan_dir/in-use-keys.json" '[.[] | . + {in_use: (.key as $k | $used[0] | index($k) != null)}]' "$scan_dir/api-keys-user.json" > "$scan_dir/api-keys-user.json.tmp" && mv "$scan_dir/api-keys-user.json.tmp" "$scan_dir/api-keys-user.json"
+  jq --slurpfile keys "$scan_dir/api-keys-user.json" --arg u "$user" '[.[] | .id as $id
+      | ([$keys[0][] | select(.owner == $id and .in_use)] | length > 0) as $in_use
+      | . + {in_use: $in_use, cleanup: (if (.name | startswith("pg-" + $u + "-conn-")) then "yes" elif $in_use then "no (key in use)" else "yes" end)}]' \
+      "$scan_dir/service-accounts-user.json" > "$scan_dir/service-accounts-user.json.tmp" && mv "$scan_dir/service-accounts-user.json.tmp" "$scan_dir/service-accounts-user.json"
+  echo "$nb_environments" > "$scan_dir/nb-environments.txt"
+  echo "$nb_clusters" > "$scan_dir/nb-clusters.txt"
+  return 0
+}
+
+# Key ids of the Confluent Cloud API keys the playground uses on this machine: *_CLUSTER_CREDS and SCHEMA_REGISTRY_CREDS
+# (exported or in the secrets store), playground.ini [ccloud], .ccloud/env.delta and the per-cluster cache
+function ccloud_in_use_api_keys () {
+  local var delta
+  load_secrets_env_vars $(get_ccloud_env_vars) 2> /dev/null
+  get_kafka_docker_playground_dir
+  {
+    for var in CLUSTER_CREDS SCHEMA_REGISTRY_CREDS AWS_CLUSTER_CREDS GCP_CLUSTER_CREDS AZURE_CLUSTER_CREDS AWS_DATABRICKS_CLUSTER_CREDS
+    do
+      echo "${!var%%:*}"
+    done
+    var=$(playground state get ccloud.CLUSTER_CREDS 2> /dev/null); echo "${var%%:*}"
+    var=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS 2> /dev/null); echo "${var%%:*}"
+    for delta in "$KAFKA_DOCKER_PLAYGROUND_DIR"/.ccloud/env.delta "$KAFKA_DOCKER_PLAYGROUND_DIR"/.ccloud/clusters/*/env.delta
+    do
+      [ -f "$delta" ] || continue
+      grep '^export CLOUD_KEY=' "$delta" | cut -d '"' -f 2
+      grep '^export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=' "$delta" | cut -d '"' -f 2 | cut -d ':' -f 1
+    done
+  } | grep -v '^$' | sort -u
+}
