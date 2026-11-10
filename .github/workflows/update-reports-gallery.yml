@@ -98,8 +98,15 @@ jobs:
           sudo apt-get install -y -qq fonts-noto-color-emoji > /dev/null
           google-chrome --version
           # playground cloud-resources ccloud costs-history checks for the confluent CLI, even with --sample (no call is made)
-          curl -sL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin > /dev/null
-          confluent version | head -2
+          # (as ci.yml: the installer runs "curl -n", which fails without ~/.netrc and the latest tag is then empty)
+          sudo sh -c 'touch "$HOME/.netrc"'
+          for i in 1 2 3 4 5
+          do
+            curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
+            echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
+            sleep 10
+          done
+          test -x /usr/local/bin/confluent
 
       # every report of the gallery from the samples (analyze logs, thread-dump, gc-logs, heap-dump with Eclipse MAT in
       # Docker, flight-recorder, tcp-dump, oracle-xstream-report, jscissors, CFK bundles, streams status, cloud costs); the
