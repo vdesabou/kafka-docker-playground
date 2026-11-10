@@ -625,11 +625,10 @@ subcommands:
     and what you are being billed for:\n\n  cloud-resources aws list            resources
     still up, scoped to you\n  cloud-resources aws costs           spend over a range
     of dates\n  cloud-resources aws costs-history   spend per month over the last
-    year\n\nThe same three exist for azure, and costs / costs-history for ccloud\n(Confluent
-    Cloud).\n\n\U0001F9F9 Only one command deletes anything:\n\n  cloud-resources
-    cleanup             delete the leftovers in aws, gcp,\n                                      azure,
-    ccloud and salesforce\n                                      (--resource, --dry-run
-    first)"
+    year\n\nThe same three exist for azure and ccloud (Confluent Cloud).\n\n\U0001F9F9
+    Only one command deletes anything:\n\n  cloud-resources cleanup             delete
+    the leftovers in aws, gcp,\n                                      azure, ccloud
+    and salesforce\n                                      (--resource, --dry-run first)"
   usage: playground cloud-resources COMMAND
   options: []
   subcommands:
@@ -789,17 +788,41 @@ subcommands:
         description: "\U0001F6AB Do not open the HTML report in the browser"
   - name: ccloud
     description: |-
-      ☁️ What Confluent Cloud costs you
+      ☁️ What is still running in Confluent Cloud, and what it costs
 
+        list            your connectors, environments, clusters, service
+                        accounts, API keys and recorded topics, org-wide
         costs           spend over a range of dates, by product
         costs-history   spend per month over the last year
 
-      Uses the organization your confluent CLI is logged into. Leftovers of
-      the examples (connectors, topics) are shown by 'playground status'; to
-      delete them, use 'playground cloud-resources cleanup'.
+      Uses the organization your confluent CLI is logged into. Nothing is
+      deleted here, use 'playground cloud-resources cleanup' for that.
     usage: playground cloud-resources ccloud COMMAND
     options: []
     subcommands:
+    - name: list
+      description: "\U0001F4CB List what the playground left running for you in Confluent
+        Cloud, across the whole organization\n\nRead-only. Walks every environment
+        and Kafka cluster of the\norganization your confluent CLI is logged into (in
+        parallel), which\nmatters in an org shared by a whole team, and shows:\n\n
+        \ \U0001F916 connectors named *_<user>, with their status, type, cluster and\n
+        \    age (from the local run records, ? when created elsewhere)\n  \U0001F310
+        environments and \U0001F3B0 clusters named pg-<user>-*\n  \U0001F916 service
+        accounts named pg-<user>-*, and \U0001F511 the API keys they own\n  \U0001F4DD
+        topics recorded by your runs (playground-ccloud-created-topics),\n     and
+        whether they still exist\n\nA running connector is what costs the most (billed
+        per task-hour),\nthen a cluster: those are summed up at the end. The \U0001F9F9
+        column tells\nwhat 'playground cloud-resources cleanup --resource ccloud'
+        deletes.\n\n\U0001F393 Tip: in a shared org, run it before leaving for the
+        day."
+      usage: playground cloud-resources ccloud list [OPTIONS]
+      options:
+      - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F4D7 Print everything as one JSON object, and nothing
+          else\n\nKeys: user, scanned (number of environments and clusters),\nconnectors,
+          environments, clusters, service_accounts, api_keys and\nrecorded_topics."
     - name: costs
       description: "\U0001F4B0  Retrieve ccloud costs for a range of dates\n\nAll
         you have to do is to be already logged in with confluent CLI. It is using

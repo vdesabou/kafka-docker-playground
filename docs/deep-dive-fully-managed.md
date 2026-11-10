@@ -30,6 +30,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | the fully managed equivalent of a self-managed config | `playground connector translate`, `playground connector connect-migration-utility discovery\|migrate` |
 | deploy it with Terraform | `playground connector create-or-update -c <name> --terraform << EOF … EOF` |
 | run it with a service account and the ACLs of the documentation | `playground run -f <example> --ccloud-service-account`, then `playground rbac acl list\|delete\|create --connector <name>` |
+| what is still running and billing for you, org-wide | `playground cloud-resources ccloud list` |
 | what you spent | `playground cloud-resources ccloud costs-history`, `playground cloud-resources ccloud costs` |
 | delete what the playground created | `playground stop` in the example folder (`maybe_delete_ccloud_environment`), `playground cloud-resources cleanup` |
 
@@ -175,6 +176,7 @@ Gotchas:
 ## 4. Costs and cleanup
 
 ```bash
+playground cloud-resources ccloud list           # your connectors, pg-<user>-* environments, clusters, service accounts, API keys, recorded topics (read-only, whole org)
 playground cloud-resources ccloud costs-history  # total per month since last year (--detailed for the lines) + HTML report
 playground cloud-resources ccloud costs --start-date 2026-10-01 --end-date 2026-10-23   # one range of dates (one month max) + HTML report
 playground connector delete --connector DatagenSource_$USER
@@ -289,6 +291,7 @@ playground stop                                                              # d
 | "which version of the connector runs in Confluent Cloud?" | `connector-plugin sourcecode -c confluentinc/<Type> --only-show-url` (employees, see the [connector plugins deep dive](/deep-dive-connector-plugin.md)) |
 | "is the fix of connector version X in a cc-connect image yet? what changed in the last images?" | `connector-plugin fm-versions -c confluentinc/<Type> --find-first X` / `--last 50 --with-log` (employees) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
+| "what did I leave running in the shared org?" | `playground cloud-resources ccloud list` (every environment and cluster: connectors `*_<user>` with status and age, `pg-<user>-*` resources, what `cleanup` deletes) |
 | "how much did that test cost?" | `playground cloud-resources ccloud costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `cloud-resources ccloud costs-history` for the trend |
 
 ---
@@ -305,6 +308,7 @@ playground connector status|logs|show-config|delete -c <name>
 playground connector error-recommendations|display-metrics-api|open-ccloud-connector-in-browser -c <name>
 playground connector offsets get|alter|reset -c <name>    # + offsets get-offsets-request-status
 playground topic dlq inspect --connector <name>           # dlq-<lcc id>
+playground cloud-resources ccloud list [--json]           # what still runs for you, org-wide
 playground cloud-resources ccloud costs-history [--detailed]
 playground stop                                           # in the ccloud/fm-* folder
 ```
