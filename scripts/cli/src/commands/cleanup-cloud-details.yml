@@ -4,8 +4,9 @@ help: |-
   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
      use this command if you notice that the playground is using unexpected ccloud details
 
-  Drops the cached environment, cluster, endpoints and API keys, so the next
-  ccloud example re-discovers them from scratch. Typically needed after you
+  Drops the cached environment, cluster, endpoints and API keys (including
+  the configs cached for each cluster used, in .ccloud/clusters/), so the
+  next ccloud example re-discovers them from scratch. Typically needed after you
   changed of Confluent Cloud organisation, or deleted the cluster from the UI
   behind the playground's back.
 

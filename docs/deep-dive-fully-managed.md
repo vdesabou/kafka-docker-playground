@@ -45,8 +45,15 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
      cluster `pg-${USER}-cluster-<service account>` on **AWS `eu-west-2`** unless `CLUSTER_CLOUD` / `CLUSTER_REGION`
      are set, its API keys with full ACLs, and Schema Registry;
    - **the previous one**: the details are saved in `playground.ini` (`[ccloud]`) and the client configs in `.ccloud/`
-     (`env.delta`, `librdkafka.delta`, `ak-tools-ccloud.delta`…). The next example asks
+     (`env.delta`, `librdkafka.delta`, `ak-tools-ccloud.delta`…). Without `CLUSTER_NAME`, the next example asks
      `🙋 Use previously used ccloud cluster: … Continue (y/n)?`.
+
+   The client configs are also cached **per cluster** in `.ccloud/clusters/<lkc-id>/`, keyed on `ENVIRONMENT`,
+   `CLUSTER_NAME` and a hash of `CLUSTER_CREDS` (and of `SCHEMA_REGISTRY_CREDS` when set). Going back to a cluster
+   already used (a `fm-gcp*` example, then a generic one on `CLUSTER_NAME`, then `fm-gcp*` again) skips the stack
+   bootstrap: `⚡ using the cached configs of cluster gcp (lkc-xxxxx), no bootstrap needed`, a few seconds instead of
+   a full bootstrap. A cached cluster that no longer exists is detected (`🗑️ cached configs of cluster … are stale`)
+   and its configs are generated again.
 
    Some examples need a given cloud or region (`bootstrap_ccloud_environment "aws" "us-east-1"`): with a cached cluster
    elsewhere, the example stops and tells you what to set. `playground cleanup-cloud-details` drops the cache when
@@ -113,7 +120,8 @@ Gotchas:
   `playground cleanup-cloud-details` and start again. Nothing is deleted in Confluent Cloud by it.
 - **Per-cloud clusters**: `AWS_CLUSTER_NAME`, `GCP_CLUSTER_NAME`, `AZURE_CLUSTER_NAME` (with their `*_REGION`,
   `*_CLOUD`, `*_CREDS`) are used automatically for the `fm-aws*`, `fm-gcp*`, `fm-azure*` examples: set them once to
-  keep a cluster per cloud.
+  keep a cluster per cloud. Switching between them uses the per-cluster cache, and an exported `CLUSTER_NAME` is
+  never replaced by the `Use previously used ccloud cluster` question.
 - A new stack takes several minutes (cluster provisioning, API keys propagation, ACLs, Schema Registry); the wait for
   the cluster to be ready can take much longer when the `confluent` CLI is not logged in (`Error: not logged in`,
   then `giving up after 1 attempt` retries): run `confluent login --save` first.
@@ -301,7 +309,7 @@ playground cloud-resources ccloud costs-history [--detailed]
 playground stop                                           # in the ccloud/fm-* folder
 ```
 
-- One cached cluster per machine (`playground.ini` `[ccloud]`, `.ccloud/`); `cleanup-cloud-details` to forget it.
+- One cached cluster per machine (`playground.ini` `[ccloud]`, `.ccloud/`), plus the configs of each cluster used (`.ccloud/clusters/<lkc-id>/`); `cleanup-cloud-details` to forget them.
 - Same `connector` commands, Confluent Cloud APIs: wait only with `--wait` (600 s), asynchronous offsets, no worker
   commands (`stop`, `log-level`, `debug`).
 - Billed by the hour: delete the connector, `playground stop` deletes only what the playground created.
