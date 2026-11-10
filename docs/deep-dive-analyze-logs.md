@@ -503,7 +503,7 @@ playground analyze logs --sample broker_pressure
 
 ```text
 🐢 Broker signals (INFO / WARN lines: ISR changes, fetch errors, request timeouts, log cleaner, quotas)
-   log cleaner: 1 log cleaner failures, 1/h · thread died · 2026-11-09 14:50:00
+   log cleaner (broker-2/server.log): 1 log cleaner failures, 1/h · thread died · 2026-11-09 14:50:00
    🌀 STORM broker 1: 30 ISR shrinks, 30.3/h · orders-4 ×10, orders-8 ×10, payments-3 ×7 (+1 more) · 2026-11-09 14:21:25 → 14:59:20
    🌀 STORM broker 2: 10 followers failing to fetch from it, 10.1/h · follower 3 ×10 · 2026-11-09 14:20:32 → 14:55:45
    broker 1: 6 requests timed out (no answer in request.timeout.ms), 6.1/h · ReplicaFetcher ×6 · 2026-11-09 14:25:30 → 14:55:00
@@ -628,7 +628,8 @@ playground analyze logs --sample compare_fix          # the log of a worker the 
 ```
 
 `<before>` is a file, a folder, an archive (analyzed again with the same `--connector`, `--with-worker`,
-`--errors-only`, `--sanitize`), or a JSON written by `--json` earlier:
+`--errors-only`, `--include-harmless`, `--include-warnings`, `--ocr`, `--sanitize`, but not `--since` / `--until`: it
+covers another period), or a JSON written by `--json` earlier. A run of it whose CFK part failed keeps its log analysis:
 
 ```text
 🔁 Compared with tools/log-analyzer/samples/compare/before.log: 1 new root cause(s), 1 growing, 0 shrinking, 3 gone, 6 unchanged · new known cause(s): 🔌 Connection failure · gone: 🤺 Producer fenced (transactions, exactly-once), 🚦 Throttled by the external system, 🚧 Request refused by a broker policy

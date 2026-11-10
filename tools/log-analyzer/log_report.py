@@ -1618,8 +1618,11 @@ BROKER_STORM_KINDS = ("isr_shrink", "isr_expand", "replica_fetch_error", "reques
 
 
 def broker_who(who: str, label: str) -> str:
-    """the broker of a signal: "broker 1" from the line, else the file it comes from (one file per broker in a bundle)"""
-    return f"broker ({worker_of(label)})" if who == "broker" else who
+    """the broker of a signal: "broker 1" from the line, else the file it comes from (one file per broker in a bundle).
+    The log cleaner lines name no broker either: the failures of the cleaners of two brokers are two rows"""
+    if who in ("broker", "log cleaner"):
+        return f"{who} ({worker_of(label)})"
+    return who
 
 
 def broker_reason(detail: str) -> str:
@@ -7785,8 +7788,12 @@ def main() -> int:
                     g["no_report"] = "--sanitize: it holds the raw thread names and stacks"
         res["heap_dumps"] = jvm_dumps.heap_dumps(res["other_files"])
         # 🗺️ 💽 the kafka-topics --describe and kafka-log-dirs outputs of the input
-        layout_files = [(f["label"], f["path"]) for f in res["other_files"].get("files") or []
-                        if f.get("kind") in ("topic_describe", "log_dirs") and f.get("path") and os.path.isfile(f["path"])]
+        # also the describe output at the top of a file of thread dumps (.also of bundle_triage.py), read where it is:
+        # in the tmp dir of the run, or kept next to the report
+        def on_disk(f: dict) -> Optional[str]:
+            return next((p for p in (f.get("read_path"), f.get("path")) if p and os.path.isfile(p)), None)
+        layout_files = [(f["label"], on_disk(f)) for f in res["other_files"].get("files") or []
+                        if {f.get("kind"), *(f.get("also") or [])} & {"topic_describe", "log_dirs"} and on_disk(f)]
         if layout_files:
             try:
                 res["cluster_layout"] = cluster_layout.analyze(layout_files)

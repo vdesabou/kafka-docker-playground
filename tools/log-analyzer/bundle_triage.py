@@ -121,6 +121,10 @@ def kind_of(label: str, path: str) -> Optional[str]:
         return None
     if name.endswith((".html", ".htm")):
         return "xstream_report" if (b"orclcdc" in data.lower() or "orclcdc" in name) else None
+    # a "commands output" file of a support bundle: a kafka-topics --describe, then a jstack. The thread dumps first (the
+    # describe is still read: layout_kinds), else they were never analyzed
+    if TOPIC_DESCRIBE.search(data) and contains(path, THREAD_DUMP):
+        return "thread_dump"
     if TOPIC_DESCRIBE.search(data):
         return "topic_describe"
     if all(n in data for n in LOG_DIRS):
@@ -130,6 +134,13 @@ def kind_of(label: str, path: str) -> Optional[str]:
     if contains(path, THREAD_DUMP):
         return "thread_dump"
     return None
+
+
+def layout_kinds(path: str) -> List[str]:
+    """the cluster layout outputs (topic_describe, log_dirs) in the head of a file of another kind"""
+    data = head(path)
+    return ([k for k, found in (("topic_describe", bool(TOPIC_DESCRIBE.search(data))),
+                                ("log_dirs", all(n in data for n in LOG_DIRS))) if found] if data else [])
 
 
 def keep(path: str, label: str, keep_dir: str, linked: bool) -> str:
@@ -171,6 +182,10 @@ def triage(walked: str, keep_dir: Optional[str], tmp_dir: Optional[str], linked_
             if not kind:
                 continue
             entry = {"label": label, "path": path, "kind": kind, "bytes": os.path.getsize(path), "kept": False}
+            if kind == "thread_dump":
+                also = layout_kinds(path)
+                if also:
+                    entry["also"] = also
             if kind in INLINE:
                 # read by analyze logs in this run (from the tmp dir when extracted): not kept, no command
                 entry["inline"] = True

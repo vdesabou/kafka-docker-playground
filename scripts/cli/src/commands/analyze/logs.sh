@@ -1548,13 +1548,18 @@ do
         [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
         [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
         [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+        [[ -n "$ocr" ]] && compare_cmd+=(--ocr)
+        [[ -n "$cfk_include_warnings" ]] && compare_cmd+=(--include-warnings)
+        # not --since / --until: the other input covers another period (the day before a fix)
         for connector in "${connector_array[@]}"
         do
             compare_cmd+=(--connector "$connector")
         done
-        # no progress page of its own, the sanitizer state of this run
-        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" \
-            || ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
+        # no progress page of its own, the sanitizer state of this run. Its exit code is not what decides: a run whose CFK
+        # part failed (no container engine for the CFK image, one bundle cfk-analysis could not read) exits non-zero
+        # after writing a good JSON, the log analysis of the other input is still there
+        PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" || true
+        if ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
         then
             logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
             tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2

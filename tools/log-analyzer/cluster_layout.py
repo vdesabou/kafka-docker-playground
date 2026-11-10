@@ -43,18 +43,27 @@ def _ids(text: str) -> List[int]:
     return [int(x) for x in text.split(",") if x.strip().lstrip("-").isdigit()]
 
 
-def read_text(path: str) -> str:
+# a kafka-log-dirs output is read whole (one JSON document) up to this size; a describe output is read line by line
+MAX_LOG_DIRS_BYTES = 256 * 1024 * 1024
+
+
+def open_text(path: str):
     import gzip
     opener = gzip.open if path.endswith(".gz") else open
-    with opener(path, "rt", encoding="utf-8", errors="replace") as fh:
-        return fh.read()
+    return opener(path, "rt", encoding="utf-8", errors="replace")
 
 
-def parse_describe(text: str) -> Tuple[Dict[str, dict], Dict[Tuple[str, int], dict]]:
-    """topics {name: {partitions, rf, configs}} and partitions {(topic, p): {leader, replicas, isr, offline, observers}}"""
+def read_text(path: str, limit: int = MAX_LOG_DIRS_BYTES) -> str:
+    with open_text(path) as fh:
+        return fh.read(limit)
+
+
+def parse_describe(text) -> Tuple[Dict[str, dict], Dict[Tuple[str, int], dict]]:
+    """topics {name: {partitions, rf, configs}} and partitions {(topic, p): {leader, replicas, isr, offline, observers}}.
+    text: a string or an iterable of lines (an open file: a log of GBs with a describe output in it is not loaded)"""
     topics: Dict[str, dict] = OrderedDict()
     parts: Dict[Tuple[str, int], dict] = OrderedDict()
-    for line in text.splitlines():
+    for line in (text.splitlines() if isinstance(text, str) else text):
         line = line.rstrip()
         m = PARTITION_RE.search(line)
         if m:
@@ -70,19 +79,21 @@ def parse_describe(text: str) -> Tuple[Dict[str, dict], Dict[Tuple[str, int], di
     return topics, parts
 
 
+LOG_DIRS_START = re.compile(r'\{\s*"(?:version|brokers)"\s*:')
+
+
 def parse_log_dirs(text: str) -> Optional[dict]:
-    """the JSON of kafka-log-dirs --describe (after its "Querying brokers…" lines)"""
-    i = text.find('{"brokers"')
-    if i < 0:
-        i = text.find("{")
-    while i >= 0:
+    """the JSON of kafka-log-dirs --describe (after its "Querying brokers…" lines). Tried only where a document of it can
+    start ({"version": or {"brokers":), at its offset (no copy of the rest of the text: a truncated output of tens of
+    MB with a { at each partition took minutes)"""
+    decoder = json.JSONDecoder()
+    for m in LOG_DIRS_START.finditer(text):
         try:
-            obj, _ = json.JSONDecoder().raw_decode(text[i:])
-            if isinstance(obj, dict) and isinstance(obj.get("brokers"), list):
-                return obj
+            obj, _ = decoder.raw_decode(text, m.start())
         except ValueError:
-            pass
-        i = text.find("{", i + 1)
+            continue
+        if isinstance(obj, dict) and isinstance(obj.get("brokers"), list):
+            return obj
     return None
 
 
@@ -100,18 +111,20 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
     parts: Dict[Tuple[str, int], dict] = OrderedDict()
     dirs: List[dict] = []
     read: List[str] = []
+    describes = 0
     for label, path in sources:
         try:
-            text = read_text(path)
+            with open_text(path) as fh:
+                t, p = parse_describe(fh)
+            if p:
+                topics.update(t)
+                parts.update(p)
+                read.append(label)
+                describes += 1
+                continue
+            ld = parse_log_dirs(read_text(path))
         except (OSError, EOFError, ValueError):  # a truncated .gz, a file that is not gzip
             continue
-        t, p = parse_describe(text)
-        if p:
-            topics.update(t)
-            parts.update(p)
-            read.append(label)
-            continue
-        ld = parse_log_dirs(text)
         if ld:
             dirs.append(ld)
             read.append(label)
@@ -122,6 +135,13 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
 
     def add(sev: str, text: str) -> None:
         findings.append({"severity": sev, "text": text})
+
+    # several outputs of the same kind (before / after, or two clusters: Replicator, MirrorMaker): the last one given wins
+    # for a partition and for the disk of a broker, never summed
+    if describes > 1 or len(dirs) > 1:
+        add("INFO", f"{describes} kafka-topics --describe and {len(dirs)} kafka-log-dirs outputs merged, the last one given wins "
+                    "for a partition and for the disk of a broker: of two clusters (Replicator, MirrorMaker), their broker ids "
+                    "are mixed")
 
     brokers: Dict[int, dict] = defaultdict(lambda: {"replicas": 0, "observers": 0, "leaders": 0, "preferred": 0,
                                                     "not_preferred": 0, "in_isr": 0, "disk_bytes": None, "log_dirs": []})
@@ -193,29 +213,30 @@ def analyze(sources: List[Tuple[str, str]]) -> Optional[dict]:
         sizes: Dict[Tuple[str, int], int] = {}
         topic_sizes: Counter = Counter()
         future = 0
+        # the last output that has a broker gives its dirs (two snapshots of the same cluster are not added up)
+        latest: Dict[int, dict] = {}
         for d in dirs:
             for br in d.get("brokers") or []:
-                b = br.get("broker")
-                if not isinstance(b, int):
-                    continue
-                total = 0
-                for ld in br.get("logDirs") or []:
-                    used = sum(int(p.get("size") or 0) for p in ld.get("partitions") or [] if not p.get("isFuture"))
-                    future += sum(1 for p in ld.get("partitions") or [] if p.get("isFuture"))
-                    total += used
-                    brokers[b]["log_dirs"].append({"dir": ld.get("logDir"), "bytes": used, "partitions": len(ld.get("partitions") or []),
-                                                   "error": ld.get("error")})
-                    if ld.get("error"):
-                        add("HIGH", f"broker {b}: log dir {ld.get('logDir')} has an error ({ld['error']}): offline, its "
-                                    "partitions moved to other dirs or went offline")
-                    for p in ld.get("partitions") or []:
-                        if p.get("isFuture"):
-                            continue
-                        name = str(p.get("partition") or "")
-                        size = int(p.get("size") or 0)
-                        key = (name, b)
-                        sizes[key] = max(sizes.get(key, 0), size)
-                brokers[b]["disk_bytes"] = (brokers[b]["disk_bytes"] or 0) + total
+                if isinstance(br, dict) and isinstance(br.get("broker"), int):
+                    latest[br["broker"]] = br
+        for b, br in sorted(latest.items()):
+            total = 0
+            for ld in [x for x in br.get("logDirs") or [] if isinstance(x, dict)]:
+                plist = [x for x in ld.get("partitions") or [] if isinstance(x, dict)]
+                used = sum(int(p.get("size") or 0) for p in plist if not p.get("isFuture"))
+                future += sum(1 for p in plist if p.get("isFuture"))
+                total += used
+                brokers[b]["log_dirs"].append({"dir": ld.get("logDir"), "bytes": used, "partitions": len(plist),
+                                               "error": ld.get("error")})
+                if ld.get("error"):
+                    add("HIGH", f"broker {b}: log dir {ld.get('logDir')} has an error ({ld['error']}): offline, its "
+                                "partitions moved to other dirs or went offline")
+                for p in plist:
+                    if p.get("isFuture"):
+                        continue
+                    key = (str(p.get("partition") or ""), b)
+                    sizes[key] = max(sizes.get(key, 0), int(p.get("size") or 0))
+            brokers[b]["disk_bytes"] = total
         for (name, b), size in sizes.items():
             topic_sizes[name.rsplit("-", 1)[0]] += size
         res["biggest_partitions"] = [{"partition": n, "broker": b, "bytes": s} for (n, b), s in

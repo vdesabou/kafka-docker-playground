@@ -10121,7 +10121,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compare BEFORE (repeatable)")"
-    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n    \n    🎓 Tip: can be set several times, oldest first (-f day3 --compare day1\n    --compare day2): the comparison is with the last\n    one, and a 📈 Trend gives the totals and the main root causes of every input\n    in order (.trend of --json)\n"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only,\n    --include-harmless, --include-warnings, --ocr and\n    --sanitize, not --since / --until: it covers another period), or a JSON\n    written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n    \n    🎓 Tip: can be set several times, oldest first (-f day3 --compare day1\n    --compare day2): the comparison is with the last\n    one, and a 📈 Trend gives the totals and the main root causes of every input\n    in order (.trend of --json)\n"
     echo
 
     # :flag.usage
@@ -11325,7 +11325,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--compare BEFORE (repeatable)")"
-    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n    \n    🎓 Tip: can be set several times, oldest first (-f day3 --compare day1\n    --compare day2): the comparison is with the last\n    one, and a 📈 Trend gives the totals and the main root causes of every input\n    in order (.trend of --json)\n"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only,\n    --include-harmless, --include-warnings, --ocr and\n    --sanitize, not --since / --until: it covers another period), or a JSON\n    written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n    \n    🎓 Tip: can be set several times, oldest first (-f day3 --compare day1\n    --compare day2): the comparison is with the last\n    one, and a 📈 Trend gives the totals and the main root causes of every input\n    in order (.trend of --json)\n"
     echo
 
     # :flag.usage
@@ -30991,6 +30991,12 @@ function summarize_log_errors() {
                     # read before timestamp_of(), whose match() changes RSTART / RLENGTH
                     lc_line = NR
                     ev[++nev] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
+                } else if (lc_kind ~ /^(isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/) {
+                    # the signals of a broker after the first 300: the last 150 kept too (a ring, written at the end),
+                    # so that the incident at the end of a log of thousands of ISR shrinks has its bursts
+                    lc_line = NR
+                    if (!(lc_kind in lc_ring_seen)) { lc_ring_seen[lc_kind] = 1; lc_ring_kinds[++nlc_ring] = lc_kind }
+                    lc_ring[lc_kind, (lc_noted[lc_kind] - 301) % 150] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
                 }
             }
         }
@@ -31047,6 +31053,11 @@ function summarize_log_errors() {
                 for (j = 1; j < n; j++) printf "@@PGCFGL@@\t%s\n", cl[j] >> records_file
                 n = split(cfg_chg[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
+            }
+            # the last signals of a broker after the first 300 (lc_ring), oldest first
+            for (i = 1; i <= nlc_ring; i++) {
+                lc_k = lc_ring_kinds[i]; lc_n = lc_noted[lc_k] - 300
+                for (j = 0; j < (lc_n < 150 ? lc_n : 150); j++) ev[++nev] = lc_ring[lc_k, ((lc_n < 150 ? 0 : lc_n % 150) + j) % 150]
             }
             for (i = 1; i <= nev; i++) printf "@@PGEVT@@\t%s\n", ev[i] >> records_file
             for (i = 1; i <= nlc_keys; i++) printf "@@PGEVTN@@\t%s\t%d\t%d\n", lc_keys[i], lc_count[lc_keys[i]], lc_leave[lc_keys[i]] + 0 >> records_file
@@ -64785,13 +64796,18 @@ playground_analyze_logs_command() {
           [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
           [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
           [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+          [[ -n "$ocr" ]] && compare_cmd+=(--ocr)
+          [[ -n "$cfk_include_warnings" ]] && compare_cmd+=(--include-warnings)
+          # not --since / --until: the other input covers another period (the day before a fix)
           for connector in "${connector_array[@]}"
           do
               compare_cmd+=(--connector "$connector")
           done
-          # no progress page of its own, the sanitizer state of this run
-          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" \
-              || ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
+          # no progress page of its own, the sanitizer state of this run. Its exit code is not what decides: a run whose CFK
+          # part failed (no container engine for the CFK image, one bundle cfk-analysis could not read) exits non-zero
+          # after writing a good JSON, the log analysis of the other input is still there
+          PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" || true
+          if ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
           then
               logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
               tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
@@ -67944,13 +67960,18 @@ playground_debug_analyze_logs_command() {
           [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
           [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
           [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+          [[ -n "$ocr" ]] && compare_cmd+=(--ocr)
+          [[ -n "$cfk_include_warnings" ]] && compare_cmd+=(--include-warnings)
+          # not --since / --until: the other input covers another period (the day before a fix)
           for connector in "${connector_array[@]}"
           do
               compare_cmd+=(--connector "$connector")
           done
-          # no progress page of its own, the sanitizer state of this run
-          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" \
-              || ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
+          # no progress page of its own, the sanitizer state of this run. Its exit code is not what decides: a run whose CFK
+          # part failed (no container engine for the CFK image, one bundle cfk-analysis could not read) exits non-zero
+          # after writing a good JSON, the log analysis of the other input is still there
+          PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" || true
+          if ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
           then
               logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
               tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2

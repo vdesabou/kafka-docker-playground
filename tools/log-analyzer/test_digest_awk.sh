@@ -113,6 +113,15 @@ do
         echo "❌ $awk_cmd: broker signal events of events.log: $got"
         failed=1
     fi
+    # 1000 ISR shrinks: the first 300 noted, then the last 150 (the incident at the end of a long log keeps its bursts)
+    awk 'BEGIN { for (i = 0; i < 1000; i++) printf "[2026-11-07 %02d:%02d:%02d,000] INFO [Partition orders-%d broker=1] Shrinking ISR from 1,2,3 to 1,3 (kafka.cluster.Partition)\n", 8 + int(i * 7 / 3600), int(i * 7 / 60) % 60, (i * 7) % 60, i % 7 }' > "$tmp/isr-1000.log"
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.isr" "$tmp/isr-1000.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "isr_shrink" {n++; if (n == 300 || n == 301) printf "%s,", $3; last = $3} END {print n "," last}' "$out.isr")
+    if [ "$got" != "300,851,450,1000" ]
+    then
+        echo "❌ $awk_cmd: 1000 ISR shrinks: line of the 300th, 301st event, events, last line: $got instead of 300,851,450,1000"
+        failed=1
+    fi
     # the loggers of the lines of the tasks (the plugin of a connector whose startup is not in the logs): each once, not the
     # ones of the runtime but its sink / source task classes, a CRLF line too
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "plugin_logger" && ($5 == "jdbc-sink" || $5 == "hdfs-sink") {print $5, $6}' "$out.records" | sort | tr '\n' ',')
