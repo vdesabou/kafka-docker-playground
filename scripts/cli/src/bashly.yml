@@ -156,6 +156,8 @@ commands:
 
 - import: src/commands/salesforce.yml
 
+- import: src/commands/ccloud.yml
+
 - import: src/commands/cloud-resources.yml
 
 - import: src/commands/cleanup-cloud-resources.yml

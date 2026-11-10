@@ -18,6 +18,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | You want | Command |
 | --- | --- |
 | run a fully managed example | `playground run -f ccloud/fm-datagen-source/fully-managed-datagen-source.sh` |
+| your own environment and one cluster per cloud, stored in a secrets profile | `playground ccloud setup` (`--profile emea`, `--cloud aws --cloud azure`, `--dry-run`) |
 | reuse your own cluster instead of creating one | `export ENVIRONMENT=… CLUSTER_NAME=… CLUSTER_CLOUD=… CLUSTER_REGION=… CLUSTER_CREDS=…` before the run |
 | forget the cached cluster details | `playground cleanup-cloud-details` (nothing is deleted in Confluent Cloud) |
 | create / update and wait for RUNNING | `playground connector create-or-update -c DatagenSource_$USER --wait << EOF … EOF` |
@@ -123,6 +124,13 @@ Gotchas:
   cluster is missing:` and the five values).
 - **The cache wins over your intent**: a cluster deleted from the UI, another organization, an API key revoked: run
   `playground cleanup-cloud-details` and start again. Nothing is deleted in Confluent Cloud by it.
+- **`playground ccloud setup` sets all of this up for you**: an environment `pg-<user>`, one Basic cluster
+  `pg-<user>-<cloud>` per `--cloud`, one Kafka key per cluster and one Schema Registry key owned by you (no service
+  account), all stored in a secrets profile (`--profile`, `CLUSTER_*` for `--default-cloud`). Idempotent: run it again,
+  existing resources and the keys of the profile that still belong to them are kept. It stores the values with the
+  secrets store directly, never pushed to GitHub, and warns when exported variables would hide them. The
+  `pg-<user>-*` cluster names let `cloud-resources cleanup` delete all their topics, never the clusters nor the
+  environment.
 - **Per-cloud clusters**: `AWS_CLUSTER_NAME`, `GCP_CLUSTER_NAME`, `AZURE_CLUSTER_NAME` (with their `*_REGION`,
   `*_CLOUD`, `*_CREDS`) are used automatically for the `fm-aws*`, `fm-gcp*`, `fm-azure*` examples: set them once to
   keep a cluster per cloud. Switching between them uses the per-cluster cache, and an exported `CLUSTER_NAME` is
@@ -303,6 +311,7 @@ playground stop                                                              # d
 | "which version of the connector runs in Confluent Cloud?" | `connector-plugin sourcecode -c confluentinc/<Type> --only-show-url` (employees, see the [connector plugins deep dive](/deep-dive-connector-plugin.md)) |
 | "is the fix of connector version X in a cc-connect image yet? what changed in the last images?" | `connector-plugin fm-versions -c confluentinc/<Type> --find-first X` / `--last 50 --with-log` (employees) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
+| "set up my own clusters in the shared org" | `playground ccloud setup --profile <org> --dry-run`, then without `--dry-run`, then `playground secrets profile <org>` |
 | "what did I leave running in the shared org?" | `playground cloud-resources ccloud list` (every environment and cluster: connectors `*_<user>` with status and age, `pg-<user>-*` resources, what `cleanup` deletes) |
 | "how much did that test cost?" | `playground cloud-resources ccloud costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `cloud-resources ccloud costs-history` for the trend |
 

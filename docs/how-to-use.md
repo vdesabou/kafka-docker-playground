@@ -403,6 +403,14 @@ You can configure the new cluster by using flags with [playground run](/playgrou
 * `--cluster-region` (or `CLUSTER_REGION` environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2` for aws, `westeurope` for azure and `europe-west2` for gcp)
 * `--cluster-environment` (or `ENVIRONMENT` environment variable) (optional): The environment id where want your new cluster (example: `txxxxx`) 
 
+> [!TIP]
+> The simplest way to use your own clusters, in your organization or one shared by your team: [playground ccloud setup](/playground%20ccloud%20setup) creates an environment `pg-<user>` with one Basic cluster per cloud (`pg-<user>-aws`, `pg-<user>-gcp`, `pg-<user>-azure`) and their API keys, owned by you, and stores all the variables below in a [secrets profile](/deep-dive-secrets.md) (`--profile emea`, `--dry-run` first). Run it again any time: what exists is reused.
+>
+> ```bash
+> playground ccloud setup --dry-run
+> playground ccloud setup --profile emea --cloud aws --cloud azure
+> ```
+
 In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
 
 * `--cluster-name` (or `CLUSTER_NAME` environment variable): The cluster name
