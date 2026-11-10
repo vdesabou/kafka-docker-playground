@@ -2861,7 +2861,8 @@ def cluster_layout_text(cl: Optional[dict]) -> List[str]:
            + (f": {cl['topics']} topic(s), {cl['partitions']} partition(s)" if cl.get("partitions") else "")]
     for b in cl.get("brokers") or []:
         disk = f", 💽 {human_size(b['disk_bytes'])}" if b.get("disk_bytes") is not None else ""
-        out.append(f"   broker {b['id']}: {b['replicas']} replica(s), {b['leaders']} leader(s)"
+        out.append(f"   broker {b['id']}: {b['replicas']} replica(s)" + (f" ({b['observers']} observer(s))" if b.get("observers") else "")
+                   + f", {b['leaders']} leader(s)"
                    + (f" ({b['not_preferred']} of its preferred ones led elsewhere)" if b.get("not_preferred") else "") + disk)
     for f in cl.get("findings") or []:
         out.append(f"   [{f['severity']}] {f['text']}")
@@ -2881,19 +2882,29 @@ def cluster_layout_html(cl: Optional[dict]) -> str:
 
     def bar(v, k, cls=""):
         return f"<span class='cl-bar {cls}' style='width:{max(2, 120 * (v or 0) / mx[k]):.0f}px'></span>"
+    with_disk = any(x.get("disk_bytes") is not None for x in brokers)
+
+    def disk_cells(b: dict, dirs: str) -> str:
+        """the disk columns (when one broker has them), — for a broker missing from kafka-log-dirs (down) while it is in
+        the Replicas of kafka-topics --describe"""
+        if not with_disk:
+            return ""
+        if b.get("disk_bytes") is None:
+            return "<td class='cl-num'>—</td><td><span class='fi-meta'>not in kafka-log-dirs</span></td>"
+        return f"<td class='cl-num'>{bar(b['disk_bytes'], 'disk_bytes', 'cl-d')}{e(human_size(b['disk_bytes']))}</td><td>{dirs}</td>"
     rows = ""
     for b in brokers:
         dirs = "<br>".join(f"<span class='mono{' cl-err' if d.get('error') else ''}'>{e(d.get('dir') or '?')}</span> "
                            f"{e(human_size(d['bytes']))}" + (f" <span class='cl-err'>⚠️ {e(d['error'])}</span>" if d.get("error") else "")
                            for d in b.get("log_dirs") or [])
         rows += (f"<tr><td><b>broker {b['id']}</b></td>"
-                 f"<td class='cl-num'>{bar(b['replicas'], 'replicas')}{b['replicas']:,}</td>"
+                 f"<td class='cl-num'>{bar(b['replicas'], 'replicas')}{b['replicas']:,}"
+                 + (f" <span class='fi-meta'>({b['observers']:,} observer(s))</span>" if b.get("observers") else "") + "</td>"
                  f"<td class='cl-num'>{bar(b['leaders'], 'leaders', 'cl-l')}{b['leaders']:,}"
                  + (f" <span class='fi-meta'>({b['not_preferred']} preferred led elsewhere)</span>" if b.get("not_preferred") else "")
                  + "</td>"
-                 + (f"<td class='cl-num'>{bar(b['disk_bytes'], 'disk_bytes', 'cl-d')}{e(human_size(b['disk_bytes']))}</td><td>{dirs}</td>"
-                    if any(x.get("disk_bytes") is not None for x in brokers) else "") + "</tr>")
-    disk_head = "<th>Disk used</th><th>Log dirs</th>" if any(x.get("disk_bytes") is not None for x in brokers) else ""
+                 + disk_cells(b, dirs) + "</tr>")
+    disk_head = "<th>Disk used</th><th>Log dirs</th>" if with_disk else ""
     items = "".join(f"<li><span class='jd-sev jd-{e(f['severity'])}'>{e(f['severity'])}</span>{e(f['text'])}</li>" for f in cl.get("findings") or [])
     lists = ""
     for key, title in (("offline", "Offline partitions"), ("under_min_isr", "Under min.insync.replicas"),
@@ -7757,7 +7768,10 @@ def main() -> int:
         layout_files = [(f["label"], f["path"]) for f in res["other_files"].get("files") or []
                         if f.get("kind") in ("topic_describe", "log_dirs") and f.get("path") and os.path.isfile(f["path"])]
         if layout_files:
-            res["cluster_layout"] = cluster_layout.analyze(layout_files)
+            try:
+                res["cluster_layout"] = cluster_layout.analyze(layout_files)
+            except Exception as ex:  # an output the parser does not expect: never break the log report for it
+                print(f"⚠️ cluster layout: {ex}", file=sys.stderr)
         dump_events = [{"time": x["time"], "kind": "lifecycle", "level": None, "text": x["text"], "file": x["file"],
                         "line": x["line"], "connector": None, "count": None, "record": None}
                        for x in jvm_dumps.timeline_events(res["thread_dumps"])]

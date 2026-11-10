@@ -7510,9 +7510,11 @@ function summarize_log_errors() {
                 if (match($0, /ISR from [0-9,]+ to [0-9,]*/)) {
                     lc_isr = substr($0, RSTART + 9, RLENGTH - 9); sub(/ to /, " -> ", lc_isr); lc_detail = lc_detail " (" lc_isr ")"
                 }
-            } else if ($0 ~ /Error sending fetch request|Error in response for fetch request/) {
+            } else if (index($0, "ReplicaFetcher") && $0 ~ /Error sending fetch request|Error in response for fetch request/) {
                 # a follower that cannot fetch from the leader (ReplicaFetcherThread): the ISR shrinks that follow have
-                # their cause here. Keyed by the leader it fetches from
+                # their cause here. Keyed by the leader it fetches from. Not the same line of a consumer
+                # ([Consumer clientId=…] Error sending fetch request … to node 2, FetchSessionHandler too, on every broker
+                # restart): a Connect worker log is not a broker whose followers cannot fetch
                 lc_kind = "replica_fetch_error"; lc_who = "broker"
                 if (match($0, /leaderId=[0-9]+/)) lc_who = "broker " substr($0, RSTART + 9, RLENGTH - 9)
                 else if (match($0, /to node [0-9]+/)) lc_who = "broker " substr($0, RSTART + 8, RLENGTH - 8)

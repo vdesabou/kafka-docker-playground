@@ -172,9 +172,10 @@ commands:
     --describe of the input give the Cluster layout: replicas, leaders and
     disk per broker, leader imbalance and skew, offline / under-replicated /
     under min ISR partitions, replication factor 1, log dirs offline, disk
-    skew (.cluster_layout). 🐢 The signals of a broker under pressure, read
+    skew (.cluster_layout); the observers of a Multi-Region Cluster are not
+    replicas missing from the ISR. 🐢 The signals of a broker under pressure, read
     from INFO / WARN lines (ISR shrinks and expands per broker and partition,
-    followers failing to fetch, requests timed out, log cleaner failures,
+    followers failing to fetch (ReplicaFetcher, not consumers), requests timed out, log cleaner failures,
     quota throttling, responses to clients already gone), are counted by
     broker with their storms, and their bursts are on the incident timeline.
     Only files with findings are
