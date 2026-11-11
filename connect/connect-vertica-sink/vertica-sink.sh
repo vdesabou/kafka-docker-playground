@@ -14,12 +14,10 @@ fi
 if [ ! -f ${DIR}/vertica-jdbc.jar ]
 then
      # install deps
-     log "Getting vertica-jdbc.jar from vertica-client-10.0.1-0.x86_64.tar.gz"
-     wget -q https://www.vertica.com/client_drivers/10.0.x/10.0.1-0/vertica-client-10.0.1-0.x86_64.tar.gz
-     tar xvfz ${DIR}/vertica-client-10.0.1-0.x86_64.tar.gz
-     cp ${DIR}/opt/vertica/java/lib/vertica-jdbc.jar ${DIR}/
-     rm -rf ${DIR}/opt
-     rm -f ${DIR}/vertica-client-10.0.1-0.x86_64.tar.gz
+     # vertica.com/client_drivers now redirects to a Rocket Software page: get the same driver version from Maven Central
+     log "Getting vertica-jdbc.jar 10.0.1-0 from Maven Central"
+     wget -q -O ${DIR}/vertica-jdbc.jar.tmp https://repo1.maven.org/maven2/com/vertica/jdbc/vertica-jdbc/10.0.1-0/vertica-jdbc-10.0.1-0.jar
+     mv ${DIR}/vertica-jdbc.jar.tmp ${DIR}/vertica-jdbc.jar
 fi
 
 

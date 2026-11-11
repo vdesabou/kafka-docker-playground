@@ -7,7 +7,7 @@ Quickly test the [Vertica](https://docs.confluent.io/kafka-connectors/vertica/cu
 ## Prerequisites
 
 * With CP 8.x, connector version 1.3.0 or later.
-* `vertica-jdbc.jar` is extracted from the Vertica client 10.0.1 package (downloaded from vertica.com) on the first run and copied into the connector `lib` folder.
+* `vertica-jdbc.jar` (`com.vertica.jdbc:vertica-jdbc:10.0.1-0`) is downloaded from Maven Central on the first run and copied into the connector `lib` folder.
 
 ## How to run
 

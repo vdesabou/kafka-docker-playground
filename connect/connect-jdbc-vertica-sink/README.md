@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with Vertica (`cjonesy/docker-vertica`), using the Vertica JDBC driver from the Vertica 10.0.1 client.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with Vertica (`cjonesy/docker-vertica`), using the Vertica JDBC driver 10.0.1 (`com.vertica.jdbc:vertica-jdbc:10.0.1-0` from Maven Central).
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ playground run -f vertica-sink.sh
 
 ## What the script does
 
-1. Downloads the Vertica client and extracts `vertica-jdbc.jar` if needed, then copies it into the JDBC connector `lib` folder.
+1. Downloads `vertica-jdbc.jar` from Maven Central if needed, then copies it into the JDBC connector `lib` folder.
 2. Starts Vertica alongside the plaintext environment and waits for `Vertica is now running`.
 3. Creates table `docker.mytable (f1 varchar(20))` with `vsql`.
 4. Produces 10 Avro records (`{"f1":"value<n>"}`) to topic `mytable` with `playground topic produce`.
