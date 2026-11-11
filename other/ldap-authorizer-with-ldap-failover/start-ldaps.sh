@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if container_engine_is_podman
+then
+     logwarn "this example does not work with podman: broker and connect use a resolv.conf with Docker's embedded DNS server (127.0.0.11), which podman does not have"
+     exit 111
+fi
 
 # certificates of the broker and of the 3 LDAP servers, signed by the same CA: the broker reaches the LDAP servers with the names
 # of the DNS SRV records (ldap.confluent.io...), which must be in the SAN of their certificates (the "container" name is the SAN)
