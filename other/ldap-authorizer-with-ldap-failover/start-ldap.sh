@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if container_engine_is_podman
+then
+     logwarn "this example does not work with podman: broker and connect use a resolv.conf with Docker's embedded DNS server (127.0.0.11), which podman does not have"
+     exit 111
+fi
+
 playground start-environment --environment ldap-authorizer-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.ldap-authorizer-sasl-plain.ldap.yml"
 
 # docker exec --privileged --user root -i broker yum install bind-utils

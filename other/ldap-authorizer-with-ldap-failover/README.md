@@ -4,6 +4,12 @@
 
 Quickly test [DNS SRV Records for LDAP](https://ldap.com/dns-srv-records-for-ldap/) in order to ensure high availability of LDAP.
 
+## Prerequisites
+
+Docker only: with podman, the scripts exit with code 111 (skipped). `broker` and `connect` use a `resolv.conf` whose
+first name server is Docker's embedded DNS (`127.0.0.11`, see below). Podman has no DNS server at that address, so
+`broker` cannot resolve `controller` and `connect` cannot resolve `broker`.
+
 ## How to run
 
 Simply run:
