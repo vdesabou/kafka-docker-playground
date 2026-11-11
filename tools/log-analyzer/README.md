@@ -217,8 +217,9 @@ kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report
 green without error. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
 `STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing with
 `STORY_STILL_MIN` errors or more at a tenth of the average rate or more, 📉 fading out below it, a few left under
-`STORY_STILL_MIN`, ✅ stopped), each step a link to its section, over an area sparkline
-(square-root scale). The 🔁 Occurrences tile has the same sparkline (`spark_svg()` of `report_html.py`); the numbers of
+`STORY_STILL_MIN`, ✅ stopped), each step a link to its section (its text selectable: a drag selects, it does not follow
+the link), over an area sparkline (square-root scale): a drag over it makes that range the 🕐 period of the report
+(`pgSetPeriod()`), and the current period is shaded on it (`STORY_SCRIPT`). The 🔁 Occurrences tile has the same sparkline (`spark_svg()` of `report_html.py`); the numbers of
 the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page).
 🔎 Findings opens with 🏆 Top causes (`findings_overview_html()`): a ring with the share of the occurrences of the first
 cause, the first `FINDINGS_TOP` ranked with a bar each (their share of all the occurrences, coloured by severity, a link to

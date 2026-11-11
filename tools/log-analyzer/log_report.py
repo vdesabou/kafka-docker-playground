@@ -6719,6 +6719,12 @@ background:linear-gradient(90deg,#22c55e,#f59e0b 30%,#ef4444 55%,#a855f7 80%,var
 .story-step{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;text-decoration:none;color:inherit;
 padding:0 4px;border-radius:12px;transition:transform .15s}
 a.story-step:hover{transform:translateY(-2px)}
+.story,.story *{user-select:text;-webkit-user-select:text}a.story-step{-webkit-user-drag:none}
+.story .story-zoom{position:relative}.story .story-zoom,.story .story-zoom *{cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:none}
+.story .story-zoom .story-peak{pointer-events:none}
+.story-sel,.story-period{position:absolute;top:0;bottom:0;pointer-events:none;border-radius:4px;display:none}
+.story-sel{background:rgba(99,102,241,.18);border:1px dashed #6366f1}
+.story-period{background:rgba(99,102,241,.12);border-left:2px solid #6366f1;border-right:2px solid #6366f1}
 .story-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;background:#fff;
 border:3px solid var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent);opacity:0;transform:scale(.6);
 animation:story-in .45s cubic-bezier(.2,.9,.3,1.4) forwards;animation-delay:calc(var(--i) * 110ms)}
@@ -6809,7 +6815,7 @@ def story_html(res: dict, levels: str) -> str:
     def step(icon: str, color: str, label: str, value: str, sub: str, href: str = "", hot: bool = False, title: str = "") -> None:
         tag = "a" if href else "div"
         steps.append(f"<{tag} class='story-step{' hot' if hot else ''}' style='--c:{color};--i:{len(steps)}'"
-                     + (f" href='{href}'" if href else "") + (f" title='{e(title)}'" if title else "")
+                     + (f" href='{href}' draggable='false'" if href else "") + (f" title='{e(title)}'" if title else "")
                      + f"><span class='story-dot'>{icon}</span><span class='story-label'>{e(label)}</span>"
                      f"<span class='story-value'>{e(value)}</span><span class='story-sub'>{e(sub)}</span></{tag}>")
 
@@ -6868,8 +6874,55 @@ def story_html(res: dict, levels: str) -> str:
     peak_left = 100 * (peak_i + .5) / STORY_BINS
     return (STORY_CSS + f"<div class='story' style='--end:{end_color}'><div class='story-title'>📖 What happened</div>"
             f"<div class='story-steps' style='--n:{len(steps)}'>{''.join(steps)}</div>"
-            f"<div style='position:relative'>{spark}<span class='story-peak' style='left:{peak_left:.1f}%'>▲ peak</span></div>"
-            f"<div class='story-axis'><span>{e(at(t0))}</span><span>{levels} over time</span><span>{e(at(t1))}</span></div></div>")
+            f"<div class='story-zoom' data-t0='{t0:.0f}' data-t1='{t1:.0f}' title='drag over the timeline to make that range the 🕐 period of the report'>"
+            f"{spark}<span class='story-period'></span><span class='story-sel'></span>"
+            f"<span class='story-peak' style='left:{peak_left:.1f}%'>▲ peak</span></div>"
+            f"<div class='story-axis'><span>{e(at(t0))}</span><span>{levels} over time</span><span>{e(at(t1))}</span></div></div>"
+            + STORY_SCRIPT)
+
+
+# the steps are links: a drag selects their text (draggable false), and the click that ends a selection does not follow
+# the link. A drag over the sparkline sets the 🕐 period of the report (pgSetPeriod of log_search.py), and the period
+# of the report, whatever set it, is shaded on the sparkline
+STORY_SCRIPT = r"""<script>
+(function () {
+  document.querySelectorAll("a.story-step").forEach(a => a.addEventListener("click", ev => {
+    if (String(getSelection()).trim()) ev.preventDefault();
+  }));
+  const z = document.querySelector(".story-zoom");
+  if (!z) return;
+  const T0 = +z.dataset.t0, T1 = +z.dataset.t1, sel = z.querySelector(".story-sel"), band = z.querySelector(".story-period");
+  const frac = ev => { const r = z.getBoundingClientRect(); return Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)); };
+  function place(el, a, b) { el.style.left = 100 * a + "%"; el.style.width = 100 * (b - a) + "%"; el.style.display = b > a ? "block" : "none"; }
+  let start = null;
+  z.addEventListener("pointerdown", ev => {
+    if (ev.button !== 0) return;
+    start = frac(ev); z.setPointerCapture(ev.pointerId); place(sel, start, start); ev.preventDefault();
+  });
+  z.addEventListener("pointermove", ev => {
+    if (start === null) return;
+    const f = frac(ev); place(sel, Math.min(start, f), Math.max(start, f));
+  });
+  function end(ev) {
+    if (start === null) return;
+    const f = frac(ev), a = Math.min(start, f), b = Math.max(start, f);
+    start = null; sel.style.display = "none";
+    // a click, not a drag: nothing to zoom on
+    if ((b - a) * z.getBoundingClientRect().width < 4 || typeof window.pgSetPeriod !== "function") return;
+    window.pgSetPeriod(T0 + a * (T1 - T0), T0 + b * (T1 - T0));
+  }
+  z.addEventListener("pointerup", end);
+  z.addEventListener("pointercancel", () => { start = null; sel.style.display = "none"; });
+  function shade() {
+    const p = (typeof pgPeriod !== "undefined" && pgPeriod) || (typeof pgWindow !== "undefined" && pgWindow);
+    if (!p) { band.style.display = "none"; return; }
+    place(band, Math.max(0, (p[0] - T0) / (T1 - T0)), Math.min(1, (p[1] - T0) / (T1 - T0)));
+  }
+  ["pgperiod", "zoomchange"].forEach(t => document.addEventListener(t, () => setTimeout(shade, 0)));
+  window.addEventListener("load", () => setTimeout(shade, 0));
+})();
+</script>"""
+
 
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
