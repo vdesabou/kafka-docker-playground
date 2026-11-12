@@ -42,7 +42,11 @@ jobs:
       # /bin/bash is bash 3.2 on macOS: the script must run with it, as with 'curl | bash'
       - name: Install (piped into /bin/bash, as with curl | bash)
         run: |
-          /bin/bash -s -- --yes --dir "$KDP_DIR" < docs/install.sh
+          set -o pipefail
+          /bin/bash -s -- --yes --dir "$KDP_DIR" < docs/install.sh | tee "$RUNNER_TEMP/install.log"
+          # the runner cannot read the private submodule: skipped with one line, without waiting for a prompt
+          grep -F "reproduction models: private submodule not readable" "$RUNNER_TEMP/install.log"
+          test ! -e "$KDP_DIR/reproduction-models/.git"
 
       - name: playground and the Confluent CLI are in the PATH of a new shell
         run: |

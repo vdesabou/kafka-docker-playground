@@ -59,7 +59,7 @@ It asks before each change, and only does this:
 
 1. **checks** your machine and changes nothing: git, bash 4+, fzf, python3, docker + compose v2 (or Podman), free disk space
 2. **installs what is missing** (bash, fzf, git, python3 for the support commands like `playground analyze`, unzip, and on macOS the optional `mawk` with which [playground analyze logs](/playground%20analyze%20logs) reads the logs 2.5x faster) with Homebrew on macOS (on a Mac without Homebrew, it offers to install it first with the [official installer](https://brew.sh), only when a tool or a container engine needs it) or the package manager on Linux, and the [Confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html) used by the Confluent Cloud examples (Homebrew on macOS, else the official installer into `~/.local/bin`, or the latest archive downloaded directly, SHA-256 checked, when that installer fails)
-3. **clones** the repository into `~/kafka-docker-playground` (latest version only), or updates the clone you already have
+3. **clones** the repository into `~/kafka-docker-playground` (latest version only), or updates the clone you already have. Confluent employees whose git can read the private `reproduction-models` submodule (an SSH key, or HTTPS credentials such as `gh auth login`, for `github.com/confluentinc`) are offered to fetch it too (`git submodule update --init --remote reproduction-models`); for everyone else it is skipped with one line
 4. **offers to install a container engine**, only when none is installed at all (see below)
 5. **adds one block** to `~/.zshrc` (or `~/.bashrc`, `~/.bash_profile`), with a backup of the file, so that `playground` and its completion are in your `PATH`:
 
@@ -106,6 +106,7 @@ When no engine answers and none is installed, the installer asks which one to in
 | `--dir <path>` | clone somewhere else than `~/kafka-docker-playground` |
 | `--no-rc` | do not touch any shell startup file, print the lines to add instead |
 | `--no-confluent-cli` | do not install the Confluent CLI (only needed by the Confluent Cloud examples) |
+| `--no-reproduction-models` | do not fetch the private `reproduction-models` submodule, even when you can read it |
 | `--engine <engine>` | container engine to install when none is found, without asking: `podman` or `docker-desktop` on macOS, `docker` on Linux, `none` |
 | `--uninstall` | remove the block from your shell startup files, then offer to delete the folder (default: keep it, it may hold your `playground.ini` and reproduction models) |
 
