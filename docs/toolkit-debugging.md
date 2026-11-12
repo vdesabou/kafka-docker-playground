@@ -443,6 +443,11 @@ playground analyze heap-dump --file heap-dump-connect-2026-10-14.hprof
 playground analyze flight-recorder --container connect --duration 60s --connector my-sink   # records connect over JMX, then analyzes
 ```
 
+👀 To skip typing them, `playground analyze watch` runs the right one on every file you download (`~/Downloads`, or
+`--folder`): logs and bundles, heap dumps, flight recordings, captures, GC logs, thread dumps and XStream reports, the
+report opened as soon as the download is complete (`--install-launch-agent` on macOS: at every login). See
+[Every download analyzed](/deep-dive-analyze-logs?id=%f0%9f%91%80-every-download-analyzed-without-typing-anything).
+
 Besides the text digest, they write a self-contained HTML report to share in a case (opened in your browser), and most
 of them accept `--json` for scripts and agents. Each report starts with a one-line verdict (🚨 critical findings and
 where to start, ⚠️ things to look at, or ✅ nothing alarming), followed by the findings with their severity (🔴 critical,

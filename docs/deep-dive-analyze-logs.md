@@ -140,6 +140,63 @@ report on that section and try it (filters, zoom, search, links to the lines).
 
 All the reports of the playground are in the [📊 reports gallery](reports.md).
 
+## 👀 Every download analyzed, without typing anything
+
+Support work is a loop: download the attachment of a case, type `playground analyze logs -f ~/Downloads/<file>`, open
+the report. `playground analyze watch` does it for you: it watches `~/Downloads` (or `--folder`), and every log file,
+bundle, dump, capture or report that lands there is analyzed **as soon as the download is complete**, its report opened
+in the browser, with a macOS notification.
+
+```bash
+playground analyze watch                                       # in a terminal, Ctrl-C to stop
+playground analyze watch --exclude Archives --install-launch-agent   # macOS: once, it then starts at every login
+tail -f ~/Library/Logs/playground-analyze-watch.log            # what the LaunchAgent does
+playground analyze watch --since 30 --once                     # what you downloaded in the last 30 minutes, then exit
+```
+
+What it prints for a Connect log, a capture, an XStream diagnostics report and a text file (`--once --no-open`, the
+samples of the playground):
+
+```text
+🔥 connect.log: log file, running playground analyze logs (report in ~/playground-log-reports/connect.log-20261112-181140)
+📊 connect.log: ~/playground-log-reports/connect.log-20261112-181140/connect-log-report.html
+🧰 capture.pcap: network_capture, running playground analyze tcp-dump (report in ~/playground-log-reports/capture.pcap-20261112-181142)
+🧰 orclcdc_diag_healthy.html: xstream_report, running playground analyze oracle-xstream-report (report in …)
+🙈 notes.txt: no logs, dumps, captures or reports found, ignored
+```
+
+Each kind of file goes to its analyzer, recognized like the 🧰 Other files of the log report:
+
+| Downloaded | Analyzed by |
+| --- | --- |
+| a log file (`.log`, `.log.1`, `.log.gz`, `.out`, `stdout`…), a `.txt` / `.json` / `.csv` / extension-less file whose first lines are log records, logs pasted in a `.docx` / `.xlsx` | `analyze logs` |
+| a heap dump (`.hprof`, `.hprof.gz`) | `analyze heap-dump` (Eclipse MAT in Docker) |
+| a flight recording (`.jfr`) | `analyze flight-recorder` |
+| a network capture (`.pcap`, `.pcapng`) | `analyze tcp-dump` |
+| an Oracle XStream diagnostics report (`orclcdc_diag*.html`) | `analyze oracle-xstream-report` |
+| a GC log, a thread dump | `analyze gc-logs`, `analyze thread-dump` (a log file holding a `kill -3` dump stays a log file: the dump is analyzed in the log report) |
+| an archive (`.zip`, `.tar.gz`, `.7z`…) or a folder | `analyze logs` when it holds logs, then the analyzer of each other kind of file inside it, one report each |
+| a picture, a PDF, an installer, anything else | nothing (`🙈 … ignored`) |
+
+Good to know:
+
+- **Only new downloads**: what is already in the folder when it starts is never analyzed (`--since <minutes>` picks the
+  entries created in the last minutes), and only the top of the folder is watched: moving a file into
+  `~/Downloads/Archives` triggers nothing. `--exclude <name>` (wildcards allowed) never analyzes an entry, even renamed
+  or re-created.
+- **A download in progress is waited for**: `.crdownload`, `.download`, `.part` and a size that still changes.
+- **No duplicates**: what Safari or Archive Utility extracts next to an archive or a compressed file already analyzed
+  (`x.zip` → `x/`, `x.hprof.gz` → `x.hprof`) is skipped.
+- **Reports**: one folder per download in `~/playground-log-reports/<name>-<date>/` (`--output-dir`, refused inside the
+  watched folder); `--no-open` keeps them closed, `--logs-only` runs `analyze logs` only, `--analyze-logs-args
+  "--errors-only --sanitize"` passes flags to every `analyze logs`.
+- **macOS LaunchAgent**: it runs the `playground` of your checkout with the `PATH` of the shell that installed it; macOS
+  asks once to let `bash` read the Documents (the checkout) and Downloads folders. After a `git pull` that changes
+  `analyze watch`, restart it: `launchctl kickstart -k gui/$(id -u)/io.kafka-docker-playground.analyze-watch`.
+  `--uninstall-launch-agent` removes it.
+- Downloads are **untrusted data**: they are only read, never run, and archives are only listed until `analyze logs`
+  extracts them in its temporary folder.
+
 ---
 
 ## 1. Mental model (the 4 things to remember)
@@ -844,17 +901,7 @@ playground analyze watch [--folder ~/Downloads] [--output-dir ~/playground-log-r
                          [--install-launch-agent | --uninstall-launch-agent]
 ```
 
-👀 `playground analyze watch` runs in a terminal and analyzes every log file, archive or folder of logs that lands in
-`~/Downloads` (or `--folder`), as soon as the download is complete, then opens its report (macOS notification).
-🧰 A heap dump, a flight recording, a network capture, an XStream diagnostics report, a GC log or a thread dump gets its
-own analyzer (`analyze heap-dump`, `flight-recorder`, `tcp-dump`, `oracle-xstream-report`, `gc-logs`, `thread-dump`),
-recognized like the 🧰 Other files of the report; in an archive or a folder, `analyze logs` runs first when it holds
-logs, then those (`--logs-only` to skip them); one holding only dumps or captures gets their reports only. A log file
-holding a `kill -3` thread dump stays a log file: the dump is analyzed in the log report. Pictures, PDFs and other files
-are ignored; what Safari or Archive Utility extracts next to an archive or a compressed file already analyzed
-(`x.zip` → `x/`, `x.hprof.gz` → `x.hprof`) is skipped.
-Only the top of the folder is watched (a file moved into `~/Downloads/Archives` never triggers anything), `--exclude`
-names entries never to analyze, and on macOS `--install-launch-agent` starts the watch at every login.
+👀 `playground analyze watch`: every download analyzed, see [Every download analyzed, without typing anything](/deep-dive-analyze-logs?id=%f0%9f%91%80-every-download-analyzed-without-typing-anything).
 
 Gotchas:
 

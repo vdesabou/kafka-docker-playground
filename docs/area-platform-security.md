@@ -27,7 +27,7 @@ Every security example: `playground find-example --category security --limit 50`
 | Question | Command or example |
 | --- | --- |
 | Run CP on Kubernetes like the customer | `--environment cfk` (or `cfk-rbac`, with OpenLDAP and role bindings) on any `connect/` example, `CFK_VERSION=<version>` for another operator version |
-| "Here is the support bundle" | `playground analyze logs -f <bundle> --output-dir /tmp/cfk-reports`: rollout issues, KRaft migration, plugin install, `--problem "<what the customer says>"` for a verdict |
+| "Here is the support bundle" | `playground analyze logs -f <bundle> --output-dir /tmp/cfk-reports`: rollout issues, KRaft migration, plugin install, `--problem "<what the customer says>"` for a verdict · 👀 or [`playground analyze watch`](/deep-dive-analyze-logs?id=%f0%9f%91%80-every-download-analyzed-without-typing-anything): every file downloaded to `~/Downloads` analyzed automatically |
 | "Here is a new bundle, what changed?" | `playground analyze logs -f <older bundle> -f <newer bundle>` |
 | The customer's `Connector` CR doesn't behave | `playground connector create-or-update` / `validate` / `diff` read CFK CRs directly |
 | Which operator code logs this error? | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |

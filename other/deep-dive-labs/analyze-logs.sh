@@ -12,6 +12,21 @@ work=$(mktemp -d)
 report_dir="$work/reports"
 trap 'rm -rf "$work"' EXIT
 
+log "👀 Every download analyzed: analyze watch --once on a folder of downloads"
+mkdir -p "$work/downloads"
+cp "${DIR}/../../tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log" "$work/downloads/connect.log"
+cp "${DIR}/../../tools/tcp-dump/samples/http_errors.pcap" "$work/downloads/capture.pcap"
+cp "${DIR}/../../tools/xstream-analyzer/samples/orclcdc_diag_healthy.html" "$work/downloads/"
+echo "meeting notes" > "$work/downloads/notes.txt"
+lab_run playground analyze watch --folder "$work/downloads" --output-dir "$work/watch-reports" --since 5 --once --no-open
+lab_expect_exit 0
+lab_expect_contains "🔥 connect.log: log file, running playground analyze logs (report in"
+lab_expect_contains "🧰 capture.pcap: network_capture, running playground analyze tcp-dump (report in"
+lab_expect_contains "🧰 orclcdc_diag_healthy.html: xstream_report, running playground analyze oracle-xstream-report (report in"
+lab_expect_contains "🙈 notes.txt: no logs, dumps, captures or reports found, ignored"
+lab_expect_contains "/connect-log-report.html"
+lab_expect_contains "/capture-tcp-dump-report.html"
+
 log "Section 2: a first run, a Connect worker log"
 lab_run playground analyze logs --sample connect_task_failure --output-dir "$report_dir"
 lab_expect_exit 0
