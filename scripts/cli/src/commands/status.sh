@@ -81,6 +81,7 @@ fi
 if [[ "$environment" == "ccloud" ]]
 then
     display_ccloud_leftovers
+    display_ccloud_hints || true
 fi
 
 check_for_ec2_instance_running

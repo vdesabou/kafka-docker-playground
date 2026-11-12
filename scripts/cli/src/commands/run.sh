@@ -959,7 +959,8 @@ then
         # CLUSTER_NAME is not set
         #
 
-        ccloud_preview="✨ ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n\n"
+        ccloud_preview="✨ ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n"
+        ccloud_preview="${ccloud_preview}🏗️ ${CYAN}tip: 'playground ccloud setup' creates your own clusters once, one per cloud, reused by every example${NC}\n\n"
 
         if [ -z $ENVIRONMENT ] && [[ ! -n "$cluster_environment" ]]
         then
@@ -2322,6 +2323,12 @@ else
     echo "playground container logs -c connect --errors   # error digest of one container (--open for the full logs)"
   fi
 
+  # a failed fully managed example is when a connector gets left running: the nightly cleanup, your own clusters
+  if [ -z "$GITHUB_RUN_NUMBER" ] && [[ $test_file_rel == *"ccloud"* ]]
+  then
+    display_ccloud_hints || true
+  fi
+
   # same example red in CI: show the CI failure to tell a local problem from a broken example
   if [ $ci_red -eq 1 ] && [[ ! $(type -f gh 2>&1) =~ "not found" ]]
   then
@@ -2417,6 +2424,7 @@ then
     log "👀 all the details are in the HTML report above, or run <playground cloud-resources ccloud costs-history --detailed>"
     # best effort: the example already succeeded, a failure to list the leftovers must not change the exit code
     display_ccloud_leftovers || true
+    display_ccloud_hints || true
   elif [[ $test_file_rel == *"aws"* ]]
   then
     echo ""

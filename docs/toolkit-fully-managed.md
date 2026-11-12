@@ -5,6 +5,20 @@ Reproduce what customers do with fully managed connectors: a service account wit
 > [!TIP]
 > The [🍪 deep dive on fully managed connectors](/deep-dive-fully-managed.md) covers the rest: choosing the cluster, the connector commands on Confluent Cloud, costs and cleanup.
 
+## 🏗️ Your own clusters, cleaned up every night
+
+Before reproducing anything on Confluent Cloud, set up your own clusters once and let the playground delete what your
+examples leave running:
+
+```bash
+playground ccloud setup --dry-run                     # environment pg-<user>, one Basic cluster per cloud, API keys: the plan
+playground ccloud setup                               # created and stored in your secrets profile, reused by every example
+playground cloud-resources nightly-cleanup enable     # every night: your connectors *_<user>, pg-<user>-sa-* environments, recorded topics
+playground cloud-resources ccloud list                # anytime: what is still running for you, org-wide
+```
+
+See [Confluent Cloud examples](/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples) for the options.
+
 ## 👤 Fully managed connectors with a service account
 
 By default the fully managed connector examples (`ccloud/fm-*`) use `"kafka.auth.mode": "KAFKA_API_KEY"`, with an API key that can do anything on the cluster. Customers often run them with a [service account](https://docs.confluent.io/cloud/current/connectors/service-account.html) and the least ACLs instead, and that is where a missing ACL or a missing Assigner role shows up.
