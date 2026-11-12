@@ -186,6 +186,40 @@ function secret_store_profiles () {
 ################################################################################
 
 #
+# 1Password service account token: when OP_SERVICE_ACCOUNT_TOKEN is not
+# exported, read it from the OS keychain entry the docs tell you to create
+# (service `op-service-account`, see docs/deep-dive-secrets.md).
+#
+# Exporting it from ~/.zshrc only covers interactive shells: a launchd agent
+# (nightly cleanup), a cron job, `zsh -c`, or a Claude Code / VS Code session
+# started from the GUI got no token, so `op` fell back to the desktop app and
+# op_signed_in() raised its sign in popup. Reading it here covers every caller.
+#
+# Looked up once per process, and only when there is no exported token. An
+# exported token (even a different one) always wins. Without the keychain
+# entry nothing changes: the desktop app integration is used as before.
+#
+function op_load_service_account_token () {
+  [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ] && return 0
+  [ -n "${PLAYGROUND_OP_TOKEN_LOOKUP_DONE:-}" ] && return 0
+  PLAYGROUND_OP_TOKEN_LOOKUP_DONE=1
+
+  local token=""
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    token=$(security find-generic-password -s op-service-account -w 2>/dev/null)
+  elif command -v secret-tool > /dev/null 2>&1
+  then
+    token=$(secret-tool lookup service op-service-account 2>/dev/null)
+  fi
+  if [ -n "$token" ]
+  then
+    export OP_SERVICE_ACCOUNT_TOKEN="$token"
+  fi
+  return 0
+}
+
+#
 # Is `op` usable right now? `op whoami` alone is not enough: with the desktop
 # app integration it answers `account is not signed in` until something in
 # this terminal session has asked the app for an authorization, which
@@ -193,11 +227,13 @@ function secret_store_profiles () {
 # fails, `op signin` asks the app once (Touch ID, or nothing if the app is
 # already unlocked), and `op whoami` is asked again.
 #
-# Not with a service account: the token is the only credential, there is
+# Not with a service account (exported, or read from the keychain by
+# op_load_service_account_token): the token is the only credential, there is
 # nothing to sign in to. stdin is closed so that a manually added account
 # (`op account add`, no app) fails fast instead of waiting for a password.
 #
 function op_signed_in () {
+  op_load_service_account_token
   if op whoami > /dev/null 2>&1
   then
     return 0
@@ -548,6 +584,7 @@ function secret_resolve_reference () {
       pass show "${ref#pass:}" 2>/dev/null | head -1
     ;;
     op://*)
+      op_load_service_account_token
       op read "$ref" 2>/dev/null
     ;;
     vault://*)
@@ -683,6 +720,15 @@ function secret_prefetch () {
   # The first call alone takes the prompt and unlocks the session; the rest then
   # find it already open and stay silent.
   #
+  #
+  # In this shell, not in the subshells below: the keychain is then read once,
+  # not once per parallel lookup.
+  #
+  if [ ${#pending[@]} -gt 0 ] && command -v op > /dev/null 2>&1
+  then
+    op_load_service_account_token
+  fi
+
   local value
   if [ ${#pending[@]} -gt 0 ]
   then
