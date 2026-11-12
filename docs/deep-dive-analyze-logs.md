@@ -839,7 +839,16 @@ playground analyze logs -f <file|folder|.zip|.tar.gz|.7z|.gz|export.json|export.
                         [--json [--json-sections summary,known_causes,root_causes,timeline,connectors,comparison]]
                         [--sanitize] [--logs-only]
 playground analyze logs --sample connect_task_failure|support_bundle|broker_pressure|jvm_dumps|kafka_streams|kafka_clients|compare_fix
+playground analyze watch [--folder ~/Downloads] [--output-dir ~/playground-log-reports] [--since <minutes> [--once]]
+                         [--exclude Archives] [--no-open] [--analyze-logs-args "--errors-only --sanitize"]
+                         [--install-launch-agent | --uninstall-launch-agent]
 ```
+
+👀 `playground analyze watch` runs in a terminal and analyzes every log file, archive or folder of logs that lands in
+`~/Downloads` (or `--folder`), as soon as the download is complete, then opens its report (macOS notification).
+Pictures, PDFs and other files are ignored; a folder that Safari extracts from a zip it already analyzed is skipped.
+Only the top of the folder is watched (a file moved into `~/Downloads/Archives` never triggers anything), `--exclude`
+names entries never to analyze, and on macOS `--install-launch-agent` starts the watch at every login.
 
 Gotchas:
 

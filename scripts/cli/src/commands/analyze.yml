@@ -295,6 +295,108 @@ commands:
       17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html
       17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html
 
+- name: watch
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
+  help: |-
+    👀 Watch a folder (default: ~/Downloads) and run 'playground analyze logs' on every new file or folder holding logs, report opened in the browser
+
+    Leave it running in a terminal: when a log file, a support bundle or a
+    folder of logs lands in the folder (a download from Zendesk, Slack, a
+    browser, Finder), it is analyzed as soon as it is complete, and its
+    HTML report opens in the browser, with a macOS notification.
+
+    ⏳ A download is complete once its size stops changing and the browser
+    has renamed it: .crdownload, .download, .part, .partial and .tmp
+    entries are waited for, never analyzed.
+
+    🔎 "Holds logs" is checked without extracting anything: a .log / .out
+    file (also rotated, .log.1, and gzipped), a .txt, .json, .csv or
+    extension-less file whose first lines look like log records (a
+    timestamp and a level, librdkafka lines, JSON records with a level),
+    an archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, .7z) or a
+    folder that contains such files. Pictures, PDFs, installers and other
+    files are ignored (logged once).
+
+    Only the entries that appear after the start are analyzed, at the
+    top of the folder (a file moved into a sub-folder never is): --since
+    also picks the ones created in the last minutes (creation time, so
+    that a folder you move files into, ~/Downloads/Archives, is not
+    picked), --once analyzes those and exits instead of watching.
+    🚫 --exclude never analyzes an entry, even renamed or re-created. Each report is written in its
+    own folder of --output-dir, named after the entry (outside the
+    watched folder, so that a report never triggers an analysis).
+
+    🔁 macOS: --install-launch-agent starts the watch at every login (a
+    LaunchAgent, restarted if it stops) with the flags given, so that you
+    never have to start it; --uninstall-launch-agent removes it.
+
+    🔒 Downloads are untrusted data: they are only read, never run.
+    Stop with Ctrl-C.
+  flags:
+    - long: --folder
+      arg: folder
+      required: false
+      help: |-
+        📂 Folder to watch (default: ~/Downloads)
+    - long: --output-dir
+      short: -o
+      arg: output_dir
+      required: false
+      help: |-
+        📂 Folder of the reports, one sub-folder per analyzed entry (default: ~/playground-log-reports)
+    - long: --since
+      arg: minutes
+      required: false
+      default: "0"
+      validate: integer
+      help: |-
+        🕐 Also analyze the entries created in the last <minutes> minutes when the watch starts (default: 0, only new entries)
+    - long: --exclude
+      arg: name
+      required: false
+      repeatable: true
+      help: |-
+        🚫 Name of an entry of the folder never analyzed, wildcards allowed (for example Archives, or "*.dmg")
+    - long: --once
+      required: false
+      help: |-
+        1️⃣ Analyze the entries of --since and exit, without watching
+    - long: --interval
+      arg: seconds
+      required: false
+      default: "3"
+      validate: integer
+      help: |-
+        ⏱️ Seconds between two checks of the folder (default: 3)
+    - long: --no-open
+      required: false
+      help: |-
+        🙈 Do not open the reports in the browser (their path is still logged)
+    - long: --analyze-logs-args
+      arg: analyze_logs_args
+      required: false
+      help: |-
+        ➕ Extra flags passed to every 'playground analyze logs' call, as one string (for example "--errors-only --sanitize")
+    - long: --install-launch-agent
+      required: false
+      conflicts: [--uninstall-launch-agent, --once]
+      help: |-
+        🔁 macOS: install a LaunchAgent that starts this watch (with --folder, --output-dir, --exclude, --interval, --no-open, --analyze-logs-args) at every login, output in ~/Library/Logs/playground-analyze-watch.log
+    - long: --uninstall-launch-agent
+      required: false
+      conflicts: [--install-launch-agent]
+      help: |-
+        🗑️ macOS: remove the LaunchAgent of --install-launch-agent
+  examples:
+  - playground analyze watch
+  - playground analyze watch --exclude Archives --install-launch-agent
+  - playground analyze watch --uninstall-launch-agent
+  - playground analyze watch --since 30 --exclude Archives
+  - playground analyze watch --since 120 --once
+  - playground analyze watch --folder ~/Desktop/cases --output-dir /tmp/log-reports
+  - playground analyze watch --analyze-logs-args "--errors-only --max-findings 20"
+
 - name: gc-logs
   dependencies:
     python3: visit https://www.python.org/downloads/ to install
