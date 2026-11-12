@@ -11816,3 +11816,25 @@ function ccloud_in_use_api_keys () {
     done
   } | grep -v '^$' | sort -u
 }
+
+# 🌙 'playground cloud-resources nightly-cleanup': where the schedule and its log live (launchd agent on macOS, a crontab
+# line elsewhere)
+NIGHTLY_CLEANUP_LABEL="io.kafka-docker-playground.nightly-cleanup"
+NIGHTLY_CLEANUP_MARKER="# kafka-docker-playground nightly-cleanup"
+function nightly_cleanup_files () {
+  nightly_cleanup_plist="$HOME/Library/LaunchAgents/$NIGHTLY_CLEANUP_LABEL.plist"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    nightly_cleanup_log="$HOME/Library/Logs/kafka-docker-playground/nightly-cleanup.log"
+  else
+    nightly_cleanup_log="${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/nightly-cleanup.log"
+  fi
+}
+
+# macOS notification for the nightly cleanup (nothing elsewhere, nor when osascript is missing)
+function nightly_cleanup_notify () {
+  if [[ "$OSTYPE" == "darwin"* ]] && command -v osascript > /dev/null 2>&1
+  then
+    osascript -e "display notification \"${1//\"/\'}\" with title \"🧹 kafka-docker-playground nightly cleanup\"" > /dev/null 2>&1 || true
+  fi
+}

@@ -32,6 +32,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | deploy it with Terraform | `playground connector create-or-update -c <name> --terraform << EOF … EOF` |
 | run it with a service account and the ACLs of the documentation | `playground run -f <example> --ccloud-service-account`, then `playground rbac acl list\|delete\|create --connector <name>` |
 | what is still running and billing for you, org-wide | `playground cloud-resources ccloud list` |
+| delete what your examples left running, every night | `playground cloud-resources nightly-cleanup enable` (`--time`, `status`, `disable`) |
 | what you spent | `playground cloud-resources ccloud costs-history`, `playground cloud-resources ccloud costs` |
 | delete what the playground created | `playground stop` in the example folder (`maybe_delete_ccloud_environment`), `playground cloud-resources cleanup` |
 
@@ -232,6 +233,14 @@ Gotchas:
   `pg-<user>-app-*` service accounts and the Schema Registry keys created for you **unless one of their keys is used
   on this machine** (`*_CLUSTER_CREDS`, `SCHEMA_REGISTRY_CREDS`, exported or in the secrets store, `playground.ini`,
   `.ccloud/`). In CI, the clusters of the variables are cleaned up one by one instead.
+- **Every night, automatically: `playground cloud-resources nightly-cleanup enable`** (`--time 02:00` by default,
+  `status`, `disable`). A launchd agent on macOS (it also runs when the Mac wakes up after that time), a crontab line
+  on Linux, running `cloud-resources cleanup --resource ccloud --force` limited to what is billed or clutters a shared
+  cluster: connectors `*_<user>` with their dlq/success/error topics, `pg-<user>-sa-*` environments, and the topics
+  recorded on shared clusters. It keeps your `pg-<user>-*` clusters and their topics, and never deletes service
+  accounts or API keys (the secrets store may be locked at night). A macOS notification tells what it deleted, or that
+  the `confluent` CLI was logged out (`confluent login --save`); the log is in
+  `~/Library/Logs/kafka-docker-playground/nightly-cleanup.log`.
 - The connector is billed while it exists, RUNNING or not: delete it, don't just pause it.
 
 ---
