@@ -1534,6 +1534,45 @@ def test_not_enough_replicas_single_replica_isr():
     both = "\n".join(log_report.broker_signals_text({"rows": [row("isr_expand", 450), row("isr_shrink", 400)]}))
     check("shrinks and expands: a broker that falls behind", "falls behind:" in both and "replicas being added" not in both, both)
 
+
+def test_live_config_changes_in_timeline():
+    """⚙️ a broker config changed live (DynamicConfigPublisher): the KafkaConfig dump logged right after is not a start,
+    its changes are one timeline row per minute for all brokers (🔧 in the config section), and ♻️ the topics given
+    throttled replicas are one row per burst"""
+    def dump(name, line, t, changes):
+        out = f"@@PGCFG@@|KafkaConfig||{line}|{t}|\n@@PGCFGL@@|leader.replication.throttled.rate = 10485760\n"
+        for k, a, b in changes:
+            out += f"@@PGCFGCHG@@|{line}|{t}|{k}={a}|{k}={b}\n"
+        return out
+    files = ""
+    for b in (1, 2):
+        files += (f"@@PGFILE@@|broker-{b}.log|1000|1|0|2026-11-07T10:00:00|2026-11-07T12:00:00\n"
+                  "@@PGREC@@|ERROR|1|5|5|2026-11-07T11:00:00|2026-11-07T11:00:00\n"
+                  "[2026-11-07 11:00:00,000] ERROR boom (x)\n@@PGTS@@|2026-11-07T11:00:00\n"
+                  + dump("KafkaConfig", 10, "2026-11-07T10:00:00", [])
+                  + f"@@PGEVT@@|dynamic_config|99|2026-11-07T10:42:37||broker {b} · node: leader.replication.throttled.rate -> 10485760\n"
+                  + dump("KafkaConfig", 100, "2026-11-07T10:42:37", [("leader.replication.throttled.rate", "9223372036854775807", "10485760")])
+                  + f"@@PGEVT@@|replica_move|200|2026-11-07T10:42:39||broker {b} · orders: 0:1,0:4\n"
+                  + f"@@PGEVT@@|replica_move|201|2026-11-07T10:43:10||broker {b} · payments: 1:2,1:3\n"
+                  + f"@@PGEVT@@|replica_move|300|2026-11-07T11:30:00||broker {b} · events: 2:1,2:2\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, files)))
+    tl = res["timeline"]
+    starts = [ev["time"] for ev in tl if ev["kind"] == "start"]
+    check("the dump of the live change is not a start", starts == ["2026-11-07T10:00:00", "2026-11-07T10:00:00"], starts)
+    live = [ev for ev in tl if ev["text"].startswith("⚙️ broker config changed live")]
+    check("one row for both brokers, with the previous value and what it means",
+          len(live) == 1 and "on 2 files: leader.replication.throttled.rate 9223372036854775807 → 10485760" in live[0]["text"]
+          and "🐢 replication throttle" in live[0]["text"], [ev["text"] for ev in tl])
+    moves = [ev for ev in tl if ev["text"].startswith("♻️")]
+    check("two bursts of moves", [(ev["time"], ev["text"].split(":")[0]) for ev in moves]
+          == [("2026-11-07T10:42:39", "♻️ replicas moved under a throttle on 2 topic(s) in 31 s"),
+              ("2026-11-07T11:30:00", "♻️ replicas moved under a throttle on 1 topic(s) in 0 s")], [ev["text"] for ev in moves])
+    check("🔧 in the config section", any("🔧 changed live, no restart" in x for x in log_report.config_changes_lines(res["configuration"])),
+          log_report.config_changes_lines(res["configuration"]))
+    text = "\n".join(log_report.timeline_text(tl, top=2))
+    check("terminal: the changes further down listed", "⚙️ changes later in the timeline" in text and "♻️" in text, text)
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

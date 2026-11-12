@@ -1163,6 +1163,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     configuration = cfk_configs(getattr(files, "cfk_bundles", None) or []) + configuration
     for c in configuration:
         drop_alternating_changes(c)
+    mark_live_configs(configuration, files)
     for f in files:
         f.pop("configs", None)
     res = {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
@@ -1266,6 +1267,10 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
     for c in res["configuration"]:
         if c.get("source") != "log" or not c.get("time"):
             continue
+        if c.get("live"):
+            # a config dumped again because a key changed while the process runs (DynamicConfigPublisher): not a start,
+            # its changes are one row per minute below (live_config_rows)
+            continue
         if c["title"] in START_CONFIGS:
             add(c["time"], c["file"], c.get("line"), "start", None, f"🔄 {START_CONFIGS[c['title']]} started ({c['title']} logged)")
         elif c["title"] in CONNECTOR_CONFIGS:
@@ -1298,6 +1303,10 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"🛑 {ev.get('detail') or 'stopping'}")
             elif ev["kind"] == "controller_change":
                 add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"👑 {ev.get('detail') or 'a new active controller'}")
+    # ⚙️ the broker configs changed live (no restart) and ♻️ the replicas moved under a throttle: one row per minute /
+    # burst, all brokers merged, as a change (🔗 the errors right after)
+    for row in live_config_rows(res["configuration"], files) + replica_move_rows(files):
+        add(row["time"], row["file"], row["line"], "config_change", None, row["text"])
     # the changes of the cluster of a CFK support bundle (cfk-analysis --json .timeline, --cluster-events): a pod that
     # terminated or restarted is an event of the infrastructure (✕, 💥), an edit of a custom resource or a rollout of a
     # StatefulSet a change (🔗). Their times are UTC, as the logs of the pods
@@ -1335,6 +1344,123 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
             titles_of.setdefault(i, h["title"])
     after_effects(out, files, titles_of)
     return out[:TIMELINE_LIMIT]
+
+
+# a "<Class>Config values:" dump logged at most this long after a DynamicConfigPublisher line of the same file is the
+# dump of a live config change, not a start
+LIVE_CONFIG_DUMP_S = 3
+# ♻️ the topics given throttled replicas less than this apart are one move (one row of the timeline)
+REPLICA_MOVE_GAP_S = 5 * 60
+# what a key changed live means, for the row of the timeline
+LIVE_CONFIG_NOTES = (
+    (re.compile(r"^(leader|follower)\.replication\.throttled\.rate$"),
+     "🐢 replication throttle: replicas being moved catch up at this rate"),
+    (re.compile(r"^confluent\.balancer\.throttle\.bytes\.per\.second$"), "🐢 the replication throttle of Self-Balancing moves"),
+    (re.compile(r"^confluent\.balancer\.enable$"), "⚖️ Self-Balancing turned on or off"),
+    (re.compile(r"^min\.insync\.replicas$"), "🧬 min.insync.replicas changed"),
+)
+LIVE_CONFIG_KV_RX = re.compile(r",\s*(?=[A-Za-z][\w.-]* -> )")
+
+
+def dynamic_events(files: List[dict], kind: str = "dynamic_config") -> List[Tuple[dict, dict]]:
+    return [(f, ev) for f in files for ev in f.get("events") or [] if ev["kind"] == kind and ev.get("time")]
+
+
+def mark_live_configs(configuration: List[dict], files: List[dict]) -> None:
+    """a config dump logged right after a live config change of its file (KRaft DynamicConfigPublisher "Updating node 1
+    with new configuration : …"): c["live"] and the "live" of its changes. The broker logs its whole KafkaConfig again,
+    which is not a restart"""
+    by_file: Dict[str, List[float]] = {}
+    for f, ev in dynamic_events(files):
+        t = ts_seconds(ev["time"])
+        if t is not None:
+            by_file.setdefault(f["label"], []).append(t)
+    if not by_file:
+        return
+    for c in configuration:
+        t = ts_seconds(c.get("time")) if c.get("source") == "log" else None
+        if t is None or not any(0 <= t - x <= LIVE_CONFIG_DUMP_S for x in by_file.get(c["file"], [])):
+            continue
+        c["live"] = True
+        for ch in c.get("changes") or []:
+            ch["live"] = True
+
+
+def live_config_notes(keys) -> str:
+    notes = []
+    for rx, note in LIVE_CONFIG_NOTES:
+        if any(rx.search(k) for k in keys) and note not in notes:
+            notes.append(note)
+    return (" · " + " · ".join(notes)) if notes else ""
+
+
+def live_config_rows(configuration: List[dict], files: List[dict]) -> List[dict]:
+    """⚙️ the broker configs changed live, one row per minute, all brokers merged: the keys with their previous value
+    (the changes of the dump logged right after), else the keys of the DynamicConfigPublisher lines"""
+    groups: Dict[str, dict] = OrderedDict()
+
+    def group(time, file, line):
+        g = groups.setdefault(time[:16], {"time": time, "file": file, "line": line, "changes": OrderedDict(), "files": set()})
+        if (time, file, line or 0) < (g["time"], g["file"], g["line"] or 0):
+            g.update(time=time, file=file, line=line)
+        g["files"].add(file)
+        return g
+
+    for c in configuration:
+        if not c.get("live"):
+            continue
+        for ch in c.get("changes") or []:
+            if ch.get("time"):
+                g = group(ch["time"], c["file"], ch.get("line"))
+                g["changes"].setdefault(ch["key"], f"{ch['previous'] or '∅'} → {ch['value'] or '∅'}")
+    for f, ev in dynamic_events(files):
+        cfg = (ev.get("detail") or "").split(": ", 1)[-1]
+        g = group(ev["time"], f["label"], ev.get("line"))
+        if not g["changes"]:
+            # no dump with its changes in that minute: the keys and new values of the line
+            for kv in LIVE_CONFIG_KV_RX.split(cfg):
+                k, _, v = kv.partition(" -> ")
+                if k.strip():
+                    g.setdefault("from_lines", OrderedDict())[k.strip()] = f"→ {v.strip()}"
+    out = []
+    for g in groups.values():
+        changes = g["changes"] or g.get("from_lines") or {}
+        if not changes:
+            continue
+        what = "; ".join(f"{k} {v}" for k, v in list(changes.items())[:4]) + (f" (+{len(changes) - 4} more)" if len(changes) > 4 else "")
+        where = f" on {len(g['files'])} files" if len(g["files"]) > 1 else ""
+        out.append({"time": g["time"], "file": g["file"], "line": g["line"],
+                    "text": (f"⚙️ broker config changed live, no restart{where}: {what}" + live_config_notes(changes))[:400]})
+    return out
+
+
+def replica_move_rows(files: List[dict]) -> List[dict]:
+    """♻️ the topics given throttled replicas (their partitions are being moved): one row per burst (events less than
+    REPLICA_MOVE_GAP_S apart), with the topics"""
+    evs = sorted(((ts_seconds(ev["time"]), ev["time"], f["label"], ev.get("line"), ev.get("detail") or "")
+                  for f, ev in dynamic_events(files, "replica_move")), key=lambda x: (x[0] or 0, x[2], x[3] or 0))
+    out: List[dict] = []
+    burst: List[tuple] = []
+
+    def close():
+        if not burst:
+            return
+        topics = list(OrderedDict((d.split(" · ", 1)[-1].split(": ", 1)[0], True) for *_, d in burst))
+        span = human_duration(int((burst[-1][0] or 0) - (burst[0][0] or 0)))
+        names = ", ".join(topics[:2]) + (f" +{len(topics) - 2} more" if len(topics) > 2 else "")
+        out.append({"time": burst[0][1], "file": burst[0][2], "line": burst[0][3],
+                    "text": (f"♻️ replicas moved under a throttle on {len(topics)} topic(s) in {span}: {names} "
+                             "(a reassignment, a Self-Balancing move or a replication factor increase)")[:400]})
+
+    for x in evs:
+        if x[0] is None:
+            continue
+        if burst and x[0] - burst[-1][0] > REPLICA_MOVE_GAP_S:
+            close()
+            burst = []
+        burst.append(x)
+    close()
+    return out
 
 
 GC_PAUSES_SHOWN = 20
@@ -1879,6 +2005,9 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     rows: Dict[Tuple[str, str], dict] = {}
     for f in files:
         for c in f.get("event_counts") or []:
+            if c["kind"] not in LIFECYCLE_KINDS:
+                # dynamic_config, replica_move: the timeline only
+                continue
             c_who = broker_who(c["who"], f["label"]) if c["kind"] in BROKER_KINDS else c["who"]
             r = rows.setdefault((c["kind"], c_who), {"kind": c["kind"], "who": c_who, "count": 0, "first": None,
                                                        "last": None, "connectors": Counter(), "reasons": Counter(), "times": [],
@@ -4009,7 +4138,17 @@ def timeline_text(events: List[dict], top: int = 8) -> List[str]:
     out = [f"🗓️ Timeline (first {min(top, len(events))} of {len(events)} event(s), all files merged)"]
     for ev in events[:top]:
         out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:160]} ({ev_where(ev)})")
+    # the changes further down (a config changed live, replicas moved, a connector reconfigured): what to correlate with
+    # the errors of the incident, often hours after the first errors of the logs
+    later = [ev for ev in events[top:] if ev["kind"] == "config_change"]
+    if later:
+        out.append(f"   ⚙️ changes later in the timeline ({min(TIMELINE_CHANGES_SHOWN, len(later))} of {len(later)}):")
+        for ev in later[:TIMELINE_CHANGES_SHOWN]:
+            out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:220]} ({ev_where(ev)})")
     return out
+
+
+TIMELINE_CHANGES_SHOWN = 8
 
 
 # ── Text (terminal digest of playground analyze logs) ────────────────────────
@@ -4045,7 +4184,7 @@ def config_changes_lines(configs: List[dict], top: int = 10) -> List[str]:
         if ch.get("time"):
             where += f" ({ch['time'].replace('T', ' ')})"
         out.append(f"{config}: {key} {previous[:80]} → {value[:80]}" + (f" ×{g['n']}" if g["n"] > 1 else "")
-                   + (f" · first {where}" if where else ""))
+                   + (f" · first {where}" if where else "") + (" · 🔧 changed live, no restart" if ch.get("live") else ""))
     if len(out) > top:
         out = out[:top] + [f"… {len(out) - top} more (--show-config <connector|config class|client id>, or the HTML report)"]
     return out
