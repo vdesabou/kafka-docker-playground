@@ -373,7 +373,9 @@ in the terminal summary and the summary for a ticket.
 The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts over the whole file, `kind, who, count, leaves`: `leaves` the consumer group rejoins due to `consumer pro-actively leaving the group`, a consumer closed on purpose; a group made of those is never a 🌀 storm and comes last, also when none of its events is among the 300 noted, the 100 groups of the short-lived consumers of an Oracle CDC connector):
 `Rebalance started` of a worker group, `Request joining group due to: <reason>` of a consumer group, `Starting connector`,
 `Starting task` (its task id as detail), `Kafka Connect started` / `worker initialization took`, `Kafka Server started` / `Transition from
-STARTING to STARTED`, the stops (`] shutting down (kafka.server`, `to SHUTTING_DOWN`, `Kafka Connect stopping`), the active
+STARTING to STARTED`, the stops (`] shutting down (kafka.server`, `to SHUTTING_DOWN`, `Kafka Connect stopping`), the failed
+starts of a worker (`process_start_failed`: `ERROR Failed to start Connect`, logged after `worker initialization took` when the
+startup gives up, so that line alone is not a successful start), the active
 controller changes (`Becoming the active controller` of KRaft, `elected as the controller` of ZooKeeper) and the GC pauses
 of 1 s or more of a GC log (`gc_pause`, detail `<ms> <what>`: unified `GC(12) Pause Full (…) … 2512.789ms`, legacy
 `[Full GC …, 1.8234560 secs]`, the total before `[Times:`; a GC log decorated with the uptime only has no time, no event). `lifecycle()` counts them per group / connector with the rate per hour of the period covered and
@@ -388,6 +390,15 @@ The 🔄 section follows the connector filter (`pgLifecycle()`): each row carrie
 (`lifecycle_connector()`: the connector or task started, the sink connector of a consumer group, as `data-conn`), the rows of
 the other connectors are hidden and the worker group rebalances and process starts, which concern every connector of the
 worker, stay.
+
+🔁 A restart loop (`restart_loops()`, `.lifecycle.loops` of `--json`): per worker or broker, its rotated files merged
+(`worker_of()`), `RESTART_LOOP_MIN` (3) failed starts or more, or `RESTART_LOOP_MIN` + 1 stops or more at a median interval of
+`RESTART_LOOP_EVERY_S` (30 min) or less. The service manager (systemd, Kubernetes) starts the process again and again and it
+never runs, which the counts of the table alone do not tell (20 failed starts over a 2-day bundle read 0.4/h). Each loop gets a
+red banner at the top of the 🔄 section ("🔁 Restart loop: Kafka Connect (connect.log) failed to start 20 times, … a new attempt
+every ~5 min 40 s", with the known cause whose title says *start*), a 🔁 restart loop badge on its failed starts and stops
+rows (sorted first), a `🔁 RESTART LOOP` line in the terminal summary and the summary for a ticket, and a sentence in the verdict.
+The failed starts are 💥 events of the 🗓️ timeline.
 
 
 A click on a 🔄 row (`LIFECYCLE_SCRIPT`): the chart (`lc-chart`) is drawn again with the times of that row only (`data-times`, `encode_times()`, in its series `data-series`: `box.setTimes()`), zoomed on its first → last occurrence, and the `tr.lc-occ` row under it opens: the `_occ` of the row, (time, file, line) of the first `LC_OCC_SHOWN` (100) noted, each a link to its line in the page of the file (`write_viewers()` marks these lines, so the page of a big file keeps them). Again, ⤺ every row or Esc: every row; the connector filter hiding the row unpicks it.

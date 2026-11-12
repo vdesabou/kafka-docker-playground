@@ -20,12 +20,13 @@ printf '%s\n' '%3|1793896102.923|FAIL|rdkafka#producer-1| new' '%3|1700000000.00
 printf '%s\n' 'no time on this line' 'ERROR nor on this one' > "$tmp/window-none.log"
 samples=("$root/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log" "$root"/tools/log-analyzer/samples/kafka-clients/*.log
          "$root"/tools/log-analyzer/samples/kafka-streams/*.log "$root"/tools/log-analyzer/samples/compare/*.log)
-# the events of the INFO lines (lifecycle, GC pauses of 1 s or more, process stops, controller changes): same with every awk
+# the events of the INFO lines (lifecycle, GC pauses of 1 s or more, process stops and failed starts, controller changes): same with every awk
 cat > "$tmp/events.log" << 'EOF'
 [2026-11-07 10:00:00,000] INFO [KafkaServer id=2] started (kafka.server.KafkaServer)
 [2026-11-07 10:10:00,000] INFO [KafkaServer id=2] shutting down (kafka.server.KafkaServer)
 [2026-11-07 10:10:01,000] INFO [BrokerServer id=1] Transition from STARTED to SHUTTING_DOWN (kafka.server.BrokerServer)
 [2026-11-07 10:20:00,000] INFO [QuorumController id=3] Becoming the active controller at epoch 7, next write offset 1. (org.apache.kafka.controller.QuorumController)
+[2026-11-07 10:20:59,000] ERROR Failed to start Connect (org.apache.kafka.connect.cli.AbstractConnectCli:178)
 [2026-11-07 10:21:00,000] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect)
 %7|1762509600.000|INIT|rdkafka#producer-1| [thrd:app]: librdkafka v2.3.0 (0x20300ff) rdkafka#producer-1 initialized (builtin.features gzip,snappy)
 [2026-11-07T10:25:00.000+0000][gc] GC(2) Pause Full (G1 Compaction Pause) 990M->950M(1G) 2512.789ms
