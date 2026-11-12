@@ -1061,6 +1061,55 @@ def test_startup_connection_retries():
     check("no start: HIGH", causes.get(log_report.CONNECTION_TITLE) == ("HIGH", 9) and log_report.STARTUP_CONNECTION_TITLE not in causes, causes)
 
 
+def test_dns_outage():
+    """🌐 host names not resolved: their own known cause (not 🔌), the window, the hosts, the Java lookups that failed in the
+    resolver vs the failures served from the negative cache of the JVM, the clients not created; the ones of a component
+    starting go to the one 🌅 LOW cause with the connection retries; 🧹 the clients aborted by a task stop are LOW"""
+    def rec(level, count, line, first, last, body):
+        return (f"@@PGREC@@|{level}|{count}|{line}|{line + 5}|{first}|{last}\n{body}\n@@PGTS@@|{first} {last}\n")
+    text = ("@@PGFILE@@|connect.log|1000|6|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+            + rec("WARN", 4, 10, "2026-10-24T17:00:01", "2026-10-24T17:00:05",
+                  "[2026-10-24 17:00:01,000] WARN Couldn't resolve server broker:9092 from bootstrap.servers as DNS resolution failed for broker (org.apache.kafka.clients.ClientUtils:106)")
+            + rec("WARN", 3, 12, "2026-10-24T17:00:02", "2026-10-24T17:00:06",
+                  "[2026-10-24 17:00:02,000] WARN [AdminClient clientId=a] Connection to node -1 (broker/172.27.0.5:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient:992)")
+            + rec("WARN", 2, 100, "2026-10-24T17:22:59", "2026-10-24T17:23:55",
+                  "[2026-10-24 17:22:59,302] WARN [cdc|task-16] [Consumer clientId=c] Error connecting to node broker-6.acme.corp:9091 (id: -3 rack: null) (org.apache.kafka.clients.NetworkClient:1207)\n"
+                  "java.net.UnknownHostException: broker-6.acme.corp: Name or service not known")
+            + rec("WARN", 30, 110, "2026-10-24T17:22:59", "2026-10-24T17:27:04",
+                  "[2026-10-24 17:22:59,301] WARN [cdc|task-26] [AdminClient clientId=a] Error connecting to node broker-4.acme.corp:9092 (id: 0 rack: null) (org.apache.kafka.clients.NetworkClient:1207)\n"
+                  "java.net.UnknownHostException: broker-4.acme.corp")
+            + rec("ERROR", 3, 200, "2026-10-24T17:23:27", "2026-10-24T17:23:27",
+                  "[2026-10-24 17:23:27,434] ERROR [cdc|task-42] WorkerSourceTask{id=cdc-42} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n"
+                  "org.apache.kafka.connect.errors.ConnectException: Failed to commit consumer offset\n"
+                  "Caused by: org.apache.kafka.common.KafkaException: Failed to construct kafka consumer\n"
+                  "Caused by: org.apache.kafka.common.config.ConfigException: No resolvable bootstrap urls given in bootstrap.servers")
+            + rec("ERROR", 5, 300, "2026-10-24T17:23:28", "2026-10-24T17:23:29",
+                  "[2026-10-24 17:23:28,000] ERROR [cdc|task-42|changeEvent] [Consumer clientId=c] Failed to close fetcher with a timeout(ms)=30000 (org.apache.kafka.clients.consumer.internals.ClassicKafkaConsumer:1240)\n"
+                  "org.apache.kafka.common.errors.InterruptException: java.lang.InterruptedException")
+            + "@@PGCFG@@|DistributedConfig||50|2026-10-24T17:01:05|\n"
+            "@@PGCFGL@@|group.id = connect-cluster\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    causes = {h["title"]: h for h in res["known_causes"]}
+    dns = causes.get(log_report.DNS_TITLE)
+    check("DNS: HIGH, the outage only (the startup records apart)", dns and (dns["severity"], dns["occurrences"]) == ("HIGH", 35),
+          {t: (h["severity"], h["occurrences"]) for t, h in causes.items()})
+    check("not a 🔌 connection failure", log_report.CONNECTION_TITLE not in causes, list(causes))
+    startup = causes.get(log_report.STARTUP_CONNECTION_TITLE)
+    check("🌅 one LOW cause for the DNS and connection retries of the startup",
+          startup and (startup["severity"], startup["occurrences"]) == ("LOW", 7), startup)
+    d = dns["dns"]
+    check("window", (d["first"], d["last"], d["ended"]) == ("2026-10-24T17:22:59", "2026-10-24T17:27:04", True), d)
+    check("hosts", d["hosts"] == ["broker-4.acme.corp", "broker-6.acme.corp"], d["hosts"])
+    check("resolver vs JVM cache", (d["java_resolver_failures"], d["java_cached_failures"]) == (2, 30), d)
+    check("clients not created", d["clients_not_created"] == 3, d)
+    check("details", any(x.startswith("🧊 JVM DNS cache: 2 lookup(s)") for x in dns["details"])
+          and any(x.startswith("🧱 ×3 Java client(s)") for x in dns["details"]), dns["details"])
+    check("KB of No resolvable bootstrap urls", "4408266460308" in (dns.get("kb") or ""), dns.get("kb"))
+    aborted = causes.get("🧹 Clients aborted while a task stopped")
+    check("🧹 LOW", aborted and (aborted["severity"], aborted["occurrences"]) == ("LOW", 5), aborted)
+
+
 def test_harmless_left_out():
     """🙈 the known harmless records: left out of the findings and the counts, listed with their reason"""
     text = ("@@PGFILE@@|broker.log|100|2|4|2026-11-09T13:00:51|2026-11-09T13:02:00\n"

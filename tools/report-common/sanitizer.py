@@ -138,6 +138,10 @@ _HEX_RE = re.compile(r'[0-9a-f]{40,}')
 
 # Hostname-looking tokens that are not hostnames
 _JAVA_ROOTS = {'java', 'javax', 'jdk', 'sun', 'org', 'io', 'com', 'net', 'scala', 'akka', 'reactor'}
+# Java packages whose first label can also start a hostname (oracle.acme.ch): the packages of the Oracle JDBC driver, UCP
+# and XStream, named alone as a logger ("log4j.logger.oracle.net.nt=DEBUG", "/admin/loggers/oracle.net.nt"), nt being a TLD
+_JAVA_PACKAGE_PREFIXES = ('oracle.jdbc', 'oracle.net', 'oracle.ucp', 'oracle.sql', 'oracle.streams', 'oracle.security',
+                          'oracle.i18n', 'oracle.xml', 'oracle.core')
 _KEEP_HOST_SUFFIXES = (
     '.svc.cluster.local', '.svc', 'confluent.io', 'confluent.cloud', 'kubernetes.io', 'k8s.io',
     'docker.io', 'docker.com', 'github.com', 'githubusercontent.com', 'apache.org', 'oracle.com',
@@ -435,6 +439,8 @@ class DataSanitizer:
                 return False
             if labels[0].lower() in _JAVA_ROOTS:
                 return False  # org.apache.kafka…, io.confluent…, java.lang…
+            if any(host.lower() == p or host.lower().startswith(p + '.') for p in _JAVA_PACKAGE_PREFIXES):
+                return False  # oracle.net.nt, oracle.jdbc.driver
             # already redacted elsewhere (db.acme.corp:5432): the same name is a hostname everywhere, even followed by
             # ". " (end of a sentence) or ": " (UnknownHostException: db.acme.corp: Name or service not known), whatever its case
             if host.lower() in self.hostname_map:

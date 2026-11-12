@@ -4696,43 +4696,47 @@ subcommands:
       (\"WARNING: sun.misc.Unsafe::…\") are left out\n(--include-harmless keeps the
       first ones); \U0001F305 the connection failures of\na component that starts
       before the broker, and stop once it is up, are\na LOW known cause of their own,
-      not the HIGH \U0001F50C Connection failure.\n✅ Every connector of the logs gets
-      its card, the ones without an\nerror too, and ☕ the JDK is shown when the logs
-      give it.\n\n\U0001F9F0 The logs of every Kafka client of Confluent are read,
-      not only Java:\nthe librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\nclients
-      (\"%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\nsyslog level, timestamp
-      included, also the Node.js objects of the\nJavaScript client logger), the .NET
-      console logger (\"fail:\", \"crit:\")\nand inner exceptions (\" ---> \"), Python
-      tracebacks (chained ones as one\nrecord, deepest cause last) and KafkaError{code=…},
-      Go and Rust panics,\nuncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing
-      lines of the\nRust client. The known causes include the client ones (records
-      not\ndelivered in time, producer buffer full, max.poll.interval.ms exceeded,\nwrong
-      security.protocol, idle connection closed by the broker).\n\n\U0001F4C2 Folders
-      are scanned recursively. .zip, .tar, .tar.gz, .tgz,\n.tar.bz2, .tbz2, .tar.xz,
-      .txz and .7z (bsdtar or 7-Zip) files are\nextracted in a temporary folder, .gz
-      files are decompressed on the\nfly, binary files are skipped, and so are the
-      copies of a file or of a\nCFK support bundle already analyzed (an archive next
-      to its extracted\nfolder). A JSON export of log events (.json, .jsonl, .ndjson,
-      also\ngzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\nevents,
-      Elasticsearch / OpenSearch hits, structured JSON logs with\nlevel/logger_name/message/stack_trace)
-      and a CSV export of log events\n(.csv, also gzipped: Kibana / OpenSearch Dashboards
-      Discover, Splunk,\nDatadog, Grafana: one event per row, a cell holding the JSON
-      log line of\nthe container is parsed) are converted back to log lines, oldest
-      first,\nand analyzed as a log file. Logs pasted in a Word document (.docx, .odt)\nor
-      exported to a spreadsheet (.xlsx, .xlsm, .ods: the columns of the\nexport, Excel
-      dates converted) are converted the same way. \U0001F4F7 With\n--ocr, the screenshots
-      (and the pictures of a document) are read by OCR\n(the Vision framework of macOS,
-      else tesseract, else tesseract in a\ncontainer) and analyzed as \"<picture>
-      (\U0001F4F7 OCR)\", approximate lines;\nwithout it, and for the PDF and the
-      old .doc / .xls / .pptx files,\n\U0001F9F0 Other files of the input lists them
-      with what to do. So are JSON lines whatever the extension (a\nfluentd / Kubernetes
-      / logstash dump saved as .log: streamed, a dump of\nseveral GB is converted
-      in seconds and the digest reads its messages,\nnot the metadata). ⚠️ An input
-      not fully read (a truncated or\ncorrupt .gz, an archive that does not fully
-      extract) is listed at the\nend, in the HTML report and in --json (.summary.incomplete_inputs):\nnever
-      a silent ✅, and exit code 1 when nothing could be read at all.\nBytes that are
-      not UTF-8 (a Latin-1 character) are read as they are.\n\U0001F30D It works offline,
-      without Docker: bash 4.2+, python3 3.8+, jq, awk\n(\U0001F3CE️ mawk when installed:
+      not the HIGH \U0001F50C Connection failure.\n\U0001F310 Host names not resolved
+      are a known cause of their own: the window,\nthe hosts, the Java lookups that
+      failed in the resolver vs the ones\nserved from the negative DNS cache of the
+      JVM, and the clients that\ncould not be created (\"No resolvable bootstrap urls\").\n✅
+      Every connector of the logs gets its card, the ones without an\nerror too, and
+      ☕ the JDK is shown when the logs give it.\n\n\U0001F9F0 The logs of every Kafka
+      client of Confluent are read, not only Java:\nthe librdkafka lines of the C/C++,
+      Python, Go, .NET and JavaScript\nclients (\"%3|1793896102.923|FAIL|rdkafka#producer-1|
+      …\", by their\nsyslog level, timestamp included, also the Node.js objects of
+      the\nJavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\nand
+      inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\nrecord,
+      deepest cause last) and KafkaError{code=…}, Go and Rust panics,\nuncaught Node.js
+      errors (KafkaJS, \"[cause]:\"), the tracing lines of the\nRust client. The known
+      causes include the client ones (records not\ndelivered in time, producer buffer
+      full, max.poll.interval.ms exceeded,\nwrong security.protocol, idle connection
+      closed by the broker).\n\n\U0001F4C2 Folders are scanned recursively. .zip,
+      .tar, .tar.gz, .tgz,\n.tar.bz2, .tbz2, .tar.xz, .txz and .7z (bsdtar or 7-Zip)
+      files are\nextracted in a temporary folder, .gz files are decompressed on the\nfly,
+      binary files are skipped, and so are the copies of a file or of a\nCFK support
+      bundle already analyzed (an archive next to its extracted\nfolder). A JSON export
+      of log events (.json, .jsonl, .ndjson, also\ngzipped: AWS CloudWatch Logs Insights
+      @timestamp/@message, CloudWatch\nevents, Elasticsearch / OpenSearch hits, structured
+      JSON logs with\nlevel/logger_name/message/stack_trace) and a CSV export of log
+      events\n(.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\nDatadog,
+      Grafana: one event per row, a cell holding the JSON log line of\nthe container
+      is parsed) are converted back to log lines, oldest first,\nand analyzed as a
+      log file. Logs pasted in a Word document (.docx, .odt)\nor exported to a spreadsheet
+      (.xlsx, .xlsm, .ods: the columns of the\nexport, Excel dates converted) are
+      converted the same way. \U0001F4F7 With\n--ocr, the screenshots (and the pictures
+      of a document) are read by OCR\n(the Vision framework of macOS, else tesseract,
+      else tesseract in a\ncontainer) and analyzed as \"<picture> (\U0001F4F7 OCR)\",
+      approximate lines;\nwithout it, and for the PDF and the old .doc / .xls / .pptx
+      files,\n\U0001F9F0 Other files of the input lists them with what to do. So are
+      JSON lines whatever the extension (a\nfluentd / Kubernetes / logstash dump saved
+      as .log: streamed, a dump of\nseveral GB is converted in seconds and the digest
+      reads its messages,\nnot the metadata). ⚠️ An input not fully read (a truncated
+      or\ncorrupt .gz, an archive that does not fully extract) is listed at the\nend,
+      in the HTML report and in --json (.summary.incomplete_inputs):\nnever a silent
+      ✅, and exit code 1 when nothing could be read at all.\nBytes that are not UTF-8
+      (a Latin-1 character) are read as they are.\n\U0001F30D It works offline, without
+      Docker: bash 4.2+, python3 3.8+, jq, awk\n(\U0001F3CE️ mawk when installed:
       on macOS, brew install mawk reads the logs\n2.5x faster than the awk of the
       system, same report),\ngzip and tar are enough (a CFK bundle gets its ☸️ sections
       when PyYAML\nis installed, else its pod logs are still read). Without the\nplayground:

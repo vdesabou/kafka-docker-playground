@@ -453,63 +453,141 @@ def reading_list(h: dict) -> List[str]:
 def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
     out = []
     marks = startup_marks(files)
+    all_groups = []
+    # 🌅 the connection failures (and host names not resolved yet) of a component that starts before the broker is up,
+    # and that stop once it is: one LOW known cause, not the HIGH 🔌 Connection failure / 🌐 Host name not resolved (they
+    # keep the ones that last or come back later)
+    early_all: List[Tuple[int, dict, dict]] = []
     for pattern, severity, title, advice in HINTS:
         rx = re.compile(pattern)
         matches = [(i, f, r) for i, f in enumerate(files) for r in f["records"] if rx.search(r["text"])]
-        groups = [(severity, title, advice, matches)]
-        # 🌅 the connection failures of a component that starts before the broker is up, and that stop once it is: not
-        # the HIGH 🔌 Connection failure (it keeps the ones that last or come back later)
-        if title == CONNECTION_TITLE and matches:
+        if title in (CONNECTION_TITLE, DNS_TITLE) and matches:
             early = [m for m in matches if startup_only(m[1], m[2], marks)]
             if early:
-                groups = [(severity, title, advice, [m for m in matches if not any(m is x for x in early)]),
-                          ("LOW", STARTUP_CONNECTION_TITLE, STARTUP_CONNECTION_ADVICE, early)]
-        for severity, title, advice, matches in groups:
-            if not matches:
-                continue
-            occurrences = sum(r["count"] for _, _, r in matches)
-            labels = list(OrderedDict((f["label"], True) for _, f, _ in matches))
-            _, first_f, first_r = earliest(matches)
-            first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
-            where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
-                     else f"in {first_f['label']} (first at {first})")
-            hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
-                    "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
-                    "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
-                    # the records it matched (index set by analyze()): how much of it is in the current selection
-                    "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
-            # what to read about it: a knowledge-base article and / or a docs page
-            # (an article of a variant only when one of the records matched is that variant)
-            texts = [r["text"] for _, _, r in matches]
-            hint.update(known_causes.links(title, texts))
-            # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
-            internal = known_causes.internal_links(title, texts)
-            if internal:
-                hint["internal_links"] = internal
-            # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
-            # tasks have them there, as before)
-            hint["_chains"] = killed_task_chains(matches)
-            if title == KILLED_TASK_TITLE:
-                # the exception that killed the tasks is what to fix: one line per distinct chain
-                chains = hint["_chains"]
-                hint["chains"] = chains
-                hint["text"] = (f"{title}: {occurrences} occurrence(s) {where}, {len(chains)} distinct exception chain(s) "
-                                f"(below, in order of first occurrence): {advice}")
-                details = []
-                for c in chains:
-                    who = ", ".join(c["connectors"][:5]) + (f" (+{len(c['connectors']) - 5} more)" if len(c["connectors"]) > 5 else "")
-                    details.append(f"×{c['occurrences']} {c['exception'][:250]}"
-                                   + (f" ⬅️ Caused by: {c['caused_by'][:250]}" if c["caused_by"] else "")
-                                   + (f" · {len(c['connectors'])} connector(s): {who}" if c["connectors"] else "")
-                                   + f" · first at {c['first_file'] + ' ' if len(labels) > 1 else ''}line {c['first_line']}"
-                                   + (f" ({c['first_timestamp'].replace('T', ' ')})" if c["first_timestamp"] else ""))
-                hint["details"] = details
-            out.append(hint)
+                matches = [m for m in matches if not any(m is x for x in early)]
+                early_all += [m for m in early if id(m[2]) not in {id(x[2]) for x in early_all}]
+        all_groups.append((severity, title, advice, matches))
+    if early_all:
+        all_groups.append(("LOW", STARTUP_CONNECTION_TITLE, STARTUP_CONNECTION_ADVICE, early_all))
+    for severity, title, advice, matches in all_groups:
+        if not matches:
+            continue
+        occurrences = sum(r["count"] for _, _, r in matches)
+        labels = list(OrderedDict((f["label"], True) for _, f, _ in matches))
+        _, first_f, first_r = earliest(matches)
+        first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
+        where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
+                 else f"in {first_f['label']} (first at {first})")
+        hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
+                "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
+                "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
+                # the records it matched (index set by analyze()): how much of it is in the current selection
+                "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
+        # what to read about it: a knowledge-base article and / or a docs page
+        # (an article of a variant only when one of the records matched is that variant)
+        texts = [r["text"] for _, _, r in matches]
+        hint.update(known_causes.links(title, texts))
+        # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
+        internal = known_causes.internal_links(title, texts)
+        if internal:
+            hint["internal_links"] = internal
+        # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
+        # tasks have them there, as before)
+        hint["_chains"] = killed_task_chains(matches)
+        if title == KILLED_TASK_TITLE:
+            # the exception that killed the tasks is what to fix: one line per distinct chain
+            chains = hint["_chains"]
+            hint["chains"] = chains
+            hint["text"] = (f"{title}: {occurrences} occurrence(s) {where}, {len(chains)} distinct exception chain(s) "
+                            f"(below, in order of first occurrence): {advice}")
+            details = []
+            for c in chains:
+                who = ", ".join(c["connectors"][:5]) + (f" (+{len(c['connectors']) - 5} more)" if len(c["connectors"]) > 5 else "")
+                details.append(f"×{c['occurrences']} {c['exception'][:250]}"
+                               + (f" ⬅️ Caused by: {c['caused_by'][:250]}" if c["caused_by"] else "")
+                               + (f" · {len(c['connectors'])} connector(s): {who}" if c["connectors"] else "")
+                               + f" · first at {c['first_file'] + ' ' if len(labels) > 1 else ''}line {c['first_line']}"
+                               + (f" ({c['first_timestamp'].replace('T', ' ')})" if c["first_timestamp"] else ""))
+            hint["details"] = details
+        elif title == DNS_TITLE:
+            hint["dns"] = dns_summary(matches)
+            hint["details"] = dns_details(hint["dns"])
+        out.append(hint)
     out.sort(key=lambda h: SEVERITY_ORDER.index(h["severity"]))
     return out
 
 
 CONNECTION_TITLE = "🔌 Connection failure"
+DNS_TITLE = "🌐 Host name not resolved (DNS)"
+# the host of a failed lookup: Java "UnknownHostException: db.acme.corp[: Name or service not known]", "DNS resolution
+# failed for db.acme.corp", "Couldn't resolve server db.acme.corp:9092", librdkafka "Failed to resolve 'db.acme.corp:9092'",
+# Go "dial tcp: lookup db.acme.corp[ on 10.0.0.2:53]: no such host"
+DNS_HOST_RX = re.compile(r"UnknownHostException: ([^\s:]+)|DNS resolution failed for ([^\s:]+)|Couldn't resolve server ([^\s:]+)"
+                         r"|Failed to resolve '([^':]+)|dial tcp: lookup ([^\s:]+)")
+# a Java lookup that went to the resolver of the OS has its message ("db.acme.corp: Name or service not known",
+# "Temporary failure in name resolution"); the same failure served from the negative cache of the JVM
+# (InetAddress$CachedAddresses) has none: "UnknownHostException: db.acme.corp" alone
+DNS_JAVA_RESOLVER_RX = re.compile(r"UnknownHostException: [^\s:]+: \S")
+DNS_JAVA_CACHED_RX = re.compile(r"UnknownHostException: [^\s:]+[ \t]*(?:$|\n)", re.M)
+DNS_NO_BOOTSTRAP_RX = re.compile(r"No resolvable bootstrap urls")
+# no DNS error in the last minutes of the logs after the last one: an outage that ended, not a wrong name
+DNS_ENDED_AFTER_S = 5 * 60
+
+
+def dns_summary(matches: List[Tuple[int, dict, dict]]) -> dict:
+    """🌐 what the records of host names not resolved tell: the window, the hosts, the Java lookups that
+    failed in the resolver of the OS vs the failures served from the negative cache of the JVM, the clients that could not
+    be created, and whether the errors stopped before the end of the logs (the hosts named in the records, without count:
+    a record also stands for the hosts whose names differ only by digits)"""
+    hosts: set = set()
+    resolver = cached = no_bootstrap = 0
+    first = last = None
+    ended = True
+    for _, f, r in matches:
+        text, n = r["text"], r["count"]
+        found = {next(g for g in m.groups() if g) for m in DNS_HOST_RX.finditer(text)}
+        hosts |= found
+        if DNS_JAVA_RESOLVER_RX.search(text):
+            resolver += n
+        elif DNS_JAVA_CACHED_RX.search(text):
+            cached += n
+        if DNS_NO_BOOTSTRAP_RX.search(text):
+            no_bootstrap += n
+        if r["first_ts"] and (not first or r["first_ts"] < first):
+            first = r["first_ts"]
+        if r["last_ts"] and (not last or r["last_ts"] > last):
+            last = r["last_ts"]
+        # still failing at the end of the file: not over (or the logs stop during the outage)
+        gap = duration_seconds(r["last_ts"], f.get("log_last_ts"))
+        if gap is None or gap < DNS_ENDED_AFTER_S:
+            ended = False
+    return {"first": first, "last": last, "duration_seconds": duration_seconds(first, last), "ended": ended,
+            "hosts": sorted(hosts),
+            "java_resolver_failures": resolver, "java_cached_failures": cached, "clients_not_created": no_bootstrap}
+
+
+def dns_details(d: dict) -> List[str]:
+    """the lines of 🌐 Host name not resolved under the known cause"""
+    out = []
+    if d["first"]:
+        out.append(f"🕐 {period_text(d['first'], d['last'])} ({human_duration(d['duration_seconds'])})"
+                   + (", then none until the end of the logs: an outage that ended (a wrong name keeps failing)" if d["ended"]
+                      else ", still failing at the end of the logs"))
+    if d["hosts"]:
+        # names only: a record stands for the occurrences of every host that differs only by its digits (broker-1,
+        # broker-2), so counting them per host would give all of them to the first one
+        out.append(f"🖥️ host(s) not resolved: " + ", ".join(d["hosts"][:6])
+                   + (f" (+{len(d['hosts']) - 6} more)" if len(d["hosts"]) > 6 else ""))
+    if d["java_cached_failures"] and d["java_resolver_failures"]:
+        out.append(f"🧊 JVM DNS cache: {d['java_resolver_failures']} lookup(s) failed in the resolver of the OS (message "
+                   f"\"<host>: Name or service not known\"), {d['java_cached_failures']} failure(s) served from the negative "
+                   "cache of the JVM (InetAddress$CachedAddresses, no resolver message): each failed lookup is handed to "
+                   "every client of the process for networkaddress.cache.negative.ttl (10 s by default)")
+    if d["clients_not_created"]:
+        out.append(f"🧱 ×{d['clients_not_created']} Java client(s) could not be created: \"No resolvable bootstrap urls "
+                   "given in bootstrap.servers\" (thrown by the constructor, not retried: fatal to the code that creates "
+                   "clients on the fly)")
+    return out
 STARTUP_CONNECTION_TITLE = "🌅 Connections retried while starting"
 STARTUP_CONNECTION_ADVICE = ("expected: the component started before the broker (or the service it connects to) was ready, "
                              "retried, and the failures stopped once it was connected. Only a problem if they come back after "
@@ -4497,6 +4575,10 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
             reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
             out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
+        # 🌐 what tells a DNS outage from a wrong name, and the JVM DNS cache: the facts the reply is built on
+        dns = next((h for h in res["known_causes"] if h["title"] == DNS_TITLE and h.get("details")), None)
+        if dns:
+            out += ["", f"### {DNS_TITLE}", ""] + [f"- {md_cell(x)}" for x in dns["details"]]
     for g in res.get("thread_dumps") or []:
         if not g.get("findings"):
             continue

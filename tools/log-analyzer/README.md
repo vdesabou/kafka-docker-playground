@@ -194,6 +194,22 @@ and, for the classes shared by several databases like `JdbcSinkConnector`, the s
 configuration dump → icon, in the committed `connector_icons.json`, linked from GitHub as `docs/content.md` does, 🔌 when
 unknown or offline). Run `python3 -I tools/report-common/connector_icons.py` again when an example or an icon is added.
 
+The class of a connector without "Instantiated connector" line nor config dump is inferred from the loggers of the lines
+of its tasks (`plugin_logger` events of `summarize_log_errors`): the digest looks for one in the first 20000 lines of the
+connector that end with a logger (a broker or DNS outage logs thousands of `NetworkClient` lines in its context first),
+then gives up after 500 lines without a new one.
+
+## Host names not resolved (🌐)
+
+`dns_summary()` (in `match_hints()`, `.known_causes[].dns` of `--json`) tells a DNS outage from a wrong name: the window
+of the records and whether they stopped `DNS_ENDED_AFTER_S` (5 minutes) before the end of their file, the hosts named in
+them (without count: a record also stands for the names that differ only by digits), the Java lookups that failed in the
+resolver of the OS (`UnknownHostException: <host>: Name or service not known`) vs the failures served from the negative
+cache of the JVM (`UnknownHostException: <host>` alone, thrown by `InetAddress$CachedAddresses`), and the Java clients
+that could not be created (`No resolvable bootstrap urls given in bootstrap.servers`). `dns_details()` writes them under
+the known cause, in the terminal, the HTML report and the summary for a ticket. The DNS records of a component that
+starts, like its connection failures, go to the one 🌅 LOW known cause.
+
 ## Versions
 
 The digest notes two INFO lines it does not keep otherwise, as `@@PGEVT@@` events of the records file: `Instantiated
