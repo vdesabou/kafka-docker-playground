@@ -2952,6 +2952,7 @@ function bootstrap_ccloud_environment () {
     fi
     log "🛠👷‍♀️ CLUSTER_NAME is not set, a new Confluent Cloud cluster will be created..."
     log "🎓 If you wanted to use an existing cluster, set CLUSTER_NAME, ENVIRONMENT, CLUSTER_CLOUD, CLUSTER_REGION and CLUSTER_CREDS (also optionnaly SCHEMA_REGISTRY_CREDS)"
+    log "🏗️ or create your own clusters once, one per cloud, stored in your secrets profile and reused by every example: playground ccloud setup"
 
     if [ -z "$CLUSTER_CLOUD" ] || [ -z "$CLUSTER_REGION" ]
     then

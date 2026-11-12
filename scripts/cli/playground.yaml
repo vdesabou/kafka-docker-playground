@@ -624,7 +624,9 @@ subcommands:
     per cloud,\n                      their API keys, stored in a secrets profile\n\nThe
     examples then run on these clusters with no bootstrap to wait for. To\nsee what
     is still running, or delete it: 'playground cloud-resources ccloud\nlist' and
-    'playground cloud-resources cleanup --resource ccloud'."
+    'playground cloud-resources cleanup --resource ccloud'.\n\n\U0001F319 Then let
+    the playground delete what your examples leave running, every\nnight: 'playground
+    cloud-resources nightly-cleanup enable'."
   usage: playground ccloud COMMAND
   options: []
   subcommands:
@@ -647,9 +649,11 @@ subcommands:
       created. --dry-run shows the plan.\n\nNames matter for the cleanup: 'cloud-resources
       cleanup --resource ccloud'\ndeletes all the topics of clusters named pg-<user>-*
       (yours), never the\nclusters, and never the environment pg-<user> nor the keys
-      stored here.\n\n\U0001F393 Tip: one profile per organization (--profile emea,
-      --profile personal),\nthen 'playground secrets profile <name>' to switch, and
-      'confluent login\n--organization <id> --save' for the confluent CLI."
+      stored here.\n\n\U0001F319 Next: 'playground cloud-resources nightly-cleanup
+      enable' deletes, every\nnight, the connectors your examples leave running (your
+      clusters are kept).\n\n\U0001F393 Tip: one profile per organization (--profile
+      <org>), then 'playground\nsecrets profile <name>' to switch, and 'confluent
+      login --organization\n<id> --save' for the confluent CLI."
     usage: playground ccloud setup [OPTIONS]
     options:
     - names:
@@ -1059,7 +1063,9 @@ subcommands:
       the keys in use can't be told apart. Run\n'playground cloud-resources cleanup
       --resource ccloud' yourself for those.\n\nmacOS: a launchd agent (~/Library/LaunchAgents),
       which also runs when the\nMac wakes up if it was asleep at that time. Linux:
-      a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'."
+      a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'.\n\n\U0001F3D7️
+      Works best with your own clusters, set up once: 'playground ccloud\nsetup'.
+      'playground cloud-resources ccloud list' shows what is left."
     usage: playground cloud-resources nightly-cleanup COMMAND
     options: []
     subcommands:

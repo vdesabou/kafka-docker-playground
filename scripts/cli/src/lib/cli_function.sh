@@ -5878,6 +5878,10 @@ function display_ccloud_leftovers () {
     logwarn "   📝 $nb_topics topic(s): $(echo "$topics" | head -$max_names | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb_topics" -gt $max_names ] && echo ', ...')"
   fi
   logwarn "🧹 delete them with <playground cloud-resources cleanup --resource ccloud>"
+  if ! nightly_cleanup_enabled
+  then
+    logwarn "🌙 or every night, automatically: <playground cloud-resources nightly-cleanup enable>"
+  fi
 }
 
 # Forget recorded entries of a cluster that match nothing anymore: topics not in $2, prefixes
@@ -11837,4 +11841,58 @@ function nightly_cleanup_notify () {
   then
     osascript -e "display notification \"${1//\"/\'}\" with title \"🧹 kafka-docker-playground nightly cleanup\"" > /dev/null 2>&1 || true
   fi
+}
+
+# true when the nightly cleanup is scheduled on this machine (launchd agent or crontab line)
+function nightly_cleanup_enabled () {
+  nightly_cleanup_files
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    [ -f "$nightly_cleanup_plist" ]
+  else
+    crontab -l 2> /dev/null | grep -qF "$NIGHTLY_CLEANUP_MARKER"
+  fi
+}
+
+# true when the Confluent Cloud tip $1 can be shown: never in CI, never after 'playground config set ccloud-hints.enabled
+# false', at most once a day each (the time is kept in playground.ini [hints])
+function ccloud_hint_due () {
+  local last now
+  [ -z "$GITHUB_RUN_NUMBER" ] || return 1
+  [ "$(playground config get ccloud-hints.enabled 2> /dev/null)" != "false" ] || return 1
+  last=$(playground state get "hints.ccloud_$1" 2> /dev/null)
+  now=$(date +%s)
+  if [[ "$last" =~ ^[0-9]+$ ]] && [ $((now - last)) -lt 86400 ]
+  then
+    return 1
+  fi
+  playground state set "hints.ccloud_$1" "$now" > /dev/null 2>&1
+  return 0
+}
+
+# 🎓 tips after a Confluent Cloud run and in 'playground status', for what the user does not use yet:
+# 'playground ccloud setup' when the run used a cluster created just for it, 'playground cloud-resources nightly-cleanup
+# enable' when it is not scheduled
+function display_ccloud_hints () {
+  local shown=0 cluster_name
+  cluster_name=$(playground state get ccloud.CLUSTER_NAME 2> /dev/null)
+  if [[ "$cluster_name" == pg-${USER}-cluster-* ]] && ccloud_hint_due setup
+  then
+    echo ""
+    log "🏗️ this run used a cluster created just for it (minutes to create, billed until 'playground stop'): create your own clusters once, one per cloud, reused by every example:"
+    echo "playground ccloud setup --dry-run      # the plan, then run it without --dry-run"
+    shown=1
+  fi
+  if ! nightly_cleanup_enabled && ccloud_hint_due nightly
+  then
+    echo ""
+    log "🌙 a connector left running is billed per task-hour, even when nobody looks at it: let the playground delete what your examples leave, every night:"
+    echo "playground cloud-resources nightly-cleanup enable"
+    shown=1
+  fi
+  if [ $shown -eq 1 ]
+  then
+    log "🤫 these tips show at most once a day, hide them with: playground config set ccloud-hints.enabled false"
+  fi
+  return 0
 }

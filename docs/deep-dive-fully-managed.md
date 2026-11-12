@@ -41,7 +41,8 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 ## 1. Mental model (the 3 things to remember)
 
 1. **One cluster per machine, cached.** `bootstrap_ccloud_environment` (the first line of every `ccloud/fm-*` example,
-   instead of `start-environment`) either reuses a cluster or creates a full stack:
+   instead of `start-environment`) either reuses a cluster or creates a full stack. The simplest is your own clusters,
+   set up once with `playground ccloud setup` (see the gotchas below):
    - **your cluster**: `CLUSTER_NAME`, `ENVIRONMENT`, `CLUSTER_CLOUD`, `CLUSTER_REGION` and `CLUSTER_CREDS`
      (`<api key>:<secret>`, optionally `SCHEMA_REGISTRY_CREDS`) exported before the run. Without
      `SCHEMA_REGISTRY_CREDS`, the Schema Registry key of another cached cluster of the same environment is reused
@@ -241,6 +242,10 @@ Gotchas:
   accounts or API keys (the secrets store may be locked at night). A macOS notification tells what it deleted, or that
   the `confluent` CLI was logged out (`confluent login --save`); the log is in
   `~/Library/Logs/kafka-docker-playground/nightly-cleanup.log`.
+- **Tips when you don't use them yet**: the end of `playground run` of a Confluent Cloud example (success or failure)
+  and `playground status` suggest `playground ccloud setup` when the run used a cluster created just for it, and
+  `playground cloud-resources nightly-cleanup enable` when it is not scheduled, at most once a day each (kept in
+  `playground.ini` `[hints]`). Hide them with `playground config set ccloud-hints.enabled false`.
 - The connector is billed while it exists, RUNNING or not: delete it, don't just pause it.
 
 ---
@@ -333,6 +338,9 @@ playground stop                                                              # d
 ## 7. Cheat sheet
 
 ```bash
+# once: your own clusters (one per cloud, in your secrets profile), and the nightly deletion of what examples leave
+playground ccloud setup [--dry-run] [--cloud aws --cloud gcp --cloud azure --cloud databricks]
+playground cloud-resources nightly-cleanup enable [--time 02:00]   # status, disable
 # cluster: reuse yours, or let the playground create one (AWS eu-west-2, basic)
 export ENVIRONMENT=… CLUSTER_NAME=… CLUSTER_CLOUD=… CLUSTER_REGION=… CLUSTER_CREDS="<key>:<secret>"
 playground cleanup-cloud-details
@@ -343,6 +351,7 @@ playground connector error-recommendations|display-metrics-api|open-ccloud-conne
 playground connector offsets get|alter|reset -c <name>    # + offsets get-offsets-request-status
 playground topic dlq inspect --connector <name>           # dlq-<lcc id>
 playground cloud-resources ccloud list [--json]           # what still runs for you, org-wide
+playground cloud-resources cleanup --resource ccloud [--dry-run]   # delete it now
 playground cloud-resources ccloud costs-history [--detailed]
 playground stop                                           # in the ccloud/fm-* folder
 ```

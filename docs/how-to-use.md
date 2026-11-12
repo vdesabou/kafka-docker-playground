@@ -392,9 +392,30 @@ Simply use [playground run](/playground%20run) command ! Below, the menu shows t
 
 <video src="videos/ccloud-run-menu.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
-All you have to do is to be already logged in with [confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html#confluent-cli-overview).
+All you have to do is to be already logged in with [confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html#confluent-cli-overview) (`confluent login --save`).
 
-By default, a new Confluent Cloud environment with a Cluster will be created.
+### 🏗️ Recommended: your own clusters, and a nightly cleanup
+
+Set it up once, in your organization or in one shared by your team:
+
+```bash
+playground ccloud setup --dry-run                     # the plan: nothing is created
+playground ccloud setup                               # environment pg-<user>, clusters pg-<user>-aws|gcp|azure, API keys
+playground cloud-resources nightly-cleanup enable     # delete what your examples leave running, every night at 02:00
+```
+
+* [playground ccloud setup](/playground%20ccloud%20setup) creates an environment `pg-<user>` with one Basic cluster per cloud (`--cloud aws|gcp|azure`, and `--cloud databricks` for an AWS `us-east-2` one used by the Databricks example), with API keys owned by you, and stores all the variables of this section in your [secrets profile](/deep-dive-secrets.md). Every `playground run` of a fully managed example then uses the cluster of the right cloud: no cluster to wait for on each run, and no topic shared with colleagues. The AWS / Azure regions follow `AWS_REGION` / `AZURE_REGION`. Run it again any time: what exists is reused.
+* [playground cloud-resources nightly-cleanup](/playground%20cloud-resources%20nightly-cleanup) `enable` schedules, every night (`--time`, default `02:00`; a launchd agent on macOS, a crontab line on Linux), the deletion of your connectors `*_<user>` on any cluster of the organization with their dlq/success/error topics, of the `pg-<user>-sa-*` environments the playground creates when no cluster is set, and of the topics your runs created on shared clusters. It keeps your own clusters and their topics, and never deletes service accounts nor API keys. `status` shows what the last runs deleted, `disable` removes it.
+
+> [!WARNING]
+> Variables exported in your shell (`export CLUSTER_NAME=…` in `~/.zshrc`) win over the secrets profile: remove them, `playground ccloud setup` warns about them.
+
+> [!TIP]
+> When you don't use them yet, `playground run` of a Confluent Cloud example ends with a tip about these two commands (at most once a day each). Hide the tips with `playground config set ccloud-hints.enabled false`.
+
+### ⚙️ Other ways: a cluster per run, or clusters you created yourself
+
+By default, without any cluster set, a new Confluent Cloud environment with a Cluster will be created.
 
 You can configure the new cluster by using flags with [playground run](/playground%20run) command or just by setting environment variables:
 
@@ -402,14 +423,6 @@ You can configure the new cluster by using flags with [playground run](/playgrou
 * `--cluster-cloud` (or `CLUSTER_CLOUD` environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
 * `--cluster-region` (or `CLUSTER_REGION` environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2` for aws, `westeurope` for azure and `europe-west2` for gcp)
 * `--cluster-environment` (or `ENVIRONMENT` environment variable) (optional): The environment id where want your new cluster (example: `txxxxx`) 
-
-> [!TIP]
-> The simplest way to use your own clusters, in your organization or one shared by your team: [playground ccloud setup](/playground%20ccloud%20setup) creates an environment `pg-<user>` with one Basic cluster per cloud (`pg-<user>-aws`, `pg-<user>-gcp`, `pg-<user>-azure`) and their API keys, owned by you, and stores all the variables below in a [secrets profile](/deep-dive-secrets.md) (`--profile emea`, `--dry-run` first). Run it again any time: what exists is reused.
->
-> ```bash
-> playground ccloud setup --dry-run
-> playground ccloud setup --profile emea --cloud aws --cloud azure
-> ```
 
 In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
 
@@ -446,7 +459,17 @@ AZURE_CLUSTER_CLOUD
 AZURE_CLUSTER_CREDS
 ```
 
-For example, if you're running an AZURE Fully Managed connector example and `AZURE_CLUSTER_NAME` is set, then this cluster will be used even if you have `CLUSTER_NAME` set.
+For example, if you're running an AZURE Fully Managed connector example and `AZURE_CLUSTER_NAME` is set, then this cluster will be used even if you have `CLUSTER_NAME` set. The same goes for any example that requires a cloud (it calls `bootstrap_ccloud_environment "aws" "$AWS_REGION"`), and `AWS_DATABRICKS_CLUSTER_*` is used by the Databricks example. `playground ccloud setup` sets all of them for you.
+
+### 🧹 What is still running, and cleaning up
+
+```bash
+playground cloud-resources ccloud list                         # your connectors, environments, clusters, service accounts, API keys and topics, org-wide
+playground cloud-resources cleanup --resource ccloud --dry-run # what would be deleted, then run it without --dry-run
+playground cloud-resources nightly-cleanup status              # is the nightly cleanup scheduled, and what did it delete
+```
+
+Everything is matched on your username: the connectors `*_<user>` and the `pg-<user>-*` names. A colleague's connector, topic or key is never touched. The [🍪 deep dive on fully managed connectors](/deep-dive-fully-managed.md) has the details.
 
 ### 👤 Fully managed connectors with a service account
 

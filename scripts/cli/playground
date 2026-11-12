@@ -3774,7 +3774,7 @@ playground_salesforce_check_usage() {
 playground_ccloud_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ccloud\n\n"
-    printf "  🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n  \n    ccloud setup        a personal environment, one Basic cluster per cloud,\n                        their API keys, stored in a secrets profile\n  \n  The examples then run on these clusters with no bootstrap to wait for. To\n  see what is still running, or delete it: 'playground cloud-resources ccloud\n  list' and 'playground cloud-resources cleanup --resource ccloud'.\n\n"
+    printf "  🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n  \n    ccloud setup        a personal environment, one Basic cluster per cloud,\n                        their API keys, stored in a secrets profile\n  \n  The examples then run on these clusters with no bootstrap to wait for. To\n  see what is still running, or delete it: 'playground cloud-resources ccloud\n  list' and 'playground cloud-resources cleanup --resource ccloud'.\n  \n  🌙 Then let the playground delete what your examples leave running, every\n  night: 'playground cloud-resources nightly-cleanup enable'.\n\n"
   else
     printf "playground ccloud - 🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n\n"
   fi
@@ -3805,7 +3805,7 @@ playground_ccloud_usage() {
 playground_ccloud_setup_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ccloud setup\n\n"
-    printf "  🏗️ Create (or complete) your personal environment and clusters, and store them\n  in a secrets profile\n  \n  For an organization shared by a team, or your own: rather than a cluster\n  created on every run, or a team cluster where everybody's topics collide,\n  you get, in the organization your confluent CLI is logged into:\n  \n    🌐 an environment pg-<user> (Stream Governance essentials)\n    🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,\n       and databricks only when asked)\n    🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n       by you (no service account)\n  \n  and the secrets profile (--profile, default: the active one) gets\n  ENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n  _CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n  'playground run' loads for the fully managed examples (fm-aws-* on the\n  AWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\n  others on --default-cloud).\n  \n  Run it again any time: what exists is reused (same names), API keys\n  already stored in the profile are kept when they still belong to the\n  cluster, and only what is missing is created. --dry-run shows the plan.\n  \n  Names matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\n  deletes all the topics of clusters named pg-<user>-* (yours), never the\n  clusters, and never the environment pg-<user> nor the keys stored here.\n  \n  🎓 Tip: one profile per organization (--profile emea, --profile personal),\n  then 'playground secrets profile <name>' to switch, and 'confluent login\n  --organization <id> --save' for the confluent CLI.\n\n"
+    printf "  🏗️ Create (or complete) your personal environment and clusters, and store them\n  in a secrets profile\n  \n  For an organization shared by a team, or your own: rather than a cluster\n  created on every run, or a team cluster where everybody's topics collide,\n  you get, in the organization your confluent CLI is logged into:\n  \n    🌐 an environment pg-<user> (Stream Governance essentials)\n    🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,\n       and databricks only when asked)\n    🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n       by you (no service account)\n  \n  and the secrets profile (--profile, default: the active one) gets\n  ENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n  _CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n  'playground run' loads for the fully managed examples (fm-aws-* on the\n  AWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\n  others on --default-cloud).\n  \n  Run it again any time: what exists is reused (same names), API keys\n  already stored in the profile are kept when they still belong to the\n  cluster, and only what is missing is created. --dry-run shows the plan.\n  \n  Names matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\n  deletes all the topics of clusters named pg-<user>-* (yours), never the\n  clusters, and never the environment pg-<user> nor the keys stored here.\n  \n  🌙 Next: 'playground cloud-resources nightly-cleanup enable' deletes, every\n  night, the connectors your examples leave running (your clusters are kept).\n  \n  🎓 Tip: one profile per organization (--profile <org>), then 'playground\n  secrets profile <name>' to switch, and 'confluent login --organization\n  <id> --save' for the confluent CLI.\n\n"
   else
     printf "playground ccloud setup - 🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n\n"
   fi
@@ -4619,7 +4619,7 @@ playground_cloud_resources_cleanup_usage() {
 playground_cloud_resources_nightly_cleanup_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources nightly-cleanup\n\n"
-    printf "  🌙 Delete what your fully managed examples left running in Confluent Cloud,\n  every night, automatically\n  \n    enable     schedule it (default 02:00), then show what tonight's run would\n  delete\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs did\n  \n  Every night it runs 'playground cloud-resources cleanup --resource ccloud\n  --force', limited to what costs money or clutters a shared cluster:\n  \n    🤖 connectors named *_<user>, on any cluster of the organization, with\n       their dlq, success and error topics\n    🌐 environments pg-<user>-sa-* (the stacks the playground created when\n       no CLUSTER_NAME was set), with their clusters\n    📝 on shared clusters, the topics recorded as created by your own runs\n  \n  It keeps your own clusters and their topics (playground ccloud setup),\n  and never deletes service accounts or API keys: the secrets store may be\n  locked at night, so the keys in use can't be told apart. Run\n  'playground cloud-resources cleanup --resource ccloud' yourself for those.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line. The\n  confluent CLI must stay logged in: 'confluent login --save'.\n\n"
+    printf "  🌙 Delete what your fully managed examples left running in Confluent Cloud,\n  every night, automatically\n  \n    enable     schedule it (default 02:00), then show what tonight's run would\n  delete\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs did\n  \n  Every night it runs 'playground cloud-resources cleanup --resource ccloud\n  --force', limited to what costs money or clutters a shared cluster:\n  \n    🤖 connectors named *_<user>, on any cluster of the organization, with\n       their dlq, success and error topics\n    🌐 environments pg-<user>-sa-* (the stacks the playground created when\n       no CLUSTER_NAME was set), with their clusters\n    📝 on shared clusters, the topics recorded as created by your own runs\n  \n  It keeps your own clusters and their topics (playground ccloud setup),\n  and never deletes service accounts or API keys: the secrets store may be\n  locked at night, so the keys in use can't be told apart. Run\n  'playground cloud-resources cleanup --resource ccloud' yourself for those.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line. The\n  confluent CLI must stay logged in: 'confluent login --save'.\n  \n  🏗️ Works best with your own clusters, set up once: 'playground ccloud\n  setup'. 'playground cloud-resources ccloud list' shows what is left.\n\n"
   else
     printf "playground cloud-resources nightly-cleanup - 🌙 Delete what your fully managed examples left running in Confluent Cloud, every night, automatically\n\n"
   fi
@@ -29640,6 +29640,10 @@ function display_ccloud_leftovers () {
     logwarn "   📝 $nb_topics topic(s): $(echo "$topics" | head -$max_names | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb_topics" -gt $max_names ] && echo ', ...')"
   fi
   logwarn "🧹 delete them with <playground cloud-resources cleanup --resource ccloud>"
+  if ! nightly_cleanup_enabled
+  then
+    logwarn "🌙 or every night, automatically: <playground cloud-resources nightly-cleanup enable>"
+  fi
 }
 
 # Forget recorded entries of a cluster that match nothing anymore: topics not in $2, prefixes
@@ -35599,6 +35603,60 @@ function nightly_cleanup_notify () {
   fi
 }
 
+# true when the nightly cleanup is scheduled on this machine (launchd agent or crontab line)
+function nightly_cleanup_enabled () {
+  nightly_cleanup_files
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    [ -f "$nightly_cleanup_plist" ]
+  else
+    crontab -l 2> /dev/null | grep -qF "$NIGHTLY_CLEANUP_MARKER"
+  fi
+}
+
+# true when the Confluent Cloud tip $1 can be shown: never in CI, never after 'playground config set ccloud-hints.enabled
+# false', at most once a day each (the time is kept in playground.ini [hints])
+function ccloud_hint_due () {
+  local last now
+  [ -z "$GITHUB_RUN_NUMBER" ] || return 1
+  [ "$(playground config get ccloud-hints.enabled 2> /dev/null)" != "false" ] || return 1
+  last=$(playground state get "hints.ccloud_$1" 2> /dev/null)
+  now=$(date +%s)
+  if [[ "$last" =~ ^[0-9]+$ ]] && [ $((now - last)) -lt 86400 ]
+  then
+    return 1
+  fi
+  playground state set "hints.ccloud_$1" "$now" > /dev/null 2>&1
+  return 0
+}
+
+# 🎓 tips after a Confluent Cloud run and in 'playground status', for what the user does not use yet:
+# 'playground ccloud setup' when the run used a cluster created just for it, 'playground cloud-resources nightly-cleanup
+# enable' when it is not scheduled
+function display_ccloud_hints () {
+  local shown=0 cluster_name
+  cluster_name=$(playground state get ccloud.CLUSTER_NAME 2> /dev/null)
+  if [[ "$cluster_name" == pg-${USER}-cluster-* ]] && ccloud_hint_due setup
+  then
+    echo ""
+    log "🏗️ this run used a cluster created just for it (minutes to create, billed until 'playground stop'): create your own clusters once, one per cloud, reused by every example:"
+    echo "playground ccloud setup --dry-run      # the plan, then run it without --dry-run"
+    shown=1
+  fi
+  if ! nightly_cleanup_enabled && ccloud_hint_due nightly
+  then
+    echo ""
+    log "🌙 a connector left running is billed per task-hour, even when nobody looks at it: let the playground delete what your examples leave, every night:"
+    echo "playground cloud-resources nightly-cleanup enable"
+    shown=1
+  fi
+  if [ $shown -eq 1 ]
+  then
+    log "🤫 these tips show at most once a day, hide them with: playground config set ccloud-hints.enabled false"
+  fi
+  return 0
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -40909,6 +40967,7 @@ function bootstrap_ccloud_environment () {
     fi
     log "🛠👷‍♀️ CLUSTER_NAME is not set, a new Confluent Cloud cluster will be created..."
     log "🎓 If you wanted to use an existing cluster, set CLUSTER_NAME, ENVIRONMENT, CLUSTER_CLOUD, CLUSTER_REGION and CLUSTER_CREDS (also optionnaly SCHEMA_REGISTRY_CREDS)"
+    log "🏗️ or create your own clusters once, one per cloud, stored in your secrets profile and reused by every example: playground ccloud setup"
 
     if [ -z "$CLUSTER_CLOUD" ] || [ -z "$CLUSTER_REGION" ]
     then
@@ -45270,6 +45329,7 @@ playground_status_command() {
   if [[ "$environment" == "ccloud" ]]
   then
       display_ccloud_leftovers
+      display_ccloud_hints || true
   fi
 
   check_for_ec2_instance_running
@@ -52507,7 +52567,8 @@ playground_run_command() {
           # CLUSTER_NAME is not set
           #
 
-          ccloud_preview="✨ ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n\n"
+          ccloud_preview="✨ ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n"
+          ccloud_preview="${ccloud_preview}🏗️ ${CYAN}tip: 'playground ccloud setup' creates your own clusters once, one per cloud, reused by every example${NC}\n\n"
 
           if [ -z $ENVIRONMENT ] && [[ ! -n "$cluster_environment" ]]
           then
@@ -53871,6 +53932,12 @@ playground_run_command() {
       echo "playground container logs -c connect --errors   # error digest of one container (--open for the full logs)"
     fi
 
+    # a failed fully managed example is when a connector gets left running: the nightly cleanup, your own clusters
+    if [ -z "$GITHUB_RUN_NUMBER" ] && [[ $test_file_rel == *"ccloud"* ]]
+    then
+      display_ccloud_hints || true
+    fi
+
     # same example red in CI: show the CI failure to tell a local problem from a broken example
     if [ $ci_red -eq 1 ] && [[ ! $(type -f gh 2>&1) =~ "not found" ]]
     then
@@ -53966,6 +54033,7 @@ playground_run_command() {
       log "👀 all the details are in the HTML report above, or run <playground cloud-resources ccloud costs-history --detailed>"
       # best effort: the example already succeeded, a failure to list the leftovers must not change the exit code
       display_ccloud_leftovers || true
+      display_ccloud_hints || true
     elif [[ $test_file_rel == *"aws"* ]]
     then
       echo ""

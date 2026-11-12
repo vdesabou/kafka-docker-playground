@@ -38,6 +38,7 @@ The full catalog is `docs/which-command.md` (🥇 question → command, "Good to
 | schemas | `schema check-compatibility\|diff\|history\|describe\|validate\|import\|export\|test-rules\|exporter\|compare` |
 | Kafka admin | `topic produce\|consume\|wait-for-records\|compare\|reassign\|elect-leader\|dump-log`, `consumer-group`, `quota`, `broker config\|stop\|start\|rolling-restart\|transactions\|metrics`, `ksqldb`, `flink`, `streams status` (Kafka Streams instances: state, rebalances, tasks, restores) |
 | databases of the examples | `db sql` (Oracle, PostgreSQL, MySQL, SQL Server, Db2, MongoDB, credentials found for you), `db wait-for-rows`, `db cdc-check` (CDC prerequisites: archivelog, wal_level, binlog, CDC tables…) |
+| Confluent Cloud | `ccloud setup` (your own environment and clusters, one per cloud, in the secrets profile), `cloud-resources ccloud list` (what still runs for you, org-wide), `cloud-resources cleanup --resource ccloud`, `cloud-resources nightly-cleanup enable\|status\|disable` |
 | CI, performance, specific | `tools http-server set-response\|reset\|requests` (the httpserver of the http examples), `tools cert create\|inspect\|convert` (keystores, truststores, certificates, server chains: generate, why TLS fails, JKS / PKCS12 / PEM / Kafka PEM properties), `get-ci-result --logs`, `connector benchmark` (skill `kdp-benchmark`), `analyze oracle-xstream-report` (skill `kdp-xstream-report`), `debug cfk sourcecode` |
 
 Gotchas that bite every time (the rest is in "Good to know" of `docs/which-command.md`):
