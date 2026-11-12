@@ -46,6 +46,6 @@ playground run -f fully-managed-databricks-delta-lake-sink.sh
 1. Makes sure the Databricks SQL warehouse is running. Stops with the Databricks error if the warehouse start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 2. Empties the S3 staging bucket.
 3. Creates topic `pageviews` and produces 100 Avro records with `playground topic produce` (datagen `pageviews` schema).
-4. Creates the fully managed `DatabricksDeltaLakeSink` connector (`delta.lake.topic2table.map` `pageviews:pageviews`, `delta.lake.table.auto.create`).
+4. Creates the fully managed `DatabricksDeltaLakeSink` connector (`delta.lake.topic2table.map` `pageviews:pageviews_fm_<user>`, `delta.lake.table.auto.create`). The table is per user (`$USER` in lower case, other characters than letters and digits replaced by `_`) because the Databricks workspace is shared: writing into a table created by someone else fails with `[INSUFFICIENT_PERMISSIONS] Insufficient privileges: Principal '...' does not have SELECT on Table '...'`.
 5. Waits for the connector lag to reach 0 with `playground connector show-lag`.
 6. Deletes the connector at the end of the run.
