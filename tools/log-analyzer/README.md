@@ -236,7 +236,10 @@ The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK is
 versions). The header (`HEADER_CSS` and `kdp_brand()` of `report_html.py`, shared with the 🔄 progress page) has a 🐳
 kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report link to the deep dive page
 (`ANALYZE_LOGS_DOC`); its gradient follows the verdict of the status pill: red with ERROR/FATAL, amber with WARN only,
-green without error. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
+green without error. The verdict itself (`verdict_parts()`: a class, a headline, lines) is one sentence in the terminal,
+the Markdown and the pill (`verdict_text()`), and in the HTML report a headline with a line per finding under it
+(`verdict_box_html()`): 👉 start with (a link to the card of the known cause, `finding_id()`), 🔁 restart loop (a link to
+the 🔄 section, `#lc-section`), 🧵 / 🔬 / 🗺️ of the JVM dumps and the cluster layout, ☸️ of the CFK bundles. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
 `STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing with
 `STORY_STILL_MIN` errors or more at a tenth of the average rate or more, 📉 fading out below it, a few left under
 `STORY_STILL_MIN`, ✅ stopped), each step a link to its section (its text selectable: a drag selects, it does not follow
@@ -450,7 +453,15 @@ decompressed as a stream: 101 MB of memory instead of 175 MB for a 44 MB log.
 files in one chronological list: the first occurrence of each root cause (the record's own message, `record_label()`),
 the first occurrence of each known cause (one row with the error when they are on the same line), the (re)starts of the
 components (a `START_CONFIGS` dump logged at startup: `DistributedConfig`, `KafkaConfig`…), the connectors (re)configured
-(once per connector and minute) and the config keys changed between restarts (`@@PGCFGCHG@@`). Only what has a
+(once per connector and minute) and the config keys changed between restarts (`@@PGCFGCHG@@`). A dump is keyed by its
+class, its `[connector|task-0]` context and its `client.id` (else `name`, `converter.type`, `task.class`); a run starts at
+a stop line or when the component dumps its own config again (`worker initialization took` and `Kafka Connect started`
+come in the middle of a startup, between the clients it creates, and do not start one). At the end of each run
+(`cfg_eval`), a variant of a key that no earlier run had is a change only when its closest earlier variant is gone from
+the run: two clients with the same `client.id` (the two consumers of the license manager, one at `latest`, one at
+`earliest`), the converter of a connector next to the one of the worker, the admin client of another component are new
+instances, not changes. A connector config is compared with its previous dump at once (reconfigured without a restart).
+Only what has a
 timestamp. The HTML report shows it in 🗓️ **Incident timeline** right after the findings (30 rows, the others in a
 `<details>`, 📄 links to the line), following the filters (`pgTimeline()`: level, component, connector, period, and the search through the record of a first error; the restarts and configurations without connector stay); the terminal summary prints its first 8 events.
 
@@ -520,7 +531,10 @@ shorter than `SHORT_PERIOD_SECONDS` (10 min) turns the tile orange (`⚠️ shor
 summary: the bundle may not even contain the incident. A records file written before that (no field 5 and 6) falls
 back to the span of the records.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
-(task killed, with one line per distinct exception chain of the killed tasks, authentication, cloud credentials (an AWS
+(task killed, with one line per distinct exception chain of the killed tasks (an exception without a message,
+`WakeupException`, `NullPointerException`: 📍 where it was thrown, `thrown_at()`, its first frame and the first one of its
+caller outside the JDK and the Kafka clients, from the context of the record, and 📝 the message of the log line that
+reported it), authentication, cloud credentials (an AWS
 `SignatureDoesNotMatch` or `(Service: S3, Status Code: 403`), TLS, unknown magic byte,
 `OutOfMemoryError`…, each pointing at its earliest occurrence; the list is shared with the CFK analyzer, in
 `tools/report-common/known_causes.py`), occurrences over time, 🗂️ the files with findings (a 📁 header per folder, a card

@@ -65,7 +65,9 @@ EOF
 printf '%s\r\n' '[2026-11-07 10:28:00,003] INFO [hdfs-sink|task-1] Starting commit and rotation (io.confluent.connect.hdfs3.TopicPartitionWriter:298)' >> "$tmp/events.log"
 samples+=("$tmp/events.log")
 # config changes between restarts only: two instances of a class in one run are not a change (the readiness check of the
-# image then the worker), a restart with another value is, and so is a connector reconfigured without a restart
+# image then the worker), a restart with another value is, and so is a connector reconfigured without a restart. Two clients
+# with the same client.id in each run (latest and earliest) are compared with the closest one of the earlier runs; a new
+# instance next to the old one in the same run (the converter of a connector next to the one of the worker) is not a change
 {
     printf '%s\n' '[2026-11-07 11:00:00,000] INFO AdminClientConfig values: ' $'\tbootstrap.servers = [broker:9092]' $'\tclient.id = ' \
         '[2026-11-07 11:00:10,000] INFO DistributedConfig values: ' $'\toffset.flush.interval.ms = 10000' \
@@ -73,8 +75,15 @@ samples+=("$tmp/events.log")
         '[2026-11-07 11:00:12,000] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect:77)' \
         '[2026-11-07 11:01:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: ' $'\tname = s3-sink' $'\ttasks.max = 1' \
         '[2026-11-07 11:02:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: ' $'\tname = s3-sink' $'\ttasks.max = 4' \
+        '[2026-11-07 11:03:00,000] INFO ConsumerConfig values: ' $'\tauto.offset.reset = latest' $'\tclient.id = lic' $'\tmax.poll.records = 500' \
+        '[2026-11-07 11:03:01,000] INFO ConsumerConfig values: ' $'\tauto.offset.reset = earliest' $'\tclient.id = lic' $'\tmax.poll.records = 500' \
+        '[2026-11-07 11:03:02,000] INFO JsonConverterConfig values: ' $'\tconverter.type = key' $'\tschemas.cache.size = 128' \
         '[2026-11-07 11:10:00,000] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect:83)' \
         '[2026-11-07 11:11:00,000] INFO DistributedConfig values: ' $'\toffset.flush.interval.ms = 60000' \
+        '[2026-11-07 11:11:01,000] INFO ConsumerConfig values: ' $'\tauto.offset.reset = earliest' $'\tclient.id = lic' $'\tmax.poll.records = 500' \
+        '[2026-11-07 11:11:02,000] INFO ConsumerConfig values: ' $'\tauto.offset.reset = latest' $'\tclient.id = lic' $'\tmax.poll.records = 100' \
+        '[2026-11-07 11:11:03,000] INFO JsonConverterConfig values: ' $'\tconverter.type = key' $'\tschemas.cache.size = 128' \
+        '[2026-11-07 11:11:04,000] INFO JsonConverterConfig values: ' $'\tconverter.type = key' $'\tschemas.cache.size = 1000' \
         '[2026-11-07 11:11:05,000] ERROR boom (x.Y)'
 } > "$tmp/config-changes.log"
 samples+=("$tmp/config-changes.log")
@@ -159,7 +168,7 @@ do
         failed=1
     fi
     got=$(awk -F '\t' '$1 == "@@PGCFGCHG@@" {print $4 "->" $5}' "$out.records" | sort | tr '\n' ',')
-    if [ "$got" != "offset.flush.interval.ms=10000->offset.flush.interval.ms=60000,tasks.max=1->tasks.max=4," ]
+    if [ "$got" != "max.poll.records=500->max.poll.records=100,offset.flush.interval.ms=10000->offset.flush.interval.ms=60000,tasks.max=1->tasks.max=4," ]
     then
         echo "❌ $awk_cmd: config changes of config-changes.log: $got"
         failed=1

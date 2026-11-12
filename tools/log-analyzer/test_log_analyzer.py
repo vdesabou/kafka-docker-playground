@@ -818,6 +818,39 @@ def test_restart_loop():
     check("failed starts in the timeline", len(tl) >= 1, tl)
 
 
+def test_verdict_box_and_bare_exception():
+    """🚨 the verdict of the HTML report: the headline, then a line per finding (👉 start with, 🔁 restart loop), each a link;
+    the text verdict stays one sentence. 📍 an exception without a message (WakeupException): its card says where it was
+    thrown and the message of the log line that reported it"""
+    stack = ("org.apache.kafka.common.errors.WakeupException\n"
+             "\tat org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.maybeTriggerWakeup(ConsumerNetworkClient.java:531)\n"
+             "\tat org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient.poll(ConsumerNetworkClient.java:295)\n"
+             "\tat com.example.registry.GroupCoordinator.poll(GroupCoordinator.java:124)\n"
+             "\tat java.base/java.lang.Thread.run(Thread.java:840)")
+    check("thrown at", log_report.thrown_at(stack) == "ConsumerNetworkClient.maybeTriggerWakeup(ConsumerNetworkClient.java:531)"
+          " ← GroupCoordinator.poll(GroupCoordinator.java:124)", log_report.thrown_at(stack))
+    check("no stack", log_report.thrown_at("boom") == "")
+    # the record keeps 3 frames (indented by the digest), its context (numbered) the whole stack
+    head_line = "[2026-11-07 10:00:00,000] ERROR Unexpected exception in group processing thread (com.example.registry.Elector:214)"
+    rec_lines = [head_line, "    " + stack.splitlines()[0]] + ["        " + l.strip() for l in stack.splitlines()[1:3]]
+    ctx_lines = [f"@@PGCTX@@|{i + 1:6d} {'▶' if i == 0 else ' '} {l}" for i, l in enumerate([head_line] + stack.splitlines())]
+    text = ("@@PGFILE@@|connect.log|1000|1|0|2026-11-07T10:00:00|2026-11-07T11:00:00\n"
+            "@@PGREC@@|ERROR|4|5|10|2026-11-07T10:00:00|2026-11-07T10:30:00\n"
+            + "\n".join(rec_lines) + "\n@@PGTS@@|2026-11-07T10:00:00 2026-11-07T10:30:00\n" + "\n".join(ctx_lines) + "\n"
+            + "".join(f"@@PGEVT@@|process_start_failed|{i}|2026-11-07T10:{i * 10:02d}:00||Kafka Connect failed to start\n" for i in range(3))
+            + "@@PGEVTN@@|process_start_failed|connect|3\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    cls, head, lines = log_report.verdict_parts(res, "ERROR")
+    check("verdict lines", [l["icon"] for l in lines] == ["👉", "🔁"], lines)
+    box = log_report.verdict_box_html(cls, head, lines)
+    check("box: headline and links", "<span class='vd-head'>🚨 4 ERROR/FATAL occurrence(s)" in box and "href='#lc-section'" in box, box)
+    check("text: one sentence", log_report.verdict(res, "ERROR")[1].startswith("🚨 4 ERROR/FATAL occurrence(s), 1 distinct record(s) in 1 file(s): start with "),
+          log_report.verdict(res, "ERROR")[1])
+    rows = log_report.chain_rows(log_report.killed_task_chains([(0, res["files"][0], r) for r in res["files"][0]["records"]]), 3, "high", {})
+    check("bare exception: thrown at and logged as", "📍 thrown at" in rows[0] and "GroupCoordinator.poll(GroupCoordinator.java:124)" in rows[0] and "Unexpected exception in group processing thread" in rows[0], rows)
+
+
 def test_member_eviction():
     """🚪 the members of a consumer group removed by the group coordinator (broker log): a 🔄 row per group with the
     timeout as its reason, tied to the sink connector of a connect-<name> group, and in the timeline, not a 💥 trigger"""

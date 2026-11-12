@@ -408,6 +408,30 @@ def cause_key_text(text: str) -> str:
     return re.sub(r"\([^()]*\|[^()]*\)", "(…)", text)
 
 
+# the frames of the JDK and of the Kafka clients: where an exception is thrown, rarely why. The first frame of the
+# caller says which component was running (the secret registry, a connector task, the herder)
+LIBRARY_FRAME_RE = re.compile(r"^(java\.|javax\.|jdk\.|sun\.|kotlin\.|scala\.|org\.apache\.kafka\.(clients|common)\.)")
+
+
+def thrown_at(text: str) -> str:
+    """where the first exception of a record was thrown: its first frame, then the first one of the caller (not the JDK nor
+    the Kafka clients) when it is another one: "ConsumerNetworkClient.maybeTriggerWakeup(ConsumerNetworkClient.java:531)
+    ← SecretRegistryCoordinator.poll(SecretRegistryCoordinator.java:124)"; "" without a stack trace"""
+    frames = []
+    for line in text.splitlines():
+        # a line of the record ("        at …"), or of its context ("     7   \tat …", numbered by the digest)
+        m = re.match(r"^(?:\s*\d+\s+▶?)?\s+at (?:[\w.]+/)?([\w$.]+)\.([\w$<>]+)\(([^)]*)\)", line)
+        if m:
+            frames.append((m.group(1), m.group(2), m.group(3)))
+        elif frames and re.match(r"^\s*(Caused by|Suppressed):", line):
+            break
+    if not frames:
+        return ""
+    short = lambda fr: f"{fr[0].split('.')[-1]}.{fr[1]}({fr[2]})"  # noqa: E731
+    caller = next((fr for fr in frames if not LIBRARY_FRAME_RE.match(fr[0])), None)
+    return short(frames[0]) + (f" ← {short(caller)}" if caller and caller != frames[0] else "")
+
+
 def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
     """Records of killed tasks grouped by exception chain (exception thrown + deepest cause), in order of first occurrence"""
     groups: Dict[str, dict] = {}
@@ -427,8 +451,14 @@ def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
     out = []
     for g in groups.values():
         _, f, r = earliest(g.pop("matches"))
+        extra = {}
+        if r["chain"] and ": " not in g["exception"]:
+            # an exception without a message (WakeupException, NullPointerException, InterruptedException): the class
+            # alone says nothing, so the message of the log line that reported it and where it was thrown
+            # (the record keeps 3 frames, its context the first 30 lines: the caller is often only there)
+            extra = {"logged": short_message(r["message"])[:300], "at": thrown_at(r.get("context") or r.get("text") or "")}
         out.append(dict(g, connectors=list(g["connectors"]), first_file=f["label"], first_line=r["first_line"],
-                        first_timestamp=r["first_ts"]))
+                        first_timestamp=r["first_ts"], **extra))
     out.sort(key=lambda g: (g["first_timestamp"] or "~", g["first_line"]))
     return out
 
@@ -2170,7 +2200,7 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
         + (f": {e(lp['known_cause'])} (🔎 Findings)." if lp.get("known_cause") else ".") + "</div>"
         for lp in lc.get("loops") or [])
     return (LIFECYCLE_CSS
-            + "<div class='table-card'><h2>🔄 Restarts and rebalances"
+            + "<div class='table-card' id='lc-section'><h2>🔄 Restarts and rebalances"
             + (" · 🐢 broker signals" if any(r["kind"] in BROKER_KINDS for r in lc["rows"]) else "")
             + "</h2><p class='legend'>From the INFO lines: the rebalances of "
             "the Connect worker groups, the rejoins of the consumer groups (a sink connector, a client), the connectors and tasks "
@@ -7132,11 +7162,19 @@ STORY_SCRIPT = r"""<script>
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
     """the verdict of the logs, and of the CFK support bundles of the input in the same line (☸️, the worse of both)"""
-    cls, text = logs_verdict(res, levels, unit)
-    cls, text = dumps_verdict(res, cls, text)
+    cls, head, lines = verdict_parts(res, levels, unit)
+    return cls, verdict_text(head, lines)
+
+
+def verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str, str, List[dict]]:
+    """the class, the headline and the lines of the verdict: the logs, the JVM dumps and the cluster layout, the CFK
+    support bundles"""
+    cls, head, lines = logs_verdict_parts(res, levels, unit)
+    cls, head, extra = dumps_verdict_parts(res, cls, head)
+    lines += extra
     bundles = res.get("_cfk_bundles") or []
     if not bundles:
-        return cls, text
+        return cls, head, lines
     crit = sum((b.get("summary") or {}).get("critical", 0) for b in bundles)
     high = sum((b.get("summary") or {}).get("high", 0) for b in bundles)
     total = sum((b.get("summary") or {}).get("total_issues", 0) for b in bundles)
@@ -7150,10 +7188,50 @@ def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
         clause = f"☸️ {where}: {total} issue(s), none critical or high."
     rank = {"ok": 0, "warn": 1, "danger": 2}
     kcls = "danger" if crit else "warn" if high or total else "ok"
-    return (cls if rank.get(cls, 0) >= rank[kcls] else kcls), f"{text} {clause}"
+    return (cls if rank.get(cls, 0) >= rank[kcls] else kcls), head, lines + [verdict_line(clause)]
+
+
+def verdict_line(clause: str, href: str = "") -> dict:
+    """a clause of the verdict as a line: "🧵 thread dumps: 2 critical…." is icon 🧵, label "thread dumps", the rest"""
+    icon, _, rest = clause.partition(" ")
+    label, sep, text = rest.partition(": ")
+    if not sep:
+        label, text = "", rest
+    return {"icon": icon, "label": label, "text": text.rstrip("."), "href": href, "plain": clause}
+
+
+def verdict_box_html(cls: str, head: str, lines: List[dict]) -> str:
+    """the verdict of the HTML report: the headline, then a line per finding (👉 start with, 🔁 restart loop, 🧵, ☸️…),
+    each a link to its section. Spans only: status_of() reads the first clause of the div for the pill of the header"""
+    if not lines:
+        return verdict_html(cls, head)
+    rows = "".join(
+        f"<span class='vd-line'><span class='vd-icon'>{e(l['icon'])}</span>"
+        + (f"<span class='vd-label'>{e(l['label'])}</span>" if l.get("label") else "")
+        + (f"<a class='vd-text' href='{e(l['href'])}'>{e(l['text'])}</a>" if l.get("href") else f"<span class='vd-text'>{e(l['text'])}</span>")
+        + "</span>" for l in lines)
+    return (VERDICT_CSS + f"<div class='verdict {cls}'><span class='vd-head'>{e(head.rstrip(':.'))}</span>"
+            f"<span class='vd-lines'>{rows}</span></div>")
+
+
+VERDICT_CSS = """<style>
+.verdict .vd-head{display:block;font-weight:600}
+.verdict .vd-lines{display:grid;grid-template-columns:auto auto 1fr;gap:6px 10px;margin-top:10px;font-size:.92rem;font-weight:400;align-items:baseline}
+.verdict .vd-line{display:contents}
+.verdict .vd-icon{text-align:center}
+.verdict .vd-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;white-space:nowrap}
+.verdict .vd-text{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
+.verdict a.vd-text:hover{color:#2563eb;border-bottom-style:solid}
+html[data-theme=dark] .verdict a.vd-text:hover{color:#93c5fd}
+</style>"""
 
 
 def dumps_verdict(res: dict, cls: str, text: str) -> Tuple[str, str]:
+    cls, text, lines = dumps_verdict_parts(res, cls, text)
+    return cls, verdict_text(text, lines)
+
+
+def dumps_verdict_parts(res: dict, cls: str, text: str) -> Tuple[str, str, List[dict]]:
     """🧵 the worst finding of the thread dumps of the input, 🔬 the heap dumps to analyze, added to the verdict"""
     clauses = []
     worst = [f for g in res.get("thread_dumps") or [] for f in g.get("findings") or [] if f.get("severity") in ("CRITICAL", "HIGH")]
@@ -7175,32 +7253,52 @@ def dumps_verdict(res: dict, cls: str, text: str) -> Tuple[str, str]:
     # "✅ No ERROR record…" followed by a critical finding of the dumps or of the layout: not a ✅ any more
     if cls != "ok" and text.startswith("✅ "):
         text = "🔎 " + text[2:]
-    return cls, " ".join([text] + clauses)
+    return cls, text, [verdict_line(c) for c in clauses]
 
 
 def logs_verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
+    cls, head, lines = logs_verdict_parts(res, levels, unit)
+    return cls, verdict_text(head, lines)
+
+
+def verdict_text(head: str, lines: List[dict]) -> str:
+    """the verdict in one sentence (terminal, markdown, the status pill of the header): the headline, then each line as
+    the clause it is in that sentence (its "plain" text, glued to the headline by its "glue")"""
+    return head + "".join(l.get("glue", " ") + l["plain"] for l in lines)
+
+
+def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str, str, List[dict]]:
+    """the verdict of the logs: its class, its headline and its lines ({icon, label, text, href, plain, glue}): the HTML
+    report shows a line per finding under the headline (verdict_box_html), the text joins them (verdict_text)"""
     s = res["summary"]
     incomplete = s.get("incomplete_inputs") or []
     if not s["files_with_findings"] and incomplete:
         return "warn", (f"⚠️ No {levels} record in the {s['files_scanned']} {unit}(s) read ({s['lines']} lines), but "
-                        f"{len(incomplete)} input(s) were not fully read: the missing part may hold errors (⚠️ Not fully read below).")
+                        f"{len(incomplete)} input(s) were not fully read: the missing part may hold errors (⚠️ Not fully read below)."), []
     if not s["files_with_findings"]:
-        return "ok", f"✅ No {levels} record in the {s['files_scanned']} {unit}(s) scanned ({s['lines']} lines)."
+        return "ok", f"✅ No {levels} record in the {s['files_scanned']} {unit}(s) scanned ({s['lines']} lines).", []
     errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
     if errors:
+        lines: List[dict] = []
         # the first known cause, else the most frequent root cause
-        start = ""
         if res["known_causes"]:
-            start = f": start with {res['known_causes'][0]['title']}"
+            title = res["known_causes"][0]["title"]
+            lines.append({"icon": "👉", "label": "Start with", "text": title, "href": "#" + finding_id(title),
+                          "plain": f": start with {title}.", "glue": ""})
         elif res["root_causes"]:
             c = res["root_causes"][0]
-            what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"]
-            start = f": start with {what[:160].rstrip('.')}"
+            what = (f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"])[:160].rstrip(".")
+            lines.append({"icon": "👉", "label": "Start with", "text": what, "href": f"#finding-root-{c.get('index', 0)}",
+                          "plain": f": start with {what}.", "glue": ""})
         loops = (res.get("lifecycle") or {}).get("loops") or []
-        loop = f" 🔁 Restart loop: {restart_loop_text(loops[0])}" + (f" (+{len(loops) - 1} more)" if len(loops) > 1 else "") + "." if loops else ""
-        return "danger", (f"🚨 {errors:,} ERROR/FATAL occurrence(s), {s['distinct']:,} distinct record(s) in "
-                          f"{s['files_with_findings']} {unit}(s){start}.{loop}")
-    return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL."
+        if loops:
+            more = f" (+{len(loops) - 1} more)" if len(loops) > 1 else ""
+            lines.append({"icon": "🔁", "label": "Restart loop", "text": restart_loop_text(loops[0]) + more, "href": "#lc-section",
+                          "plain": f"🔁 Restart loop: {restart_loop_text(loops[0])}{more}."})
+        head = (f"🚨 {errors:,} ERROR/FATAL occurrence(s), {s['distinct']:,} distinct record(s) in "
+                f"{s['files_with_findings']} {unit}(s)")
+        return "danger", head + ("" if lines and lines[0]["icon"] == "👉" else "."), lines
+    return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL.", []
 
 
 def read_incomplete(path: Optional[str]) -> List[dict]:
@@ -7350,6 +7448,7 @@ details.rec[open]>summary .rec-line{display:none}
 .fi-exc.error{color:#dc2626}
 .fi-msg{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;color:#334155;word-break:break-word}
 .fi-cause{margin:3px 0 0 14px}
+.fi-at{font-size:.78rem;overflow-wrap:anywhere}
 .fi-conns{margin-top:4px}
 .fi-conn{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;padding:0 6px;margin:2px 3px 0 0;border-radius:4px;background:#e2e8f0;color:#334155}
 .fi-conns details{display:inline}.fi-conns summary{display:inline;cursor:pointer;font-size:.75rem;color:#2563eb;font-weight:500}
@@ -7428,6 +7527,8 @@ def chain_rows(chains: List[dict], limit: int, sev: str, viewers: Dict[str, str]
     ordered = sorted(chains, key=lambda c: -c["occurrences"])
     for c in ordered[:limit]:
         rows.append(f"<span class='fi-count {sev}'>{c['occurrences']:,}×</span>" + exception_html(c["exception"][:400])
+                    + (f"<div class='fi-cause'><span class='fi-meta'>📍 thrown at </span><code class='fi-at'>{e(c['at'])}</code></div>" if c.get("at") else "")
+                    + (f"<div class='fi-cause'><span class='fi-meta'>📝 logged as </span><span class='fi-msg'>{log_html(c['logged'])}</span></div>" if c.get("logged") else "")
                     + (f"<div class='fi-cause'><span class='fi-meta'>⬅️ Caused by </span>{exception_html(c['caused_by'][:400])}</div>" if c["caused_by"] else "")
                     + connectors_html(c["connectors"])
                     + f"<div>{first_html(viewers, c['first_file'], c['first_line'], c['first_timestamp'])}</div>")
@@ -7580,14 +7681,15 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
 
 COVERAGE_CSS = """<style>
 .cov-folder{font-size:.84rem;font-weight:600;color:#334155;margin:14px 0 4px}
-.cov-row{display:grid;grid-template-columns:minmax(160px,26%) 1fr 270px;gap:10px;align-items:center;font-size:.8rem;padding:3px 0}
+.cov-row{display:grid;grid-template-columns:minmax(160px,26%) 1fr 300px;gap:10px;align-items:center;font-size:.8rem;padding:3px 0}
 .cov-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cov-track{position:relative;height:12px;border-radius:6px;background:#e2e8f0}
 .cov-bar{position:absolute;top:0;height:100%;border-radius:6px;background:linear-gradient(90deg,#1e3a5f,#2563eb);min-width:3px}
 .cov-bar.hit{background:linear-gradient(90deg,#9a3412,#ea580c)}
 .cov-gap{position:absolute;top:0;height:100%;background:repeating-linear-gradient(45deg,#dc2626 0 4px,transparent 4px 8px);opacity:.7}
-.cov-when{color:#64748b;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cov-axis{display:grid;grid-template-columns:minmax(160px,26%) 1fr 270px;gap:10px;font-size:.72rem;color:#94a3b8}
+/* the period of a file wraps (two lines) rather than being cut: every row keeps the same columns, the bars stay aligned */
+.cov-when{color:#64748b;font-variant-numeric:tabular-nums;line-height:1.3;overflow-wrap:anywhere}
+.cov-axis{display:grid;grid-template-columns:minmax(160px,26%) 1fr 300px;gap:10px;font-size:.72rem;color:#94a3b8}
 .cov-axis div:nth-child(2){display:flex;justify-content:space-between}
 .cov-gaps{margin:4px 0 8px;font-size:.8rem;color:#b91c1c}
 html[data-theme=dark] .cov-folder{color:#cbd5e1}html[data-theme=dark] .cov-track{background:#334155}
@@ -7712,7 +7814,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # the verdict
     # one row of tiles: the logs, then the ☸️ CFK bundles; the quick links to the sections above them
     kpis += "".join(findings_severity_tiles(res.get("findings") or []) + cfk_kpi_tiles(res.get("_cfk_bundles") or []))
-    body = [verdict_html(*verdict(res, levels, unit)), QUICK_LINKS, incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
+    body = [verdict_box_html(*verdict_parts(res, levels, unit)), QUICK_LINKS, incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
             cfk_sections_html(res.get("_cfk_bundles") or [], unit), jvm_dumps_html(res),
             compare_html(res.get("comparison")), trend_html(res.get("trend")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"], period_picker(res)),
