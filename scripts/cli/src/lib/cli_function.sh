@@ -9133,7 +9133,7 @@ function benchmark_ccloud_kcat_start () {
   tr -d '"' < "$root_folder/.ccloud/librdkafka.delta" | grep -v "basic.auth.user.info" > "$root_folder/.ccloud/librdkafka_benchmark.delta"
   docker run -d --rm --name "$BENCHMARK_CCLOUD_KCAT_CONTAINER" --network=host \
     -v "$root_folder/.ccloud/librdkafka_benchmark.delta:/tmp/configuration/ccloud.properties" \
-    --entrypoint tail confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
+    --platform linux/amd64 --entrypoint tail edenhill/kcat:1.7.1 -f /dev/null > /dev/null 2>&1
 }
 
 function benchmark_ccloud_kcat_stop () {

@@ -83,17 +83,20 @@ if [[ "$environment" == "ccloud" ]]; then
     grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
 
     # FIXED: Added --entrypoint to override the default 'kcat' entrypoint
-    if ! kcat_error=$(docker run -d --rm --name "$kcat_container_name" --network=host \
+    # edenhill/kcat:1.7.1 (librdkafka 1.8.2): confluentinc/cp-kcat:latest is kcat 1.7.0 (librdkafka 1.7.0), which some
+    # Confluent Cloud clusters reject with "Broker: API version not supported" (#10406). amd64 only
+    if ! kcat_error=$(docker run -d --rm --platform linux/amd64 --name "$kcat_container_name" --network=host \
         -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
         --entrypoint tail \
-        confluentinc/cp-kcat:latest -f /dev/null 2>&1)
+        edenhill/kcat:1.7.1 -f /dev/null 2>&1)
     then
         # without it, every count was 0 and 'consume --min-expected-messages' waited until its timeout
         logerror "❌ could not start the kcat container that counts the records: $kcat_error"
         exit 1
     fi
 
-    trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file" EXIT
+    kcat_err_file=$(mktemp)
+    trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file $kcat_err_file" EXIT
 fi
 
 # read_committed: the offsets include the aborted records and the transaction markers, the records are counted with a
@@ -145,25 +148,30 @@ do
         # Count actual records rather than summing offsets: offsets overestimate the number of
         # readable records with transaction markers or compaction, which makes
         # 'playground topic consume' wait forever for records that never come
-        if [ "$isolation_level" != "read_committed" ]
+        # isolation.level is always passed: the default of librdkafka is read_committed, not read_uncommitted
+        kcat_isolation_level="read_uncommitted"
+        if [ "$isolation_level" == "read_committed" ]
         then
-            count=$(docker exec "$kcat_container_name" kcat \
-                -F /tmp/configuration/ccloud.properties \
-                -C -t "$topic" \
-                -o beginning -e -q \
-                -f '%o\n' 2>/dev/null | wc -l | tr -d ' ')
-
-            echo "${count:-0}"
-        else
-            count=$(docker exec "$kcat_container_name" kcat \
-                -F /tmp/configuration/ccloud.properties \
-                -X isolation.level=read_committed \
-                -C -t "$topic" \
-                -o beginning -e -q \
-                -f '%o\n' 2>/dev/null | wc -l | tr -d ' ')
-
-            echo "${count:-0}"
+            kcat_isolation_level="read_committed"
         fi
+        count=$(docker exec "$kcat_container_name" kcat \
+            -F /tmp/configuration/ccloud.properties \
+            -X isolation.level=$kcat_isolation_level \
+            -C -t "$topic" \
+            -o beginning -e -q \
+            -f '%o\n' 2>"$kcat_err_file" | wc -l | tr -d ' ')
+
+        # a kcat error must not become a count of 0: 'consume --min-expected-messages' then waited until its timeout
+        # with "contains 0 messages" (kcat 1.7.0 got "Broker: API version not supported" from a Confluent Cloud
+        # cluster, #10406). "Unknown topic or partition" is transient right after the topic creation: it stays a count
+        kcat_error=$(grep "% ERROR" "$kcat_err_file" | grep -v "Unknown topic or partition" | head -1)
+        if [ -n "$kcat_error" ]
+        then
+            logerror "❌ kcat could not count the records of topic $topic: $kcat_error"
+            echo "kcat error: $kcat_error"
+            exit 1
+        fi
+        echo "${count:-0}"
 
     elif [ ${#committed_consumer_args[@]} -ne 0 ]
     then
