@@ -845,6 +845,34 @@ install_engine_docker_linux() {
   fi
 }
 
+# podman refuses to run when ~/.config (or its own folders under ~/.local/share) is not owned by the user:
+#   path "/Users/<you>/.config" exists and it is not owned by the current user
+# it happens when a command run with sudo created it (sudo keeps HOME on macOS): offer to give them back
+fix_home_dirs_owner() {
+  local dir bad=""
+  for dir in "$HOME/.config" "$HOME/.local" "$HOME/.local/share"
+  do
+    [ -e "$dir" ] || continue
+    if [ -n "$(find "$dir" -maxdepth 3 ! -user "$(id -u)" -print -quit 2> /dev/null)" ]
+    then
+      bad="$bad $dir"
+    fi
+  done
+  bad="$(echo "$bad" | xargs)"
+  [ -n "$bad" ] || return 0
+  logwarn "not owned by $(id -un), podman refuses to run: $(for dir in $bad; do printf '%s (owner %s) ' "$dir" "$(stat -f %Su "$dir" 2> /dev/null)"; done)"
+  if ! confirm "give them back to $(id -un) (sudo chown -R $(id -un):$(id -gn) $bad)?"
+  then
+    logwarn "skipped: run 'sudo chown -R $(id -un):$(id -gn) $bad', then this installer again"
+    return 1
+  fi
+  local tty=/dev/null
+  { : < /dev/tty; } 2> /dev/null && tty=/dev/tty
+  # shellcheck disable=SC2086
+  run /usr/bin/sudo chown -R "$(id -un):$(id -gn)" $bad < "$tty" \
+    || { logwarn "chown failed: run 'sudo chown -R $(id -un):$(id -gn) $bad', then this installer again"; return 1; }
+}
+
 # Apple silicon: amd64-only images (SQL Server, Oracle, Db2...) run with Rosetta in the podman machine, else with QEMU
 # emulation, under which some hang or crash. Needs Rosetta 2 installed on macOS (not there on a new Mac) and
 # 'rosetta = true' in the [machine] table of ~/.config/containers/containers.conf, before the machine starts.
@@ -926,6 +954,7 @@ install_engine_podman_macos() {
   run ln -sfn "$prefix/lib/docker/cli-plugins/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
   hash -r 2> /dev/null || true
 
+  fix_home_dirs_owner || return 1
   setup_podman_rosetta
 
   if [ "$opt_dry_run" = "1" ] || ! podman machine inspect podman-machine-default > /dev/null 2>&1
