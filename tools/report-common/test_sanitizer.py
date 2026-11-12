@@ -29,6 +29,7 @@ LEAKS = [
     ("GET https://acct.blob.core.windows.net/c/blob?sv=2022-11-02&ss=b&srt=co&sp=r&sig=AbCdEfGh%2BIjKl%3D 403", "AbCdEfGh"),
     ("connection.url=jdbc:oracle:thin:scott/tiger@//oracle.acme.corp:1521/ORCLPDB1", "tiger"),
     ("jdbc:oracle:thin:scott/tiger@oracle.acme.corp:1521:ORCL", "tiger"),
+    ("java.net.UnknownHostException: oracle.acme.ch: Name or service not known", "oracle.acme.ch"),
     ("connection.uri=mongodb://user:p@ss@mongo.acme.corp:27017/db", "p@ss"),
     ("connection.url=jdbc:postgresql://db.acme.corp:5432/db?user=app&password=Pg5ecret", "Pg5ecret"),
     ("Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U", "eyJzdWIiOiIxMjM0NTY3ODkwIn0"),
@@ -50,6 +51,8 @@ LEAKS = [
 ]
 
 KEPT = [
+    # an Oracle driver package named alone as a logger (nt is a TLD)
+    "curl -s -X PUT http://connect:8083/admin/loggers/oracle.net.nt -d '{\"level\": \"DEBUG\"}'; log4j.logger.oracle.net.nt=DEBUG",
     "2026-11-06 10:00:00,123 ERROR [my-sink|task-0] WorkerSinkTask{id=my-sink-0} Task threw an uncaught exception",
     "org.apache.kafka.connect.errors.ConnectException: kafka.server.KafkaServer failed",
     "retry.backoff.ms = 100",

@@ -7428,8 +7428,10 @@ function summarize_log_errors() {
             pl_conn = substr($0, 1, pl_p - 1)
             while ((pl_q = index(pl_conn, "[")) > 0) pl_conn = substr(pl_conn, pl_q + 1)
             if (pl_conn == "" || pl_conn ~ /[] ]/) pl_conn = ""
-            # a connector whose last 500 lines brought no new logger: done (the cost of a big log stays low)
-            if (pl_conn != "" && pl_n[pl_conn] + 0 < 40 && pl_quiet[pl_conn]++ < 500 && match($0, /\([A-Za-z_][A-Za-z0-9_$]*\.[A-Za-z0-9_$.]+(:[0-9]+)?\)\r?$/)) {
+            # a connector whose last 500 lines brought no new logger: done (the cost of a big log stays low). Until its
+            # first logger, 20000 lines: its first lines can all come from the clients of the runtime (a broker or DNS
+            # outage logs thousands of NetworkClient lines in its context before a line of the plugin itself)
+            if (pl_conn != "" && pl_n[pl_conn] + 0 < 40 && pl_quiet[pl_conn]++ < (pl_n[pl_conn] ? 500 : 20000) && match($0, /\([A-Za-z_][A-Za-z0-9_$]*\.[A-Za-z0-9_$.]+(:[0-9]+)?\)\r?$/)) {
                 pl_logger = substr($0, RSTART + 1, RLENGTH - 1)
                 sub(/\r$/, "", pl_logger)
                 sub(/\)$/, "", pl_logger)

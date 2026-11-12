@@ -69,7 +69,9 @@ lab_expect_contains "[HIGH] 🧲 Unknown magic byte ×1 in cloudwatch.json (firs
 log "Section 3: the non-Java clients"
 lab_run playground analyze logs --sample kafka_clients --output-dir "$report_dir"
 lab_expect_contains "🧭 Summary: 208 occurrence(s) of 23 distinct record(s) in 12 file(s), 2026-11-05 16:28:22 → 2026-11-05 16:33:40"
-lab_expect_contains "[HIGH] 🔌 Connection failure ×195 in 7 files (first at python-producer.log line 1, 2026-11-05 16:28:22)"
+lab_expect_contains "[HIGH] 🌐 Host name not resolved (DNS) ×23 in go-producer.log (first at line 2, 2026-11-05 16:28:49)"
+lab_expect_contains "🖥️ host(s) not resolved: nonexistent-broker"
+lab_expect_contains "[HIGH] 🔌 Connection failure ×172 in 6 files (first at python-producer.log line 1, 2026-11-05 16:28:22)"
 lab_expect_contains "[HIGH] ⚙️ Invalid client configuration ×1 in python-producer.log (first at line 34)"
 lab_expect_contains "[HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)"
 lab_expect_contains "[HIGH] 🗺️ Topic not found in the metadata ×2 in 2 files (first at rust-producer.log line 1)"
@@ -217,12 +219,12 @@ lab_expect_contains '{"connector":"cdc-xstream-oracle-source","by_level":{"FATAL
 
 log "Section 8: before sharing, --sanitize"
 cat > "$work/secrets.log" << 'EOF'
-[2026-11-06 10:00:00,000] ERROR [jdbc-sink|task-0] Login failed for user 'app' to jdbc:postgresql://db.acme.corp:5432/orders with sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="app" password="s3cr3t!"; from 10.20.30.40 (io.confluent.connect.jdbc.sink.JdbcSinkTask)
+[2026-11-06 10:00:00,000] ERROR [jdbc-sink|task-0] Login failed for user 'app' to jdbc:postgresql://db.acme.corp:5432/orders with sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="app" password="not-a-real-one"; from 10.20.30.40 (io.confluent.connect.jdbc.sink.JdbcSinkTask)
 EOF
 lab_run playground analyze logs -f "$work/secrets.log" --sanitize --output-dir "$report_dir"
 lab_expect_contains "jdbc:postgresql://<HOST-1>:5432/orders with sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"app\" password=<REDACTED>; from <IP-1>"
 lab_expect_contains "🔒 Sanitized (best effort, review before sharing): 2 secret(s), 1 IP(s), 1 hostname(s), 0 email(s), 0 LDAP DN(s) (--sanitize)"
-lab_expect_not_contains "s3cr3t!"
+lab_expect_not_contains "not-a-real-one"
 lab_expect_not_contains "10.20.30.40"
 
 log "Section 9, step 5: a truncated download"

@@ -217,12 +217,32 @@ KNOWN_CAUSES = [
      "title": KILLED_TASK_TITLE,
      "advice": "it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then "
                "playground connector restart --connector <connector>"},
+    # what a task's clients log when the task is stopped from another thread (restart, rebalance, a graceful stop that timed
+    # out): the consumer closed by an interrupted thread ("Failed to close fetcher with a timeout(ms)=30000" +
+    # InterruptException), the producer closed with records in flight (LogReporter "Producer is closed forcefully."). Many
+    # of them, and no cause of their own: a consequence, not the problem
+    {"name": "clients_aborted_on_stop", "severity": "low", "category": "Connect Issues",
+     "pattern": r"Failed to close (?:fetcher|coordinator) with a timeout|Producer is closed forcefully",
+     "title": "🧹 Clients aborted while a task stopped",
+     "advice": "a consequence: the task was stopped (restart, rebalance, a graceful stop that timed out, a killed task) "
+               "and its consumer or producer was closed while it was still working. A source task sends the records "
+               "aborted again from its last committed offset. Look at why the task stopped (🧨, 🛑, 🔁 and the "
+               "restarts) rather than at these errors"},
+    # a host name that does not resolve. "No resolvable bootstrap urls given in bootstrap.servers": a Java client created
+    # while none of its bootstrap servers resolves fails in its constructor (ConfigException), it is not retried: fatal to
+    # the code that creates clients on the fly (the Oracle CDC source commits its redo log offsets with a new consumer)
     {"name": "dns_error", "severity": "high", "category": "Network Issues",
      "pattern": r"no such host|DNS resolution failed|dial tcp: lookup|UnknownHostException|Couldn't resolve server"
-                r"|Failed to resolve '|Name or service not known|getaddrinfo (?:ENOTFOUND|EAI_AGAIN)",
-     "title": "🔌 Connection failure",
-     "advice": "the host is down, unreachable or the name does not resolve: check the host, port and network "
-               "(playground debug tcp-dump shows what goes over the wire)"},
+                r"|Failed to resolve '|Name or service not known|getaddrinfo (?:ENOTFOUND|EAI_AGAIN)"
+                r"|Temporary failure in name resolution|No resolvable bootstrap urls",
+     "title": "🌐 Host name not resolved (DNS)",
+     "advice": "a host name did not resolve: a typo or a missing DNS record when it never works; a DNS outage when it "
+               "stops on its own (the window and hosts below). A Java client created during the outage fails in its "
+               "constructor (\"No resolvable bootstrap urls given in bootstrap.servers\", not retried), the clients "
+               "already running reconnect. The JVM caches a failed lookup for networkaddress.cache.negative.ttl (10 s "
+               "in java.security) and hands it to every client of the process: a lower value (2 to 5 s) shortens the "
+               "impact of a short outage. With networkaddress.cache.negative.ttl set in java.security, "
+               "-Dsun.net.inetaddr.negative.ttl is ignored: override it with -Djava.security.properties=<file>"},
     # librdkafka (C/C++, Python, Go, .NET, JavaScript clients) logs a FAIL when the broker closes an idle connection
     # (connections.max.idle.ms): "Disconnected (after 600013ms in state UP)". Before connection_refused
     {"name": "client_idle_disconnect", "severity": "low", "category": "Network Issues",
@@ -366,7 +386,7 @@ KNOWN_CAUSES = [
                 r"|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|(?<!\d)\d{1,5}/\d{1,5} brokers are down|ALL_BROKERS_DOWN"
                 r"|connect timed out|Connection to node -?\d+ .{0,200} could not be established|Communications link failure",
      "title": "🔌 Connection failure",
-     "advice": "the host is down, unreachable or the name does not resolve: check the host, port and network "
+     "advice": "the host is down or unreachable, or nothing listens on the port: check the host, port and network "
                "(playground debug tcp-dump shows what goes over the wire)"},
     {"name": "timeout", "severity": "medium", "category": "Network Issues",
      "pattern": r"\btimed out\b|deadline exceeded|i/o timeout|TimeoutException",
@@ -414,10 +434,11 @@ HINT_ORDER = [
     "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🔑 Authentication failure", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
-    "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🔌 Connection failure",
+    "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",
+    "🔌 Connection failure",
     "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost", "📥 Producer buffer full",
     "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system",
-    "🛑 Task or connector did not stop in time", "⏱️ Timeouts", "📏 Record too large",
+    "🛑 Task or connector did not stop in time", "⏱️ Timeouts", "📏 Record too large", "🧹 Clients aborted while a task stopped",
     "❓ Unknown topic or partition", "⏮️ Offset out of range", "🚧 Request refused by a broker policy", "👑 Partition leadership changed",
 ]
 
@@ -560,6 +581,8 @@ LINKS = {
         {"kb": KB + "360052984771-What-are-potential-causes-of-transient-network-issues-on-Confluent-Cloud",
          "kb_title": "Transient network issues on Confluent Cloud", "pattern": r"terminated during authentication"},
     ],
+    "🌐 Host name not resolved (DNS)": {"kb": KB + "4408266460308-How-to-resolve-ConfigException-No-resolvable-bootstrap-urls-given-in-bootstrap-servers",
+        "kb_title": "\"ConfigException: No resolvable bootstrap urls given in bootstrap.servers\"", "pattern": r"No resolvable bootstrap urls"},
     "⚙️ Invalid client configuration": {"kb": KB + "20921646333716-What-might-cause-Invalid-value-for-configuration-bootstrap-servers-Empty-list-Error",
         "kb_title": "\"Invalid value [] for configuration bootstrap.servers: Empty list\"", "pattern": r"bootstrap\.servers: Empty list"},
     "🗺️ Topic not found in the metadata": {"kb": KB + "360054951292-How-to-bypass-Producer-throws-TimeoutException-while-performing-a-rolling-restart-on-the-Kafka-brokers",

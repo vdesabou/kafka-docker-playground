@@ -106,6 +106,10 @@ commands:
     (--include-harmless keeps the first ones); 🌅 the connection failures of
     a component that starts before the broker, and stop once it is up, are
     a LOW known cause of their own, not the HIGH 🔌 Connection failure.
+    🌐 Host names not resolved are a known cause of their own: the window,
+    the hosts, the Java lookups that failed in the resolver vs the ones
+    served from the negative DNS cache of the JVM, and the clients that
+    could not be created ("No resolvable bootstrap urls").
     ✅ Every connector of the logs gets its card, the ones without an
     error too, and ☕ the JDK is shown when the logs give it.
 

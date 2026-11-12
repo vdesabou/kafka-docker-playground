@@ -164,7 +164,16 @@ All the reports of the playground are in the [📊 reports gallery](reports.md).
    `reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json`). Everything else is in the 🌳 root
    causes, grouped by deepest exception. 🌅 Connection failures that only happen while a component starts (its
    readiness check and its clients retry until the broker is up, then stop) are a LOW known cause of their own,
-   **Connections retried while starting**: the HIGH 🔌 Connection failure keeps the ones that last or come back.
+   **Connections retried while starting**: the HIGH 🔌 Connection failure keeps the ones that last or come back
+   (same for host names not resolved yet). 🌐 **Host name not resolved (DNS)** is a known cause of its own, with what
+   tells a DNS outage from a wrong name: the window (and whether the errors stopped before the end of the logs), the
+   hosts, how many Java lookups failed in the resolver of the OS (`UnknownHostException: <host>: Name or service not
+   known`) and how many were served from the negative cache of the JVM (`UnknownHostException: <host>` alone: one
+   failed lookup handed to every client of the process for `networkaddress.cache.negative.ttl`), and the Java clients
+   that could not be created (`No resolvable bootstrap urls given in bootstrap.servers`, thrown by the constructor and
+   not retried: it kills the Oracle CDC source, which commits its redo log offsets with a new consumer). 🧹 **Clients
+   aborted while a task stopped** (`Failed to close fetcher with a timeout`, `Producer is closed forcefully.`) is LOW:
+   a consequence of the stop, not a root cause.
 3. **The HTML report is the deliverable.** The terminal digest is bounded (`--max-findings` per file); the report holds
    **every** record, a timeline of all the files, a card per connector, filters, links to each line of each file, and
    a 📤 Share panel. The filters are kept in the URL: 🔗 **Link to this view** points a colleague at one burst of one
@@ -311,7 +320,10 @@ that refuses connections or does not resolve:
 🧭 Summary: 208 occurrence(s) of 23 distinct record(s) in 12 file(s), 2026-11-05 16:28:22 → 2026-11-05 16:33:40
 …
 🧠 Known causes
-   [HIGH] 🔌 Connection failure ×195 in 7 files (first at python-producer.log line 1, 2026-11-05 16:28:22)
+   [HIGH] 🌐 Host name not resolved (DNS) ×23 in go-producer.log (first at line 2, 2026-11-05 16:28:49)
+      🕐 2026-11-05 16:28:49 → 16:28:56 (7 s), still failing at the end of the logs
+      🖥️ host(s) not resolved: nonexistent-broker
+   [HIGH] 🔌 Connection failure ×172 in 6 files (first at python-producer.log line 1, 2026-11-05 16:28:22)
    [HIGH] ⚙️ Invalid client configuration ×1 in python-producer.log (first at line 34)
    [HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)
    [HIGH] 🗺️ Topic not found in the metadata ×2 in 2 files (first at rust-producer.log line 1)
