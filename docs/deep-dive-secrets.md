@@ -233,7 +233,7 @@ or when the prompts get in the way. When `OP_SERVICE_ACCOUNT_TOKEN` is set, `op`
 ```bash
 brew install 1password-cli          # Linux: https://developer.1password.com/docs/cli/get-started/
 # 1Password app > Settings > Developer > enable "Integrate with 1Password CLI"
-op whoami                           # Touch ID the first time
+op signin                           # Touch ID (op whoami alone answers 'account is not signed in' until then)
 playground secrets backend op
 ```
 
@@ -418,7 +418,7 @@ With a service account, grant it `kdp-shared:read_items` at creation (5.3, step 
 | Message | Cause | Fix |
 | --- | --- | --- |
 | `❌ the 1Password CLI (op) is not installed` | | `brew install 1password-cli` |
-| `❌ not signed in to 1Password` | app integration off or app locked, or `OP_SERVICE_ACCOUNT_TOKEN` empty or invalid in this shell | `op whoami`; enable the integration, or open a new terminal after fixing the token |
+| `❌ not signed in to 1Password` | app integration off, the Touch ID prompt denied, or `OP_SERVICE_ACCOUNT_TOKEN` empty or invalid in this shell. With the app, the playground runs `op signin` for you when `op whoami` says `account is not signed in` | `op signin`; enable the integration, or open a new terminal after fixing the token |
 | `❌ 1Password vault <vault> is not readable with your current session` | `secrets.op-vault` is a vault this session can't see (`Private` with a service account) | `playground config set secrets.op-vault <vault>`; `op vault list` shows the ones you can |
 | `❌ could not create 1Password item kdp-… in vault …` | no write permission on the vault | a service account with `write_items` on it |
 | `❌ could not update 1Password item … 👉 a service account token needs write_items on that vault to rotate a password` | `secrets set` on a linked item of a read-only vault | rotate it in the vault (a maintainer) |
