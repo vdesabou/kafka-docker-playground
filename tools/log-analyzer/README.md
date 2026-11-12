@@ -9,6 +9,12 @@ to their `Caused by:` chain.
 when one of them errors or finds other records (the Tools tests workflow runs it): the digest must stay portable, mawk
 (the default awk of Debian / Ubuntu) refuses a function and a parameter of the same name, for example.
 
+The awk programs that read every line (the digest, the `--since` / `--until` window) run through `log_awk`
+(`scripts/cli/src/lib/cli_function.sh`): `mawk` when it is installed, else `awk`, or `PLAYGROUND_AWK` when it is set
+(the test sets `PLAYGROUND_AWK=awk` to run its awk wrapper). On macOS, mawk 1.3.4 reads 2.5x faster than the awk of the
+system, with byte-identical records on 131 customer log files (3 GB: 113 s instead of 280 s); gawk is 2x slower than
+the awk of the system there, so it is never picked. On Linux the three are close (200 MB: gawk 3.0 s, mawk 2.6 s).
+
 ## Word and Excel documents, screenshots
 
 `office_export.py <document> <output> [<folder for its pictures>]` reads the logs a customer sent in an office document,

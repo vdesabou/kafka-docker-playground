@@ -15,7 +15,7 @@ https://kafka-docker-playground.io/#/deep-dive-analyze-logs
 
 | File | What it does |
 | --- | --- |
-| `Dockerfile` | `python:3.12-slim` + bash, jq, gawk, gzip, tar, unzip, zip, PyYAML, then the generated CLI (`scripts/cli/playground`), `tools/log-analyzer`, `tools/report-common`, `tools/streams-analyzer` and `cfk-analysis`. The build context is the root of the repository |
+| `Dockerfile` | `python:3.12-slim` (its mawk runs the digest) + bash, jq, gawk, gzip, tar, unzip, zip, PyYAML, then the generated CLI (`scripts/cli/playground`), `tools/log-analyzer`, `tools/report-common`, `tools/streams-analyzer` and `cfk-analysis`. The build context is the root of the repository |
 | `Dockerfile.dockerignore` | only those folders go into the context (BuildKit reads `<Dockerfile>.dockerignore`) |
 | `entrypoint.sh` | `PLAYGROUND_HOST_PATH_MAP=/data=${KDP_HOST_DIR:-.}`, a hint when nothing is mounted in `/data`, then `playground analyze logs "$@"` |
 | `test-image.sh` | the checks run before publishing: a sanitized `.zip`, a folder with `KDP_HOST_DIR` (✏️ links on the host), a CFK bundle (☸️ sections), two CFK bundles compared, `--json`, no mount, no argument. All with `--network none` |

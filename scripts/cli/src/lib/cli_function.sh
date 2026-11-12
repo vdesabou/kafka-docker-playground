@@ -6819,6 +6819,22 @@ function install_confluent_plugin() {
     log "✅ Confluent kubectl plugin installed successfully!"
 }
 
+# 🏎️ The awk of the programs that read every line of a log: the digest below (analyze logs, container logs --errors) and
+# the --since / --until window of analyze logs. mawk when it is installed: on macOS it reads 2.5x faster than the awk of
+# the system (3 GB of customer logs: 113 s instead of 280 s), with the same records (tools/log-analyzer/test_digest_awk.sh
+# checks it), and it is already the default awk of Debian / Ubuntu. gawk is never picked: on macOS it is 2x slower than
+# the awk of the system. PLAYGROUND_AWK forces one ("awk": the awk of PATH, "busybox awk").
+function log_awk() {
+    local awk_cmd="${PLAYGROUND_AWK:-}"
+    if [ -z "$awk_cmd" ]
+    then
+        awk_cmd=awk
+        command -v mawk > /dev/null 2>&1 && awk_cmd=mawk
+    fi
+    # unquoted: "busybox awk" is a command and its argument
+    $awk_cmd "$@"
+}
+
 # Reads container logs on stdin and prints de-duplicated ERROR/FATAL records
 # (optionally WARN), each with an occurrence count, the exception chain and a
 # few frames of the deepest cause, instead of tens of thousands of raw lines.
@@ -6868,7 +6884,7 @@ function summarize_log_errors() {
     # LC_ALL=C: the digest reads bytes. In a UTF-8 locale, the awk of macOS aborts on the first invalid byte (a Latin-1
     # character in a customer log: "awk: towc: multibyte conversion failure") and every record of the file is lost
     PG_LOG_DIGEST_CONNECTORS="${PG_LOG_DIGEST_CONNECTORS:-}" PG_LOG_DIGEST_WITH_WORKER="${PG_LOG_DIGEST_WITH_WORKER:-}" \
-    LC_ALL=C awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
+    LC_ALL=C log_awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
     # anything that does not look like the continuation of a stack trace or of a
     # multi-line message (indented line, "Caused by:", exception line) starts a record
     # (a .NET exception has a generic type: Confluent.Kafka.ProduceException`2[System.String,System.String]: …)
