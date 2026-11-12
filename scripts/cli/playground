@@ -44839,6 +44839,74 @@ function databricks_ensure_sql_warehouse_running () {
   log "✅ Databricks SQL warehouse ${warehouse_id} is running"
 }
 
+# Run one SQL statement on a Databricks SQL warehouse (SQL Statement Execution API) and print
+# its rows as a JSON array (data_array). Exits with the Databricks error message when it fails,
+# for example "[INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table ..." or
+# "PERMISSION_DENIED: ... does not have READ FILES on External Location ...".
+function databricks_sql_statement () {
+  local host="${1#https://}"
+  host="${host%%/*}"
+  local token="$2"
+  local http_path="$3"
+  local statement="$4"
+  local warehouse_id="${http_path##*/}"
+
+  local payload
+  payload=$(jq -n --arg statement "$statement" --arg warehouse_id "$warehouse_id" '{statement: $statement, warehouse_id: $warehouse_id, wait_timeout: "50s", on_wait_timeout: "CANCEL"}')
+  local response
+  response=$(curl -s -X POST -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d "$payload" "https://${host}/api/2.0/sql/statements/")
+  local state
+  state=$(echo "$response" | jq -r '.status.state // empty' 2>/dev/null)
+  if [ "$state" != "SUCCEEDED" ]
+  then
+    local message
+    message=$(echo "$response" | jq -r '.status.error.message // .message // empty' 2>/dev/null)
+    logerror "❌ Databricks statement <$statement> ${state:-failed}: ${message:-$response}"
+    exit 1
+  fi
+  echo "$response" | jq -c '.result.data_array // []'
+}
+
+# Wait until a Databricks table holds the expected number of rows, and fail the test otherwise.
+# The lag of the Databricks Delta Lake sink reaches 0 even when its COPY INTO fails (the staging
+# S3 writer commits the offsets first), so the lag alone does not prove anything landed in the table.
+function databricks_wait_for_table_rows () {
+  local host="$1"
+  local token="$2"
+  local http_path="$3"
+  local table="$4"
+  local expected="$5"
+  local max_wait="${6:-120}"
+
+  local cur_wait=0
+  local count=""
+  log "⏳ Waiting up to $max_wait seconds for $expected rows in Databricks table $table"
+  while true
+  do
+    local rows
+    # logerror writes to stdout: print the captured output when the statement fails (exit in a subshell)
+    if ! rows=$(databricks_sql_statement "$host" "$token" "$http_path" "SELECT COUNT(*) FROM $table")
+    then
+      echo "$rows"
+      exit 1
+    fi
+    count=$(echo "$rows" | jq -r '.[0][0] // empty')
+    if [ "$count" == "$expected" ]
+    then
+      log "✅ Databricks table $table has $count rows"
+      return 0
+    fi
+    if [[ "$cur_wait" -ge "$max_wait" ]]
+    then
+      logerror "❌ Databricks table $table has ${count:-0} rows after $max_wait seconds, expected $expected"
+      logerror "🔎 the connector log only shows 'java.sql.SQLException (SQLState=HY000, vendorCode=500051)' when COPY INTO fails: the real error is in the Query History of the SQL warehouse (COPY INTO $table)"
+      exit 1
+    fi
+    sleep 10
+    cur_wait=$(( cur_wait+10 ))
+  done
+}
+
 # Assert a topic is empty, and fail the test if it is not.
 #
 # `playground topic consume --min-expected-messages 0` does NOT assert anything: with 0 the

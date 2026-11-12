@@ -97,6 +97,9 @@ playground topic produce --topic pageviews --value predefined-schemas/datagen/pa
 # makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
 DATABRICKS_TABLE_NAME="pageviews_$(echo "${USER:-playground}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
 
+log "Dropping table ${DATABRICKS_TABLE_NAME} if it exists, so that it holds only the records of this run"
+databricks_sql_statement "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "DROP TABLE IF EXISTS default.${DATABRICKS_TABLE_NAME}"
+
 log "Creating Databricks Delta Lake Sink connector, writing to table ${DATABRICKS_TABLE_NAME}"
 playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
 {
@@ -124,3 +127,6 @@ EOF
 sleep 30
 
 playground connector show-lag --max-wait 120
+
+log "Verifying that the 100 records are in table ${DATABRICKS_TABLE_NAME} (the lag reaches 0 even when the COPY INTO fails)"
+databricks_wait_for_table_rows "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "default.${DATABRICKS_TABLE_NAME}" 100
