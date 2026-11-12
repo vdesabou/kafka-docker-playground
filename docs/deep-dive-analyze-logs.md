@@ -154,7 +154,8 @@ All the reports of the playground are in the [📊 reports gallery](reports.md).
    registered in SERVER runtime…`) are left out of the findings and the counts, and listed in a 🙈 Known harmless
    section with why; `--include-harmless` keeps them.
 2. **Known causes first.** About 50 known causes (task killed, `errors.tolerance` exceeded, authentication, TLS, wrong
-   `security.protocol`, unknown magic byte, fenced producer, rebalances, throttling, records not delivered in time…)
+   `security.protocol`, unknown magic byte, fenced producer, rebalances, throttling, records not delivered in time, a
+   Connect worker that fails to start, a config provider placeholder `${secret:…}` that reached a connector…)
    are recognized and come with **what to do**, often the `playground` command that checks it, and for most of them
    📚 Confluent knowledge-base articles to read or send (in the terminal, the HTML report and the summary for a
    ticket): the article of the variant found in the logs first (ORA-01017, `Login failed for user`, SASL with

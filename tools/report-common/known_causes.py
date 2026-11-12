@@ -117,6 +117,39 @@ KNOWN_CAUSES = [
      "title": "🦓 ZooKeeper session error",
      "advice": "the ZooKeeper session expired or was lost: look for long GC pauses on the client and for ZooKeeper "
                "nodes that are down"},
+    # the Connect Secret Registry (ConnectSecretRegistryExtension) cannot join its group: two members advertise the same
+    # URL. Either two workers share rest.advertised.host.name / port, or one worker joins twice: since CP 7.9.11 and 8.4
+    # (ce-kafka "Refactor REST extension registration", CC-43384), Connect calls register() of each REST extension a
+    # second time for the admin resources when admin.listeners is a separate listener, and the extension initializes
+    # the registry again ("Initializing REST with URI" twice in one start). The worker then fails to start
+    {"name": "secret_registry_duplicate_urls", "severity": "critical", "category": "Connect Issues",
+     "pattern": r"secret registry group contained multiple members advertising the same URL"
+                r"|Found duplicate URLs for secret registry group members",
+     "title": "🪞 Secret registry: duplicate URLs, Connect does not start",
+     "advice": "two members of the secret registry group advertise the same URL, so ConnectSecretRegistryExtension times "
+               "out (\"Timed out waiting for join group to complete\") and the worker exits. Count the \"Initializing REST "
+               "with URI\" lines of one start: two in the same worker on CP 7.9.11+ / 8.4+ with a separate admin.listeners "
+               "means the extension is registered twice (regular and admin REST resources): remove admin.listeners (admin "
+               "endpoints back on the main listeners) or set it empty (admin endpoints disabled) until a fixed release. One "
+               "per worker: two workers share rest.advertised.host.name / rest.advertised.port, give each its own"},
+    # the worker process exits during its startup (AbstractConnectCli): the Caused by chain says why, and a service
+    # manager (systemd, Kubernetes) restarting it makes a restart loop with the same error every few minutes
+    {"name": "connect_failed_to_start", "severity": "critical", "category": "Connect Issues",
+     "pattern": r"ERROR Failed to start Connect\b|ERROR Stopping due to error \(org\.apache\.kafka\.connect",
+     "title": "🚫 Connect worker failed to start",
+     "advice": "the Connect worker exited during its startup, before its REST API was up (Control Center and the REST "
+               "calls see no connector): the Caused by chain of the record says why. When it repeats, the service manager "
+               "(systemd, Kubernetes) restarts the worker in a loop: fix the cause first, restarts do not help"},
+    # a connector received the literal ${provider:path:key} of a config provider instead of its value: the provider is not
+    # in config.providers of the worker, the path or key does not exist, or the provider was not ready (secret registry)
+    {"name": "config_provider_unresolved", "severity": "high", "category": "Connect Issues",
+     "pattern": r"(?:Exception|error|invalid|failed)[^\n]{0,300}\$\{(?:secret|file|directory|env|vault|keyvault|aws"
+                r"|azure|gcp|securepass)[\w-]{0,20}:[^}\s]{1,200}",
+     "title": "🧷 Config provider placeholder not resolved",
+     "advice": "a connector used the literal ${provider:path:key} placeholder of a config provider instead of its value "
+               "(for example as a password or a token): check that the provider is in config.providers of every worker, "
+               "with its config.providers.<name>.class, and that the path and key exist; with the Connect Secret Registry "
+               "(${secret:…}), check that it started on the worker"},
     {"name": "plugin_not_found", "severity": "high", "category": "Plugin Issues",
      "pattern": r"Failed to find any class that implements Connector|Failed to find any class that implements Converter",
      "title": "🧩 Plugin not found",
@@ -431,7 +464,8 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 # order of the known causes in the log report (its verdict and findings follow it), the other titles come after, in
 # declaration order
 HINT_ORDER = [
-    "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
+    "💥 OutOfMemoryError", "🪞 Secret registry: duplicate URLs, Connect does not start", "🚫 Connect worker failed to start",
+    KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🔑 Authentication failure", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
     "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",

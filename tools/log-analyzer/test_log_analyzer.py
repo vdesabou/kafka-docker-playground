@@ -317,6 +317,50 @@ def test_fixed_bugs_found():
     check("on the card", card.get("fixed_bugs") and card["fixed_bugs"][0]["verdict"] == "affected", card.get("fixed_bugs"))
 
 
+def test_secret_registry_duplicate_urls_and_failed_start():
+    """🪞 the secret registry group refusing two members with the same URL, 🚫 the worker exiting at startup, and 🧷 a
+    ${provider:path:key} placeholder that reached a connector: known causes; a WARN quoting a placeholder is not one"""
+    text = ("@@PGFILE@@|connect.log|40|5|5|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            "@@PGREC@@|ERROR|2|3|4|2026-11-07T10:01:00|2026-11-07T10:06:00\n"
+            "[2026-11-07 10:01:00,000] ERROR Found duplicate URLs for secret registry group members. This indicates a "
+            "misconfiguration and is common when executing in containers. (io.confluent.kafka.secretregistry.masterelector."
+            "kafka.SecretRegistryCoordinator:191)\n"
+            "@@PGTS@@|2026-11-07T10:01:00\n"
+            "@@PGREC@@|ERROR|2|5|9|2026-11-07T10:01:00|2026-11-07T10:06:00\n"
+            "[2026-11-07 10:01:00,010] ERROR Unexpected exception in secret registry group processing thread (io.confluent."
+            "kafka.secretregistry.masterelector.kafka.KafkaGroupMasterElector:214)\n"
+            "    java.lang.IllegalStateException: The secret registry group contained multiple members advertising the same "
+            "URL. Verify that each instance has a unique, routable listener by setting the 'listeners' configuration.\n"
+            "@@PGTS@@|2026-11-07T10:01:00\n"
+            "@@PGREC@@|ERROR|2|10|14|2026-11-07T10:02:00|2026-11-07T10:07:00\n"
+            "[2026-11-07 10:02:00,000] ERROR Failed to start Connect (org.apache.kafka.connect.cli.AbstractConnectCli:178)\n"
+            "    org.apache.kafka.connect.errors.ConnectException: Error initializing the secret registry\n"
+            "    Caused by: io.confluent.kafka.secretregistry.exceptions.SecretRegistryTimeoutException: Timed out waiting "
+            "for join group to complete\n"
+            "@@PGTS@@|2026-11-07T10:02:00\n"
+            "@@PGREC@@|ERROR|1|20|22|2026-11-07T10:08:00|2026-11-07T10:08:00\n"
+            "[2026-11-07 10:08:00,000] ERROR [http-sink|task-0] Task threw an uncaught and unrecoverable exception (x)\n"
+            "    org.jose4j.jwt.consumer.InvalidJwtException: JWT processing failed. Additional details: [[17] Unable to "
+            "process JOSE object (cause: org.jose4j.lang.JoseException: Invalid JOSE Compact Serialization. Expecting "
+            "either 3 or 5 parts for JWS or JWE respectively but was 1.): ${secret:http-sink:token}]\n"
+            "@@PGTS@@|2026-11-07T10:08:00\n"
+            "@@PGREC@@|WARN|1|30|30|2026-11-07T10:09:00|2026-11-07T10:09:00\n"
+            "[2026-11-07 10:09:00,000] WARN The value ${file:/opt/props.properties:user} of key user is kept as it is (x)\n"
+            "@@PGTS@@|2026-11-07T10:09:00\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    hints = {h["title"]: h for h in res["known_causes"]}
+    dup = hints.get("🪞 Secret registry: duplicate URLs, Connect does not start")
+    check("duplicate URLs: both records, critical", dup and dup["occurrences"] == 4 and dup["severity"] == "CRITICAL", dup)
+    check("advice names admin.listeners", "admin.listeners" in dup["advice"], dup["advice"])
+    start = hints.get("🚫 Connect worker failed to start")
+    check("failed to start", start and start["occurrences"] == 2, start)
+    ph = hints.get("🧷 Config provider placeholder not resolved")
+    check("placeholder: the task error only, not the WARN", ph and ph["occurrences"] == 1, ph)
+    check("secret registry cause before the generic ones", list(hints).index(dup["title"]) < list(hints).index(start["title"]),
+          list(hints))
+
+
 def test_cp_version_not_control_center():
     """the images of Control Center next-gen, Prometheus and Alertmanager (2.3.0) are not a Confluent Platform version"""
     comps = {"kafka": {"image": "acr.io/confluentinc/cp-server:8.1.4"},
