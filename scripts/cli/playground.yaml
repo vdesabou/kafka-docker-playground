@@ -5194,23 +5194,31 @@ subcommands:
         by default: it can hide evidence (a dump of bytes taken for a secret, the
         IP of the broker) and doubles the time on large bundles"
   - name: watch
-    description: "\U0001F440 Watch a folder (default: ~/Downloads) and run 'playground
-      analyze logs' on every new file or folder holding logs, report opened in the
-      browser\n\nLeave it running in a terminal: when a log file, a support bundle
-      or a\nfolder of logs lands in the folder (a download from Zendesk, Slack, a\nbrowser,
-      Finder), it is analyzed as soon as it is complete, and its\nHTML report opens
-      in the browser, with a macOS notification.\n\n⏳ A download is complete once
-      its size stops changing and the browser\nhas renamed it: .crdownload, .download,
-      .part, .partial and .tmp\nentries are waited for, never analyzed.\n\n\U0001F50E
-      \"Holds logs\" is checked without extracting anything: a .log / .out\nfile (also
-      rotated, .log.1, and gzipped), a .txt, .json, .csv or\nextension-less file whose
-      first lines look like log records (a\ntimestamp and a level, librdkafka lines,
-      JSON records with a level),\nan archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2,
-      .tar.xz, .7z) or a\nfolder that contains such files. Pictures, PDFs, installers
-      and other\nfiles are ignored (logged once).\n\nOnly the entries that appear
-      after the start are analyzed, at the\ntop of the folder (a file moved into a
-      sub-folder never is): --since\nalso picks the ones created in the last minutes
-      (creation time, so\nthat a folder you move files into, ~/Downloads/Archives,
+    description: "\U0001F440 Watch a folder (default: ~/Downloads) and analyze every
+      new log file, bundle, dump, capture or report, report opened in the browser\n\nLeave
+      it running in a terminal: when a log file, a support bundle or a\nfolder of
+      logs lands in the folder (a download from Zendesk, Slack, a\nbrowser, Finder),
+      it is analyzed as soon as it is complete, and its\nHTML report opens in the
+      browser, with a macOS notification.\n\n⏳ A download is complete once its size
+      stops changing and the browser\nhas renamed it: .crdownload, .download, .part,
+      .partial and .tmp\nentries are waited for, never analyzed.\n\n\U0001F50E \"Holds
+      logs\" is checked without extracting anything: a .log / .out\nfile (also rotated,
+      .log.1, and gzipped), a .txt, .json, .csv or\nextension-less file whose first
+      lines look like log records (a\ntimestamp and a level, librdkafka lines, JSON
+      records with a level),\nan archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz,
+      .7z) or a\nfolder that contains such files. Pictures, PDFs, installers and other\nfiles
+      are ignored (logged once).\n\n\U0001F9F0 The other files support asks for get
+      their own analyzer (unless\n--logs-only), recognized as in the \U0001F9F0 Other
+      files of 'analyze logs':\na heap dump (analyze heap-dump), a flight recording
+      (analyze\nflight-recorder), a network capture (analyze tcp-dump), an Oracle\nXStream
+      diagnostics report (analyze oracle-xstream-report), a GC log\n(analyze gc-logs),
+      a thread dump (analyze thread-dump; a log file\nholding a kill -3 thread dump
+      stays a log file: analyze logs analyzes\nthe dump in its report). In an archive
+      or a folder, 'analyze logs'\nruns first (thread dumps analyzed in its report),
+      then the analyzer\nof each other kind of file, one report each.\n\nOnly the
+      entries that appear after the start are analyzed, at the\ntop of the folder
+      (a file moved into a sub-folder never is): --since\nalso picks the ones created
+      in the last minutes (creation time, so\nthat a folder you move files into, ~/Downloads/Archives,
       is not\npicked), --once analyzes those and exits instead of watching.\n\U0001F6AB
       --exclude never analyzes an entry, even renamed or re-created. Each report is
       written in its\nown folder of --output-dir, named after the entry (outside the\nwatched
@@ -5264,11 +5272,17 @@ subcommands:
       description: ➕ Extra flags passed to every 'playground analyze logs' call, as
         one string (for example "--errors-only --sanitize")
     - names:
+      - "--logs-only"
+      argument: ''
+      description: "\U0001F525 Only run 'playground analyze logs' (on files holding
+        logs), never the analyzers of heap dumps, flight recordings, captures, XStream
+        reports, GC logs and thread dumps"
+    - names:
       - "--install-launch-agent"
       argument: ''
       description: "\U0001F501 macOS: install a LaunchAgent that starts this watch
-        (with --folder, --output-dir, --exclude, --interval, --no-open, --analyze-logs-args)
-        at every login, output in ~/Library/Logs/playground-analyze-watch.log\n\nConflicts
+        (with --folder, --output-dir, --exclude, --interval, --no-open, --logs-only,
+        --analyze-logs-args) at every login, output in ~/Library/Logs/playground-analyze-watch.log\n\nConflicts
         with: --uninstall-launch-agent, --once"
     - names:
       - "--uninstall-launch-agent"
