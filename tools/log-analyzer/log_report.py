@@ -5269,7 +5269,8 @@ document.addEventListener("click", function (ev) {
   if (!a || ev.defaultPrevented) return;
   ev.preventDefault();
   if (a.getAttribute("href") === "#") { pgScrollTo(null); return; }
-  const el = document.getElementById(a.getAttribute("href").slice(1));
+  // data-alt: where to go when the target is not in the report (🧭 Main cause: the 🏆 overview, else the card of the cause)
+  const el = document.getElementById(a.getAttribute("href").slice(1)) || (a.dataset.alt && document.getElementById(a.dataset.alt.slice(1)));
   if (!el) return;
   const card = el.matches(".rec-card, .fi-card, [id^='finding-']") ? el : (el.closest(".table-card, .chart-card") || el);
   const collapsed = card.classList.contains("sec-collapsed") ? card : card.closest(".sec-collapsed");
@@ -7120,10 +7121,12 @@ def story_html(res: dict, levels: str) -> str:
     what = "error" if errors else "warning"
     steps = []
 
-    def step(icon: str, color: str, label: str, value: str, sub: str, href: str = "", hot: bool = False, title: str = "") -> None:
+    def step(icon: str, color: str, label: str, value: str, sub: str, href: str = "", hot: bool = False, title: str = "",
+             alt: str = "") -> None:
         tag = "a" if href else "div"
         steps.append(f"<{tag} class='story-step{' hot' if hot else ''}' style='--c:{color};--i:{len(steps)}'"
-                     + (f" href='{href}' draggable='false'" if href else "") + (f" title='{e(title)}'" if title else "")
+                     + (f" href='{href}' draggable='false'" if href else "") + (f" data-alt='{e(alt)}'" if alt else "")
+                     + (f" title='{e(title)}'" if title else "")
                      + f"><span class='story-dot'>{icon}</span><span class='story-label'>{e(label)}</span>"
                      f"<span class='story-value'>{e(value)}</span><span class='story-sub'>{e(sub)}</span></{tag}>")
 
@@ -7141,8 +7144,10 @@ def story_html(res: dict, levels: str) -> str:
     main = next((v for v in views if v.get("title") and not v["title"].startswith("🌳")), None)
     if main:
         step(main["title"].split(" ", 1)[0], "#a855f7", "Main cause", main["title"].split(" ", 1)[-1],
-             f"{main.get('occurrences', 0):,} occurrence(s)", "#" + finding_id(main["title"]),
-             title="the known cause with the most occurrences: open its card in 🔎 Findings")
+             f"{main.get('occurrences', 0):,} occurrence(s)", "#findings-overview",
+             title="the known cause with the most occurrences: 🏆 the top causes of 🔎 Findings",
+             # no 🏆 overview (fewer than 2 causes): its card
+             alt="#" + finding_id(main["title"]))
     conns = res.get("connectors") or []
     hit = [c for c in conns if c["by_level"]["FATAL"] + c["by_level"]["ERROR"]]
     if conns:
@@ -7702,7 +7707,7 @@ def findings_overview_html(items: List[dict], total: int) -> str:
     more = (f"<span class='fo-more'>+ {len(rows) - FINDINGS_TOP} more finding(s) below · a record can match several known causes: "
             "the shares do not add up to 100%</span>" if len(rows) > FINDINGS_TOP else
             "<span class='fo-more'>a record can match several known causes: the shares do not add up to 100%</span>")
-    return (FINDINGS_OVERVIEW_CSS + f"<div class='fo'>{ring}<div class='fo-list'><span class='fo-head'>🏆 Top causes, by severity then occurrences</span>"
+    return (FINDINGS_OVERVIEW_CSS + f"<div class='fo' id='findings-overview'>{ring}<div class='fo-list'><span class='fo-head'>🏆 Top causes, by severity then occurrences</span>"
             + "".join(lis) + more + "</div></div>")
 
 
