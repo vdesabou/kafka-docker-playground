@@ -262,8 +262,9 @@ wait_for_ccloud_connector_up $connector_name 180
 
 connectorId=$(get_ccloud_connector_lcc $connector_name)
 
-log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --min-expected-messages 10 --timeout 60
+# the first batch waits for the cold start of the custom SMT function (50 to 90 seconds seen in CI)
+log "Verifying topic success-$connectorId (up to 300 seconds: the first custom SMT call is slow)"
+playground topic consume --topic success-$connectorId --min-expected-messages 10 --timeout 300
 
 playground tools http-server requests --min-expected-requests 1 --grep "uuid" --max-wait 600
 log "✅ 'uuid' field is present - custom InsertUuid SMT worked correctly!"

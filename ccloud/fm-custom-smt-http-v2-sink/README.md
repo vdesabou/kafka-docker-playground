@@ -32,5 +32,5 @@ playground run -f fm-custom-smt-http-v2-sink.sh
 3. Starts a local HTTP server and ngrok (`docker-compose.noauth.yml`).
 4. Produces 10 Avro records to topic `http-topic` with `playground topic produce`.
 5. Creates the fully managed `HttpSinkV2` connector with the `InsertUuid$Value` transform (`custom.smt.artifact.id`).
-6. Verifies 10 records in `success-<connector id>` with `playground topic consume`, and that the HTTP server received a `uuid` field.
+6. Verifies 10 records in `success-<connector id>` with `playground topic consume` (waits up to 300 seconds: the first batch waits for the cold start of the custom SMT function, 50 to 90 seconds), and that the HTTP server received a `uuid` field.
 7. Deletes the connector and the SMT artifact at the end of the run.
