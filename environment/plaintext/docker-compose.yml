@@ -755,7 +755,8 @@ services:
       - prometheus
 
   kcat:
-    image: confluentinc/cp-kcat:latest
+    image: edenhill/kcat:1.7.1
+    platform: linux/amd64
     hostname: kcat
     container_name: kcat
     depends_on:
