@@ -135,8 +135,9 @@ Gotchas:
   `pg-<user>-*` cluster names let `cloud-resources cleanup` delete all their topics, never the clusters nor the
   environment.
 - **Per-cloud clusters**: `AWS_CLUSTER_NAME`, `GCP_CLUSTER_NAME`, `AZURE_CLUSTER_NAME` (with their `*_REGION`,
-  `*_CLOUD`, `*_CREDS`) are used automatically for the `fm-aws*`, `fm-gcp*`, `fm-azure*` examples: set them once to
-  keep a cluster per cloud. Switching between them uses the per-cluster cache, and an exported `CLUSTER_NAME` is
+  `*_CLOUD`, `*_CREDS`) are used automatically for the `fm-aws*`, `fm-gcp*`, `fm-azure*` examples, and for any example
+  that requires a cloud (`bootstrap_ccloud_environment "aws" "$AWS_REGION"`, like
+  `ccloud/custom-connector-connect-aws-s3-sink`): set them once to keep a cluster per cloud. Switching between them uses the per-cluster cache, and an exported `CLUSTER_NAME` is
   never replaced by the `Use previously used ccloud cluster` question.
 - A new stack takes several minutes (cluster provisioning, API keys propagation, ACLs, Schema Registry); the wait for
   the cluster to be ready can take much longer when the `confluent` CLI is not logged in (`Error: not logged in`,

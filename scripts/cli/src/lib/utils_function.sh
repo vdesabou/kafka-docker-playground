@@ -2755,6 +2755,8 @@ function bootstrap_ccloud_environment () {
   local expected_region="$2"
   local connect_migration_utility="$3"
   local ccloud_cluster_list=""
+  local per_cloud_cluster_forced=""
+  local prefix name_var
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -2813,6 +2815,7 @@ function bootstrap_ccloud_environment () {
       then
         log "AWS_DATABRICKS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_DATABRICKS_CLUSTER_NAME to be used !"
         suggest_use_previous_example_ccloud=0
+        per_cloud_cluster_forced=1
         export CLUSTER_NAME=$AWS_DATABRICKS_CLUSTER_NAME
         export CLUSTER_REGION=$AWS_DATABRICKS_CLUSTER_REGION
         export CLUSTER_CLOUD=$AWS_DATABRICKS_CLUSTER_CLOUD
@@ -2826,6 +2829,7 @@ function bootstrap_ccloud_environment () {
       then
         log "🤖 AWS Fully managed example and AWS_CLUSTER_NAME environment variable is set, forcing the cluster $AWS_CLUSTER_NAME to be used !"
         suggest_use_previous_example_ccloud=0
+        per_cloud_cluster_forced=1
         export CLUSTER_NAME=$AWS_CLUSTER_NAME
         export CLUSTER_REGION=$AWS_CLUSTER_REGION
         export CLUSTER_CLOUD=$AWS_CLUSTER_CLOUD
@@ -2839,6 +2843,7 @@ function bootstrap_ccloud_environment () {
       then
         log "🤖 GCP Fully managed example and GCP_CLUSTER_NAME environment variable is set, forcing the cluster $GCP_CLUSTER_NAME to be used !"
         suggest_use_previous_example_ccloud=0
+        per_cloud_cluster_forced=1
         export CLUSTER_NAME=$GCP_CLUSTER_NAME
         export CLUSTER_REGION=$GCP_CLUSTER_REGION
         export CLUSTER_CLOUD=$GCP_CLUSTER_CLOUD
@@ -2852,6 +2857,7 @@ function bootstrap_ccloud_environment () {
       then
         log "🤖 Azure Fully managed example and AZURE_CLUSTER_NAME environment variable is set, forcing the cluster $AZURE_CLUSTER_NAME to be used !"
         suggest_use_previous_example_ccloud=0
+        per_cloud_cluster_forced=1
         export CLUSTER_NAME=$AZURE_CLUSTER_NAME
         export CLUSTER_REGION=$AZURE_CLUSTER_REGION
         export CLUSTER_CLOUD=$AZURE_CLUSTER_CLOUD
@@ -2860,6 +2866,25 @@ function bootstrap_ccloud_environment () {
     fi
   fi
   
+  # an example that requires a cloud (bootstrap_ccloud_environment "<cloud>" "<region>") in a folder whose name does not
+  # say it (ccloud/custom-connector-connect-aws-s3-sink): the cluster of that cloud, when AWS_ / GCP_ / AZURE_CLUSTER_NAME
+  # is set, rather than CLUSTER_NAME in another cloud (the example would stop on 'expected ccloud cloud provider')
+  if [ -z "$per_cloud_cluster_forced" ] && [ -n "$expected_cloud" ]
+  then
+    prefix=$(echo "$expected_cloud" | tr '[:lower:]' '[:upper:]')_
+    name_var="${prefix}CLUSTER_NAME"
+    if [[ "$prefix" =~ ^(AWS|GCP|AZURE)_$ ]] && [ -n "${!name_var}" ]
+    then
+      log "🤖 the example requires $expected_cloud and $name_var is set, forcing the cluster ${!name_var} to be used !"
+      suggest_use_previous_example_ccloud=0
+      local region_var="${prefix}CLUSTER_REGION" cloud_var="${prefix}CLUSTER_CLOUD" creds_var="${prefix}CLUSTER_CREDS"
+      export CLUSTER_NAME="${!name_var}"
+      export CLUSTER_REGION="${!region_var}"
+      export CLUSTER_CLOUD="${!cloud_var}"
+      export CLUSTER_CREDS="${!creds_var}"
+    fi
+  fi
+
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
   do
       i=$(playground state get "ccloud.${item}")
