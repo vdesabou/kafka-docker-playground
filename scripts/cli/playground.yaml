@@ -710,7 +710,9 @@ subcommands:
     year\n\nThe same three exist for azure and ccloud (Confluent Cloud).\n\n\U0001F9F9
     Only one command deletes anything:\n\n  cloud-resources cleanup             delete
     the leftovers in aws, gcp,\n                                      azure, ccloud
-    and salesforce\n                                      (--resource, --dry-run first)"
+    and salesforce\n                                      (--resource, --dry-run first)\n\n\U0001F319
+    and it can run by itself every night, for Confluent Cloud:\n\n  cloud-resources
+    nightly-cleanup enable|disable|status"
   usage: playground cloud-resources COMMAND
   options: []
   subcommands:
@@ -1041,6 +1043,51 @@ subcommands:
         deleting anything nor asking\n\nIn CI, the Confluent Cloud part is skipped
         when no cluster is known (CLUSTER_NAME, or a previous ccloud run):\nfinding
         one would create it.\n\nConflicts with: --recorded-topics-only"
+  - name: nightly-cleanup
+    description: "\U0001F319 Delete what your fully managed examples left running
+      in Confluent Cloud, every night, automatically\n\n  enable     schedule it (default
+      02:00), then show what tonight's run would delete\n  disable    remove the schedule\n
+      \ status     is it scheduled, when, and what the last runs did\n\nEvery night
+      it runs 'playground cloud-resources cleanup --resource ccloud\n--force', limited
+      to what costs money or clutters a shared cluster:\n\n  \U0001F916 connectors
+      named *_<user>, on any cluster of the organization, with\n     their dlq, success
+      and error topics\n  \U0001F310 environments pg-<user>-sa-* (the stacks the playground
+      created when\n     no CLUSTER_NAME was set), with their clusters\n  \U0001F4DD
+      on shared clusters, the topics recorded as created by your own runs\n\nIt keeps
+      your own clusters and their topics (playground ccloud setup),\nand never deletes
+      service accounts or API keys: the secrets store may be\nlocked at night, so
+      the keys in use can't be told apart. Run\n'playground cloud-resources cleanup
+      --resource ccloud' yourself for those.\n\nmacOS: a launchd agent (~/Library/LaunchAgents),
+      which also runs when the\nMac wakes up if it was asleep at that time. Linux:
+      a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'."
+    usage: playground cloud-resources nightly-cleanup COMMAND
+    options: []
+    subcommands:
+    - name: enable
+      description: "\U0001F319 Schedule the nightly cleanup, then show what tonight's
+        run would delete\n\nRun it again to change the time. The job uses this checkout
+        of the\nplayground and the PATH of the shell you run it from."
+      usage: playground cloud-resources nightly-cleanup enable [OPTIONS]
+      options:
+      - names:
+        - "--time"
+        argument: TIME
+        description: "\U0001F551 Time of the run, HH:MM, local time\n\nDefault value:
+          02:00"
+    - name: disable
+      description: "\U0001F6D1 Remove the nightly cleanup schedule"
+      usage: playground cloud-resources nightly-cleanup disable
+      options: []
+    - name: status
+      description: "\U0001F50E Is the nightly cleanup scheduled, at what time, and
+        what did its last runs do"
+      usage: playground cloud-resources nightly-cleanup status [OPTIONS]
+      options:
+      - names:
+        - "--lines"
+        argument: LINES
+        description: "\U0001F4C4 Number of lines of the log to show\n\nDefault value:
+          40"
 - name: run
   description: "\U0001F579️ Run any example !\n\n\U0001F525 It start an interactive
     mode where you'll be fully guided !\n\n  playground run                       \U0001F50D
