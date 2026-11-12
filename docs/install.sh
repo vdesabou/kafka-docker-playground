@@ -10,7 +10,9 @@
 #      Confluent CLI (used by the Confluent Cloud examples), plus mawk on macOS (playground analyze logs reads the logs
 #      2.5x faster with it). On macOS without Homebrew, offers to install it first
 #      (official installer from https://brew.sh), only when a tool or a container engine needs it
-#   3. clones the repository (--depth 1), or updates an existing clone
+#   3. clones the repository (--depth 1), or updates an existing clone. When your git can read the private
+#      reproduction-models submodule (Confluent employees: SSH key or HTTPS credentials for github.com/confluentinc),
+#      offers to fetch it too; otherwise skips it with one line
 #   4. when no container engine is installed at all, offers to install one: Podman or Docker Desktop on macOS,
 #      Docker Engine on Linux. Never with --yes alone (pass --engine), never next to an engine already installed.
 #   5. adds ONE block, between markers, to ~/.zshrc / ~/.bashrc / ~/.bash_profile, with a backup of the file:
@@ -27,6 +29,7 @@
 #   --dry-run      show what would be done, change nothing
 #   --no-rc        do not touch any shell startup file
 #   --no-confluent-cli  do not install the Confluent CLI (only needed by the Confluent Cloud examples)
+#   --no-reproduction-models  do not fetch the private reproduction-models submodule, even with access to it
 #   --engine <e>   container engine to install when none is found, without asking: podman | docker-desktop (macOS),
 #                  docker (Linux), none. Without it, the installer asks (and --yes installs none)
 #   --uninstall    remove the block from the shell startup files, then offer to delete the clone
@@ -48,6 +51,7 @@ opt_yes=0
 opt_dry_run=0
 opt_no_rc=0
 opt_no_confluent_cli=0
+opt_no_reproduction_models=0
 opt_engine=""
 opt_uninstall=0
 
@@ -72,7 +76,7 @@ usage() {
   sed -n '2,/^$/p' "${BASH_SOURCE[0]:-/dev/null}" 2>/dev/null | sed 's/^# \{0,1\}//'
   if [ ! -f "${BASH_SOURCE[0]:-}" ]
   then
-    echo "usage: curl -fsSL ${KDP_DOCS_URL}/install.sh | bash -s -- [--dir <path>] [--branch <b>] [--yes] [--dry-run] [--no-rc] [--uninstall]"
+    echo "usage: curl -fsSL ${KDP_DOCS_URL}/install.sh | bash -s -- [--dir <path>] [--branch <b>] [--yes] [--dry-run] [--no-rc] [--no-reproduction-models] [--uninstall]"
   fi
 }
 
@@ -129,6 +133,7 @@ parse_args() {
       --dry-run) opt_dry_run=1; shift ;;
       --no-rc) opt_no_rc=1; shift ;;
       --no-confluent-cli) opt_no_confluent_cli=1; shift ;;
+      --no-reproduction-models) opt_no_reproduction_models=1; shift ;;
       --engine) [ $# -ge 2 ] || die "--engine needs podman, docker-desktop, docker or none"; opt_engine="$2"; shift 2 ;;
       --engine=*) opt_engine="${1#--engine=}"; shift ;;
       --uninstall) opt_uninstall=1; shift ;;
@@ -696,6 +701,67 @@ clone_or_update() {
     run git clone --depth 1 --branch "$opt_branch" "$KDP_REPO_URL" "$install_dir" || die "git clone failed"
   else
     die "nothing more to do without the repository"
+  fi
+}
+
+# git that never waits for a password, a passphrase or a host key confirmation: no access means a quick failure
+git_no_prompt() {
+  GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never \
+    GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new" git "$@"
+}
+
+# the private reproduction-models submodule (confluentinc/kafka-docker-playground-internal): fetched only when this
+# machine can read it, over SSH (the URL of .gitmodules) or else HTTPS (gh / credential helper)
+fetch_reproduction_models() {
+  local sub="reproduction-models" ssh_url https_url url=""
+  if [ "$opt_no_reproduction_models" = "1" ]
+  then
+    log "reproduction models: skipped (--no-reproduction-models)"
+    return 0
+  fi
+  if [ "$opt_dry_run" = "1" ] && [ ! -f "$install_dir/.gitmodules" ]
+  then
+    printf '%s\n' "   ${C_YELLOW}[dry-run] would check:${C_RESET} access to the private $sub submodule, and fetch it if readable"
+    return 0
+  fi
+  ssh_url="$(git -C "$install_dir" config -f .gitmodules --get "submodule.$sub.url" 2> /dev/null)" || return 0
+  if [ -e "$install_dir/$sub/.git" ]
+  then
+    log_ok "reproduction models: already there (update them with: git -C $install_dir submodule update --remote $sub)"
+    return 0
+  fi
+  case "$ssh_url" in
+    git@github.com:*) https_url="https://github.com/${ssh_url#git@github.com:}" ;;
+    *) https_url="" ;;
+  esac
+  if git_no_prompt ls-remote "$ssh_url" HEAD > /dev/null 2>&1
+  then
+    url="$ssh_url"
+  elif [ -n "$https_url" ] && git_no_prompt ls-remote "$https_url" HEAD > /dev/null 2>&1
+  then
+    url="$https_url"
+  fi
+  if [ -z "$url" ]
+  then
+    log "reproduction models: private submodule not readable with your git credentials, skipped (Confluent employees: set up an SSH key or 'gh auth login' for github.com, then run this again)"
+    return 0
+  fi
+  if confirm "fetch the private reproduction models (submodule $sub, from $url)?"
+  then
+    run git -C "$install_dir" submodule init "$sub" || { logwarn "could not init the $sub submodule"; return 0; }
+    if [ "$url" != "$ssh_url" ]
+    then
+      run git -C "$install_dir" config "submodule.$sub.url" "$url"
+    fi
+    if [ "$opt_dry_run" = "1" ]
+    then
+      run git -C "$install_dir" submodule update --remote "$sub"
+    elif printf '%s\n' "   ${C_BOLD}\$ git -C $install_dir submodule update --remote $sub${C_RESET}" && git_no_prompt -C "$install_dir" submodule update --remote "$sub"
+    then
+      log_ok "reproduction models in $install_dir/$sub"
+    else
+      logwarn "could not fetch the $sub submodule: run 'git -C $install_dir submodule update --init --remote $sub' yourself"
+    fi
   fi
 }
 
@@ -1361,6 +1427,7 @@ main() {
   install_confluent_cli
   choose_dir
   clone_or_update
+  fetch_reproduction_models
   setup_engine
   setup_rc
   run_doctor
