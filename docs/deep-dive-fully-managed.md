@@ -126,7 +126,10 @@ Gotchas:
   `playground cleanup-cloud-details` and start again. Nothing is deleted in Confluent Cloud by it.
 - **`playground ccloud setup` sets all of this up for you**: an environment `pg-<user>`, one Basic cluster
   `pg-<user>-<cloud>` per `--cloud`, one Kafka key per cluster and one Schema Registry key owned by you (no service
-  account), all stored in a secrets profile (`--profile`, `CLUSTER_*` for `--default-cloud`). Idempotent: run it again,
+  account), all stored in a secrets profile (`--profile`, `CLUSTER_*` for `--default-cloud`). The AWS / Azure regions
+  default to `AWS_REGION` / `AZURE_REGION`, exported or in the profile, so the cluster sits where the example puts its
+  cloud resources. `--cloud databricks` (never by default) adds an AWS cluster `pg-<user>-databricks` in `us-east-2`
+  (`--databricks-region`), stored as `AWS_DATABRICKS_CLUSTER_*` for `fm-databricks-delta-lake-sink`. Idempotent: run it again,
   existing resources and the keys of the profile that still belong to them are kept. It stores the values with the
   secrets store directly, never pushed to GitHub, and warns when exported variables would hide them. The
   `pg-<user>-*` cluster names let `cloud-resources cleanup` delete all their topics, never the clusters nor the

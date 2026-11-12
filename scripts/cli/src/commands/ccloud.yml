@@ -22,7 +22,8 @@ commands:
     you get, in the organization your confluent CLI is logged into:
 
       🌐 an environment pg-<user> (Stream Governance essentials)
-      🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure)
+      🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,
+         and databricks only when asked)
       🔑 one Kafka API key per cluster and one Schema Registry API key, owned
          by you (no service account)
 
@@ -49,14 +50,19 @@ commands:
     arg: cloud
     repeatable: true
     unique: true
-    allowed: [aws, gcp, azure]
+    allowed: [aws, gcp, azure, databricks]
     default: [aws, gcp, azure]
     help: |-
       🌤️ Cloud provider of a cluster to create (repeat it for several)
+
+      databricks is never created by default: an AWS cluster
+      pg-<user>-databricks (--databricks-region, default us-east-2) stored as
+      AWS_DATABRICKS_CLUSTER_*, the cluster of fm-databricks-delta-lake-sink.
+      Add it with --cloud databricks (alone, the other clusters are kept).
   - long: --aws-region
     arg: region
     help: |-
-      🗺️ Region of the AWS cluster (default: AWS_REGION, else eu-west-2)
+      🗺️ Region of the AWS cluster (default: AWS_REGION, exported or in the profile, else eu-west-2)
 
       Examples that need a given region stop when the cluster is elsewhere:
       keep AWS_REGION equal to it.
@@ -67,12 +73,16 @@ commands:
   - long: --azure-region
     arg: region
     help: |-
-      🗺️ Region of the Azure cluster (default: AZURE_REGION, else westeurope)
+      🗺️ Region of the Azure cluster (default: AZURE_REGION, exported or in the profile, else westeurope)
+  - long: --databricks-region
+    arg: region
+    help: |-
+      🗺️ Region of the Databricks cluster, with --cloud databricks (default: us-east-2)
   - long: --default-cloud
     arg: cloud
     allowed: [aws, gcp, azure]
     help: |-
-      🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*), default: the first --cloud
+      🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*), default: the first --cloud (not databricks)
   - long: --environment-name
     arg: name
     help: |-
@@ -91,3 +101,4 @@ commands:
   - playground ccloud setup --dry-run
   - playground ccloud setup --profile emea --cloud aws --cloud azure
   - playground ccloud setup --cloud gcp --gcp-region europe-west1 --default-cloud gcp
+  - playground ccloud setup --cloud databricks

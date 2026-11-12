@@ -587,7 +587,7 @@
       "subcommands": [
         {
           "name": "setup",
-          "description": "🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n\nFor an organization shared by a team, or your own: rather than a cluster\ncreated on every run, or a team cluster where everybody's topics collide,\nyou get, in the organization your confluent CLI is logged into:\n\n  🌐 an environment pg-<user> (Stream Governance essentials)\n  🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure)\n  🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n     by you (no service account)\n\nand the secrets profile (--profile, default: the active one) gets\nENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n_CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n'playground run' loads for the fully managed examples (fm-aws-* on the\nAWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\nothers on --default-cloud).\n\nRun it again any time: what exists is reused (same names), API keys\nalready stored in the profile are kept when they still belong to the\ncluster, and only what is missing is created. --dry-run shows the plan.\n\nNames matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\ndeletes all the topics of clusters named pg-<user>-* (yours), never the\nclusters, and never the environment pg-<user> nor the keys stored here.\n\n🎓 Tip: one profile per organization (--profile emea, --profile personal),\nthen 'playground secrets profile <name>' to switch, and 'confluent login\n--organization <id> --save' for the confluent CLI.",
+          "description": "🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n\nFor an organization shared by a team, or your own: rather than a cluster\ncreated on every run, or a team cluster where everybody's topics collide,\nyou get, in the organization your confluent CLI is logged into:\n\n  🌐 an environment pg-<user> (Stream Governance essentials)\n  🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,\n     and databricks only when asked)\n  🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n     by you (no service account)\n\nand the secrets profile (--profile, default: the active one) gets\nENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n_CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n'playground run' loads for the fully managed examples (fm-aws-* on the\nAWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\nothers on --default-cloud).\n\nRun it again any time: what exists is reused (same names), API keys\nalready stored in the profile are kept when they still belong to the\ncluster, and only what is missing is created. --dry-run shows the plan.\n\nNames matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\ndeletes all the topics of clusters named pg-<user>-* (yours), never the\nclusters, and never the environment pg-<user> nor the keys stored here.\n\n🎓 Tip: one profile per organization (--profile emea, --profile personal),\nthen 'playground secrets profile <name>' to switch, and 'confluent login\n--organization <id> --save' for the confluent CLI.",
           "usage": "playground ccloud setup [OPTIONS]",
           "options": [
             {
@@ -595,14 +595,14 @@
                 "--cloud"
               ],
               "argument": "CLOUD",
-              "description": "🌤️ Cloud provider of a cluster to create (repeat it for several)\n\nRepeatable: ✓ Yes\nDefault value: [\"aws\", \"gcp\", \"azure\"]\nAllowed values: aws, gcp, azure"
+              "description": "🌤️ Cloud provider of a cluster to create (repeat it for several)\n\ndatabricks is never created by default: an AWS cluster\npg-<user>-databricks (--databricks-region, default us-east-2) stored as\nAWS_DATABRICKS_CLUSTER_*, the cluster of fm-databricks-delta-lake-sink.\nAdd it with --cloud databricks (alone, the other clusters are kept).\n\nRepeatable: ✓ Yes\nDefault value: [\"aws\", \"gcp\", \"azure\"]\nAllowed values: aws, gcp, azure, databricks"
             },
             {
               "names": [
                 "--aws-region"
               ],
               "argument": "REGION",
-              "description": "🗺️ Region of the AWS cluster (default: AWS_REGION, else eu-west-2)\n\nExamples that need a given region stop when the cluster is elsewhere:\nkeep AWS_REGION equal to it."
+              "description": "🗺️ Region of the AWS cluster (default: AWS_REGION, exported or in the profile, else eu-west-2)\n\nExamples that need a given region stop when the cluster is elsewhere:\nkeep AWS_REGION equal to it."
             },
             {
               "names": [
@@ -616,14 +616,21 @@
                 "--azure-region"
               ],
               "argument": "REGION",
-              "description": "🗺️ Region of the Azure cluster (default: AZURE_REGION, else westeurope)"
+              "description": "🗺️ Region of the Azure cluster (default: AZURE_REGION, exported or in the profile, else westeurope)"
+            },
+            {
+              "names": [
+                "--databricks-region"
+              ],
+              "argument": "REGION",
+              "description": "🗺️ Region of the Databricks cluster, with --cloud databricks (default: us-east-2)"
             },
             {
               "names": [
                 "--default-cloud"
               ],
               "argument": "CLOUD",
-              "description": "🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*), default: the first --cloud\n\nAllowed values: aws, gcp, azure"
+              "description": "🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*), default: the first --cloud (not databricks)\n\nAllowed values: aws, gcp, azure"
             },
             {
               "names": [

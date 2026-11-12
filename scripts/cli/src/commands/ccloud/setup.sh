@@ -1,23 +1,55 @@
 eval "clouds=(${args[--cloud]})"
-default_cloud="${args[--default-cloud]:-${clouds[0]}}"
 environment_name="${args[--environment-name]:-pg-${USER}}"
 profile="${args[--profile]:-$(get_active_secret_profile)}"
 dry_run="${args[--dry-run]}"
 
-declare -A regions
-regions[aws]="${args[--aws-region]:-${AWS_REGION:-eu-west-2}}"
-regions[gcp]="${args[--gcp-region]:-europe-west2}"
-regions[azure]="${args[--azure-region]:-${AZURE_REGION:-westeurope}}"
-declare -A prefixes
-prefixes[aws]="AWS_"
-prefixes[gcp]="GCP_"
-prefixes[azure]="AZURE_"
-
-if [[ " ${clouds[*]} " != *" $default_cloud "* ]]
+# CLUSTER_* (examples that need no specific cloud): --default-cloud, else the first --cloud that is not databricks
+default_cloud="${args[--default-cloud]}"
+if [ -z "$default_cloud" ]
+then
+    for cloud in "${clouds[@]}"
+    do
+        if [ "$cloud" != "databricks" ]
+        then
+            default_cloud="$cloud"
+            break
+        fi
+    done
+elif [[ " ${clouds[*]} " != *" $default_cloud "* ]]
 then
     logerror "❌ --default-cloud $default_cloud is not one of the --cloud: ${clouds[*]}"
     exit 1
 fi
+
+# a region variable from the shell, else from the secrets profile (where 'playground run' gets it from too)
+function region_variable () {
+    if [ -n "${!1:-}" ]
+    then
+        echo "${!1}"
+    else
+        # not stored: empty (the CLI runs with set -e)
+        secret_get_from_store "$1" "$profile" 2> /dev/null || true
+    fi
+}
+
+declare -A regions
+aws_region=$(region_variable AWS_REGION)
+azure_region=$(region_variable AZURE_REGION)
+regions[aws]="${args[--aws-region]:-${aws_region:-eu-west-2}}"
+regions[gcp]="${args[--gcp-region]:-europe-west2}"
+regions[azure]="${args[--azure-region]:-${azure_region:-westeurope}}"
+regions[databricks]="${args[--databricks-region]:-us-east-2}"
+declare -A prefixes
+prefixes[aws]="AWS_"
+prefixes[gcp]="GCP_"
+prefixes[azure]="AZURE_"
+prefixes[databricks]="AWS_DATABRICKS_"
+# cloud provider of each cluster: the databricks one is an AWS cluster (fm-databricks-delta-lake-sink)
+declare -A providers
+providers[aws]="aws"
+providers[gcp]="gcp"
+providers[azure]="azure"
+providers[databricks]="aws"
 
 tmp_dir=$(mktemp -d -t pg-ccloud-setup-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
@@ -42,7 +74,7 @@ if [[ -n "$dry_run" ]]
 then
     log "🔎 dry-run: showing what would be created and stored, nothing is"
 fi
-log "🏗️ Setting up environment $environment_name with cluster(s) ${clouds[*]} (default: $default_cloud), stored in secrets profile $profile"
+log "🏗️ Setting up environment $environment_name with cluster(s) ${clouds[*]} (default: ${default_cloud:-none}), stored in secrets profile $profile"
 
 # keys of the org, to know whether the keys already stored in the profile still belong to the resources
 confluent api-key list -o json > "$tmp_dir/api-keys.json" 2> /dev/null || echo "[]" > "$tmp_dir/api-keys.json"
@@ -101,11 +133,11 @@ for cloud in "${clouds[@]}"
 do
     name="pg-${USER}-$cloud"
     region="${regions[$cloud]}"
-    id=$(jq -r --arg n "$name" '[.[] | select(.name == $n)][0].id // empty' "$tmp_dir/clusters.json")
+    id=$(jq -r --arg n "$name" '[.[] | select(.name == $n and ((.status // "") | ascii_upcase | test("DELET") | not))][0].id // empty' "$tmp_dir/clusters.json")
     if [ -n "$id" ]
     then
         existing_region=$(jq -r --arg id "$id" '.[] | select(.id == $id) | .region' "$tmp_dir/clusters.json")
-        log "🎰 cluster $name ($id, $cloud $existing_region) already exists, reusing it"
+        log "🎰 cluster $name ($id, ${providers[$cloud]} $existing_region) already exists, reusing it"
         if [ "$existing_region" != "$region" ]
         then
             logwarn "⚠️ it is in $existing_region, not $region: examples expecting $region will stop, delete it in the UI to move it"
@@ -113,14 +145,14 @@ do
         fi
     elif [[ -n "$dry_run" ]]
     then
-        log "🔎 dry-run, would create Basic cluster $name ($cloud $region)"
+        log "🔎 dry-run, would create Basic cluster $name (${providers[$cloud]} $region)"
         id="<new $cloud cluster>"
     else
-        log "🎰 creating Basic cluster $name ($cloud $region)"
-        id=$(confluent kafka cluster create "$name" --cloud "$cloud" --region "$region" --type basic --environment "$environment_id" -o json | jq -r '.id // empty')
+        log "🎰 creating Basic cluster $name (${providers[$cloud]} $region)"
+        id=$(confluent kafka cluster create "$name" --cloud "${providers[$cloud]}" --region "$region" --type basic --environment "$environment_id" -o json | jq -r '.id // empty')
         if [ -z "$id" ]
         then
-            logerror "❌ could not create cluster $name ($cloud $region)"
+            logerror "❌ could not create cluster $name (${providers[$cloud]} $region)"
             exit 1
         fi
         log "🎰 cluster $name is $id"
@@ -199,12 +231,12 @@ do
         to_store "${prefix}CLUSTER_CREDS" "$creds" secret
     fi
     to_store "${prefix}CLUSTER_NAME" "$name" plain
-    to_store "${prefix}CLUSTER_CLOUD" "$cloud" plain
+    to_store "${prefix}CLUSTER_CLOUD" "${providers[$cloud]}" plain
     to_store "${prefix}CLUSTER_REGION" "${regions[$cloud]}" plain
     if [ "$cloud" == "$default_cloud" ]
     then
         to_store CLUSTER_NAME "$name" plain
-        to_store CLUSTER_CLOUD "$cloud" plain
+        to_store CLUSTER_CLOUD "${providers[$cloud]}" plain
         to_store CLUSTER_REGION "${regions[$cloud]}" plain
         if [ -n "$creds" ]
         then
@@ -264,7 +296,7 @@ done
 
 # ⚠️ exported variables win over the profile: they would hide what was just stored
 exported=""
-for name in ENVIRONMENT SCHEMA_REGISTRY_CREDS CLUSTER_NAME CLUSTER_CLOUD CLUSTER_REGION CLUSTER_CREDS AWS_CLUSTER_NAME GCP_CLUSTER_NAME AZURE_CLUSTER_NAME AWS_CLUSTER_CREDS GCP_CLUSTER_CREDS AZURE_CLUSTER_CREDS
+for name in ENVIRONMENT SCHEMA_REGISTRY_CREDS CLUSTER_NAME CLUSTER_CLOUD CLUSTER_REGION CLUSTER_CREDS AWS_CLUSTER_NAME GCP_CLUSTER_NAME AZURE_CLUSTER_NAME AWS_CLUSTER_CREDS GCP_CLUSTER_CREDS AZURE_CLUSTER_CREDS AWS_DATABRICKS_CLUSTER_NAME AWS_DATABRICKS_CLUSTER_CREDS
 do
     if [ -n "${!name:-}" ]
     then
@@ -283,7 +315,7 @@ do
     then
         var="AWS_REGION"
         [ "$cloud" == "azure" ] && var="AZURE_REGION"
-        value="${!var:-$(secret_get_from_store "$var" "$profile" 2> /dev/null)}"
+        value=$(region_variable "$var")
         if [ -n "$value" ] && [ "$value" != "${regions[$cloud]}" ]
         then
             logwarn "⚠️ $var is $value but the $cloud cluster is in ${regions[$cloud]}: the examples that need their cloud resources and the cluster in the same region will stop"
