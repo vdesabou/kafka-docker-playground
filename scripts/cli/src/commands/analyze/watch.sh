@@ -526,9 +526,17 @@ list_entries() {
     find "$folder" -mindepth 1 -maxdepth 1 ! -name '.*' -print0 2> /dev/null
 }
 
+# the console log of the watcher itself (the LaunchAgent writes ~/Library/Logs/playground-analyze-watch.log), copied or
+# downloaded into the folder ("playground-analyze-watch (1).log" too): it only quotes the digests of the files it
+# analyzed, analyzing it again gives a report of a report
+is_own_log() {
+    [[ "$1" == playground-analyze-watch*.log* ]]
+}
+
 # --exclude: top-level names (wildcards allowed) never analyzed, whatever happens to them (moved, renamed, re-created)
 is_excluded() {
     local pattern
+    is_own_log "$1" && return 0
     for pattern in "${exclude_array[@]}"
     do
         # shellcheck disable=SC2053
@@ -583,7 +591,12 @@ do
         name=$(basename "$p")
         present["$name"]=1
         [ -n "${seen[$name]:-}" ] && continue
-        if is_excluded "$name"
+        if is_own_log "$name"
+        then
+            log "🚫 $name: the log of playground analyze watch itself, ignored"
+            seen["$name"]=1
+            continue
+        elif is_excluded "$name"
         then
             log "🚫 $name: excluded (--exclude), ignored"
             seen["$name"]=1

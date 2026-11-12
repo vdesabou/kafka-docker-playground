@@ -1573,6 +1573,48 @@ def test_live_config_changes_in_timeline():
     text = "\n".join(log_report.timeline_text(tl, top=2))
     check("terminal: the changes further down listed", "⚙️ changes later in the timeline" in text and "♻️" in text, text)
 
+def test_sslexception_socket_error_is_not_tls():
+    """an SSLException that only wraps a socket error (an LDAPS connection, already open, that times out or is reset) is
+    not 🔐 TLS handshake failure, and must not become the 👉 start with of the verdict ahead of the connect timeouts; a
+    real handshake failure stays 🔐"""
+    def rec(level, count, line, first, last, body):
+        return (f"@@PGREC@@|{level}|{count}|{line}|{line + 5}|{first}|{last}\n{body}\n@@PGTS@@|{first} {last}\n")
+    ldap = "(io.confluent.security.auth.provider.ldap.LdapAuthenticateCallbackHandler)"
+    text = ("@@PGFILE@@|metadata-service.log|1000|3|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+            + rec("WARN", 6, 10, "2026-10-24T17:15:00", "2026-10-24T17:16:00",
+                  f"[2026-10-24 17:15:00,000] WARN Caught exception searching for LDAP User. javax.naming.ldap.InitialLdapContext@1a2b3c4d  {ldap}\n"
+                  "    javax.naming.CommunicationException: Connection timed out (Read failed) [Root exception is javax.net.ssl.SSLException: Connection timed out (Read failed)]; remaining name 'OU=Users,DC=example,DC=com'\n"
+                  "    Caused by: javax.net.ssl.SSLException: Connection timed out (Read failed)\n"
+                  "    Caused by: java.net.SocketException: Connection timed out (Read failed)")
+            + rec("WARN", 2, 20, "2026-10-24T17:15:01", "2026-10-24T17:15:02",
+                  f"[2026-10-24 17:15:01,000] WARN Caught exception searching for LDAP Group. javax.naming.ldap.InitialLdapContext@1a2b3c4d  {ldap}\n"
+                  "    javax.naming.CommunicationException: Connection reset [Root exception is javax.net.ssl.SSLException: Connection reset]; remaining name 'CN=group,DC=example,DC=com'\n"
+                  "    Caused by: javax.net.ssl.SSLException: Connection reset")
+            + rec("ERROR", 40, 30, "2026-10-24T17:20:00", "2026-10-24T17:59:00",
+                  f"[2026-10-24 17:20:00,000] ERROR Failed to obtain user DN for user1. javax.naming.ldap.InitialLdapContext@1a2b3c4d  {ldap}\n"
+                  "    io.confluent.security.auth.provider.ldap.LdapException: LDAP context could not be created with provided configs\n"
+                  "    Caused by: javax.naming.CommunicationException: 10.0.0.1:636 [Root exception is java.net.SocketTimeoutException: connect timed out]\n"
+                  "    Caused by: java.net.SocketTimeoutException: connect timed out"))
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    causes = {h["title"]: h["occurrences"] for h in res["known_causes"]}
+    check("no 🔐 for socket errors under an SSLException", "🔐 TLS handshake failure" not in causes, causes)
+    check("the read timeout is a ⏱️", causes.get("⏱️ Timeouts", 0) >= 6, causes)
+    cls, verdict = log_report.verdict(res, "ERROR/FATAL/WARN")
+    check("start with 🔌", "start with 🔌 Connection failure" in verdict, verdict)
+    # a real TLS failure still matches the 🔐 pattern, the socket errors under an SSLException do not
+    tls = next(c for c in log_report.known_causes.KNOWN_CAUSES if c["name"] == "tls_handshake")["pattern"]
+    for line, want in (("javax.net.ssl.SSLException: Unrecognized SSL message, plaintext connection?", True),
+                       ("javax.net.ssl.SSLException: Received fatal alert: certificate_expired", True),
+                       ("javax.net.ssl.SSLException: Tag mismatch", True),
+                       ("javax.net.ssl.SSLHandshakeException: Remote host terminated the handshake", True),
+                       ("Caused by: javax.net.ssl.SSLException: Connection reset", False),
+                       ("Caused by: javax.net.ssl.SSLException: Read timed out", False),
+                       ("Caused by: javax.net.ssl.SSLException: Broken pipe (Write failed)", False),
+                       ("Caused by: javax.net.ssl.SSLException: Socket closed", False)):
+        check(f"🔐 {want}: {line}", bool(re.search(tls, line, re.I)) == want, line)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

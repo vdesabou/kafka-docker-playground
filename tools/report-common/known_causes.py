@@ -59,8 +59,13 @@ KNOWN_CAUSES = [
      "title": "🗝️ Empty or unreadable truststore",
      "advice": "the truststore has no trusted certificate (a PKCS12 store read without its password, a missing or empty "
                "file): set javax.net.ssl.trustStorePassword with javax.net.ssl.trustStore, or fix the path"},
+    # an SSLException that only wraps a socket error (an LDAPS or HTTPS connection, already open, that times out, is
+    # reset or closed) is not a TLS problem: it goes to ⏱️ / 🔌 like the same error on a plaintext connection
     {"name": "tls_handshake", "severity": "high", "category": "Certificate/TLS Issues",
-     "pattern": r"SSLHandshakeException|SSLException|SSL handshake failed|PKIX path|unable to find valid certification path"
+     "pattern": r"SSLHandshakeException"
+                r"|SSLException(?!: (?:Connection (?:reset|timed out|closed|or outbound has closed)|Read timed out"
+                r"|Broken pipe|Socket closed))"
+                r"|SSL handshake failed|PKIX path|unable to find valid certification path"
                 r"|No subject alternative names|certificate verify failed|x509:|tls: bad certificate"
                 r"|tls handshake (?:error|failure|timeout)|bad_certificate|certificate_unknown|handshake_failure"
                 r"|certificate (?:has )?expired",

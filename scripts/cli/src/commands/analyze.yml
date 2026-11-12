@@ -339,7 +339,9 @@ commands:
     also picks the ones created in the last minutes (creation time, so
     that a folder you move files into, ~/Downloads/Archives, is not
     picked), --once analyzes those and exits instead of watching.
-    🚫 --exclude never analyzes an entry, even renamed or re-created. Each report is written in its
+    🚫 --exclude never analyzes an entry, even renamed or re-created
+    (nor the log of the watch itself, playground-analyze-watch*.log,
+    copied into the folder). Each report is written in its
     own folder of --output-dir, named after the entry (outside the
     watched folder, so that a report never triggers an analysis).
 

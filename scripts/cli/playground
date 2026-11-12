@@ -10650,7 +10650,7 @@ playground_analyze_logs_usage() {
 playground_analyze_watch_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze watch\n\n"
-    printf "  👀 Watch a folder (default: ~/Downloads) and analyze every new log file,\n  bundle, dump, capture or report, report opened in the browser\n  \n  Leave it running in a terminal: when a log file, a support bundle or a\n  folder of logs lands in the folder (a download from Zendesk, Slack, a\n  browser, Finder), it is analyzed as soon as it is complete, and its\n  HTML report opens in the browser, with a macOS notification.\n  \n  ⏳ A download is complete once its size stops changing and the browser\n  has renamed it: .crdownload, .download, .part, .partial and .tmp\n  entries are waited for, never analyzed.\n  \n  🔎 \"Holds logs\" is checked without extracting anything: a .log / .out\n  file (also rotated, .log.1, and gzipped), a .txt, .json, .csv or\n  extension-less file whose first lines look like log records (a\n  timestamp and a level, librdkafka lines, JSON records with a level),\n  an archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, .7z) or a\n  folder that contains such files. Pictures, PDFs, installers and other\n  files are ignored (logged once).\n  \n  🧰 The other files support asks for get their own analyzer (unless\n  --logs-only), recognized as in the 🧰 Other files of 'analyze logs':\n  a heap dump (analyze heap-dump), a flight recording (analyze\n  flight-recorder), a network capture (analyze tcp-dump), an Oracle\n  XStream diagnostics report (analyze oracle-xstream-report), a GC log\n  (analyze gc-logs), a thread dump (analyze thread-dump; a log file\n  holding a kill -3 thread dump stays a log file: analyze logs analyzes\n  the dump in its report). In an archive or a folder, 'analyze logs'\n  runs first when it holds logs (thread dumps analyzed in its report),\n  then the analyzer of each other kind of file, one report each; one\n  holding only dumps or captures gets their reports only.\n  \n  ⏭️ What Safari or Archive Utility extracts next to an archive or a\n  compressed file already analyzed (x.zip → x/, x.hprof.gz → x.hprof\n  or x.hprof/) is not analyzed again.\n  \n  Only the entries that appear after the start are analyzed, at the\n  top of the folder (a file moved into a sub-folder never is): --since\n  also picks the ones created in the last minutes (creation time, so\n  that a folder you move files into, ~/Downloads/Archives, is not\n  picked), --once analyzes those and exits instead of watching.\n  🚫 --exclude never analyzes an entry, even renamed or re-created. Each report\n  is written in its\n  own folder of --output-dir, named after the entry (outside the\n  watched folder, so that a report never triggers an analysis).\n  \n  🔁 macOS: --install-launch-agent starts the watch at every login (a\n  LaunchAgent, restarted if it stops) with the flags given, so that you\n  never have to start it; --uninstall-launch-agent removes it.\n  \n  🔒 Downloads are untrusted data: they are only read, never run.\n  Stop with Ctrl-C.\n\n"
+    printf "  👀 Watch a folder (default: ~/Downloads) and analyze every new log file,\n  bundle, dump, capture or report, report opened in the browser\n  \n  Leave it running in a terminal: when a log file, a support bundle or a\n  folder of logs lands in the folder (a download from Zendesk, Slack, a\n  browser, Finder), it is analyzed as soon as it is complete, and its\n  HTML report opens in the browser, with a macOS notification.\n  \n  ⏳ A download is complete once its size stops changing and the browser\n  has renamed it: .crdownload, .download, .part, .partial and .tmp\n  entries are waited for, never analyzed.\n  \n  🔎 \"Holds logs\" is checked without extracting anything: a .log / .out\n  file (also rotated, .log.1, and gzipped), a .txt, .json, .csv or\n  extension-less file whose first lines look like log records (a\n  timestamp and a level, librdkafka lines, JSON records with a level),\n  an archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, .7z) or a\n  folder that contains such files. Pictures, PDFs, installers and other\n  files are ignored (logged once).\n  \n  🧰 The other files support asks for get their own analyzer (unless\n  --logs-only), recognized as in the 🧰 Other files of 'analyze logs':\n  a heap dump (analyze heap-dump), a flight recording (analyze\n  flight-recorder), a network capture (analyze tcp-dump), an Oracle\n  XStream diagnostics report (analyze oracle-xstream-report), a GC log\n  (analyze gc-logs), a thread dump (analyze thread-dump; a log file\n  holding a kill -3 thread dump stays a log file: analyze logs analyzes\n  the dump in its report). In an archive or a folder, 'analyze logs'\n  runs first when it holds logs (thread dumps analyzed in its report),\n  then the analyzer of each other kind of file, one report each; one\n  holding only dumps or captures gets their reports only.\n  \n  ⏭️ What Safari or Archive Utility extracts next to an archive or a\n  compressed file already analyzed (x.zip → x/, x.hprof.gz → x.hprof\n  or x.hprof/) is not analyzed again.\n  \n  Only the entries that appear after the start are analyzed, at the\n  top of the folder (a file moved into a sub-folder never is): --since\n  also picks the ones created in the last minutes (creation time, so\n  that a folder you move files into, ~/Downloads/Archives, is not\n  picked), --once analyzes those and exits instead of watching.\n  🚫 --exclude never analyzes an entry, even renamed or re-created\n  (nor the log of the watch itself, playground-analyze-watch*.log,\n  copied into the folder). Each report is written in its\n  own folder of --output-dir, named after the entry (outside the\n  watched folder, so that a report never triggers an analysis).\n  \n  🔁 macOS: --install-launch-agent starts the watch at every login (a\n  LaunchAgent, restarted if it stops) with the flags given, so that you\n  never have to start it; --uninstall-launch-agent removes it.\n  \n  🔒 Downloads are untrusted data: they are only read, never run.\n  Stop with Ctrl-C.\n\n"
   else
     printf "playground analyze watch - 👀 Watch a folder (default: ~/Downloads) and analyze every new log file, bundle, dump, capture or report, report opened in the browser\n\n"
   fi
@@ -68089,9 +68089,17 @@ playground_analyze_watch_command() {
       find "$folder" -mindepth 1 -maxdepth 1 ! -name '.*' -print0 2> /dev/null
   }
 
+  # the console log of the watcher itself (the LaunchAgent writes ~/Library/Logs/playground-analyze-watch.log), copied or
+  # downloaded into the folder ("playground-analyze-watch (1).log" too): it only quotes the digests of the files it
+  # analyzed, analyzing it again gives a report of a report
+  is_own_log() {
+      [[ "$1" == playground-analyze-watch*.log* ]]
+  }
+
   # --exclude: top-level names (wildcards allowed) never analyzed, whatever happens to them (moved, renamed, re-created)
   is_excluded() {
       local pattern
+      is_own_log "$1" && return 0
       for pattern in "${exclude_array[@]}"
       do
           # shellcheck disable=SC2053
@@ -68146,7 +68154,12 @@ playground_analyze_watch_command() {
           name=$(basename "$p")
           present["$name"]=1
           [ -n "${seen[$name]:-}" ] && continue
-          if is_excluded "$name"
+          if is_own_log "$name"
+          then
+              log "🚫 $name: the log of playground analyze watch itself, ignored"
+              seen["$name"]=1
+              continue
+          elif is_excluded "$name"
           then
               log "🚫 $name: excluded (--exclude), ignored"
               seen["$name"]=1
