@@ -172,7 +172,12 @@ All the reports of the playground are in the [📊 reports gallery](reports.md).
    known`) and how many were served from the negative cache of the JVM (`UnknownHostException: <host>` alone: one
    failed lookup handed to every client of the process for `networkaddress.cache.negative.ttl`), and the Java clients
    that could not be created (`No resolvable bootstrap urls given in bootstrap.servers`, thrown by the constructor and
-   not retried: it kills the Oracle CDC source, which commits its redo log offsets with a new consumer). 🧹 **Clients
+   not retried: it kills the Oracle CDC source, which commits its redo log offsets with a new consumer). 🧬 **Not
+   enough replicas** lists the partitions refused with their window (first → last, duration), ISR and min.isr, most
+   refused first, and spots a single replica in sync while min.isr is 2: either the other replicas fell out of sync, or
+   the topic has fewer replicas than `min.insync.replicas` (RF=1 with `min.insync.replicas=2` works until a replica is
+   added by an RF increase, a reassignment or a Self-Balancing move, then every `acks=all` write is refused until the
+   new replica has caught up). 🧹 **Clients
    aborted while a task stopped** (`Failed to close fetcher with a timeout`, `Producer is closed forcefully.`) is LOW:
    a consequence of the stop, not a root cause.
 3. **The HTML report is the deliverable.** The terminal digest is bounded (`--max-findings` per file); the report holds

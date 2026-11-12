@@ -542,6 +542,11 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
         elif title == DNS_TITLE:
             hint["dns"] = dns_summary(matches)
             hint["details"] = dns_details(hint["dns"])
+        elif title == NOT_ENOUGH_REPLICAS_TITLE:
+            ner = not_enough_replicas_summary(matches)
+            if ner["partitions"]:
+                hint["not_enough_replicas"] = ner
+                hint["details"] = not_enough_replicas_details(ner)
         out.append(hint)
     out.sort(key=lambda h: SEVERITY_ORDER.index(h["severity"]))
     return out
@@ -618,6 +623,61 @@ def dns_details(d: dict) -> List[str]:
                    "given in bootstrap.servers\" (thrown by the constructor, not retried: fatal to the code that creates "
                    "clients on the fly)")
     return out
+NOT_ENOUGH_REPLICAS_TITLE = "🧬 Not enough replicas"
+# "The size of the current ISR Set(4) is insufficient to satisfy the min.isr requirement of 2 for partition orders-0"
+NOT_ENOUGH_REPLICAS_RX = re.compile(r"ISR Set\(([^)]*)\) is insufficient to satisfy the min\.isr requirement of (\d+) for partition (\S+)")
+NOT_ENOUGH_REPLICAS_SHOWN = 4
+
+
+def not_enough_replicas_summary(matches: List[Tuple[int, dict, dict]]) -> dict:
+    """🧬 the partitions whose produce requests were refused for lack of in-sync replicas: per partition the occurrences,
+    the window (first → last), the ISR and min.isr, most refused first; and how many of them had a single replica in sync
+    while min.isr asked for more (a record also stands for the partitions whose names differ only by digits)"""
+    parts: Dict[str, dict] = {}
+    for _, f, r in matches:
+        m = NOT_ENOUGH_REPLICAS_RX.search(r["text"])
+        if not m:
+            continue
+        isr = [x for x in re.split(r"[,\s]+", m.group(1)) if x]
+        p = parts.setdefault(m.group(3), {"partition": m.group(3), "occurrences": 0, "first": None, "last": None,
+                                          "isr": isr, "min_isr": int(m.group(2)), "file": f["label"]})
+        p["occurrences"] += r["count"]
+        if r.get("first_ts") and (not p["first"] or r["first_ts"] < p["first"]):
+            p["first"] = r["first_ts"]
+        if r.get("last_ts") and (not p["last"] or r["last_ts"] > p["last"]):
+            p["last"] = r["last_ts"]
+    rows = sorted(parts.values(), key=lambda p: -p["occurrences"])
+    for p in rows:
+        a, b = ts_seconds(p["first"]), ts_seconds(p["last"])
+        p["duration_seconds"] = int(b - a) if a is not None and b is not None else None
+    single = [p for p in rows if len(p["isr"]) == 1 and p["min_isr"] >= 2]
+    return {"partitions": rows, "single_replica_isr": len(single),
+            "min_isr": max((p["min_isr"] for p in single), default=None)}
+
+
+def not_enough_replicas_details(d: dict) -> List[str]:
+    """the lines of 🧬 Not enough replicas under the known cause: the single in-sync replica diagnosis, then the partitions
+    refused the most with their window"""
+    out = []
+    if d["single_replica_isr"]:
+        out.append(f"1️⃣ a single replica in sync on {d['single_replica_isr']} partition(s) while min.isr is {d['min_isr']}: "
+                   "either its other replicas fell out of sync (📉 Shrinking ISR, a broker down), or the topic has fewer "
+                   "replicas than min.insync.replicas. RF=1 with min.insync.replicas=2 works, the minimum being capped at "
+                   "the number of replicas (KAFKA-15583), until a replica is added by a replication factor increase, a "
+                   "reassignment or a Self-Balancing move: then every acks=all write is refused until the new replica has "
+                   "caught up (hours for a large partition under the replication throttle). 📈 ISR expands from one replica "
+                   "without 📉 shrinks point at the second: set min.insync.replicas=1 on those topics while the replicas "
+                   "are added, raise the throttle (confluent.balancer.throttle.bytes.per.second), and never leave "
+                   "min.insync.replicas above the replication factor")
+    for p in d["partitions"][:NOT_ENOUGH_REPLICAS_SHOWN]:
+        out.append(f"🎯 {p['partition']}: ×{p['occurrences']:,}, {period_text(p['first'], p['last'])}"
+                   + (f" ({human_duration(p['duration_seconds'])})" if p["duration_seconds"] else "")
+                   + f", ISR [{','.join(p['isr'])}] for min.isr {p['min_isr']}")
+    if len(d["partitions"]) > NOT_ENOUGH_REPLICAS_SHOWN:
+        out.append(f"… {len(d['partitions']) - NOT_ENOUGH_REPLICAS_SHOWN} more partition(s) in .known_causes[].not_enough_replicas of --json")
+    return out
+
+
 STARTUP_CONNECTION_TITLE = "🌅 Connections retried while starting"
 STARTUP_CONNECTION_ADVICE = ("expected: the component started before the broker (or the service it connects to) was ready, "
                              "retried, and the failures stopped once it was connected. Only a problem if they come back after "
@@ -1921,6 +1981,11 @@ def broker_signals_text(lc: Optional[dict], top: int = 8) -> List[str]:
                    + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
     if len(rows) > top:
         out.append(f"   … {len(rows) - top} more in the HTML report and .lifecycle of --json")
+    if any(r["kind"] == "isr_expand" for r in rows) and not any(r["kind"] == "isr_shrink" for r in rows):
+        # replicas joining and none leaving: new replicas catching up (RF increase, reassignment, Self-Balancing), not
+        # followers that fall behind and come back
+        out.append("   👉 ISR expands without any ISR shrink: replicas being added (a replication factor increase, a reassignment "
+                   "or a Self-Balancing move) that join the ISR once they have caught up, not a broker that falls behind")
     if any(r["kind"] in ("isr_shrink", "replica_fetch_error", "request_timeout") for r in rows):
         out.append("   👉 a broker that falls behind: check its request handler / network idle ratio, disk latency, GC pauses "
                    "and the network between brokers (playground broker metrics on a repro; the JMX metrics from the customer)")
@@ -4748,6 +4813,10 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         dns = next((h for h in res["known_causes"] if h["title"] == DNS_TITLE and h.get("details")), None)
         if dns:
             out += ["", f"### {DNS_TITLE}", ""] + [f"- {md_cell(x)}" for x in dns["details"]]
+        # 🧬 the partitions refused and their window: the impact table of an RCA
+        ner = next((h for h in res["known_causes"] if h["title"] == NOT_ENOUGH_REPLICAS_TITLE and h.get("details")), None)
+        if ner:
+            out += ["", f"### {NOT_ENOUGH_REPLICAS_TITLE}", ""] + [f"- {md_cell(x)}" for x in ner["details"]]
     for g in res.get("thread_dumps") or []:
         if not g.get("findings"):
             continue
@@ -7738,7 +7807,10 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
         reads = " · ".join([f"<a href='{e(url)}' target='_blank' rel='noopener'>📚 {e(label)}</a>" for label, url in reading_links(v)]
                            + [f"<a href='{e(l['url'])}' target='_blank' rel='noopener' title='internal runbook of Confluent support'>"
                               f"🔒 {e(l['title'])}</a>" for l in v.get("internal_links") or []])
-        head += (chains_note(chains, limit) + f"<div class='fi-advice'>👉 {e(v['advice'])}</div>"
+        # what the records tell beyond the advice (🧬 the partitions refused and their window): not for the killed tasks,
+        # whose details are their chains, already in the rows
+        facts = "".join(f"<div class='fi-advice'>{e(d)}</div>" for d in (v.get("details") or [])[:6]) if not v.get("chains") else ""
+        head += (chains_note(chains, limit) + f"<div class='fi-advice'>👉 {e(v['advice'])}</div>" + facts
                  + (f"<div class='fi-advice fi-read'>{reads}</div>" if reads else ""))
         return dict(f, html=head, html_details=chain_rows(chains, limit, sev, viewers) or None)
     # a root cause no known cause explains: its exception as the title, the same rows as a known cause
