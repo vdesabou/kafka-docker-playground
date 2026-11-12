@@ -38075,7 +38075,9 @@ RUN ${CONNECT_3RDPARTY_INSTALL}
 USER ${CONNECT_USER}
 EOF
     log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} to include additional tools"
-    docker build --quiet -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir
+    # DOCKER_BUILDKIT=0: build on the local image store, like the "Restoring ubi minimal" build above.
+    # With a docker-container buildx builder (e.g. BUILDX_BUILDER set in CI), the FROM image patched locally is not visible
+    (export_docker_config_without_cred_helpers; DOCKER_BUILDKIT=0 docker build --quiet -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir)
     if [ $? == 0 ]
     then
       tools_ok="true"
@@ -38086,7 +38088,7 @@ EOF
   if [ "$tools_ok" == "true" ]
   then
     # metadata only layer
-    printf 'FROM %s\nLABEL %s="1"\n' "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "$tools_label" | docker build --quiet -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} - > /dev/null 2>&1
+    printf 'FROM %s\nLABEL %s="1"\n' "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "$tools_label" | (export_docker_config_without_cred_helpers; DOCKER_BUILDKIT=0 docker build --quiet -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} -) > /dev/null 2>&1
   fi
   set -e
 }
