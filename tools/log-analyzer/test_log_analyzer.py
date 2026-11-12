@@ -775,6 +775,49 @@ def test_consumer_leaving_not_a_storm():
     check("the leaving group last", order[-1] == "cdc-orcl-39-T24-FUSP", order)
 
 
+def test_restart_loop():
+    """🔁 a worker that failed to start again and again (ERROR Failed to start Connect, its rotated files merged), a process
+    stopped every few minutes: a restart loop, first in the 🔄 table, in its text and in the verdict; two stops or two failed
+    starts are not one"""
+    def failed(f, n, t0):
+        return "".join(f"@@PGEVT@@|process_start_failed|{10 + i}|2026-11-07T{t0 + i // 6:02d}:{i % 6 * 10 + 5:02d}:00||Kafka Connect failed to start\n"
+                       f"@@PGEVT@@|process_stop|{11 + i}|2026-11-07T{t0 + i // 6:02d}:{i % 6 * 10 + 5:02d}:01||Kafka Connect worker stopping\n"
+                       for i in range(n)) + f"@@PGEVTN@@|process_start_failed|connect|{n}\n@@PGEVTN@@|process_stop|connect|{n}\n"
+    err = ("@@PGREC@@|ERROR|1|5|5|2026-11-07T10:00:00|2026-11-07T10:00:00\n"
+           "[2026-11-07 10:00:00,000] ERROR Failed to start Connect (org.apache.kafka.connect.cli.AbstractConnectCli:178)\n"
+           "@@PGTS@@|2026-11-07T10:00:00\n")
+    text = ("@@PGFILE@@|w1/connect.log.1|1000|1|0|2026-11-07T10:00:00|2026-11-07T10:20:00\n" + err + failed("", 2, 10)
+            + "@@PGFILE@@|w1/connect.log|1000|1|0|2026-11-07T11:00:00|2026-11-07T11:20:00\n" + err + failed("", 2, 11)
+            # another worker: two failed starts only
+            + "@@PGFILE@@|w2/connect.log|1000|1|0|2026-11-07T10:00:00|2026-11-07T10:20:00\n" + err + failed("", 2, 10)
+            # a broker stopped every 10 min, four times: a loop; another one stopped twice is not
+            + "@@PGFILE@@|b1/server.log|1000|1|0|2026-11-07T10:00:00|2026-11-07T11:00:00\n" + err
+            + "".join(f"@@PGEVT@@|process_stop|{i}|2026-11-07T10:{i * 10:02d}:00||Kafka broker shutting down\n" for i in range(4))
+            + "@@PGEVTN@@|process_stop|broker|4\n"
+            + "@@PGFILE@@|b2/server.log|1000|1|0|2026-11-07T10:00:00|2026-11-07T11:00:00\n" + err
+            + "".join(f"@@PGEVT@@|process_stop|{i}|2026-11-07T10:{i * 10:02d}:00||Kafka broker shutting down\n" for i in range(2))
+            + "@@PGEVTN@@|process_stop|broker|2\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    loops = {(lp["worker"], lp["who"]): lp for lp in res["lifecycle"]["loops"]}
+    check("the loops", set(loops) == {("w1/connect.log", "connect"), ("b1/server.log", "broker")}, loops)
+    w1 = loops[("w1/connect.log", "connect")]
+    check("rotated files merged", w1["failed"] == 4 and w1["first"] == "2026-11-07 10:05:00" and w1["last"] == "2026-11-07 11:15:00", w1)
+    b1 = loops[("b1/server.log", "broker")]
+    check("broker stopped every 10 min", b1["failed"] == 0 and b1["stops"] == 4 and b1["every_seconds"] == 600, b1)
+    check("loop text", log_report.restart_loop_text(w1).startswith("Kafka Connect (w1/connect.log) failed to start 4 times, 2026-11-07 10:05:00 → 11:15:00"),
+          log_report.restart_loop_text(w1))
+    first = res["lifecycle"]["rows"][0]
+    check("failed starts first, with the loop badge", first["kind"] == "process_start_failed" and first["loop"], first)
+    text_out = "\n".join(log_report.lifecycle_text(res["lifecycle"]))
+    check("in the text", "🔁 RESTART LOOP Kafka Connect (w1/connect.log) failed to start 4 times" in text_out, text_out)
+    check("in the verdict", "🔁 Restart loop: Kafka Connect (w1/connect.log) failed to start 4 times" in log_report.logs_verdict(res, "ERROR")[1],
+          log_report.logs_verdict(res, "ERROR"))
+    check("in the HTML", "🔁 Restart loop: Kafka Connect (w1/connect.log)" in log_report.lifecycle_html(res["lifecycle"]), "")
+    tl = [ev["text"] for ev in res["timeline"] if ev["text"].startswith("💥 Kafka Connect failed")]
+    check("failed starts in the timeline", len(tl) >= 1, tl)
+
+
 def test_member_eviction():
     """🚪 the members of a consumer group removed by the group coordinator (broker log): a 🔄 row per group with the
     timeout as its reason, tied to the sink connector of a connect-<name> group, and in the timeline, not a 💥 trigger"""

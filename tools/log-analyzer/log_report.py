@@ -1195,6 +1195,8 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 group, _, why = (ev.get("detail") or "?").partition(" · ")
                 add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None,
                     f"🚪 members of group {group} removed by the coordinator: {why or 'timeout'}", ev.get("connector") or None)
+            elif ev["kind"] == "process_start_failed":
+                add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"💥 {ev.get('detail') or 'failed to start'}")
             elif ev["kind"] == "process_stop":
                 add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"🛑 {ev.get('detail') or 'stopping'}")
             elif ev["kind"] == "controller_change":
@@ -1688,7 +1690,7 @@ STORM_MIN = 10
 STORM_PER_HOUR = 6
 LIFECYCLE_KINDS = {"worker_rebalance": "worker group rebalances", "consumer_rejoin": "consumer group rejoins",
                    "connector_start": "connector starts", "task_start": "task starts", "process_start": "process starts",
-                   "process_stop": "process stops", "controller_change": "active controller changes",
+                   "process_start_failed": "failed starts", "process_stop": "process stops", "controller_change": "active controller changes",
                    "gc_pause": "GC pauses of 1 s or more",
                    "member_eviction": "group members removed by the coordinator",
                    "isr_shrink": "ISR shrinks", "isr_expand": "ISR expands",
@@ -1717,6 +1719,61 @@ def broker_reason(detail: str) -> str:
     return re.sub(r" \(.*$", "", detail.split(" · ", 1)[1].strip()) if " · " in detail else ""
 
 
+# the kinds of a worker or a broker (re)started or stopped: one row per process ("connect", "broker"), not per connector
+PROCESS_KINDS = ("process_start", "process_start_failed", "process_stop")
+# 🔁 a restart loop: a worker that failed to start RESTART_LOOP_MIN times in a file (ERROR Failed to start Connect), or a
+# process of a file stopped RESTART_LOOP_MIN + 1 times, every RESTART_LOOP_EVERY_S or less (median): it never runs for long
+RESTART_LOOP_MIN = 3
+RESTART_LOOP_EVERY_S = 30 * 60
+
+
+def restart_loops(res: dict, files: List[dict]) -> List[dict]:
+    """🔁 the processes in a restart loop, one per worker or broker (its rotated files merged, worker_of): started again and
+    again by its service manager (systemd, Kubernetes) and failing or stopping each time. The counts of the whole files,
+    the times of the ones noted"""
+    counts: Dict[str, Counter] = {}
+    times: Dict[Tuple[str, str, str], List[float]] = {}
+    for f in files:
+        w = worker_of(f["label"])
+        for c in f.get("event_counts") or []:
+            if c["kind"] in PROCESS_KINDS:
+                counts.setdefault(w, Counter())[(c["kind"], c["who"])] += c["count"]
+        for ev in f.get("events") or []:
+            t = ts_seconds(ev.get("time"))
+            if ev["kind"] in PROCESS_KINDS and t is not None:
+                who = "connect" if "Connect" in (ev.get("detail") or "") else "broker"
+                times.setdefault((w, ev["kind"], who), []).append(t)
+    titles = [h["title"] for h in res.get("known_causes") or []]
+    # the known cause of a process that does not start (secret registry, a port in use, a bad config…): the first one
+    # whose title says so
+    cause = next((t for t in titles if re.search(r"start", t, re.I)), None)
+    out = []
+    for w, cnt in counts.items():
+        for who in sorted({x for _, x in cnt}):
+            failed, stops = cnt[("process_start_failed", who)], cnt[("process_stop", who)]
+            ts = sorted(times.get((w, "process_start_failed" if failed >= RESTART_LOOP_MIN else "process_stop", who)) or [])
+            gaps = sorted(b - a for a, b in zip(ts, ts[1:]))
+            every = gaps[len(gaps) // 2] if gaps else None
+            if not (failed >= RESTART_LOOP_MIN
+                    or (stops >= RESTART_LOOP_MIN + 1 and every is not None and every <= RESTART_LOOP_EVERY_S)):
+                continue
+            stamp_of = lambda x: datetime.fromtimestamp(x, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: E731
+            out.append({"worker": w, "who": who, "failed": failed, "stops": stops, "starts": cnt[("process_start", who)],
+                        "first": stamp_of(ts[0]) if ts else None, "last": stamp_of(ts[-1]) if ts else None,
+                        "every_seconds": int(every) if every is not None else None,
+                        "known_cause": cause if who == "connect" and failed else None})
+    return sorted(out, key=lambda lp: (-lp["failed"], -lp["stops"]))
+
+
+def restart_loop_text(lp: dict) -> str:
+    """🔁 one line for a restart loop: "connect (connect.log) failed to start 20 times, 09:46 → 11:37, every ~5 min" """
+    name = "Kafka Connect" if lp["who"] == "connect" else "the broker" if lp["who"] == "broker" else lp["who"]
+    what = f"failed to start {lp['failed']:,} times" if lp["failed"] >= RESTART_LOOP_MIN else f"stopped {lp['stops']:,} times"
+    when = f", {period_text(lp['first'], lp['last'])}" if lp.get("first") else ""
+    every = f", a new attempt every ~{human_duration(lp['every_seconds'])}" if lp.get("every_seconds") else ""
+    return f"{name} ({lp['worker']}) {what}{when}{every}"
+
+
 def lifecycle(res: dict, files: List[dict]) -> dict:
     """the lifecycle of the INFO lines: rebalances of the worker groups, rejoins of the consumer groups, connectors and
     tasks started, workers and brokers (re)started; counted per group / connector (all of them) with the first and last
@@ -1736,7 +1793,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                 continue
             group = (ev.get("detail") or "").split(" · ")[0]
             who = group if ev["kind"] in ("worker_rebalance", "consumer_rejoin", "member_eviction") else \
-                ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] in ("process_start", "process_stop") else \
+                ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] in PROCESS_KINDS else \
                 "controller" if ev["kind"] == "controller_change" else "jvm" if ev["kind"] == "gc_pause" else \
                 broker_who(group, f["label"]) if ev["kind"] in BROKER_KINDS else ev.get("connector") or ""
             r = rows.get((ev["kind"], who))
@@ -1783,11 +1840,15 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                     "_times": sorted(r["times"]),
                     # (time, file, line) of the first LC_OCC_SHOWN noted, by time: the occurrences of a row clicked
                     "_occ": sorted(r["occ"])[:LC_OCC_SHOWN]})
+    loops = restart_loops(res, files)
+    for r in out:
+        # 🔁 the failed starts and stops of a process in a restart loop: first in the table, with a badge
+        r["loop"] = r["kind"] in ("process_start_failed", "process_stop") and any(lp["who"] == r["who"] for lp in loops)
     order = list(LIFECYCLE_KINDS)
     # the groups of consumers that leave on purpose last: thousands of them must not push the real rebalances down
-    out.sort(key=lambda r: (not r["storm"], r["leaving"], order.index(r["kind"]), -r["count"]))
+    out.sort(key=lambda r: (not r["loop"], not r["storm"], r["leaving"], order.index(r["kind"]), -r["count"]))
     # the period the rates are computed on: under an hour, the HTML report shows the count over it instead of a rate
-    return {"rows": out, "storms": [r for r in out if r["storm"]], "hours": round(hours, 3)}
+    return {"rows": out, "storms": [r for r in out if r["storm"]], "loops": loops, "hours": round(hours, 3)}
 
 
 def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
@@ -1795,9 +1856,12 @@ def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
     if not rows:
         return []
     out = ["🔄 Restarts and rebalances (INFO lines)"]
+    for lp in (lc or {}).get("loops") or []:
+        out.append(f"   🔁 RESTART LOOP {restart_loop_text(lp)}"
+                   + (f" · {lp['known_cause']}" if lp.get("known_cause") else ""))
     for r in rows[:top]:
         rate = f", {r['per_hour']:g}/h" if r.get("per_hour") is not None else ""
-        out.append(f"   {'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
+        out.append(f"   {'🔁 ' if r.get('loop') else ''}{'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
                    + (f" · {r['reason']}" if r.get("reason") else "")
                    + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
     if len(rows) > top:
@@ -1848,7 +1912,8 @@ def lifecycle_conn_attr(r: dict) -> str:
 
 # the look of each kind of row of the 🔄 table: icon and color (pill, count bar, activity span)
 LIFECYCLE_LOOK = {"worker_rebalance": ("🔁", "#7c3aed"), "consumer_rejoin": ("🔄", "#2563eb"), "connector_start": ("🔌", "#16a34a"),
-                  "task_start": ("▶️", "#059669"), "process_start": ("🚀", "#d97706"), "process_stop": ("⏹️", "#b45309"),
+                  "task_start": ("▶️", "#059669"), "process_start": ("🚀", "#d97706"), "process_start_failed": ("💥", "#dc2626"),
+                  "process_stop": ("⏹️", "#b45309"),
                   "controller_change": ("👑", "#0891b2"), "gc_pause": ("🧹", "#dc2626"),
                   "member_eviction": ("🚪", "#9333ea"), "isr_shrink": ("📉", "#e11d48"), "isr_expand": ("📈", "#0d9488"),
                   "replica_fetch_error": ("🪝", "#c2410c"), "request_timeout": ("⏱️", "#b91c1c"), "log_cleaner": ("🧽", "#7c2d12"),
@@ -2065,6 +2130,8 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
     def row(r: dict) -> str:
         icon, color = LIFECYCLE_LOOK.get(r["kind"], ("•", "#64748b"))
         storm = "<br><span class='lc-storm-badge'>🌀 storm</span>" if r["storm"] else ""
+        if r.get("loop"):
+            storm += "<br><span class='lc-storm-badge'>🔁 restart loop</span>"
         conn = f" <span class='fi-conn'>{e(r['connector'])}</span>" if r.get("connector") else ""
         epochs = sorted(int(x) for x in (lifecycle_time(t) for t in r.get("_times") or []) if x is not None)
         pick = (f" tabindex='0' data-series='{shown_kinds.index(r['kind']) if r['kind'] in shown_kinds else -1}'"
@@ -2092,6 +2159,16 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
                                 for k in kinds], note=" · all the connectors", chart_id="lc-chart",
                        # the whole width of the card: a wider drawing keeps the time labels apart
                        extra={"W": 1000, "H": 200}) if len(points) > 1 else ""
+    # 🔁 a worker or a broker in a restart loop: said first, the counts of the table alone do not tell it
+    loop_banner = "".join(
+        f"<div class='verdict danger'>🔁 Restart loop: {e(restart_loop_text(lp))}. "
+        + ("Each start ends with <code>ERROR Failed to start Connect</code>: the worker never runs, so its REST API, its "
+           "connectors and tasks stay down, and its service manager starts it again. The error logged just before each "
+           "failure is the cause" if lp["failed"] >= RESTART_LOOP_MIN else
+           "It never runs for long: look at what it logs just before each stop (an ERROR, a JVM crash, a kill by the "
+           "service manager or a liveness probe)")
+        + (f": {e(lp['known_cause'])} (🔎 Findings)." if lp.get("known_cause") else ".") + "</div>"
+        for lp in lc.get("loops") or [])
     return (LIFECYCLE_CSS
             + "<div class='table-card'><h2>🔄 Restarts and rebalances"
             + (" · 🐢 broker signals" if any(r["kind"] in BROKER_KINDS for r in lc["rows"]) else "")
@@ -2104,11 +2181,14 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
             "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). The chart shows them over time (drag "
             "to zoom); the swimlane of When places each occurrence of a row on the period of the table (a tick per bucket, darker "
             "with more), between its first and last one. It follows the connector filter (click a connector name to set it): "
-            "the rows of the other connectors are hidden, the worker group rebalances and process starts stay. Click a row: "
+            "the rows of the other connectors are hidden, the worker group rebalances and process starts stay. 🔁 a restart "
+            f"loop: a worker that failed to start (ERROR Failed to start Connect) {RESTART_LOOP_MIN} times or more, or a "
+            f"process stopped {RESTART_LOOP_MIN + 1} times or more, every {RESTART_LOOP_EVERY_S // 60} min or less. Click a row: "
             "the chart shows it alone, on its period, and its occurrences open under it, each with a link to its line in the "
             "log file (again: every row).</p>"
             + "<p class='legend lc-picked-note' hidden>🔍 only <b class='lc-picked-who'></b> in the chart and its occurrences "
             "under its row · <button type='button' class='lc-unpick'>⤺ every row</button></p>"
+            + loop_banner
             + (f"<div class='lc-chart'>{chart}</div>" if chart else "")
             + "<p class='legend lc-none' hidden>No restart nor rebalance for this connector.</p><table class='lc-table'><tr><th>What</th>"
             f"<th>Group / connector</th><th>Count</th><th>Per hour</th><th>When {axis}</th><th>Reason, connector</th></tr>"
@@ -4664,9 +4744,12 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     all_lc = (res.get("lifecycle") or {}).get("rows") or []
     lc_rows = [r for r in all_lc if r["kind"] not in BROKER_KINDS]
     if lc_rows:
-        out += ["", "### Restarts and rebalances", "", "| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]
+        out += ["", "### Restarts and rebalances", ""]
+        out += [f"🔁 **Restart loop**: {md_cell(restart_loop_text(lp))}" + (f" ({md_cell(lp['known_cause'])})" if lp.get("known_cause") else "")
+                + "\n" for lp in (res.get("lifecycle") or {}).get("loops") or []]
+        out += ["| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]
         for r in lc_rows[:8]:
-            out.append(f"| {'🌀 ' if r['storm'] else ''}{LIFECYCLE_KINDS[r['kind']]} | `{md_cell(r['who'] or '?')}` | {r['count']:,} | {rate_cell(r)} |")
+            out.append(f"| {'🔁 ' if r.get('loop') else ''}{'🌀 ' if r['storm'] else ''}{LIFECYCLE_KINDS[r['kind']]} | `{md_cell(r['who'] or '?')}` | {r['count']:,} | {rate_cell(r)} |")
     br_rows = [r for r in all_lc if r["kind"] in BROKER_KINDS]
     if br_rows:
         out += ["", "### Broker signals", "", "| What | Broker | Count | Per hour | Partitions / peers |", "| --- | --- | --- | --- | --- |"]
@@ -7085,8 +7168,10 @@ def logs_verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
             c = res["root_causes"][0]
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"]
             start = f": start with {what[:160].rstrip('.')}"
+        loops = (res.get("lifecycle") or {}).get("loops") or []
+        loop = f" 🔁 Restart loop: {restart_loop_text(loops[0])}" + (f" (+{len(loops) - 1} more)" if len(loops) > 1 else "") + "." if loops else ""
         return "danger", (f"🚨 {errors:,} ERROR/FATAL occurrence(s), {s['distinct']:,} distinct record(s) in "
-                          f"{s['files_with_findings']} {unit}(s){start}.")
+                          f"{s['files_with_findings']} {unit}(s){start}.{loop}")
     return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL."
 
 
@@ -8013,7 +8098,8 @@ def main() -> int:
                        findings=[{k: v for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
         if res.get("lifecycle"):
             strip = lambda rows: [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]  # noqa: E731
-            compact["lifecycle"] = {"rows": strip(res["lifecycle"]["rows"]), "storms": strip(res["lifecycle"]["storms"])}
+            compact["lifecycle"] = {"rows": strip(res["lifecycle"]["rows"]), "storms": strip(res["lifecycle"]["storms"]),
+                                    "loops": res["lifecycle"].get("loops") or []}
         if args.json_sections:
             sections = [x.strip() for x in args.json_sections.split(",") if x.strip()]
             compact = {k: v for k, v in compact.items() if k in sections}

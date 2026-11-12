@@ -6869,7 +6869,7 @@ function log_awk() {
 #   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
 #   @@PGEVT@@<tab>jvm_version<tab>line<tab>timestamp<tab><tab>version [vendor] (jvm.spec of a Connect worker, java.version=,
 #             the Version: of a GC log, the header of a thread dump)
-#   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
+#   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_start_failed|process_stop|controller_change<tab>
 #              line<tab>timestamp<tab>connector<tab>group, reason or what started / stopped: the lifecycle of the INFO lines,
 #              300 of each kind at most
 #   @@PGEVT@@<tab>member_eviction<tab>line<tab>timestamp<tab>connector<tab>group · timeout: members of a classic consumer group
@@ -7473,7 +7473,7 @@ function summarize_log_errors() {
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id/) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id/) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
             if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
@@ -7494,6 +7494,10 @@ function summarize_log_errors() {
                 lc_kind = "process_start"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker started"
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
                 lc_kind = "process_start"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker started"
+            } else if (index($0, "Failed to start Connect")) {
+                # ERROR Failed to start Connect (AbstractConnectCli): the worker gave up during its startup and exits. Several of
+                # them in a file is a restart loop (the service manager starts it again, it fails again): 🔁 in the report
+                lc_kind = "process_start_failed"; lc_who = "connect"; lc_detail = "Kafka Connect failed to start"
             } else if (index($0, "Kafka Connect stopping")) {
                 lc_kind = "process_stop"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker stopping"
             } else if ($0 ~ /\] shutting down \(kafka\.server|to SHUTTING_DOWN/) {
@@ -7577,7 +7581,7 @@ function summarize_log_errors() {
                 if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
             }
             if (lc_kind != "") {
-                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/ ? lc_who : lc_conn)
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_start_failed|process_stop|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
                 # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):
