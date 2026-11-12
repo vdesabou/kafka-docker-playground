@@ -60,6 +60,11 @@ WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf
 [2026-11-07 10:40:05,000] ERROR [kafka-log-cleaner-thread-0]: Error due to (kafka.log.LogCleaner)
 [2026-11-07 10:40:06,000] INFO Attempting to send response via channel for which there is no open connection, connection id 172.18.0.5:9092-172.18.0.9:51234-3 (kafka.network.Processor)
 %5|1762512007.000|THROTTLE|rdkafka#producer-1| [thrd:broker:9092/2]: broker:9092/2: ProduceRequest throttled by broker for 512ms
+[2026-11-07 10:41:00,000] INFO [DynamicConfigPublisher broker id=1] Updating node 1 with new configuration : leader.replication.throttled.rate -> 10485760 (kafka.server.metadata.DynamicConfigPublisher)
+[2026-11-07 10:41:00,100] INFO [DynamicConfigPublisher broker id=2] Updating node 2 with new configuration :  (kafka.server.metadata.DynamicConfigPublisher)
+[2026-11-07 10:41:01,000] INFO [DynamicConfigPublisher broker id=1] Updating cluster configuration : confluent.balancer.throttle.bytes.per.second -> 52428800 (kafka.server.metadata.DynamicConfigPublisher)
+[2026-11-07 10:41:02,000] INFO [DynamicConfigPublisher broker id=1] Updating topic orders with new configuration : leader.replication.throttled.replicas -> 0:1,0:4,follower.replication.throttled.replicas -> 0:1,retention.ms -> 1000 (kafka.server.metadata.DynamicConfigPublisher)
+[2026-11-07 10:41:03,000] INFO [DynamicConfigPublisher broker id=1] Updating topic payments with new configuration : retention.ms -> 1000 (kafka.server.metadata.DynamicConfigPublisher)
 EOF
 # a line of a log written on Windows (CRLF)
 printf '%s\r\n' '[2026-11-07 10:28:00,003] INFO [hdfs-sink|task-1] Starting commit and rotation (io.confluent.connect.hdfs3.TopicPartitionWriter:298)' >> "$tmp/events.log"
@@ -124,6 +129,13 @@ do
     if [ "$got" != "isr_expand=broker 1 · orders-0 (1,3 -> 1,3,2),isr_shrink=broker 1 · orders-0 (1,2,3 -> 1,3),isr_shrink=broker 1 · orders-1 (1,2 -> 1),log_cleaner=log cleaner · thread died,quota_throttle=broker 2 · ProduceRequest,replica_fetch_error=broker 1 · follower 2,replica_fetch_error=broker 1 · follower 2,request_timeout=broker 1 · Producer,response_dropped=broker · client gone before the response," ]
     then
         echo "❌ $awk_cmd: broker signal events of events.log: $got"
+        failed=1
+    fi
+    # the broker configs changed live (not the empty update of a start) and the topics given throttled replicas (a move)
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 ~ /^(dynamic_config|replica_move)$/ {print $2 "=" $6}' "$out.records" | LC_ALL=C sort | tr '\n' ',')
+    if [ "$got" != "dynamic_config=broker 1 · cluster: confluent.balancer.throttle.bytes.per.second -> 52428800,dynamic_config=broker 1 · node: leader.replication.throttled.rate -> 10485760,replica_move=broker 1 · orders: 0:1,0:4," ]
+    then
+        echo "❌ $awk_cmd: live config events of events.log: $got"
         failed=1
     fi
     # 1000 ISR shrinks: the first 300 noted, then the last 150 (the incident at the end of a long log keeps its bursts)

@@ -6875,6 +6875,10 @@ function log_awk() {
 #   @@PGEVT@@<tab>member_eviction<tab>line<tab>timestamp<tab>connector<tab>group · timeout: members of a classic consumer group
 #              removed by the group coordinator of a broker (session timeout, rebalance timeout, pending sync expired)
 #   @@PGEVT@@<tab>gc_pause<tab>line<tab>timestamp<tab><tab><ms> <what>: a GC pause of 1 s or more (GC log, unified or legacy)
+#   @@PGEVT@@<tab>dynamic_config<tab>line<tab>timestamp<tab><tab>broker <id> · node|cluster|default broker: key -> value, …: a
+#              broker config changed while it runs (DynamicConfigPublisher of KRaft, no restart)
+#   @@PGEVT@@<tab>replica_move<tab>line<tab>timestamp<tab><tab>broker <id> · topic: partition:broker,…: throttled replicas set on a
+#              topic (its partitions are being moved: reassignment, Self-Balancing, RF increase with a throttle)
 #   @@PGEVT@@<tab>isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped<tab>line<tab>
 #              timestamp<tab><tab>broker <id> · partition, peer or what: the signals of a broker under pressure (INFO / WARN
 #              lines: ISR changes, followers failing to fetch, requests timing out, log cleaner stopped, quota throttling,
@@ -7538,7 +7542,7 @@ function summarize_log_errors() {
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id/) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id|DynamicConfigPublisher/) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
             if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
@@ -7631,6 +7635,27 @@ function summarize_log_errors() {
                 lc_kind = "quota_throttle"; lc_who = "broker"
                 if (match($0, /\/[0-9]+: /)) { lc_who = "broker " substr($0, RSTART + 1, RLENGTH - 3) }
                 lc_detail = lc_who " · " (index($0, "ThrottlingQuotaExceeded") ? "controller mutation quota" : (match($0, /[A-Za-z]+Request throttled/) ? substr($0, RSTART, RLENGTH - 10) : "client quota"))
+            } else if (index($0, "DynamicConfigPublisher") && index($0, " -> ") && $0 ~ /Updating (node [0-9]+|cluster|default broker|broker [0-9]+)( configuration| with new configuration) : /) {
+                # a broker config changed while it runs (KRaft, kafka.server.metadata.DynamicConfigPublisher, INFO): "Updating node
+                # 1 with new configuration : leader.replication.throttled.rate -> 10485760", "Updating cluster configuration :
+                # confluent.balancer.throttle.bytes.per.second -> 52428800": no restart, the KafkaConfig dump that follows is not
+                # a start. Keyed by the broker that applied it
+                lc_kind = "dynamic_config"; lc_who = "broker"
+                if (match($0, /broker id=[0-9]+/)) lc_who = "broker " substr($0, RSTART + 10, RLENGTH - 10)
+                lc_scope = index($0, "Updating cluster") ? "cluster" : (index($0, "default broker") ? "default broker" : "node")
+                lc_cfg = $0; sub(/.*new configuration : */, "", lc_cfg); sub(/.*Updating cluster configuration : */, "", lc_cfg)
+                sub(/ *\(kafka\.server\.metadata\.DynamicConfigPublisher\) *$/, "", lc_cfg)
+                lc_detail = lc_who " · " lc_scope ": " substr(lc_cfg, 1, 400)
+            } else if (index($0, "DynamicConfigPublisher") && match($0, /Updating topic [^ ]+ with new configuration : .*(leader|follower)\.replication\.throttled\.replicas -> [0-9]/)) {
+                # throttled replicas set on a topic: its partitions are being moved (kafka-reassign-partitions --throttle, a
+                # Self-Balancing move, an RF increase with a throttle): "Updating topic orders with new configuration :
+                # leader.replication.throttled.replicas -> 0:1,0:4,…" (partition:broker, the old and the new replicas)
+                lc_kind = "replica_move"; lc_who = "broker"
+                lc_topic = substr($0, RSTART + 15); sub(/ .*/, "", lc_topic)
+                lc_repl = ""
+                if (match($0, /(leader|follower)\.replication\.throttled\.replicas -> [0-9][0-9:,]*/)) { lc_repl = substr($0, RSTART, RLENGTH); sub(/.*-> /, "", lc_repl); sub(/,$/, "", lc_repl) }
+                if (match($0, /broker id=[0-9]+/)) lc_who = "broker " substr($0, RSTART + 10, RLENGTH - 10)
+                lc_detail = lc_who " · " lc_topic ": " substr(lc_repl, 1, 200)
             } else if (index($0, "no open connection, connection id")) {
                 # the broker finished a request after its client went away (it timed out first): the broker is slow to
                 # answer (kafka.network.Processor, INFO)
@@ -7650,7 +7675,7 @@ function summarize_log_errors() {
                 if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
             }
             if (lc_kind != "") {
-                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_start_failed|process_stop|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/ ? lc_who : lc_conn)
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_start_failed|process_stop|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped|dynamic_config|replica_move)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
                 # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):

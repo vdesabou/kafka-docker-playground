@@ -487,6 +487,18 @@ come in the middle of a startup, between the clients it creates, and do not star
 the run: two clients with the same `client.id` (the two consumers of the license manager, one at `latest`, one at
 `earliest`), the converter of a connector next to the one of the worker, the admin client of another component are new
 instances, not changes. A connector config is compared with its previous dump at once (reconfigured without a restart).
+⚙️ A broker config changed while it runs (KRaft `DynamicConfigPublisher`: `Updating node 1 with new configuration :
+leader.replication.throttled.rate -> 10485760`, `Updating cluster configuration : …`) is a `dynamic_config` event of the
+digest, and the topics given throttled replicas (`Updating topic orders with new configuration :
+leader.replication.throttled.replicas -> 0:1,0:4`: their partitions are being moved) are `replica_move` events.
+`mark_live_configs()` marks the dump logged at most `LIVE_CONFIG_DUMP_S` (3 s) after a `dynamic_config` line of its file
+as live: the broker logs its whole `KafkaConfig` again, which is not a start (no 🔄 row) and its changes say `🔧 changed
+live, no restart` in the ⚙️ section. `live_config_rows()` writes one timeline row per minute for all brokers (`⚙️ broker
+config changed live, no restart on 4 files: leader.replication.throttled.rate 9223372036854775807 → 10485760 · 🐢
+replication throttle…`, the keys with their previous value from the dump, else the keys of the line) and
+`replica_move_rows()` one per burst of moves less than `REPLICA_MOVE_GAP_S` (5 min) apart (`♻️ replicas moved under a
+throttle on 29 topic(s) in 2 min 31 s: …`). Both are changes (🔗 the errors right after). The terminal lists the
+changes beyond the first 8 rows of the timeline under `⚙️ changes later in the timeline`.
 Only what has a
 timestamp. The HTML report shows it in 🗓️ **Incident timeline** right after the findings (30 rows, the others in a
 `<details>`, 📄 links to the line), following the filters (`pgTimeline()`: level, component, connector, period, and the search through the record of a first error; the restarts and configurations without connector stay); the terminal summary prints its first 8 events.
