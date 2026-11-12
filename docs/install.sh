@@ -845,6 +845,63 @@ install_engine_docker_linux() {
   fi
 }
 
+# Apple silicon: amd64-only images (SQL Server, Oracle, Db2...) run with Rosetta in the podman machine, else with QEMU
+# emulation, under which some hang or crash. Needs Rosetta 2 installed on macOS (not there on a new Mac) and
+# 'rosetta = true' in the [machine] table of ~/.config/containers/containers.conf, before the machine starts.
+rosetta_installed() {
+  arch -x86_64 /usr/bin/true > /dev/null 2>&1
+}
+
+setup_podman_rosetta() {
+  local conf="$HOME/.config/containers/containers.conf"
+  [ "$arch" = "arm64" ] || return 0
+  if rosetta_installed
+  then
+    log_ok "Rosetta 2 is installed"
+  elif confirm "install Rosetta 2, so that the podman machine runs amd64-only images (SQL Server, Oracle...) with it instead of QEMU (sudo softwareupdate --install-rosetta --agree-to-license)?"
+  then
+    local tty=/dev/null
+    { : < /dev/tty; } 2> /dev/null && tty=/dev/tty
+    if [ "$opt_dry_run" != "1" ] && [ "$tty" = "/dev/tty" ] && ! /usr/bin/sudo -n -v 2> /dev/null
+    then
+      log "enter your macOS password to install Rosetta 2 (sudo)"
+    fi
+    run /usr/bin/sudo softwareupdate --install-rosetta --agree-to-license < "$tty" \
+      || logwarn "the Rosetta 2 install failed: amd64-only images will run with QEMU. Install it later with: softwareupdate --install-rosetta --agree-to-license"
+  else
+    logwarn "skipped: amd64-only images will run with QEMU. Install Rosetta 2 later with: softwareupdate --install-rosetta --agree-to-license"
+  fi
+
+  # podman reads it when the machine starts
+  if [ -f "$conf" ] && awk '/^\[/ { in_machine = ($0 == "[machine]") } in_machine && /^[[:space:]]*rosetta[[:space:]]*=/ { found = 1 } END { exit !found }' "$conf"
+  then
+    grep -Eq '^[[:space:]]*rosetta[[:space:]]*=[[:space:]]*true' "$conf" \
+      || logwarn "$conf sets rosetta to something else than true, leaving it as it is"
+    return 0
+  fi
+  if [ -f "$conf" ] && grep -qx '\[machine\]' "$conf"
+  then
+    # add the key right after the existing [machine] table header
+    if [ "$opt_dry_run" = "1" ]
+    then
+      run sed -i '' '/^\[machine\]$/a\
+rosetta = true' "$conf"
+    else
+      cp -p "$conf" "$conf.bak.$(date +%Y%m%d%H%M%S)" && sed -i '' '/^\[machine\]$/a\
+rosetta = true
+' "$conf" && log_ok "rosetta = true added to the [machine] table of $conf"
+    fi
+  else
+    run mkdir -p "$(dirname "$conf")"
+    if [ "$opt_dry_run" = "1" ]
+    then
+      printf '%s\n' "   ${C_YELLOW}[dry-run] would add to $conf:${C_RESET} [machine] rosetta = true"
+    else
+      printf '\n[machine]\nrosetta = true\n' >> "$conf" && log_ok "rosetta = true added to $conf"
+    fi
+  fi
+}
+
 install_engine_podman_macos() {
   local mem_gb cpus machine_mb prefix
   mem_gb=$(( $(sysctl -n hw.memsize 2> /dev/null || echo 0) / 1024 / 1024 / 1024 ))
@@ -868,6 +925,8 @@ install_engine_podman_macos() {
   run mkdir -p "$HOME/.docker/cli-plugins"
   run ln -sfn "$prefix/lib/docker/cli-plugins/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
   hash -r 2> /dev/null || true
+
+  setup_podman_rosetta
 
   if [ "$opt_dry_run" = "1" ] || ! podman machine inspect podman-machine-default > /dev/null 2>&1
   then
