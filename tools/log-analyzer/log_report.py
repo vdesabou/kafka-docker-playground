@@ -7552,9 +7552,12 @@ background:linear-gradient(135deg,#fff7ed,#fef2f2);border:1px solid #fed7aa}
 .fo-ring .trk{stroke:#fde2cf}.fo-ring .arc{stroke:var(--c);stroke-linecap:round;stroke-dasharray:var(--len) 999;animation:fo-draw 1.1s ease-out}
 @keyframes fo-draw{from{stroke-dasharray:0 999}}
 @media (prefers-reduced-motion:reduce){.fo-ring .arc{animation:none}}
-.fo-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 22px}
-.fo-pct{font-size:2rem;font-weight:800;line-height:1;color:var(--c)}
-.fo-what{font-size:.72rem;font-weight:600;color:#7c2d12;margin-top:4px;line-height:1.25}
+/* the text stays inside the hole of the ring (124 px across): a box of 100 px, the name of the cause on 3 lines at most */
+.fo-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.fo-pct{font-size:1.65rem;font-weight:800;line-height:1;color:var(--c);letter-spacing:-.02em}
+.fo-of{font-size:.56rem;font-weight:600;color:#9a3412;margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+.fo-what{max-width:100px;font-size:.66rem;font-weight:700;color:#7c2d12;margin-top:2px;line-height:1.2;overflow-wrap:anywhere;
+display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .fo-list{display:flex;flex-direction:column;gap:8px;min-width:0}
 .fo-head{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#c2410c}
 .fo-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;text-decoration:none;color:inherit;
@@ -7576,15 +7579,17 @@ transform-origin:left;animation:fo-grow .9s ease-out}
 @media (max-width:800px){.fo{grid-template-columns:1fr}}
 </style>""" + "<style>" + dark("""
 .fo{background:linear-gradient(135deg,#1c1310,#2a1215);border-color:#7c2d12}
-.fo-ring .trk{stroke:#3b1d14}.fo-what{color:#fed7aa}.fo-head{color:#fdba74}
+.fo-ring .trk{stroke:#3b1d14}.fo-what{color:#fed7aa}.fo-of{color:#fdba74}.fo-head{color:#fdba74}
 .fo-row,.fo-row .fo-title,.fo-row .fo-num{color:#f1f5f9}.fo-row{background:rgba(15,23,42,.55)}.fo-row:hover{background:#0f172a}.fo-bar{background:#3b1d14}.fo-num small,.fo-more{color:#fdba74}
 """) + "</style>"
 
 
 def fo_pct(p: float) -> str:
-    """99.7%, not 100%; 0.4%, not 0%"""
+    """99.7%, not 100%; 0.4%, not 0%; 100% (not 100.0%) when it is all of them"""
     if 0 < p < 0.1:
         return "<0.1%"
+    if p >= 100:
+        return "100%"
     return f"{p:.1f}%" if p >= 99.5 or p < 10 else f"{p:.0f}%"
 
 
@@ -7610,8 +7615,8 @@ def findings_overview_html(items: List[dict], total: int) -> str:
             f"{top['_view']['occurrences']:,} of the {total:,} occurrences'><svg viewBox='0 0 170 170' aria-hidden='true'>"
             "<circle class='trk' cx='85' cy='85' r='70' fill='none' stroke-width='16'/>"
             "<circle class='arc' cx='85' cy='85' r='70' fill='none' stroke-width='16'/></svg>"
-            f"<div class='fo-center'><span class='fo-pct'>{fo_pct(pct)}</span><span class='fo-what'>of all occurrences: "
-            f"{e(fo_title(top['_view']))}</span></div></div>")
+            f"<div class='fo-center'><span class='fo-pct'>{fo_pct(pct)}</span><span class='fo-of'>of all occurrences</span>"
+            f"<span class='fo-what'>{e(fo_title(top['_view']))}</span></div></div>")
     lis = []
     for i, f in enumerate(rows[:FINDINGS_TOP]):
         v = f["_view"]
