@@ -49392,6 +49392,7 @@ playground_ccloud_setup_command() {
       if stored_key_belongs_to SCHEMA_REGISTRY_CREDS "$sr_cluster"
       then
           log "🔑 SCHEMA_REGISTRY_CREDS of profile $profile is a key of $sr_cluster, keeping it"
+          to_store SCHEMA_REGISTRY_CREDS "$(secret_get_from_store SCHEMA_REGISTRY_CREDS "$profile")" secret
       elif [[ -n "$dry_run" ]]
       then
           log "🔎 dry-run, would create a Schema Registry API key for $sr_cluster, owned by you"
@@ -49423,6 +49424,7 @@ playground_ccloud_setup_command() {
       then
           log "🔑 ${prefix}CLUSTER_CREDS of profile $profile is a key of $id, keeping it"
           creds=$(secret_get_from_store "${prefix}CLUSTER_CREDS" "$profile")
+          to_store "${prefix}CLUSTER_CREDS" "$creds" secret
       elif [[ -n "$dry_run" ]]
       then
           log "🔎 dry-run, would create a Kafka API key for $name, owned by you"
@@ -49476,8 +49478,7 @@ playground_ccloud_setup_command() {
       done
   fi
 
-  # 💾 the secrets profile: secret_store_value directly, never 'playground secrets set', which can also push the value to
-  # the GitHub Actions secrets of the repository (config secrets.github-repo) and overwrite the ones the CI uses
+  # 💾 the secrets profile, with 'playground secrets set' (the keys kept from the profile too)
   echo ""
   for i in "${!store_names[@]}"
   do
@@ -49492,7 +49493,13 @@ playground_ccloud_setup_command() {
               log "🔎 dry-run, would store $name=$value in profile $profile"
           fi
       else
-          secret_store_value "$name" "$value" "$profile" "${store_kinds[$i]}" > /dev/null || { logerror "❌ could not store $name in profile $profile"; exit 1; }
+          if ! out=$(playground secrets set "$name" --value "$value" --profile "$profile" "--${store_kinds[$i]}" 2>&1)
+          then
+              echo "$out"
+              logerror "❌ could not store $name in profile $profile"
+              exit 1
+          fi
+          echo "$out" | grep "⚠️" || true
           if [ "${store_kinds[$i]}" == "secret" ]
           then
               log "💾 $name=${value%%:*}:<secret> stored in profile $profile"

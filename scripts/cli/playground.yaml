@@ -643,17 +643,21 @@ subcommands:
       SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n_CLOUD, _REGION, _CREDS,
       and CLUSTER_* for --default-cloud: what\n'playground run' loads for the fully
       managed examples (fm-aws-* on the\nAWS cluster, fm-gcp-* on the GCP one, fm-azure-*
-      on the Azure one, the\nothers on --default-cloud).\n\nRun it again any time:
-      what exists is reused (same names), API keys\nalready stored in the profile
-      are kept when they still belong to the\ncluster, and only what is missing is
-      created. --dry-run shows the plan.\n\nNames matter for the cleanup: 'cloud-resources
-      cleanup --resource ccloud'\ndeletes all the topics of clusters named pg-<user>-*
-      (yours), never the\nclusters, and never the environment pg-<user> nor the keys
-      stored here.\n\n\U0001F319 Next: 'playground cloud-resources nightly-cleanup
-      enable' deletes, every\nnight, the connectors your examples leave running (your
-      clusters are kept).\n\n\U0001F393 Tip: one profile per organization (--profile
-      <org>), then 'playground\nsecrets profile <name>' to switch, and 'confluent
-      login --organization\n<id> --save' for the confluent CLI."
+      on the Azure one, the\nothers on --default-cloud).\n\n\U0001F419 When 'playground
+      config get secrets.github-repo' is set (the opt-in\nof the repository maintainer,
+      as for 'playground secrets set'), the same\nnames are also pushed to the GitHub
+      Actions secrets / variables of that\nrepository, so that the CI uses this environment
+      and these clusters.\n\nRun it again any time: what exists is reused (same names),
+      API keys\nalready stored in the profile are kept when they still belong to the\ncluster,
+      and only what is missing is created. --dry-run shows the plan.\n\nNames matter
+      for the cleanup: 'cloud-resources cleanup --resource ccloud'\ndeletes all the
+      topics of clusters named pg-<user>-* (yours), never the\nclusters, and never
+      the environment pg-<user> nor the keys stored here.\n\n\U0001F319 Next: 'playground
+      cloud-resources nightly-cleanup enable' deletes, every\nnight, the connectors
+      your examples leave running (your clusters are kept).\n\n\U0001F393 Tip: one
+      profile per organization (--profile <org>), then 'playground\nsecrets profile
+      <name>' to switch, and 'confluent login --organization\n<id> --save' for the
+      confluent CLI."
     usage: playground ccloud setup [OPTIONS]
     options:
     - names:
