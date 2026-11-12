@@ -252,7 +252,7 @@ kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report
 (`ANALYZE_LOGS_DOC`); its gradient follows the verdict of the status pill: red with ERROR/FATAL, amber with WARN only,
 green without error. The verdict itself (`verdict_parts()`: a class, a headline, lines) is one sentence in the terminal,
 the Markdown and the pill (`verdict_text()`), and in the HTML report a headline with a line per finding under it
-(`verdict_box_html()`): 👉 start with (a link to the card of the known cause, `finding_id()`), 🔁 restart loop (a link to
+(`verdict_box_html()`): 👉 start with (a link to the card of the known cause, `finding_id()`: the first known cause with an ERROR or FATAL record; known causes are ranked by severity, then the ones with ERROR / FATAL records before the ones seen in WARN records only, then `HINT_ORDER`), 🔁 restart loop (a link to
 the 🔄 section, `#lc-section`), 🧵 / 🔬 / 🗺️ of the JVM dumps and the cluster layout, ☸️ of the CFK bundles. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
 `STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing with
 `STORY_STILL_MIN` errors or more at a tenth of the average rate or more, 📉 fading out below it, a few left under

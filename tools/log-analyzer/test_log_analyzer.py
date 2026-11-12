@@ -1638,6 +1638,33 @@ def test_known_causes_from_past_cases():
           log_report.file_component("logs/server_20261101_bk01.log"))
 
 
+def test_verdict_prefers_causes_with_errors():
+    """a HIGH cause seen once in a WARN of another connector is not the 👉 start with ahead of thousands of ERROR records
+    of a MEDIUM cause; within a severity, the causes with ERROR records come first; only WARN records: catalogue order"""
+    def rec(level, count, line, first, body):
+        return f"@@PGREC@@|{level}|{count}|{line}|{line + 5}|{first}|{first}\n{body}\n@@PGTS@@|{first}\n"
+    text = ("@@PGFILE@@|connect.log|1000|3|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+            + rec("WARN", 1, 5, "2026-10-24T17:00:01",
+                  "[2026-10-24 17:00:01,000] WARN [jdbc-src|task-0] Error while committing read transaction (io.confluent.connect.jdbc.source.JdbcSourceTask)\n"
+                  "    com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure")
+            + rec("ERROR", 5000, 20, "2026-10-24T17:05:00",
+                  "[2026-10-24 17:05:00,000] ERROR [src|task-0] Error encountered in task src-0. Executing stage 'TRANSFORMATION' with class "
+                  "'org.apache.kafka.connect.transforms.Flatten$Value'. (org.apache.kafka.connect.runtime.errors.LogReporter)\n"
+                  "    org.apache.kafka.connect.errors.DataException: Flatten transformation does not support ARRAY for record with schemas (for field a.b)."))
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    by = {h["title"]: h for h in res["known_causes"]}
+    check("🔌 still listed, HIGH", by.get("🔌 Connection failure", {}).get("severity") == "HIGH", list(by))
+    cls, verdict = log_report.verdict(res, "ERROR/FATAL/WARN")
+    check("start with a cause that has the ERROR records", "start with 🪄 Transformation (SMT) failed" in verdict, verdict)
+    mediums = [bool(h["_errors"]) for h in res["known_causes"] if h["severity"] == "MEDIUM"]
+    check("ERROR causes first within a severity", mediums == sorted(mediums, reverse=True), [h["title"] for h in res["known_causes"]])
+    # only WARN records: the catalogue order, 🔌 first
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text.split("@@PGREC@@|ERROR")[0])))
+    check("WARN only: 🔌 first", res["known_causes"][0]["title"] == "🔌 Connection failure", [h["title"] for h in res["known_causes"]])
+
+
 def test_sslexception_socket_error_is_not_tls():
     """an SSLException that only wraps a socket error (an LDAPS connection, already open, that times out or is reset) is
     not 🔐 TLS handshake failure, and must not become the 👉 start with of the verdict ahead of the connect timeouts; a
