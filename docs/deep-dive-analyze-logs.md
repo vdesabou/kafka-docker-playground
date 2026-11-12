@@ -150,7 +150,7 @@ in the browser, with a macOS notification.
 ```bash
 playground analyze watch                                       # in a terminal, Ctrl-C to stop
 playground analyze watch --exclude Archives --install-launch-agent   # macOS: once, it then starts at every login
-tail -f ~/Library/Logs/playground-analyze-watch.log            # what the LaunchAgent does
+tail -f ~/Library/Logs/playground-analyze-watch.log            # what the LaunchAgent does (a copy in the watched folder is never analyzed)
 playground analyze watch --since 30 --once                     # what you downloaded in the last 30 minutes, then exit
 ```
 

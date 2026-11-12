@@ -5223,13 +5223,14 @@ subcommands:
       (a file moved into a sub-folder never is): --since\nalso picks the ones created
       in the last minutes (creation time, so\nthat a folder you move files into, ~/Downloads/Archives,
       is not\npicked), --once analyzes those and exits instead of watching.\n\U0001F6AB
-      --exclude never analyzes an entry, even renamed or re-created. Each report is
-      written in its\nown folder of --output-dir, named after the entry (outside the\nwatched
-      folder, so that a report never triggers an analysis).\n\n\U0001F501 macOS: --install-launch-agent
-      starts the watch at every login (a\nLaunchAgent, restarted if it stops) with
-      the flags given, so that you\nnever have to start it; --uninstall-launch-agent
-      removes it.\n\n\U0001F512 Downloads are untrusted data: they are only read,
-      never run.\nStop with Ctrl-C."
+      --exclude never analyzes an entry, even renamed or re-created\n(nor the log
+      of the watch itself, playground-analyze-watch*.log,\ncopied into the folder).
+      Each report is written in its\nown folder of --output-dir, named after the entry
+      (outside the\nwatched folder, so that a report never triggers an analysis).\n\n\U0001F501
+      macOS: --install-launch-agent starts the watch at every login (a\nLaunchAgent,
+      restarted if it stops) with the flags given, so that you\nnever have to start
+      it; --uninstall-launch-agent removes it.\n\n\U0001F512 Downloads are untrusted
+      data: they are only read, never run.\nStop with Ctrl-C."
     usage: playground analyze watch [OPTIONS]
     options:
     - names:
