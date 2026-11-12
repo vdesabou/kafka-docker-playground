@@ -39,7 +39,7 @@ case "$backend" in
         log "🎓 you can also point a variable at an item you already have:"
         log "   playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password"
 
-        if ! op whoami > /dev/null 2>&1
+        if ! op_signed_in
         then
             logwarn "⚠️ not signed in to 1Password"
             logwarn "👉 enable 'Integrate with 1Password CLI' in the desktop app, or run: eval \$(op signin)"

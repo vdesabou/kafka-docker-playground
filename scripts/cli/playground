@@ -37059,6 +37059,31 @@ function secret_store_profiles () {
 # backends
 
 #
+# Is `op` usable right now? `op whoami` alone is not enough: with the desktop
+# app integration it answers `account is not signed in` until something in
+# this terminal session has asked the app for an authorization, which
+# `op whoami` itself never does (`op vault list`, `op read`… do). So when it
+# fails, `op signin` asks the app once (Touch ID, or nothing if the app is
+# already unlocked), and `op whoami` is asked again.
+#
+# Not with a service account: the token is the only credential, there is
+# nothing to sign in to. stdin is closed so that a manually added account
+# (`op account add`, no app) fails fast instead of waiting for a password.
+#
+function op_signed_in () {
+  if op whoami > /dev/null 2>&1
+  then
+    return 0
+  fi
+  if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]
+  then
+    return 1
+  fi
+  op signin < /dev/null > /dev/null 2>&1 || return 1
+  op whoami > /dev/null 2>&1
+}
+
+#
 # 1Password vault the items are created in. `Private` is the vault every
 # account has, so it is the default; a shared vault is often a better choice
 # for a team, hence the override.
@@ -37132,7 +37157,7 @@ function secret_backend_put () {
       vault=$(get_op_vault)
       title=$(get_op_item_title "$profile" "$name")
 
-      if ! op whoami > /dev/null 2>&1
+      if ! op_signed_in
       then
         logerror "❌ not signed in to 1Password, cannot store $name" >&2
         logerror "👉 enable 'Integrate with 1Password CLI' in the desktop app, or run: eval \$(op signin)" >&2
@@ -37300,7 +37325,7 @@ function secret_backend_del () {
 # "not signed in" error twenty times.
 #
 # Deliberately cheap: only the checks that are local or answered from the
-# already open session. `op whoami` is ~0.07s, while `op vault get` is a real
+# already open session. `op whoami` is ~0.07s (see op_signed_in()), while `op vault get` is a real
 # round trip and costs several seconds — see secret_backend_vault_ready().
 #
 function secret_backend_ready () {
@@ -37314,7 +37339,7 @@ function secret_backend_ready () {
         logerror "👉 brew install 1password-cli"
         return 1
       fi
-      if ! op whoami > /dev/null 2>&1
+      if ! op_signed_in
       then
         logerror "❌ not signed in to 1Password"
         logerror "👉 enable 'Integrate with 1Password CLI' in the desktop app (Settings > Developer), or run: eval \$(op signin)"
@@ -48641,7 +48666,7 @@ playground_secrets_backend_command() {
           log "🎓 you can also point a variable at an item you already have:"
           log "   playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password"
 
-          if ! op whoami > /dev/null 2>&1
+          if ! op_signed_in
           then
               logwarn "⚠️ not signed in to 1Password"
               logwarn "👉 enable 'Integrate with 1Password CLI' in the desktop app, or run: eval \$(op signin)"
