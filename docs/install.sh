@@ -7,7 +7,8 @@
 # What it does, asking before each change:
 #   1. checks git, bash 4+, fzf, python3, docker + compose v2 (or podman), free disk space, and changes nothing
 #   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git, python3, unzip, and the
-#      Confluent CLI (used by the Confluent Cloud examples)
+#      Confluent CLI (used by the Confluent Cloud examples). On macOS without Homebrew, offers to install it first
+#      (official installer from https://brew.sh), only when a tool or a container engine needs it
 #   3. clones the repository (--depth 1), or updates an existing clone
 #   4. when no container engine is installed at all, offers to install one: Podman or Docker Desktop on macOS,
 #      Docker Engine on Linux. Never with --yes alone (pass --engine), never next to an engine already installed.
@@ -404,6 +405,75 @@ sudo_cmd() {
   if [ "$(id -u)" = "0" ]; then echo ""; else echo "sudo"; fi
 }
 
+# macOS without Homebrew: offer to install it with the official installer (https://brew.sh), once per run, only when
+# something needs it (missing tools, a container engine). Sets brew_bin and brew_shellenv_needed on success.
+# usage: ensure_brew "<what needs it>"
+brew_install_asked=0
+ensure_brew() {
+  local reason="$1" installer prefix
+  [ "$os" = "macos" ] || return 1
+  [ -n "$brew_bin" ] && return 0
+  [ "$brew_install_asked" = "0" ] || return 1
+  brew_install_asked=1
+  if [ "$arch" = "arm64" ]; then prefix=/opt/homebrew; else prefix=/usr/local; fi
+  if [ "$(id -u)" = "0" ]
+  then
+    logwarn "Homebrew is not installed, and it cannot be installed as root: run this installer as your user"
+    return 1
+  fi
+  if ! command -v curl > /dev/null 2>&1
+  then
+    logwarn "Homebrew is not installed, and curl is missing to install it: https://brew.sh"
+    return 1
+  fi
+  log "Homebrew is not installed, it is needed for $reason"
+  log "the official Homebrew installer asks for your password (sudo) and may install the Xcode Command Line Tools"
+  if ! confirm "install Homebrew into $prefix (official installer from https://brew.sh)?"
+  then
+    log "skipped: install Homebrew yourself from https://brew.sh, then run this installer again"
+    return 1
+  fi
+  if [ "$opt_dry_run" = "1" ]
+  then
+    run env NONINTERACTIVE=1 /bin/bash "<Homebrew install.sh, downloaded from https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh>"
+    # the next steps show the brew commands they would run
+    brew_bin="$prefix/bin/brew"
+    brew_shellenv_needed=1
+    return 0
+  fi
+  installer="$(mktemp -t homebrew-install.XXXXXX)" || { logwarn "mktemp failed: install Homebrew yourself from https://brew.sh"; return 1; }
+  if ! curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"
+  then
+    rm -f "$installer"
+    logwarn "could not download the Homebrew installer: install it yourself from https://brew.sh"
+    return 1
+  fi
+  # NONINTERACTIVE: this installer already asked; sudo still asks for the password on the terminal.
+  # stdin from the terminal (with curl | bash, stdin is this script)
+  if { : < /dev/tty; } 2> /dev/null
+  then
+    run env NONINTERACTIVE=1 /bin/bash "$installer" < /dev/tty
+  else
+    run env NONINTERACTIVE=1 /bin/bash "$installer" < /dev/null
+  fi
+  local rc=$?
+  rm -f "$installer"
+  if [ "$rc" != "0" ] || [ ! -x "$prefix/bin/brew" ]
+  then
+    logwarn "the Homebrew install failed (it needs an administrator account): https://brew.sh"
+    return 1
+  fi
+  brew_bin="$prefix/bin/brew"
+  log_ok "Homebrew installed: $brew_bin"
+  if ! path_has_dir "$prefix/bin"
+  then
+    brew_shellenv_needed=1
+    PATH="$prefix/bin:$PATH"
+    export PATH
+  fi
+  return 0
+}
+
 install_missing() {
   title "📦 2/6 Missing tools"
   missing_packages="$(echo "$missing_packages" | xargs)"
@@ -417,7 +487,7 @@ install_missing() {
   sudo="$(sudo_cmd)"
   case "$os" in
     macos)
-      if [ -z "$brew_bin" ]
+      if ! ensure_brew "$missing_packages"
       then
         logerror "missing: $missing_packages, and Homebrew is not installed"
         log "install Homebrew first (https://brew.sh), then run this installer again, or install them yourself"
@@ -775,9 +845,11 @@ setup_engine() {
 
   local choices engine=""
   choices="$(engine_choices)"
-  if [ "$os" = "macos" ] && [ -z "$brew_bin" ]
+  # Homebrew only when an engine can be installed: asked interactively, or --engine podman|docker-desktop
+  # (--yes alone installs no engine, --engine none neither)
+  if [ "$os" = "macos" ] && [ -z "$brew_bin" ] && [ "$opt_engine" != "none" ] && { [ "$opt_yes" = "0" ] || [ -n "$opt_engine" ]; }
   then
-    choices=""
+    ensure_brew "a container engine (Podman or Docker Desktop)" || choices=""
   fi
   if [ -z "$choices" ]
   then
