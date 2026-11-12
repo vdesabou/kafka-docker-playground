@@ -501,7 +501,9 @@ back to the span of the records.
 `tools/report-common/known_causes.py`), occurrences over time, 🗂️ the files with findings (a 📁 header per folder, a card
 per file with its component, the occurrences with a bar split by level, the levels as pills, also in the title of the card of each
 file; `pgFilesTable()` counts them again for the filters), root causes
-(deepest exception of each record) and every record (with a 📋 Show context block: the raw lines around its first
+(deepest exception of each record; a record without exception by its message, `root_causes()` ignoring its numbers, its
+`{…}` maps and its `(A|B|C)` lists: one root cause for an Oracle CDC `Failed to commit consumer offset {0=36227957} for
+tables 0=DB.T24(A|B|C)` of every task, and `--compare` matches the root causes on that key, not on their label) and every record (with a 📋 Show context block: the raw lines around its first
 occurrence, from the `@@PGCTX@@` lines of the records file) and the ⚙️ configuration (the `<Class>Config values:`
 dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a

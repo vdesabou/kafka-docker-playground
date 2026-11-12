@@ -402,6 +402,12 @@ def chain_key_text(text: str) -> str:
     return re.sub(r"clientId=[^,\]\s]+", "clientId=…", text)
 
 
+def cause_key_text(text: str) -> str:
+    """A message without its {…} maps (offsets, partitions) and its (A|B|C) lists (tables): the same root cause"""
+    text = re.sub(r"\{.*\}", "{…}", text)
+    return re.sub(r"\([^()]*\|[^()]*\)", "(…)", text)
+
+
 def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
     """Records of killed tasks grouped by exception chain (exception thrown + deepest cause), in order of first occurrence"""
     groups: Dict[str, dict] = {}
@@ -712,9 +718,12 @@ def root_causes(files: List[dict]) -> List[dict]:
         # exception chains of the findings: one root cause for all the clients, the connectors are listed with it
         plain = chain_key_text(short_message(r["message"]))
         label = (f"{r['root_cause']}: {mask_ids(r['root_cause_message'])[:100]}" if r["root_cause"] else plain[:160])
-        # the same message with other numbers is the same cause ("(after 1ms in state CONNECT)" of librdkafka, in two files)
-        key = label if r["root_cause"] else mask_ids(label)
-        c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": label, "occurrences": 0, "records": 0, "files": OrderedDict(),
+        # the same message with other numbers is the same cause ("(after 1ms in state CONNECT)" of librdkafka, in two files),
+        # and with other offsets or tables: "Failed to commit consumer offset {0=36227957} for tables 0=DB.T24(A|B|C)" of the
+        # Oracle CDC connector, one table list per task (before the cut at 160 characters, which leaves the list unclosed, and
+        # the digits masked before it too: "correlation id 4755" and "correlation id 102568" would move the cut)
+        key = label if r["root_cause"] else mask_ids(cause_key_text(plain))[:160]
+        c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": label, "key": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
                                     "connectors": OrderedDict(), "example": r["root_cause_message"] or plain, "level": r["level"],
                                     "records_meta": []})
         c["occurrences"] += r["count"]
@@ -3400,9 +3409,12 @@ def compare_reports(res: dict, prev: dict, label: str) -> dict:
         out.sort(key=lambda x: (order[x["status"]], -max(x["occurrences"], x["before"])))
         return out
 
-    root_causes = diff({c["label"]: c for c in res["root_causes"]}, {c["label"]: c for c in prev.get("root_causes") or []},
-                       lambda c: {"level": c.get("level"), "root_cause": c.get("root_cause"), "example": c.get("example", "")[:300],
-                                  "index": next((i for i, x in enumerate(res["root_causes"]) if x["label"] == c["label"]), None)})
+    # by grouping key, not label (the text of the first record: another table list or offset in the other log)
+    ckey = lambda c: c.get("key") or c["label"]
+    root_causes = diff({ckey(c): c for c in res["root_causes"]}, {ckey(c): c for c in prev.get("root_causes") or []},
+                       lambda c: {"label": c["label"], "level": c.get("level"), "root_cause": c.get("root_cause"),
+                                  "example": c.get("example", "")[:300],
+                                  "index": next((i for i, x in enumerate(res["root_causes"]) if ckey(x) == ckey(c)), None)})
     known = diff({h["title"]: h for h in res["known_causes"]}, {h["title"]: h for h in prev.get("known_causes") or []},
                  lambda h: {"severity": h.get("severity")})
     connectors = diff({n: {"occurrences": v} for n, v in (s.get("by_connector") or {}).items()},
@@ -3459,7 +3471,7 @@ def trend_text(tr: Optional[dict], top: int = 6) -> List[str]:
     out = [f"📈 Trend over {len(tr['labels'])} inputs (oldest first: {' → '.join(tr['labels'])})" + (" per hour" if tr["per_hour"] else "")]
     out.append("   " + " · ".join(f"{lvl} {trend_values(tr['totals'][lvl])}" for lvl in ("FATAL", "ERROR", "WARN")))
     for r in tr["root_causes"][:top]:
-        what = f"{r['root_cause'].split('.')[-1]}: {r['example']}" if r.get("root_cause") else r.get("example") or r["key"]
+        what = f"{r['root_cause'].split('.')[-1]}: {r['example']}" if r.get("root_cause") else r.get("example") or r.get("label") or r["key"]
         out.append(f"   {trend_values(r['values'])}  {what[:140]}")
     return out
 
@@ -3514,7 +3526,7 @@ def compare_text(cmp: Optional[dict], top: int = 6) -> List[str]:
     out.append("   " + " · ".join(f"{lvl} {t[lvl]['before']} → {t[lvl]['now']}" for lvl in ("FATAL", "ERROR", "WARN"))
                + f" · period {human_duration(cmp['period']['before_seconds'])} → {human_duration(cmp['period']['now_seconds'])}")
     for x in [x for x in cmp["root_causes"] if x["status"] != "same"][:top]:
-        what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x["example"] or x["key"]
+        what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x["example"] or x.get("label") or x["key"]
         out.append(f"   {COMPARE_ICONS[x['status']]} {x['status']:<9} {compare_counts(x)} {what[:160]}")
     return out
 
@@ -4531,7 +4543,7 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
                 f"{c['new']} new, {c['growing']} growing, {c['shrinking']} shrinking, {c['gone']} gone, {c['same']} unchanged"
                 + (" (per hour: the periods differ)" if cmp["per_hour"] else ""), ""]
         for x in [x for x in cmp["root_causes"] if x["status"] != "same"][:8]:
-            what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x.get("example") or x["key"]
+            what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x.get("example") or x.get("label") or x["key"]
             out.append(f"- {COMPARE_ICONS[x['status']]} {x['status']} {compare_counts(x)}: {md_cell(what[:200])}")
     events = res.get("timeline") or []
     linked = [ev for ev in events if ev.get("after")]

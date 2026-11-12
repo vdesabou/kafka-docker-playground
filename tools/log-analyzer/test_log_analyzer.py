@@ -57,6 +57,27 @@ def test_epoch_float_string():
     check("epoch float", out.startswith("[2023-10-14T19:13:29.500Z]"), out)
 
 
+def test_root_cause_ignores_offsets_and_table_lists():
+    # Oracle CDC: one table list per task and the offsets in the message, still one root cause (526 before, one per task)
+    def rec(line, msg, ts):
+        return {"message": f"[{ts},707] WARN [cdc-A|task-{line}] {msg} (io.confluent.connect.oracle.cdc.OracleCdcSourceTask:683)",
+                "root_cause": "", "root_cause_message": "", "level": "WARN", "count": 1, "connector": "cdc-A",
+                "timestamps": [ts.replace(" ", "T")], "first_ts": ts.replace(" ", "T"), "first_line": line, "index": line}
+    tables = "|".join(f"F_TABLE_NUMBER_{n}_WITH_A_LONG_NAME" for n in range(8))
+    files = [{"label": "connect.log", "records": [
+        rec(1, f"Failed to commit consumer offset {{}} for tables 0=DB1.T24({tables}). Attempt 1 of 50", "2026-10-13 22:47:39"),
+        rec(2, "Failed to commit consumer offset {0=36227957} for tables 0=DB2.T24(FLXP_SEC_TRADE|FLYU_EFG). Attempt 2 of 50",
+            "2026-10-13 22:48:58"),
+        rec(3, "Task threw an uncaught and unrecoverable exception", "2026-10-13 22:49:00")]}]
+    produce = ("Got error produce response with correlation id {} on topic-partition _confluent-monitoring-{}, retrying "
+               "(2147483646 attempts left). Error: NETWORK_EXCEPTION. Error Message: Disconnected from node 2")
+    files[0]["records"] += [rec(4, produce.format(4755, 3), "2026-10-13 22:50:00"), rec(5, produce.format(102568, 10), "2026-10-13 22:51:00")]
+    causes = log_report.root_causes(files)
+    check("one cause for the commit warnings, one for the produce errors", len(causes) == 3, [c["label"] for c in causes])
+    check("occurrences merged", causes[0]["occurrences"] == 2 and causes[0]["label"].startswith("Failed to commit consumer offset {}"),
+          causes[0])
+
+
 def test_splunk_time_reversed():
     with tempfile.TemporaryDirectory() as d:
         src, dst = os.path.join(d, "splunk.csv"), os.path.join(d, "out.log")
