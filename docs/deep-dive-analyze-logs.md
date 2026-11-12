@@ -848,10 +848,11 @@ playground analyze watch [--folder ~/Downloads] [--output-dir ~/playground-log-r
 `~/Downloads` (or `--folder`), as soon as the download is complete, then opens its report (macOS notification).
 🧰 A heap dump, a flight recording, a network capture, an XStream diagnostics report, a GC log or a thread dump gets its
 own analyzer (`analyze heap-dump`, `flight-recorder`, `tcp-dump`, `oracle-xstream-report`, `gc-logs`, `thread-dump`),
-recognized like the 🧰 Other files of the report; in an archive or a folder, `analyze logs` runs first, then those
-(`--logs-only` to skip them). A log file holding a `kill -3` thread dump stays a log file: the dump is analyzed in the
-log report. Pictures, PDFs and other files are ignored; a folder that Safari extracts from a zip it already analyzed is
-skipped.
+recognized like the 🧰 Other files of the report; in an archive or a folder, `analyze logs` runs first when it holds
+logs, then those (`--logs-only` to skip them); one holding only dumps or captures gets their reports only. A log file
+holding a `kill -3` thread dump stays a log file: the dump is analyzed in the log report. Pictures, PDFs and other files
+are ignored; what Safari or Archive Utility extracts next to an archive or a compressed file already analyzed
+(`x.zip` → `x/`, `x.hprof.gz` → `x.hprof`) is skipped.
 Only the top of the folder is watched (a file moved into `~/Downloads/Archives` never triggers anything), `--exclude`
 names entries never to analyze, and on macOS `--install-launch-agent` starts the watch at every login.
 

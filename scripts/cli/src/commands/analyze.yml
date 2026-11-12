@@ -326,8 +326,13 @@ commands:
     (analyze gc-logs), a thread dump (analyze thread-dump; a log file
     holding a kill -3 thread dump stays a log file: analyze logs analyzes
     the dump in its report). In an archive or a folder, 'analyze logs'
-    runs first (thread dumps analyzed in its report), then the analyzer
-    of each other kind of file, one report each.
+    runs first when it holds logs (thread dumps analyzed in its report),
+    then the analyzer of each other kind of file, one report each; one
+    holding only dumps or captures gets their reports only.
+
+    ⏭️ What Safari or Archive Utility extracts next to an archive or a
+    compressed file already analyzed (x.zip → x/, x.hprof.gz → x.hprof
+    or x.hprof/) is not analyzed again.
 
     Only the entries that appear after the start are analyzed, at the
     top of the folder (a file moved into a sub-folder never is): --since

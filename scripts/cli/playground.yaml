@@ -5214,9 +5214,12 @@ subcommands:
       diagnostics report (analyze oracle-xstream-report), a GC log\n(analyze gc-logs),
       a thread dump (analyze thread-dump; a log file\nholding a kill -3 thread dump
       stays a log file: analyze logs analyzes\nthe dump in its report). In an archive
-      or a folder, 'analyze logs'\nruns first (thread dumps analyzed in its report),
-      then the analyzer\nof each other kind of file, one report each.\n\nOnly the
-      entries that appear after the start are analyzed, at the\ntop of the folder
+      or a folder, 'analyze logs'\nruns first when it holds logs (thread dumps analyzed
+      in its report),\nthen the analyzer of each other kind of file, one report each;
+      one\nholding only dumps or captures gets their reports only.\n\n⏭️ What Safari
+      or Archive Utility extracts next to an archive or a\ncompressed file already
+      analyzed (x.zip → x/, x.hprof.gz → x.hprof\nor x.hprof/) is not analyzed again.\n\nOnly
+      the entries that appear after the start are analyzed, at the\ntop of the folder
       (a file moved into a sub-folder never is): --since\nalso picks the ones created
       in the last minutes (creation time, so\nthat a folder you move files into, ~/Downloads/Archives,
       is not\npicked), --once analyzes those and exits instead of watching.\n\U0001F6AB
