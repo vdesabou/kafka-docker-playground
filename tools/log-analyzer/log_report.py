@@ -5097,7 +5097,8 @@ html[data-theme=dark] .quick-links a:hover{background:#1e3a5f}
 background:#fff;color:#1e293b;font:inherit;font-size:.82rem;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.18)}
 .to-top[hidden]{display:none}html[data-theme=dark] .to-top{background:#1e293b;color:#e2e8f0;border-color:#334155}
 .side-nav,.side-nav-show{display:none}
-.table-card,.chart-card,.findings{scroll-margin-top:var(--pg-sticky,12px)}
+/* every target of a link (a section, a 🔎 finding card…) lands under the sticky filter bar, not behind it */
+.table-card,.chart-card,.findings,[id]{scroll-margin-top:var(--pg-sticky,12px)}
 @media (min-width:1400px){
 body.side-nav-on{padding-left:228px}
 body.side-nav-on .side-nav{display:flex}
@@ -5260,16 +5261,20 @@ document.addEventListener("click", function (ev) {
   window.addEventListener("scroll", toggle, { passive: true });
   toggle();
 })();
+// the links to a place of the report (KPI tiles, quick links, 🧭 the steps of the story, 🏆 the top causes, the lines
+// of the verdict): a quick scroll under the sticky filter bar, the section opened when it is collapsed, the target
+// flashed. A 🔎 finding card is the target itself (the main cause of the story landed in the middle of its chains)
 document.addEventListener("click", function (ev) {
-  const a = ev.target.closest("a.kpi-link, .quick-links a.ql, .side-nav a.ql");
-  if (!a) return;
+  const a = ev.target.closest("a.kpi-link, .quick-links a.ql, .side-nav a.ql, a.story-step[href^='#'], a.fo-row[href^='#'], .verdict a.vd-text[href^='#']");
+  if (!a || ev.defaultPrevented) return;
   ev.preventDefault();
   if (a.getAttribute("href") === "#") { pgScrollTo(null); return; }
   const el = document.getElementById(a.getAttribute("href").slice(1));
   if (!el) return;
-  const card = el.closest(".table-card, .chart-card") || el;
-  if (card.classList.contains("sec-collapsed")) {
-    const h = card.querySelector(":scope > h2, :scope > .section-title");
+  const card = el.matches(".rec-card, .fi-card, [id^='finding-']") ? el : (el.closest(".table-card, .chart-card") || el);
+  const collapsed = card.classList.contains("sec-collapsed") ? card : card.closest(".sec-collapsed");
+  if (collapsed) {
+    const h = collapsed.querySelector(":scope > h2, :scope > .section-title");
     if (h) h.click();
   }
   pgScrollTo(card);
