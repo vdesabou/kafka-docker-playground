@@ -84,6 +84,9 @@ set -e
 # makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
 DATABRICKS_TABLE_NAME="pageviews_fm_$(echo "${USER:-playground}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
 
+log "Dropping table ${DATABRICKS_TABLE_NAME} if it exists, so that it holds only the records of this run"
+databricks_sql_statement "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "DROP TABLE IF EXISTS default.${DATABRICKS_TABLE_NAME}"
+
 log "Creating fully managed connector, writing to table ${DATABRICKS_TABLE_NAME}"
 playground connector create-or-update --connector $connector_name << EOF
 {
@@ -109,6 +112,9 @@ EOF
 wait_for_ccloud_connector_up $connector_name 180
 
 playground connector show-lag --connector $connector_name --max-wait 300
+
+log "Verifying that the 100 records are in table ${DATABRICKS_TABLE_NAME} (the lag reaches 0 even when the COPY INTO fails)"
+databricks_wait_for_table_rows "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "default.${DATABRICKS_TABLE_NAME}" 100
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
