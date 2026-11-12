@@ -308,11 +308,9 @@ than `SHORT_PERIOD_SECONDS`; the logs since the last (re)start of the Connect wo
 startup is not in the input (no `START_CONFIGS` dump, no `process_start` event); the plugin version of the connectors
 with errors when only that is missing; per `ASK_FOR_CAUSES`, the logs of a component the known causes point at when the
 input has none (a regex on their records keeps the broker logs out for a database login failure) and the heap dump, GC
-logs, thread dumps or TLS debug output that explain a known cause (not when 🧰 found them in the input); the broker logs
-when 💥 a burst follows a cluster event without them; and for the 3 most frequent ERROR root causes no known cause
-explains, the DEBUG logger of the plugin (`debug_logger()`: the package, 4 parts at most, of the first frame of the record
-or of its context that is not the JDK, the Connect runtime or the Kafka clients, else of its logger), with the
-`PUT /admin/loggers` and log4j lines. Shown in the summary, the 📥 section of the HTML report, the summary for a ticket and
+logs, thread dumps or certificates (the chain the server sends, the truststore) that explain a known cause (not when 🧰
+found them in the input); and the broker logs when 💥 a burst follows a cluster event without them. It never asks for logs
+at DEBUG (nor `-Djavax.net.debug`): the support team does not ask customers for them. Shown in the summary, the 📥 section of the HTML report, the summary for a ticket and
 `.data_to_request` of `--json`.
 
 ## Tasks by worker (🖥️)
