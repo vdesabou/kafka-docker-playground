@@ -369,12 +369,72 @@ install_confluent_cli() {
   if confirm "install the Confluent CLI, used by the Confluent Cloud examples, into $HOME/.local/bin (curl -sL --http1.1 https://cnfl.io/cli | sh)?"
   then
     run mkdir -p "$HOME/.local/bin"
-    run sh -c "curl -sL --http1.1 https://cnfl.io/cli | sh -s -- -b \"$HOME/.local/bin\"" \
-      || { logwarn "the Confluent CLI install failed: https://docs.confluent.io/confluent-cli/current/install.html"; return 0; }
+    if ! run sh -c "curl -sL --http1.1 https://cnfl.io/cli | sh -s -- -b \"$HOME/.local/bin\""
+    then
+      # the official installer lists the S3 bucket to resolve 'latest', which some networks (GitHub runners
+      # included) refuse: download the archive of the latest version directly instead
+      logwarn "the official Confluent CLI installer failed, downloading the latest archive directly"
+      install_confluent_cli_archive "$HOME/.local/bin" \
+        || { logwarn "the Confluent CLI install failed: https://docs.confluent.io/confluent-cli/current/install.html"; return 0; }
+    fi
     path_has_dir "$HOME/.local/bin" || confluent_bin_dir="$HOME/.local/bin"
   else
     log "skipped: install it later from https://docs.confluent.io/confluent-cli/current/install.html if you use Confluent Cloud"
   fi
+}
+
+# the Confluent CLI from its latest archive on S3 (the files the official installer downloads), SHA-256 checked
+# usage: install_confluent_cli_archive <bin dir>
+install_confluent_cli_archive() {
+  local bin_dir="$1" base="https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/latest"
+  local cli_os="linux" cli_arch archive tmp expected actual
+  case "$(uname -m)" in
+    x86_64|amd64) cli_arch=amd64 ;;
+    aarch64|arm64) cli_arch=arm64 ;;
+    s390x) cli_arch=s390x ;;
+    *) logwarn "no Confluent CLI archive for $(uname -m)"; return 1 ;;
+  esac
+  [ "$os" = "macos" ] && cli_os=darwin
+  # musl (Alpine): the linux archive is built for glibc
+  [ "$pkg_manager" = "apk" ] && cli_os=alpine
+  archive="confluent_latest_${cli_os}_${cli_arch}.tar.gz"
+  if [ "$opt_dry_run" = "1" ]
+  then
+    run curl -fsSL -o "<tmp>/$archive" "$base/$archive"
+    run tar -xzf "<tmp>/$archive" -C "<tmp>" "&&" install -m 0755 "<tmp>/confluent/confluent" "$bin_dir/confluent"
+    return 0
+  fi
+  command -v tar > /dev/null 2>&1 || { logwarn "tar is missing"; return 1; }
+  tmp="$(mktemp -d)" || return 1
+  if ! run curl -fsSL -o "$tmp/$archive" "$base/$archive" \
+    || ! expected="$(curl -fsSL "$base/confluent_latest_checksums.txt" | awk -v f="$archive" '$2 == f { print $1 }')" \
+    || [ -z "$expected" ]
+  then
+    rm -rf "$tmp"
+    logwarn "could not download $base/$archive or its checksum"
+    return 1
+  fi
+  if command -v sha256sum > /dev/null 2>&1
+  then
+    actual="$(sha256sum "$tmp/$archive" | cut -d ' ' -f 1)"
+  else
+    actual="$(shasum -a 256 "$tmp/$archive" 2> /dev/null | cut -d ' ' -f 1)"
+  fi
+  if [ "$actual" != "$expected" ]
+  then
+    rm -rf "$tmp"
+    logwarn "checksum mismatch for $archive (expected $expected, got ${actual:-nothing})"
+    return 1
+  fi
+  if ! tar -xzf "$tmp/$archive" -C "$tmp" confluent/confluent || ! mkdir -p "$bin_dir" \
+    || ! install -m 0755 "$tmp/confluent/confluent" "$bin_dir/confluent"
+  then
+    rm -rf "$tmp"
+    logwarn "could not extract the Confluent CLI into $bin_dir"
+    return 1
+  fi
+  rm -rf "$tmp"
+  log_ok "Confluent CLI installed: $bin_dir/confluent ($("$bin_dir/confluent" version 2> /dev/null | awk '/^Version/ { print $2 }'))"
 }
 
 # python3 3.9+, used by most support commands: playground analyze, schema, connector-plugin, connector diagnose,
