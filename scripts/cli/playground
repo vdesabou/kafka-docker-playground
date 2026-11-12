@@ -3804,7 +3804,7 @@ playground_ccloud_usage() {
 playground_ccloud_setup_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ccloud setup\n\n"
-    printf "  🏗️ Create (or complete) your personal environment and clusters, and store them\n  in a secrets profile\n  \n  For an organization shared by a team, or your own: rather than a cluster\n  created on every run, or a team cluster where everybody's topics collide,\n  you get, in the organization your confluent CLI is logged into:\n  \n    🌐 an environment pg-<user> (Stream Governance essentials)\n    🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure)\n    🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n       by you (no service account)\n  \n  and the secrets profile (--profile, default: the active one) gets\n  ENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n  _CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n  'playground run' loads for the fully managed examples (fm-aws-* on the\n  AWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\n  others on --default-cloud).\n  \n  Run it again any time: what exists is reused (same names), API keys\n  already stored in the profile are kept when they still belong to the\n  cluster, and only what is missing is created. --dry-run shows the plan.\n  \n  Names matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\n  deletes all the topics of clusters named pg-<user>-* (yours), never the\n  clusters, and never the environment pg-<user> nor the keys stored here.\n  \n  🎓 Tip: one profile per organization (--profile emea, --profile personal),\n  then 'playground secrets profile <name>' to switch, and 'confluent login\n  --organization <id> --save' for the confluent CLI.\n\n"
+    printf "  🏗️ Create (or complete) your personal environment and clusters, and store them\n  in a secrets profile\n  \n  For an organization shared by a team, or your own: rather than a cluster\n  created on every run, or a team cluster where everybody's topics collide,\n  you get, in the organization your confluent CLI is logged into:\n  \n    🌐 an environment pg-<user> (Stream Governance essentials)\n    🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,\n       and databricks only when asked)\n    🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n       by you (no service account)\n  \n  and the secrets profile (--profile, default: the active one) gets\n  ENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n  _CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n  'playground run' loads for the fully managed examples (fm-aws-* on the\n  AWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\n  others on --default-cloud).\n  \n  Run it again any time: what exists is reused (same names), API keys\n  already stored in the profile are kept when they still belong to the\n  cluster, and only what is missing is created. --dry-run shows the plan.\n  \n  Names matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\n  deletes all the topics of clusters named pg-<user>-* (yours), never the\n  clusters, and never the environment pg-<user> nor the keys stored here.\n  \n  🎓 Tip: one profile per organization (--profile emea, --profile personal),\n  then 'playground secrets profile <name>' to switch, and 'confluent login\n  --organization <id> --save' for the confluent CLI.\n\n"
   else
     printf "playground ccloud setup - 🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n\n"
   fi
@@ -3822,14 +3822,14 @@ playground_ccloud_setup_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--cloud CLOUD (repeatable)")"
-    printf "    🌤️ Cloud provider of a cluster to create (repeat it for several)\n"
-    printf "    %s\n" "Allowed: aws, gcp, azure"
+    printf "    🌤️ Cloud provider of a cluster to create (repeat it for several)\n    \n    databricks is never created by default: an AWS cluster\n    pg-<user>-databricks (--databricks-region, default us-east-2) stored as\n    AWS_DATABRICKS_CLUSTER_*, the cluster of fm-databricks-delta-lake-sink.\n    Add it with --cloud databricks (alone, the other clusters are kept).\n"
+    printf "    %s\n" "Allowed: aws, gcp, azure, databricks"
     printf "    %s\n" "Default: aws, gcp, azure"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--aws-region REGION")"
-    printf "    🗺️ Region of the AWS cluster (default: AWS_REGION, else eu-west-2)\n    \n    Examples that need a given region stop when the cluster is elsewhere:\n    keep AWS_REGION equal to it.\n"
+    printf "    🗺️ Region of the AWS cluster (default: AWS_REGION, exported or in the\n    profile, else eu-west-2)\n    \n    Examples that need a given region stop when the cluster is elsewhere:\n    keep AWS_REGION equal to it.\n"
     echo
 
     # :flag.usage
@@ -3839,12 +3839,17 @@ playground_ccloud_setup_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--azure-region REGION")"
-    printf "    🗺️ Region of the Azure cluster (default: AZURE_REGION, else westeurope)\n"
+    printf "    🗺️ Region of the Azure cluster (default: AZURE_REGION, exported or in the\n    profile, else westeurope)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--databricks-region REGION")"
+    printf "    🗺️ Region of the Databricks cluster, with --cloud databricks (default:\n    us-east-2)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--default-cloud CLOUD")"
-    printf "    🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*),\n    default: the first --cloud\n"
+    printf "    🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*),\n    default: the first --cloud (not databricks)\n"
     printf "    %s\n" "Allowed: aws, gcp, azure"
     echo
 
@@ -3873,6 +3878,7 @@ playground_ccloud_setup_usage() {
     printf "  playground ccloud setup --dry-run\n"
     printf "  playground ccloud setup --profile emea --cloud aws --cloud azure\n"
     printf "  playground ccloud setup --cloud gcp --gcp-region europe-west1 --default-cloud\n  gcp\n"
+    printf "  playground ccloud setup --cloud databricks\n"
     echo
 
   fi
@@ -48867,25 +48873,57 @@ playground_ccloud_setup_command() {
 
   # src/commands/ccloud/setup.sh
   eval "clouds=(${args[--cloud]})"
-  default_cloud="${args[--default-cloud]:-${clouds[0]}}"
   environment_name="${args[--environment-name]:-pg-${USER}}"
   profile="${args[--profile]:-$(get_active_secret_profile)}"
   dry_run="${args[--dry-run]}"
 
-  declare -A regions
-  regions[aws]="${args[--aws-region]:-${AWS_REGION:-eu-west-2}}"
-  regions[gcp]="${args[--gcp-region]:-europe-west2}"
-  regions[azure]="${args[--azure-region]:-${AZURE_REGION:-westeurope}}"
-  declare -A prefixes
-  prefixes[aws]="AWS_"
-  prefixes[gcp]="GCP_"
-  prefixes[azure]="AZURE_"
-
-  if [[ " ${clouds[*]} " != *" $default_cloud "* ]]
+  # CLUSTER_* (examples that need no specific cloud): --default-cloud, else the first --cloud that is not databricks
+  default_cloud="${args[--default-cloud]}"
+  if [ -z "$default_cloud" ]
+  then
+      for cloud in "${clouds[@]}"
+      do
+          if [ "$cloud" != "databricks" ]
+          then
+              default_cloud="$cloud"
+              break
+          fi
+      done
+  elif [[ " ${clouds[*]} " != *" $default_cloud "* ]]
   then
       logerror "❌ --default-cloud $default_cloud is not one of the --cloud: ${clouds[*]}"
       exit 1
   fi
+
+  # a region variable from the shell, else from the secrets profile (where 'playground run' gets it from too)
+  function region_variable () {
+      if [ -n "${!1:-}" ]
+      then
+          echo "${!1}"
+      else
+          # not stored: empty (the CLI runs with set -e)
+          secret_get_from_store "$1" "$profile" 2> /dev/null || true
+      fi
+  }
+
+  declare -A regions
+  aws_region=$(region_variable AWS_REGION)
+  azure_region=$(region_variable AZURE_REGION)
+  regions[aws]="${args[--aws-region]:-${aws_region:-eu-west-2}}"
+  regions[gcp]="${args[--gcp-region]:-europe-west2}"
+  regions[azure]="${args[--azure-region]:-${azure_region:-westeurope}}"
+  regions[databricks]="${args[--databricks-region]:-us-east-2}"
+  declare -A prefixes
+  prefixes[aws]="AWS_"
+  prefixes[gcp]="GCP_"
+  prefixes[azure]="AZURE_"
+  prefixes[databricks]="AWS_DATABRICKS_"
+  # cloud provider of each cluster: the databricks one is an AWS cluster (fm-databricks-delta-lake-sink)
+  declare -A providers
+  providers[aws]="aws"
+  providers[gcp]="gcp"
+  providers[azure]="azure"
+  providers[databricks]="aws"
 
   tmp_dir=$(mktemp -d -t pg-ccloud-setup-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
@@ -48910,7 +48948,7 @@ playground_ccloud_setup_command() {
   then
       log "🔎 dry-run: showing what would be created and stored, nothing is"
   fi
-  log "🏗️ Setting up environment $environment_name with cluster(s) ${clouds[*]} (default: $default_cloud), stored in secrets profile $profile"
+  log "🏗️ Setting up environment $environment_name with cluster(s) ${clouds[*]} (default: ${default_cloud:-none}), stored in secrets profile $profile"
 
   # keys of the org, to know whether the keys already stored in the profile still belong to the resources
   confluent api-key list -o json > "$tmp_dir/api-keys.json" 2> /dev/null || echo "[]" > "$tmp_dir/api-keys.json"
@@ -48969,11 +49007,11 @@ playground_ccloud_setup_command() {
   do
       name="pg-${USER}-$cloud"
       region="${regions[$cloud]}"
-      id=$(jq -r --arg n "$name" '[.[] | select(.name == $n)][0].id // empty' "$tmp_dir/clusters.json")
+      id=$(jq -r --arg n "$name" '[.[] | select(.name == $n and ((.status // "") | ascii_upcase | test("DELET") | not))][0].id // empty' "$tmp_dir/clusters.json")
       if [ -n "$id" ]
       then
           existing_region=$(jq -r --arg id "$id" '.[] | select(.id == $id) | .region' "$tmp_dir/clusters.json")
-          log "🎰 cluster $name ($id, $cloud $existing_region) already exists, reusing it"
+          log "🎰 cluster $name ($id, ${providers[$cloud]} $existing_region) already exists, reusing it"
           if [ "$existing_region" != "$region" ]
           then
               logwarn "⚠️ it is in $existing_region, not $region: examples expecting $region will stop, delete it in the UI to move it"
@@ -48981,14 +49019,14 @@ playground_ccloud_setup_command() {
           fi
       elif [[ -n "$dry_run" ]]
       then
-          log "🔎 dry-run, would create Basic cluster $name ($cloud $region)"
+          log "🔎 dry-run, would create Basic cluster $name (${providers[$cloud]} $region)"
           id="<new $cloud cluster>"
       else
-          log "🎰 creating Basic cluster $name ($cloud $region)"
-          id=$(confluent kafka cluster create "$name" --cloud "$cloud" --region "$region" --type basic --environment "$environment_id" -o json | jq -r '.id // empty')
+          log "🎰 creating Basic cluster $name (${providers[$cloud]} $region)"
+          id=$(confluent kafka cluster create "$name" --cloud "${providers[$cloud]}" --region "$region" --type basic --environment "$environment_id" -o json | jq -r '.id // empty')
           if [ -z "$id" ]
           then
-              logerror "❌ could not create cluster $name ($cloud $region)"
+              logerror "❌ could not create cluster $name (${providers[$cloud]} $region)"
               exit 1
           fi
           log "🎰 cluster $name is $id"
@@ -49067,12 +49105,12 @@ playground_ccloud_setup_command() {
           to_store "${prefix}CLUSTER_CREDS" "$creds" secret
       fi
       to_store "${prefix}CLUSTER_NAME" "$name" plain
-      to_store "${prefix}CLUSTER_CLOUD" "$cloud" plain
+      to_store "${prefix}CLUSTER_CLOUD" "${providers[$cloud]}" plain
       to_store "${prefix}CLUSTER_REGION" "${regions[$cloud]}" plain
       if [ "$cloud" == "$default_cloud" ]
       then
           to_store CLUSTER_NAME "$name" plain
-          to_store CLUSTER_CLOUD "$cloud" plain
+          to_store CLUSTER_CLOUD "${providers[$cloud]}" plain
           to_store CLUSTER_REGION "${regions[$cloud]}" plain
           if [ -n "$creds" ]
           then
@@ -49132,7 +49170,7 @@ playground_ccloud_setup_command() {
 
   # ⚠️ exported variables win over the profile: they would hide what was just stored
   exported=""
-  for name in ENVIRONMENT SCHEMA_REGISTRY_CREDS CLUSTER_NAME CLUSTER_CLOUD CLUSTER_REGION CLUSTER_CREDS AWS_CLUSTER_NAME GCP_CLUSTER_NAME AZURE_CLUSTER_NAME AWS_CLUSTER_CREDS GCP_CLUSTER_CREDS AZURE_CLUSTER_CREDS
+  for name in ENVIRONMENT SCHEMA_REGISTRY_CREDS CLUSTER_NAME CLUSTER_CLOUD CLUSTER_REGION CLUSTER_CREDS AWS_CLUSTER_NAME GCP_CLUSTER_NAME AZURE_CLUSTER_NAME AWS_CLUSTER_CREDS GCP_CLUSTER_CREDS AZURE_CLUSTER_CREDS AWS_DATABRICKS_CLUSTER_NAME AWS_DATABRICKS_CLUSTER_CREDS
   do
       if [ -n "${!name:-}" ]
       then
@@ -49151,7 +49189,7 @@ playground_ccloud_setup_command() {
       then
           var="AWS_REGION"
           [ "$cloud" == "azure" ] && var="AZURE_REGION"
-          value="${!var:-$(secret_get_from_store "$var" "$profile" 2> /dev/null)}"
+          value=$(region_variable "$var")
           if [ -n "$value" ] && [ "$value" != "${regions[$cloud]}" ]
           then
               logwarn "⚠️ $var is $value but the $cloud cluster is in ${regions[$cloud]}: the examples that need their cloud resources and the cluster in the same region will stop"
@@ -105074,6 +105112,20 @@ playground_ccloud_setup_parse_requirements() {
         ;;
 
       # :flag.case
+      --databricks-region)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--databricks-region']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--databricks-region requires an argument: --databricks-region REGION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --default-cloud)
 
         # :flag.case_arg
@@ -105159,8 +105211,8 @@ playground_ccloud_setup_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--cloud]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(aws|gcp|azure)$ ]]; then
-      printf "%s\n" "--cloud must be one of: aws, gcp, azure" >&2
+    if [[ ! $i =~ ^(aws|gcp|azure|databricks)$ ]]; then
+      printf "%s\n" "--cloud must be one of: aws, gcp, azure, databricks" >&2
       exit 1
     fi
   done
@@ -156283,6 +156335,7 @@ playground_ccloud_setup_completion() {
             "aws"
             "gcp"
             "azure"
+            "databricks"
           )
           local completion_value
           for completion_value in "${completion_values[@]}"; do
@@ -156325,6 +156378,16 @@ playground_ccloud_setup_completion() {
         fi
         shift
         completion_blocked_flags["--azure-region"]=1
+
+        ;;
+      --databricks-region)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--databricks-region"]=1
 
         ;;
       --default-cloud)
@@ -156383,6 +156446,7 @@ playground_ccloud_setup_completion() {
     completion_flag_candidates --aws-region "$completion_current" --aws-region
     completion_flag_candidates --gcp-region "$completion_current" --gcp-region
     completion_flag_candidates --azure-region "$completion_current" --azure-region
+    completion_flag_candidates --databricks-region "$completion_current" --databricks-region
     completion_flag_candidates --default-cloud "$completion_current" --default-cloud
     completion_flag_candidates --environment-name "$completion_current" --environment-name
     completion_flag_candidates --profile "$completion_current" --profile
