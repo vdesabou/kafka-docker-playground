@@ -88,7 +88,7 @@ When no engine answers and none is installed, the installer asks which one to in
 > [!WARNING]
 > Docker Desktop needs a [paid subscription](https://www.docker.com/pricing/faq/) in companies with more than 250 employees or more than $10 million revenue: check that yours has one, or pick Podman.
 
-- An engine already installed but stopped (Docker Desktop, OrbStack, Rancher Desktop, Colima, Podman) is never replaced: the installer tells you how to start it.
+- An engine already installed but stopped (Docker Desktop, OrbStack, Rancher Desktop, Colima, Podman) is never replaced: the installer tells you how to start it. On macOS, a `docker` CLI alone (for example left by `brew uninstall podman`) is not an engine: the installer offers to install one.
 - `--yes` alone never installs an engine: pass `--engine podman`, `--engine docker-desktop` (macOS), `--engine docker` (Linux) or `--engine none`.
 - `--uninstall` leaves the engine installed.
 
