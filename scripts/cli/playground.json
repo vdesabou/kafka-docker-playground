@@ -4752,6 +4752,84 @@
           ]
         },
         {
+          "name": "watch",
+          "description": "👀 Watch a folder (default: ~/Downloads) and run 'playground analyze logs' on every new file or folder holding logs, report opened in the browser\n\nLeave it running in a terminal: when a log file, a support bundle or a\nfolder of logs lands in the folder (a download from Zendesk, Slack, a\nbrowser, Finder), it is analyzed as soon as it is complete, and its\nHTML report opens in the browser, with a macOS notification.\n\n⏳ A download is complete once its size stops changing and the browser\nhas renamed it: .crdownload, .download, .part, .partial and .tmp\nentries are waited for, never analyzed.\n\n🔎 \"Holds logs\" is checked without extracting anything: a .log / .out\nfile (also rotated, .log.1, and gzipped), a .txt, .json, .csv or\nextension-less file whose first lines look like log records (a\ntimestamp and a level, librdkafka lines, JSON records with a level),\nan archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, .7z) or a\nfolder that contains such files. Pictures, PDFs, installers and other\nfiles are ignored (logged once).\n\nOnly the entries that appear after the start are analyzed, at the\ntop of the folder (a file moved into a sub-folder never is): --since\nalso picks the ones created in the last minutes (creation time, so\nthat a folder you move files into, ~/Downloads/Archives, is not\npicked), --once analyzes those and exits instead of watching.\n🚫 --exclude never analyzes an entry, even renamed or re-created. Each report is written in its\nown folder of --output-dir, named after the entry (outside the\nwatched folder, so that a report never triggers an analysis).\n\n🔁 macOS: --install-launch-agent starts the watch at every login (a\nLaunchAgent, restarted if it stops) with the flags given, so that you\nnever have to start it; --uninstall-launch-agent removes it.\n\n🔒 Downloads are untrusted data: they are only read, never run.\nStop with Ctrl-C.",
+          "usage": "playground analyze watch [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--folder"
+              ],
+              "argument": "FOLDER",
+              "description": "📂 Folder to watch (default: ~/Downloads)"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Folder of the reports, one sub-folder per analyzed entry (default: ~/playground-log-reports)"
+            },
+            {
+              "names": [
+                "--since"
+              ],
+              "argument": "MINUTES",
+              "description": "🕐 Also analyze the entries created in the last <minutes> minutes when the watch starts (default: 0, only new entries)\n\nDefault value: 0"
+            },
+            {
+              "names": [
+                "--exclude"
+              ],
+              "argument": "NAME",
+              "description": "🚫 Name of an entry of the folder never analyzed, wildcards allowed (for example Archives, or \"*.dmg\")\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--once"
+              ],
+              "argument": "",
+              "description": "1️⃣ Analyze the entries of --since and exit, without watching"
+            },
+            {
+              "names": [
+                "--interval"
+              ],
+              "argument": "SECONDS",
+              "description": "⏱️ Seconds between two checks of the folder (default: 3)\n\nDefault value: 3"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🙈 Do not open the reports in the browser (their path is still logged)"
+            },
+            {
+              "names": [
+                "--analyze-logs-args"
+              ],
+              "argument": "ANALYZE_LOGS_ARGS",
+              "description": "➕ Extra flags passed to every 'playground analyze logs' call, as one string (for example \"--errors-only --sanitize\")"
+            },
+            {
+              "names": [
+                "--install-launch-agent"
+              ],
+              "argument": "",
+              "description": "🔁 macOS: install a LaunchAgent that starts this watch (with --folder, --output-dir, --exclude, --interval, --no-open, --analyze-logs-args) at every login, output in ~/Library/Logs/playground-analyze-watch.log\n\nConflicts with: --uninstall-launch-agent, --once"
+            },
+            {
+              "names": [
+                "--uninstall-launch-agent"
+              ],
+              "argument": "",
+              "description": "🗑️ macOS: remove the LaunchAgent of --install-launch-agent\n\nConflicts with: --install-launch-agent"
+            }
+          ]
+        },
+        {
           "name": "gc-logs",
           "description": "📈 Analyze JVM Garbage Collection logs\n\n📊 Parses GC logs from local files / folders or a running container: pause statistics, Full GC and evacuation / concurrent mode failures, live set, heap floor trend (leak), allocation stalls, GC causes, and recommendations backed by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n\n🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*) formats, any decoration\n\n🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM restart, the latest run is analyzed (--run to pick another)\n\n🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n\n🌐 Also writes a self-contained HTML dashboard (pause timeline and heap before / after GC that zoom together, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs",
           "usage": "playground analyze gc-logs [OPTIONS]",
