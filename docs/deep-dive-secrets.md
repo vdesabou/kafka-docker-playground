@@ -278,20 +278,24 @@ op service-account create "kdp-jdoe-playground" --expires-in 90d \
 security add-generic-password -a "$USER" -s op-service-account -w        # Linux: secret-tool store --label="op service account" service op-service-account
 ```
 
-and read from there in `~/.zshrc` (or `~/.bashrc`):
+That is all the playground needs: when `OP_SERVICE_ACCOUNT_TOKEN` is not exported, it reads the token from that
+keychain entry (service `op-service-account`, exact name) before calling `op`. So it also works where your shell
+profile never runs, which is where the desktop app popups came from: `playground cloud-resources nightly-cleanup`
+(launchd, cron), `zsh -c`, a Claude Code or VS Code session started from the GUI. An exported
+`OP_SERVICE_ACCOUNT_TOKEN` always wins over the keychain entry.
+
+Your own `op` commands still use the desktop app (and see your `Private` vault). For them to use the service
+account too, export it in `~/.zshrc` (or `~/.bashrc`):
 
 ```bash
 export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -s op-service-account -w 2>/dev/null)
 # Linux: export OP_SERVICE_ACCOUNT_TOKEN=$(secret-tool lookup service op-service-account)
 ```
 
-To keep your interactive `op` on the desktop app (and your `Private` vault), give the token to the playground only:
-`alias playground='OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -s op-service-account -w 2>/dev/null) playground'`.
-
 **4. Point the playground at the vault.** Mandatory: the default `Private` is invisible to a service account.
 
 ```bash
-op whoami                                         # User Type: SERVICE_ACCOUNT
+OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -s op-service-account -w) op whoami   # User Type: SERVICE_ACCOUNT
 playground secrets backend op
 playground config set secrets.op-vault kdp-jdoe
 ```
@@ -418,7 +422,7 @@ With a service account, grant it `kdp-shared:read_items` at creation (5.3, step 
 | Message | Cause | Fix |
 | --- | --- | --- |
 | `❌ the 1Password CLI (op) is not installed` | | `brew install 1password-cli` |
-| `❌ not signed in to 1Password` | app integration off, the Touch ID prompt denied, or `OP_SERVICE_ACCOUNT_TOKEN` empty or invalid in this shell. With the app, the playground runs `op signin` for you when `op whoami` says `account is not signed in` | `op signin`; enable the integration, or open a new terminal after fixing the token |
+| `❌ not signed in to 1Password` | app integration off, the Touch ID prompt denied, or the service account token invalid (exported `OP_SERVICE_ACCOUNT_TOKEN`, else the keychain entry `op-service-account`). With the app, the playground runs `op signin` for you when `op whoami` says `account is not signed in` | `op signin`; enable the integration, or update the keychain entry (and open a new terminal if you export the token) |
 | `❌ 1Password vault <vault> is not readable with your current session` | `secrets.op-vault` is a vault this session can't see (`Private` with a service account) | `playground config set secrets.op-vault <vault>`; `op vault list` shows the ones you can |
 | `❌ could not create 1Password item kdp-… in vault …` | no write permission on the vault | a service account with `write_items` on it |
 | `❌ could not update 1Password item … 👉 a service account token needs write_items on that vault to rotate a password` | `secrets set` on a linked item of a read-only vault | rotate it in the vault (a maintainer) |
@@ -668,7 +672,8 @@ playground secrets scan [--staged]
 - Resolution: exported variable > active profile > `default`. Only the variables the example declares are loaded.
 - `op` and `vault` are never picked automatically. `vault` is reference only.
 - 1Password: items `kdp-<profile>-<NAME>` in `secrets.op-vault` (default `Private`), field `password`, tag
-  `kafka-docker-playground`. Service account = a dedicated vault, `OP_SERVICE_ACCOUNT_TOKEN` from the keychain.
+  `kafka-docker-playground`. Service account = a dedicated vault, token in the keychain entry `op-service-account` (read by the playground when
+  `OP_SERVICE_ACCOUNT_TOKEN` is not exported).
   Team credentials = `link` to a shared vault, never `secrets.op-vault` on it.
 - Sources: [`secrets_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/secrets_function.sh)
   (store, backends, resolution), the commands in
