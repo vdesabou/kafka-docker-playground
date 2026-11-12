@@ -1497,6 +1497,43 @@ def test_thread_dump_labels_after_a_missing_file():
         check("label kept with its path", jvm_dumps._paths(of, ["a.txt", "b.txt"]) == [("b.txt", kept)])
 
 
+
+def test_not_enough_replicas_single_replica_isr():
+    """🧬 NotEnoughReplicas: the partitions refused with their window, most refused first, and the single in-sync replica
+    diagnosis (RF=1 with min.insync.replicas=2 exposed by replicas being added); 🐢 ISR expands without any shrink are
+    replicas being added, not a broker that falls behind"""
+    def rec(count, line, first, last, isr, part):
+        body = (f"[{first.replace('T', ' ')},000] ERROR [ReplicaManager broker=1] Error processing append operation on partition {part} (kafka.server.ReplicaManager)\n"
+                f"org.apache.kafka.common.errors.NotEnoughReplicasException: The size of the current ISR Set({isr}) is insufficient to satisfy the min.isr requirement of 2 for partition {part}")
+        return f"@@PGREC@@|ERROR|{count}|{line}|{line + 1}|{first}|{last}\n{body}\n@@PGTS@@|{first} {last}\n"
+    text = ("@@PGFILE@@|server.log|1000|3|0|2026-10-31T22:00:00|2026-11-01T04:00:00\n"
+            + rec(40, 10, "2026-10-31T22:10:50", "2026-10-31T22:12:16", "3", "orders-changelog-1")
+            + rec(800, 20, "2026-11-01T00:42:39", "2026-11-01T03:59:06", "2", "events-repartition-0")
+            + rec(5, 30, "2026-11-01T01:00:00", "2026-11-01T01:00:10", "2, 3", "payments-2"))
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    ner = next((h for h in res["known_causes"] if h["title"] == log_report.NOT_ENOUGH_REPLICAS_TITLE), None)
+    check("🧬 known cause", ner and ner["occurrences"] == 845, [h["title"] for h in res["known_causes"]])
+    d = ner["not_enough_replicas"]
+    check("most refused partition first, with its window",
+          [(p["partition"], p["occurrences"], p["first"], p["last"]) for p in d["partitions"]][:2]
+          == [("events-repartition-0", 800, "2026-11-01T00:42:39", "2026-11-01T03:59:06"),
+              ("orders-changelog-1", 40, "2026-10-31T22:10:50", "2026-10-31T22:12:16")], d["partitions"])
+    check("duration", d["partitions"][0]["duration_seconds"] == 3 * 3600 + 16 * 60 + 27, d["partitions"][0])
+    check("single in-sync replica: 2 partitions (not the one with ISR 2,3)", (d["single_replica_isr"], d["min_isr"]) == (2, 2), d)
+    check("diagnosis names RF=1 / min.insync.replicas and KAFKA-15583",
+          "KAFKA-15583" in ner["details"][0] and "min.insync.replicas=1" in ner["details"][0], ner["details"])
+    check("partition line", ner["details"][1].startswith("🎯 events-repartition-0: ×800, 2026-11-01 00:42:39 → 03:59:06 (3 h 16 min)")
+          and ner["details"][1].endswith("ISR [2] for min.isr 2"), ner["details"])
+    md = log_report.ticket_markdown(res, "server.log", "ERROR")
+    check("ticket section", f"### {log_report.NOT_ENOUGH_REPLICAS_TITLE}" in md, md[-800:])
+    row = lambda kind, n: {"kind": kind, "who": "broker 1", "count": n, "per_hour": 70.0, "storm": True, "first": None,
+                           "last": None, "reason": ""}
+    expands = "\n".join(log_report.broker_signals_text({"rows": [row("isr_expand", 450)]}))
+    check("expands only: replicas being added", "replicas being added" in expands and "falls behind:" not in expands, expands)
+    both = "\n".join(log_report.broker_signals_text({"rows": [row("isr_expand", 450), row("isr_shrink", 400)]}))
+    check("shrinks and expands: a broker that falls behind", "falls behind:" in both and "replicas being added" not in both, both)
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

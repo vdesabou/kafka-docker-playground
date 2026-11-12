@@ -164,7 +164,21 @@ from), `request_timeout` (`Disconnecting from node 2 due to request timeout`: th
 `.lifecycle` (`BROKER_KINDS`, a line without broker id: `broker (<file>)`), with the partitions or peers they happen to
 most as reason and a 🌀 storm as the rebalances, prints them in their own 🐢 block, groups them in bursts on the
 timeline (`broker_bursts`: less than 5 min apart, from 1 ISR shrink or log cleaner failure, 3 of the others, 20 per kind),
-and asks for the JMX metrics of the brokers in 📥.
+and asks for the JMX metrics of the brokers in 📥. ISR expands without a single ISR shrink are replicas being added (a
+replication factor increase, a reassignment, a Self-Balancing move) that join the ISR once caught up: the 🐢 block says so
+instead of only "a broker that falls behind" (kept when there are shrinks, fetch errors or request timeouts).
+
+## Not enough replicas (🧬)
+
+`not_enough_replicas_summary()` (in `match_hints()`, `.known_causes[].not_enough_replicas` of `--json`) reads the
+`NotEnoughReplicasException: The size of the current ISR Set(<ids>) is insufficient to satisfy the min.isr requirement of
+<n> for partition <p>` records: per partition the occurrences, the window (first → last) and its duration, the ISR and
+min.isr, most refused first (a record also stands for the partitions whose names differ only by digits), and how many
+partitions had a single replica in sync while min.isr asked for 2 or more. `not_enough_replicas_details()` writes them
+under the known cause, in the terminal, the HTML report and the summary for a ticket: the impact table of an RCA, and the
+single in-sync replica diagnosis: the other replicas fell out of sync, or the topic has fewer replicas than
+`min.insync.replicas` (RF=1 with `min.insync.replicas=2` works, the minimum being capped at the number of replicas,
+KAFKA-15583, until a replica is added: every `acks=all` write is then refused until the new replica has caught up).
 
 ## Comparison with another input
 
