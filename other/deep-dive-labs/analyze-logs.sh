@@ -190,7 +190,7 @@ lab_expect_not_contains "license-manager: acks"
 
 log "Section 6: did the fix work? --compare"
 lab_run playground analyze logs --sample compare_fix --output-dir "$report_dir"
-lab_expect_contains "🔁 Compared with tools/log-analyzer/samples/compare/before.log: 1 new root cause(s), 1 growing, 0 shrinking, 3 gone, 6 unchanged · new known cause(s): 🔌 Connection failure · gone: 🤺 Producer fenced (transactions, exactly-once), 🚦 Throttled by the external system, 🚧 Request refused by a broker policy"
+lab_expect_contains "🔁 Compared with tools/log-analyzer/samples/compare/before.log: 1 new root cause(s), 1 growing, 0 shrinking, 3 gone, 6 unchanged · new known cause(s): 🔌 Connection failure · gone: 🤺 Producer fenced (transactions, exactly-once), 🚦 Throttled by the external system, 🌩️ HTTP 5xx from the external system, 🚧 Request refused by a broker policy"
 lab_expect_contains "FATAL 0 → 0 · ERROR 6 → 5 · WARN 4 → 9 · period 9 min → 9 min"
 lab_expect_contains "🆕 new 0 → 1 SQLRecoverableException: IO Error: Connection reset by peer"
 lab_expect_contains "📈 growing 1 → 7 RebalanceInProgressException: Offset commit cannot be completed since the consumer is undergoing a rebalance"

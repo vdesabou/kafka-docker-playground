@@ -557,7 +557,7 @@ DNS_TITLE = "🌐 Host name not resolved (DNS)"
 # the host of a failed lookup: Java "UnknownHostException: db.acme.corp[: Name or service not known]", "DNS resolution
 # failed for db.acme.corp", "Couldn't resolve server db.acme.corp:9092", librdkafka "Failed to resolve 'db.acme.corp:9092'",
 # Go "dial tcp: lookup db.acme.corp[ on 10.0.0.2:53]: no such host"
-DNS_HOST_RX = re.compile(r"UnknownHostException: ([^\s:]+)|DNS resolution failed for ([^\s:]+)|Couldn't resolve server ([^\s:]+)"
+DNS_HOST_RX = re.compile(r"UnknownHostException: (?!Failed to resolve ')([^\s:]+)|DNS resolution failed for ([^\s:]+)|Couldn't resolve server ([^\s:]+)"
                          r"|Failed to resolve '([^':]+)|dial tcp: lookup ([^\s:]+)")
 # a Java lookup that went to the resolver of the OS has its message ("db.acme.corp: Name or service not known",
 # "Temporary failure in name resolution"); the same failure served from the negative cache of the JVM
@@ -4401,7 +4401,7 @@ FILE_COMPONENTS = [
     ("connect", "🔌 Connect", r"connect|(^|[/_-])cw\d|worker"),
     ("clients", "📡 Clients", r"producer|consumer|client|librdkafka|kafkajs|confluent[-_]kafka|panic|uncaught|python|dotnet|golang|"
                              r"^go[-_](app|client)|rust|node[-_.]?js|^node[-_](app|client)"),
-    ("kafka", "🗄️ Kafka", r"kafka|broker|server\.log|controller|state-change|kraft"),
+    ("kafka", "🗄️ Kafka", r"kafka|broker|server\.log|^server[_-][^/]*\.log|controller|state-change|kraft"),
 ]
 
 

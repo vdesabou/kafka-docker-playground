@@ -1573,6 +1573,71 @@ def test_live_config_changes_in_timeline():
     text = "\n".join(log_report.timeline_text(tl, top=2))
     check("terminal: the changes further down listed", "⚙️ changes later in the timeline" in text and "♻️" in text, text)
 
+def test_known_causes_from_past_cases():
+    """causes that real support bundles got wrong (synthetic lines of the same shape): the MDS client is not Schema
+    Registry, a wrong SASL mechanism is not a wrong password, an SMT that throws is not a converter, HTTP 5xx and the
+    records of errors.log.enable have their cause, the more precise cause of a record comes first"""
+    def causes_of(body, level="ERROR"):
+        text = ("@@PGFILE@@|connect.log|100|1|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+                f"@@PGREC@@|{level}|3|10|20|2026-10-24T17:00:01|2026-10-24T17:00:09\n{body}\n@@PGTS@@|2026-10-24T17:00:01 2026-10-24T17:00:09\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]], res
+    # the token login of a client to MDS (metadataServerUrls): 🪪, not 📐 Schema Registry, not the SR API key article
+    got, res = causes_of("[2026-10-24 17:00:01,000] ERROR [worker] Failed to authenticate (org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule)\n"
+                         "    io.confluent.security.auth.client.rest.exceptions.RestClientException: Unauthorized; error code: 401")
+    check("MDS client: 🪪", "🪪 MDS / RBAC token error" in got and "📐 Schema Registry error" not in got, got)
+    kb = next(h for h in res["known_causes"] if h["title"] == "🔑 Authentication failure").get("kb_articles", [])
+    check("MDS 401: not the Schema Registry API key article", not any("Schema Registry" in a.get("title", "") for a in kb), kb)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] WARN Error while refreshing active metadata server urls (io.confluent.security.auth.client.provider.HttpBasicCredentialProvider)", "WARN")
+    check("MDS urls refresh: 🪪", got == ["🪪 MDS / RBAC token error"], got)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR Unexpected exception sending HTTP Request. (io.confluent.security.auth.client.rest.RestClient:449)\n"
+                       "    java.net.SocketTimeoutException: Read timed out")
+    check("MDS RestClient logger: 🪪", "🪪 MDS / RBAC token error" in got and "📐 Schema Registry error" not in got, got)
+    # the Schema Registry client keeps its cause and its article
+    got, res = causes_of("[2026-10-24 17:00:01,000] ERROR [sink|task-0] failed\n"
+                         "    io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: Unauthorized; error code: 401")
+    check("SR client: 📐", "📐 Schema Registry error" in got, got)
+    kb = next(h for h in res["known_causes"] if h["title"] == "🔑 Authentication failure").get("kb_articles", [])
+    check("SR 401: the Schema Registry API key article", any("Schema Registry" in a.get("title", "") for a in kb), kb)
+    # a SASL mechanism the listener does not enable: 🛂, not 🔑
+    got, _ = causes_of("[2026-10-24 17:00:01,000] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed authentication with /10.0.0.1 "
+                       "(channelId=10.0.0.2:9092-10.0.0.1:50000-0) (errorMessage=Client SASL mechanism 'OAUTHBEARER' not enabled in the server, "
+                       "enabled mechanisms are [PLAIN]) (org.apache.kafka.common.network.Selector)")
+    check("wrong SASL mechanism: 🛂 not 🔑", "🛂 Wrong security.protocol or SASL mechanism" in got and "🔑 Authentication failure" not in got, got)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed authentication with /10.0.0.1 "
+                       "(channelId=x) (errorMessage=Authentication failed: Invalid username or password) (org.apache.kafka.common.network.Selector)")
+    check("a wrong password stays 🔑", "🔑 Authentication failure" in got, got)
+    # an SMT that throws: 🪄, not 🔀 (with the Flatten advice); a converter error stays 🔀
+    got, res = causes_of("[2026-10-24 17:00:01,000] ERROR [src|task-0] Error encountered in task src-0. Executing stage 'TRANSFORMATION' with class "
+                         "'org.apache.kafka.connect.transforms.Flatten$Value', where source record is = SourceRecord{...}. (org.apache.kafka.connect.runtime.errors.LogReporter)\n"
+                         "    org.apache.kafka.connect.errors.DataException: Flatten transformation does not support ARRAY for record with schemas (for field a.b).")
+    check("SMT: 🪄 not 🔀", "🪄 Transformation (SMT) failed" in got and "🔀 Serialization or conversion error" not in got, got)
+    check("SMT: ⏭️ errors.log.enable", "⏭️ Records failed in a stage (errors.log.enable)" in got, got)
+    smt = next(h for h in res["known_causes"] if h["title"] == "🪄 Transformation (SMT) failed")
+    check("Flatten advice", "connect-transforms jar" in smt["advice"], smt["advice"])
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [sink|task-0] Error encountered in task sink-0. Executing stage 'VALUE_CONVERTER' with class "
+                       "'io.confluent.connect.avro.AvroConverter'. (org.apache.kafka.connect.runtime.errors.LogReporter)\n"
+                       "    org.apache.kafka.connect.errors.DataException: Converting byte[] to Kafka Connect data failed due to serialization error")
+    check("converter: 🔀 not 🪄", "🔀 Serialization or conversion error" in got and "🪄 Transformation (SMT) failed" not in got, got)
+    # an HTTP 504 of the endpoint
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [http-sink|task-0] Error while processing HTTP request with Url : https://api.example.com/x, "
+                       "Status code : 504, Reason Phrase : Gateway Timeout, Response Content : , (io.confluent.connect.http.writer.HttpWriterImpl)")
+    check("HTTP 5xx: 🌩️", "🌩️ HTTP 5xx from the external system" in got, got)
+    # the more precise cause first: 🗝️ before 🔐 for the same records, 🧬 before 🚫
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [s3|task-0] task failed\n"
+                       "    javax.net.ssl.SSLException: java.lang.RuntimeException: Unexpected error: java.security.InvalidAlgorithmParameterException: the trustAnchors parameter must be non-empty")
+    check("🗝️ before 🔐", got.index("🗝️ Empty or unreadable truststore") < got.index("🔐 TLS handshake failure"), got)
+    order = [t for _, _, t, _ in log_report.HINTS]
+    check("🧬 before 🚫 and 🔑", order.index("🧬 Not enough replicas") < order.index("🔑 Authentication failure") < order.index("🚫 Authorization failure"), order[:15])
+    # the host of a Netty "UnknownHostException: Failed to resolve 'db.example.com.'" is the name, not "Failed"
+    m = log_report.DNS_HOST_RX.search("java.net.UnknownHostException: Failed to resolve 'db.example.com' [A(1)]")
+    check("DNS host", m and next(g for g in m.groups() if g) == "db.example.com", m and m.groups())
+    # broker logs named server_<date>_<host>.log
+    check("server_<date>_<host>.log is a broker log", log_report.file_component("logs/server_20261101_bk01.log") == "kafka",
+          log_report.file_component("logs/server_20261101_bk01.log"))
+
+
 def test_sslexception_socket_error_is_not_tls():
     """an SSLException that only wraps a socket error (an LDAPS connection, already open, that times out or is reset) is
     not 🔐 TLS handshake failure, and must not become the 👉 start with of the verdict ahead of the connect timeouts; a
