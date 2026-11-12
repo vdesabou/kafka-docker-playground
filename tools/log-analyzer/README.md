@@ -338,6 +338,18 @@ advice once, a chip per connector with its errors, the first `TW_TOP_ONLY` shown
 the connector filter (`pgLifecycle()`: the rows and chips of the other connectors are hidden, a picked one shows even
 past the first ones).
 
+The names of the workers shown (tiles, legend, errors per worker) are the part that differs (`worker_short_names()`: the
+start they share cut at a separator, backed off while what is left is under 4 characters, a long shared end dropped, a
+short one such as `.txt` kept, cut in the middle past 28 characters), the full name on hover.
+
+✂️ Overlapping copies: a plain-text log whose first and last shared lines (timestamped, milliseconds included) are also in
+a log digested before it (`without_overlap()` of `analyze/logs.sh`, only for logs of the same period) is the same log
+downloaded at another time: only its other lines are digested (a copy of the file without the shared block), and
+`--same-source` (label, label of the other one, lines shared, lines kept) makes `worker_of()` give both the same worker
+(`SAME_SOURCE`, shortened with the labels), with a ✂️ note in 🕰️ Log coverage. Every line in the other one: skipped as a
+copy. Before that, two downloads of the last 5000 lines of a connector were two workers, the task moving between them 85
+times, and every count nearly doubled.
+
 ## Known bugs fixed in a later version (🩹)
 
 `fixed_bugs_found()` matches each entry of `tools/report-common/fixed_bugs.py` (`FIXED_BUGS`: title, plugin, connector

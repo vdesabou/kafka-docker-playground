@@ -991,6 +991,13 @@ def shorten_labels(files: List[dict]) -> None:
     for f in files:
         f["path"] = f["label"]
         f["label"] = f["label"][len(prefix):]
+    # the overlapping copies (--same-source) are named as the files
+    cut = lambda label: label[len(prefix):] if prefix and label.startswith(prefix) else label  # noqa: E731
+    aliases = {cut(k): cut(v) for k, v in SAME_SOURCE.items()}
+    SAME_SOURCE.clear()
+    SAME_SOURCE.update(aliases)
+    for o in OVERLAPS:
+        o["file"], o["same_as"] = cut(o["file"]), cut(o["same_as"])
 
 
 def drop_alternating_changes(config: dict, window: int = 60) -> None:
@@ -2281,9 +2288,34 @@ def mdc_text(items: List[dict]) -> str:
             "others count as \"no connector context\" (🔌 cards, Connector filter, counts per connector)")
 
 
+# ✂️ the inputs that are an overlapping copy of another one (the same log downloaded twice, at two times: analyze logs
+# --same-source): label → the label of the other one, and what each kept
+SAME_SOURCE: Dict[str, str] = {}
+OVERLAPS: List[dict] = []
+
+
+def read_same_source(path: Optional[str]) -> None:
+    """label<tab>label of the other one<tab>lines shared<tab>lines kept, written by analyze logs"""
+    if not path or not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            parts = (line.rstrip("\n").split("\t") + ["", "", ""])[:4]
+            if parts[0] and parts[1]:
+                SAME_SOURCE[parts[0]] = parts[1]
+                OVERLAPS.append({"file": parts[0], "same_as": parts[1],
+                                 "shared_lines": int(parts[2]) if parts[2].isdigit() else None,
+                                 "kept_lines": int(parts[3]) if parts[3].isdigit() else None})
+
+
 def worker_of(label: str) -> str:
     """the worker a log file belongs to: its label without the rotation suffix (worker-1/connect.log.1 and
-    worker-1/connect.log.2.gz are worker-1/connect.log; connect-1.log and connect-2.log are two workers)"""
+    worker-1/connect.log.2.gz are worker-1/connect.log; connect-1.log and connect-2.log are two workers); an overlapping
+    copy of another input (SAME_SOURCE) is the worker of that one"""
+    for _ in range(10):
+        if label not in SAME_SOURCE:
+            break
+        label = SAME_SOURCE[label]
     return re.sub(r"(?:[.-]\d+|\.\d{4}-\d\d-\d\d(?:[-_.]\d\d)?)?(?:\.gz)?$", "", label)
 
 
@@ -2503,6 +2535,39 @@ document.addEventListener("click", function (ev) {
 </script>"""
 
 
+def worker_short_names(workers: List[str], keep: int = 28) -> Dict[str, str]:
+    """the names of the workers without the part they all share (at a / . - _ or space): the files of two workers named
+    "<connector>-<env>-log.txt" and "<connector>-<env>-log (1).txt" are "log.txt" and "log (1).txt"; a name still longer
+    than `keep` characters is cut in the middle. One worker, or nothing left to tell them apart: the name itself"""
+    if len(workers) < 2:
+        return {w: w for w in workers}
+    seps = "/.-_ "
+    pre = os.path.commonprefix(workers)
+    pre = pre[:max((pre.rfind(c) + 1 for c in seps), default=0)]
+    rev = os.path.commonprefix([w[::-1] for w in workers])[::-1]
+    # the suffix: from a separator, and never the extension alone (".txt" says nothing, "log.txt" neither)
+    cut = min((rev.find(c) for c in seps if c in rev), default=-1)
+    suf = rev[cut:] if cut >= 0 else ""
+    # a long shared end ("/connect.log") is dropped, a short one (".txt", ".log") kept
+    if len(suf) > 8:
+        suf_shown, suf_cut = "", suf
+    else:
+        suf_shown, suf_cut = suf, suf
+
+    def mid(w: str, p: str) -> str:
+        return w[len(p):len(w) - len(suf_cut)] if len(p) + len(suf_cut) < len(w) else ""
+    # what is left must be readable: "connect-1", not "1" (the shared start backed off to the separator before)
+    while pre and any(len(mid(w, pre).strip()) < 4 for w in workers):
+        pre = pre[:max((pre[:-1].rfind(c) + 1 for c in seps), default=0)]
+    out = {}
+    for w in workers:
+        name = (("…" if pre else "") + mid(w, pre) + suf_shown).strip() or w
+        if len(name) > keep:
+            name = name[:keep // 2] + "…" + name[-(keep // 2 - 1):]
+        out[w] = name
+    return out if len(set(out.values())) == len(workers) else {w: w for w in workers}
+
+
 def task_workers_html(tw: Optional[dict]) -> str:
     """🖥️ the tiles of the workers (tasks at the end of the logs, errors, 🎯), the connectors failing on one worker only
     grouped by that worker, then a row per connector: a lane per task coloured by the worker that ran it, over time"""
@@ -2511,6 +2576,9 @@ def task_workers_html(tw: Optional[dict]) -> str:
         return ""
     workers, conns = tw["workers"], tw["connectors"]
     color = {w: TW_COLORS[i % len(TW_COLORS)] for i, w in enumerate(workers)}
+    # the names shown: the part of the worker names that differs (the full one on hover)
+    short = worker_short_names(workers)
+    sn = lambda w: e(short.get(w, w))  # noqa: E731
     times = [x for t in tasks for r in t["runs"] for x in (lifecycle_time(r["from"]), lifecycle_time(r["to"])) if x is not None]
     times += [x for x in (lifecycle_time(tw.get("start")), lifecycle_time(tw.get("end"))) if x is not None]
     t0, t1 = min(times), max(times)
@@ -2540,7 +2608,7 @@ def task_workers_html(tw: Optional[dict]) -> str:
                  + (f"<span class='tw-pill warn'>{warns:,} warning(s)</span>" if warns else "")
                  + (f"<span class='tw-pill target'>🎯 {only} connector(s) fail only here</span>" if only else ""))
         tiles.append(f"<div class='tw-tile{' tw-suspect' if only else ''}' style='--tw:{color[w]}'>"
-                     f"<div class='tw-tile-name'>{dot(w)}{e(w)}</div>"
+                     f"<div class='tw-tile-name' title='{e(w)}'>{dot(w)}{sn(w)}</div>"
                      f"<div class='tw-tile-big'>{now:,}<small>task(s) running at the end</small></div>"
                      f"<div class='tw-tile-stats'>{ran:,} task(s) ran here · {starts:,} start(s) · {len(on):,} connector(s)</div>"
                      f"<div class='tw-tile-err'>{pills}</div>"
@@ -2563,8 +2631,8 @@ def task_workers_html(tw: Optional[dict]) -> str:
         more = len(cs) - TW_TOP_ONLY
         label = f"▾ Show the {more} other connector(s)"
         toggle = f"<button type='button' class='tw-toggle' data-label='{e(label)}'>{e(label)}</button>" if more > 0 else ""
-        blocks.append(f"<div class='tw-group'><div class='tw-group-head'>🎯 <b>{len(cs)} connector(s)</b> fail on {dot(w)}<b>{e(w)}</b> only: "
-                      f"{sum(errs.values()):,} ERROR/FATAL there, none on {', '.join(dot(o) + e(o) for o in others[:4])}"
+        blocks.append(f"<div class='tw-group'><div class='tw-group-head'>🎯 <b>{len(cs)} connector(s)</b> fail on {dot(w)}<b title='{e(w)}'>{sn(w)}</b> only: "
+                      f"{sum(errs.values()):,} ERROR/FATAL there, none on {', '.join(dot(o) + sn(o) for o in others[:4])}"
                       f"{' …' if len(others) > 4 else ''}, where their tasks ran at the same time."
                       "<span class='tw-hint'>👉 That host differs: compare its DNS, truststore, plugin path, network and worker config "
                       "with the others.</span></div>"
@@ -2598,7 +2666,7 @@ def task_workers_html(tw: Optional[dict]) -> str:
                     if x["warnings"] else "<span></span>")
             st = (f"<span class='tw-pill' title='the tasks of {cn} were started {x['task_starts']} time(s) on {w} (Starting task lines)'>"
                   f"▶ {x['task_starts']} start{'s' if x['task_starts'] > 1 else ''}</span>")
-            ews.append(f"<div class='tw-ew'><span class='tw-w' title='worker {w}: its colour in the lanes'>{dot(x['worker'])}{w}</span>{pill}{warn}{st}</div>")
+            ews.append(f"<div class='tw-ew'><span class='tw-w' title='worker {w}: its colour in the lanes'>{dot(x['worker'])}{sn(x['worker'])}</span>{pill}{warn}{st}</div>")
         target = f" · <b>🎯 errors on {e(c['only_on'])} only</b>" if c["only_on"] else ""
         rows.append(f"<tr class='tw-row{' tw-suspect' if c['only_on'] else ''}{' tw-more' if i >= TW_TOP else ''}' data-conn='{e(c['connector'])}'>"
                     f"<td><span class='fi-conn'>{e(c['connector'])}</span><div class='tw-sub'>{len(ts)} task(s) · {moves} move(s){target}</div></td>"
@@ -2606,7 +2674,7 @@ def task_workers_html(tw: Optional[dict]) -> str:
     more = len(conns) - TW_TOP
     label = f"▾ Show the {more} other connector(s)"
     toggle = f"<button type='button' class='tw-toggle' data-label='{e(label)}'>{e(label)}</button>" if more > 0 else ""
-    legend = "".join(f"<span title='worker {e(w)}'>{dot(w)}{e(w)}</span>" for w in workers)
+    legend = "".join(f"<span title='worker {e(w)}'>{dot(w)}{sn(w)}</span>" for w in workers)
     axis = f"<div class='tw-axis'><span title='the first task start'>{e(datetime.fromtimestamp(t0, timezone.utc).strftime('%Y-%m-%d %H:%M'))}</span><span title='the last line of the logs of the workers'>{e(datetime.fromtimestamp(t1, timezone.utc).strftime('%Y-%m-%d %H:%M'))}</span></div>"
     return (TASK_WORKERS_CSS
             + f"<div class='table-card tw-card'><h2>🖥️ Tasks by worker ({len(workers)} workers, {len(conns):,} connector(s), {len(tasks):,} task(s))</h2>"
@@ -7751,7 +7819,21 @@ def coverage_html(cov: dict, viewers: Optional[Dict[str, str]], unit: str = "fil
             "<p class='legend'>The time range of each file (first and last timestamped line) on the same axis, grouped by folder "
             "(a folder of rotated logs, a worker, a pod): 🟧 a file with records, 🟦 without. What happened outside these "
             "ranges, or in a period hatched in red (no file of the folder covers it), is not in the input.</p>"
-            + "".join(parts) + "</div>")
+            + overlaps_html() + "".join(parts) + "</div>")
+
+
+def overlaps_html() -> str:
+    """✂️ the inputs that are an overlapping copy of another one: only their other lines were read (one source)"""
+    if not OVERLAPS:
+        return ""
+    items = "".join(
+        f"<li><code>{e(o['file'])}</code> overlaps <code>{e(o['same_as'])}</code>: "
+        + (f"{o['shared_lines']:,} lines in both, " if o.get("shared_lines") is not None else "")
+        + (f"only its {o['kept_lines']:,} other lines were read" if o.get("kept_lines") else "every line is in the other one, skipped")
+        + "</li>" for o in OVERLAPS)
+    return (f"<div class='verdict warn'>✂️ {len(OVERLAPS)} overlapping cop{'y' if len(OVERLAPS) == 1 else 'ies'} of the same log "
+            "(downloaded twice, at two times): the lines they share are counted once, and they are one worker."
+            f"<ul style='margin:6px 0 0 18px;font-weight:400'>{items}</ul></div>")
 
 
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
@@ -8044,6 +8126,8 @@ def main() -> int:
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
     ap.add_argument("--bytes-read", type=int, default=None, help="the size of the input read, in bytes (the 🗂️ tile)")
     ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
+    ap.add_argument("--same-source", metavar="FILE", help="label<tab>label<tab>shared<tab>kept of each input that is an "
+                    "overlapping copy of another one (only its other lines were read)")
     ap.add_argument("--compare", metavar="JSON", action="append", default=[],
                     help="the JSON of analyze logs of another input, to compare with (repeatable, oldest first: a trend)")
     ap.add_argument("--ticket-out", metavar="PATH", help="also write the summary for a ticket (Markdown, sanitized) there")
@@ -8127,6 +8211,7 @@ def main() -> int:
     if args.connector:
         filter_connectors(files, args.connector, args.with_worker)
     harmless_items = [] if args.include_harmless else drop_harmless(files)
+    read_same_source(args.same_source)
     res = analyze(files, args.unit)
     res["harmless"] = harmless_items
     if args.jvm_versions:
@@ -8137,6 +8222,7 @@ def main() -> int:
     if args.bytes_read is not None:
         res["summary"]["bytes_read"] = args.bytes_read
     res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
+    res["summary"]["overlapping_copies"] = OVERLAPS
     if args.compare:
         prevs, labels = [], []
         for i, path in enumerate(args.compare):

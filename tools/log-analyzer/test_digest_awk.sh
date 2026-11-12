@@ -207,4 +207,23 @@ do
         failed=1
     fi
 done
+# ✂️ an overlapping copy of the same log (downloaded twice, at two times): only its lines that are not in the first one
+# are analyzed; every line in the first one: skipped; the log of another worker of the same period: not an overlap
+sed -n "/^LOG_TS_RE=/p;/^function log_ts_line/,/^}/p;/^function without_overlap/,/^}/p" "$root/scripts/cli/src/commands/analyze/logs.sh" > "$tmp/overlap.sh"
+printf '%s\n' 'header line' '[2026-11-02 12:00:00,001] ERROR a' '  at x.y(Z.java:1)' '[2026-11-02 12:00:01,002] INFO b' '[2026-11-02 12:00:02,003] INFO c' '  continued' > "$tmp/ov-first.log"
+printf '%s\n' 'header line' '[2026-11-02 12:00:01,002] INFO b' '[2026-11-02 12:00:02,003] INFO c' '  continued' '[2026-11-02 12:00:03,004] ERROR d' > "$tmp/ov-later.log"
+printf '%s\n' '[2026-11-02 12:00:01,002] INFO b' '[2026-11-02 12:00:02,003] INFO c' > "$tmp/ov-inside.log"
+printf '%s\n' '[2026-11-02 12:00:01,500] INFO other worker' '[2026-11-02 12:00:02,500] INFO other worker' > "$tmp/ov-other.log"
+got=$(bash -c 'source "$1"; tmp_dir="$2"; same_source_file="$2/same-source"; : > "$same_source_file"; plain_logs=(); nb_overlaps=0; nb_duplicates=0
+    log() { :; }
+    for f in ov-first ov-later ov-inside ov-other; do without_overlap "$2/$f.log" "$f"; printf "%s=%s;" "$f" "$( [ -f "$overlap_result" ] && tr "\n" "|" < "$overlap_result" || echo "$overlap_result")"; done
+    printf "%s" "$(tr "\t\n" ",;" < "$same_source_file")"' _ "$tmp/overlap.sh" "$tmp")
+expected="ov-first=;ov-later=header line|[2026-11-02 12:00:03,004] ERROR d|;ov-inside=skip;ov-other=;ov-later,ov-first,3,2;ov-inside,ov-first,2,0;"
+if [ "$got" != "$expected" ]
+then
+    echo "❌ overlapping copies: $got instead of $expected"
+    failed=1
+else
+    echo "✅ overlapping copies of the same log"
+fi
 exit $failed
