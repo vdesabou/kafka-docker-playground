@@ -220,7 +220,8 @@ sniffable_name() {
     esac
 }
 
-# prints the reason when the entry holds logs, nothing (false) otherwise
+# prints "logs<TAB>reason" when the entry holds logs, "others<TAB>reason" when it only holds the files of other analyzers
+# (heap dumps, captures…), nothing (false) otherwise
 holds_logs() {
     local path="$1" name nb f
     name=$(basename "$path")
@@ -229,17 +230,8 @@ holds_logs() {
         nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -acE "$log_name_regex")
         if [ "${nb:-0}" -gt 0 ]
         then
-            echo "folder with $nb log file(s) or archive(s)"
+            printf 'logs\t%s\n' "folder with $nb log file(s) or archive(s)"
             return 0
-        fi
-        if [ -z "$logs_only" ]
-        then
-            nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -aicE "$other_name_regex")
-            if [ "${nb:-0}" -gt 0 ]
-            then
-                echo "folder with $nb dump(s), capture(s) or report(s)"
-                return 0
-            fi
         fi
         # no log file name: sniff the first text-like files
         nb=0
@@ -249,11 +241,20 @@ holds_logs() {
             nb=$((nb + 1))
             if file_text "$f" | looks_like_logs
             then
-                echo "folder with log records ($(basename "$f"))"
+                printf 'logs\t%s\n' "folder with log records ($(basename "$f"))"
                 return 0
             fi
             [ $nb -ge 50 ] && break
         done < <(find "$path" -type f ! -name '.*' -size -200000k -print0 2> /dev/null)
+        if [ -z "$logs_only" ]
+        then
+            nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -aicE "$other_name_regex")
+            if [ "${nb:-0}" -gt 0 ]
+            then
+                printf 'others\t%s\n' "folder with $nb dump(s), capture(s) or report(s), no logs"
+                return 0
+            fi
+        fi
         return 1
     fi
     case "$name" in
@@ -261,17 +262,8 @@ holds_logs() {
             nb=$(archive_list "$path" | LC_ALL=C grep -acE "$log_name_regex")
             if [ "${nb:-0}" -gt 0 ]
             then
-                echo "archive with $nb log file(s) or archive(s)"
+                printf 'logs\t%s\n' "archive with $nb log file(s) or archive(s)"
                 return 0
-            fi
-            if [ -z "$logs_only" ]
-            then
-                nb=$(archive_list "$path" | LC_ALL=C grep -aicE "$other_name_regex")
-                if [ "${nb:-0}" -gt 0 ]
-                then
-                    echo "archive with $nb dump(s), capture(s) or report(s)"
-                    return 0
-                fi
             fi
             # no log file name: sniff the first text-like entries
             nb=0
@@ -283,22 +275,31 @@ holds_logs() {
                 nb=$((nb + 1))
                 if archive_cat "$path" "$f" | looks_like_logs
                 then
-                    echo "archive with log records ($(basename "$f"))"
+                    printf 'logs\t%s\n' "archive with log records ($(basename "$f"))"
                     return 0
                 fi
                 [ $nb -ge 10 ] && break
             done < <(archive_list "$path")
+            if [ -z "$logs_only" ]
+            then
+                nb=$(archive_list "$path" | LC_ALL=C grep -aicE "$other_name_regex")
+                if [ "${nb:-0}" -gt 0 ]
+                then
+                    printf 'others\t%s\n' "archive with $nb dump(s), capture(s) or report(s), no logs"
+                    return 0
+                fi
+            fi
             return 1
             ;;
     esac
     if printf '%s\n' "$name" | LC_ALL=C grep -qE "$log_name_regex"
     then
-        echo "log file"
+        printf 'logs\t%s\n' "log file"
         return 0
     fi
     if sniffable_name "$path" && file_text "$path" | looks_like_logs
     then
-        echo "file with log records"
+        printf 'logs\t%s\n' "file with log records"
         return 0
     fi
     return 1
@@ -334,7 +335,8 @@ notify() {
 
 archive_stem() {
     local name="$1"
-    for ext in .tar.gz .tar.bz2 .tar.xz .zip .ZIP .tgz .tbz2 .txz .tar .7z
+    # the tar ones before .gz / .bz2 / .xz: x.tar.gz is x, x.hprof.gz is x.hprof (what Archive Utility extracts)
+    for ext in .tar.gz .tar.bz2 .tar.xz .zip .ZIP .tgz .tbz2 .txz .tar .7z .gz .bz2 .xz
     do
         case "$name" in
             *"$ext") printf '%s\n' "${name%"$ext"}"; return ;;
@@ -379,7 +381,7 @@ run_analyzer() {
     local label="$1" analyzer="$2" rc=0 report before
     shift 2
     before=$(ls -t "$report_dir"/*-report.html 2> /dev/null | head -1)
-    if [ -n "$no_open" ]
+    if [ -n "$no_open" ] || [ -n "${quiet_run:-}" ]
     then
         # stdout not a terminal: the report is not opened
         (unset PLAYGROUND_RUN_LOG_TERMINAL; playground analyze "$analyzer" "$@" --output-dir "$report_dir" | cat) || rc=$?
@@ -397,7 +399,7 @@ run_analyzer() {
     elif [ -n "$report" ] && [ "$report" != "$before" ]
     then
         log "📊 $label: $report"
-        notify "📊 Report ready: $label ($analyzer)"
+        if [ -z "${quiet_run:-}" ]; then notify "📊 Report ready: $label ($analyzer)"; fi
     fi
 }
 
@@ -435,12 +437,23 @@ run_other_analyzers() {
 }
 
 # ⚠️ errexit is on in the generated CLI: no function may end on a false test ([ … ] && …), it would stop the watch
+# an archive or a compressed file analyzed: what Safari or Archive Utility extracts from it next to it (x.zip → x/,
+# x.hprof.gz → x.hprof or x.hprof/) is not analyzed again. Only when the name changes: a c.log deleted then downloaded
+# again is a new download
+record_analyzed() {
+    local stem
+    stem=$(archive_stem "$1")
+    if [ "$stem" != "$1" ]; then analyzed_stems[$stem]="$1"; fi
+    nb_analyzed=$((nb_analyzed + 1))
+    return 0
+}
+
 analyze_entry() {
-    local name="$1" path="$folder/$1" reason stem kind analyzer
-    if [ -d "$path" ] && [ -n "${analyzed_stems[$name]:-}" ]
+    local name="$1" path="$folder/$1" reason holds stem kind analyzer
+    if [ -n "${analyzed_stems[$name]:-}" ]
     then
-        log "⏭️  $name: the folder extracted from ${analyzed_stems[$name]}, already analyzed"
-        return
+        log "⏭️  $name: extracted from ${analyzed_stems[$name]}, already analyzed"
+        return 0
     fi
     stem=$(printf '%s' "$(archive_stem "$name")" | LC_ALL=C tr -c 'A-Za-z0-9._-' '_')
     report_dir="$output_dir/${stem}-$(date +%Y%m%d-%H%M%S)"
@@ -457,23 +470,41 @@ analyze_entry() {
             log "🧰 $name: $kind, running playground analyze $analyzer (report in $report_dir)"
             notify "🧰 Analyzing $name ($analyzer)"
             run_analyzer "$name" "$analyzer" -f "$path"
-            analyzed_stems[$(archive_stem "$name")]="$name"
-            nb_analyzed=$((nb_analyzed + 1))
-            return
+            record_analyzed "$name"
+            return 0
         fi
     fi
 
-    if ! reason=$(holds_logs "$path")
+    if ! holds=$(holds_logs "$path")
     then
         log "🙈 $name: no logs, dumps, captures or reports found, ignored"
-        return
+        return 0
     fi
+    reason="${holds#*$'\t'}"
     mkdir -p "$report_dir"
+    if [ "${holds%%$'\t'*}" = "others" ]
+    then
+        notify "🧰 Analyzing $name"
+        if [ -d "$path" ]
+        then
+            log "🧰 $name: $reason, running their analyzers (reports in $report_dir)"
+            run_other_analyzers "$name" "$path"
+        else
+            # analyze logs extracts them (<stem>-other-files/): its report, without logs, is neither opened nor notified
+            log "🧰 $name: $reason, extracted by playground analyze logs (report not opened), then their analyzers (reports in $report_dir)"
+            quiet_run=1 run_analyzer "$name" logs -f "$path" "${extra_args[@]}"
+            for kept in "$report_dir"/*-other-files
+            do
+                if [ -d "$kept" ]; then run_other_analyzers "$name" "$kept"; fi
+            done
+        fi
+        record_analyzed "$name"
+        return 0
+    fi
     log "🔥 $name: $reason, running playground analyze logs (report in $report_dir)"
     notify "🔥 Analyzing $name"
     run_analyzer "$name" logs -f "$path" "${extra_args[@]}"
-    analyzed_stems[$(archive_stem "$name")]="$name"
-    nb_analyzed=$((nb_analyzed + 1))
+    record_analyzed "$name"
 
     if [ -z "$logs_only" ]
     then

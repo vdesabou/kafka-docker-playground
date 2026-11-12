@@ -10650,7 +10650,7 @@ playground_analyze_logs_usage() {
 playground_analyze_watch_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze watch\n\n"
-    printf "  👀 Watch a folder (default: ~/Downloads) and analyze every new log file,\n  bundle, dump, capture or report, report opened in the browser\n  \n  Leave it running in a terminal: when a log file, a support bundle or a\n  folder of logs lands in the folder (a download from Zendesk, Slack, a\n  browser, Finder), it is analyzed as soon as it is complete, and its\n  HTML report opens in the browser, with a macOS notification.\n  \n  ⏳ A download is complete once its size stops changing and the browser\n  has renamed it: .crdownload, .download, .part, .partial and .tmp\n  entries are waited for, never analyzed.\n  \n  🔎 \"Holds logs\" is checked without extracting anything: a .log / .out\n  file (also rotated, .log.1, and gzipped), a .txt, .json, .csv or\n  extension-less file whose first lines look like log records (a\n  timestamp and a level, librdkafka lines, JSON records with a level),\n  an archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, .7z) or a\n  folder that contains such files. Pictures, PDFs, installers and other\n  files are ignored (logged once).\n  \n  🧰 The other files support asks for get their own analyzer (unless\n  --logs-only), recognized as in the 🧰 Other files of 'analyze logs':\n  a heap dump (analyze heap-dump), a flight recording (analyze\n  flight-recorder), a network capture (analyze tcp-dump), an Oracle\n  XStream diagnostics report (analyze oracle-xstream-report), a GC log\n  (analyze gc-logs), a thread dump (analyze thread-dump; a log file\n  holding a kill -3 thread dump stays a log file: analyze logs analyzes\n  the dump in its report). In an archive or a folder, 'analyze logs'\n  runs first (thread dumps analyzed in its report), then the analyzer\n  of each other kind of file, one report each.\n  \n  Only the entries that appear after the start are analyzed, at the\n  top of the folder (a file moved into a sub-folder never is): --since\n  also picks the ones created in the last minutes (creation time, so\n  that a folder you move files into, ~/Downloads/Archives, is not\n  picked), --once analyzes those and exits instead of watching.\n  🚫 --exclude never analyzes an entry, even renamed or re-created. Each report\n  is written in its\n  own folder of --output-dir, named after the entry (outside the\n  watched folder, so that a report never triggers an analysis).\n  \n  🔁 macOS: --install-launch-agent starts the watch at every login (a\n  LaunchAgent, restarted if it stops) with the flags given, so that you\n  never have to start it; --uninstall-launch-agent removes it.\n  \n  🔒 Downloads are untrusted data: they are only read, never run.\n  Stop with Ctrl-C.\n\n"
+    printf "  👀 Watch a folder (default: ~/Downloads) and analyze every new log file,\n  bundle, dump, capture or report, report opened in the browser\n  \n  Leave it running in a terminal: when a log file, a support bundle or a\n  folder of logs lands in the folder (a download from Zendesk, Slack, a\n  browser, Finder), it is analyzed as soon as it is complete, and its\n  HTML report opens in the browser, with a macOS notification.\n  \n  ⏳ A download is complete once its size stops changing and the browser\n  has renamed it: .crdownload, .download, .part, .partial and .tmp\n  entries are waited for, never analyzed.\n  \n  🔎 \"Holds logs\" is checked without extracting anything: a .log / .out\n  file (also rotated, .log.1, and gzipped), a .txt, .json, .csv or\n  extension-less file whose first lines look like log records (a\n  timestamp and a level, librdkafka lines, JSON records with a level),\n  an archive (.zip, .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, .7z) or a\n  folder that contains such files. Pictures, PDFs, installers and other\n  files are ignored (logged once).\n  \n  🧰 The other files support asks for get their own analyzer (unless\n  --logs-only), recognized as in the 🧰 Other files of 'analyze logs':\n  a heap dump (analyze heap-dump), a flight recording (analyze\n  flight-recorder), a network capture (analyze tcp-dump), an Oracle\n  XStream diagnostics report (analyze oracle-xstream-report), a GC log\n  (analyze gc-logs), a thread dump (analyze thread-dump; a log file\n  holding a kill -3 thread dump stays a log file: analyze logs analyzes\n  the dump in its report). In an archive or a folder, 'analyze logs'\n  runs first when it holds logs (thread dumps analyzed in its report),\n  then the analyzer of each other kind of file, one report each; one\n  holding only dumps or captures gets their reports only.\n  \n  ⏭️ What Safari or Archive Utility extracts next to an archive or a\n  compressed file already analyzed (x.zip → x/, x.hprof.gz → x.hprof\n  or x.hprof/) is not analyzed again.\n  \n  Only the entries that appear after the start are analyzed, at the\n  top of the folder (a file moved into a sub-folder never is): --since\n  also picks the ones created in the last minutes (creation time, so\n  that a folder you move files into, ~/Downloads/Archives, is not\n  picked), --once analyzes those and exits instead of watching.\n  🚫 --exclude never analyzes an entry, even renamed or re-created. Each report\n  is written in its\n  own folder of --output-dir, named after the entry (outside the\n  watched folder, so that a report never triggers an analysis).\n  \n  🔁 macOS: --install-launch-agent starts the watch at every login (a\n  LaunchAgent, restarted if it stops) with the flags given, so that you\n  never have to start it; --uninstall-launch-agent removes it.\n  \n  🔒 Downloads are untrusted data: they are only read, never run.\n  Stop with Ctrl-C.\n\n"
   else
     printf "playground analyze watch - 👀 Watch a folder (default: ~/Downloads) and analyze every new log file, bundle, dump, capture or report, report opened in the browser\n\n"
   fi
@@ -67783,7 +67783,8 @@ playground_analyze_watch_command() {
       esac
   }
 
-  # prints the reason when the entry holds logs, nothing (false) otherwise
+  # prints "logs<TAB>reason" when the entry holds logs, "others<TAB>reason" when it only holds the files of other analyzers
+  # (heap dumps, captures…), nothing (false) otherwise
   holds_logs() {
       local path="$1" name nb f
       name=$(basename "$path")
@@ -67792,17 +67793,8 @@ playground_analyze_watch_command() {
           nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -acE "$log_name_regex")
           if [ "${nb:-0}" -gt 0 ]
           then
-              echo "folder with $nb log file(s) or archive(s)"
+              printf 'logs\t%s\n' "folder with $nb log file(s) or archive(s)"
               return 0
-          fi
-          if [ -z "$logs_only" ]
-          then
-              nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -aicE "$other_name_regex")
-              if [ "${nb:-0}" -gt 0 ]
-              then
-                  echo "folder with $nb dump(s), capture(s) or report(s)"
-                  return 0
-              fi
           fi
           # no log file name: sniff the first text-like files
           nb=0
@@ -67812,11 +67804,20 @@ playground_analyze_watch_command() {
               nb=$((nb + 1))
               if file_text "$f" | looks_like_logs
               then
-                  echo "folder with log records ($(basename "$f"))"
+                  printf 'logs\t%s\n' "folder with log records ($(basename "$f"))"
                   return 0
               fi
               [ $nb -ge 50 ] && break
           done < <(find "$path" -type f ! -name '.*' -size -200000k -print0 2> /dev/null)
+          if [ -z "$logs_only" ]
+          then
+              nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -aicE "$other_name_regex")
+              if [ "${nb:-0}" -gt 0 ]
+              then
+                  printf 'others\t%s\n' "folder with $nb dump(s), capture(s) or report(s), no logs"
+                  return 0
+              fi
+          fi
           return 1
       fi
       case "$name" in
@@ -67824,17 +67825,8 @@ playground_analyze_watch_command() {
               nb=$(archive_list "$path" | LC_ALL=C grep -acE "$log_name_regex")
               if [ "${nb:-0}" -gt 0 ]
               then
-                  echo "archive with $nb log file(s) or archive(s)"
+                  printf 'logs\t%s\n' "archive with $nb log file(s) or archive(s)"
                   return 0
-              fi
-              if [ -z "$logs_only" ]
-              then
-                  nb=$(archive_list "$path" | LC_ALL=C grep -aicE "$other_name_regex")
-                  if [ "${nb:-0}" -gt 0 ]
-                  then
-                      echo "archive with $nb dump(s), capture(s) or report(s)"
-                      return 0
-                  fi
               fi
               # no log file name: sniff the first text-like entries
               nb=0
@@ -67846,22 +67838,31 @@ playground_analyze_watch_command() {
                   nb=$((nb + 1))
                   if archive_cat "$path" "$f" | looks_like_logs
                   then
-                      echo "archive with log records ($(basename "$f"))"
+                      printf 'logs\t%s\n' "archive with log records ($(basename "$f"))"
                       return 0
                   fi
                   [ $nb -ge 10 ] && break
               done < <(archive_list "$path")
+              if [ -z "$logs_only" ]
+              then
+                  nb=$(archive_list "$path" | LC_ALL=C grep -aicE "$other_name_regex")
+                  if [ "${nb:-0}" -gt 0 ]
+                  then
+                      printf 'others\t%s\n' "archive with $nb dump(s), capture(s) or report(s), no logs"
+                      return 0
+                  fi
+              fi
               return 1
               ;;
       esac
       if printf '%s\n' "$name" | LC_ALL=C grep -qE "$log_name_regex"
       then
-          echo "log file"
+          printf 'logs\t%s\n' "log file"
           return 0
       fi
       if sniffable_name "$path" && file_text "$path" | looks_like_logs
       then
-          echo "file with log records"
+          printf 'logs\t%s\n' "file with log records"
           return 0
       fi
       return 1
@@ -67897,7 +67898,8 @@ playground_analyze_watch_command() {
 
   archive_stem() {
       local name="$1"
-      for ext in .tar.gz .tar.bz2 .tar.xz .zip .ZIP .tgz .tbz2 .txz .tar .7z
+      # the tar ones before .gz / .bz2 / .xz: x.tar.gz is x, x.hprof.gz is x.hprof (what Archive Utility extracts)
+      for ext in .tar.gz .tar.bz2 .tar.xz .zip .ZIP .tgz .tbz2 .txz .tar .7z .gz .bz2 .xz
       do
           case "$name" in
               *"$ext") printf '%s\n' "${name%"$ext"}"; return ;;
@@ -67942,7 +67944,7 @@ playground_analyze_watch_command() {
       local label="$1" analyzer="$2" rc=0 report before
       shift 2
       before=$(ls -t "$report_dir"/*-report.html 2> /dev/null | head -1)
-      if [ -n "$no_open" ]
+      if [ -n "$no_open" ] || [ -n "${quiet_run:-}" ]
       then
           # stdout not a terminal: the report is not opened
           (unset PLAYGROUND_RUN_LOG_TERMINAL; playground analyze "$analyzer" "$@" --output-dir "$report_dir" | cat) || rc=$?
@@ -67960,7 +67962,7 @@ playground_analyze_watch_command() {
       elif [ -n "$report" ] && [ "$report" != "$before" ]
       then
           log "📊 $label: $report"
-          notify "📊 Report ready: $label ($analyzer)"
+          if [ -z "${quiet_run:-}" ]; then notify "📊 Report ready: $label ($analyzer)"; fi
       fi
   }
 
@@ -67998,12 +68000,23 @@ playground_analyze_watch_command() {
   }
 
   # ⚠️ errexit is on in the generated CLI: no function may end on a false test ([ … ] && …), it would stop the watch
+  # an archive or a compressed file analyzed: what Safari or Archive Utility extracts from it next to it (x.zip → x/,
+  # x.hprof.gz → x.hprof or x.hprof/) is not analyzed again. Only when the name changes: a c.log deleted then downloaded
+  # again is a new download
+  record_analyzed() {
+      local stem
+      stem=$(archive_stem "$1")
+      if [ "$stem" != "$1" ]; then analyzed_stems[$stem]="$1"; fi
+      nb_analyzed=$((nb_analyzed + 1))
+      return 0
+  }
+
   analyze_entry() {
-      local name="$1" path="$folder/$1" reason stem kind analyzer
-      if [ -d "$path" ] && [ -n "${analyzed_stems[$name]:-}" ]
+      local name="$1" path="$folder/$1" reason holds stem kind analyzer
+      if [ -n "${analyzed_stems[$name]:-}" ]
       then
-          log "⏭️  $name: the folder extracted from ${analyzed_stems[$name]}, already analyzed"
-          return
+          log "⏭️  $name: extracted from ${analyzed_stems[$name]}, already analyzed"
+          return 0
       fi
       stem=$(printf '%s' "$(archive_stem "$name")" | LC_ALL=C tr -c 'A-Za-z0-9._-' '_')
       report_dir="$output_dir/${stem}-$(date +%Y%m%d-%H%M%S)"
@@ -68020,23 +68033,41 @@ playground_analyze_watch_command() {
               log "🧰 $name: $kind, running playground analyze $analyzer (report in $report_dir)"
               notify "🧰 Analyzing $name ($analyzer)"
               run_analyzer "$name" "$analyzer" -f "$path"
-              analyzed_stems[$(archive_stem "$name")]="$name"
-              nb_analyzed=$((nb_analyzed + 1))
-              return
+              record_analyzed "$name"
+              return 0
           fi
       fi
 
-      if ! reason=$(holds_logs "$path")
+      if ! holds=$(holds_logs "$path")
       then
           log "🙈 $name: no logs, dumps, captures or reports found, ignored"
-          return
+          return 0
       fi
+      reason="${holds#*$'\t'}"
       mkdir -p "$report_dir"
+      if [ "${holds%%$'\t'*}" = "others" ]
+      then
+          notify "🧰 Analyzing $name"
+          if [ -d "$path" ]
+          then
+              log "🧰 $name: $reason, running their analyzers (reports in $report_dir)"
+              run_other_analyzers "$name" "$path"
+          else
+              # analyze logs extracts them (<stem>-other-files/): its report, without logs, is neither opened nor notified
+              log "🧰 $name: $reason, extracted by playground analyze logs (report not opened), then their analyzers (reports in $report_dir)"
+              quiet_run=1 run_analyzer "$name" logs -f "$path" "${extra_args[@]}"
+              for kept in "$report_dir"/*-other-files
+              do
+                  if [ -d "$kept" ]; then run_other_analyzers "$name" "$kept"; fi
+              done
+          fi
+          record_analyzed "$name"
+          return 0
+      fi
       log "🔥 $name: $reason, running playground analyze logs (report in $report_dir)"
       notify "🔥 Analyzing $name"
       run_analyzer "$name" logs -f "$path" "${extra_args[@]}"
-      analyzed_stems[$(archive_stem "$name")]="$name"
-      nb_analyzed=$((nb_analyzed + 1))
+      record_analyzed "$name"
 
       if [ -z "$logs_only" ]
       then
