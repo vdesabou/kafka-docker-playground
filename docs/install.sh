@@ -718,10 +718,18 @@ detect_engine() {
   fi
   if command -v docker > /dev/null 2>&1
   then
+    # macOS: every engine was looked for above, so a docker CLI alone is not one (for example left by
+    # 'brew uninstall podman' after this installer ran 'brew install podman docker docker-compose'): offer to
+    # install one, unless DOCKER_HOST points at an engine elsewhere
+    if [ "$os" = "macos" ] && [ -z "${DOCKER_HOST:-}" ]
+    then
+      log "only the docker CLI is installed ($(command -v docker)), no container engine"
+      return 0
+    fi
     engine_state="stopped"
     if [ "$os" = "macos" ]
     then
-      engine_hint="the docker CLI is installed but no engine answers: start Docker Desktop, OrbStack, Colima or the podman machine"
+      engine_hint="the docker CLI is installed but no engine answers at DOCKER_HOST=${DOCKER_HOST:-}: start it, or unset DOCKER_HOST"
     elif [ -S /var/run/docker.sock ] && ! id -nG 2> /dev/null | grep -qw docker && [ "$(id -u)" != "0" ]
     then
       if getent group docker 2> /dev/null | cut -d: -f4 | tr ',' '\n' | grep -qx "${USER:-}"
