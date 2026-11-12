@@ -7,7 +7,8 @@
 # What it does, asking before each change:
 #   1. checks git, bash 4+, fzf, python3, docker + compose v2 (or podman), free disk space, and changes nothing
 #   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git, python3, unzip, and the
-#      Confluent CLI (used by the Confluent Cloud examples). On macOS without Homebrew, offers to install it first
+#      Confluent CLI (used by the Confluent Cloud examples), plus mawk on macOS (playground analyze logs reads the logs
+#      2.5x faster with it). On macOS without Homebrew, offers to install it first
 #      (official installer from https://brew.sh), only when a tool or a container engine needs it
 #   3. clones the repository (--depth 1), or updates an existing clone
 #   4. when no container engine is installed at all, offers to install one: Podman or Docker Desktop on macOS,
@@ -241,6 +242,8 @@ rc_files_for_shell() {
 # ---------------------------------------------------------------------------------------------------------------------
 
 missing_packages=""
+# nice to have, installed together with missing_packages, never a reason to install Homebrew on their own
+optional_packages=""
 confluent_missing=0
 # set when the Confluent CLI is in ~/.local/bin and that folder is not in the PATH: the shell block adds it
 confluent_bin_dir=""
@@ -308,6 +311,19 @@ check_prerequisites() {
   then
     logwarn "unzip is missing (used by playground connector-plugin search-jar, schema import...)"
     missing_packages="$missing_packages unzip"
+  fi
+
+  # macOS: playground analyze logs reads the logs with mawk when it is installed, 2.5x faster than the awk of macOS
+  # with the same report. Not on Linux: there the awks are close, and mawk is already the awk of Debian / Ubuntu
+  if [ "$os" = "macos" ]
+  then
+    if command -v mawk > /dev/null 2>&1
+    then
+      log_ok "mawk $(mawk -W version 2>&1 | awk 'NR == 1 { print $2 }')"
+    else
+      log "mawk is not installed (optional: playground analyze logs reads the logs 2.5x faster with it)"
+      optional_packages="$optional_packages mawk"
+    fi
   fi
 
   check_confluent_cli
@@ -561,6 +577,16 @@ ensure_brew() {
 install_missing() {
   title "📦 2/6 Missing tools"
   missing_packages="$(echo "$missing_packages" | xargs)"
+  optional_packages="$(echo "$optional_packages" | xargs)"
+  if [ -n "$optional_packages" ]
+  then
+    if [ -n "$missing_packages" ] || [ -n "$brew_bin" ]
+    then
+      missing_packages="$(echo "$missing_packages $optional_packages" | xargs)"
+    else
+      log "not installing $optional_packages: optional, and Homebrew is not installed (later: brew install $optional_packages)"
+    fi
+  fi
   if [ -z "$missing_packages" ]
   then
     log_ok "nothing to install"
