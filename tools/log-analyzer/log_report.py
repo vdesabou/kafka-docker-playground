@@ -7230,9 +7230,9 @@ def chain_rows(chains: List[dict], limit: int, sev: str, viewers: Dict[str, str]
     return rows
 
 
-# 🏆 the overview at the top of 🔎 Findings: a ring with the share of the top cause, the top 5 ranked with a bar each (their
-# share of all the occurrences: a record can be in several known causes, the shares do not add up to 100%), a link to
-# each card
+# 🏆 the overview at the top of 🔎 Findings: a ring with the share of the top cause, the top 5 ranked (severity, then
+# occurrences) with a bar each (their share of all the occurrences: a record can be in several known causes, the shares do
+# not add up to 100%), a link to each card
 FINDINGS_TOP = 5
 SEV_COLORS = {"CRITICAL": "#dc2626", "HIGH": "#ea580c", "MEDIUM": "#ca8a04", "LOW": "#16a34a", "INFO": "#2563eb"}
 
@@ -7291,7 +7291,9 @@ def findings_overview_html(items: List[dict], total: int) -> str:
     rows = [f for f in items if (f.get("_view") or {}).get("occurrences") and f.get("id")]
     if len(rows) < 2 or not total:
         return ""
-    rows.sort(key=lambda f: -f["_view"]["occurrences"])
+    # the same order as the cards: the most severe first, the most frequent first within a severity (a killed task before
+    # a MEDIUM warning that happens more often)
+    rows.sort(key=lambda f: (SEVERITY_ORDER.index(f["severity"]) if f.get("severity") in SEVERITY_ORDER else 9, -f["_view"]["occurrences"]))
     top = rows[0]
     pct = min(100.0, 100 * top["_view"]["occurrences"] / total)
     color = SEV_COLORS.get(top["severity"], "#ea580c")
@@ -7314,7 +7316,7 @@ def findings_overview_html(items: List[dict], total: int) -> str:
     more = (f"<span class='fo-more'>+ {len(rows) - FINDINGS_TOP} more finding(s) below · a record can match several known causes: "
             "the shares do not add up to 100%</span>" if len(rows) > FINDINGS_TOP else
             "<span class='fo-more'>a record can match several known causes: the shares do not add up to 100%</span>")
-    return (FINDINGS_OVERVIEW_CSS + f"<div class='fo'>{ring}<div class='fo-list'><span class='fo-head'>🏆 Top causes, by occurrences</span>"
+    return (FINDINGS_OVERVIEW_CSS + f"<div class='fo'>{ring}<div class='fo-list'><span class='fo-head'>🏆 Top causes, by severity then occurrences</span>"
             + "".join(lis) + more + "</div></div>")
 
 

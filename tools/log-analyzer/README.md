@@ -228,7 +228,8 @@ the link), over an area sparkline (square-root scale): a drag over it makes that
 (`pgSetPeriod()`), and the current period is shaded on it (`STORY_SCRIPT`). The 🔁 Occurrences tile has the same sparkline (`spark_svg()` of `report_html.py`); the numbers of
 the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page).
 🔎 Findings opens with 🏆 Top causes (`findings_overview_html()`): a ring with the share of the occurrences of the first
-cause, the first `FINDINGS_TOP` ranked with a bar each (their share of all the occurrences, coloured by severity, a link to
+cause, the first `FINDINGS_TOP` ranked like the cards (the most severe first, then the most frequent: a killed task before a
+MEDIUM warning that happens more often) with a bar each (their share of all the occurrences, coloured by severity, a link to
 their card). A record can match several known causes: the shares do not add up to 100%, so no pie.
 🔌 Connectors opens with 🟥 Every connector at a glance (`connectors_heatmap_html()`, 6 connectors or more): a cell per
 connector grouped by plugin class (the group with the most errors first), coloured by its ERROR/FATAL on a log scale
