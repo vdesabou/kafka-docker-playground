@@ -462,6 +462,89 @@ function is_duplicate_file () {
     seen_by_size[$size]+="$path"$'\t'"$label"$'\n'
     return 1
 }
+# ✂️ the plain-text logs digested so far (path<TAB>label<TAB>first timestamp<TAB>last timestamp): a download of the same log
+# at another time (the Confluent Cloud UI gives the last 5000 lines of 48 hours, a customer sends it twice) overlaps one of
+# them. Only its lines that are not in that one are analyzed, and both are one source (label<TAB>label of the other
+# one<TAB>lines shared<TAB>lines kept, read by log_report.py --same-source: one worker in 🖥️ Tasks by worker)
+plain_logs=()
+nb_overlaps=0
+same_source_file="$tmp_dir/same-source"
+: > "$same_source_file"
+LOG_TS_RE='^\[?[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}'
+
+# the first or the last line of a log that starts with a timestamp ("[2026-11-02 12:00:42,284] ERROR …"), "" without
+function log_ts_line () {
+    if [ "$2" == "last" ]
+    then
+        tail -n 20000 "$1" 2> /dev/null | LC_ALL=C grep -E "$LOG_TS_RE" | tail -n 1
+    else
+        LC_ALL=C grep -m1 -E "$LOG_TS_RE" "$1" 2> /dev/null
+    fi
+}
+
+# sets overlap_result: "" (no overlap: digest the file), "skip" (every line is in a log digested earlier) or the path of
+# a copy of the file without the lines it shares with that log. Both ends of the shared block must be found as the same
+# timestamped line (milliseconds included) in both files: two workers never log the same lines
+# $1: path, $2: label
+function without_overlap () {
+    local path="$1" label="$2" xfirst xlast xf xl entry ypath ylabel yf yl yfirst ylast a b k ny slice kept total
+    overlap_result=""
+    xfirst=$(log_ts_line "$path")
+    [ -z "$xfirst" ] && return
+    xlast=$(log_ts_line "$path" last)
+    xf=$(printf '%s' "$xfirst" | LC_ALL=C grep -oE "$LOG_TS_RE" | tr -d '[' | tr T ' ')
+    xl=$(printf '%s' "$xlast" | LC_ALL=C grep -oE "$LOG_TS_RE" | tr -d '[' | tr T ' ')
+    for entry in "${plain_logs[@]}"
+    do
+        IFS=$'\t' read -r ypath ylabel yf yl <<< "$entry"
+        # not the same period: no overlap
+        [[ "$xf" > "$yl" || "$yf" > "$xl" ]] && continue
+        yfirst=$(log_ts_line "$ypath")
+        ylast=$(log_ts_line "$ypath" last)
+        # where the shared block starts in the file: the first line of the other one, else (it started before) the
+        # first line of the file, which the other one must have
+        a=$(LC_ALL=C grep -n -F -x -m1 -- "$yfirst" "$path" | cut -d: -f1)
+        if [ -z "$a" ]
+        then
+            LC_ALL=C grep -q -F -x -- "$xfirst" "$ypath" || continue
+            a=$(LC_ALL=C grep -n -F -x -m1 -- "$xfirst" "$path" | cut -d: -f1)
+        fi
+        # where it ends: the last timestamped line of the other one and the lines after it (its stack trace), else (it
+        # ends after) the end of the file, whose last line the other one must have
+        b=$(LC_ALL=C grep -n -F -x -- "$ylast" "$path" | tail -n 1 | cut -d: -f1)
+        if [ -n "$b" ]
+        then
+            ny=$(LC_ALL=C grep -n -F -x -- "$ylast" "$ypath" | tail -n 1 | cut -d: -f1)
+            k=$(( $(wc -l < "$ypath") - ny ))
+            b=$((b + k))
+            total=$(wc -l < "$path" | tr -d ' ')
+            [ "$b" -gt "$total" ] && b=$total
+        else
+            LC_ALL=C grep -q -F -x -- "$xlast" "$ypath" || continue
+            b=$(wc -l < "$path")
+        fi
+        [ -z "$a" ] || [ "$a" -gt "$b" ] && continue
+        nb_overlaps=$((nb_overlaps+1))
+        slice="$tmp_dir/overlap-$nb_overlaps.log"
+        # (sed, not head -n 0: the head of macOS refuses a count of 0)
+        sed -e "${a},${b}d" "$path" > "$slice"
+        total=$(wc -l < "$path" | tr -d ' ')
+        kept=$(wc -l < "$slice" | tr -d ' ')
+        printf '%s\t%s\t%s\t%s\n' "$label" "$ylabel" "$((b - a + 1))" "$kept" >> "$same_source_file"
+        plain_logs+=("$path"$'\t'"$label"$'\t'"$xf"$'\t'"$xl")
+        if ! LC_ALL=C grep -qE "$LOG_TS_RE" "$slice"
+        then
+            log "⏭️  $label: its $total lines are all in $ylabel (an overlapping copy), skipped"
+            nb_duplicates=$((nb_duplicates+1))
+            overlap_result=skip
+        else
+            log "✂️  $label: $((b - a + 1)) of its $total lines are also in $ylabel (an overlapping copy of the same log): only the $kept others are analyzed"
+            overlap_result="$slice"
+        fi
+        return
+    done
+    plain_logs+=("$path"$'\t'"$label"$'\t'"$xf"$'\t'"$xl")
+}
 nb_extracted=0
 # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
 # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
@@ -1128,8 +1211,17 @@ function analyze_logs_path_entry () {
                     then
                         return
                     fi
-                    analyze_logs_digest "$label" "$path"
-                    append_config_file "$path" "$label"
+                    without_overlap "$path" "$label"
+                    if [ "$overlap_result" == "skip" ]
+                    then
+                        return
+                    elif [ -n "$overlap_result" ]
+                    then
+                        analyze_logs_digest "$label" "$overlap_result" "$path"
+                    else
+                        analyze_logs_digest "$label" "$path"
+                        append_config_file "$path" "$label"
+                    fi
                 fi
             else
                 case "$path" in
@@ -1481,7 +1573,7 @@ if [[ ${#sample_array[@]} -gt 0 ]]
 then
     title="sample ${sample_array[*]}"
 fi
-report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file" --bytes-read "$nb_bytes")
+report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file" --same-source "$same_source_file" --bytes-read "$nb_bytes")
 # the files of the input, read again by the report: the file pages and 🔎 Search every log line of the HTML report, and
 # the check of the connector context (MDC) of the Connect logs, also in the summary and --json
 report_args+=(--sources "$sources_file")

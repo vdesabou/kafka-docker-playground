@@ -266,7 +266,7 @@ Give it anything: `-f` takes files, folders and archives, repeated as many times
 
 | Input | What happens |
 | --- | --- |
-| a folder | scanned recursively, sorted; `__MACOSX/`, `.DS_Store` ignored; a copy of a file already analyzed is skipped (`⏭️ … same content as …`) |
+| a folder | scanned recursively, sorted; `__MACOSX/`, `.DS_Store` ignored; a copy of a file already analyzed is skipped (`⏭️ … same content as …`); an overlapping copy of the same log (downloaded twice at two times, as the last 5000 lines of a connector log of the Confluent Cloud UI) only has its other lines analyzed (`✂️ … of its … lines are also in …`), and both are one worker (✂️ note in 🕰️ Log coverage) |
 | `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z` | extracted to a temporary folder, nested archives too (`.7z` needs `bsdtar` or 7-Zip). An archive that does not fully extract is reported ⚠️ |
 | `.gz` | decompressed on the fly; a truncated one (a partial download) is read up to the error and reported ⚠️ |
 | a JSON export of log events: CloudWatch Logs Insights, CloudWatch events, Elasticsearch / OpenSearch hits (`_source` or `fields`), the Loki query API, structured JSON logs (logback, pino, bunyan, GELF: numeric levels too) | converted back to log lines, **oldest first**, stack traces below their event, then digested like a log file |

@@ -851,6 +851,33 @@ def test_verdict_box_and_bare_exception():
     check("bare exception: thrown at and logged as", "📍 thrown at" in rows[0] and "GroupCoordinator.poll(GroupCoordinator.java:124)" in rows[0] and "Unexpected exception in group processing thread" in rows[0], rows)
 
 
+def test_overlapping_copy_and_worker_names():
+    """✂️ an overlapping copy of another input (analyze logs --same-source) is the worker of that one: no second worker in
+    🖥️ Tasks by worker, no task "moving" between the two; 🖥️ the worker names shown are the part that differs"""
+    with tempfile.TemporaryDirectory() as tmp:
+        same = os.path.join(tmp, "same-source")
+        with open(same, "w") as fh:
+            fh.write("/data/s3-sink-log (1).txt\t/data/s3-sink-log.txt\t4936\t65\n")
+        try:
+            log_report.read_same_source(same)
+            check("alias", log_report.worker_of("/data/s3-sink-log (1).txt") == log_report.worker_of("/data/s3-sink-log.txt"))
+            files = [{"label": "/data/s3-sink-log.txt"}, {"label": "/data/s3-sink-log (1).txt"}]
+            log_report.shorten_labels(files)
+            check("alias after the labels are shortened", log_report.SAME_SOURCE == {"s3-sink-log (1).txt": "s3-sink-log.txt"}
+                  and log_report.OVERLAPS[0]["kept_lines"] == 65, log_report.SAME_SOURCE)
+            check("overlaps note", "only its 65 other lines were read" in log_report.overlaps_html(), log_report.overlaps_html())
+        finally:
+            log_report.SAME_SOURCE.clear()
+            log_report.OVERLAPS.clear()
+    names = log_report.worker_short_names
+    check("short: rotated pods", list(names(["b/pods/connect-0/connect.log", "b/pods/connect-1/connect.log"]).values())
+          == ["…connect-0", "…connect-1"], names(["b/pods/connect-0/connect.log", "b/pods/connect-1/connect.log"]))
+    check("short: long file names", list(names(["acme.s3-sink.v2-PROD-log (1) 1.txt", "acme.s3-sink.v2-PROD-log.txt"]).values())
+          == ["…PROD-log (1) 1.txt", "…PROD-log.txt"], names(["acme.s3-sink.v2-PROD-log (1) 1.txt", "acme.s3-sink.v2-PROD-log.txt"]))
+    check("short: already short", names(["w1", "w2"]) == {"w1": "w1", "w2": "w2"})
+    check("short: one worker", names(["connect.log"]) == {"connect.log": "connect.log"})
+
+
 def test_member_eviction():
     """🚪 the members of a consumer group removed by the group coordinator (broker log): a 🔄 row per group with the
     timeout as its reason, tied to the sink connector of a connect-<name> group, and in the timeline, not a 💥 trigger"""
