@@ -259,7 +259,15 @@ then
                 else
                     doctor_warn "the podman machine runs amd64 images with QEMU, not Rosetta"
                     logwarn "amd64-only images such as SQL Server hang or crash under QEMU. Enable Rosetta:"
-                    logwarn "  printf '[machine]\\\\nrosetta = true\\\\n' >> ~/.config/containers/containers.conf"
+                    # a new Mac doesn't have Rosetta 2 until something installs it: podman then falls back to QEMU
+                    if ! arch -x86_64 /usr/bin/true > /dev/null 2>&1
+                    then
+                        logwarn "  softwareupdate --install-rosetta --agree-to-license    # Rosetta 2 is not installed on this Mac"
+                    fi
+                    if ! grep -Eq '^[[:space:]]*rosetta[[:space:]]*=[[:space:]]*true' ~/.config/containers/containers.conf 2>/dev/null
+                    then
+                        logwarn "  printf '[machine]\\\\nrosetta = true\\\\n' >> ~/.config/containers/containers.conf"
+                    fi
                     logwarn "  podman machine stop && podman machine start"
                 fi
             fi

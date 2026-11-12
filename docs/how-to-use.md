@@ -80,7 +80,7 @@ When no engine answers and none is installed, the installer asks which one to in
 
 | Platform | Choices | What it runs |
 | --- | --- | --- |
-| macOS | 🦭 **Podman** (default): free, installed and started for you | `brew install podman docker docker-compose`, links the compose plugin into `~/.docker/cli-plugins`, `podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100` (less memory on a Mac with less than 16GB), then [playground switch-podman](/playground%20switch-podman) |
+| macOS | 🦭 **Podman** (default): free, installed and started for you | `brew install podman docker docker-compose`, links the compose plugin into `~/.docker/cli-plugins`, on Apple silicon installs Rosetta 2 if missing (`sudo softwareupdate --install-rosetta --agree-to-license`) and sets `rosetta = true` in `~/.config/containers/containers.conf` so that amd64-only images (SQL Server, Oracle…) don't run with QEMU, `podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100` (less memory on a Mac with less than 16GB), then [playground switch-podman](/playground%20switch-podman) |
 | macOS | 🐳 **Docker Desktop** | `brew install --cask docker-desktop` and `open -a Docker`: accept its agreement in the window, the installer waits for the engine. Give it at least 8GB of memory in Settings > Resources |
 | Linux | 🐳 **Docker Engine**: free | Docker's installer (`https://get.docker.com`, Ubuntu, Debian, Fedora, CentOS, RHEL), `sudo systemctl enable --now docker`, and adds you to the `docker` group (applies to your next login) |
 | Windows WSL 2 | none | install [Docker Desktop for Windows with the WSL 2 integration](https://docs.docker.com/desktop/features/wsl/). With systemd enabled in the distribution, Docker Engine is offered as on Linux |
