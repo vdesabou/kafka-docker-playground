@@ -486,8 +486,15 @@ ensure_brew() {
     logwarn "Homebrew is not installed, and curl is missing to install it: https://brew.sh"
     return 1
   fi
+  # the official installer needs sudo to create $prefix: only an administrator can install Homebrew there
+  case "$(dseditgroup -o checkmember -m "$(id -un)" admin 2> /dev/null)" in
+    "no "*)
+      logwarn "Homebrew is not installed, it is needed for $reason, but $(id -un) is not an administrator of this Mac: the Homebrew installer needs one (sudo). Ask for administrator rights, or install it with an administrator account (https://brew.sh), then run this installer again"
+      return 1
+      ;;
+  esac
   log "Homebrew is not installed, it is needed for $reason"
-  log "the official Homebrew installer asks for your password (sudo) and may install the Xcode Command Line Tools"
+  log "the official Homebrew installer needs your password (sudo) and may install the Xcode Command Line Tools"
   if ! confirm "install Homebrew into $prefix (official installer from https://brew.sh)?"
   then
     log "skipped: install Homebrew yourself from https://brew.sh, then run this installer again"
@@ -495,11 +502,28 @@ ensure_brew() {
   fi
   if [ "$opt_dry_run" = "1" ]
   then
+    run /usr/bin/sudo -v
     run env NONINTERACTIVE=1 /bin/bash "<Homebrew install.sh, downloaded from https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh>"
     # the next steps show the brew commands they would run
     brew_bin="$prefix/bin/brew"
     brew_shellenv_needed=1
     return 0
+  fi
+  # NONINTERACTIVE=1 below (this installer already asked) makes the Homebrew installer use 'sudo -n' only, which
+  # never asks for a password and fails without a cached sudo timestamp: ask for the password here, once
+  if ! /usr/bin/sudo -n -v 2> /dev/null
+  then
+    if ! { : < /dev/tty; } 2> /dev/null
+    then
+      logwarn "the Homebrew installer needs your password (sudo) and there is no terminal to ask it: run 'sudo -v' in this terminal, then this installer again, or install Homebrew from https://brew.sh"
+      return 1
+    fi
+    log "enter your macOS password for the Homebrew installer (sudo)"
+    if ! /usr/bin/sudo -v < /dev/tty
+    then
+      logwarn "sudo failed: Homebrew not installed, install it from https://brew.sh"
+      return 1
+    fi
   fi
   installer="$(mktemp -t homebrew-install.XXXXXX)" || { logwarn "mktemp failed: install Homebrew yourself from https://brew.sh"; return 1; }
   if ! curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"
@@ -508,7 +532,7 @@ ensure_brew() {
     logwarn "could not download the Homebrew installer: install it yourself from https://brew.sh"
     return 1
   fi
-  # NONINTERACTIVE: this installer already asked; sudo still asks for the password on the terminal.
+  # NONINTERACTIVE: this installer already asked, and the sudo timestamp is cached above.
   # stdin from the terminal (with curl | bash, stdin is this script)
   if { : < /dev/tty; } 2> /dev/null
   then
@@ -520,7 +544,7 @@ ensure_brew() {
   rm -f "$installer"
   if [ "$rc" != "0" ] || [ ! -x "$prefix/bin/brew" ]
   then
-    logwarn "the Homebrew install failed (it needs an administrator account): https://brew.sh"
+    logwarn "the Homebrew install failed, see its output above: https://brew.sh"
     return 1
   fi
   brew_bin="$prefix/bin/brew"
