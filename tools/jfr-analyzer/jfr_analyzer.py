@@ -616,7 +616,7 @@ def findings(a):
         add("warning" if eps >= 1000 else "info", "Many exceptions are thrown.",
             f"The JVM throws {eps:,.0f} exceptions per second (all threads).",
             "Exceptions thrown and caught in a loop: retries, errors.tolerance=all, or a library using exceptions for "
-            "control flow. Look at the connector logs at DEBUG.")
+            "control flow. Look at the WARN / ERROR of the connector logs over the same period.")
     elif eps is not None:
         normal.append(("Exceptions thrown", f"{eps:,.0f} per second"))
     gc = a["gc"]

@@ -2606,9 +2606,9 @@ ASK_FOR_CAUSES = [
      "the GC logs of the workers (-Xlog:gc*:file=gc.log) and 3 thread dumps 10 s apart while it happens (jstack <pid>, or kill -3)",
      "a long GC pause or a slow / stuck poll loop explains most of them: playground analyze gc-logs, playground analyze thread-dump"),
     (("🔐 TLS handshake failure", "🗝️ Empty or unreadable truststore"), None,
-     "the output of -Djavax.net.debug=ssl:handshake on the client (KAFKA_OPTS) and the content of its truststore "
-     "(keytool -list -v -keystore <truststore>)", "which certificate the server sends and which ones the client trusts: "
-     "playground tools cert inspect"),
+     "the certificate chain the server sends (openssl s_client -connect <host>:<port> -showcerts </dev/null) and the "
+     "content of the truststore of the client (keytool -list -v -keystore <truststore>)", "which certificate the server "
+     "sends and which ones the client trusts: playground tools cert inspect"),
     (("🔑 Authentication failure", "🚫 Authorization failure", "🛂 Wrong security.protocol or SASL mechanism", "🪪 MDS / RBAC token error"),
      "kafka", "the broker logs over the same period (server.log, and kafka-authorizer.log for the authorization denials)",
      "the broker logs the reason of an authentication failure and the principal, operation and resource of a denied request",
@@ -2620,30 +2620,11 @@ ASK_FOR_CAUSES = [
      "the Schema Registry logs over the same period, and the subject: playground schema describe / history on an export",
      "the request refused, its subject and the compatibility level"),
 ]
-# the loggers to set to DEBUG for an error no known cause explains: the package of the deepest frame of the plugin
-GENERIC_FRAME = re.compile(r"^(?:java|javax|jdk|sun|com\.sun|kotlin|scala|org\.apache\.kafka\.(?:connect\.runtime|clients|common))\.")
-
-
-def debug_logger(r: dict) -> Optional[str]:
-    """the package to log at DEBUG for a record: of the first frame of the plugin (not the JDK, not the Connect runtime
-    or the Kafka clients), else of its logger, 4 parts at most (io.confluent.connect.jdbc)"""
-    candidates = re.findall(r"\bat ([\w$]+(?:\.[\w$]+)+)\.[\w$<>]+\(", r.get("text", "") + "\n" + (r.get("context") or ""))
-    m = re.search(r"\(([a-z][\w$]*(?:\.[\w$]+)+?)(?::\d+)?\)\s*$", r.get("message") or "")
-    if m:
-        candidates.append(m.group(1))
-    for cls in candidates:
-        if not GENERIC_FRAME.match(cls):
-            parts = [p for p in cls.split(".") if p and not p[0].isupper()]
-            if len(parts) >= 2:
-                return ".".join(parts[:4])
-    return None
-
-
 def data_to_request(res: dict, files: List[dict]) -> List[dict]:
     """📥 what to ask the customer for next, each with why and how: the inputs not fully read, a window too short, workers
     whose logs miss their startup (no config dump, no version: the logs since the last (re)start), the logs of a component
     the findings point at but the input does not have, the data that explains a known cause (heap dump, GC logs, thread
-    dumps, TLS debug), and the DEBUG loggers for the most frequent errors no known cause explains"""
+    dumps, the certificates). Never logs at DEBUG: the support of the customer does not ask for them"""
     out: List[dict] = []
     s = res["summary"]
 
@@ -2740,28 +2721,11 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
     # 💥 bursts right after a broker event, without the broker logs
     if "kafka" not in components and any(ev.get("effects") for ev in res.get("timeline") or []):
         ask("the broker logs over the same period", "errors pile up right after an event of the cluster: the broker logs say what happened")
-    # DEBUG for the most frequent errors no known cause explains
-    by_index = {r.get("index"): r for f in res["files"] for r in f["records"]}
-    loggers: "OrderedDict[str, str]" = OrderedDict()
-    for c in [c for c in res["root_causes"] if not c.get("explained_by") and c["level"] in ("ERROR", "FATAL")][:3]:
-        for meta in c["records_meta"][:3]:
-            r = by_index.get(meta[4])
-            pkg = debug_logger(r) if r else None
-            if pkg and pkg not in loggers:
-                ex = c["example"]
-                loggers[pkg] = (c.get("root_cause") or "").split(".")[-1] or f"\"{ex[:70]}{'…' if len(ex) > 70 else ''}\""
-                break
     # the data to request of the CFK support bundles of the input (cfk-analysis: gaps of the bundle, --problem): one list
     for b in getattr(files, "cfk_bundles", None) or []:
         for x in b.get("data_to_request") or []:
             if x.get("what"):
                 ask(f"☸️ {x['what']}", x.get("why") or "", x.get("command") or "")
-    for pkg, what in list(loggers.items())[:2]:
-        ask(f"the logs with {pkg} at DEBUG while the error happens",
-            f"{what} is not a known cause: the DEBUG lines of that package say what the plugin was doing",
-            f"on a running worker, no restart: curl -s -X PUT -H \"Content-Type: application/json\" "
-            f"http://<worker>:8083/admin/loggers/{pkg} -d '{{\"level\": \"DEBUG\"}}' (back to INFO after); "
-            f"or log4j.logger.{pkg}=DEBUG in connect-log4j.properties")
     return out
 
 
@@ -2806,8 +2770,8 @@ def data_to_request_html(items: List[dict]) -> str:
                     f"<p class='dr-why'>💡 {e(x['why'])}</p>{how(x.get('how') or '')}</div></div>" for i, x in enumerate(items, 1))
     return (DATA_REQUEST_CSS + "<div class='table-card'><h2>📥 Data to request</h2><p class='legend'>What to ask the customer for "
             "next, from the gaps of the input (not fully read, a short window, logs without the startup of a worker, a component "
-            "whose logs are missing) and from the findings (the data that explains a known cause, DEBUG loggers for the errors "
-            "no known cause explains). Also in the summary for a ticket.</p>"
+            "whose logs are missing) and from the findings (the data that explains a known cause). Also in the summary for a "
+            "ticket.</p>"
             f"<div class='dr-list'>{cards}</div></div>" + DATA_REQUEST_SCRIPT)
 
 
@@ -3746,6 +3710,22 @@ def timeline_what(ev: dict) -> str:
     return ev["text"]
 
 
+# what a mark of the 🗓️ chart is, for its legend: only the ones of the events drawn are listed ("✕ stop / GC pause", not
+# every kind a ✕ can be). Keyed by the emoji the text of the event starts with
+TIMELINE_SUBS = {"🚀": "(re)start", "💥": "failed start", "🔄": "rebalance", "🚪": "members removed", "🧵": "thread dump",
+                 "🛑": "stop", "👑": "controller change", "♻️": "GC pause", "🐢": "broker signals", "☸️": "pod event",
+                 "🔌": "connector (re)configured", "⚙️": "config changed"}
+
+
+def timeline_sub(ev: dict) -> str:
+    """the legend entry of an event of the 🗓️ chart (TIMELINE_SUBS), "" for the first errors and the known causes"""
+    if ev.get("known_causes") or ev["kind"] == "first_error":
+        return ""
+    if ev["kind"] == "start":
+        return "(re)start"
+    return next((v for k, v in TIMELINE_SUBS.items() if ev["text"].startswith(k)), "")
+
+
 def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) -> str:
     """the 🗓️ Incident timeline card: the first `shown` events, the others in a <details>"""
     if not events:
@@ -3754,10 +3734,16 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     def row(ev):
         where = log_viewer.link(viewers, ev["file"], e(f"{ev['file'].split('/')[-1]}:{ev['line']}"), ev["line"]) if ev.get("line") else e(ev["file"])
         cls = "tl-known" if ev.get("known_causes") else f"tl-{ev['kind']}"
+        # a process (re)started is a ▲ (re)start in the chart, as the startup config dumps; a failed start a ▼ of its own
+        if not ev.get("known_causes") and ev["text"].startswith("🚀"):
+            cls += " tl-proc-start"
+        elif not ev.get("known_causes") and ev["text"].startswith("💥"):
+            cls += " tl-start-failed"
         # what the filters of the report need: level, connector, time, record (the search reads the record block)
         attrs = (f" data-level='{LEVEL_ORDER.get(ev['level'], '')}'" if ev["kind"] == "first_error" else "") \
             + (f" data-conn='{e(ev['connector'])}'" if ev.get("connector") else "") \
             + f" data-t='{epoch(ev['time'])}'" + (f" data-rec='{ev['record']}'" if ev.get("record") is not None else "")
+        attrs += f" data-sub='{e(timeline_sub(ev))}'"
         return (f"<tr class='tl-row {cls}' data-component='{file_component(ev['file'])}'{attrs}><td class='mono tl-time'>{e(ev['time'][:10])}<br>{e(ev['time'][11:19])}</td>"
                 "<td class='mono tl-delta'></td>"
                 f"<td>{component_chips([ev['file']])}</td><td>{e(timeline_what(ev))}"
@@ -3798,6 +3784,10 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "table.tl-first[hidden],details.tl-more[hidden]{display:none}"
             ".tl-legend span{margin-right:12px;white-space:nowrap}.tl-legend span[hidden]{display:none}"
             "@keyframes tlflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}tr.tl-flash td{animation:tlflash 1.6s ease-out}"
+            # the row picked and its mark in the chart: a halo around the mark, the row outlined
+            "tr.tl-row{cursor:pointer}tr.tl-picked td{box-shadow:inset 0 2px 0 #0ea5e9,inset 0 -2px 0 #0ea5e9}tr.tl-picked td:first-child{box-shadow:inset 3px 0 0 #0ea5e9,inset 0 2px 0 #0ea5e9,inset 0 -2px 0 #0ea5e9}"
+            ".tl-halo{fill:none;stroke:#0ea5e9;stroke-width:2.5;animation:tlhalo 1.2s ease-out 2}@keyframes tlhalo{from{stroke-width:7;opacity:.4}}"
+            "@media (prefers-reduced-motion:reduce){.tl-halo{animation:none}}"
             "</style>"
             "<div class='table-card' id='incident-timeline'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
@@ -3814,11 +3804,12 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "⤢ Use as the period of the report</button></span></div><div class='tl-chart' hidden></div>"
             "<p class='legend tl-legend' hidden><span data-kind='fatal' style='color:#991b1b'>● first FATAL</span>"
             "<span data-kind='error' style='color:#dc2626'>● first ERROR</span><span data-kind='warn' style='color:#f59e0b'>● first WARN</span>"
-            "<span data-kind='known' style='color:#ea580c'>◆ known cause</span><span data-kind='start' style='color:#2563eb'>▲ (re)start</span>"
-            "<span data-kind='lifecycle' style='color:#7c3aed'>○ rebalance / process start / 🧵 thread dump</span>"
-            "<span data-kind='infra' style='color:#a21caf'>✕ GC pause / stop / controller change / 🐢 broker signals</span>"
-            "<span data-kind='config' style='color:#0d9488'>■ connector (re)configured / config changed</span>"
-            "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row, 🔍 drag over the chart to zoom, double-click to zoom out</span></p>"
+            "<span data-kind='known' style='color:#ea580c'>◆ known cause</span><span data-kind='start' data-sym='▲' style='color:#2563eb'>▲ (re)start</span>"
+            "<span data-kind='failed' data-sym='▼' style='color:#dc2626'>▼ failed start</span>"
+            "<span data-kind='lifecycle' data-sym='○' style='color:#7c3aed'>○ rebalance / 🧵 thread dump</span>"
+            "<span data-kind='infra' data-sym='✕' style='color:#a21caf'>✕ GC pause / stop / controller change / 🐢 broker signals</span>"
+            "<span data-kind='config' data-sym='■' style='color:#0d9488'>■ connector (re)configured / config changed</span>"
+            "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row (and a row for its mark), 🔍 drag over the chart to zoom, double-click to zoom out</span></p>"
             f"<table class='tl-first'>{head}{first}</table>{more}</div>")
 
 
@@ -5695,14 +5686,16 @@ function pgTimelineDeltas(rows) {
 const PG_TL_KINDS = {
   fatal: ["circle", "#991b1b", "first FATAL"], error: ["circle", "#dc2626", "first ERROR"], warn: ["circle", "#f59e0b", "first WARN"],
   known: ["diamond", "#ea580c", "known cause"], start: ["triangle", "#2563eb", "(re)start"],
-  lifecycle: ["ring", "#7c3aed", "rebalance / process start"], config: ["square", "#0d9488", "connector (re)configured / config changed"],
+  failed: ["triangle-down", "#dc2626", "failed start"],
+  lifecycle: ["ring", "#7c3aed", "rebalance"], config: ["square", "#0d9488", "connector (re)configured / config changed"],
   infra: ["cross", "#a21caf", "GC pause / stop / controller change"]
 };
 function pgTimelineKind(tr) {
   const c = tr.classList;
   if (c.contains("tl-known")) return "known";
   if (c.contains("tl-first_error")) return tr.dataset.level === "0" ? "fatal" : (tr.dataset.level === "2" ? "warn" : "error");
-  if (c.contains("tl-start")) return "start";
+  if (c.contains("tl-start") || c.contains("tl-proc-start")) return "start";
+  if (c.contains("tl-start-failed")) return "failed";
   if (c.contains("tl-lifecycle")) return "lifecycle";
   if (c.contains("tl-infra")) return "infra";
   if (c.contains("tl-connector_config") || c.contains("tl-config_change")) return "config";
@@ -5710,10 +5703,32 @@ function pgTimelineKind(tr) {
 }
 // 🔍 the zoom of the chart (drag over it, double-click or ⟲ All to zoom out): [from, to] in epoch seconds, or null.
 // The chart only: ⤢ makes it the period of the whole report (the zoom of the occurrences chart)
-var pgTlZoom = null, pgTlRows = [], pgTlTotal = 0;
+var pgTlZoom = null, pgTlRows = [], pgTlTotal = 0, pgTlMarks = new Map(), pgTlPicked = null;
+// a row of the table clicked: its mark circled in the chart (and the chart scrolled into view when it is not), the row
+// outlined; again: unpicked. Kept across the redraws of the chart (filters, zoom, resize)
+function pgTimelinePick(tr, scroll) {
+  document.querySelectorAll(".tl-halo").forEach(function (h) { h.remove(); });
+  document.querySelectorAll("tr.tl-picked").forEach(function (r) { r.classList.remove("tl-picked"); });
+  pgTlPicked = tr;
+  if (!tr) return;
+  tr.classList.add("tl-picked");
+  const m = pgTlMarks.get(tr);
+  if (!m) return;
+  const halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  halo.setAttribute("cx", m.ex); halo.setAttribute("cy", m.ey); halo.setAttribute("r", 11); halo.setAttribute("class", "tl-halo");
+  m.g.appendChild(halo);
+  const box = document.querySelector(".tl-chart"), r = box && box.getBoundingClientRect();
+  if (scroll && r && (r.bottom < 0 || r.top > window.innerHeight)) box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+document.addEventListener("click", function (ev) {
+  const tr = ev.target.closest && ev.target.closest("tr.tl-row");
+  if (!tr || ev.target.closest("a, button, summary, input, select")) return;
+  pgTimelinePick(pgTlPicked === tr ? null : tr, true);
+});
 function pgTimelineChart(rows) {
   const box = document.querySelector(".tl-chart");
   if (!box) return;
+  pgTlMarks = new Map();
   pgTlRows = rows;
   const ns = "http://www.w3.org/2000/svg";
   const evs = [];
@@ -5864,11 +5879,13 @@ function pgTimelineChart(rows) {
     else if (spec[0] === "ring") shape = el("circle", { cx: ex, cy: ey, r: 5.5, fill: "none", stroke: spec[1], "stroke-width": 2.5 }, g);
     else if (spec[0] === "square") shape = el("rect", { x: ex - 5.5, y: ey - 5.5, width: 11, height: 11, rx: 1.5, fill: spec[1] }, g);
     else if (spec[0] === "cross") shape = el("path", { d: "M" + (ex - 6) + " " + (ey - 6) + "L" + (ex + 6) + " " + (ey + 6) + "M" + (ex + 6) + " " + (ey - 6) + "L" + (ex - 6) + " " + (ey + 6), stroke: spec[1], "stroke-width": 3.5, fill: "none" }, g);
+    else if (spec[0] === "triangle-down") shape = el("path", { d: "M" + ex + " " + (ey + 7.5) + "L" + (ex + 7.5) + " " + (ey - 6) + "L" + (ex - 7.5) + " " + (ey - 6) + "Z", fill: spec[1] }, g);
     else if (spec[0] === "triangle") shape = el("path", { d: "M" + ex + " " + (ey - 7.5) + "L" + (ex + 7.5) + " " + (ey + 6) + "L" + (ex - 7.5) + " " + (ey + 6) + "Z", fill: spec[1] }, g);
     else shape = el("path", { d: "M" + ex + " " + (ey - 8.5) + "L" + (ex + 8.5) + " " + ey + "L" + ex + " " + (ey + 8.5) + "L" + (ex - 8.5) + " " + ey + "Z", fill: spec[1], "class": "tl-known-mark" }, g);
     const tip = el("title", {}, g);
     tip.textContent = pgStamp(ev.t) + "  (+" + pgDur(ev.t - t0) + " after the first" + (prev === null ? "" : ", +" + pgDur(ev.t - prev) + " after the previous") + ")\\n"
-      + ev.compLabel + " · " + spec[2] + "\\n" + ev.what;
+      + ev.compLabel + " · " + (ev.tr.dataset.sub || spec[2]) + "\\n" + ev.what;
+    pgTlMarks.set(ev.tr, { g: g, ex: ex, ey: ey });
     prev = ev.t;
     function go() {
       const details = ev.tr.closest("details");
@@ -5877,6 +5894,7 @@ function pgTimelineChart(rows) {
       ev.tr.classList.remove("tl-flash");
       void ev.tr.offsetWidth;
       ev.tr.classList.add("tl-flash");
+      pgTimelinePick(ev.tr, false);
     }
     g.addEventListener("click", go);
     g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
@@ -5902,11 +5920,21 @@ function pgTimelineChart(rows) {
   });
   svg.addEventListener("dblclick", function () { if (pgTlZoom) { pgTlZoom = null; pgTimeline(); } });
   box.appendChild(svg);
+  if (pgTlPicked) pgTimelinePick(pgTlPicked, false);
   if (legend) {
     const present = {};
     evs.forEach(function (ev) { present[ev.kind] = true; });
     if (breaks.length) present["break"] = true;
-    legend.querySelectorAll("span[data-kind]").forEach(function (sp) { sp.hidden = !present[sp.dataset.kind]; });
+    // the entries of a shape: only the kinds of the events drawn ("✕ stop / failed start", not every kind a ✕ can be)
+    const subs = {};
+    evs.forEach(function (ev) {
+      const s = ev.tr.dataset.sub;
+      if (s && (subs[ev.kind] = subs[ev.kind] || []).indexOf(s) < 0) subs[ev.kind].push(s);
+    });
+    legend.querySelectorAll("span[data-kind]").forEach(function (sp) {
+      sp.hidden = !present[sp.dataset.kind];
+      if (sp.dataset.sym && subs[sp.dataset.kind]) sp.textContent = sp.dataset.sym + " " + subs[sp.dataset.kind].join(" / ");
+    });
   }
   if (caption) {
     caption.hidden = false;

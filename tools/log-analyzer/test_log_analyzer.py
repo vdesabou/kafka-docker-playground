@@ -444,7 +444,7 @@ def test_data_to_request():
         asks = log_report.data_to_request(res, files)
     whats = [x["what"] for x in asks]
     check("startup logs", any(w.startswith("the logs since the last (re)start of connect.log") for w in whats), whats)
-    check("debug logger", any("io.confluent.connect.jdbc at DEBUG" in w for w in whats), whats)
+    check("never logs at DEBUG", not any("DEBUG" in w for w in whats), whats)
     check("no broker logs for ORA-01017", not any("broker" in w for w in whats), whats)
     check("in the ticket", "### Data to request" in log_report.ticket_markdown(dict(res, data_to_request=asks), "t", "ERROR/FATAL/WARN"))
 

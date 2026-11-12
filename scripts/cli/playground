@@ -31253,7 +31253,9 @@ function summarize_log_errors() {
                 # the task id: which worker ran which task, and when (🖥️ Tasks by worker)
                 lc_detail = lc_who
             } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
-                lc_kind = "process_start"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker started"
+                # "worker initialization took" comes before the startup ends: a worker that fails to start logs it too
+                lc_kind = "process_start"; lc_who = "connect"; cfg_end(); run_gen++
+                lc_detail = index($0, "Kafka Connect started") ? "Kafka Connect worker started" : "Kafka Connect worker initialized"
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
                 lc_kind = "process_start"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker started"
             } else if (index($0, "Failed to start Connect")) {
