@@ -39,7 +39,7 @@ playground run -f databricks-delta-lake-sink.sh
 1. Downloads the Simba Spark JDBC driver if needed and ensures the Databricks SQL warehouse is running. Stops with the Databricks error if the warehouse start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 2. Empties the staging S3 bucket.
 3. Produces 100 Avro records to topic `pageviews` (datagen `pageviews` schema) with `playground topic produce`.
-4. Creates the `databricks-delta-lake-sink` connector, mapping topic `pageviews` to table `pageviews` (`delta.lake.table.auto.create=true`).
+4. Creates the `databricks-delta-lake-sink` connector, mapping topic `pageviews` to table `pageviews_<user>` (`$USER` in lower case, other characters than letters and digits replaced by `_`, for example `pageviews_runner` on CI), created by the connector (`delta.lake.table.auto.create=true`). One table per user because the Databricks workspace is shared: writing into a table created by someone else fails with `[INSUFFICIENT_PERMISSIONS] Insufficient privileges: Principal '...' does not have SELECT on Table 'workspace.default.pageviews'`.
 5. Waits for the consumer lag to reach zero with `playground connector show-lag`.
 
 You can verify that data is present in the table using the Databricks UI:

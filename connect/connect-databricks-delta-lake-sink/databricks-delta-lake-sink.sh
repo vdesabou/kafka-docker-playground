@@ -93,7 +93,11 @@ set -e
 log "Sending messages to topic pageviews"
 playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
 
-log "Creating Databricks Delta Lake Sink connector"
+# one table per user: the workspace is shared, and a table created by someone else
+# makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
+DATABRICKS_TABLE_NAME="pageviews_$(echo "${USER:-playground}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
+
+log "Creating Databricks Delta Lake Sink connector, writing to table ${DATABRICKS_TABLE_NAME}"
 playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
 {
      "connector.class": "io.confluent.connect.databricks.deltalake.DatabricksDeltaLakeSinkConnector",
@@ -107,7 +111,7 @@ playground connector create-or-update --connector databricks-delta-lake-sink  <<
      "delta.lake.host.name": "$DATABRICKS_SERVER_HOSTNAME",
      "delta.lake.http.path": "$DATABRICKS_HTTP_PATH",
      "delta.lake.token": "$DATABRICKS_TOKEN",
-     "delta.lake.topic2table.map": "pageviews:pageviews",
+     "delta.lake.topic2table.map": "pageviews:${DATABRICKS_TABLE_NAME}",
      "delta.lake.table.auto.create": "true",
      "staging.s3.access.key.id": "$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID",
      "staging.s3.secret.access.key": "$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY",
