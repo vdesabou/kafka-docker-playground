@@ -13,6 +13,13 @@ report and click around: this is what you get on your own data.
 > reports before running it on real data. `playground analyze <command> --help` lists the samples.
 
 > [!TIP]
+> 👀 **Get the reports of your downloads without typing anything**: `playground analyze watch` analyzes every log file,
+> bundle, heap dump, flight recording, capture, GC log, thread dump or XStream report that lands in `~/Downloads`, each
+> with its analyzer, and opens its report as soon as the download is complete. On macOS,
+> `playground analyze watch --exclude Archives --install-launch-agent` starts it at every login. See
+> [Every download analyzed](/deep-dive-analyze-logs?id=%f0%9f%91%80-every-download-analyzed-without-typing-anything).
+
+> [!TIP]
 > 📤 Every report has a **Share** button (or the S key): download the self-contained `.html`, copy its summary, copy it
 > for a ticket, for Slack or as rich text, copy its path, or email the summary.
 
