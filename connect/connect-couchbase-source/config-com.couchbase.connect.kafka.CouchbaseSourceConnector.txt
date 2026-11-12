@@ -128,17 +128,6 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -211,6 +200,17 @@ Note that this config is considered advanced, please only customize the cipher l
 
 	 - Type: LIST
 	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -560,6 +560,36 @@ To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.persistence.polling.interval
+
+When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
+
+To enable this feature, specify a non-zero persistence polling interval. The interval is how frequently the connector asks each Couchbase node which changes have been fully replicated and persisted. This ensures consistency between Couchbase and Kafka, at the cost of additional latency and bandwidth usage.
+
+To disable this feature, specify a zero duration (`0`). In this mode the connector publishes changes to Kafka immediately, without waiting for replication. This is fast and uses less network bandwidth, but can result in publishing "phantom changes" that don’t reflect the actual state of a document in Couchbase after a failover.
+
+TIP: Documents written to Couchbase with enhanced durability are never published to Kafka until the durability requirements are met, regardless of whether persistence polling is enabled.
+
+CAUTION: When connecting to an ephemeral bucket, always disable persistence polling by setting this config option to `0`, otherwise the connector will never publish any changes.
+
+	 - Type: STRING
+	 - Default: 100ms
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.flow.control.buffer
+
+The flow control buffer limits how much data Couchbase will send before waiting for the connector to acknowledge the data has been processed. The recommended size is between 10 MiB ("10m") and 50 MiB ("50m").
+
+CAUTION: Make sure to allocate enough memory to the Kafka Connect worker process to accommodate the flow control buffer, otherwise the connector might run out of memory under heavy load. Read on for details.
+
+There's a separate buffer for each node in the Couchbase cluster. When calculating how much memory to allocate to the Kafka Connect worker, multiply the flow control buffer size by the number of Couchbase nodes, then multiply by 2. This is how much memory a single connector task requires for the flow control buffer (not counting the connector's baseline memory usage).
+
+	 - Type: STRING
+	 - Default: 16m
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.xattrs
 
 Should filters and source handlers have access to a document's extended attributes?
@@ -592,36 +622,6 @@ Ignored if `couchbase.enable.dcp.trace` is false.
 
 	 - Type: STRING
 	 - Default: .*
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.flow.control.buffer
-
-The flow control buffer limits how much data Couchbase will send before waiting for the connector to acknowledge the data has been processed. The recommended size is between 10 MiB ("10m") and 50 MiB ("50m").
-
-CAUTION: Make sure to allocate enough memory to the Kafka Connect worker process to accommodate the flow control buffer, otherwise the connector might run out of memory under heavy load. Read on for details.
-
-There's a separate buffer for each node in the Couchbase cluster. When calculating how much memory to allocate to the Kafka Connect worker, multiply the flow control buffer size by the number of Couchbase nodes, then multiply by 2. This is how much memory a single connector task requires for the flow control buffer (not counting the connector's baseline memory usage).
-
-	 - Type: STRING
-	 - Default: 16m
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.persistence.polling.interval
-
-When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
-
-To enable this feature, specify a non-zero persistence polling interval. The interval is how frequently the connector asks each Couchbase node which changes have been fully replicated and persisted. This ensures consistency between Couchbase and Kafka, at the cost of additional latency and bandwidth usage.
-
-To disable this feature, specify a zero duration (`0`). In this mode the connector publishes changes to Kafka immediately, without waiting for replication. This is fast and uses less network bandwidth, but can result in publishing "phantom changes" that don’t reflect the actual state of a document in Couchbase after a failover.
-
-TIP: Documents written to Couchbase with enhanced durability are never published to Kafka until the durability requirements are met, regardless of whether persistence polling is enabled.
-
-CAUTION: When connecting to an ephemeral bucket, always disable persistence polling by setting this config option to `0`, otherwise the connector will never publish any changes.
-
-	 - Type: STRING
-	 - Default: 100ms
 	 - Importance: MEDIUM
 	 - Required: false
 
