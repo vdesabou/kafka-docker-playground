@@ -8064,7 +8064,11 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     sanitized = any(t.startswith("🔒") for t, _ in sections)
     body.append(share_html(text_summary(res, []), share_zip, sanitized, title, ticket_markdown(res, title, levels, unit), share_extra))
     bundles = res.get("_cfk_bundles") or []
-    meta = [f"🕐 {e(span)}", f"🎚️ {e(levels)}"]
+    meta = [f"🕐 {e(span)}"]
+    # the levels read: said only when the WARN were left out (analyze logs --errors-only), the default needs no pill
+    if "WARN" not in levels:
+        meta.append(f"<span title='analyze logs --errors-only: the WARN lines were not read, the report has no warning'>"
+                    f"🎚️ {e(levels)} only: WARN not read (--errors-only)</span>")
     if bundles:
         env = [b.get("environment") or {} for b in bundles]
         k8s = next((x["kubernetes_version"] for x in env if x.get("kubernetes_version")), "")
