@@ -7123,6 +7123,9 @@ function summarize_log_errors() {
         if (k == "client.id" || (k == "name" && cfg_id == "")) cfg_id = v
         # the key and the value converter of a task log the same class one after the other: two configs
         if (k == "converter.type") cfg_id = cfg_id (cfg_id == "" ? "" : " ") v
+        # TaskConfig only logs task.class: the tasks of two connectors (without the [connector|task-0] context) are two
+        # configs, not a change of one
+        if (k == "task.class" && cfg_id == "") cfg_id = v
         cfg_buf = cfg_buf k "=" v "\n"
     }
     # keys whose value differs between the previous dump of a config and this one (a restart with another config),
@@ -7143,6 +7146,59 @@ function summarize_log_errors() {
                 nchg[key]++
             }
         }
+    }
+    # the variants of a config in one run: dumps separated by \035
+    function cfg_has(list, buf) {
+        return list != "" && index("\035" list, "\035" buf "\035") > 0
+    }
+    # the changes of the run that ends: a variant of the key that no earlier run had, whose closest earlier variant is gone
+    # from this run. When that one is still there, the new variant is another instance next to it (the converter of a
+    # connector next to the one of the worker, the admin client of another component with the same empty client.id)
+    function cfg_eval(key,    list, i, v, n, c, m, sl, st) {
+        if (cfg_prev[key] == "") return
+        list = cfg_cur[key]; n = 0; sl = cfg_ln; st = cfg_ts
+        while ((i = index(list, "\035")) > 0) {
+            v = substr(list, 1, i - 1)
+            list = substr(list, i + 1)
+            n++
+            if (cfg_has(cfg_prev[key], v)) continue
+            c = cfg_closest(cfg_prev[key], v)
+            if (c == "" || cfg_has(cfg_cur[key], c)) continue
+            split(cfg_meta[key, n], m, "\t")
+            cfg_ln = m[1]; cfg_ts = m[2]
+            cfg_diff(key, c, v)
+        }
+        cfg_ln = sl; cfg_ts = st
+    }
+    # the variants of the run that ends added to the ones of the earlier runs (16 at most)
+    function cfg_merge(key,    list, i, v) {
+        list = cfg_cur[key]
+        while ((i = index(list, "\035")) > 0) {
+            v = substr(list, 1, i - 1)
+            list = substr(list, i + 1)
+            if (!cfg_has(cfg_prev[key], v) && cfg_nprev[key]++ < 16) cfg_prev[key] = cfg_prev[key] v "\035"
+        }
+    }
+    # the variant of the list with the fewest keys that differ from buf (the one buf is a change of). Walked with index():
+    # the split() of the awk of macOS also cuts at the newlines of the dumps when the separator is one character
+    function cfg_closest(list, buf,    i, v, best, bestn, d) {
+        best = ""; bestn = -1
+        while ((i = index(list, "\035")) > 0) {
+            v = substr(list, 1, i - 1)
+            list = substr(list, i + 1)
+            d = cfg_ndiff(v, buf)
+            if (bestn < 0 || d < bestn) { best = v; bestn = d }
+        }
+        return best
+    }
+    function cfg_ndiff(old, new,    n, i, ol, nl, k, prev, d) {
+        split("", prev)
+        n = split(old, ol, "\n")
+        for (i = 1; i < n; i++) prev[substr(ol[i], 1, index(ol[i], "=") - 1)] = substr(ol[i], index(ol[i], "=") + 1)
+        n = split(new, nl, "\n")
+        d = 0
+        for (i = 1; i < n; i++) { k = substr(nl[i], 1, index(nl[i], "=") - 1); if ((k in prev) && prev[k] != substr(nl[i], index(nl[i], "=") + 1)) d++ }
+        return d
     }
     # seconds of a 2026-11-09T13:00:54 timestamp within its month (day, hour, minute, second): enough to compare two
     # dumps a few seconds apart (no mktime in mawk nor in the awk of macOS)
@@ -7167,11 +7223,20 @@ function summarize_log_errors() {
         if (!(key in cfg_text)) {
             if (ncfg >= 50) return
             cfg_order[++ncfg] = key
-        } else if (cfg_text[key] != cfg_buf && (cfg_gen[key] != run_gen || (cfg_ctx != "" && cfg_cls !~ /(Producer|Consumer|AdminClient|Converter|Serializer|Deserializer)Config$/))) {
+        } else if (cfg_ctx != "" && cfg_cls !~ /(Producer|Consumer|AdminClient|Converter|Serializer|Deserializer)Config$/) {
+            # the config of a connector itself changes without a restart (reconfigured)
+            if (cfg_text[key] != cfg_buf) cfg_diff(key, cfg_text[key], cfg_buf)
+        } else {
             # a change between restarts only: two dumps of the same class in one run are two instances (two telemetry
             # exporters of a broker, the readiness check of the image then the worker, the key, value and header
-            # converters), not a new config. The config of a connector itself changes without a restart (reconfigured)
-            cfg_diff(key, cfg_text[key], cfg_buf)
+            # converters, two consumers of the license manager with the same client.id, one at latest and one at
+            # earliest), not a new config. So at the end of a run (cfg_eval), each variant of its key is compared with
+            # every variant of the earlier runs (a startup that fails does not create every client each time)
+            if (cfg_gen[key] != run_gen) { cfg_eval(key); cfg_merge(key); cfg_cur[key] = ""; cfg_ncur[key] = 0 }
+        }
+        if (!cfg_has(cfg_cur[key], cfg_buf) && cfg_ncur[key] < 8) {
+            cfg_meta[key, ++cfg_ncur[key]] = cfg_ln "\t" cfg_ts
+            cfg_cur[key] = cfg_cur[key] cfg_buf "\035"
         }
         cfg_gen[key] = run_gen
         cfg_text[key] = cfg_buf
@@ -7491,11 +7556,13 @@ function summarize_log_errors() {
                 # the task id: which worker ran which task, and when (🖥️ Tasks by worker)
                 lc_detail = lc_who
             } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
-                # "worker initialization took" comes before the startup ends: a worker that fails to start logs it too
-                lc_kind = "process_start"; lc_who = "connect"; cfg_end(); run_gen++
+                # "worker initialization took" comes before the startup ends: a worker that fails to start logs it too. Not a
+                # new run of the configs (run_gen): it and "Kafka Connect started" come in the middle of a startup, between the
+                # clients it creates. A restart is its stop line, or its own config dumped again
+                lc_kind = "process_start"; lc_who = "connect"; cfg_end()
                 lc_detail = index($0, "Kafka Connect started") ? "Kafka Connect worker started" : "Kafka Connect worker initialized"
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
-                lc_kind = "process_start"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker started"
+                lc_kind = "process_start"; lc_who = "broker"; cfg_end(); lc_detail = "Kafka broker started"
             } else if (index($0, "Failed to start Connect")) {
                 # ERROR Failed to start Connect (AbstractConnectCli): the worker gave up during its startup and exits. Several of
                 # them in a file is a restart loop (the service manager starts it again, it fails again): 🔁 in the report
@@ -7648,6 +7715,8 @@ function summarize_log_errors() {
                 for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
             }
             cfg_end()
+            # the changes of the last run
+            for (i = 1; i <= ncfg; i++) cfg_eval(cfg_order[i])
             for (i = 1; i <= ncfg; i++) {
                 k = cfg_order[i]
                 printf "@@PGCFG@@\t%s\n", cfg_head[k] >> records_file
