@@ -8,6 +8,7 @@ analyze_logs_args="${args[--analyze-logs-args]}"
 eval "exclude_array=(${args[--exclude]})"
 install_launch_agent="${args[--install-launch-agent]}"
 uninstall_launch_agent="${args[--uninstall-launch-agent]}"
+logs_only="${args[--logs-only]}"
 
 launch_agent_label="io.kafka-docker-playground.analyze-watch"
 launch_agent_plist="$HOME/Library/LaunchAgents/$launch_agent_label.plist"
@@ -90,8 +91,9 @@ then
     do
         agent_args+=(--exclude "$pattern")
     done
-    [ -n "$no_open" ] && agent_args+=(--no-open)
-    [ -n "$analyze_logs_args" ] && agent_args+=(--analyze-logs-args "$analyze_logs_args")
+    if [ -n "$no_open" ]; then agent_args+=(--no-open); fi
+    if [ -n "$logs_only" ]; then agent_args+=(--logs-only); fi
+    if [ -n "$analyze_logs_args" ]; then agent_args+=(--analyze-logs-args "$analyze_logs_args"); fi
     mkdir -p "$(dirname "$launch_agent_plist")" "$(dirname "$launch_agent_log")"
     {
         echo '<?xml version="1.0" encoding="UTF-8"?>'
@@ -180,6 +182,10 @@ archive_cat() {
 
 # names that are log files: server.log, connect.log.3, kafka.log.gz, stdout, gc.log.0.current, logs/<anything>, .out
 log_name_regex='(\.log(\.[0-9]+)?(\.gz)?$|\.log\.[0-9-]+(\.gz)?$|\.out(\.[0-9]+)?$|(^|/)(stdout|stderr)(\.txt)?$|log[^/]*\.txt$|(^|/)logs?/[^/]+[^/]$|\.(jsonl|ndjson)(\.gz)?$|gc[^/]*\.current$|\.(zip|tgz|tar|tar\.gz|tar\.bz2|tar\.xz|7z)$)'
+# the files of another analyzer (heap dumps, flight recordings, network captures, XStream reports, thread dumps): an
+# archive or a folder holding only them is analyzed too (analyze logs keeps them in <stem>-other-files/)
+other_name_regex='(\.hprof(\.gz)?$|\.jfr$|\.(pcap|pcapng|cap)(\.gz)?$|orclcdc[^/]*\.html?$|(thread|jstack)[^/]*$)'
+
 # lines that look like log records: a time and a level, librdkafka (%3|1793896102.923|FAIL|...), JSON with a level, logfmt
 time_regex='[0-9]{2}:[0-9]{2}:[0-9]{2}|"@?timestamp"|[0-9]{10}\.[0-9]{3}'
 level_regex='(^|[^A-Za-z])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([^A-Za-z]|$)|"(level|severity)" *: *"|level=(trace|debug|info|warn|warning|error|fatal)|^%[0-7]\|[0-9]+\.[0-9]+\|'
@@ -226,6 +232,15 @@ holds_logs() {
             echo "folder with $nb log file(s) or archive(s)"
             return 0
         fi
+        if [ -z "$logs_only" ]
+        then
+            nb=$(find "$path" -type f ! -name '.*' 2> /dev/null | head -20000 | LC_ALL=C grep -aicE "$other_name_regex")
+            if [ "${nb:-0}" -gt 0 ]
+            then
+                echo "folder with $nb dump(s), capture(s) or report(s)"
+                return 0
+            fi
+        fi
         # no log file name: sniff the first text-like files
         nb=0
         while IFS= read -r -d '' f
@@ -248,6 +263,15 @@ holds_logs() {
             then
                 echo "archive with $nb log file(s) or archive(s)"
                 return 0
+            fi
+            if [ -z "$logs_only" ]
+            then
+                nb=$(archive_list "$path" | LC_ALL=C grep -aicE "$other_name_regex")
+                if [ "${nb:-0}" -gt 0 ]
+                then
+                    echo "archive with $nb dump(s), capture(s) or report(s)"
+                    return 0
+                fi
             fi
             # no log file name: sniff the first text-like entries
             nb=0
@@ -325,46 +349,145 @@ declare -A stable=()    # name -> number of checks with the same size
 declare -A analyzed_stems=()
 nb_analyzed=0
 
+# kind<TAB>path of the files given (label<TAB>path on stdin), from the classifier of the 🧰 Other files of analyze logs
+# (tools/log-analyzer/bundle_triage.py). One line of python: bashly indents the partial, a multi-line -c would break: gc_log, thread_dump, heap_dump, flight_recording, network_capture, xstream_report,
+# topic_describe, log_dirs, screenshot, document. Nothing is copied or moved (no --keep-dir)
+triage_kinds() {
+    local walked
+    walked=$(mktemp -t kdp-watch-walked)
+    cat > "$walked"
+    python3 -I "$root_folder/tools/log-analyzer/bundle_triage.py" --walked "$walked" 2> /dev/null \
+        | python3 -I -c 'import json, sys; [print(f["kind"] + "\t" + f["path"]) for f in json.load(sys.stdin).get("files", []) if f.get("path") and "\t" not in f["path"] and "\n" not in f["path"]]' 2> /dev/null
+    rm -f "$walked"
+}
+
+# the analyzer of a kind ("" when analyze logs reads it itself, or nothing does)
+analyzer_of() {
+    case "$1" in
+        gc_log) echo gc-logs ;;
+        thread_dump) echo thread-dump ;;
+        heap_dump) echo heap-dump ;;
+        flight_recording) echo flight-recorder ;;
+        network_capture) echo tcp-dump ;;
+        xstream_report) echo oracle-xstream-report ;;
+        *) echo "" ;;
+    esac
+}
+
+# runs 'playground analyze <analyzer> <args>' with its report in $report_dir, opened (or not) in the browser
+run_analyzer() {
+    local label="$1" analyzer="$2" rc=0 report before
+    shift 2
+    before=$(ls -t "$report_dir"/*-report.html 2> /dev/null | head -1)
+    if [ -n "$no_open" ]
+    then
+        # stdout not a terminal: the report is not opened
+        (unset PLAYGROUND_RUN_LOG_TERMINAL; playground analyze "$analyzer" "$@" --output-dir "$report_dir" | cat) || rc=$?
+    elif [[ -t 1 ]]
+    then
+        playground analyze "$analyzer" "$@" --output-dir "$report_dir" || rc=$?
+    else
+        PLAYGROUND_RUN_LOG_TERMINAL=1 playground analyze "$analyzer" "$@" --output-dir "$report_dir" || rc=$?
+    fi
+    report=$(ls -t "$report_dir"/*-report.html 2> /dev/null | head -1)
+    if [ $rc -ne 0 ]
+    then
+        logwarn "⚠️ $label: playground analyze $analyzer exited with $rc"
+        notify "⚠️ analyze $analyzer of $label failed ($rc)"
+    elif [ -n "$report" ] && [ "$report" != "$before" ]
+    then
+        log "📊 $label: $report"
+        notify "📊 Report ready: $label ($analyzer)"
+    fi
+}
+
+# the dedicated analyzers on the files of an archive (kept by analyze logs in <stem>-other-files/) or of a folder:
+# one run per kind (one per file for heap-dump, which reads one), thread dumps left out (analyzed in the logs report)
+run_other_analyzers() {
+    local label="$1" source="$2" kind path analyzer
+    declare -A kind_files=()
+    while IFS=$'\t' read -r kind path
+    do
+        [ "$kind" = "thread_dump" ] && continue
+        analyzer=$(analyzer_of "$kind")
+        [ -n "$analyzer" ] || continue
+        if [ "$kind" = "heap_dump" ]
+        then
+            log "🔬 $label: heap dump $(basename "$path"), running playground analyze heap-dump (Eclipse MAT in Docker, can take minutes)"
+            run_analyzer "$label" heap-dump -f "$path"
+            continue
+        fi
+        kind_files[$kind]+="$path"$'\n'
+    done < <(find "$source" -type f ! -name '.*' 2> /dev/null | head -2000 | awk '{ n = $0; sub(/.*\//, "", n); print n "\t" $0 }' | triage_kinds)
+    for kind in gc_log flight_recording network_capture xstream_report
+    do
+        [ -n "${kind_files[$kind]:-}" ] || continue
+        local files=() f_args=()
+        mapfile -t files < <(printf '%s' "${kind_files[$kind]}" | head -20)
+        for path in "${files[@]}"
+        do
+            f_args+=(-f "$path")
+        done
+        analyzer=$(analyzer_of "$kind")
+        log "🧰 $label: ${#files[@]} $kind file(s), running playground analyze $analyzer"
+        run_analyzer "$label" "$analyzer" "${f_args[@]}"
+    done
+}
+
+# ⚠️ errexit is on in the generated CLI: no function may end on a false test ([ … ] && …), it would stop the watch
 analyze_entry() {
-    local name="$1" path="$folder/$1" reason stem report_dir rc report
+    local name="$1" path="$folder/$1" reason stem kind analyzer
     if [ -d "$path" ] && [ -n "${analyzed_stems[$name]:-}" ]
     then
         log "⏭️  $name: the folder extracted from ${analyzed_stems[$name]}, already analyzed"
         return
     fi
-    if ! reason=$(holds_logs "$path")
-    then
-        log "🙈 $name: no logs found, ignored"
-        return
-    fi
     stem=$(printf '%s' "$(archive_stem "$name")" | LC_ALL=C tr -c 'A-Za-z0-9._-' '_')
     report_dir="$output_dir/${stem}-$(date +%Y%m%d-%H%M%S)"
+
+    # a single file of another analyzer: a heap dump, a flight recording, a capture, an XStream report, a GC log or a
+    # thread dump (a log file holding a kill -3 thread dump stays a log file: analyze logs analyzes the dump in its report)
+    if [ -f "$path" ] && [ -z "$logs_only" ]
+    then
+        kind=$(printf '%s\t%s\n' "$name" "$path" | triage_kinds | cut -f1)
+        analyzer=$(analyzer_of "$kind")
+        if [ -n "$analyzer" ] && { { [ "$kind" != "gc_log" ] && [ "$kind" != "thread_dump" ]; } || ! file_text "$path" | looks_like_logs; }
+        then
+            mkdir -p "$report_dir"
+            log "🧰 $name: $kind, running playground analyze $analyzer (report in $report_dir)"
+            notify "🧰 Analyzing $name ($analyzer)"
+            run_analyzer "$name" "$analyzer" -f "$path"
+            analyzed_stems[$(archive_stem "$name")]="$name"
+            nb_analyzed=$((nb_analyzed + 1))
+            return
+        fi
+    fi
+
+    if ! reason=$(holds_logs "$path")
+    then
+        log "🙈 $name: no logs, dumps, captures or reports found, ignored"
+        return
+    fi
     mkdir -p "$report_dir"
     log "🔥 $name: $reason, running playground analyze logs (report in $report_dir)"
     notify "🔥 Analyzing $name"
-    rc=0
-    if [ -n "$no_open" ]
-    then
-        # stdout not a terminal: the report is not opened
-        (unset PLAYGROUND_RUN_LOG_TERMINAL; playground analyze logs -f "$path" --output-dir "$report_dir" "${extra_args[@]}" | cat) || rc=$?
-    elif [[ -t 1 ]]
-    then
-        playground analyze logs -f "$path" --output-dir "$report_dir" "${extra_args[@]}" || rc=$?
-    else
-        PLAYGROUND_RUN_LOG_TERMINAL=1 playground analyze logs -f "$path" --output-dir "$report_dir" "${extra_args[@]}" || rc=$?
-    fi
+    run_analyzer "$name" logs -f "$path" "${extra_args[@]}"
     analyzed_stems[$(archive_stem "$name")]="$name"
     nb_analyzed=$((nb_analyzed + 1))
-    report=$(ls -t "$report_dir"/*-report.html 2> /dev/null | head -1)
-    if [ $rc -ne 0 ]
+
+    if [ -z "$logs_only" ]
     then
-        logwarn "⚠️ $name: playground analyze logs exited with $rc"
-        notify "⚠️ Analysis of $name failed ($rc)"
-    elif [ -n "$report" ]
-    then
-        log "📊 $name: $report"
-        notify "📊 Report ready: $name"
+        if [ -d "$path" ]
+        then
+            run_other_analyzers "$name" "$path"
+        else
+            for kept in "$report_dir"/*-other-files
+            do
+                if [ -d "$kept" ]; then run_other_analyzers "$name" "$kept"; fi
+            done
+        fi
     fi
+    return 0
 }
 
 # the entries of the folder, NUL separated, hidden ones left out (.DS_Store, .localized)
@@ -418,7 +541,7 @@ if [ -n "$once" ]
 then
     log "🔎 analyzing the entries of $folder created in the last $since minute(s)"
 else
-    log "👀 watching $folder for new logs (every ${interval}s, reports in $output_dir), Ctrl-C to stop"
+    log "👀 watching $folder for new logs, dumps, captures and reports (every ${interval}s, reports in $output_dir), Ctrl-C to stop"
 fi
 
 while true
@@ -452,7 +575,7 @@ do
         then
             stable["$name"]=$(( ${stable[$name]:-0} + 1 ))
         else
-            [ -z "${pending[$name]:-}" ] && log "⏳ new entry: $name"
+            if [ -z "${pending[$name]:-}" ]; then log "⏳ new entry: $name"; fi
             pending["$name"]="$size"
             stable["$name"]=0
         fi
@@ -485,13 +608,13 @@ do
     # an entry deleted, then downloaded again with the same name, is a new one
     for name in "${!seen[@]}"
     do
-        [ -z "${present[$name]:-}" ] && unset 'seen[$name]'
+        if [ -z "${present[$name]:-}" ]; then unset 'seen[$name]'; fi
     done
     unset present
 
     if [ -n "$once" ]
     then
-        [ $nb_analyzed -eq 0 ] && log "✅ nothing to analyze in $folder (last $since minute(s))"
+        if [ $nb_analyzed -eq 0 ]; then log "✅ nothing to analyze in $folder (last $since minute(s))"; fi
         break
     fi
     sleep "$interval"

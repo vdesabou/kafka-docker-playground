@@ -840,13 +840,18 @@ playground analyze logs -f <file|folder|.zip|.tar.gz|.7z|.gz|export.json|export.
                         [--sanitize] [--logs-only]
 playground analyze logs --sample connect_task_failure|support_bundle|broker_pressure|jvm_dumps|kafka_streams|kafka_clients|compare_fix
 playground analyze watch [--folder ~/Downloads] [--output-dir ~/playground-log-reports] [--since <minutes> [--once]]
-                         [--exclude Archives] [--no-open] [--analyze-logs-args "--errors-only --sanitize"]
+                         [--exclude Archives] [--no-open] [--logs-only] [--analyze-logs-args "--errors-only --sanitize"]
                          [--install-launch-agent | --uninstall-launch-agent]
 ```
 
 👀 `playground analyze watch` runs in a terminal and analyzes every log file, archive or folder of logs that lands in
 `~/Downloads` (or `--folder`), as soon as the download is complete, then opens its report (macOS notification).
-Pictures, PDFs and other files are ignored; a folder that Safari extracts from a zip it already analyzed is skipped.
+🧰 A heap dump, a flight recording, a network capture, an XStream diagnostics report, a GC log or a thread dump gets its
+own analyzer (`analyze heap-dump`, `flight-recorder`, `tcp-dump`, `oracle-xstream-report`, `gc-logs`, `thread-dump`),
+recognized like the 🧰 Other files of the report; in an archive or a folder, `analyze logs` runs first, then those
+(`--logs-only` to skip them). A log file holding a `kill -3` thread dump stays a log file: the dump is analyzed in the
+log report. Pictures, PDFs and other files are ignored; a folder that Safari extracts from a zip it already analyzed is
+skipped.
 Only the top of the folder is watched (a file moved into `~/Downloads/Archives` never triggers anything), `--exclude`
 names entries never to analyze, and on macOS `--install-launch-agent` starts the watch at every login.
 
