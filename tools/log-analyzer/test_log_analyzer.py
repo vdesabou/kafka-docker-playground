@@ -23,6 +23,27 @@ import log_report  # noqa: E402
 import ocr  # noqa: E402
 import progress  # noqa: E402
 
+# 📚 the knowledge-base articles are private (reproduction-models): the tests never read them. Synthetic curated links
+# with the same rules (variant patterns, fallback, Confluent Cloud flags) as the real ones the tests rely on, and an
+# empty error-text index (a test installs its own)
+SYNTHETIC_KB_LINKS = {
+    "🔑 Authentication failure": [
+        {"kb": "https://kb.example/sasl-librdkafka", "kb_title": "synthetic: SASL authentication error", "pattern": r"SASL authentication error"},
+        {"kb": "https://kb.example/ora-01017", "kb_title": "synthetic: ORA-01017", "pattern": r"ORA-01017"},
+        {"kb": "https://kb.example/sr-api-key", "kb_title": "synthetic: Schema Registry API key",
+         "pattern": r"^(?![\s\S]*security\.auth\.client\.rest)[\s\S]*Unauthorized; error code:? ?401"},
+        {"kb": "https://kb.example/ccloud-auth", "kb_title": "synthetic: Confluent Cloud connector authentication", "fallback": True, "ccloud": "records"}],
+    "🚫 Authorization failure": [
+        {"kb": "https://kb.example/ccloud-topic-acl", "kb_title": "synthetic: topic authorization on Confluent Cloud",
+         "pattern": r"TopicAuthorizationException|TOPIC_AUTHORIZATION_FAILED|Not authorized to access topics"},
+        {"kb": "https://kb.example/ccloud-connect-acls", "kb_title": "synthetic: ACLs of a Connect cluster on Confluent Cloud", "fallback": True, "ccloud": True}],
+    "🌐 Host name not resolved (DNS)": [
+        {"kb": "https://kb.example/dns-bootstrap", "kb_title": "synthetic: No resolvable bootstrap urls", "pattern": r"No resolvable bootstrap urls"}],
+    "📜 License error": [{"kb": "https://kb.example/license", "kb_title": "synthetic: Invalid License"}],
+}
+log_report.known_causes._kb_links = SYNTHETIC_KB_LINKS
+log_report.known_causes._kb_index = []
+
 
 def check(name, ok, detail=""):
     if not ok:
@@ -580,8 +601,8 @@ def test_cfk_sections_and_verdict():
 
 def test_kb_articles_of_variants():
     kc = log_report.known_causes
-    saved = kc.LINKS.get("🔑 Authentication failure")
-    kc.LINKS["🔑 Authentication failure"] = [
+    saved = kc._kb_links.get("🔑 Authentication failure")
+    kc._kb_links["🔑 Authentication failure"] = [
         {"kb": "https://kb/general", "kb_title": "general"},
         {"kb": "https://kb/ora", "kb_title": "ORA-01017", "pattern": r"ORA-01017"},
         {"kb": "https://kb/mysql", "kb_title": "MySQL", "pattern": r"Access denied for user"},
@@ -595,10 +616,10 @@ def test_kb_articles_of_variants():
         check("reading links", log_report.reading_links(got) == [("KB: general", "https://kb/general"), ("KB: cloud", "https://kb/cloud")], got)
     finally:
         if saved is None:
-            kc.LINKS.pop("🔑 Authentication failure", None)
+            kc._kb_links.pop("🔑 Authentication failure", None)
         else:
-            kc.LINKS["🔑 Authentication failure"] = saved
-    check("single dict entry still works", kc.links("📜 License error").get("kb", "").startswith(kc.KB))
+            kc._kb_links["🔑 Authentication failure"] = saved
+    check("a single article", kc.links("📜 License error").get("kb") == "https://kb.example/license")
     check("unknown cause", kc.links("no such cause") == {})
 
 
@@ -1256,7 +1277,7 @@ def test_dns_outage():
     check("clients not created", d["clients_not_created"] == 3, d)
     check("details", any(x.startswith("🧊 JVM DNS cache: 2 lookup(s)") for x in dns["details"])
           and any(x.startswith("🧱 ×3 Java client(s)") for x in dns["details"]), dns["details"])
-    check("KB of No resolvable bootstrap urls", "4408266460308" in (dns.get("kb") or ""), dns.get("kb"))
+    check("KB of No resolvable bootstrap urls", dns.get("kb") == "https://kb.example/dns-bootstrap", dns.get("kb"))
     aborted = causes.get("🧹 Clients aborted while a task stopped")
     check("🧹 LOW", aborted and (aborted["severity"], aborted["occurrences"]) == ("LOW", 5), aborted)
 
@@ -2325,6 +2346,63 @@ def test_regenerate_button():
         res = log_report.analyze(log_report.parse_records(records_file(tmp, "@@PGFILE@@|connect.log|10|0|0||\n")))
     check("in the header", "lr-regen" in log_report.html_report(res, "t", "ERROR/FATAL", 0, regenerate=cmd))
     check("none without it", "lr-regen" not in log_report.html_report(res, "t", "ERROR/FATAL", 0))
+
+
+def test_kb_lookup_by_error_message():
+    """📚 the private error-text index (kb_index.json, $PLAYGROUND_KB_INDEX_FILE): an article whose signature matches the
+    records is linked to the root cause no known cause explains (card, summary for a ticket, terminal) and to a known
+    cause after its curated articles; an article naming a product only when the records mention it; never an article of
+    the curated links; and no knowledge-base URL in this public repository"""
+    kc = log_report.known_causes
+    src = open(kc.__file__, encoding="utf-8").read()
+    check("no knowledge-base article URL in the public catalogue", not re.search(r"support\.confluent\.io/hc/[^\s\"']*articles/\d", src)
+          and not any(e.get("kb") for v in kc.LINKS.values() for e in (v if isinstance(v, list) else [v])))
+    saved_index, saved_env = kc._kb_index, os.environ.get("PLAYGROUND_KB_INDEX_FILE")
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "kb_index.json")
+        with open(path, "w") as fh:
+            json.dump({"articles": [
+                {"url": "https://kb.example/generic", "title": "generic", "patterns": [r"Out\s+of\s+order\s+sequence\s+number"]},
+                {"url": "https://kb.example/precise", "title": "precise", "patterns": [r"Out\s+of\s+order\s+sequence\s+number\s+for\s+producer"]},
+                {"url": "https://kb.example/jdbc-only", "title": "jdbc only", "patterns": [r"Out\s+of\s+order\s+sequence"], "context": r"JdbcSink"},
+                {"url": "https://kb.example/sr-api-key", "title": "curated", "patterns": [r"Unauthorized;\s+error\s+code:\s+401"]},
+                {"url": "https://kb.example/npe-ksqldb", "title": "npe of a ksqlDB query", "patterns": [r"java\.lang\.NullPointerException"]},
+                {"url": "https://kb.example/backing-store", "title": "a class name", "patterns": [r"KafkaConfigBackingStore"]},
+                {"url": "https://kb.example/not-leader", "title": "not leader", "patterns": [r"NotLeaderForPartitionException"]}]}, fh)
+        os.environ["PLAYGROUND_KB_INDEX_FILE"] = path
+        kc._kb_index = None
+        try:
+            got = kc.kb_for_texts(["org.apache.kafka.common.errors.OutOfOrderSequenceException: Out  of ORDER sequence number for producer 42"])
+            check("most specific first, case and spaces ignored, product articles only with their product", [a["title"] for a in got] == ["precise", "generic"], got)
+            check("a generic exception or a bare class name links no article, a precise Kafka exception does",
+                  not kc.kb_for_texts(["java.lang.NullPointerException: Cannot invoke \"x.close()\" at org.apache.kafka.connect.storage.KafkaConfigBackingStore.stop"])
+                  and [a["title"] for a in kc.kb_for_texts(["org.apache.kafka.common.errors.NotLeaderForPartitionException: This server is not the leader"])] == ["not leader"])
+            check("an article of the curated links keeps its own rule (never looked up)",
+                  not kc.kb_for_texts(["io.confluent.security.auth.client.rest.exceptions.RestClientException: Unauthorized; error code: 401"]))
+            text = ("@@PGFILE@@|connect.log|100|1|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+                    "@@PGREC@@|ERROR|3|10|20|2026-10-24T17:00:01|2026-10-24T17:00:09\n"
+                    "[2026-10-24 17:00:01,000] ERROR [orders-src|task-0] failed to send (org.apache.kafka.clients.producer.internals.Sender)\n"
+                    "    org.apache.kafka.common.errors.OutOfOrderSequenceException: Out of order sequence number for producer 7 at offset 12\n"
+                    "@@PGTS@@|2026-10-24T17:00:01 2026-10-24T17:00:09\n")
+            with tempfile.TemporaryDirectory() as tmp2:
+                res = log_report.analyze(log_report.parse_records(records_file(tmp2, text)))
+            rc = next(c for c in res["root_causes"] if "OutOfOrderSequence" in (c["root_cause"] or ""))
+            check("root cause: its KB", [a["title"] for a in rc.get("kb_articles") or []] == ["precise", "generic"], rc.get("kb_articles"))
+            md = log_report.ticket_markdown(res, "t", "ERROR/FATAL", "file")
+            # (the summary for a ticket is sanitized: the host of these synthetic URLs is a placeholder there)
+            check("summary for a ticket", "📚 [KB: precise](" in md, md[-600:])
+            check("terminal", "📚 KB: precise: https://kb.example/precise" in log_report.text_summary(res, []))
+            card = next(log_report.finding_view(f, {}, "file") for f in res["findings"] if (f.get("_view") or {}).get("kind") == "root")
+            check("🌳 card", "📚 KB: precise" in card["html"], card["html"][-400:])
+            got = kc.links("📜 License error", ["Out of order sequence number for producer 1"])
+            check("known cause: its curated article first, the looked-up ones after",
+                  [a["title"] for a in got["kb_articles"]] == ["synthetic: Invalid License", "precise", "generic"], got)
+        finally:
+            kc._kb_index = saved_index
+            if saved_env is None:
+                os.environ.pop("PLAYGROUND_KB_INDEX_FILE", None)
+            else:
+                os.environ["PLAYGROUND_KB_INDEX_FILE"] = saved_env
 
 
 if __name__ == "__main__":

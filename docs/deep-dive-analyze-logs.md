@@ -217,7 +217,7 @@ Good to know:
    are recognized and come with **what to do**, often the `playground` command that checks it, and for most of them
    📚 Confluent knowledge-base articles to read or send (in the terminal, the HTML report and the summary for a
    ticket): the article of the variant found in the logs first (ORA-01017, `Login failed for user`, SASL with
-   librdkafka, `_confluent-command`, OOMKilled…), then the general one. With the private `reproduction-models` repository of Confluent support, the internal GTS runbooks (PKIX,
+   librdkafka, `_confluent-command`, OOMKilled…), then the general one, and an error no known cause explains gets 📚 the article that quotes its exact message. The knowledge-base articles are for signed-in Confluent customers: they come from the private repository of Confluent support, so a report written without it has the docs pages only. With the private `reproduction-models` repository of Confluent support, the internal GTS runbooks (PKIX,
    SASL, authorization, converters, DLQ, consumer rebalancing…) come with a 🔒, in the terminal, the HTML report and
    `--json`, never in the summary for a ticket (`PLAYGROUND_LOG_RUNBOOKS_FILE`, default
    `reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json`). Everything else is in the 🌳 root
@@ -777,7 +777,7 @@ playground analyze logs --sample support_bundle --json 2>/dev/null | jq -c '.con
 | --- | --- |
 | `.summary` | totals, levels, period covered, `incomplete_inputs`, `time_zone` |
 | `.known_causes[]` | title, severity, occurrences, first occurrence, advice, exception chains of the killed tasks, knowledge-base articles (`kb_articles`) |
-| `.root_causes[]` | every distinct error, its connectors, `explained_by` |
+| `.root_causes[]` | every distinct error, its connectors, `explained_by`, the knowledge-base articles that quote its message (`kb_articles`) |
 | `.timeline[]` | the incident timeline |
 | `.connectors[]` | the card of each connector |
 | `.comparison` | with `--compare` |
