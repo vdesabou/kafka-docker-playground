@@ -2405,6 +2405,29 @@ def test_kb_lookup_by_error_message():
                 os.environ["PLAYGROUND_KB_INDEX_FILE"] = saved_env
 
 
+def test_weak_verdict():
+    """🤔 when more than half of the ERROR / FATAL occurrences have no known cause, the verdict says so under its 👉 start
+    with (link to 🌳 All root causes); not at half or less"""
+    def run(unknown_count):
+        text = ("@@PGFILE@@|connect.log|100|2|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+                "@@PGREC@@|ERROR|10|10|20|2026-10-24T17:00:01|2026-10-24T17:00:09\n"
+                "[2026-10-24 17:00:01,000] ERROR [orders-sink|task-0] failed (org.example.Sink)\n"
+                "    org.apache.kafka.common.errors.SaslAuthenticationException: Authentication failed\n"
+                "@@PGTS@@|2026-10-24T17:00:01 2026-10-24T17:00:09\n"
+                f"@@PGREC@@|ERROR|{unknown_count}|30|40|2026-10-24T17:10:01|2026-10-24T17:10:09\n"
+                "[2026-10-24 17:10:01,000] ERROR [orders-sink|task-0] boom (org.example.Sink)\n"
+                "    org.example.WidgetException: the widget is broken\n"
+                "@@PGTS@@|2026-10-24T17:10:01 2026-10-24T17:10:09\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return log_report.logs_verdict_parts(res, "ERROR/FATAL")[2]
+    lines = run(30)
+    weak = [l for l in lines if l["icon"] == "🤔"]
+    check("75% unexplained: a 🤔 line", weak and weak[0]["href"] == "#all-root-causes"
+          and weak[0]["text"].startswith("75% of the ERROR/FATAL occurrences have no known cause"), lines)
+    check("half unexplained: none", not [l for l in run(10) if l["icon"] == "🤔"], run(10))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
