@@ -12,6 +12,15 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -23,14 +32,14 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 couchbase.username
+🔘 couchbase.bootstrap.timeout
 
-Name of the Couchbase user to authenticate as.
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
 
 	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.seed.nodes
 
@@ -56,29 +65,9 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Security
 ==========================
-🔘 couchbase.enable.tls
-
-Use secure connection to Couchbase Server.
-
-If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.hostname.verification
 
 Set this to `false` to disable TLS hostname verification for Couchbase connections. Less secure, but might be required if for some reason you can't issue a certificate whose Subject Alternative Names match the hostname used to connect to the server. Only disable if you understand the impact and can accept the risks.
@@ -140,6 +129,17 @@ Note that this config is considered advanced, please only customize the cipher l
 
 	 - Type: LIST
 	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.enable.tls
+
+Use secure connection to Couchbase Server.
+
+If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
