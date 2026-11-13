@@ -92,6 +92,41 @@ samples+=("$tmp/events.log")
         '[2026-11-07 11:11:05,000] ERROR boom (x.Y)'
 } > "$tmp/config-changes.log"
 samples+=("$tmp/config-changes.log")
+# two appenders: each line written twice in a row (to the millisecond), a stack trace twice as a block, collapsed by
+# pairs. The same text at another millisecond, and a stack frame repeated inside a trace, are not duplicates
+{
+    printf '%s\n' '[2026-11-07 12:00:00,001] ERROR [orders-sink|task-0] boom (x.Y:1)' '[2026-11-07 12:00:00,001] ERROR [orders-sink|task-0] boom (x.Y:1)' \
+        '[2026-11-07 12:00:00,002] ERROR [orders-sink|task-0] boom (x.Y:1)' \
+        '[2026-11-07 12:00:01,000] INFO [Worker clientId=connect-1, groupId=connect-cluster] Rebalance started (org.apache.kafka.connect.runtime.distributed.WorkerCoordinator:225)' \
+        '[2026-11-07 12:00:01,000] INFO [Worker clientId=connect-1, groupId=connect-cluster] Rebalance started (org.apache.kafka.connect.runtime.distributed.WorkerCoordinator:225)' \
+        '[2026-11-07 12:00:02,003] ERROR [orders-sink|task-0] task failed (x.Y:2)' 'java.lang.IllegalStateException: bad' $'\tat a.b(C.java:1)' $'\tat a.b(C.java:1)' \
+        '[2026-11-07 12:00:02,003] ERROR [orders-sink|task-0] task failed (x.Y:2)' 'java.lang.IllegalStateException: bad' $'\tat a.b(C.java:1)' $'\tat a.b(C.java:1)' \
+        '[2026-11-07 12:00:03,000] INFO done (x.Y:3)'
+    # a WARN logged twice in the same millisecond (once per column), through the two appenders: 4 lines, 2 events
+    for i in 1 2 3 4; do printf '%s\n' '[2026-11-07 12:00:04,005] WARN [orders-source|task-0] JDBC type -156 (sql_variant) not currently supported (x.Dialect:1)'; done
+} > "$tmp/dup.log"
+# a Grafana / Loki export (Download as txt): header, epoch and UTC time before each line, newest first, the frames of a
+# trace without prefix, an event id (UUID) in each message
+{
+    printf '%s\n' '"3 lines shown — 0.01% (5min) of 1h"' 'Total bytes processed: "1.2  MB"' \
+        'Common labels: {"app":"connect","level":"ERROR","service_name":"connect"}' '' ''
+    printf '1793959203000\t2026-11-07T10:00:03.000Z\t[2026-11-07 11:00:03,000] ERROR Failed to produce event log message: {"id":"6f1c0d2e-1a2b-4c3d-8e9f-0a1b2c3d4e5f","type":"x"} (a.B)\n'
+    printf '1793959202000\t2026-11-07T10:00:02.000Z\t[2026-11-07 11:00:02,000] ERROR Failed to produce event log message: {"id":"0b2d4f6a-8c0e-4a1b-9c2d-3e4f5a6b7c8d","type":"x"} (a.B)\n'
+    printf '1793959201000\t2026-11-07T10:00:01.000Z\t[2026-11-07 11:00:01,000] ERROR [orders-sink|task-0] task failed (x.Y:2)\njava.lang.IllegalStateException: bad\n\tat a.b(C.java:1)\n'
+} > "$tmp/loki.log"
+# the broker side of an authentication incident (INFO lines of kafka.network.Selector, three formats), the client side
+# (not an event of the broker), and an HDFS sink that rotates with empty offsets and never commits next to one that commits
+{
+    printf '%s\n' '[2026-11-07 13:00:00,000] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed authentication with /10.0.0.1 (channelId=10.0.0.9:9092-10.0.0.1:50001-1) (errorMessage={"status":"Authentication failed"}) (org.apache.kafka.common.network.Selector)' \
+        '[2026-11-07 13:00:01,000] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed authentication with /10.0.0.1 (channelId=10.0.0.9:9092-10.0.0.1:50002-2) (errorMessage={"status":"Authentication failed"}) (org.apache.kafka.common.network.Selector)' \
+        '[2026-11-07 13:00:02,000] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed re-authentication with /10.0.0.2 (channelId=10.0.0.9:9092-10.0.0.2:50003-3) (errorMessage=Authentication failed: Invalid username or password) (org.apache.kafka.common.network.Selector)' \
+        '[2026-11-07 13:00:03,000] INFO [SocketServer listenerType=ZK_BROKER, nodeId=2] Failed authentication with /10.0.0.3 (channelId=10.0.0.8:9092-10.0.0.3:50004-4) (userId=alice, errorMessage=Authentication failed: Invalid username or password) (org.apache.kafka.common.network.Selector)' \
+        '[2026-11-07 13:00:04,000] INFO [AdminClient clientId=adminclient-1] Failed authentication with broker.example.com/10.0.0.9 (channelId=-1) (Authentication failed) (org.apache.kafka.common.network.Selector)' \
+        '[2026-11-07 13:01:00,000] INFO [hdfs-sink|task-0] Starting commit and rotation for topic partition orders-0 with start offsets {} and end offsets {} (io.confluent.connect.hdfs3.TopicPartitionWriter:615)' \
+        '[2026-11-07 13:01:05,000] INFO [hdfs-sink|task-0] Starting commit and rotation for topic partition orders-0 with start offsets {} and end offsets {} (io.confluent.connect.hdfs3.TopicPartitionWriter:615)' \
+        '[2026-11-07 13:01:06,000] INFO [ok-sink|task-0] Starting commit and rotation for topic partition pay-0 with start offsets {pay-0=1} and end offsets {pay-0=9} (io.confluent.connect.hdfs3.TopicPartitionWriter:615)' \
+        '[2026-11-07 13:01:07,000] INFO [ok-sink|task-0] Committed hdfs://nn/topics/pay/partition=0/pay+0+0000000001+0000000009.avro for pay-0 (io.confluent.connect.hdfs3.TopicPartitionWriter:880)'
+} > "$tmp/signals.log"
 failed=0
 reference=""
 for awk_cmd in "$@"
@@ -172,6 +207,34 @@ do
         failed=1
     fi
     # the JVM of the components (jvm.spec of a Connect worker, java.version=, the Version: of a GC log), and the warnings of
+    # two appenders: the duplicated lines collapsed (2 single lines, a trace of 4 lines, 2 of the 4 copies of a WARN), the
+    # same text at another millisecond kept, said in the digest and in @@PGFILE@@
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.dup" "$tmp/dup.log" > "$out.dup.digest" 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGFILE@@" {printf "dup=%s,", $8} $1 == "@@PGREC@@" {printf "x%s,", $3} $1 == "@@PGEVTN@@" {printf "%s=%s,", $2, $4}' "$out.dup"; grep -c '^⚠️ 8 duplicated line(s) collapsed' "$out.dup.digest")
+    if [ "$got" != "dup=8,x2,x1,x2,worker_rebalance=1,1" ]
+    then
+        echo "❌ $awk_cmd: duplicated lines of dup.log: $got instead of dup=8,x2,x1,x2,worker_rebalance=1,1"
+        failed=1
+    fi
+    # a Grafana / Loki export: the prefix removed, the header not a record, the event ids masked (one record), newest first
+    # detected (first seen = the oldest occurrence, at the bottom; the oldest record first)
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.loki" "$tmp/loki.log" > "$out.loki.digest" 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGFILE@@" {printf "%s,", $9} $1 == "@@PGREC@@" {printf "x%s %s-%s %s %s,", $3, $4, $5, $6, $7} $1 == "@@PGTS@@" {printf "[%s],", $2}' "$out.loki"; grep -c 'Common labels' "$out.loki")
+    if [ "$got" != "newest_first,x1 8-8 2026-11-07T11:00:01 2026-11-07T11:00:01,[2026-11-07T11:00:01],x2 7-6 2026-11-07T11:00:02 2026-11-07T11:00:03,[2026-11-07T11:00:02 2026-11-07T11:00:03],0" ]
+    then
+        echo "❌ $awk_cmd: Grafana / Loki export loki.log: $got"
+        failed=1
+    fi
+    # the broker side of an authentication incident: an event of the broker, counted per broker and per client IP and error
+    # (not the client side); the sink rotating with empty offsets, and the commits of another one counted
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.sig" "$tmp/signals.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 != "plugin_logger" {print "E " $2 "=" $6} $1 == "@@PGEVTN@@" {print "N " $2 "=" $3 "=" $4}' "$out.sig" | LC_ALL=C sort | tr '\n' ',')
+    expected='E auth_failure=broker 1 · /10.0.0.1 failed authentication: {"status":"Authentication failed"},E auth_failure=broker 1 · /10.0.0.1 failed authentication: {"status":"Authentication failed"},E auth_failure=broker 1 · /10.0.0.2 failed re-authentication: Authentication failed: Invalid username or password,E auth_failure=broker 2 · /10.0.0.3 failed authentication: Authentication failed: Invalid username or password,E sink_empty_rotation=hdfs-sink · orders-0,E sink_empty_rotation=hdfs-sink · orders-0,N auth_failure=broker 1=3,N auth_failure=broker 2=1,N auth_failure_by=broker 1 · /10.0.0.1 failed authentication: {"status":"Authentication failed"}=2,N auth_failure_by=broker 1 · /10.0.0.2 failed re-authentication: Authentication failed: Invalid username or password=1,N auth_failure_by=broker 2 · /10.0.0.3 failed authentication: Authentication failed: Invalid username or password=1,N sink_commit=ok-sink=1,N sink_empty_rotation=hdfs-sink=2,'
+    if [ "$got" != "$expected" ]
+    then
+        echo "❌ $awk_cmd: authentication failures and empty rotations of signals.log: $got"
+        failed=1
+    fi
     # the JDK launcher on stderr ("WARNING: sun.misc.Unsafe::…") are not records
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "jvm_version" {print $6}' "$out.records" | sort | tr '\n' ',')
     if [ "$got" != "17.0.9,21.0.5+11-LTS,25.0.4.1+1-LTS Eclipse Adoptium," ]

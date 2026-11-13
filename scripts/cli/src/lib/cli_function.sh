@@ -7002,6 +7002,9 @@ function summarize_log_errors() {
         gsub(/@[0-9a-f]+/, "@#", key)
         # an AWS Request ID of letters only (VZPWGRBNDARQCDHD): another one per request
         gsub(/[Rr]equest I[Dd]: [^ ,)]+/, "Request ID: #", key)
+        # a UUID (the id of an event, of a request): another one per occurrence ("Failed to produce event log message:
+        # {"specversion":"1.0","id":"6f1c0d2e-1a2b-…"…} was one record per line). Written out: no {8} in every awk
+        if (index(key, "-")) gsub(/[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]-[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]-[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]-[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]-[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]/, "#", key)
         gsub(/[0-9]+/, "#", key)
         return mask_ids(key)
     }
@@ -7281,8 +7284,32 @@ function summarize_log_errors() {
         if (msg == "" || (fac != "FAIL" && fac != "ERROR")) return ""
         return sprintf("%%3|%d.%03d|%s|%s| %s", int(ts / 1000), ts % 1000, fac, name, msg)
     }
-    function flush(    lvl, key, i, chain, long_chain, frames, nframes, line, cause, nrec, nr, py, gof, pf1, pf2, pf3, js) {
+    # a timestamp to the millisecond in the first 60 characters: two such lines identical in a row are one line logged
+    # twice (two appenders), not two events
+    function has_ms(s) {
+        return match(substr(s, 1, 60), /[0-9]:[0-9][0-9][.,][0-9][0-9][0-9]/)
+    }
+    # a failed authentication seen by a broker: "broker 1 · /10.0.0.1 failed re-authentication: <error>" (the error of
+    # "(errorMessage=…)", "(userId=…, errorMessage=…)", or an older "(…)" after the channel), its broker in au_who
+    function au_detail(line,    p, what, ip, msg) {
+        p = index(line, "authentication with /")
+        what = substr(line, p - 3, 3) == "re-" ? "re-authentication" : "authentication"
+        msg = substr(line, p + 21)
+        p = index(msg, " ")
+        ip = p ? substr(msg, 1, p - 1) : msg
+        msg = p ? substr(msg, p) : ""
+        au_who = "broker"
+        if ((p = index(line, "nodeId=")) > 0) { au_who = substr(line, p + 7, 12); sub(/[^0-9].*/, "", au_who); au_who = "broker " au_who }
+        if ((p = index(msg, "errorMessage=")) > 0) msg = substr(msg, p + 13)
+        else { sub(/^ \(channelId=[^)]*\)/, "", msg); sub(/^ *\(/, "", msg) }
+        if ((p = index(msg, ") (org.apache.kafka.")) > 0) msg = substr(msg, 1, p - 1)
+        else sub(/\) *$/, "", msg)
+        if (length(msg) > 150) msg = substr(msg, 1, 150) "..."
+        return au_who " · /" ip " failed " what (msg != "" ? ": " msg : "")
+    }
+    function flush(    lvl, key, i, chain, long_chain, frames, nframes, line, cause, nrec, nr, py, gof, pf1, pf2, pf3, js, joined) {
         if (nlines == 0) return
+        flush_seq++
         # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
         if (rec[1] ~ /^[^ ]+ (FATAL|ERROR|WARN) x[0-9]+ \(first seen line [0-9]+, last seen line [0-9]+\)$/) { nlines = 0; return }
         # (the "{" line of a Node.js object is set aside by the first regex of each line: rec[1] is "")
@@ -7294,6 +7321,22 @@ function summarize_log_errors() {
         }
         lvl = (js != "") ? "ERROR" : level_of(rec[1])
         if (lvl == "" || (lvl == "WARN" && include_warnings == "")) { nlines = 0; return }
+        # a multi-line record (a stack trace) identical to the record right before it, timestamp to the millisecond
+        # included: the same event written twice by two appenders (the identical lines in a row are collapsed as they
+        # are read, a trace repeats as a block)
+        if (nlines >= 2) {
+            joined = rec[1]
+            for (i = 2; i <= nlines; i++) joined = joined "\n" rec[i]
+            if (dup_rec_seq == flush_seq - 1 && joined == dup_rec && has_ms(rec[1])) {
+                dup_lines += nlines
+                # by pairs, as the lines: a third copy is another event
+                dup_rec = ""
+                nlines = 0
+                return
+            }
+            dup_rec = joined
+            dup_rec_seq = flush_seq
+        }
 
         # exception chain: first exception line plus every "Caused by:", then frames of the deepest cause
         split("", r)
@@ -7372,6 +7415,11 @@ function summarize_log_errors() {
         nrec = nlines
         nlines = 0
         ts = timestamp_of(r[1])
+        # newest-first export: without the records file, the order of the times of the records (with it, of every line)
+        if (records_file == "" && ts != "") {
+            if (ord_prev != "") { if (ts < ord_prev) ord_desc++; else if (ts > ord_prev) ord_asc++ }
+            ord_prev = ts
+        }
         # the times of the occurrences, at most 1000 per record, spread over its whole life: every stride-th one is kept,
         # and when 1000 are kept every other one is dropped and the stride doubles (the first 1000 were kept: an error
         # of a whole day showed as a burst at its start). Each time kept stands for stride occurrences
@@ -7419,6 +7467,18 @@ function summarize_log_errors() {
         with_worker = ENVIRON["PG_LOG_DIGEST_WITH_WORKER"]
     }
     {
+        # a Grafana / Loki export ("Download as txt" of Explore): a header ("1000 lines shown — …", "Total bytes processed:
+        # …", "Common labels: {…"level":"ERROR"…}": not a record), then each line prefixed with its epoch (ms or ns) and its
+        # UTC time: "1793959203000<tab>2026-11-07T10:00:03.000Z<tab>[2026-11-07 11:00:03,000] ERROR …". The prefix is
+        # removed (else each line was a record of its own), the lines of a stack trace have none
+        if (NR <= 10 && ($0 ~ /^Common labels: \{/ || $0 ~ /^Total bytes processed: / || $0 ~ /^"[0-9]+ lines shown/)) next
+        # (looked for in the first 20 lines only, then on each line of an export: not a cost on the other logs)
+        if ((NR <= 20 || loki) && match($0, /^[0-9]+\t[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9:.]+Z?\t/)) { loki = 1; $0 = substr($0, RLENGTH + 1) }
+        # the same line twice in a row, to the millisecond: two appenders write each line (every count and event doubled).
+        # By pairs: a WARN logged 4 times in the same millisecond (once per column) through two appenders is 8 lines, 4 events
+        if ($0 == dup_last && !dup_was && $0 != "" && has_ms($0)) { dup_lines++; dup_was = 1; next }
+        dup_was = 0
+        dup_last = $0
         # the 2 lines before a record, for its context
         prev2 = prev1
         prev1 = cur
@@ -7432,7 +7492,45 @@ function summarize_log_errors() {
             if (line_ts != "") {
                 if (log_first_ts == "" || line_ts < log_first_ts) log_first_ts = line_ts
                 if (line_ts > log_last_ts) log_last_ts = line_ts
+                # newest-first export (Grafana / Loki, Kibana): the times go down from line to line
+                if (ord_prev != "") { if (line_ts < ord_prev) ord_desc++; else if (line_ts > ord_prev) ord_asc++ }
+                ord_prev = line_ts
             }
+        }
+        # a client that failed to authenticate, seen by a broker (kafka.network.Selector, INFO: the ERROR is on the client
+        # side): "[SocketServer listenerType=BROKER, nodeId=1] Failed re-authentication with /10.0.0.1 (channelId=…)
+        # (errorMessage=…)". An event of the broker (auth_failure, as its other signals: counted, the first 300 and the last
+        # 150 noted), also counted per client IP and error (au_n). A storm is millions of lines: handled here, before the
+        # other matches of each line (the lifecycle regex of the INFO lines, the fast path), and only counted with the raw
+        # pieces of the line (the broker id, re-, the IP, what follows the channel), read into words (au_detail) for the
+        # events noted and at the end. One index() on the other lines
+        if (records_file != "" && (au_p = index($0, "authentication with /")) > 0 && (substr($0, au_p - 7, 7) == "Failed " || substr($0, au_p - 10, 10) == "Failed re-") &&
+            index(substr($0, 1, 60), " INFO ") && mode == "" && rec[nlines] !~ /panicked at [^ ]+:[0-9]+:[0-9]+:$/) {
+            au_rest = substr($0, au_p + 21)
+            au_q = index(au_rest, " ")
+            au_nid = (au_nid = index($0, "nodeId=")) > 0 ? substr($0, au_nid + 7, 4) : ""
+            au_raw = au_nid SUBSEP substr($0, au_p - 3, 3) SUBSEP (au_q ? substr(au_rest, 1, au_q - 1) : au_rest)
+            if (au_q && (au_q = index(au_rest, ") (")) > 0) au_raw = au_raw SUBSEP substr(au_rest, au_q)
+            if (au_raw in au_n) au_n[au_raw]++
+            else if (nau < 500) { au_keys[++nau] = $0; au_rawk[nau] = au_raw; au_n[au_raw] = 1 }
+            if (!(au_nid in au_whoc)) { au_detail($0); au_whoc[au_nid] = au_who }
+            lc_key = "auth_failure\t" au_whoc[au_nid]
+            if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
+            lc_count[lc_key]++
+            if (++lc_noted["auth_failure"] <= 300) {
+                au_line = NR
+                ev[++nev] = "auth_failure\t" au_line "\t" timestamp_of($0) "\t\t" au_detail($0)
+            } else {
+                if (!("auth_failure" in lc_ring_seen)) { lc_ring_seen["auth_failure"] = 1; lc_ring_kinds[++nlc_ring] = "auth_failure" }
+                lc_ring["auth_failure", (lc_noted["auth_failure"] - 301) % 150] = NR "\t\t\n" $0
+            }
+            # an INFO line: it ends the record before it, as in the fast path below
+            if (cfg_on) cfg_end()
+            flush()
+            if (ctx_after > 0) capture_after()
+            rec_line = NR
+            rec[nlines = 1] = ""
+            next
         }
         # the version of each connector and of Kafka, from INFO lines the digest does not keep otherwise
         if (records_file != "" && index($0, "Instantiated ") && match($0, /Instantiated (connector|task) [^ ]+ with version [^ ]+ of type (class )?[^ ]+/)) {
@@ -7542,11 +7640,23 @@ function summarize_log_errors() {
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id|DynamicConfigPublisher/) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id|DynamicConfigPublisher|Starting commit and rotation|Committed [^ ]+ for /) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
-            if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
-            if (index($0, "Rebalance started") && match($0, /groupId=[^],]+/)) {
+            if ((index($0, "|task-") || index($0, "|worker")) && match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
+            if (index($0, "Starting commit and rotation for topic partition ")) {
+                # a sink of files (HDFS) that rotates with nothing to commit: "Starting commit and rotation for topic partition
+                # orders-0 with start offsets {} and end offsets {}" again and again, and no "Committed <file> for <partition>":
+                # put() does not progress (sink_commit counts the commits)
+                if (index($0, "with start offsets {} and end offsets {}") && match($0, /topic partition [^ ]+/)) {
+                    lc_kind = "sink_empty_rotation"; lc_who = lc_conn
+                    lc_detail = lc_conn " · " substr($0, RSTART + 16, RLENGTH - 16)
+                }
+            } else if (match($0, /Committed [^ ]+ for /)) {
+                # a file committed by a sink (HDFS TopicPartitionWriter: "Committed hdfs://…/orders+0+0000000000+0000000009.avro
+                # for orders-0"): counted only, against the rotations with empty offsets
+                lc_kind = "sink_commit"; lc_who = lc_conn; lc_detail = lc_conn
+            } else if (index($0, "Rebalance started") && match($0, /groupId=[^],]+/)) {
                 lc_kind = "worker_rebalance"; lc_who = substr($0, RSTART + 8, RLENGTH - 8); lc_detail = lc_who
             } else if (index($0, "Request joining group") && match($0, /groupId=[^],]+/)) {
                 lc_kind = "consumer_rejoin"; lc_who = substr($0, RSTART + 8, RLENGTH - 8)
@@ -7681,16 +7791,19 @@ function summarize_log_errors() {
                 # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):
                 # counted apart, so that a group made of those is not a storm even when none of its events is noted
                 if (lc_kind == "consumer_rejoin" && index(lc_detail, "pro-actively leaving")) lc_leave[lc_key]++
-                if (++lc_noted[lc_kind] <= 300) {
+                if (lc_kind == "sink_commit") {
+                    # counted only
+                } else if (++lc_noted[lc_kind] <= 300) {
                     # read before timestamp_of(), whose match() changes RSTART / RLENGTH
                     lc_line = NR
                     ev[++nev] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
                 } else if (lc_kind ~ /^(isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped)$/) {
                     # the signals of a broker after the first 300: the last 150 kept too (a ring, written at the end),
                     # so that the incident at the end of a log of thousands of ISR shrinks has its bursts
-                    lc_line = NR
                     if (!(lc_kind in lc_ring_seen)) { lc_ring_seen[lc_kind] = 1; lc_ring_kinds[++nlc_ring] = lc_kind }
-                    lc_ring[lc_kind, (lc_noted[lc_kind] - 301) % 150] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
+                    # the line itself, its time read at the end: timestamp_of on each line of a storm of millions of
+                    # lines was a third of the cost of the digest of the file
+                    lc_ring[lc_kind, (lc_noted[lc_kind] - 301) % 150] = NR "\t" lc_conn "\t" lc_detail "\n" $0
                 }
             }
         }
@@ -7731,8 +7844,23 @@ function summarize_log_errors() {
     }
     END {
         flush()
+        # a newest-first export (the times go down from line to line: Grafana / Loki, Kibana): first and last seen are put
+        # back in the order of time (first = the oldest occurrence), the records and their times too
+        newest_first = (ord_desc >= 2 && ord_desc > 4 * ord_asc)
+        if (newest_first) {
+            for (i = 1; i <= nkeys; i++) {
+                k = order[i]
+                t = first_seen[k]; first_seen[k] = last_seen[k]; last_seen[k] = t
+                t = first_ts[k]; first_ts[k] = last_ts[k]; last_ts[k] = t
+                n = split(substr(timestamps[k], 2), kept_ts, " ")
+                timestamps[k] = ""
+                for (j = n; j >= 1; j--) timestamps[k] = timestamps[k] " " kept_ts[j]
+            }
+            for (i = 1; i <= int(nkeys / 2); i++) { t = order[i]; order[i] = order[nkeys + 1 - i]; order[nkeys + 1 - i] = t }
+        }
         if (records_file != "") {
-            printf "@@PGFILE@@\t%s\t%d\t%d\t%d\t%s\t%s\n", label, NR, nkeys, total_occurrences, log_first_ts, log_last_ts >> records_file
+            # (then the duplicated lines collapsed, and "newest_first" for a newest-first export)
+            printf "@@PGFILE@@\t%s\t%d\t%d\t%d\t%s\t%s\t%d\t%s\n", label, NR, nkeys, total_occurrences, log_first_ts, log_last_ts, dup_lines, (newest_first ? "newest_first" : "") >> records_file
             for (i = 1; i <= nkeys; i++) {
                 k = order[i]
                 printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], long_text[k], (ts_stride[k] > 1 ? "x" ts_stride[k] " " : "") substr(timestamps[k], 2) >> records_file
@@ -7753,10 +7881,23 @@ function summarize_log_errors() {
             # the last signals of a broker after the first 300 (lc_ring), oldest first
             for (i = 1; i <= nlc_ring; i++) {
                 lc_k = lc_ring_kinds[i]; lc_n = lc_noted[lc_k] - 300
-                for (j = 0; j < (lc_n < 150 ? lc_n : 150); j++) ev[++nev] = lc_ring[lc_k, ((lc_n < 150 ? 0 : lc_n % 150) + j) % 150]
+                for (j = 0; j < (lc_n < 150 ? lc_n : 150); j++) {
+                    lc_r = lc_ring[lc_k, ((lc_n < 150 ? 0 : lc_n % 150) + j) % 150]
+                    lc_i = index(lc_r, "\n")
+                    lc_h = substr(lc_r, 1, lc_i - 1)
+                    lc_t = index(lc_h, "\t")
+                    ev[++nev] = lc_k "\t" substr(lc_h, 1, lc_t - 1) "\t" timestamp_of(substr(lc_r, lc_i + 1)) substr(lc_h, lc_t) (lc_k == "auth_failure" ? au_detail(substr(lc_r, lc_i + 1)) : "")
+                }
             }
             for (i = 1; i <= nev; i++) printf "@@PGEVT@@\t%s\n", ev[i] >> records_file
             for (i = 1; i <= nlc_keys; i++) printf "@@PGEVTN@@\t%s\t%d\t%d\n", lc_keys[i], lc_count[lc_keys[i]], lc_leave[lc_keys[i]] + 0 >> records_file
+            # the authentication failures seen by a broker per client IP and error, over the whole file (500 of them at most)
+            for (i = 1; i <= nau; i++) {
+                au_k = au_detail(au_keys[i])
+                if (!(au_k in au_sum)) au_out[++nau_out] = au_k
+                au_sum[au_k] += au_n[au_rawk[i]]
+            }
+            for (i = 1; i <= nau_out; i++) printf "@@PGEVTN@@\tauth_failure_by\t%s\t%d\t0\n", au_out[i], au_sum[au_out[i]] >> records_file
             close(records_file)
         }
         # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed
@@ -7775,6 +7916,9 @@ function summarize_log_errors() {
         }
         if (connectors == "") printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
         else printf "🔎 %d distinct record(s), %d occurrence(s) for --connector %s (%d distinct record(s) in the file), in %d lines\n", nshown_keys, shown_occurrences, connectors, nkeys, NR
+        # (said from 10 % of the lines: a line logged twice to the millisecond here and there is not two appenders)
+        if (dup_lines > 0 && dup_lines * 10 >= NR) printf "⚠️ %d duplicated line(s) collapsed (the same line logged twice in a row: two appenders?)\n", dup_lines
+        if (newest_first) printf "⚠️ newest-first export (the times go down): first / last seen are given in the order of time\n"
         shown = 0
         split("FATAL ERROR WARN", severities, " ")
         for (s = 1; s <= 3; s++) {

@@ -171,11 +171,13 @@ def parse_records(path: str) -> List[dict]:
                 parts = line.split("\t")
                 # the period the file covers (first and last timestamped line) is only in the records files
                 # written by a recent summarize_log_errors: an older one has no field 5 and 6
-                parts += [""] * (7 - len(parts))
+                # then the lines logged twice in a row collapsed (two appenders) and "newest_first" (a newest-first export)
+                parts += [""] * (9 - len(parts))
                 current = {"label": parts[1], "lines": int(parts[2]), "distinct": int(parts[3]),
                            "occurrences": int(parts[4]), "log_first_ts": parts[5] or None,
                            "log_last_ts": parts[6] or None, "records": [], "configs": [], "events": [],
-                           "event_counts": []}
+                           "event_counts": [], "duplicated_lines": int(parts[7]) if parts[7].isdigit() else 0,
+                           "newest_first": parts[8] == "newest_first"}
                 files.append(current)
                 rec = done = None
             elif line.startswith("@@PGREC@@\t") and current is not None:
@@ -820,6 +822,22 @@ def ocr_text(labels: List[str]) -> str:
             "(orq.apache, a digit): check the picture before quoting a value")
 
 
+def log_format_notes(s: dict) -> List[str]:
+    """⚠️ what the digest corrected in the format of the logs: lines logged twice in a row, newest-first exports"""
+    out = []
+    dup = s.get("duplicated_lines") or []
+    if dup:
+        names = ", ".join(d["file"].rsplit("/", 1)[-1] for d in dup[:3]) + (f" (+{len(dup) - 3})" if len(dup) > 3 else "")
+        out.append(f"⚠️ {sum(d['lines'] for d in dup):,} duplicated line(s) collapsed (the same line logged twice in a row: "
+                   f"two appenders?) in {names}: the counts are of the events, once each")
+    nf = s.get("newest_first_files") or []
+    if nf:
+        names = ", ".join(n.rsplit("/", 1)[-1] for n in nf[:3]) + (f" (+{len(nf) - 3})" if len(nf) > 3 else "")
+        out.append(f"⚠️ newest-first export (the times go down from line to line) in {names}: first and last seen are given "
+                   "in the order of time")
+    return out
+
+
 def ocr_html(labels: List[str]) -> str:
     if not labels:
         return ""
@@ -1284,6 +1302,11 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["summary"]["jvm_versions"] = jvm_versions(files)
     # 📷 the screenshots read by OCR (analyze logs --ocr): their records are approximate
     res["summary"]["ocr_files"] = [f["label"] for f in files if f["label"].endswith(OCR_SUFFIX)]
+    # ⚠️ the lines logged twice in a row collapsed by the digest (two appenders), the newest-first exports
+    # (from 10 % of the lines of a file: a line logged twice to the millisecond here and there is not two appenders)
+    res["summary"]["duplicated_lines"] = [{"file": f["label"], "lines": f["duplicated_lines"]} for f in files
+                                          if f.get("duplicated_lines") and f["duplicated_lines"] * 10 >= (f.get("lines") or 0)]
+    res["summary"]["newest_first_files"] = [f["label"] for f in files if f.get("newest_first")]
     res["lifecycle"] = lifecycle(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
@@ -1595,7 +1618,8 @@ BURST_WORDS = {"isr_shrink": ("📉", "ISR shrink", "ISR shrinks"), "isr_expand"
                "request_timeout": ("⏱️", "request timeout", "request timeouts"),
                "log_cleaner": ("🧽", "log cleaner failure", "log cleaner failures"),
                "quota_throttle": ("🚦", "throttled request", "throttled requests"),
-               "response_dropped": ("📭", "response to a client already gone", "responses to clients already gone")}
+               "response_dropped": ("📭", "response to a client already gone", "responses to clients already gone"),
+               "auth_failure": ("🚷", "failed client authentication", "failed client authentications")}
 
 
 # the broker signals that can cause the errors that follow them: a partition whose ISR shrank (NotEnoughReplicas for the
@@ -2041,13 +2065,16 @@ LIFECYCLE_KINDS = {"worker_rebalance": "worker group rebalances", "consumer_rejo
                    "replica_fetch_error": "followers failing to fetch from it",
                    "request_timeout": "requests timed out (no answer in request.timeout.ms)",
                    "log_cleaner": "log cleaner failures", "quota_throttle": "requests throttled by a quota",
-                   "response_dropped": "responses to clients already gone"}
+                   "response_dropped": "responses to clients already gone",
+                   "auth_failure": "failed client authentications (INFO of the broker)",
+                   "sink_empty_rotation": "sink rotations with empty offsets (start offsets {} and end offsets {})"}
 # the signals of a broker under pressure, read from INFO / WARN lines (the digest of the errors misses them): keyed by the
 # broker (the leader of the partition, the one that did not answer), with the partitions or peers as reason
 BROKER_KINDS = ("isr_shrink", "isr_expand", "replica_fetch_error", "request_timeout", "log_cleaner", "quota_throttle",
-                "response_dropped")
+                "response_dropped", "auth_failure")
 # the broker kinds that make a storm when they repeat (STORM_MIN and STORM_PER_HOUR, as the rebalances)
-BROKER_STORM_KINDS = ("isr_shrink", "isr_expand", "replica_fetch_error", "request_timeout", "quota_throttle", "response_dropped")
+BROKER_STORM_KINDS = ("isr_shrink", "isr_expand", "replica_fetch_error", "request_timeout", "quota_throttle", "response_dropped",
+                      "auth_failure")
 
 
 def broker_who(who: str, label: str) -> str:
@@ -2061,6 +2088,13 @@ def broker_who(who: str, label: str) -> str:
 def broker_reason(detail: str) -> str:
     """the partition or the peer of a broker signal: "broker 1 · orders-0 (1,2,3 -> 1,3)" is orders-0"""
     return re.sub(r" \(.*$", "", detail.split(" · ", 1)[1].strip()) if " · " in detail else ""
+
+
+# 🔂 a sink of files (HDFS) in a livelock: SINK_LIVELOCK_MIN rotations with empty offsets ("Starting commit and rotation for
+# topic partition orders-0 with start offsets {} and end offsets {}") or more, and not one "Committed <file> for <partition>"
+SINK_LIVELOCK_MIN = 10
+SINK_LIVELOCK_TEXT = ("no Committed line: the sink keeps rotating without data to commit (empty offsets) and never logs "
+                      "Committed: a put() loop that does not progress")
 
 
 # the kinds of a worker or a broker (re)started or stopped: one row per process ("connect", "broker"), not per connector
@@ -2124,8 +2158,16 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     time (of the 300 noted per kind and file), the rate per hour of the period covered, and the storms"""
     hours = (res["summary"].get("log_duration_seconds") or 0) / 3600
     rows: Dict[Tuple[str, str], dict] = {}
+    # the failed authentications of each broker per client IP and error over the whole files (auth_failure_by), and the
+    # files committed by each sink (sink_commit): counted only
+    auth_by: Dict[Tuple[str, str], Counter] = {}
+    commits: Counter = Counter()
     for f in files:
         for c in f.get("event_counts") or []:
+            if c["kind"] == "auth_failure_by":
+                auth_by.setdefault(("auth_failure", broker_who(c["who"].split(" · ")[0], f["label"])), Counter())[broker_reason(c["who"])] += c["count"]
+            elif c["kind"] == "sink_commit":
+                commits[c["who"]] += c["count"]
             if c["kind"] not in LIFECYCLE_KINDS:
                 # dynamic_config, replica_move: the timeline only
                 continue
@@ -2160,6 +2202,9 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                     r["reasons"][broker_reason(ev["detail"])] += 1
             elif " · " in (ev.get("detail") or ""):
                 r["reasons"][ev["detail"].split(" · ", 1)[1].strip()] += 1
+    for key, exact in auth_by.items():
+        if key in rows:
+            rows[key]["reasons"] = exact
     out = []
     for r in rows.values():
         per_hour = round(r["count"] / hours, 1) if hours > 0 else None
@@ -2175,9 +2220,13 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
         leaving = r["kind"] == "consumer_rejoin" and r["leaves"] * 2 >= r["count"] > 0
         if leaving and not reason:
             reason = f"consumer pro-actively leaving the group ({r['leaves']:,} of {r['count']:,})"
+        # 🔂 a sink of files that keeps rotating with empty offsets and never commits a file
+        livelock = r["kind"] == "sink_empty_rotation" and r["count"] >= SINK_LIVELOCK_MIN and not commits[r["who"]]
+        if livelock:
+            reason = (f"{reason} · " if reason else "") + SINK_LIVELOCK_TEXT
         out.append({"kind": r["kind"], "who": r["who"], "count": r["count"], "first": r["first"], "last": r["last"],
                     "per_hour": per_hour, "connector": r["connectors"].most_common(1)[0][0] if r["connectors"] else None,
-                    "reason": reason, "leaving": leaving,
+                    "reason": reason, "leaving": leaving, "livelock": livelock,
                     # a consumer that leaves on purpose (closed: "pro-actively leaving the group", the schema history
                     # consumer of Debezium every few seconds, the short-lived consumers of Oracle CDC) is not a storm
                     "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") + BROKER_STORM_KINDS and r["count"] >= STORM_MIN
@@ -2193,7 +2242,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
         r["loop"] = r["kind"] in ("process_start_failed", "process_stop") and any(lp["who"] == r["who"] for lp in loops)
     order = list(LIFECYCLE_KINDS)
     # the groups of consumers that leave on purpose last: thousands of them must not push the real rebalances down
-    out.sort(key=lambda r: (not r["loop"], not r["storm"], r["leaving"], order.index(r["kind"]), -r["count"]))
+    out.sort(key=lambda r: (not r["loop"], not (r["storm"] or r["livelock"]), r["leaving"], order.index(r["kind"]), -r["count"]))
     # the period the rates are computed on: under an hour, the HTML report shows the count over it instead of a rate
     return {"rows": out, "storms": [r for r in out if r["storm"]], "loops": loops, "hours": round(hours, 3)}
 
@@ -2208,7 +2257,7 @@ def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
                    + (f" · {lp['known_cause']}" if lp.get("known_cause") else ""))
     for r in rows[:top]:
         rate = f", {r['per_hour']:g}/h" if r.get("per_hour") is not None else ""
-        out.append(f"   {'🔁 ' if r.get('loop') else ''}{'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
+        out.append(f"   {'🔁 ' if r.get('loop') else ''}{'🌀 STORM ' if r['storm'] else ''}{'🔂 LIVELOCK ' if r.get('livelock') else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
                    + (f" · {r['reason']}" if r.get("reason") else "")
                    + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
     if len(rows) > top:
@@ -2223,7 +2272,7 @@ def broker_signals_text(lc: Optional[dict], top: int = 8) -> List[str]:
                   key=lambda r: (r["kind"] != "log_cleaner", not r["storm"]))
     if not rows:
         return []
-    out = ["🐢 Broker signals (INFO / WARN lines: ISR changes, fetch errors, request timeouts, log cleaner, quotas)"]
+    out = ["🐢 Broker signals (INFO / WARN lines: ISR changes, fetch errors, request timeouts, log cleaner, quotas, failed authentications)"]
     for r in rows[:top]:
         rate = f", {r['per_hour']:g}/h" if r.get("per_hour") is not None else ""
         out.append(f"   {'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
@@ -2269,7 +2318,8 @@ LIFECYCLE_LOOK = {"worker_rebalance": ("🔁", "#7c3aed"), "consumer_rejoin": ("
                   "controller_change": ("👑", "#0891b2"), "gc_pause": ("🧹", "#dc2626"),
                   "member_eviction": ("🚪", "#9333ea"), "isr_shrink": ("📉", "#e11d48"), "isr_expand": ("📈", "#0d9488"),
                   "replica_fetch_error": ("🪝", "#c2410c"), "request_timeout": ("⏱️", "#b91c1c"), "log_cleaner": ("🧽", "#7c2d12"),
-                  "quota_throttle": ("🚦", "#ca8a04"), "response_dropped": ("📭", "#6b7280")}
+                  "quota_throttle": ("🚦", "#ca8a04"), "response_dropped": ("📭", "#6b7280"), "auth_failure": ("🚷", "#be123c"),
+                  "sink_empty_rotation": ("🔂", "#a16207")}
 
 LIFECYCLE_CSS = """<style>
 .lc-table{border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
@@ -4551,6 +4601,7 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append("   " + time_zone_note(s))
     if s.get("ocr_files"):
         out.append("   " + ocr_text(s["ocr_files"]))
+    out += ["   " + t for t in log_format_notes(s)]
     if s.get("connect_without_mdc"):
         out.append("   " + mdc_text(s["connect_without_mdc"]) + f". Fix: {MDC_HOW}")
     if s.get("kafka_versions"):
@@ -8531,6 +8582,11 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        f"<p class='san-note {cls}'>{e(icon)} {e(text.strip())}</p>")
     # ⛔ end of support: right under the verdict, above everything else
     body.insert(1, SUPPORT_CSS + support_banner_html(s, res.get("_cfk_bundles") or [], res.get("connectors") or []))
+    # ⚠️ lines logged twice collapsed, newest-first exports
+    for t in log_format_notes(s):
+        body.insert(2, "<style>.fmt-note{margin:6px 0 2px;font-size:.82rem;padding:6px 12px;border-radius:8px;border-left:4px solid #d97706;"
+                       "background:#fffbeb;color:#92400e}html[data-theme=dark] .fmt-note{background:#3a2406;color:#fcd34d}</style>"
+                       f"<p class='fmt-note'>{e(t)}</p>")
     # ⚠️ Connect logs without the connector context: the connector views below miss records
     if s.get("connect_without_mdc"):
         body.insert(2, "<style>.mdc-note{margin:6px 0 2px;font-size:.82rem;padding:6px 12px;border-radius:8px;border-left:4px solid #d97706;"
