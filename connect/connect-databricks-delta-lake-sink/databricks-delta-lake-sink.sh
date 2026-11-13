@@ -129,10 +129,20 @@ sleep 30
 
 playground connector show-lag --max-wait 120
 
-if [[ "$DATABRICKS_HTTP_PATH" == *"/warehouses/"* ]]
+log "Verifying that the 100 records are in table ${DATABRICKS_TABLE_NAME} (the lag reaches 0 even when the COPY INTO fails)"
+databricks_wait_for_table_rows "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "default.${DATABRICKS_TABLE_NAME}" 100
+
+log "Dropping table ${DATABRICKS_TABLE_NAME} and removing the staged files of topic ${DATABRICKS_TOPIC}, as both are only for this run"
+if ! drop_output=$(databricks_sql_statement "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "DROP TABLE IF EXISTS default.${DATABRICKS_TABLE_NAME}")
 then
-     log "Verifying that the 100 records are in table ${DATABRICKS_TABLE_NAME} (the lag reaches 0 even when the COPY INTO fails)"
-     databricks_wait_for_table_rows "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "default.${DATABRICKS_TABLE_NAME}" 100
-else
-     logwarn "🧱 Databricks http path is not a SQL warehouse (SQL Statement Execution API needs one), not verifying the rows in table ${DATABRICKS_TABLE_NAME}"
+     echo "$drop_output"
+     logwarn "🧱 could not drop table ${DATABRICKS_TABLE_NAME}"
 fi
+set +e
+(
+     export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
+     export AWS_SECRET_ACCESS_KEY="$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY"
+     export AWS_SESSION_TOKEN=""
+     aws s3 rm "s3://${DATABRICKS_AWS_BUCKET_NAME}/topics/${DATABRICKS_TOPIC}/" --recursive --region $DATABRICKS_AWS_BUCKET_REGION
+)
+set -e
