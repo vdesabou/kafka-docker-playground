@@ -59,7 +59,7 @@ Branch off `master` first (`git switch -c default-cp-$NEW`). These lines state t
 | File | Line |
 | --- | --- |
 | `scripts/utils.sh` | `export TAG=$OLD # default tag` (`run-tests.sh` and `update-readme` grep that exact comment: keep the format) |
-| `.github/workflows/ci.yml` | `tag: ["$OLD"]` in **both** matrices (nightly job and `workflow_dispatch` job), and `./playground update-readme --tags "$OLD"` |
+| `.github/workflows/ci.yml` | `tag: ["$OLD"]` in **both** matrices (nightly job and `workflow_dispatch` job), and `./playground update-readme --tags "$OLD"` (twice: `post-build` and `close-fixed-issues`) |
 | `CLAUDE.md` | `(currently \`TAG=$OLD\`)` in Conventions |
 | `docs/how-to-use.md` | `(currently CP $OLD, which is KRaft only)` |
 | `other/deep-dive-labs/run-and-versions.sh` | the target of `update-version --tag` / `--connect-tag` (so the lab reuses the default images); its quote in `docs/deep-dive-run-and-versions.md` (`--tag=$OLD is same as current tag, ignoring...`) |
