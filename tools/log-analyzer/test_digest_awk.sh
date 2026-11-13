@@ -295,6 +295,51 @@ do
         echo "❌ $awk_cmd: a WARNING: line of the JDK launcher is a record"
         failed=1
     fi
+    # 📈 the INFO lines as templates: the [connector|task-0] context apart (task-0 and task-1 one template), the first word of
+    # a leading [Consumer …] kept, numbers, hex ids, UUIDs, ip:port, quoted values, bracketed lists and {…} masked (an empty
+    # {} kept: an HDFS rotation with empty offsets is not one with offsets), the failed authentications of a broker (their
+    # own fast path) one template whatever the client IP; counted per minute
+    awk 'BEGIN {
+        for (i = 0; i < 60; i++) printf "[2026-11-07 15:%02d:%02d,000] INFO [orders-sink|task-%d] Starting commit and rotation for topic partition orders-%d with start offsets {} and end offsets {} (io.confluent.connect.hdfs3.TopicPartitionWriter:615)\n", int(i / 6), (i % 6) * 10, i % 2, i % 3
+        for (i = 0; i < 3; i++) printf "[2026-11-07 15:10:0%d,000] INFO [pay-sink|task-0] Starting commit and rotation for topic partition pay-0 with start offsets {pay-0=%d} and end offsets {pay-0=%d} (io.confluent.connect.hdfs3.TopicPartitionWriter:615)\n", i, i * 10, i * 10 + 9
+        printf "[2026-11-07 15:11:00,000] INFO [Consumer clientId=consumer-a-1, groupId=a] Seeking to offset 12 for partition orders-0 (org.apache.kafka.clients.consumer.KafkaConsumer:1)\n"
+        printf "[2026-11-07 15:11:01,000] INFO [Consumer clientId=consumer-b-2, groupId=b] Seeking to offset 7 for partition orders-1 (org.apache.kafka.clients.consumer.KafkaConsumer:1)\n"
+        printf "[2026-11-07 15:11:02,000] INFO Created connector \047orders-sink\047 with id 6f1c0d2e-1a2b-4c3d-8e9f-0a1b2c3d4e5f and tags [a, b] (x.Herder:1)\n"
+        printf "[2026-11-07 15:11:03,000] INFO Created connector \047pay-sink\047 with id 0b2d4f6a-8c0e-4a1b-9c2d-3e4f5a6b7c8d and tags [c] (x.Herder:1)\n"
+        printf "[2026-11-07 15:11:04,000] INFO Connected to 10.0.0.1:9092 with \"secret\" and {\"a\":1} (x.Client:1)\n"
+        printf "[2026-11-07 15:11:05,000] INFO Connected to 10.0.0.22:19092 with \"other\" and {\"b\":2} (x.Client:1)\n"
+        for (i = 1; i <= 3; i++) printf "[2026-11-07 15:12:0%d,000] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed re-authentication with /10.0.0.%d (channelId=10.0.0.9:9092-10.0.0.%d:5000%d-%d) (errorMessage={\"status\":\"Authentication failed\"}) (org.apache.kafka.common.network.Selector)\n", i, i, i, i, i
+    }' > "$tmp/info.log"
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.info" "$tmp/info.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGINFON@@" {print $2 "," $3 "," $4} $1 == "@@PGINFO@@" {print $2 "|" $3 "|" $4 "|" $5 "|" $6 "|" $7 "|" $8}' "$out.info" | LC_ALL=C sort | tr '\n' ';')
+    # (the first and last times are those of the first line of their minute)
+    expected="2|2026-11-07T15:11:00|2026-11-07T15:11:00|2||[Consumer #] Seeking to offset # for partition orders-# (org.apache.kafka.clients.consumer.KafkaConsumer:#)|64;"
+    expected+="2|2026-11-07T15:11:02|2026-11-07T15:11:02|2||Created connector '#' with id # and tags [#] (x.Herder:#)|66;"
+    expected+="2|2026-11-07T15:11:04|2026-11-07T15:11:04|2||Connected to # with \"#\" and {#} (x.Client:#)|68;"
+    expected+="3|2026-11-07T15:10:00|2026-11-07T15:10:00|3|pay-sink|Starting commit and rotation for topic partition pay-# with start offsets {#} and end offsets {#} (io.confluent.connect.hdfs#.TopicPartitionWriter:#)|61;"
+    expected+="3|2026-11-07T15:12:01|2026-11-07T15:12:01|3||[SocketServer #] Failed re-authentication with /# (channelId=#) (errorMessage={#}) (org.apache.kafka.common.network.Selector)|70;"
+    expected+="60|2026-11-07T15:00:00|2026-11-07T15:09:00|6|orders-sink|Starting commit and rotation for topic partition orders-# with start offsets {} and end offsets {} (io.confluent.connect.hdfs#.TopicPartitionWriter:#)|1;"
+    expected+="72,6,0;"
+    if [ "$got" != "$expected" ]
+    then
+        echo "❌ $awk_cmd: INFO templates of info.log: $got"
+        failed=1
+    fi
+    got=$(awk -F '\t' '$1 == "@@PGINFO@@" && $6 == "orders-sink" {getline; print $2}' "$out.info" | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ')
+    if [ "$got" != "2026-11-07T15:00=6 2026-11-07T15:01=6 2026-11-07T15:02=6 2026-11-07T15:03=6 2026-11-07T15:04=6 2026-11-07T15:05=6 2026-11-07T15:06=6 2026-11-07T15:07=6 2026-11-07T15:08=6 2026-11-07T15:09=6 " ]
+    then
+        echo "❌ $awk_cmd: INFO template per minute of info.log: $got"
+        failed=1
+    fi
+    # 3100 templates: the first 3000 kept, the lines of the 100 others counted apart
+    awk 'BEGIN { a = "abcdefghijklmnopqrstuvwxyz"; for (i = 0; i < 3100; i++) printf "[2026-11-07 16:00:00,000] INFO Loaded plugin %s%s%s (x.Scanner:1)\n", substr(a, i % 26 + 1, 1), substr(a, int(i / 26) % 26 + 1, 1), substr(a, int(i / 676) + 1, 1) }' > "$tmp/info-cap.log"
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.infocap" "$tmp/info-cap.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGINFON@@" {print $2 "," $3 "," $4} $1 == "@@PGINFO@@" {n++} END {print n}' "$out.infocap" | tr '\n' ',')
+    if [ "$got" != "3100,3000,100,40," ]
+    then
+        echo "❌ $awk_cmd: 3100 INFO templates: INFO lines, templates, lines not counted, templates written: $got instead of 3100,3000,100,40"
+        failed=1
+    fi
     # --since: the lines before the first time follow it, librdkafka epoch times are read, and a file without any time
     # is kept whole (and noted) rather than dropped: before, every line of it became empty and the file was reported clean
     for case in "iso||||[2026-11-08 10:00:00,000] ERROR new|  at a.b(C.java:2)|" "epoch|%3|1793896102.923|FAIL|rdkafka#producer-1| new||" \

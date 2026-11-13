@@ -209,6 +209,37 @@ and asks for the JMX metrics of the brokers in 📥. ISR expands without a singl
 replication factor increase, a reassignment, a Self-Balancing move) that join the ISR once caught up: the 🐢 block says so
 instead of only "a broker that falls behind" (kept when there are shrinks, fetch errors or request timeouts).
 
+### 📈 INFO messages repeating abnormally
+
+The incidents that log no ERROR at all: an HDFS sink logging `Starting commit and rotation for topic partition <p> with
+start offsets {} and end offsets {}` every 7 s and never `Committed`, a broker logging `Failed re-authentication with /<ip>`
+hundreds of times a minute. Each needed a hand-written signal (🔂, 🚷); this detector finds the next one without code.
+The digest (`it_add()` of `summarize_log_errors`) turns every INFO line with a time into a template: the message without
+its `[connector|task-0]` context (kept apart, so a template is per connector), the first word of a leading `[Consumer
+clientId=…, groupId=…]` / `[SocketServer listenerType=BROKER, nodeId=1]` kept, quoted values, bracketed lists, `{…}` (an
+empty `{}` is kept: it is the anomaly of the HDFS sink), numbers, hex ids that start with a digit, UUIDs and `ip:port`
+masked, 160 characters at most. Each template is counted with its first / last time (to the minute) and per minute;
+3000 templates and 200000 template-minute cells at most (then the lines of a new template are only counted as `over`).
+Cheap: the masking only runs when the quick key of a line (its first 160 characters without the digits) is new, and the
+failed authentications of a broker reuse the key of their own fast path. The digest alone takes 10 to 20 % longer (mawk,
+a Connect log of 245k lines, 76k of them INFO: 0.55 → 0.63 s; a broker log of 750k lines of failed authentications:
+1.52 → 1.71 s), the whole `analyze logs` of that Connect log less than 1 % (5.06 → 5.10 s). Records:
+`@@PGINFON@@ <INFO lines> <templates> <over>`, `@@PGINFOC@@ <connector> <INFO lines>` per connector context, then the 25
+most frequent templates and the 15 with the busiest minute among the others: `@@PGINFO@@ <count> <first> <last> <busiest
+minute> <connector> <template> <line> <example line>` and `@@PGINFOB@@ <minute>=<count> …`.
+`info_anomalies()` of `log_report.py` merges the rotated files of a worker and flags a template that is
+**steady** (`INFO_STEADY_*`: 30 min or more, at least one every 10 s on average, in 80 % of the minutes of its period, and
+25 % of the INFO lines of its connector, or of the lines without connector context of its file) or a **burst**
+(`INFO_BURST_*`: a minute with 100 or more and 10 times the median minute of the period, the minutes without any counted
+as 0; not within 2 min of a start, stop or rebalance of the file, whose startup logs hundreds of plugin and config lines).
+`INFO_CHATTER` leaves out what is normal by nature (offset commits, a sink that commits its files, the poll of a JDBC
+source, the progress of a connector, `RestServer` access lines, heartbeats, metrics, fetch sessions, log retention of a
+broker) unless it runs at 5 per second or more; `INFO_COVERED` moves what a 🔄 / 🐢 signal already reports (empty
+rotations, failed authentications, rebalances, ISR changes…) to `.info_anomalies.covered`. LOW, MEDIUM at 1 per second
+or more (steady) or 100 times the median (burst); never a known cause, never in the verdict: the 📈 block of the terminal
+(5), the 📈 card of the HTML report (after 🔄), one line of the summary for a ticket and `.info_anomalies` of `--json`
+(`rows`, `covered`, `info_lines`; the templates of each file are left out of `.files`).
+
 ## Not enough replicas (🧬)
 
 `not_enough_replicas_summary()` (in `match_hints()`, `.known_causes[].not_enough_replicas` of `--json`) reads the

@@ -216,6 +216,28 @@ def parse_records(path: str) -> List[dict]:
                 parts = (line.rstrip("\n").split("\t") + [""] * 5)[1:5]
                 current["event_counts"].append({"kind": parts[0], "who": parts[1], "count": int(parts[2]) if parts[2].isdigit() else 0,
                                                 "leaves": int(parts[3]) if parts[3].isdigit() else 0})
+            elif line.startswith("@@PGINFON@@\t") and current is not None:
+                # 📈 the INFO lines of the file as templates (summarize_log_errors): how many INFO lines, templates, lines
+                # of new templates past the cap; then the INFO lines per connector context, and the top templates
+                parts = (line.split("\t") + ["0"] * 4)[1:4]
+                current["info"] = {"lines": int(parts[0]) if parts[0].isdigit() else 0, "templates": int(parts[1]) if parts[1].isdigit() else 0,
+                                   "over": int(parts[2]) if parts[2].isdigit() else 0, "by_connector": {}}
+            elif line.startswith("@@PGINFOC@@\t") and current is not None and current.get("info"):
+                parts = (line.split("\t") + ["", "0"])[1:3]
+                current["info"]["by_connector"][parts[0]] = int(parts[1]) if parts[1].isdigit() else 0
+            elif line.startswith("@@PGINFO@@\t") and current is not None:
+                # count, first, last, busiest minute, connector, template, line of the example, example (it may hold tabs)
+                parts = (line.split("\t", 8) + [""] * 9)[1:9]
+                current.setdefault("info_templates", []).append(
+                    {"count": int(parts[0]) if parts[0].isdigit() else 0, "first": parts[1] or None, "last": parts[2] or None,
+                     "max_per_minute": int(parts[3]) if parts[3].isdigit() else 0, "connector": parts[4], "template": parts[5],
+                     "line": int(parts[6]) if parts[6].isdigit() else None, "example": parts[7], "buckets": {}})
+            elif line.startswith("@@PGINFOB@@\t") and current is not None and current.get("info_templates"):
+                # "2026-11-02T20:17=127 2026-11-02T20:18=12 …": the count per minute (unordered)
+                for tok in line.split("\t", 1)[1].split():
+                    minute, _, n = tok.rpartition("=")
+                    if minute and n.isdigit():
+                        current["info_templates"][-1]["buckets"][minute] = int(n)
             elif line.startswith("@@PGCFGCHG@@\t") and current is not None and current["configs"]:
                 parts = (line.split("\t") + [""] * 5)[1:5]
                 key, _, previous = parts[2].partition("=")
@@ -1312,6 +1334,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
                                           if f.get("duplicated_lines") and f["duplicated_lines"] * 10 >= (f.get("lines") or 0)]
     res["summary"]["newest_first_files"] = [f["label"] for f in files if f.get("newest_first")]
     res["lifecycle"] = lifecycle(res, files)
+    res["info_anomalies"] = info_anomalies(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
     # 🧟 a task left running on a worker after its graceful stop failed: a finding (what to do: restart that worker),
@@ -2160,6 +2183,198 @@ def restart_loop_text(lp: dict) -> str:
     when = f", {period_text(lp['first'], lp['last'])}" if lp.get("first") else ""
     every = f", a new attempt every ~{human_duration(lp['every_seconds'])}" if lp.get("every_seconds") else ""
     return f"{name} ({lp['worker']}) {what}{when}{every}"
+
+
+# 📈 INFO messages that repeat abnormally (summarize_log_errors counts the INFO lines as templates: numbers, ids, quoted
+# values and lists masked, the [connector|task-0] context kept apart). The incidents with no ERROR at all: an HDFS sink
+# rotating with empty offsets every 7 s and never committing, a storm of failed re-authentications on a broker. A template
+# is an anomaly when it is
+#   steady: INFO_STEADY_MIN_S (30 min) or more, at least one every INFO_STEADY_EVERY_S (10 s) on average, in
+#           INFO_STEADY_COVERAGE (80 %) of the minutes of its period, and INFO_STEADY_SHARE (25 %) of the INFO lines of its
+#           connector (of the lines without connector context of its file for the others), or
+#   burst:  a minute with INFO_BURST_MIN (100) of them or more and INFO_BURST_RATIO (10) times the median minute of the file
+#           period (zeros included), not within INFO_BURST_NEAR_S of a start, stop or rebalance of the file (the startup of a
+#           worker logs hundreds of plugin and config lines in a minute)
+# Never a known cause, never in the verdict: LOW, MEDIUM when it runs at 1 or more per second or 100 times its median
+INFO_STEADY_MIN_S = 30 * 60
+INFO_STEADY_EVERY_S = 10
+INFO_STEADY_COVERAGE = 0.8
+INFO_STEADY_SHARE = 0.25
+INFO_BURST_MIN = 100
+INFO_BURST_RATIO = 10
+INFO_BURST_NEAR_S = 120
+INFO_ANOMALIES_SHOWN = 5
+# normal chatter by nature: flagged only above INFO_CHATTER_MAX_PER_S (a JDBC source connecting to its database 20 times per
+# second is not its normal poll)
+INFO_CHATTER_MAX_PER_S = 5
+INFO_CHATTER = [
+    # the offset commits of the runtime (every offset.flush.interval.ms), and of a sink that works
+    re.compile(r"Committing offsets|Finished commitOffsets|commitOffsets successfully|flushing .* outstanding messages for offset commit|Finished offset commit|Committed offset|Successfully committed"),
+    # a sink of files that commits its files (HDFS, S3 "Committed …"), flush successes
+    re.compile(r"^Committed |Files committed|Successfully flushed|Flushing records|Flushed .* records"),
+    # the progress of a working connector ("Successfully wrote 12 records.", "Processed 500 records")
+    re.compile(r"(?i)\b(wrote|written|sent|polled|processed|read|inserted|flushed|produced|consumed) # (records?|messages?|rows?|events?)\b"),
+    # the access log of the REST API of a worker (a script polling the status of every connector)
+    re.compile(r"\(org\.apache\.kafka\.connect\.runtime\.rest\.RestServer"),
+    # the poll of a JDBC source: one query (and one connection) per poll.interval.ms
+    re.compile(r"Current Result is null\. Executing query|Database connection established|Begin using SQL query|Executing query"),
+    # heartbeats, metrics reporters, fetch sessions, the consumer group membership of a working client
+    re.compile(r"[Hh]eartbeat|MetricsReporter|[Mm]etrics (reporter|collector)|FetchSessionHandler|Node -?# disconnected|Resetting the last seen epoch|"
+               r"Successfully synced group|Successfully joined group|Setting offset for partition|Found no committed offset|Resetting offset for partition"),
+    # the periodic jobs of a broker and of a worker: log roller, segment retention, producer snapshots, telemetry
+    re.compile(r"log roller|Deleting segment|Deleted (log|offset index|time index|producer state)|Rolled new log segment|Wrote producer snapshot|"
+               r"Incrementing (merged )?log start offset|Scheduling segments? for deletion|telemetry|Telemetry"),
+]
+# the templates a lifecycle signal (🔄 / 🐢) already reports: in .info_anomalies.covered of --json only
+INFO_COVERED = [
+    (re.compile(r"Starting commit and rotation for topic partition .* with start offsets \{\} and end offsets \{\}"), "sink_empty_rotation"),
+    (re.compile(r"Failed (re-)?authentication with /"), "auth_failure"),
+    (re.compile(r"Rebalance started"), "worker_rebalance"),
+    (re.compile(r"Request joining group"), "consumer_rejoin"),
+    (re.compile(r"Starting connector "), "connector_start"),
+    (re.compile(r"Starting task "), "task_start"),
+    (re.compile(r"Shrinking ISR"), "isr_shrink"),
+    (re.compile(r"Expanding ISR"), "isr_expand"),
+    (re.compile(r"Error sending fetch request|Error in response for fetch request"), "replica_fetch_error"),
+    (re.compile(r"due to request timeout"), "request_timeout"),
+    (re.compile(r"no open connection, connection id"), "response_dropped"),
+    (re.compile(r"has failed, removing it from the group|members who haven.t joined|pending sync request expiration"), "member_eviction"),
+]
+# the events near which a burst is the startup, a stop or a rebalance of the process, not an anomaly
+INFO_BURST_EVENTS = ("process_start", "process_stop", "process_start_failed", "connector_start", "task_start", "worker_rebalance")
+
+
+def info_minute(m: str) -> Optional[int]:
+    """"2026-11-02T20:17" as epoch minutes"""
+    try:
+        return epoch(m[:16] + ":00") // 60
+    except ValueError:
+        return None
+
+
+def info_anomalies(res: dict, files: List[dict]) -> dict:
+    """📈 the INFO templates that repeat abnormally (steady and high, or in a burst), the rotated files of a worker merged
+    (worker_of): .info_anomalies of --json (rows, and covered: the ones a lifecycle signal already reports)"""
+    merged: Dict[Tuple[str, str, str], dict] = {}
+    totals: Dict[Tuple[str, str], int] = Counter()
+    spans: Dict[str, List[int]] = {}
+    events: Dict[str, List[float]] = {}
+    for f in files:
+        info = f.get("info")
+        if not info:
+            continue
+        w = worker_of(f["label"])
+        for c, n in (info.get("by_connector") or {}).items():
+            totals[(w, c)] += n
+        for t in (f.get("log_first_ts"), f.get("log_last_ts")):
+            mm = info_minute(t) if t else None
+            if mm is not None:
+                spans.setdefault(w, []).append(mm)
+        events.setdefault(w, []).extend(x for x in (ts_seconds(ev.get("time")) for ev in f.get("events") or []
+                                                    if ev["kind"] in INFO_BURST_EVENTS) if x is not None)
+        for t in f.get("info_templates") or []:
+            m = merged.get((w, t["connector"], t["template"]))
+            if not m:
+                m = merged[(w, t["connector"], t["template"])] = dict(t, worker=w, file=f["label"], buckets=Counter())
+            else:
+                m["count"] += t["count"]
+                m["first"] = min(x for x in (m["first"], t["first"]) if x) if (m["first"] or t["first"]) else None
+                m["last"] = max(x for x in (m["last"], t["last"]) if x) if (m["last"] or t["last"]) else None
+            m["buckets"].update(t["buckets"])
+    rows, covered = [], []
+    for (w, c, tpl), m in merged.items():
+        b = {mm: n for mm, n in ((info_minute(k), v) for k, v in m["buckets"].items()) if mm is not None}
+        first, last = ts_seconds(m["first"]), ts_seconds(m["last"])
+        span = (last - first) if first is not None and last is not None else 0
+        per_s = m["count"] / span if span > 0 else None
+        total = totals.get((w, c)) or 0
+        share = m["count"] / total if total else 0.0
+        active = (max(b) - min(b) + 1) if b else 0
+        coverage = len(b) / active if active else 0.0
+        steady = (span >= INFO_STEADY_MIN_S and per_s is not None and per_s * INFO_STEADY_EVERY_S >= 1
+                  and coverage >= INFO_STEADY_COVERAGE and share >= INFO_STEADY_SHARE)
+        # the median minute of the period of the worker's files, the minutes without any counted as 0
+        burst = None
+        if b and max(b.values()) >= INFO_BURST_MIN:
+            lo, hi = min(spans.get(w) or [min(b)]), max(spans.get(w) or [max(b)])
+            n_minutes = max(hi - lo + 1, len(b))
+            counts = sorted(list(b.values()) + [0] * (n_minutes - len(b)))
+            median = counts[len(counts) // 2]
+            peak_minute, peak = max(b.items(), key=lambda kv: (kv[1], -kv[0]))
+            near = any(abs(t - peak_minute * 60 - 30) <= INFO_BURST_NEAR_S for t in events.get(w) or [])
+            if peak >= INFO_BURST_RATIO * max(median, 1) and not near:
+                burst = {"minute": iso(peak_minute * 60)[:16], "count": peak, "median": median}
+        if not (steady or burst):
+            continue
+        chatter = any(rx.search(tpl) for rx in INFO_CHATTER)
+        if chatter and not (per_s is not None and per_s >= INFO_CHATTER_MAX_PER_S):
+            continue
+        row = {"kind": "steady" if steady else "burst", "connector": c or None, "worker": w, "template": tpl,
+               "count": m["count"], "first": m["first"], "last": m["last"],
+               "per_minute": round(per_s * 60, 1) if per_s is not None else None,
+               "every_seconds": round(1 / per_s, 1) if per_s else None, "share": round(share, 3),
+               "burst": burst, "file": m["file"], "line": m.get("line"), "example": (m.get("example") or "")[:500]}
+        row["severity"] = "MEDIUM" if (steady and per_s is not None and per_s >= 1) or \
+            (burst and burst["count"] >= 100 * max(burst["median"], 1)) else "LOW"
+        cov = next((kind for rx, kind in INFO_COVERED if rx.search(tpl)), None)
+        if cov:
+            covered.append(dict(row, covered_by=cov))
+        else:
+            rows.append(row)
+    order = lambda r: (r["severity"] != "MEDIUM", -r["count"])  # noqa: E731
+    return {"rows": sorted(rows, key=order), "covered": sorted(covered, key=order),
+            "info_lines": sum((f.get("info") or {}).get("lines", 0) for f in files)}
+
+
+def info_anomaly_text(r: dict) -> str:
+    """"orders-sink: ×683 steady, 8.4/min (one every 7.1 s) over 1 h 20 min (14:27 → 15:48), 75 % of its INFO lines" """
+    who = r["connector"] or r["worker"]
+    span = (ts_seconds(r["last"]) or 0) - (ts_seconds(r["first"]) or 0)
+    if r["kind"] == "steady":
+        how = (f"steady, {r['per_minute']:g}/min (one every {r['every_seconds']:g} s) over {human_duration(int(span))}"
+               f", {round(r['share'] * 100)} % of its INFO lines")
+    else:
+        bu = r["burst"]
+        how = f"burst, {bu['count']:,} in the minute {bu['minute'].replace('T', ' ')} (median {bu['median']:,}/min)"
+    return f"{who}: ×{r['count']:,} {how} · {period_text(r['first'], r['last'])}"
+
+
+def info_anomalies_text(ia: Optional[dict]) -> List[str]:
+    rows = (ia or {}).get("rows") or []
+    if not rows:
+        return []
+    out = ["📈 INFO messages repeating abnormally (steady and high, or a burst: no ERROR needed)"]
+    for r in rows[:INFO_ANOMALIES_SHOWN]:
+        out.append(f"   {r['severity']} {info_anomaly_text(r)}")
+        out.append(f"      {r['template']}")
+    if len(rows) > INFO_ANOMALIES_SHOWN:
+        out.append(f"   … {len(rows) - INFO_ANOMALIES_SHOWN} more in the HTML report and .info_anomalies of --json")
+    return out
+
+
+def info_anomalies_html(ia: Optional[dict], viewers: Optional[Dict[str, str]] = None) -> str:
+    rows = (ia or {}).get("rows") or []
+    if not rows:
+        return ""
+    viewers = viewers or {}
+
+    def where(r: dict) -> str:
+        text = e(f"{r['file'].split('/')[-1]}:{r['line']}" if r.get("line") else r["file"])
+        return log_viewer.link(viewers, r["file"], text, r["line"]) if r.get("line") else text
+    trs = "".join(
+        f"<tr><td>{badge(r['severity'], 'warn' if r['severity'] == 'MEDIUM' else 'low')}</td><td>{'〰️ steady' if r['kind'] == 'steady' else '💥 burst'}</td>"
+        f"<td class='mono'>{e(r['connector'] or r['worker'])}</td><td>{r['count']:,}</td>"
+        f"<td>{e(info_anomaly_text(r).split(': ', 1)[1])}</td>"
+        f"<td class='mono'>{e(r['template'])}<br><span class='legend'>{where(r)}: {e(r['example'][:300])}</span></td></tr>"
+        for r in rows[:20])
+    return ("<div class='table-card' id='info-anomalies'><h2>📈 INFO messages repeating abnormally</h2><p class='legend'>"
+            "INFO messages (numbers, ids, quoted values and lists masked) that repeat at a steady high rate (one every "
+            f"{INFO_STEADY_EVERY_S} s or more for {INFO_STEADY_MIN_S // 60} min or more, {round(INFO_STEADY_SHARE * 100)} % of the "
+            f"INFO lines of their connector) or in a burst ({INFO_BURST_RATIO}× their median minute): the incidents that log no "
+            "ERROR (a sink that rotates without committing, a client that keeps failing to authenticate). Normal chatter "
+            "(offset commits, polls, heartbeats, log retention) and what 🔄 / 🐢 already report are left out. Not a known "
+            "cause: read the lines around the example.</p><table><thead><tr><th>Severity</th><th>Shape</th><th>Connector / "
+            f"file</th><th>Count</th><th>Rate and period</th><th>Template, example</th></tr></thead><tbody>{trs}</tbody></table></div>")
 
 
 def lifecycle(res: dict, files: List[dict]) -> dict:
@@ -4696,6 +4911,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     # rebalances and restarts of the INFO lines (🔄 of the HTML report, .lifecycle of --json)
     out += lifecycle_text(res.get("lifecycle"))
     out += broker_signals_text(res.get("lifecycle"))
+    # INFO messages that repeat abnormally (📈 of the HTML report, .info_anomalies of --json)
+    out += info_anomalies_text(res.get("info_anomalies"))
     out += cluster_layout_text(res.get("cluster_layout"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
@@ -5354,6 +5571,10 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
                    + (" …" if len(bad) > 5 else "") + f" ([supported connector versions]({bad[0]['support']['doc']}))")
     for i in s.get("incomplete_inputs") or []:
         out.append(f"**⚠️ Not fully read:** `{i['file']}`: {i['reason']}")
+    ia = (res.get("info_anomalies") or {}).get("rows") or []
+    if ia:
+        out.append(f"**📈 INFO messages repeating abnormally:** {len(ia)}: " + "; ".join(
+            f"`{md_cell(r['template'][:120])}` ({md_cell(info_anomaly_text(r))})" for r in ia[:2]) + (" …" if len(ia) > 2 else ""))
     if res["known_causes"]:
         out += ["", "### What to look at first", "", "| Severity | Known cause | Occurrences | First | What to do |", "| --- | --- | --- | --- | --- |"]
         for h in res["known_causes"][:10]:
@@ -8712,7 +8933,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             .replace("<div class='recs-list'>", findings_overview_html(findings_view, s["occurrences"]) + "<div class='recs-list'>", 1),
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
-            lifecycle_html(res.get("lifecycle"), viewers), cluster_layout_html(res.get("cluster_layout")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files")),
+            lifecycle_html(res.get("lifecycle"), viewers), info_anomalies_html(res.get("info_anomalies"), viewers), cluster_layout_html(res.get("cluster_layout")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files")),
             harmless_html(res.get("harmless") or []), ocr_html(res["summary"].get("ocr_files") or [])]
     # the sanitization state (⚠️ Not sanitized, 🔒 Sanitization of analyze logs) is a line under the verdict, not a section
     notes = [(t, text) for t, text in sections if t.startswith(("⚠️ Not sanitized", "🔒 Sanitization"))]
@@ -9128,7 +9349,7 @@ def main() -> int:
     mark_thread_dump_files(res)
     if args.json:
         # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report
-        compact = dict({k: v for k, v in res.items() if not k.startswith("_")}, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
+        compact = dict({k: v for k, v in res.items() if not k.startswith("_")}, files=[dict({k: v for k, v in f.items() if k != "info_templates"}, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
                                    for f in res["files"]],
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
                        known_causes=[{k: v for k, v in h.items() if k != "records" and not k.startswith("_")} for h in res["known_causes"]],
