@@ -84,14 +84,20 @@ KNOWN_CAUSES = [
                "of the connector (aws.access.key.id / aws.secret.access.key, or its credentials provider) and the IAM "
                "policy"},
     {"name": "authentication_failed", "severity": "high", "category": "Authentication Issues",
-     "pattern": r"SaslAuthenticationException|AuthenticationException|authentication failed|failed authentication"
+     "pattern": r"SaslAuthenticationException|AuthenticationException|authentication failed"
+                r"|failed authentication(?![^\n]{0,300}Client SASL mechanism '[^']+' not enabled)"
                 r"|invalid credentials|ORA-01017|Access denied for user|Login failed for user|\b401 unauthorized\b"
                 r"|\bunauthorized\b|http (?:status|code|error)[ :=]*401|Status code\s*:?\s*401",
      "title": "🔑 Authentication failure",
      "advice": "check the credentials (user, password, API key, keytab) of the client or of the external system"},
     {"name": "mds_error", "severity": "high", "category": "MDS/RBAC Issues",
      "pattern": r"MDS.{0,40}failed|metadata service.{0,40}error|TokenBasedSecurityStore.{0,80}Exception|RBAC.{0,40}token"
-                r"|MdsException",
+                r"|MdsException"
+                # the MDS client of the token login (TokenUserLoginCallbackHandler, metadataServerUrls): its exceptions,
+                # "Unexpected exception sending HTTP Request (io.confluent.security.auth.client.rest.RestClient)", and the
+                # refresh of the MDS URLs
+                r"|security\.auth\.client\.rest\.exceptions\.RestClientException|\(io\.confluent\.security\.auth\.client\.rest\.\w+(?::\d+)?\)"
+                r"|Error while refreshing active metadata server urls|Failed to fetch MDS URLs",
      "title": "🪪 MDS / RBAC token error",
      "advice": "the client cannot get or validate its token from the metadata service (MDS): check its URL, the "
                "token keypair and the credentials of the principal"},
@@ -233,7 +239,8 @@ KNOWN_CAUSES = [
                "and consumer, or auto.register.schemas=false / use.latest.version with an unregistered schema. "
                "playground schema list shows the real subject names"},
     {"name": "serialization_error", "severity": "medium", "category": "Serialization Issues",
-     "pattern": r"Converting byte\[\] to Kafka Connect data failed|SerializationException|DataException",
+     "pattern": r"Converting byte\[\] to Kafka Connect data failed|SerializationException"
+                r"|^(?![\s\S]*Executing stage 'TRANSFORMATION')[\s\S]*?DataException",
      "title": "🔀 Serialization or conversion error",
      "advice": "the converter does not match the format of the records, or a record does not match the schema; "
                "errors.tolerance=all + a dead letter queue keeps the task running (playground topic dlq inspect)"},
@@ -296,6 +303,7 @@ KNOWN_CAUSES = [
     {"name": "client_security_protocol", "severity": "high", "category": "Network Issues",
      "pattern": r"incorrect security\.protocol|verify that security\.protocol|broker might require SASL authentication"
                 r"|connecting to a SSL listener|Unexpected handshake request with client mechanism"
+                r"|Client SASL mechanism '[^']+' not enabled|UnsupportedSaslMechanismException"
                 # a TLS or HTTP client on a PLAINTEXT listener: the broker reads its first bytes as a size (369296128 is
                 # the start of a TLS record 0x16030100, 1195725856 "GET ")
                 r"|Invalid receive \(size = \d{7,}",
@@ -351,6 +359,26 @@ KNOWN_CAUSES = [
                "call, a GC pause): the consumer leaves the group, its partitions are reassigned and its commits fail. "
                "Process faster or in smaller batches (max.poll.records in Java), or raise max.poll.interval.ms"},
     # errors.tolerance=none (the default): the first record that fails in a stage kills the task
+    # a single message transform (SMT) that throws: "Executing stage 'TRANSFORMATION' with class '…Flatten$Value'".
+    # Flatten "does not support ARRAY" on a worker of Apache Kafka 3.1 or later (KAFKA-12305 added arrays, kept as is) is
+    # an older connect-transforms jar on the plugin path that shadows the one of the worker
+    {"name": "transformation_failed", "severity": "medium", "category": "Connect Issues",
+     "pattern": r"Executing stage 'TRANSFORMATION'|Flatten transformation does not support ARRAY",
+     "title": "🪄 Transformation (SMT) failed",
+     "advice": "a single message transform threw on a record (the class is in the Executing stage line): its config does "
+               "not fit the records, or the record has a field type it does not handle (playground connector smt test "
+               "replays it on a record). Flatten \"does not support ARRAY\" on Apache Kafka 3.1 or later (CP 7.1+) is an "
+               "old connect-transforms jar on the plugin path that shadows the one of the worker: compare the "
+               "connector-plugins of the workers (GET /connector-plugins?connectorsOnly=false)"},
+    # errors.log.enable=true: the LogReporter logs every record that failed in a stage, "Error encountered in task
+    # orders-0. Executing stage 'KAFKA_PRODUCE' with class …". With errors.tolerance=all the record is skipped
+    {"name": "record_failed_in_stage", "severity": "medium", "category": "Connect Issues",
+     "pattern": r"Error encountered in task \S+\. Executing stage '",
+     "title": "⏭️ Records failed in a stage (errors.log.enable)",
+     "advice": "each line is a record that failed in the stage it names (KAFKA_PRODUCE, TASK_PUT, VALUE_CONVERTER, "
+               "TRANSFORMATION…). With errors.tolerance=all the task skips it and keeps running: a sink sends it to its "
+               "dead letter queue when one is set (playground topic dlq inspect), a source drops it and its offset still "
+               "moves on (data loss). With errors.tolerance=none, a 🧯 errors.tolerance exceeded follows and the task fails"},
     {"name": "tolerance_exceeded", "severity": "high", "category": "Connect Issues",
      "pattern": r"Tolerance exceeded in error handler",
      "title": "🧯 errors.tolerance exceeded",
@@ -389,6 +417,14 @@ KNOWN_CAUSES = [
                "(playground connector history for Connect, playground streams status for Kafka Streams) and look at the "
                "members that join and leave, session.timeout.ms, heartbeat.interval.ms and max.poll.interval.ms"},
     # an external system or a cloud API over its rate limit
+    # an HTTP sink (or any REST client of a connector) that gets 5xx: "Status code : 504, Reason Phrase : Gateway Timeout"
+    {"name": "http_server_error", "severity": "medium", "category": "Network Issues",
+     "pattern": r"Status code\s*:?\s*5\d\d\b|http (?:status|code|error)[ :=]*5\d\d\b|\b50[234] (?:Bad Gateway|Service Unavailable"
+                r"|Gateway Timeout)\b",
+     "title": "🌩️ HTTP 5xx from the external system",
+     "advice": "the endpoint (or a gateway, load balancer or proxy in front of it) answered 500, 502, 503 or 504: look at its "
+               "side for the same times. A 504 or a timeout does not say whether the request was processed: the retries "
+               "of the connector (retry.backoff.ms, max.retries) can send it twice to an endpoint that is not idempotent"},
     {"name": "throttled", "severity": "medium", "category": "Network Issues",
      "pattern": r"ThrottlingException|Rate exceeded|429 Too Many Requests|TooManyRequests|http (?:status|code|error)[ :=]*429"
                 r"|Status code\s*:?\s*429|es_rejected_execution_exception|\bSlowDown\b|RequestLimitExceeded"
@@ -438,7 +474,7 @@ KNOWN_CAUSES = [
     {"name": "operator_error", "severity": "medium", "category": "Operator Issues",
      "pattern": r"reconcile error|Failed to reconcile|Reconciler error|operator error", "hint": False},
     {"name": "schema_registry_error", "severity": "medium", "category": "Schema Registry Issues",
-     "pattern": r"SchemaRegistryException|RestClientException",
+     "pattern": r"SchemaRegistryException|(?<!security\.auth\.client\.rest\.exceptions\.)RestClientException",
      "title": "📐 Schema Registry error",
      "advice": "a call to the Schema Registry failed: check its url and credentials in the converter or client "
                "(playground schema describe --subject <s> for the subject, playground schema history for its changes)"},
@@ -471,12 +507,15 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 HINT_ORDER = [
     "💥 OutOfMemoryError", "🪞 Secret registry: duplicate URLs, Connect does not start", "🚫 Connect worker failed to start",
     KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
-    "🔑 Authentication failure", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
+    "🧬 Not enough replicas",
+    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
+    "🗝️ Empty or unreadable truststore", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
-    "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",
+    "🪄 Transformation (SMT) failed", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",
     "🔌 Connection failure",
     "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost", "📥 Producer buffer full",
-    "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system",
+    "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system", "🌩️ HTTP 5xx from the external system",
+    "⏭️ Records failed in a stage (errors.log.enable)",
     "🛑 Task or connector did not stop in time", "⏱️ Timeouts", "📏 Record too large", "🧹 Clients aborted while a task stopped",
     "❓ Unknown topic or partition", "⏮️ Offset out of range", "🚧 Request refused by a broker policy", "👑 Partition leadership changed",
 ]
@@ -608,7 +647,7 @@ LINKS = {
         {"kb": KB + "33949564732948-What-s-causing-unable-to-connect-to-the-database-due-to-a-connection-issue-Error-using-PostgreSQL-CDC-Source-V2-Connector-on-Confluent-Cloud",
          "kb_title": "PostgreSQL CDC: \"password authentication failed\"", "pattern": r"password authentication failed for user"},
         {"kb": KB + "23119096873876-How-to-configure-Confluent-Supported-Libraries-to-use-Schema-Registry-with-an-API-Key",
-         "kb_title": "Schema Registry API key of the clients (\"Unauthorized; error code: 401\")", "pattern": r"Unauthorized; error code:? ?401"},
+         "kb_title": "Schema Registry API key of the clients (\"Unauthorized; error code: 401\")", "pattern": r"^(?![\s\S]*security\.auth\.client\.rest)[\s\S]*Unauthorized; error code:? ?401"},
         {"kb": KB + "27052383612948-What-to-check-if-a-connector-on-Confluent-Cloud-fails-with-authentication-issues",
          "kb_title": "What to check when a Confluent Cloud connector fails to authenticate", "fallback": True},
     ],
