@@ -20,7 +20,7 @@ is analyzed apart, its dumps compared with each other: the dumps of 2 Connect wo
 | Section | Content |
 | --- | --- |
 | Threads per dump | states (RUNNABLE / BLOCKED / WAITING / TIMED_WAITING / VM threads) |
-| Findings | deadlocks, contended locks, lock stalls, threads stuck in a socket write, stuck threads, CPU-hungry threads, growing pools, saturated broker request handlers |
+| Findings | deadlocks, contended locks, lock stalls, threads stuck in a socket write, stuck threads, CPU-hungry threads, growing pools, saturated broker request handlers. Each one is a sentence (`text`, the terminal and `--json`); its title is the words before the first `: `, and a lock stall also has `details` (the waiting thread, the holder, why neither progresses), shown one per line in the HTML reports |
 | Deadlocks | cycles in the wait-for graph (monitors and `java.util.concurrent` locks), plus the JVM's own report |
 | Lock contention | each lock with its waiters and its owner (state and top application frame) |
 | Same frames in all dumps | non-idle threads (BLOCKED, or RUNNABLE outside a poll / accept / select) on the same top 5 frames |

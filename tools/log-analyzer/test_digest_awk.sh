@@ -185,6 +185,21 @@ do
         echo "❌ $awk_cmd: events of events.log: $(printf '%s' "$got" | tr '\n' ',') instead of $(printf '%s' "$expected" | tr '\n' ',')"
         failed=1
     fi
+    # one start of a worker logs both "worker initialization took" and "Kafka Connect started": one process start; a start
+    # after a stop that only logs "Kafka Connect started": one more (2, not 3)
+    printf '%s\n' '[2026-11-07 11:00:00,000] INFO Kafka Connect worker initialization took 2000ms (org.apache.kafka.connect.cli.AbstractConnectCli:88)' \
+        '[2026-11-07 11:00:01,000] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect:57)' \
+        '[2026-11-07 11:00:02,000] ERROR [orders-sink|task-0] boom (org.example.Sink:1)' \
+        '[2026-11-07 11:10:00,000] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect:67)' \
+        '[2026-11-07 11:20:00,000] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect:57)' > "$tmp/starts.log"
+    : > "$out.starts"
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.starts" "$tmp/starts.log" > /dev/null 2>&1
+    got=$(grep -c "^@@PGEVT@@"$'\t'"process_start"$'\t' "$out.starts")
+    if [ "$got" != 2 ]
+    then
+        echo "❌ $awk_cmd: $got process start(s) in starts.log instead of 2"
+        failed=1
+    fi
     # the signals of a broker under pressure (ISR changes, followers that cannot fetch, requests timing out, log cleaner,
     # responses to clients already gone, quota throttling): keyed by the broker, with the partition or the peer. The fetch
     # error of a consumer (same FetchSessionHandler line) is not a follower that cannot fetch

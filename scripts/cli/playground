@@ -31628,16 +31628,23 @@ function summarize_log_errors() {
                 # "worker initialization took" comes before the startup ends: a worker that fails to start logs it too. Not a
                 # new run of the configs (run_gen): it and "Kafka Connect started" come in the middle of a startup, between the
                 # clients it creates. A restart is its stop line, or its own config dumped again
-                lc_kind = "process_start"; lc_who = "connect"; cfg_end()
-                lc_detail = index($0, "Kafka Connect started") ? "Kafka Connect worker started" : "Kafka Connect worker initialized"
+                # one start logs both lines: "Kafka Connect started" right after "worker initialization took" (no stop or
+                # failure in between, same file) is the end of the start already counted, not a second one
+                if (index($0, "Kafka Connect started") && lc_init_pending && lc_init_file == FILENAME) {
+                    lc_init_pending = 0; cfg_end()
+                } else {
+                    lc_kind = "process_start"; lc_who = "connect"; cfg_end()
+                    lc_detail = index($0, "Kafka Connect started") ? "Kafka Connect worker started" : "Kafka Connect worker initialized"
+                    lc_init_pending = index($0, "Kafka Connect started") ? 0 : 1; lc_init_file = FILENAME
+                }
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
                 lc_kind = "process_start"; lc_who = "broker"; cfg_end(); lc_detail = "Kafka broker started"
             } else if (index($0, "Failed to start Connect")) {
                 # ERROR Failed to start Connect (AbstractConnectCli): the worker gave up during its startup and exits. Several of
                 # them in a file is a restart loop (the service manager starts it again, it fails again): 🔁 in the report
-                lc_kind = "process_start_failed"; lc_who = "connect"; lc_detail = "Kafka Connect failed to start"
+                lc_kind = "process_start_failed"; lc_who = "connect"; lc_detail = "Kafka Connect failed to start"; lc_init_pending = 0
             } else if (index($0, "Kafka Connect stopping")) {
-                lc_kind = "process_stop"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker stopping"
+                lc_kind = "process_stop"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker stopping"; lc_init_pending = 0
             } else if ($0 ~ /\] shutting down \(kafka\.server|to SHUTTING_DOWN/) {
                 lc_kind = "process_stop"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker shutting down"
             } else if ($0 ~ /Becoming the active controller|elected as the controller/) {
