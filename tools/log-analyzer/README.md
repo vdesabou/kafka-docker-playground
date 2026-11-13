@@ -133,7 +133,7 @@ conversion failure`) and every record of the file was lost; its lines are cut wi
   tables. `analyze logs` writes them to `$tmp_dir/not-logs` (`label<tab>gc|unleveled`); a file with records is a log all
   the same. They are still digested (the GC pauses and the JDK of a GC log join the timeline and the tiles), but their
   dates are left out of the 🕐 period covered and of 🕰️ log coverage (`.summary.not_logs` of `--json`), and an input made
-  only of them gets `🔎 No Kafka / Connect log in the input: …` (`.summary.no_kafka_log`) instead of a ✅ and a period.
+  only of them gets `🔎 No Kafka / Connect log in the input: …` (`.summary.no_kafka_log`) instead of a ✅ and a period. The files that hold the thread dumps analyzed in 🧵 are named as such (`mark_thread_dump_files()`: reason `thread_dump`, "N file(s) of thread dumps (🧵 below)"), not as files without a log level.
 - **Kafka Connect REST API outputs** (`rest_dumps.py <file> <folder>`), found by content whatever the extension (the
   whole file is JSON, or JSON documents start lines of a terminal capture): each FAILED connector or task of `GET
   /connectors/<name>/status` or `/connectors?expand=status` becomes an ERROR record with its `[<connector>|task-<id>]`
@@ -385,7 +385,7 @@ cooperative protocol) of each file. A worker is a file without its rotation suff
 and the ERROR / WARN of the connector in that worker's logs) and `only_on` when the errors (`ONLY_ON_MIN_ERRORS` = 3 or
 more) all come from one worker while a task of the connector ran on another worker during those errors, its logs covering
 that time (`clean_overlap`: an incident that ended before the tasks moved, or the logs of a worker that start later, is not
-a difference of the host); `zombies` (`zombie_tasks()`, 🧟): a task whose `Graceful stop of task X failed` is on a worker
+a difference of the host); `zombies` (`zombie_tasks()`, 🧟; its card in 🔎 Findings is a title, the error count and the failed stop, then one line per fact: errors since the stop, where the task runs, what to do, `zombie_parts()`): a task whose `Graceful stop of task X failed` is on a worker
 and that logs ERROR / FATAL records (its `[connector|task-N]` context) on that worker more than `ZOMBIE_AFTER_S` (60 s)
 after it, `ZOMBIE_MIN_ERRORS` (3) or more, before any new start of the task there, with its starts on the other workers
 since (the instance that replaced it): the worker cancelled and forgot it but its threads still run (a client retrying
