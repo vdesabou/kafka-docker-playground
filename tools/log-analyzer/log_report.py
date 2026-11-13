@@ -1025,6 +1025,9 @@ def summary(files: List[dict]) -> dict:
     # not (a short window is a bundle that may not even contain the incident)
     log_first, log_last = None, None
     for f in files:
+        # a GC log, a capture of host commands (--not-logs): its dates are not a period of the logs
+        if f.get("not_log"):
+            continue
         for ts in (f.get("log_first_ts"), f.get("log_last_ts")):
             if not ts:
                 continue
@@ -1040,7 +1043,10 @@ def summary(files: List[dict]) -> dict:
             "first_timestamp": first, "last_timestamp": last,
             "log_first_timestamp": log_first, "log_last_timestamp": log_last,
             "log_duration_seconds": duration_seconds(log_first, log_last),
-            "findings_duration_seconds": duration_seconds(first, last)}
+            "findings_duration_seconds": duration_seconds(first, last),
+            # the files that are not logs of a component (--not-logs), and an input made only of them
+            "not_logs": [{"file": f["label"], "reason": f["not_log"]} for f in files if f.get("not_log")],
+            "no_kafka_log": bool(files) and all(f.get("not_log") for f in files)}
 
 
 def shorten_labels(files: List[dict]) -> None:
@@ -1112,6 +1118,8 @@ def coverage(files: List[dict]) -> dict:
     rotated logs): what happened then is not in the input. Also in --json: .coverage"""
     out_files = []
     for f in files:
+        if f.get("not_log"):
+            continue
         first, last = f.get("log_first_ts"), f.get("log_last_ts")
         a, b = ts_seconds(first), ts_seconds(last)
         label = f["label"]
@@ -1190,6 +1198,11 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
     res["config_lint"] = config_lint(res)
+    # 🧩 a plugin class listed twice by GET /connector-plugins: a card of 🔎 Findings too (no 🔌 card shows it)
+    shadowed = [x for x in res["config_lint"] if x["connector"] == "connector plugins"]
+    if shadowed:
+        res["findings"] = sorted(res["findings"] + [{"severity": x["severity"], "text": f"🧩 {x['key']} {x['value']} in GET /connector-plugins: {x['message']}"}
+                                                    for x in shadowed], key=lambda x: SEVERITY_ORDER.index(x["severity"]))
     res["config_drift"] = config_drift(res)
     for c in res["connectors"]:
         c["config_lint"] = [x for x in res["config_lint"] if x["connector"] == c["connector"]]
@@ -3486,8 +3499,39 @@ def config_lint(res: dict) -> List[dict]:
         if kind == "producer" and v.get("acks") not in (None, "", "all", "-1"):
             add(name, c, "MEDIUM", "acks", v.get("acks"), "the source producer does not wait for all the in-sync replicas: "
                 "records can be lost when a broker fails; Connect defaults to acks=all")
+    out += shadowed_plugins(res)
     order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
     out.sort(key=lambda x: (order.get(x["severity"], 9), x["connector"]))
+    return out
+
+
+def shadowed_plugins(res: dict) -> List[dict]:
+    """a class listed twice by a GET /connector-plugins of the input (?connectorsOnly=false): two jars of the plugin path
+    or of the classpath of the worker have it, the one loaded first wins. One without version is an old jar (an
+    Apache Kafka connect-transforms of another release next to the one of the worker): HIGH, two versions: MEDIUM"""
+    out: List[dict] = []
+    for c in res.get("configuration") or []:
+        if c.get("title") != "connector plugins" or not c.get("text"):
+            continue
+        versions: "OrderedDict[str, List[str]]" = OrderedDict()
+        for line in c["text"].splitlines():
+            key, sep, value = line.partition("=")
+            if sep and key.strip():
+                versions.setdefault(key.strip(), []).append(value.strip())
+        for cls, vs in versions.items():
+            if len(vs) < 2:
+                continue
+            shown = ", ".join(v or "no version" for v in vs)
+            if "" in vs:
+                out.append({"connector": "connector plugins", "severity": "HIGH", "key": cls, "value": f"listed {len(vs)} times ({shown})",
+                            "message": f"class {cls} is loaded from two places: an old jar on the plugin path (or the classpath) "
+                            "may shadow the one of the worker, the one found first wins. List the jars that have it on a worker "
+                            f"(for j in $(find <plugin.path> /usr/share/java -name '*.jar'); do unzip -l \"$j\" | grep -q '{cls.split('$')[0].replace('.', '/')}.class' "
+                            "&& echo \"$j\"; done) and remove the old one", "file": c.get("file"), "line": c.get("line")})
+            elif len(set(vs)) > 1:
+                out.append({"connector": "connector plugins", "severity": "MEDIUM", "key": cls, "value": f"listed {len(vs)} times ({shown})",
+                            "message": f"class {cls} is installed in {len(set(vs))} versions: the connectors may not run the "
+                            "version you expect, keep one", "file": c.get("file"), "line": c.get("line")})
     return out
 
 
@@ -4216,6 +4260,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     scope = f" (--connector {' '.join(connectors)})" if connectors else ""
     out.append(f"🧭 Summary{scope}: {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s) in "
                f"{s['files_with_findings']} file(s){span}")
+    if s.get("no_kafka_log"):
+        out.append(f"   🔎 No Kafka / Connect log in the input: {not_logs_text(s)}")
     # what the logs themselves cover, and whether that window is wide enough to hold the context of an incident
     if s["log_duration_seconds"] is not None:
         covered = f"   🕐 Period covered: {period_text(s['log_first_timestamp'], s['log_last_timestamp'])} ({human_duration(s['log_duration_seconds'])})"
@@ -4919,7 +4965,7 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     s = res["summary"]
     out = [f"## 🔥 Log analysis: {title}", ""]
     out.append(f"**Verdict:** {verdict(res, levels, unit)[1]}")
-    covered = period_text(s.get("log_first_timestamp"), s.get("log_last_timestamp"))
+    covered = "none (no Kafka / Connect log)" if s.get("no_kafka_log") else period_text(s.get("log_first_timestamp"), s.get("log_last_timestamp"))
     dur = s.get("log_duration_seconds")
     out.append(f"**Period covered:** {covered}" + (f" ({human_duration(dur)})" if dur is not None else "")
                + f" · {s['files_scanned']} {unit}(s)" + (f" ({human_size(s['bytes_read'])})" if s.get("bytes_read") is not None else "")
@@ -7565,7 +7611,28 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
     if not s["files_with_findings"] and incomplete:
         return "warn", (f"⚠️ No {levels} record in the {s['files_scanned']} {unit}(s) read ({s['lines']} lines), but "
                         f"{len(incomplete)} input(s) were not fully read: the missing part may hold errors (⚠️ Not fully read below)."), []
+    if not s["files_with_findings"] and s.get("no_kafka_log") and not res.get("_cfk_bundles"):
+        return "warn", (f"🔎 No Kafka / Connect log in the input: the {s['files_scanned']} {unit}(s) read are "
+                        f"{not_logs_text(s)}, nothing here can show an error: ask for the logs of the component."), []
     if not s["files_with_findings"]:
+        # another part of the analysis found problems (the issues of a CFK bundle, made of the ERROR lines of its files;
+        # a plugin class listed twice): not a ✅, the clauses of those parts follow (☸️ of verdict_parts)
+        bundles = res.get("_cfk_bundles") or []
+        cfk_issues = sum((b.get("summary") or {}).get("total_issues", 0) for b in bundles)
+        cfk_errors = sum(int(i.get("count") or 1) for b in bundles for i in b.get("issues") or []
+                         if re.search(r"\b(ERROR|FATAL)\b", i.get("message") or ""))
+        others = [f for f in res.get("findings") or [] if f.get("severity") in ("CRITICAL", "HIGH")
+                  and (f.get("_view") or {}).get("kind") != "cfk"]
+        if cfk_issues or others:
+            what = []
+            if cfk_issues:
+                n = f"{len(bundles)} CFK bundles" if len(bundles) > 1 else "the CFK bundle"
+                what.append(f"{n} has {cfk_issues} issue(s)" + (f", from {cfk_errors:,} ERROR/FATAL line(s) of its files" if cfk_errors else ""))
+            if others:
+                what.append(f"{len(others)} critical / high finding(s) of the input")
+            lines = [verdict_line(f"👉 Start with: {others[0]['text'][:160]}", "#findings")] if others else []
+            return "warn", (f"🔎 No {levels} record in the {s['files_scanned']} {unit}(s) of the log digest ({s['lines']} lines), "
+                            f"but {' and '.join(what)}."), lines
         return "ok", f"✅ No {levels} record in the {s['files_scanned']} {unit}(s) scanned ({s['lines']} lines).", []
     errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
     if errors:
@@ -7590,6 +7657,31 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
                 f"{s['files_with_findings']} {unit}(s)")
         return "danger", head + ("" if lines and lines[0]["icon"] == "👉" else "."), lines
     return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL.", []
+
+
+def mark_not_logs(files: List[dict], path: Optional[str]) -> None:
+    """label<tab>reason (gc: a GC log, unleveled: no line with a log level) of the files digested that are not logs of a
+    component, written by analyze logs: f["not_log"]. A file with records is a log all the same"""
+    if not path or not os.path.exists(path):
+        return
+    reasons: Dict[str, str] = {}
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            label, _, reason = line.rstrip("\n").partition("\t")
+            if label:
+                reasons[label] = reason or "unleveled"
+    for f in files:
+        if f["label"] in reasons and not f["records"]:
+            f["not_log"] = reasons[f["label"]]
+
+
+def not_logs_text(s: dict) -> str:
+    """the files that are not logs, in words: GC logs, files without a log level"""
+    items = s.get("not_logs") or []
+    gc = sum(1 for x in items if x["reason"] == "gc")
+    parts = ([f"{gc} GC log(s) (🧰 Other files of the input)"] if gc else []) + (
+        [f"{len(items) - gc} file(s) without a line with a log level (captures of commands, tables…)"] if len(items) > gc else [])
+    return " and ".join(parts)
 
 
 def read_incomplete(path: Optional[str]) -> List[dict]:
@@ -8361,6 +8453,8 @@ def main() -> int:
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
     ap.add_argument("--bytes-read", type=int, default=None, help="the size of the input read, in bytes (the 🗂️ tile)")
     ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
+    ap.add_argument("--not-logs", metavar="FILE", help="label<tab>reason (gc, unleveled) of the files digested that are not "
+                    "logs of a component: not in the period covered, and an input made only of them is said so")
     ap.add_argument("--same-source", metavar="FILE", help="label<tab>label<tab>shared<tab>kept of each input that is an "
                     "overlapping copy of another one (only its other lines were read)")
     ap.add_argument("--compare", metavar="JSON", action="append", default=[],
@@ -8447,6 +8541,7 @@ def main() -> int:
         filter_connectors(files, args.connector, args.with_worker)
     harmless_items = [] if args.include_harmless else drop_harmless(files)
     read_same_source(args.same_source)
+    mark_not_logs(files, args.not_logs)
     res = analyze(files, args.unit)
     res["harmless"] = harmless_items
     if args.jvm_versions:

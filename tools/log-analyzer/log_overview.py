@@ -118,6 +118,47 @@ def parse_line(line: str):
     return level, logger, message
 
 
+# librdkafka: "%3|1793896102.923|FAIL|rdkafka#producer-1| …", its level is the syslog number after the %
+LIBRDKAFKA_RE = re.compile(r"^%\d\|\d+(?:\.\d+)?\|")
+# how much of a file is read to find a line with a level: the head of a log has some
+LEVEL_SNIFF_BYTES = 4 * 1024 * 1024
+
+
+def has_level(path: str, max_bytes: int = LEVEL_SNIFF_BYTES) -> bool:
+    """a line with a log level in the head of the file: a log of Kafka, Connect, a client, the CFK operator… (a capture of
+    host commands, a table of kubectl, a GC log decorated with the uptime only have none)"""
+    read = 0
+    try:
+        with open_text(path) as fh:
+            for line in fh:
+                read += len(line)
+                if LIBRDKAFKA_RE.match(line):
+                    return True
+                parsed = parse_line(line.rstrip("\n"))
+                if parsed and parsed[0]:
+                    return True
+                if read >= max_bytes:
+                    break
+    except (OSError, EOFError, gzip.BadGzipFile):
+        return True
+    return False
+
+
+def unleveled(sources: str) -> List[str]:
+    """the labels of the files analyzed (label<tab>path…) without any line with a log level: not logs"""
+    out: List[str] = []
+    seen = set()
+    with open(sources, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) < 2 or parts[0] in seen:
+                continue
+            seen.add(parts[0])
+            if os.path.isfile(parts[1]) and not has_level(parts[1]):
+                out.append(parts[0])
+    return out
+
+
 def overview(records: str, sources: str, exports: Optional[str], top: int) -> dict:
     periods: Dict[str, tuple] = {}
     with open(records, encoding="utf-8", errors="replace") as fh:
@@ -250,7 +291,9 @@ def text(res: dict, levels: str) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--records", required=True, help="records file of summarize_log_errors (@@PGFILE@@ lines)")
+    ap.add_argument("--records", help="records file of summarize_log_errors (@@PGFILE@@ lines)")
+    ap.add_argument("--unleveled", action="store_true", help="only print the labels of the --sources without any line "
+                    "with a log level (not logs: host captures, command outputs), one per line")
     ap.add_argument("--sources", required=True, help="label<tab>path of each file analyzed")
     ap.add_argument("--exports", help="label<tab>format<tab>events of the JSON / CSV exports converted")
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels of the digest, for the title")
@@ -258,6 +301,12 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="print the overview as JSON")
     ap.add_argument("--json-out", metavar="FILE", help="also write the JSON there (one pass for the text and the JSON)")
     args = ap.parse_args()
+    if args.unleveled:
+        for label in unleveled(args.sources):
+            print(label)
+        return 0
+    if not args.records:
+        ap.error("--records is required")
     res = overview(args.records, args.sources, args.exports, args.top)
     if args.json_out:
         with open(args.json_out, "w", encoding="utf-8") as fh:

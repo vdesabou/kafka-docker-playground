@@ -251,11 +251,25 @@ def command_of(kind: str, items: List[dict], paths: List[Optional[str]]) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--walked", required=True, help="label<tab>path of every file of the input")
+    ap.add_argument("--walked", help="label<tab>path of every file of the input")
+    ap.add_argument("--gc-logs", metavar="SOURCES", help="only print the labels of the files of SOURCES (label<tab>path…, the "
+                    "files digested by analyze logs) that are GC logs, one per line: they are not logs of a component")
     ap.add_argument("--keep-dir", help="where to keep the files recognized that were extracted to --tmp-dir")
     ap.add_argument("--tmp-dir", help="the tmp dir of analyze logs, deleted at the end")
     ap.add_argument("--sources", help="label<tab>path of the files the report links to (copied, not moved)")
     args = ap.parse_args()
+    if args.gc_logs:
+        seen = set()
+        with open(args.gc_logs, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                parts = line.rstrip("\n").split("\t")
+                if len(parts) >= 2 and parts[0] not in seen and os.path.isfile(parts[1]):
+                    seen.add(parts[0])
+                    if kind_of(parts[0], parts[1]) == "gc_log":
+                        print(parts[0])
+        return 0
+    if not args.walked:
+        ap.error("--walked is required")
     linked = set()
     if args.sources:
         try:

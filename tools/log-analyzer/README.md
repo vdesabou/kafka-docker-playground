@@ -112,6 +112,28 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Files that are not logs, REST API outputs, CFK bundles made by hand
+
+- **Not logs** (`log_report.py --not-logs`): after the digests, `bundle_triage.py --gc-logs <sources>` lists the GC logs
+  and `log_overview.py --unleveled --sources <sources>` the files without any line with a log level in their first 4 MB
+  (log4j / logback, logfmt, JSON, klog, JVM unified logging, librdkafka `%3|…`): captures of host commands, `kubectl get`
+  tables. `analyze logs` writes them to `$tmp_dir/not-logs` (`label<tab>gc|unleveled`); a file with records is a log all
+  the same. They are still digested (the GC pauses and the JDK of a GC log join the timeline and the tiles), but their
+  dates are left out of the 🕐 period covered and of 🕰️ log coverage (`.summary.not_logs` of `--json`), and an input made
+  only of them gets `🔎 No Kafka / Connect log in the input: …` (`.summary.no_kafka_log`) instead of a ✅ and a period.
+- **Kafka Connect REST API outputs** (`rest_dumps.py <file> <folder>`), found by content whatever the extension (the
+  whole file is JSON, or JSON documents start lines of a terminal capture): each FAILED connector or task of `GET
+  /connectors/<name>/status` or `/connectors?expand=status` becomes an ERROR record with its `[<connector>|task-<id>]`
+  context, the worker and its `trace` as the stack trace (no time), digested instead of the file; the other documents
+  (`GET /connector-plugins`, connector configs) go to `append_config_file`. A plugin list may have entries without a
+  version (`?connectorsOnly=false`); a class listed twice is a 🧩 finding of `config_lint()` (`shadowed_plugins()`):
+  HIGH when one has no version (an old jar on the plugin path may shadow the one of the worker), MEDIUM for two versions.
+- **CFK bundles made by hand** (`is_cfk_bundle`): a flat collection of `kubectl` outputs needs a
+  `confluent-operator-*.log`, two YAMLs of `platform.confluent.io` custom resources, or one with a pod `*.log`; every file
+  of it but the YAMLs is digested (a pod log saved as `.txt`). One CR next to a `.txt` log is read as plain files.
+- **Verdict**: no record in the logs but issues of a CFK bundle, or a critical / high finding of the input (a shadowed
+  plugin): `🔎 No … record in the N file(s) of the log digest, but …`, never a ✅.
+
 ## Other files of the input (🧰 bundle triage)
 
 `analyze logs` writes `label<tab>path` of every file it walks (archives extracted) to `$tmp_dir/walked`.

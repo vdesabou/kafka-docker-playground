@@ -16,6 +16,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bundle_triage  # noqa: E402
+import rest_dumps  # noqa: E402
 import json_log_export as jle  # noqa: E402
 import log_overview  # noqa: E402
 import log_report  # noqa: E402
@@ -571,7 +572,10 @@ def test_cfk_sections_and_verdict():
     check("in findings", any(f.get("_view", {}).get("kind") == "cfk" for f in log_report.analyze(
         (lambda fs: (setattr(fs, "cfk_bundles", [bundle]), fs)[1])(log_report.parse_records(records_file(tempfile.mkdtemp(), text))))["findings"]))
     cls, text = log_report.verdict(res, "ERROR/FATAL/WARN")
-    check("one verdict", cls == "danger" and text.startswith("✅ No") and "☸️ CFK bundle: 1 critical, 1 high issue(s) of 2, start with Pod Failures" in text, (cls, text))
+    # no record in the logs but issues in the bundle: not a ✅ (#4)
+    check("one verdict", cls == "danger" and text.startswith("🔎 No ERROR/FATAL/WARN record in the 1 file(s) of the log digest")
+          and "but the CFK bundle has 2 issue(s)" in text
+          and "☸️ CFK bundle: 1 critical, 1 high issue(s) of 2, start with Pod Failures" in text, (cls, text))
 
 
 def test_kb_articles_of_variants():
@@ -1877,6 +1881,145 @@ def test_thread_dump_single_waiter_stall_and_stuck_io():
     check("not the idle reader, not the epollWait thread", not any("db-idle-reader" in f["text"] or "producer-network" in f["text"]
                                                                   for f in r["findings"]), r["findings"])
     check("JSON: stuck_io", [x["name"] for x in r["stuck_io"]] == ["jdbc-writer"], r["stuck_io"])
+
+
+STATUS_CAPTURE = """[user@host ~]$ curl -s http://connect.example.com:8083/connectors/orders-sink/status | python3 -m json.tool
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+{
+    "name": "orders-sink",
+    "connector": {"state": "RUNNING", "worker_id": "10.0.0.1:8083"},
+    "tasks": [
+        {"id": 0, "state": "FAILED", "worker_id": "10.0.0.2:8083",
+         "trace": "org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler\\n\\tat org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:518)\\nCaused by: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!\\n\\tat io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.getByteBuffer(AbstractKafkaSchemaSerDe.java:600)\\n"},
+        {"id": 1, "state": "RUNNING", "worker_id": "10.0.0.1:8083"}
+    ],
+    "type": "sink"
+}
+[user@host ~]$ curl -s "http://connect.example.com:8083/connectors?expand=status"
+{"payments-source": {"status": {"name": "payments-source", "connector": {"state": "FAILED", "worker_id": "10.0.0.3:8083", "trace": "java.lang.IllegalStateException: boom\\n\\tat a.b.C.start(C.java:1)"}, "tasks": [], "type": "source"}}}
+"""
+
+
+def test_rest_status_dump_traces():
+    """#3b: a REST status dump saved as .txt (prompt, curl progress, pretty-printed JSON, a map of ?expand=status): each
+    FAILED connector / task is an ERROR record with its [connector|task-N] context, the worker and the trace"""
+    with tempfile.TemporaryDirectory() as tmp:
+        src = os.path.join(tmp, "connector_status.txt")
+        with open(src, "w") as fh:
+            fh.write(STATUS_CAPTURE)
+        out = os.path.join(tmp, "out")
+        old, sys.stdout = sys.stdout, io.StringIO()
+        try:
+            rc = rest_dumps.main(["rest_dumps.py", src, out])
+            printed = sys.stdout.getvalue()
+        finally:
+            sys.stdout = old
+        check("recognized", rc == 0 and printed.split("\t")[:3] == ["2", "2", "0"], (rc, printed))
+        log = open(os.path.join(out, "rest-status.log")).read()
+        check("task record", "ERROR [orders-sink|task-0] REST status: task orders-sink-0 is FAILED on worker 10.0.0.2:8083 (sink connector)" in log, log)
+        check("trace lines", "\tat org.apache.kafka.connect.runtime.WorkerSinkTask" in log
+              and "Caused by: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!" in log, log)
+        check("connector record", "ERROR [payments-source] REST status: connector payments-source is FAILED on worker 10.0.0.3:8083" in log, log)
+        check("RUNNING task left out", "task-1" not in log, log)
+        # a log that only mentions "tasks": not a REST output
+        plain = os.path.join(tmp, "connect.log")
+        with open(plain, "w") as fh:
+            fh.write('[2026-11-06 06:16:24,209] INFO {"tasks": 2, "state": "x"} (a.b.C)\n')
+        check("not a REST output", rest_dumps.main(["rest_dumps.py", plain, os.path.join(tmp, "out2")]) == 1)
+
+
+def test_connector_plugins_without_version_and_shadowed():
+    """#3c: GET /connector-plugins?connectorsOnly=false saved as .txt: entries without a version are kept, and a class
+    listed twice (one without a version: an old jar) is a HIGH finding of config lint and of 🔎 Findings"""
+    plugins = [{"class": "io.confluent.connect.jdbc.JdbcSinkConnector", "type": "sink", "version": "10.7.4"},
+               {"class": "org.apache.kafka.connect.transforms.Flatten$Value", "type": "transformation"},
+               {"class": "org.apache.kafka.connect.transforms.Flatten$Value", "type": "transformation", "version": "7.9.1-ce"}]
+    with tempfile.TemporaryDirectory() as tmp:
+        src = os.path.join(tmp, "plugins.txt")
+        with open(src, "w") as fh:
+            fh.write('$ curl -s "http://connect.example.com:8083/connector-plugins?connectorsOnly=false"\n' + json.dumps(plugins) + "\n")
+        old, sys.stdout = sys.stdout, io.StringIO()
+        try:
+            rc = rest_dumps.main(["rest_dumps.py", src, os.path.join(tmp, "out")])
+        finally:
+            sys.stdout = old
+        check("plugin list recognized", rc == 0 and json.load(open(os.path.join(tmp, "out", "blocks", "1.json"))) == plugins)
+        text = ("@@PGFILE@@|plugins.txt|2|0|0||\n@@PGCFG@@|connector plugins|file||||plugins.txt\n"
+                "@@PGCFGL@@|io.confluent.connect.jdbc.JdbcSinkConnector=10.7.4\n"
+                "@@PGCFGL@@|org.apache.kafka.connect.transforms.Flatten$Value=\n"
+                "@@PGCFGL@@|org.apache.kafka.connect.transforms.Flatten$Value=7.9.1-ce\n")
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    lint = [x for x in res["config_lint"] if x["connector"] == "connector plugins"]
+    check("shadowed class", len(lint) == 1 and lint[0]["severity"] == "HIGH" and lint[0]["key"] == "org.apache.kafka.connect.transforms.Flatten$Value"
+          and "loaded from two places" in lint[0]["message"] and "org/apache/kafka/connect/transforms/Flatten.class" in lint[0]["message"], lint)
+    check("in findings", any(f["text"].startswith("🧩 org.apache.kafka.connect.transforms.Flatten$Value") for f in res["findings"]), res["findings"])
+    cls, verdict = log_report.verdict(res, "ERROR/FATAL")
+    check("not a ✅ (#4)", cls == "warn" and verdict.startswith("🔎 No ERROR/FATAL record") and "1 critical / high finding(s)" in verdict, verdict)
+
+
+def test_no_kafka_log_in_the_input():
+    """#14: an input of host captures and a GC log: no period covered from their dates, no gap, and the verdict says that
+    there is no Kafka / Connect log instead of a ✅; a real log next to them keeps its period"""
+    with tempfile.TemporaryDirectory() as tmp:
+        capture = os.path.join(tmp, "capture_broker01.txt")
+        with open(capture, "w") as fh:
+            fh.write("=== uptime\n 16:48:00 up 120 days\n=== ls -l /var/lib/kafka\n-rw-r--r-- 1 kafka kafka 10 2025-06-25 16:09:06 meta.properties\n")
+        gc = os.path.join(tmp, "kafkaServer-gc.log")
+        with open(gc, "w") as fh:
+            for i in range(6):
+                fh.write(f"[2026-09-07T21:4{i}:28.000+0000][info][gc] GC({i}) Pause Young (Normal) (G1 Evacuation Pause) 100M->50M(1G) 12.3ms\n")
+        log = os.path.join(tmp, "server.log")
+        with open(log, "w") as fh:
+            fh.write("[2026-10-25 15:00:00,000] INFO [KafkaServer id=1] started (kafka.server.KafkaServer)\n")
+        sources = os.path.join(tmp, "sources")
+        with open(sources, "w") as fh:
+            fh.write(f"capture_broker01.txt\t{capture}\t1\nkafkaServer-gc.log\t{gc}\t1\nserver.log\t{log}\t1\n")
+        check("unleveled", log_overview.unleveled(sources) == ["capture_broker01.txt"], log_overview.unleveled(sources))
+        check("GC log", bundle_triage.kind_of("kafkaServer-gc.log", gc) == "gc_log")
+        not_logs = os.path.join(tmp, "not-logs")
+        with open(not_logs, "w") as fh:
+            fh.write("kafkaServer-gc.log\tgc\ncapture_broker01.txt\tunleveled\n")
+        only = ("@@PGFILE@@|capture_broker01.txt|4|0|0|2025-06-25T16:09:06|2025-06-25T16:09:06\n"
+                "@@PGFILE@@|kafkaServer-gc.log|6|0|0|2026-09-07T21:40:28|2026-09-07T21:45:28\n")
+        files = log_report.parse_records(records_file(tmp, only))
+        log_report.mark_not_logs(files, not_logs)
+        res = log_report.analyze(files)
+        s = res["summary"]
+        check("no period", s["log_first_timestamp"] is None and s["log_duration_seconds"] is None and not res["coverage"]["gaps"], s)
+        cls, verdict = log_report.verdict(res, "ERROR/FATAL")
+        check("no Kafka log verdict", cls == "warn" and verdict.startswith("🔎 No Kafka / Connect log in the input")
+              and "1 GC log(s)" in verdict and "1 file(s) without a line with a log level" in verdict, verdict)
+        check("ticket", "**Period covered:** none (no Kafka / Connect log)" in log_report.ticket_markdown(res, "t", "ERROR/FATAL"))
+        files = log_report.parse_records(records_file(tmp, only + "@@PGFILE@@|server.log|1|0|0|2026-10-25T15:00:00|2026-10-25T15:30:00\n"))
+        log_report.mark_not_logs(files, not_logs)
+        res = log_report.analyze(files)
+        check("period of the real log only", res["summary"]["log_first_timestamp"].startswith("2026-10-25T15:00")
+              and not res["summary"]["no_kafka_log"], res["summary"])
+        check("✅ with a real log", log_report.verdict(res, "ERROR/FATAL")[1].startswith("✅ No ERROR/FATAL record"))
+
+
+def test_cfk_bundle_detection():
+    """#3a: one CFK custom resource next to a .txt log is not a CFK bundle (the log was never digested); several CRs,
+    a CR with a pod log, an operator log, a support bundle are"""
+    import subprocess
+    logs_sh = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts", "cli", "src", "commands", "analyze", "logs.sh")
+    funcs = subprocess.run(["sed", "-n", "/^function is_cfk_bundle/,/^}/p", logs_sh], capture_output=True, text=True).stdout
+    cr = "apiVersion: platform.confluent.io/v1beta1\nkind: Connector\nmetadata:\n  name: orders-sink\n"
+
+    def bundle(files):
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, content in files.items():
+                path = os.path.join(tmp, name)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "w") as fh:
+                    fh.write(content)
+            return subprocess.run(["bash", "-c", funcs + '\nis_cfk_bundle "$1"', "x", tmp]).returncode == 0
+    check("one CR and a .txt log", not bundle({"orders-sink.yaml": cr, "evidence.txt": "[2026-11-06 06:16:24,209] ERROR x\n"}))
+    check("one CR alone", not bundle({"orders-sink.yaml": cr}))
+    check("two CRs", bundle({"orders-sink.yaml": cr, "kafka.yaml": cr.replace("Connector", "Kafka")}))
+    check("a CR and a pod log", bundle({"connect.yaml": cr, "connect-0.log": "x\n"}))
+    check("operator log", bundle({"confluent-operator-5c94578d76-fjlb5.log": "x\n"}))
+    check("support bundle", bundle({"cluster-details.txt": "x\n"}))
 
 
 if __name__ == "__main__":

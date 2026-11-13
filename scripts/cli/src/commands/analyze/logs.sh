@@ -597,11 +597,13 @@ function is_duplicate_cfk_bundle () {
 
 # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
 # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout). Also a flat
-# collection of kubectl outputs made by hand (kubectl logs > kafka-0.log, kubectl get kafka -o yaml > kafka.yaml…): a
-# log of the CFK operator, or the YAML of a platform.confluent.io custom resource, at the top of the folder
+# collection of kubectl outputs made by hand (kubectl logs > kafka-0.log, kubectl get kafka -o yaml > kafka.yaml…) at the
+# top of the folder: a log of the CFK operator, or several YAML of platform.confluent.io custom resources, or one with a
+# pod log (*.log). One custom resource next to other files (a KafkaConnector CR sent with a .txt log of the worker) is not
+# a bundle: the folder is read as log files
 # $1: folder
 function is_cfk_bundle () {
-    local d
+    local d nb_cr=0
     [ -f "$1/cluster-details.txt" ] && return 0
     if [ -d "$1/operator" ]
     then
@@ -619,9 +621,25 @@ function is_cfk_bundle () {
         case "$(basename "$d")" in
             confluent-operator*.log) return 0 ;;
         esac
-        head -n 20 "$d" 2>/dev/null | grep -q 'apiVersion: platform.confluent.io/' && return 0
+        if head -n 20 "$d" 2>/dev/null | grep -q 'apiVersion: platform.confluent.io/'
+        then
+            nb_cr=$((nb_cr+1))
+            [ $nb_cr -ge 2 ] && return 0
+        fi
     done
+    if [ $nb_cr -eq 1 ]
+    then
+        for d in "$1"/*.log "$1"/*.log.gz "$1"/*.log.[0-9]*
+        do
+            [ -f "$d" ] && return 0
+        done
+    fi
     return 1
+}
+
+# a CFK bundle made by hand (kubectl outputs side by side), not by kubectl confluent support-bundle. $1: folder
+function is_flat_cfk_bundle () {
+    [ ! -f "$1/cluster-details.txt" ] && [ ! -d "$1/cluster-resources" ] && [ ! -d "$1/operator" ]
 }
 
 # a JSON or CSV export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, Kibana Discover CSV,
@@ -883,6 +901,43 @@ function analyze_logs_gzip () {
     analyze_logs_digest "$1" "$2" "$2" gz
 }
 
+# an output of the Kafka Connect REST API, whatever its extension (tools/log-analyzer/rest_dumps.py): the trace of each
+# FAILED connector or task of a GET /connectors/<name>/status or /connectors?expand=status becomes an ERROR record (the
+# known causes and root causes see it), a GET /connector-plugins list and the connector configs go to ⚙️ Configuration.
+# Returns 1 when the file is not one: the caller reads it as before; also 1 when its JSON documents are only a part of
+# the file (a log with a curl output pasted in it): the caller digests the file too. $1: path, $2: label
+function analyze_logs_rest_dump () {
+    local path="$1" label="$2" out summary nb_status nb_failed nb_blocks most b
+    nb_extracted=$((nb_extracted+1))
+    out="$tmp_dir/$nb_extracted/rest-api"
+    if ! summary=$(python3 -I "$root_folder/tools/log-analyzer/rest_dumps.py" "$path" "$out" 2>/dev/null)
+    then
+        rm -rf "$out"
+        return 1
+    fi
+    IFS=$'\t' read -r nb_status nb_failed nb_blocks most <<< "$summary"
+    log "🔌 $label: Kafka Connect REST API output: $nb_status connector status(es) with $nb_failed FAILED connector(s) / task(s) (their trace read as ERROR records), $nb_blocks other JSON document(s) (plugins, configs)"
+    for b in "$out"/blocks/*.json
+    do
+        [ -f "$b" ] && append_config_file "$b" "$label"
+    done
+    if [ -s "$out/rest-status.log" ]
+    then
+        if [ "$most" == "1" ]
+        then
+            analyze_logs_digest "$label" "$out/rest-status.log" "$path"
+        else
+            analyze_logs_digest "$label (REST status)" "$out/rest-status.log" "$path"
+        fi
+    elif [ "$most" == "1" ]
+    then
+        # no FAILED connector nor task: the file is read as it is, its ⚙️ configuration records need a file of the
+        # records (they join the last one)
+        analyze_logs_digest "$label" "$path"
+    fi
+    [ "$most" == "1" ]
+}
+
 # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
 # file, or a JSON file with connector configs (a connector config, {name, config}, the output of /connectors?expand=info),
 # or the output of GET /connector-plugins (the versions installed)
@@ -900,10 +955,12 @@ function append_config_file () {
             [ "$(wc -c < "$path" | tr -d ' ')" -lt 5000000 ] || return 0
             # the output of GET /connector-plugins: the version of each plugin installed on the worker (the version of a
             # connector whose logs miss its startup)
-            if jq -e 'type == "array" and length > 0 and all(.[]; type == "object" and has("class") and has("version") and has("type"))' "$path" > /dev/null 2>&1
+            # (?connectorsOnly=false: the transformations, converters… have no version, nor an old jar of a plugin on the
+            # plugin path; a class listed twice is a finding of config lint)
+            if jq -e 'type == "array" and length > 0 and all(.[]; type == "object" and has("class") and has("type"))' "$path" > /dev/null 2>&1
             then
                 printf '@@PGCFG@@\tconnector plugins\tfile\t\t\t%s\n' "$label" >> "$config_records_file"
-                jq -r '.[] | "@@PGCFGL@@\t\(.class)=\(.version)"' "$path" >> "$config_records_file" 2>/dev/null
+                jq -r '.[] | "@@PGCFGL@@\t\(.class)=\(.version // "")"' "$path" >> "$config_records_file" 2>/dev/null
                 return 0
             fi
             jq -r '
@@ -993,7 +1050,14 @@ function walk_cfk_bundle_logs () {
         else
             analyze_logs_path_entry "$f" "${label%/}/${f#"$path"/}"
         fi
-    done < <(find "$path" -type f \( -name '*.log' -o -name '*.log.gz' -o -name '*.log.[0-9]*' \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+    done < <(if is_flat_cfk_bundle "$path"
+             then
+                 # made by hand: every file but the YAML of the custom resources (read by the CFK analyzer), so that a log
+                 # saved as .txt or without extension (kubectl logs connect-0 > connect-0.txt) is digested too
+                 find "$path" -type f ! -name '*.yaml' ! -name '*.yml' ! -name '.DS_Store' ! -path "*/__MACOSX/*" -print0 | sort -z
+             else
+                 find "$path" -type f \( -name '*.log' -o -name '*.log.gz' -o -name '*.log.[0-9]*' \) ! -path "*/__MACOSX/*" -print0 | sort -z
+             fi)
     in_cfk_walk=""
 }
 
@@ -1176,7 +1240,10 @@ function analyze_logs_path_entry () {
             case "$path" in
                 *.csv|*.csv.gz) export_format=CSV ;;
             esac
-            if analyze_logs_export "$path" "$label" "$export_format"
+            if [[ "$path" == *.json ]] && analyze_logs_rest_dump "$path" "$label"
+            then
+                :
+            elif analyze_logs_export "$path" "$label" "$export_format"
             then
                 :
             elif [[ "$path" == *.gz ]]
@@ -1205,6 +1272,11 @@ function analyze_logs_path_entry () {
             then
                 if ! is_duplicate_file "$path" "$label"
                 then
+                    # a Connect REST API output saved as .txt (connector status, plugins), detected by its content
+                    if grep -q -m1 -e '"tasks"' -e '"class"' "$path" 2>/dev/null && analyze_logs_rest_dump "$path" "$label"
+                    then
+                        return
+                    fi
                     # JSON lines whatever the extension (a fluentd / Kubernetes / logstash dump saved as .log): converted
                     # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON
                     if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
@@ -1241,6 +1313,20 @@ do
 done
 collect_digests
 cat "$config_records_file" >> "$records_file"
+# the files digested that are not logs of a component: a GC log (its pauses and JDK still join the report, 🧰 gives the
+# command of its analyzer) and the files without any line with a log level (captures of host commands, kubectl tables…).
+# They do not make the period covered nor its gaps, and an input made only of them says so instead of a ✅
+not_logs_file="$tmp_dir/not-logs"
+: > "$not_logs_file"
+if [ -s "$sources_file" ] && command -v python3 > /dev/null 2>&1
+then
+    python3 -I "$root_folder/tools/log-analyzer/bundle_triage.py" --gc-logs "$sources_file" 2>/dev/null | awk '{ print $0 "\tgc" }' >> "$not_logs_file"
+    python3 -I "$root_folder/tools/log-analyzer/log_overview.py" --unleveled --sources "$sources_file" 2>/dev/null \
+        | awk -F '\t' 'FILENAME == ARGV[1] { gc[$1] = 1; next } !($0 in gc) { print $0 "\tunleveled" }' "$not_logs_file" - >> "$not_logs_file"
+fi
+nb_not_logs=$(grep -c . "$not_logs_file" || true)
+nb_gc_logs=$(grep -c $'\tgc$' "$not_logs_file" || true)
+nb_digested_labels=$(cut -f1 "$sources_file" | sort -u | grep -c . || true)
 set -e
 
 if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]
@@ -1448,6 +1534,12 @@ then
     exit $cfk_exit
 fi
 
+# the issues the CFK analysis of the bundles found (their JSON: --json, or written next to their report)
+cfk_nb_issues=0
+for cfk_issues_json in "${cfk_json_files[@]}" "${cfk_compare_files[@]}"
+do
+    cfk_nb_issues=$((cfk_nb_issues + $(jq '.summary.total_issues // 0' "$cfk_issues_json" 2>/dev/null || echo 0)))
+done
 duplicates_msg=""
 if [ $nb_duplicates -gt 0 ]
 then
@@ -1463,6 +1555,14 @@ nb_incomplete=$(grep -c . "$incomplete_file" || true)
 if [ $nb_files_with_findings -eq 0 ] && [ "$nb_incomplete" -gt 0 ]
 then
     logwarn "⚠️ no $levels record found in $nb_files file(s), but $nb_incomplete input(s) were not fully read: the missing part may hold errors, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+elif [ $nb_files_with_findings -eq 0 ] && [ "$nb_not_logs" -gt 0 ] && [ "$nb_not_logs" -ge "$nb_digested_labels" ] && [ "$cfk_nb_issues" -eq 0 ]
+then
+    # not a ✅ nor a period covered: nothing here could show an error
+    log "🔎 no Kafka / Connect log in the input: none of the $nb_files file(s) read is the log of a component ($nb_gc_logs GC log(s), see 🧰 below; $((nb_not_logs - nb_gc_logs)) file(s) without a line with a log level: captures of commands, tables…), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+elif [ $nb_files_with_findings -eq 0 ] && [ "$cfk_nb_issues" -gt 0 ]
+then
+    # not a ✅: the CFK analysis above found issues (made of the ERROR lines of its files, its events…)
+    log "🔎 no $levels record found in $nb_files file(s) of the log digest, but the CFK bundle analysis above found $cfk_nb_issues issue(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
 elif [ $nb_files_with_findings -eq 0 ]
 then
     log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
@@ -1496,6 +1596,11 @@ then
 fi
 sanitize_file "$records_file"
 sanitize_file "$incomplete_file"
+# the same placeholders as the labels of the records file (--no-count: they are counted there)
+if [[ -n "$sanitize" ]] && python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$not_logs_file" > "$not_logs_file.sanitized"
+then
+    mv "$not_logs_file.sanitized" "$not_logs_file"
+fi
 
 # 🔭 no finding: what the logs contain (period covered, levels, top messages and loggers) and what to ask for next,
 # instead of a bare "no record found" (tools/log-analyzer/log_overview.py)
@@ -1577,6 +1682,8 @@ report_args=(--records "$records_file" --title "$title" --levels "$levels" --ski
 # the files of the input, read again by the report: the file pages and 🔎 Search every log line of the HTML report, and
 # the check of the connector context (MDC) of the Connect logs, also in the summary and --json
 report_args+=(--sources "$sources_file")
+# the GC logs and the files without a log level: not logs (period covered, verdict)
+report_args+=(--not-logs "$not_logs_file")
 # 🔒 --sanitize: the thread dumps of the input sanitized with the same placeholders, and nothing that holds raw lines next
 # to the report (file pages, search, full thread report), so that none of it ends up in the 📦 .zip of the report
 if [[ -n "$sanitize" ]]
