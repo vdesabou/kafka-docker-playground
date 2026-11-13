@@ -96,6 +96,7 @@ flags:
       🔖 docker-compose override file
 
       ❕ It must be absolute full path
+  - import: src/flags/ansible-inventory.yml
   - long: --rbac-role-bindings-file
     validate: file_exists
     arg: rbac-role-bindings-file

@@ -23,6 +23,28 @@ x-connect-host: &connect-host
 
 services:
 
+  # ZooKeeper hosts: only with a customer inventory that has a zookeeper group (CP 7.x)
+  zookeeper:
+    <<: *host
+    hostname: zookeeper
+    container_name: zookeeper
+    profiles:
+      - zookeeper
+
+  zookeeper2:
+    <<: *host
+    hostname: zookeeper2
+    container_name: zookeeper2
+    profiles:
+      - zookeeper
+
+  zookeeper3:
+    <<: *host
+    hostname: zookeeper3
+    container_name: zookeeper3
+    profiles:
+      - zookeeper
+
   controller:
     <<: *host
     hostname: controller

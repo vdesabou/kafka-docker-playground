@@ -11,6 +11,7 @@ schema_registry_tag="${args[--schema-registry-tag]}"
 ksqldb_tag="${args[--ksqldb-tag]}"
 control_center_tag="${args[--control-center-tag]}"
 client_version="${args[--client-version]}"
+ansible_inventory="${args[--ansible-inventory]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
@@ -452,6 +453,19 @@ then
   array_flag_list+=("--client-version=$client_version")
   # read by the client examples, and by set_kafka_client_tag (utils_function.sh) for the java builds
   export CLIENT_VERSION=$client_version
+fi
+
+if [[ -n "$ansible_inventory" ]]
+then
+  if [[ "${environment:-$PLAYGROUND_ENVIRONMENT}" != ansible* ]]
+  then
+    logerror "❌ --ansible-inventory only works with --environment ansible or ansible-sasl-ssl"
+    exit 1
+  fi
+  ansible_inventory="$(cd "$(dirname "$ansible_inventory")" && pwd)/$(basename "$ansible_inventory")"
+  array_flag_list+=("--ansible-inventory=$ansible_inventory")
+  # read by environment/ansible/start.sh
+  export ANSIBLE_CUSTOMER_INVENTORY="$ansible_inventory"
 fi
 
 if [[ -n "$environment" ]]

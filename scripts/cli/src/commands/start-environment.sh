@@ -5,6 +5,7 @@ docker_compose_override_file="${args[--docker-compose-override-file]}"
 wait_for_control_center="${args[--wait-for-control-center]}"
 no_stop="${args[--no-stop]}"
 rbac_role_bindings_file="${args[--rbac-role-bindings-file]}"
+ansible_inventory="${args[--ansible-inventory]}"
 
 if [ "$environment" = "ccloud" ]
 then
@@ -59,6 +60,17 @@ then
     exit 1
   fi
   export RBAC_ROLE_BINDINGS_FILE="$rbac_role_bindings_file"
+fi
+
+if [[ -n "$ansible_inventory" ]]
+then
+  if [[ "$environment" != ansible* ]]
+  then
+    logerror "❌ --ansible-inventory only works with --environment ansible or ansible-sasl-ssl (it is $environment)"
+    exit 1
+  fi
+  # read by environment/ansible/start.sh
+  export ANSIBLE_CUSTOMER_INVENTORY="$(cd "$(dirname "$ansible_inventory")" && pwd)/$(basename "$ansible_inventory")"
 fi
 
 # Handle --service flag (can be passed multiple times)

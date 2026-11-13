@@ -17,19 +17,24 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # - Confluent Platform: --tag (TAG), installed by cp-ansible as confluent_package_version
 # - cp-ansible (the confluent.platform collection): ANSIBLE_CP_VERSION, else the latest patch of the same major.minor as TAG
 # - ansible-core: ANSIBLE_CORE_VERSION
-cp_version="${TAG_BASE:-$TAG}"
-cp_major_minor=$(echo "$cp_version" | cut -d "." -f 1,2)
-cp_next_minor="$(echo "$cp_major_minor" | cut -d "." -f 1).$(( $(echo "$cp_major_minor" | cut -d "." -f 2) + 1 )).0"
-if [ -n "$ANSIBLE_CP_VERSION" ]
-then
-  export CP_ANSIBLE_VERSION_SPEC="==${ANSIBLE_CP_VERSION}"
-  cp_ansible_label="$ANSIBLE_CP_VERSION"
-else
-  export CP_ANSIBLE_VERSION_SPEC=">=${cp_major_minor}.0,<${cp_next_minor}"
-  cp_ansible_label="${cp_major_minor}.x"
-fi
+# - with a customer inventory (ANSIBLE_CUSTOMER_INVENTORY, playground run --ansible-inventory): its confluent_package_version
+#   and installation_method, see below
 export ANSIBLE_CORE_VERSION="${ANSIBLE_CORE_VERSION:-2.17.*}"
-export ANSIBLE_CONTROLLER_IMAGE_TAG="cp-ansible-${cp_ansible_label}-core-${ANSIBLE_CORE_VERSION//\*/x}"
+function set_cp_versions () {
+  cp_version="$1"
+  cp_major_minor=$(echo "$cp_version" | cut -d "." -f 1,2)
+  cp_next_minor="$(echo "$cp_major_minor" | cut -d "." -f 1).$(( $(echo "$cp_major_minor" | cut -d "." -f 2) + 1 )).0"
+  if [ -n "$ANSIBLE_CP_VERSION" ]
+  then
+    export CP_ANSIBLE_VERSION_SPEC="==${ANSIBLE_CP_VERSION}"
+    cp_ansible_label="$ANSIBLE_CP_VERSION"
+  else
+    export CP_ANSIBLE_VERSION_SPEC=">=${cp_major_minor}.0,<${cp_next_minor}"
+    cp_ansible_label="${cp_major_minor}.x"
+  fi
+  export ANSIBLE_CONTROLLER_IMAGE_TAG="cp-ansible-${cp_ansible_label}-core-${ANSIBLE_CORE_VERSION//\*/x}"
+}
+set_cp_versions "${TAG_BASE:-$TAG}"
 ANSIBLE_INSTALLATION_METHOD="${ANSIBLE_INSTALLATION_METHOD:-archive}"
 
 # the docker connection plugin of the controller talks to the engine through its socket
@@ -43,6 +48,45 @@ fi
 # from /cache instead of downloading it on each run
 export ANSIBLE_ARCHIVE_CACHE_DIR="${ANSIBLE_ARCHIVE_CACHE_DIR:-$HOME/.playground-ansible-cache}"
 mkdir -p "$ANSIBLE_ARCHIVE_CACHE_DIR"
+
+# the inventory of the customer (ANSIBLE_CUSTOMER_INVENTORY, playground run --ansible-inventory <hosts.yml>): its variables
+# are kept, its hosts become the playground hosts, see inventory_overlay.py. It runs in the controller image (python and
+# the yaml loader of ansible, for the !vault values)
+overlay_json=""
+if [ -n "${ANSIBLE_CUSTOMER_INVENTORY:-}" ]
+then
+  if [ ! -f "$ANSIBLE_CUSTOMER_INVENTORY" ]
+  then
+    logerror "❌ the customer inventory $ANSIBLE_CUSTOMER_INVENTORY does not exist"
+    exit 1
+  fi
+  customer_inventory="$(cd "$(dirname "$ANSIBLE_CUSTOMER_INVENTORY")" && pwd)/$(basename "$ANSIBLE_CUSTOMER_INVENTORY")"
+  function run_inventory_overlay () {
+    docker compose -f ../../environment/ansible/docker-compose.yml build --quiet ansible-controller > /dev/null
+    docker run --rm -v "$customer_inventory:/input/hosts.yml:ro" -v "${DIR}/inventory_overlay.py:/overlay.py:ro" "kdp-ansible-controller:${ANSIBLE_CONTROLLER_IMAGE_TAG}" python3 /overlay.py /input/hosts.yml
+  }
+  log "📋 reading the customer inventory $customer_inventory"
+  overlay_json=$(run_inventory_overlay)
+  if [ -z "$overlay_json" ] || [ "$(echo "$overlay_json" | jq -r '.error // empty')" != "" ]
+  then
+    logerror "❌ ${overlay_json:+$(echo "$overlay_json" | jq -r '.error')}"
+    exit 1
+  fi
+  customer_version=$(echo "$overlay_json" | jq -r '.version')
+  if [ -n "$customer_version" ] && [ "$customer_version" != "$cp_version" ]
+  then
+    log "📋 confluent_package_version of the customer inventory: $customer_version (instead of $cp_version)"
+    set_cp_versions "$customer_version"
+  fi
+  customer_method=$(echo "$overlay_json" | jq -r '.method')
+  if [ -n "$customer_method" ]
+  then
+    ANSIBLE_INSTALLATION_METHOD="$customer_method"
+  fi
+  echo "$overlay_json" | jq -r '.changes[] | "   ✏️ " + .' | while read -r line; do log "$line"; done
+  echo "$overlay_json" | jq -r '.warnings[] | "   ⚠️ " + .' | while read -r line; do logwarn "$line"; done
+fi
+
 archive_file="confluent-${cp_version}.tar.gz"
 if [ "$ANSIBLE_INSTALLATION_METHOD" == "archive" ] && [ ! -f "$ANSIBLE_ARCHIVE_CACHE_DIR/$archive_file" ]
 then
@@ -61,7 +105,10 @@ fi
 # has in the other playground environments (used by the playground commands that read JMX metrics: JMX_PORT is read
 # by the *-run-class scripts, KAFKA_JMX_PORT / SCHEMA_REGISTRY_JMX_PORT / KSQL_JMX_PORT by the playground commands)
 # <host> <cp-ansible group> <JMX variable of the playground commands> <JMX port> <compose profile>
-ansible_hosts_table="controller kafka_controller KAFKA_JMX_PORT 10005 -
+ansible_hosts_table="zookeeper zookeeper KAFKA_JMX_PORT 9999 zookeeper
+zookeeper2 zookeeper KAFKA_JMX_PORT 12999 zookeeper
+zookeeper3 zookeeper KAFKA_JMX_PORT 13999 zookeeper
+controller kafka_controller KAFKA_JMX_PORT 10005 -
 controller2 kafka_controller KAFKA_JMX_PORT 12005 controller-nodes
 controller3 kafka_controller KAFKA_JMX_PORT 13005 controller-nodes
 broker kafka_broker KAFKA_JMX_PORT 10000 -
@@ -90,13 +137,27 @@ do
 done
 profile_args=()
 ansible_hosts=()
-while read -r host group jmx_var jmx_port profile
-do
-  if [ "$profile" == "-" ] || [[ " ${enabled_profiles[*]} " == *" $profile "* ]]
-  then
-    ansible_hosts+=("$host")
-  fi
-done <<< "$ansible_hosts_table"
+if [ -n "$overlay_json" ]
+then
+  # the hosts of the customer inventory, the --enable-* flags don't apply
+  read -r -a ansible_hosts <<< "$(echo "$overlay_json" | jq -r '.hosts | join(" ")')"
+  enabled_profiles=()
+  while read -r host group jmx_var jmx_port profile
+  do
+    if [ "$profile" != "-" ] && [[ " ${ansible_hosts[*]} " == *" $host "* ]] && [[ " ${enabled_profiles[*]} " != *" $profile "* ]]
+    then
+      enabled_profiles+=("$profile")
+    fi
+  done <<< "$ansible_hosts_table"
+else
+  while read -r host group jmx_var jmx_port profile
+  do
+    if [ "$profile" == "-" ] || [[ " ${enabled_profiles[*]} " == *" $profile "* ]]
+    then
+      ansible_hosts+=("$host")
+    fi
+  done <<< "$ansible_hosts_table"
+fi
 for profile in "${enabled_profiles[@]}"
 do
   profile_args+=(--profile "$profile")
@@ -106,6 +167,11 @@ log "🖥️ hosts: ${ansible_hosts[*]}"
 # security of the cluster (environment/ansible-sasl-ssl sets ANSIBLE_SECURITY): cp-ansible generates the certificates
 security_vars=""
 ansible_environment_name="ansible"
+if [ -n "$overlay_json" ] && [ -n "${ANSIBLE_SECURITY:-}" ]
+then
+  logwarn "⚠️ the security of the customer inventory is used, not the one of the ansible-${ANSIBLE_SECURITY} environment"
+  ANSIBLE_SECURITY=""
+fi
 case "${ANSIBLE_SECURITY:-}" in
   "")
     ;;
@@ -131,6 +197,31 @@ then
   archive_vars="    confluent_archive_file_source: /cache/${archive_file}
     confluent_archive_file_remote: true"
 fi
+if [ -n "$overlay_json" ]
+then
+  {
+    echo "# generated by environment/ansible/start.sh from the customer inventory $customer_inventory: edit it, then run"
+    echo "# the playbook again with docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
+    echo "$overlay_json" | jq '.inventory' | yq -P -o yaml '.'
+  } > "$inventory_file"
+  # what the hosts of the playground need: the docker connection, the JDK of the hosts, the archive of the cache
+  ARCHIVE_SOURCE="/cache/${archive_file}" CP_VERSION="$cp_version" METHOD="$ANSIBLE_INSTALLATION_METHOD" yq -i -P '
+    .all.vars.ansible_connection = "community.docker.docker"
+    | .all.vars.ansible_user = "root"
+    | .all.vars.ansible_become = false
+    | .all.vars.custom_java_path = "/usr/lib/jvm/default-java"
+    | .all.vars.confluent_package_version = strenv(CP_VERSION)
+    | .all.vars.installation_method = strenv(METHOD)
+    | (select(strenv(METHOD) == "archive") | .all.vars.confluent_archive_file_source = strenv(ARCHIVE_SOURCE) | .all.vars.confluent_archive_file_remote = true) // .' "$inventory_file"
+  # the JMX ports of the other playground environments, as host variables
+  while read -r host group jmx_var jmx_port profile
+  do
+    if [ "$jmx_var" != "-" ] && [[ " ${ansible_hosts[*]} " == *" $host "* ]]
+    then
+      yq -i -P ".all.children.${group}.hosts.\"${host}\".${group}_service_environment_overrides.JMX_PORT = ${jmx_port} | .all.children.${group}.hosts.\"${host}\".${group}_service_environment_overrides.${jmx_var} = ${jmx_port}" "$inventory_file"
+    fi
+  done <<< "$ansible_hosts_table"
+else
 cat > "$inventory_file" << EOF
 # generated by environment/ansible/start.sh: edit it, then run the playbook again with
 # docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all
@@ -147,7 +238,7 @@ ${archive_vars}
 ${security_vars}
   children:
 EOF
-for group in kafka_controller kafka_broker schema_registry kafka_connect ksql kafka_rest control_center_next_gen
+for group in zookeeper kafka_controller kafka_broker schema_registry kafka_connect ksql kafka_rest control_center_next_gen
 do
   group_hosts=""
   while read -r host host_group jmx_var jmx_port profile
@@ -188,6 +279,7 @@ EOF
     fi
   } >> "$inventory_file"
 done
+fi
 
 # the docker compose override of an example (playground run --environment ansible): the hosts are not cp images, so
 #  - the environment variables of controller, broker, schema-registry and connect become inventory variables, with the
@@ -271,6 +363,20 @@ fi
 # other environments
 mkdir -p "${DIR}/../../confluent-hub"
 docker compose "${compose_files[@]}" "${profile_args[@]}" up -d --quiet-pull
+# the hosts started but not in the inventory: a customer inventory without some of the default hosts (no connect,
+# ZooKeeper instead of KRaft controllers...), or with 2 brokers (a compose profile starts broker2 and broker3)
+unused_hosts=()
+while read -r host group jmx_var jmx_port profile
+do
+  if { [ "$profile" == "-" ] || [[ " ${enabled_profiles[*]} " == *" $profile "* ]]; } && [[ " ${ansible_hosts[*]} " != *" $host "* ]]
+  then
+    unused_hosts+=("$host")
+  fi
+done <<< "$ansible_hosts_table"
+if [ ${#unused_hosts[@]} -gt 0 ]
+then
+  docker compose "${compose_files[@]}" "${profile_args[@]}" rm -s -f "${unused_hosts[@]}" > /dev/null 2>&1
+fi
 # the variables of the compose file are exported by this script: the saved command (stop, re-run) sets them again
 command="source ${DIR}/../../scripts/utils.sh && ANSIBLE_ARCHIVE_CACHE_DIR='${ANSIBLE_ARCHIVE_CACHE_DIR}' ANSIBLE_DOCKER_SOCKET='${ANSIBLE_DOCKER_SOCKET}' ANSIBLE_CORE_VERSION='${ANSIBLE_CORE_VERSION}' CP_ANSIBLE_VERSION_SPEC='${CP_ANSIBLE_VERSION_SPEC}' ANSIBLE_CONTROLLER_IMAGE_TAG='${ANSIBLE_CONTROLLER_IMAGE_TAG}' docker compose -f ${DIR}/../../environment/ansible/docker-compose.yml ${generated_override:+-f ${generated_override}} ${profile_args[*]} up -d --quiet-pull"
 playground state set run.docker_command "$command"
@@ -369,12 +475,17 @@ EOF
 done
 # CA of the cluster, for the https REST APIs (curl --cacert): the certificates of the truststore of connect
 rm -f "${inventory_dir}/ca.pem"
-truststore=$(docker exec connect sh -c 'sed -n "s/^ssl.truststore.location=//p" /etc/kafka/client.properties 2> /dev/null' | head -1)
-truststore_password=$(docker exec connect sh -c 'sed -n "s/^ssl.truststore.password=//p" /etc/kafka/client.properties 2> /dev/null' | head -1)
+ca_host="connect"
+if [[ " ${ansible_hosts[*]} " != *" connect "* ]]
+then
+  ca_host="broker"
+fi
+truststore=$(docker exec "$ca_host" sh -c 'sed -n "s/^ssl.truststore.location=//p" /etc/kafka/client.properties 2> /dev/null' | head -1)
+truststore_password=$(docker exec "$ca_host" sh -c 'sed -n "s/^ssl.truststore.password=//p" /etc/kafka/client.properties 2> /dev/null' | head -1)
 if [ -n "$truststore" ]
 then
-  docker exec connect keytool -list -rfc -keystore "$truststore" -storepass "$truststore_password" 2> /dev/null | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' > "${inventory_dir}/ca.pem"
-  log "🔐 security of the cluster: $(docker exec connect sed -n 's/^security.protocol=//p' /etc/kafka/client.properties), CA of the REST APIs in ${inventory_dir}/ca.pem"
+  docker exec "$ca_host" keytool -list -rfc -keystore "$truststore" -storepass "$truststore_password" 2> /dev/null | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' > "${inventory_dir}/ca.pem"
+  log "🔐 security of the cluster: $(docker exec "$ca_host" sed -n 's/^security.protocol=//p' /etc/kafka/client.properties), CA of the REST APIs in ${inventory_dir}/ca.pem"
   if is_ansible_host ksqldb-server 2> /dev/null && [[ " ${ansible_hosts[*]} " == *" ksqldb-server "* ]]
   then
     # the ksql cli of playground ksqldb sql: the truststore of the ksqlDB host for its https listener
@@ -385,4 +496,9 @@ fi
 log "📝 To see the properties files generated by cp-ansible, use cli command 'playground container exec -c broker --command \"cat /opt/confluent/etc/kafka/server.properties\"' (package install: /etc/kafka/server.properties)"
 log "📝 Inventory: $inventory_file, playbook output: $playbook_log"
 
-wait_container_ready
+if [[ " ${ansible_hosts[*]} " == *" connect "* ]]
+then
+  wait_container_ready
+else
+  log "🚦 no connect host in the inventory, the cluster is ready"
+fi
