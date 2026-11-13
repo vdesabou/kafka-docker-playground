@@ -2560,6 +2560,42 @@ def test_sample_connect_workers_bugs():
           and "thread x is RUNNABLE." in plain, plain)
 
 
+def test_archive_inputs_robustness():
+    """found on unused archived inputs: an input with nothing to read is not a ✅; a database alert log (appended to for
+    years) does not stretch the period covered nor the coverage"""
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, "")))
+    cls, head, _ = log_report.logs_verdict_parts(res, "ERROR/FATAL")
+    check("nothing read: not a ✅", cls == "warn" and head.startswith("🔎 Nothing to read in the input"), (cls, head))
+    text = ("@@PGFILE@@|bundle/alert_ORCL.log|500|1|1|2019-04-18T07:21:33|2026-11-03T19:07:09\n"
+            "@@PGREC@@|ERROR|1|10|12|2026-11-03T19:00:00|2026-11-03T19:00:00\n"
+            "2026-11-03T19:00:00.000000+00:00 ORA-00600: internal error code\n@@PGTS@@|2026-11-03T19:00:00\n"
+            "@@PGFILE@@|bundle/connect.log|100|0|0|2026-11-03T18:00:00|2026-11-03T19:30:00\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        files[0]["log_first_ts"], files[0]["log_last_ts"] = "2019-04-18T07:21:33", "2026-11-03T19:07:09"
+        files[1]["log_first_ts"], files[1]["log_last_ts"] = "2026-11-03T18:00:00", "2026-11-03T19:30:00"
+        res = log_report.analyze(files)
+    s = res["summary"]
+    check("alert log: not the period covered", s["log_first_timestamp"] == "2026-11-03T18:00:00", (s["log_first_timestamp"], s["log_last_timestamp"]))
+    check("alert log: its ORA- error still a record", s["by_level"]["ERROR"] == 1, s["by_level"])
+    check("alert log: not in the coverage", all("alert_ORCL" not in x["label"] for x in res["coverage"]["files"]), res["coverage"]["files"])
+    # catalogue: 🪵 with an index, 🎟️ the OAuth token, the harmless messages of several unrelated bundles
+    kc = log_report.known_causes
+    t = {x[2]: x[0] for x in kc.hints()}
+    check("🪵 DEBUG_X[3]:", re.search(t["🪵 Debug traces logged at ERROR"], "[2026-11-02 12:00:00,000] ERROR DEBUG_FLUSH_RECORD[3]: offset=1, opType=I"))
+    for line in ("javax.security.auth.login.LoginException: An internal error occurred while retrieving token from callback handler",
+                 "org.jose4j.jwt.consumer.InvalidJwtException: JWT (claims->{...}) rejected due to invalid claims",
+                 "org.jose4j.lang.UnresolvableKeyException: Unable to find a suitable verification key for JWS w/ header {alg=RS256}"):
+        check(f"🎟️ {line[:40]}", re.search(t["🎟️ OAuth token cannot be obtained or validated"], line))
+    for line in ("[ControllerServer id=1] Renouncing the leadership due to a metadata log event. We were the leader at epoch 7",
+                 "Catching up to assignment's config offset.", "Jolokia Access Control is not enabled. Please consider enabling it",
+                 "app=kafka, clusterId=c1, server=1 - Unable to submit events without credentials",
+                 "Switching to END_SESSION because sequences have incremented due to a log switch. Previous sequences: [1]"):
+        check(f"harmless: {line[:40]}", kc.harmless(line), line)
+    check("not harmless: a real error", not kc.harmless("ERROR WorkerSinkTask{id=x-0} Task threw an uncaught and unrecoverable exception"))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

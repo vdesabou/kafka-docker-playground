@@ -403,4 +403,18 @@ then
 else
     echo "✅ overlapping copies of the same log"
 fi
+# 📦 an archive is recognized by its content: a CSV export saved as .tar is read as a file, real archives are extracted
+sed -n "/^function looks_like_archive/,/^}/p" "$root/scripts/cli/src/commands/analyze/logs.sh" > "$tmp/archive.sh"
+printf '%s\n' '"time","message"' '"2026-11-02 12:00:00","ERROR boom"' > "$tmp/export.tar"
+mkdir -p "$tmp/arc" && printf 'x\n' > "$tmp/arc/a.log"
+tar -cf "$tmp/real.tar" -C "$tmp/arc" a.log && tar -czf "$tmp/real.tar.gz" -C "$tmp/arc" a.log
+( cd "$tmp/arc" && zip -q "$tmp/real.zip" a.log ) 2>/dev/null || cp "$tmp/real.tar.gz" "$tmp/real.zip"
+got=$(bash -c 'source "$1"; for f in export.tar real.tar real.tar.gz real.zip; do looks_like_archive "$2/$f" && printf "%s=archive;" "$f" || printf "%s=file;" "$f"; done' _ "$tmp/archive.sh" "$tmp")
+if [ "$got" != "export.tar=file;real.tar=archive;real.tar.gz=archive;real.zip=archive;" ]
+then
+    echo "❌ archives by content: $got"
+    failed=1
+else
+    echo "✅ archives recognized by their content (a CSV saved as .tar is a file)"
+fi
 exit $failed
