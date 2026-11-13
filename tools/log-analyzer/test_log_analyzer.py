@@ -2474,6 +2474,59 @@ def test_weak_verdict():
     check("half unexplained: none", not [l for l in run(10) if l["icon"] == "🤔"], run(10))
 
 
+
+def test_info_anomalies():
+    """📈 INFO templates that repeat abnormally (@@PGINFO@@ of the digest): steady and high (the rotated files of a worker
+    merged), a burst, normal chatter left out (unless it runs at 5/s or more), a burst at a startup left out, a template a
+    lifecycle signal reports in .covered only; in the terminal, the HTML report and the summary for a ticket"""
+    def minutes(start, n, per):
+        return " ".join(f"2026-11-07T{10 + (start + i) // 60:02d}:{(start + i) % 60:02d}={per}" for i in range(n))
+    ex = "[2026-11-07 10:00:00,000] INFO [{c}|task-0] {m} (x.Y:1)"
+    text = ("@@PGFILE@@|w1/connect.log.1|1000|0|0|2026-11-07T10:00:00|2026-11-07T10:29:59|0|\n"
+            "@@PGINFON@@|400|3|0\n@@PGINFOC@@|db-source|200\n@@PGINFOC@@||200\n"
+            f"@@PGINFO@@|180|2026-11-07T10:00:00|2026-11-07T10:29:50|6|db-source|Reconnecting to the database (x.Source:#)|5|{ex.format(c='db-source', m='Reconnecting to the database')}\n"
+            f"@@PGINFOB@@|{minutes(0, 30, 6)}\n"
+            "@@PGFILE@@|w1/connect.log|100000|0|0|2026-11-07T10:30:00|2026-11-07T11:00:00|0|\n"
+            "@@PGINFON@@|40000|8|0\n@@PGINFOC@@|db-source|400\n@@PGINFOC@@|orders-sink|200\n@@PGINFOC@@|jdbc-src|19000\n@@PGINFOC@@||1000\n"
+            f"@@PGINFO@@|180|2026-11-07T10:30:00|2026-11-07T10:59:50|6|db-source|Reconnecting to the database (x.Source:#)|5|{ex.format(c='db-source', m='Reconnecting to the database')}\n"
+            f"@@PGINFOB@@|{minutes(30, 30, 6)}\n"
+            f"@@PGINFO@@|180|2026-11-07T10:30:00|2026-11-07T10:59:50|6|db-source|WorkerSourceTask{{#}} Committing offsets for # acknowledged messages (x.W:#)|6|{ex.format(c='db-source', m='Committing offsets for 3 acknowledged messages')}\n"
+            f"@@PGINFOB@@|{minutes(30, 30, 6)}\n"
+            f"@@PGINFO@@|18000|2026-11-07T10:30:00|2026-11-07T11:00:00|600|jdbc-src|Database connection established. (x.Cached:#)|7|{ex.format(c='jdbc-src', m='Database connection established.')}\n"
+            f"@@PGINFOB@@|{minutes(30, 30, 600)}\n"
+            f"@@PGINFO@@|180|2026-11-07T10:30:00|2026-11-07T11:00:00|6|orders-sink|Starting commit and rotation for topic partition orders-# with start offsets {{}} and end offsets {{}} (x.T:#)|8|{ex.format(c='orders-sink', m='Starting commit and rotation for topic partition orders-0 with start offsets {} and end offsets {}')}\n"
+            f"@@PGINFOB@@|{minutes(30, 30, 6)}\n"
+            "@@PGINFO@@|170|2026-11-07T10:40:00|2026-11-07T10:41:50|150||Request to leader failed, retrying (x.Herder:#)|9|[2026-11-07 10:40:00,000] INFO Request to leader failed, retrying (x.Herder:1)\n"
+            "@@PGINFOB@@|2026-11-07T10:40=150 2026-11-07T10:41=20\n"
+            "@@PGINFO@@|300|2026-11-07T10:50:00|2026-11-07T10:50:30|300||Added plugin # (x.Scanner:#)|10|[2026-11-07 10:50:00,000] INFO Added plugin a (x.Scanner:1)\n"
+            "@@PGINFOB@@|2026-11-07T10:50=300\n"
+            "@@PGEVT@@|process_start|11|2026-11-07T10:50:40|||Kafka Connect worker started\n"
+            "@@PGINFO@@|120|2026-11-07T10:30:00|2026-11-07T10:49:50|6||Polling for new data (x.Poller:#)|12|[2026-11-07 10:30:00,000] INFO Polling for new data (x.Poller:1)\n"
+            f"@@PGINFOB@@|{minutes(30, 20, 6)}\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        res = log_report.analyze(files)
+    check("parsed", files[1]["info"]["by_connector"]["jdbc-src"] == 19000 and len(files[1]["info_templates"]) == 7
+          and files[1]["info_templates"][0]["buckets"]["2026-11-07T10:30"] == 6, files[1].get("info"))
+    ia = res["info_anomalies"]
+    got = [(r["kind"], r["severity"], r["connector"], r["count"]) for r in ia["rows"]]
+    check("anomalies: the connections of jdbc-src at 10/s (chatter, but above 5/s), the burst of the worker, the steady "
+          "reconnections of db-source over its two rotated files; not its offset commits, not the burst of the startup, not "
+          "the 20 min of polls",
+          got == [("steady", "MEDIUM", "jdbc-src", 18000), ("burst", "MEDIUM", None, 170), ("steady", "LOW", "db-source", 360)], got)
+    check("covered: the empty rotations (🔂 of the lifecycle)", [(r["covered_by"], r["connector"]) for r in ia["covered"]] == [("sink_empty_rotation", "orders-sink")], ia["covered"])
+    db = ia["rows"][2]
+    check("db-source: rate and share", db["per_minute"] == 6.0 and db["every_seconds"] == 10.0 and db["share"] == 0.6, db)
+    out = log_report.text_summary(res, [])
+    check("terminal", "📈 INFO messages repeating abnormally" in out
+          and "   LOW db-source: ×360 steady, 6/min (one every 10 s) over 59 min 50 s, 60 % of its INFO lines · 2026-11-07 10:00:00 → 10:59:50" in out
+          and "burst, 150 in the minute 2026-11-07 10:40 (median 0/min)" in out, out[out.find("📈"):][:900])
+    md = log_report.ticket_markdown(res, "t", "ERROR/FATAL/WARN")
+    check("summary for a ticket", "**📈 INFO messages repeating abnormally:** 3: `Database connection established. (x.Cached:#)`" in md, md[:1500])
+    html = log_report.info_anomalies_html(ia, {})
+    check("HTML card", "id='info-anomalies'" in html and "Reconnecting to the database" in html and "Committing offsets" not in html, html[:300])
+    check("nothing on a file without INFO templates", log_report.info_anomalies_text(log_report.info_anomalies(res, files[:0])) == [])
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

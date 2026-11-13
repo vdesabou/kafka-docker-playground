@@ -30747,6 +30747,11 @@ function log_awk() {
 #              lines: ISR changes, followers failing to fetch, requests timing out, log cleaner stopped, quota throttling,
 #              responses to clients already gone), 300 of each kind at most
 #   @@PGEVTN@@<tab>kind<tab>connector or group<tab>count: how many of them in the whole file
+# then the INFO lines as templates (it_add: numbers, ids, quoted values, lists masked, the [connector|task-0] context apart):
+#   @@PGINFON@@<tab>INFO lines<tab>templates<tab>lines of new templates past the cap of 3000
+#   @@PGINFOC@@<tab>connector (empty: no context)<tab>INFO lines
+#   @@PGINFO@@<tab>count<tab>first time<tab>last time (to the minute)<tab>busiest minute<tab>connector<tab>template<tab>line<tab>example
+#   @@PGINFOB@@<tab>minute=count, space separated (unordered): the 25 most frequent, then the 15 busiest minutes of the others
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
@@ -31152,6 +31157,65 @@ function summarize_log_errors() {
     function has_ms(s) {
         return match(substr(s, 1, 60), /[0-9]:[0-9][0-9][.,][0-9][0-9][0-9]/)
     }
+    # 📈 the INFO lines as templates (info_anomalies of tools/log-analyzer/log_report.py: an INFO message that repeats at a
+    # steady high rate or in a burst, the incidents with no ERROR at all: an HDFS sink rotating with empty offsets every 7 s,
+    # a storm of failed re-authentications on a broker). The message without its [connector|task-0] context (kept apart),
+    # the first word of a leading "[SocketServer listenerType=BROKER, nodeId=1]" kept, quoted values, bracketed lists,
+    # {…} (an empty {} kept: it is the anomaly of the HDFS sink), numbers, hex ids that start with a digit, UUIDs and ip:port
+    # masked (a run of them separated by - . : _ / is one #: 10.0.0.1:9092, 6f1c0d2e-1a2b-…), 160
+    # characters at most. Counted per template with its first / last time and per minute; 3000 templates at most (then the
+    # lines of a new one are only counted in it_over) and 200000 template-minute cells.
+    # Cheap: the masking (6 gsub() on 500 characters) only for a line whose quick key ck (its first 160 characters, the
+    # connector of the context included, without the digits; 20000 of them in it_ck) is new. The failed authentications of a broker (millions of
+    # lines in a storm) come with the key of their own fast path. The logger is read once per template (from its example)
+    function it_add(p, ck,    m, c, q, b, pre, id) {
+        it_last_id = 0
+        if (ck in it_ck) { it_inc(it_last_id = it_ck[ck]); return }
+        m = substr($0, p + 6, 500)
+        sub(/^ +/, "", m)
+        c = ""; pre = ""
+        if (substr(m, 1, 1) == "[" && (q = index(m, "] ")) > 0) {
+            b = index(m, "|")
+            if (b > 0 && b < q) { c = substr(m, 2, b - 2); m = substr(m, q + 2) }
+            else if ((b = index(m, " ")) > 0 && b < q) { pre = substr(m, 1, b) "#] "; m = substr(m, q + 2) }
+        }
+        if (index(m, "\t")) gsub(/\t/, " ", m)
+        if (index(m, "\"")) gsub(/"[^"]*"/, "\"#\"", m)
+        if (index(m, "\047")) gsub(/\047[^\047]*\047/, "\047#\047", m)
+        if (index(m, "[")) gsub(/\[[^][]+\]/, "[#]", m)
+        if (index(m, "{")) gsub(/\{[^{}]+\}/, "{#}", m)
+        gsub(/[0-9][0-9a-fA-F]*/, "#", m)
+        if (index(m, "#")) gsub(/#([-.:_\/]+#)+/, "#", m)
+        m = pre m
+        if (length(m) > 160) m = cut_utf8(m, 160)
+        if ((c SUBSEP m) in it_id) id = it_id[c, m]
+        else if (n_it < 3000) {
+            id = it_id[c, m] = ++n_it
+            it_tpl[id] = m; it_c[id] = c; it_first[id] = it_last[id] = line_ts; it_ex[id] = NR "\t" long($0)
+        } else { it_over++; return }
+        if (n_ck < 20000) { n_ck++; it_ck[ck] = id }
+        it_inc(it_last_id = id)
+    }
+    # one more line of template id: the count of its current minute in it_lc (a string compare per line), added to its count
+    # and to the template-minute cell when the minute changes (it_flush). First and last time are only compared then: to the
+    # minute
+    function it_inc(id,    mn) {
+        if ((mn = substr(line_ts, 1, 16)) == it_lm[id]) { it_lc[id]++; return }
+        it_flush(id)
+        if (line_ts < it_first[id]) it_first[id] = line_ts
+        if (line_ts > it_last[id]) it_last[id] = line_ts
+        it_lm[id] = mn; it_lc[id] = 1
+    }
+    function it_flush(id,    v) {
+        if (!it_lc[id]) return
+        it_n[id] += it_lc[id]
+        # (a new cell when the sum is its own count: the minute of a template seen again, in a newest-first export, is added to)
+        if (n_itb < 200000 || (id, it_lm[id]) in it_b) {
+            if ((v = it_b[id, it_lm[id]] += it_lc[id]) == it_lc[id]) { n_itb++; it_mins[id] = it_mins[id] " " it_lm[id] }
+        } else v = it_lc[id]
+        if (v > it_max[id]) it_max[id] = v
+        it_lc[id] = 0
+    }
     # a failed authentication seen by a broker: "broker 1 · /10.0.0.1 failed re-authentication: <error>" (the error of
     # "(errorMessage=…)", "(userId=…, errorMessage=…)", or an older "(…)" after the channel), its broker in au_who
     function au_detail(line,    p, what, ip, msg) {
@@ -31367,6 +31431,7 @@ function summarize_log_errors() {
                 # newest-first export (Grafana / Loki, Kibana): the times go down from line to line
                 if (ord_prev != "") { if (line_ts < ord_prev) ord_desc++; else if (line_ts > ord_prev) ord_asc++ }
                 ord_prev = line_ts
+                it_nr = NR
             }
         }
         # a client that failed to authenticate, seen by a broker (kafka.network.Selector, INFO: the ERROR is on the client
@@ -31386,6 +31451,12 @@ function summarize_log_errors() {
             if (au_raw in au_n) au_n[au_raw]++
             else if (nau < 500) { au_keys[++nau] = $0; au_rawk[nau] = au_raw; au_n[au_raw] = 1 }
             if (!(au_nid in au_whoc)) { au_detail($0); au_whoc[au_nid] = au_who }
+            # 📈 its INFO template (it_add), keyed by the pieces read above: the masking once per broker, kind, client IP and error
+            # (inline: the same template and minute as the line before it, the case of a storm)
+            if (line_ts != "") {
+                if (au_raw == au_it_k && substr(line_ts, 1, 16) == it_lm[au_it_i]) it_lc[au_it_i]++
+                else { it_add(index(substr($0, 1, 80), " INFO "), "\001" au_raw); au_it_k = au_raw; au_it_i = it_last_id }
+            }
             lc_key = "auth_failure\t" au_whoc[au_nid]
             if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
             lc_count[lc_key]++
@@ -31403,6 +31474,18 @@ function summarize_log_errors() {
             rec_line = NR
             rec[nlines = 1] = ""
             next
+        }
+        # 📈 an INFO line with a time: its template counted (it_add; the failed authentications of a broker in their fast path above)
+        # (inline: a template already counted in this minute)
+        # (the quick key without the task of the context: "[orders-sink|] Database connection established.", found without
+        # the gsub() when the message has no digit, most of the chatter of a worker)
+        if (it_nr == NR && (it_p = index(substr($0, 1, 80), " INFO ")) > 0) {
+            it_k = substr($0, it_p + 6, 160)
+            if (substr(it_k, 1, 1) == "[" && (it_q = index(it_k, "|")) > 0 && (it_r = index(it_k, "] ")) > it_q) it_k = substr(it_k, 1, it_q) substr(it_k, it_r)
+            if (!(it_k in it_ck)) gsub(/[0-9]+/, "", it_k)
+            if (!(it_k in it_ck)) it_add(it_p, it_k)
+            else if (substr(line_ts, 1, 16) == it_lm[it_i = it_ck[it_k]]) it_lc[it_i]++
+            else it_inc(it_i)
         }
         # the version of each connector and of Kafka, from INFO lines the digest does not keep otherwise
         if (records_file != "" && index($0, "Instantiated ") && match($0, /Instantiated (connector|task) [^ ]+ with version [^ ]+ of type (class )?[^ ]+/)) {
@@ -31772,6 +31855,37 @@ function summarize_log_errors() {
                 au_sum[au_k] += au_n[au_rawk[i]]
             }
             for (i = 1; i <= nau_out; i++) printf "@@PGEVTN@@\tauth_failure_by\t%s\t%d\t0\n", au_out[i], au_sum[au_out[i]] >> records_file
+            # 📈 the INFO templates: the 25 most frequent, then the 15 with the busiest minute among the others (a burst of a
+            # rare one), each with its count per minute (unordered)
+            for (i = 1; i <= n_it; i++) { it_flush(i); info_lines += it_n[i] }
+            info_lines += it_over
+            if (info_lines > 0) {
+                printf "@@PGINFON@@\t%d\t%d\t%d\n", info_lines, n_it, it_over >> records_file
+                for (i = 1; i <= n_it; i++) it_conn[it_c[i]] += it_n[i]
+                for (it_cn in it_conn) printf "@@PGINFOC@@\t%s\t%d\n", it_cn, it_conn[it_cn] >> records_file
+                # (one pass for each list: a template replaces the smallest one kept when it is above it)
+                n_sel = 0
+                for (j = 1; j <= 2; j++) {
+                    n_top = 0
+                    for (i = 1; i <= n_it; i++) {
+                        if (i in it_sel) continue
+                        it_v = j == 1 ? it_n[i] : it_max[i]
+                        if (n_top < (j == 1 ? 25 : 15)) { it_top[++n_top] = i; it_topv[n_top] = it_v; continue }
+                        it_lo = 1
+                        for (it_k = 2; it_k <= n_top; it_k++) if (it_topv[it_k] < it_topv[it_lo]) it_lo = it_k
+                        if (it_v > it_topv[it_lo]) { it_top[it_lo] = i; it_topv[it_lo] = it_v }
+                    }
+                    for (it_k = 1; it_k <= n_top; it_k++) { it_sel[it_top[it_k]] = 1; it_sel_id[++n_sel] = it_top[it_k] }
+                }
+                for (j = 1; j <= n_sel; j++) {
+                    i = it_sel_id[j]
+                    printf "@@PGINFO@@\t%d\t%s\t%s\t%d\t%s\t%s\t%s\n", it_n[i], it_first[i], it_last[i], it_max[i], it_c[i], it_tpl[i], it_ex[i] >> records_file
+                    it_nm = split(it_mins[i], it_mn, " ")
+                    it_bk = ""
+                    for (it_k = 1; it_k <= it_nm; it_k++) it_bk = it_bk " " it_mn[it_k] "=" it_b[i, it_mn[it_k]]
+                    printf "@@PGINFOB@@\t%s\n", substr(it_bk, 2) >> records_file
+                }
+            }
             close(records_file)
         }
         # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed
