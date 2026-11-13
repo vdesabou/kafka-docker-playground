@@ -2261,6 +2261,25 @@ def test_no_kafka_log_with_thread_dumps():
     check("verdict", cls == "warn" and "the thread dumps are analyzed below" in head and "nothing here can show an error" not in head, head)
 
 
+def test_verdict_cause_weighted_by_severity():
+    """👉 start with: a lower severity cause comes first only when its ERROR occurrences weigh more (x10 per level);
+    within a severity the order of the catalogue stays (a precise cause before its consequence); the story says the same"""
+    kc = lambda title, sev, errors: {"title": title, "severity": sev, "_errors": errors, "occurrences": errors}  # noqa: E731
+    pick = lambda causes: (log_report.verdict_cause({"known_causes": causes}) or {}).get("title")  # noqa: E731
+    check("166,071 MEDIUM errors before 6,024 HIGH ones",
+          pick([kc("🎫 Kerberos", "HIGH", 6024), kc("🪄 SMT", "MEDIUM", 166071)]) == "🪄 SMT")
+    check("3,302 MEDIUM errors before 20 HIGH ones", pick([kc("🪪 MDS", "HIGH", 20), kc("🌩️ 5xx", "MEDIUM", 3302)]) == "🌩️ 5xx")
+    check("not 10 times more: the HIGH one", pick([kc("🔑 auth", "HIGH", 500), kc("⏱️ timeouts", "MEDIUM", 4000)]) == "🔑 auth")
+    check("same severity: the order, not the volume", pick([kc("🌐 DNS", "HIGH", 23), kc("🔌 connection", "HIGH", 172)]) == "🌐 DNS")
+    check("CRITICAL wins", pick([kc("💥 OOM", "CRITICAL", 1), kc("🪄 SMT", "MEDIUM", 90)]) == "💥 OOM")
+    check("WARN only: none", pick([kc("🔌 connection", "HIGH", 0)]) is None)
+    check("crossing to MEDIUM: the MEDIUM cause of the most errors (more than 10x the first one)",
+          pick([kc("🪪 MDS", "HIGH", 10), kc("🪄 SMT", "MEDIUM", 102), kc("🚦 throttled", "MEDIUM", 2927), kc("🌩️ 5xx", "MEDIUM", 1994)]) == "🚦 throttled")
+    check("same severity, more than 10x: the later one", pick([kc("🧨 killed", "HIGH", 3), kc("🔌 connection", "HIGH", 40)]) == "🔌 connection")
+    check("log hygiene never", pick([kc("🛂 protocol", "HIGH", 30451), kc("🪵 Debug traces logged at ERROR", "LOW", 4116560)]) == "🛂 protocol"
+          and pick([kc("🪵 Debug traces logged at ERROR", "LOW", 9)]) is None)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
