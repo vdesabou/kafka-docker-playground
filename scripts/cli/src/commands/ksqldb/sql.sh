@@ -61,7 +61,7 @@ log "🧮 Running ksqlDB statements in $container container (ksqlDB ${ksqldb_ver
 rc=0
 # -t + stty: the cli formats the tables for the terminal width. --file runs every statement, even after a failing one,
 # and prints the errors in red
-output=$(docker exec -t "$container" sh -c "stty cols $width 2>/dev/null; timeout $timeout_options $max_wait ksql $cli_options --file /tmp/playground-ksqldb-statements.sql http://ksqldb-server:8088" 2>&1) || rc=$?
+output=$(docker exec -t "$container" sh -c "stty cols $width 2>/dev/null; timeout $timeout_options $max_wait ksql $cli_options --file /tmp/playground-ksqldb-statements.sql ${ksqldb_internal_url:-http://ksqldb-server:8088}" 2>&1) || rc=$?
 output=$(printf '%s\n' "$output" | tr -d '\r')
 
 # the errors of the statements are the red lines

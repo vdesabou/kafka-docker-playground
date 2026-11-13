@@ -314,6 +314,24 @@ then
     security="$producer_config_name /etc/kafka/producer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+elif [[ "$environment" == ansible* ]]
+then
+    # environment/ansible*: the security cp-ansible rendered, client.properties of the connect host written by
+    # environment/ansible/start.sh (absent with plaintext), and the truststore of that host for an https schema registry
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
+    ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null)
+    if [ -n "$ansible_client_properties" ]
+    then
+        security="$producer_config_name /etc/kafka/client.properties"
+    fi
+    if [ "$(ansible_rest_scheme schema-registry)" == "https" ]
+    then
+        sr_url_cli="https://schema-registry:8081"
+        security="$property_name schema.registry.ssl.truststore.location=$(echo "$ansible_client_properties" | sed -n 's/^ssl.truststore.location=//p' | head -1) $property_name schema.registry.ssl.truststore.password=$(echo "$ansible_client_properties" | sed -n 's/^ssl.truststore.password=//p' | head -1) $security"
+    fi
 elif [[ "$environment" == *"ssl"* ]]
 then
     get_broker_container

@@ -356,6 +356,37 @@ function is_multiple_connect_workers_running() {
   fi
 }
 
+# environment/ansible*: scheme of the REST API of host $1 (connect*, schema-registry, ksqldb-server), from the listeners=
+# of the configuration cp-ansible rendered on it: https with ssl_enabled (or an inventory with TLS), http otherwise
+function ansible_rest_scheme () {
+  local host="$1" file
+  case "$host" in
+    connect*) file="kafka/connect-distributed.properties" ;;
+    schema-registry*) file="schema-registry/schema-registry.properties" ;;
+    ksqldb-server*) file="ksqldb/ksql-server.properties" ;;
+    *) echo "http"; return 0 ;;
+  esac
+  if docker exec "$host" sh -c "grep -h '^listeners=' /opt/confluent/etc/$file /etc/$file 2> /dev/null" 2> /dev/null | grep -q "https://"
+  then
+    echo "https"
+  else
+    echo "http"
+  fi
+}
+
+# environment/ansible*: curl options for the https REST API of host $1 published on localhost port $2. The certificates
+# of cp-ansible (or of the customer) are issued for the host name, not localhost: it is resolved to 127.0.0.1, and the
+# CA of the cluster (exported by environment/ansible/start.sh) verifies them
+function ansible_curl_security () {
+  local root="$root_folder"
+  if [ -z "$root" ]
+  then
+    # filter functions run before the before hook, which sets root_folder
+    root="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." >/dev/null && pwd )"
+  fi
+  echo "--cacert $root/environment/ansible/inventory/ca.pem --resolve $1:$2:127.0.0.1"
+}
+
 function get_connect_url_and_security() {
   get_environment_used
 
@@ -516,6 +547,16 @@ function get_connect_url_and_security() {
   then
       # bearer token of the Keycloak client superuser (SystemAdmin on the connect cluster)
       security="--oauth2-bearer $(get_rbac_oauth_token superuser)"
+  elif [[ "$environment" == ansible* ]]
+  then
+      local connect_host="connect"
+      [ "$connect_port" == "8283" ] && connect_host="connect2"
+      [ "$connect_port" == "8383" ] && connect_host="connect3"
+      if [ "$(ansible_rest_scheme "$connect_host")" == "https" ]
+      then
+          connect_url="https://$connect_host:$connect_port"
+          security="$(ansible_curl_security "$connect_host" "$connect_port")"
+      fi
   fi
 }
 
@@ -855,6 +896,13 @@ function get_sr_url_and_security() {
   then
       # bearer token of the Keycloak client superuser (SystemAdmin on the schema registry cluster)
       sr_security="--oauth2-bearer $(get_rbac_oauth_token superuser)"
+  elif [[ "$environment" == ansible* ]]
+  then
+      if [ "$(ansible_rest_scheme schema-registry)" == "https" ]
+      then
+          sr_url="https://schema-registry:8081"
+          sr_security="$(ansible_curl_security schema-registry 8081)"
+      fi
     elif [[ "$environment" == cfk* ]]
     then
         # CFK Schema Registry is exposed as a Kubernetes service.
@@ -4482,6 +4530,41 @@ function add_connector_config_based_on_environment () {
       # nothing to do
       return
     ;;
+    ansible*)
+      # environment/ansible*: the Kafka clients of the connector (confluent.topic.*, redo.log.consumer.*, the history
+      # producers and consumers of Debezium, reporter.*) get the security of the connect worker, and the converters an
+      # https schema registry with its truststore: the client.properties of the connect host, derived from what cp-ansible
+      # rendered for the inventory (nothing to do with plaintext)
+      local ansible_client_properties ansible_sr_https=false
+      get_connect_container
+      ansible_client_properties=$(docker exec "${connect_container:-connect}" cat /etc/kafka/client.properties 2> /dev/null)
+      [ "$(ansible_rest_scheme schema-registry)" == "https" ] && ansible_sr_https=true
+      if [ -z "$ansible_client_properties" ] && [ "$ansible_sr_https" == "false" ]
+      then
+        return
+      fi
+      echo "$json_content" > $tmp_dir/input.json
+      jq --arg props "$ansible_client_properties" --argjson sr_https "$ansible_sr_https" '
+        ($props | split("\n") | map(select(test("^[a-z][a-z.]*=")) | capture("^(?<k>[^=]+)=(?<v>.*)$")) | map({(.k): .v}) | add // {}) as $sec
+        | . as $config
+        | (
+            [ {b: "confluent.topic.bootstrap.servers", p: ["confluent.topic."]},
+              {b: "redo.log.consumer.bootstrap.servers", p: ["redo.log.consumer."]},
+              {b: "database.history.kafka.bootstrap.servers", p: ["database.history.producer.", "database.history.consumer."]},
+              {b: "schema.history.internal.kafka.bootstrap.servers", p: ["schema.history.internal.producer.", "schema.history.internal.consumer."]},
+              {b: "reporter.bootstrap.servers", p: ["reporter.admin.", "reporter.producer."]} ]
+            | map(. as $e | select($config | has($e.b))) | map(.p[]) ) as $prefixes
+        | reduce $prefixes[] as $p (.; . + ($sec | with_entries(.key = $p + .key)))
+        | if $sr_https then
+            reduce ("key", "value") as $c (.;
+              if has($c + ".converter.schema.registry.url") then
+                .[$c + ".converter.schema.registry.url"] = "https://schema-registry:8081"
+                | .[$c + ".converter.schema.registry.ssl.truststore.location"] = $sec["ssl.truststore.location"]
+                | .[$c + ".converter.schema.registry.ssl.truststore.password"] = $sec["ssl.truststore.password"]
+              else . end)
+          else . end' $tmp_dir/input.json > $tmp_dir/output.json
+      json_content=$(cat $tmp_dir/output.json)
+    ;;
     ccloud)
       if [ -f $root_folder/.ccloud/env.delta ]
       then
@@ -5150,7 +5233,7 @@ function get_example_supported_environments () {
   then
     skips_cfk=1
   fi
-  for environment_name in plaintext ccloud cfk cfk-rbac ansible 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  for environment_name in plaintext ccloud cfk cfk-rbac ansible ansible-sasl-ssl 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
   do
     if [[ "$environment_name" == cfk* ]] && [ $skips_cfk == 1 ]
     then
@@ -10899,8 +10982,17 @@ function get_ksqldb_url_and_security () {
     return 1
   fi
   ksqldb_url="http://localhost:${mapped##*:}"
+  # the url of the ksql cli, run in a container of the network
+  ksqldb_internal_url="http://ksqldb-server:8088"
   get_environment_used
-  if [[ "$environment" == "rbac-sasl-plain" ]]
+  if [[ "$environment" == ansible* ]] && [ "$(ansible_rest_scheme ksqldb-server)" == "https" ]
+  then
+    ksqldb_url="https://ksqldb-server:${mapped##*:}"
+    ksqldb_internal_url="https://ksqldb-server:8088"
+    ksqldb_security="$(ansible_curl_security ksqldb-server "${mapped##*:}")"
+    # truststore of the ksqlDB host, written by environment/ansible/start.sh
+    ksqldb_cli_security="--config-file /etc/kafka/ksql-cli.properties"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
   then
     ksqldb_security="-u ksqlDBAdmin:ksqlDBAdmin"
     ksqldb_cli_security="--user ksqlDBAdmin --password ksqlDBAdmin"
@@ -11629,6 +11721,7 @@ function connector_config_adapt () {
   fi
   [ -n "$(playground state get flags.ENABLE_KAFKA_NODES 2> /dev/null)" ] && brokers=3
   [[ "$environment" == *plaintext ]] && plaintext=true
+  [[ "$environment" == "ansible" ]] && plaintext=true
   local playground_bootstrap="broker:9092" playground_sr_url="http://schema-registry:8081"
   if [[ "$environment" == mdc* ]]
   then
