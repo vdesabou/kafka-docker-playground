@@ -2261,6 +2261,38 @@ def test_no_kafka_log_with_thread_dumps():
     check("verdict", cls == "warn" and "the thread dumps are analyzed below" in head and "nothing here can show an error" not in head, head)
 
 
+def test_jt400_ibm_i_causes_and_connector_class_logger():
+    """IBM i (jt400) connection failures have their own causes (server mapper port 449 timed out, connection dropped at the
+    first exchange), next to the generic ones; a connector whose class logs itself (in a package shared with its sink) is
+    known without "Instantiated connector" line"""
+    def causes_of(body):
+        text = ("@@PGFILE@@|connect.log|100|1|0|2026-11-07T14:00:00|2026-11-07T15:00:00\n"
+                f"@@PGREC@@|ERROR|1|10|10|2026-11-07T14:02:20|2026-11-07T14:02:20\n{body}\n@@PGTS@@|2026-11-07T14:02:20\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    got = causes_of("[2026-11-07 14:02:20,000] ERROR [db-source|worker] Failed to start connector 'db-source' (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2246)\n"
+                    "    Caused by: java.sql.SQLNonTransientConnectionException: The application requester cannot establish the connection. (Connect timed out)\n"
+                    "    Caused by: java.net.SocketTimeoutException: Connect timed out\n"
+                    "        at com.ibm.as400.access.PortMapper.getSocketConnection(PortMapper.java:289)\n"
+                    "        at com.ibm.as400.access.PortMapper.getServerSocket(PortMapper.java:177)\n"
+                    "        at com.ibm.as400.access.AS400ImplRemote.hostcnnConnect(AS400ImplRemote.java:3781)")
+    check("jt400 449: 🖥️", "🖥️ IBM i (jt400): server mapper port 449 unreachable" in got, got)
+    check("jt400 449: not dropped", "🖥️ IBM i (jt400): connection dropped at the first exchange" not in got, got)
+    got = causes_of("[2026-11-07 14:02:20,000] ERROR [db-source|worker] Failed to start connector 'db-source' (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2246)\n"
+                    "    Caused by: java.sql.SQLNonTransientConnectionException: The application requester cannot establish the connection. (Connection was dropped unexpectedly.)\n"
+                    "    Caused by: com.ibm.as400.access.ConnectionDroppedException: Connection was dropped unexpectedly.\n"
+                    "        at com.ibm.as400.access.AS400XChgRandSeedReplyDS.read(AS400XChgRandSeedReplyDS.java:67)")
+    check("jt400 dropped: 🖥️", "🖥️ IBM i (jt400): connection dropped at the first exchange" in got, got)
+    check("jt400 dropped: not 449", "🖥️ IBM i (jt400): server mapper port 449 unreachable" not in got, got)
+    # the connector class as logger: the class, not the package io.confluent.connect.jdbc (shared by source and sink)
+    cls, pkg = log_report.plugin_of_loggers(["io.confluent.connect.jdbc.dialect.DatabaseDialects",
+                                             "io.confluent.connect.jdbc.JdbcSourceConnector"])
+    check("class logger", cls == "io.confluent.connect.jdbc.JdbcSourceConnector" and pkg == "io.confluent.connect.jdbc", (cls, pkg))
+    cls, pkg = log_report.plugin_of_loggers(["io.confluent.connect.jdbc.dialect.DatabaseDialects"])
+    check("shared package only: no class", cls is None, (cls, pkg))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

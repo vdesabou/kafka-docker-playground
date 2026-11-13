@@ -7119,7 +7119,7 @@ function summarize_log_errors() {
         cfg_id = ""
     }
     function cfg_add(line,    i, k, v) {
-        sub(/^\t/, "", line)
+        sub(/^(\t| +)/, "", line)
         i = index(line, " = ")
         if (i == 0) return
         k = substr(line, 1, i - 1)
@@ -7307,7 +7307,7 @@ function summarize_log_errors() {
         if (length(msg) > 150) msg = substr(msg, 1, 150) "..."
         return au_who " · /" ip " failed " what (msg != "" ? ": " msg : "")
     }
-    function flush(    lvl, key, i, chain, long_chain, frames, nframes, line, cause, nrec, nr, py, gof, pf1, pf2, pf3, js, joined) {
+    function flush(    lvl, key, i, chain, long_chain, frames, nframes, jdk_frames, njdk, line, cause, nrec, nr, py, gof, pf1, pf2, pf3, js, joined) {
         if (nlines == 0) return
         flush_seq++
         # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
@@ -7384,7 +7384,13 @@ function summarize_log_errors() {
             if (line ~ /^[ \t]*--- End of inner exception/) { nframes = 3; continue }
             if (line ~ /^[ \t]*--- End of /) continue
             if (line ~ /^[ \t]*at /) {
-                if (nframes < 3) { sub(/^[ \t]*/, "", line); frames = frames "\n        " short(line); nframes++ }
+                sub(/^[ \t]*/, "", line)
+                # the JDK frames of the socket, reflection or thread pool say little: the first frames of the library or
+                # the connector below them (com.ibm.as400.access.PortMapper.getSocketConnection under NioSocketImpl.connect)
+                # tell who opened the socket. The JDK ones are shown only when there is nothing else
+                if (line ~ /^at (java\.[a-z.]+\/|jdk\.[a-z.]+\/)?(java|javax|jdk|sun|com\.sun)\./) {
+                    if (njdk < 3) { jdk_frames = jdk_frames "\n        " short(line); njdk++ }
+                } else if (nframes < 3) { frames = frames "\n        " short(line); nframes++ }
                 continue
             }
             if (line ~ /^[ \t]*\.\.\. [0-9]+ (more|common frames omitted)/) continue
@@ -7400,8 +7406,11 @@ function summarize_log_errors() {
                 cause = line
                 frames = ""
                 nframes = 0
+                jdk_frames = ""
+                njdk = 0
             }
         }
+        if (frames == "") frames = jdk_frames
         if (chain == "" && mode != "go" && r[1] !~ /(Exception|Error|Throwable)(:|[ \t]|$)/) frames = ""
 
         # same message and same deepest cause = same finding, whatever the timestamps and ids
@@ -7824,7 +7833,9 @@ function summarize_log_errors() {
         sub(/\r$/, "")
         if (records_file != "") {
             if (cfg_on) {
-                if ($0 ~ /^\t[^ \t]+ = /) cfg_add($0)
+                # the keys are indented with a tab; with spaces when the log was copied from a ticket, a web console or
+                # an editor that converts tabs
+                if ($0 ~ /^(\t| +)[^ \t]+ = /) cfg_add($0)
                 else cfg_end()
             }
             if (index($0, "Config values:")) cfg_start()
