@@ -16,6 +16,11 @@ than all of them include the fix.
   fixed_in first fixed version of each minor line
   ref      the Jira / pull request ids of the changelog
   advice   what to do besides upgrading
+
+A bug of the Kafka Connect runtime (Apache Kafka, shipped in Confluent Platform) has "runtime": "cp" instead of
+plugin / classes: fixed_in has Confluent Platform versions (from playground cp-changelog), and the verdict comes from the
+CP version of the worker that logged the record ("Kafka version: x.y.z-ce" / -ccs of the same file, else the only one of
+the input).
 """
 
 import re
@@ -60,6 +65,29 @@ FIXED_BUGS = [
      "fixed_in": ["2.13.11", "2.14.12", "2.15.1"],
      "ref": "CC-39664",
      "advice": "a Connect worker of Confluent Platform 8.2 rejected the redo log consumer configuration of older versions"},
+    {"title": "🩹 S3 sink: offsets of skipped records never committed (consumer lag stuck, replay on restart)",
+     "plugin": "confluentinc/kafka-connect-s3",
+     "classes": r"\.S3SinkConnector$|\.S3SinkTask$",
+     # confluentinc/kafka-connect-storage-cloud#972: preCommit() only committed the offset of the last record written to
+     # S3, so the records skipped at the end of a partition (tombstones with behavior.on.null.values=ignore, records
+     # dropped by errors.tolerance=all or a transform) were never committed: the lag stays, every restart replays them
+     "pattern": r"Skipping null value record",
+     "fixed_in": ["10.6.20", "11.0.21", "12.0.11", "12.1.14"],
+     "ref": "CC-43920 (PR-972)",
+     "advice": "the consumer lag of the partitions that end with skipped records (tombstones) never goes to 0 and each "
+               "restart re-reads and re-logs them: no data is missing. It clears on a partition when a record with a "
+               "value is written after them"},
+    {"title": "🩹 Connect runtime: NullPointerException in recordTaskRemoved hides why a task failed to start",
+     "runtime": "cp",
+     "plugin": "Confluent Platform (Kafka Connect runtime)",
+     # apache/kafka#21717 (KAFKA-19697): when a second task of the same connector fails to start on a worker, the clean-up
+     # of the task metrics throws a NullPointerException, which replaces the real error in the task status
+     "pattern": r"NullPointerException[\s\S]{0,6000}ConnectorStatusMetricsGroup\.recordTaskRemoved",
+     "fixed_in": ["7.9.8", "8.0.6", "8.1.4", "8.2.2"],
+     "ref": "KAFKA-19697 (PR-21717)",
+     "advice": "the NullPointerException is not the cause: the task failed to start for another reason (logged just "
+               "before it on the same worker: the converter, the config, the plugin). Upgrading only makes /status show "
+               "that reason"},
 ]
 
 

@@ -388,12 +388,38 @@ def short_exception(line: str) -> str:
     return re.sub(r"`\d+\[.*$", "", m.group(1)).split(".")[-1] + (f": {m.group(2)}" if m.group(2) else "")
 
 
+# a duration in a message ("[7336us]" and "[19ms]" of the Couchbase events, "after 1ms in state CONNECT"): the same error
+# that took another time is the same cause
+DURATION_RX = re.compile(r"(?<![\w.])\d+(?:\.\d+)?(?:ns|us|µs|ms|s)\b|(?<![\w.])\d+(?:\.\d+)? ?(?:nanos|micros|millis|milliseconds?|secs?|seconds?|mins?|minutes?|hours?)\b")
+
+
 def mask_ids(text: str) -> str:
-    """digits as #, and ids of letters and digits (AWS Request ID 5PPC305GEXB1A0R9, Extended Request ID, tokens) as one #:
-    the same error with another request id, table or partition is the same chain"""
+    """durations as #t, digits as #, and ids of letters and digits (AWS Request ID 5PPC305GEXB1A0R9, Extended Request ID,
+    tokens) as one #: the same error with another request id, table, partition or duration is the same chain"""
+    text = DURATION_RX.sub("#t", text)
     text = re.sub(r"(?i)(request id: )[^\s,)]+", r"\1#", text)
     text = re.sub(r"(?=[A-Za-z0-9+/]*[0-9])(?=[A-Za-z0-9+/]*[A-Za-z])[A-Za-z0-9+/]{8,}", "#", text)
     return re.sub(r"[0-9]+", "#", text)
+
+
+# the name of a task or a connector in a message of the Connect runtime, and the client ids that embed it (one-shot
+# clients "consumer-<connector>-<task>-<table>-<seq>", connector-producer-<connector>-0): the MDC context and the
+# connectors listed with a cause already say which connector, the key keeps the message
+NAME_IN_MESSAGE_RX = re.compile(r"((?:Graceful stop of|Failed to (?:stop|start)|Ignoring (?:stop|await stop) request for unowned) "
+                                r"(?:task|connector)) \S+|(Worker(?:Source|Sink)?Task\{id=)[^}\s]+\}")
+CLIENT_ID_RX = re.compile(r"\b((?:connector-(?:dlq-)?)?(?:consumer|producer|adminclient))-[\w.#$-]*\d[\w.#$-]*")
+
+
+def mask_names(text: str, connector: Optional[str] = None) -> str:
+    """a message without the names of its connector and task and without client ids: "Graceful stop of task orders-0
+    failed." and "Graceful stop of task payments-3 failed." are one root cause (149 connectors stopped at once: one row,
+    not 149)"""
+    text = CLIENT_ID_RX.sub(r"\1-…", text)
+    text = NAME_IN_MESSAGE_RX.sub(lambda m: f"{m.group(1)} <task>" if m.group(1) else f"{m.group(2)}<task>}}", text)
+    if connector and len(connector) > 2:
+        # a whole name only: a connector named "jdbc" leaves io.confluent.connect.jdbc.sink alone
+        text = re.sub(rf"(?<![\w.]){re.escape(connector)}(?!\w)", "<connector>", text)
+    return text
 
 
 def chain_key_text(text: str) -> str:
@@ -441,7 +467,7 @@ def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
         # same chain on another table, topic or partition: {ORACDC.REDO.DB1-0=OffsetAndMetadata{offset=1}} and digits ignored;
         # a message without exception is the same for every client and broker: "[Producer clientId=connector-producer-X-0]"
         # and "(broker-1.example.com/10.0.0.1:9092)" ignored (the connectors are listed with the chain)
-        key = mask_ids(re.sub(r"\{.*\}", "{…}", chain_key_text(f"{thrown}\n{cause}")))
+        key = mask_ids(re.sub(r"\{.*\}", "{…}", mask_names(chain_key_text(f"{thrown}\n{cause}"), r.get("connector"))))
         g = groups.setdefault(key, {"exception": short_exception(thrown), "caused_by": short_exception(cause) if cause else "",
                                     "occurrences": 0, "connectors": OrderedDict(), "matches": []})
         g["occurrences"] += r["count"]
@@ -480,7 +506,28 @@ def reading_list(h: dict) -> List[str]:
             + [f"🔒 {l['title']}: {l['url']}" for l in h.get("internal_links") or []])
 
 
-def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
+# a host of Confluent Cloud (pkc-xxxxx.<region>.<cloud>.confluent.cloud, psrc-…, the Cloud API): the brokers are not the
+# customer's, their logs cannot be asked for, and the Confluent Cloud articles apply
+CCLOUD_RX = re.compile(known_causes.CCLOUD_PATTERN, re.I)
+
+
+def points_at_confluent_cloud(files: List[dict]) -> bool:
+    """the records, their context lines, the configs (bootstrap.servers of a config dump or a properties file) or the
+    events of the input name a *.confluent.cloud host"""
+    for f in files:
+        for r in f["records"]:
+            if CCLOUD_RX.search(r["text"]) or CCLOUD_RX.search(r.get("context") or ""):
+                return True
+        for c in f.get("configs") or []:
+            if any(CCLOUD_RX.search(line) for line in c.get("lines") or []):
+                return True
+        if any(CCLOUD_RX.search(ev.get("detail") or "") for ev in f.get("events") or []):
+            return True
+    return False
+
+
+def match_hints(files: List[dict], unit: str = "file", ccloud: bool = False) -> List[dict]:
+    """ccloud: the input points at Confluent Cloud (points_at_confluent_cloud): the Confluent Cloud articles are shown"""
     out = []
     marks = startup_marks(files)
     all_groups = []
@@ -520,7 +567,7 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
         # what to read about it: a knowledge-base article and / or a docs page
         # (an article of a variant only when one of the records matched is that variant)
         texts = [r["text"] for _, _, r in matches]
-        hint.update(known_causes.links(title, texts))
+        hint.update(known_causes.links(title, texts, ccloud))
         # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
         internal = known_causes.internal_links(title, texts)
         if internal:
@@ -894,7 +941,11 @@ def root_causes(files: List[dict]) -> List[dict]:
         # and with other offsets or tables: "Failed to commit consumer offset {0=36227957} for tables 0=DB.T24(A|B|C)" of the
         # Oracle CDC connector, one table list per task (before the cut at 160 characters, which leaves the list unclosed, and
         # the digits masked before it too: "correlation id 4755" and "correlation id 102568" would move the cut)
-        key = label if r["root_cause"] else mask_ids(cause_key_text(plain))[:160]
+        # and without the names of its connector and task, its client ids and its durations: one root cause for the
+        # "Graceful stop of task <name> failed." of 149 connectors, for "[7336us]" and "[19ms]"
+        conn = r.get("connector")
+        key = (f"{r['root_cause']}: {mask_ids(mask_names(r['root_cause_message'], conn))[:100]}" if r["root_cause"]
+               else mask_ids(mask_names(cause_key_text(plain), conn))[:160])
         c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": label, "key": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
                                     "connectors": OrderedDict(), "example": r["root_cause_message"] or plain, "level": r["level"],
                                     "records_meta": []})
@@ -1009,6 +1060,43 @@ def period_text(first: Optional[str], last: Optional[str]) -> str:
     return out
 
 
+# the logs of a Connect worker (all its rotated files) that cover less than this: too short to hold the start of an
+# incident, even when other files of the input (brokers, operator) cover days (a CFK bundle keeps the end of each log)
+SHORT_WORKER_LOG_SECONDS = 120
+
+
+def short_connect_logs(files: List[dict]) -> List[dict]:
+    """the Connect workers whose logs cover less than SHORT_WORKER_LOG_SECONDS: [{"worker", "seconds", "info"}] (info:
+    their logs have INFO lines the digest recognized: starts, rebalances…)"""
+    spans: "OrderedDict[str, List]" = OrderedDict()
+    for f in files:
+        # (not a config file of the worker: connect-distributed.properties, a connector JSON)
+        if file_component(f["label"]) != "connect" or re.search(r"\.(?:properties|json|ya?ml|xml|conf|cfg|ini)$", f["label"], re.I):
+            continue
+        a, b = ts_seconds(f.get("log_first_ts")), ts_seconds(f.get("log_last_ts"))
+        if a is None or b is None:
+            continue
+        x = spans.setdefault(log_worker(f["label"]), [a, b, False])
+        x[0], x[1], x[2] = min(x[0], a), max(x[1], b), x[2] or bool(f.get("events"))
+    return [{"worker": w, "seconds": int(b - a), "info": info} for w, (a, b, info) in spans.items()
+            if b - a < SHORT_WORKER_LOG_SECONDS]
+
+
+def short_connect_logs_text(s: dict) -> str:
+    """"⚠️ the logs of connect-0.log, connect-1.log cover only 10 s to 1 min 55 s …", "" when none or when the whole
+    input is already flagged as short"""
+    short = s.get("short_connect_logs") or []
+    dur = s.get("log_duration_seconds")
+    if not short or (dur is not None and dur < SHORT_PERIOD_SECONDS):
+        return ""
+    lo, hi = min(x["seconds"] for x in short), max(x["seconds"] for x in short)
+    names = ", ".join(x["worker"].split("/")[-1] for x in short[:4]) + (f" (+{len(short) - 4} more)" if len(short) > 4 else "")
+    span = human_duration(lo) if lo == hi else f"{human_duration(lo)} to {human_duration(hi)}"
+    info = "" if any(x["info"] for x in short) else ", without an INFO line of the worker (starts, rebalances)"
+    return (f"⚠️ the logs of {names} cover only {span}{info}: too short for the start of an incident, ask for a longer "
+            "window (kubectl logs <pod> --since=<duration>, the rotated files of the worker)")
+
+
 def summary(files: List[dict]) -> dict:
     by_level = {"FATAL": 0, "ERROR": 0, "WARN": 0}
     by_connector: Dict[str, int] = {}
@@ -1046,7 +1134,8 @@ def summary(files: List[dict]) -> dict:
             "findings_duration_seconds": duration_seconds(first, last),
             # the files that are not logs of a component (--not-logs), and an input made only of them
             "not_logs": [{"file": f["label"], "reason": f["not_log"]} for f in files if f.get("not_log")],
-            "no_kafka_log": bool(files) and all(f.get("not_log") for f in files)}
+            "no_kafka_log": bool(files) and all(f.get("not_log") for f in files),
+            "short_connect_logs": short_connect_logs(files)}
 
 
 def shorten_labels(files: List[dict]) -> None:
@@ -1166,7 +1255,8 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
         for r in f["records"]:
             r["index"], r["file_index"] = index, file_index
             index += 1
-    hints = match_hints(files, unit)
+    ccloud = points_at_confluent_cloud(files)
+    hints = match_hints(files, unit, ccloud)
     causes = root_causes(files)
     # the "<Class>Config values:" dumps of the logs and the config files of the input (.properties, connector JSON)
     configuration = [dict({k: v for k, v in c.items() if k != "lines"}, file=f["label"], text="\n".join(c["lines"]))
@@ -1178,7 +1268,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     mark_live_configs(configuration, files)
     for f in files:
         f.pop("configs", None)
-    res = {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
+    res = {"summary": dict(summary(files), confluent_cloud=ccloud), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
            "root_causes": causes, "files": [f for f in files if f["records"]],
            "files_without_findings": [f["label"] for f in files if not f["records"]],
            "coverage": coverage(files),
@@ -1197,6 +1287,13 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["lifecycle"] = lifecycle(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
+    # 🧟 a task left running on a worker after its graceful stop failed: a finding (what to do: restart that worker),
+    # MEDIUM when the logs cannot show a restart of the task there
+    zombies = res["task_workers"]["zombies"] = zombie_tasks(files)
+    if zombies:
+        res["findings"] = sorted(res["findings"] + [{"severity": "HIGH" if z["verified"] else "MEDIUM", "text": zombie_text(z), "zombie": True}
+                                                    for z in zombies[:5]],
+                                 key=lambda x: SEVERITY_ORDER.index(x["severity"]))
     res["config_lint"] = config_lint(res)
     # 🧩 a plugin class listed twice by GET /connector-plugins: a card of 🔎 Findings too (no 🔌 card shows it)
     shadowed = [x for x in res["config_lint"] if x["connector"] == "connector plugins"]
@@ -1244,6 +1341,11 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
     between restarts. Answers "what happened first?"; only what has a timestamp, the first TIMELINE_LIMIT events"""
     by_index = {r.get("index"): (f, r) for f in files for r in f["records"] if r.get("index") is not None}
     events: Dict[Tuple[str, int], dict] = {}
+    # the records of the known causes, and where each one starts: the first ERROR of a root cause that a known cause covers
+    # is a row only when it is the first occurrence of that known cause (one row, both texts), else the known cause row
+    # already says it
+    covered = {i for h in res["known_causes"] for i in h.get("records") or []}
+    known_firsts = {((h.get("first") or {}).get("file"), (h.get("first") or {}).get("line")) for h in res["known_causes"]}
 
     def add(time, file, line, kind, level, text, connector=None, count=None, record=None):
         if not time:
@@ -1275,6 +1377,8 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 first = fr
         if first:
             f, r = first
+            if r.get("index") in covered and (f["label"], r["first_line"]) not in known_firsts:
+                continue
             add(r["first_ts"], f["label"], r["first_line"], "first_error", r["level"], record_label(r)[:200],
                 r.get("connector"), c["occurrences"], r.get("index"))
     for h in res["known_causes"]:
@@ -2534,6 +2638,108 @@ def worker_of(label: str) -> str:
 # path or network difference of that host, invisible in a merged view
 ONLY_ON_MIN_ERRORS = 3
 
+# 🧟 a task whose graceful stop failed on a worker and that keeps logging errors there afterwards, without being started
+# again on that worker: the worker cancelled it and forgot it, but its threads still run (its clients reconnect, retry
+# logins, hold locks) while the task runs elsewhere. Only a restart of that worker stops it. Errors in the first
+# ZOMBIE_AFTER_S after the stop are the end of the stop itself
+GRACEFUL_STOP_RX = re.compile(r"Graceful stop of task (\S+?-\d+) failed")
+TASK_CONTEXT_RX = re.compile(r"\[([^\s|\]]+)\|task-(\d+)[|\]]")
+ZOMBIE_AFTER_S = 60
+ZOMBIE_MIN_ERRORS = 3
+# without a "Starting task" line on the worker, a task restarted there after the failed stop looks the same: only a loop
+# of errors (a client retrying its login every few seconds, for days) is reported, unverified
+ZOMBIE_MIN_ERRORS_UNVERIFIED = 100
+
+
+def log_worker(label: str) -> str:
+    """worker_of(), and a folder per rotated file is the same worker too ("x.log.5/x.log.5" and "x.log/x.log", as some
+    bundles extract them): the rotation suffix of a ".log" folder is dropped as well"""
+    return re.sub(r"(\.log)(?:[.-]\d+|\.\d{4}-\d\d-\d\d(?:[-_.]\d\d)?)(?:\.gz)?(?=/)", r"\1", worker_of(label))
+
+
+def zombie_tasks(files: List[dict]) -> List[dict]:
+    """🧟 the tasks still running on a worker after their graceful stop failed there: ERROR / FATAL records of the task
+    (its [connector|task-N] context) on that worker more than ZOMBIE_AFTER_S after the "Graceful stop of task X failed",
+    before any new start of X on that worker; with the starts of X on the other workers after the stop (the task that
+    replaced it). On a worker whose logs have no "Starting task" line (no INFO lines), a restart of the task there would
+    not be seen: unverified (a MEDIUM finding instead of a HIGH one)"""
+    def norm(t: Optional[str]) -> Optional[str]:
+        return t.replace(" ", "T")[:19] if t else None
+    starts: List[Tuple[str, str, str]] = []
+    by_worker: "OrderedDict[str, List[Tuple[dict, dict]]]" = OrderedDict()
+    for f in files:
+        w = log_worker(f["label"])
+        by_worker.setdefault(w, []).extend((f, r) for r in f["records"])
+        for ev in f.get("events") or []:
+            task = ev.get("detail") or ""
+            if ev["kind"] == "task_start" and ev.get("time") and re.match(r"^\S+-\d+$", task):
+                starts.append((norm(ev["time"]), task, w))
+    workers_with_starts = {w for _, _, w in starts}
+    lasts = {}
+    for w in by_worker:
+        parts = w.split("/")
+        lasts.setdefault(parts[-1], set()).add(w)
+
+    def shown(w: str) -> str:
+        parts = w.split("/")
+        return "/".join(parts[-2:]) if len(lasts.get(parts[-1], ())) > 1 else parts[-1]
+    out = []
+    for w, records in by_worker.items():
+        stops: Dict[str, Tuple[str, dict, dict]] = {}
+        for f, r in records:
+            m = GRACEFUL_STOP_RX.search(r.get("message") or "")
+            t = norm(r.get("first_ts"))
+            if m and t and (m.group(1) not in stops or t < stops[m.group(1)][0]):
+                stops[m.group(1)] = (t, f, r)
+        for task, (t_stop, stop_f, stop_rec) in stops.items():
+            # a new start of the task on this worker ends the suspicion: the errors after it are of the new instance
+            restart = min((t for t, x, v in starts if x == task and v == w and t > t_stop), default=None)
+            after = epoch(t_stop) + ZOMBIE_AFTER_S
+            until = epoch(restart) if restart else None
+            n, first, last = 0, None, None
+            for _, r in records:
+                if r is stop_rec or r["level"] not in ("ERROR", "FATAL") or GRACEFUL_STOP_RX.search(r.get("message") or ""):
+                    continue
+                m = TASK_CONTEXT_RX.search(r.get("message") or "")
+                if not m or f"{m.group(1)}-{m.group(2)}" != task:
+                    continue
+                stride = r.get("ts_stride") or 1
+                times = [x for x in epochs(r.get("timestamps") or []) if x > after and (until is None or x < until)]
+                if not times and not r.get("timestamps"):
+                    a = norm(r.get("first_ts"))
+                    times = [epoch(a)] if a and epoch(a) > after and (until is None or epoch(a) < until) else []
+                    stride = r["count"]
+                if times:
+                    n += len(times) * stride
+                    first = min(first or times[0], times[0])
+                    last = max(last or times[-1], times[-1])
+            if n < (ZOMBIE_MIN_ERRORS if w in workers_with_starts else ZOMBIE_MIN_ERRORS_UNVERIFIED):
+                continue
+            elsewhere = sorted({(t, v) for t, x, v in starts if x == task and v != w and t >= t_stop})
+            out.append({"task": task, "connector": re.sub(r"-\d+$", "", task), "worker": shown(w), "stopped_at": t_stop,
+                        "stop_file": stop_f["label"], "stop_line": stop_rec.get("first_line"), "errors": n,
+                        "first_error": iso_utc(first), "last_error": iso_utc(last), "restarted_here": restart,
+                        "verified": w in workers_with_starts,
+                        "started_elsewhere": [{"worker": shown(v), "time": t} for t, v in elsewhere[:3]]})
+    out.sort(key=lambda z: (not z["verified"], -z["errors"]))
+    return out
+
+
+def iso_utc(seconds: Optional[float]) -> Optional[str]:
+    return iso(seconds) if seconds is not None else None
+
+
+def zombie_text(z: dict) -> str:
+    where = ("while it started on " + ", ".join(f"{x['worker']} ({x['time'].replace('T', ' ')})" for x in z["started_elsewhere"])
+             if z["started_elsewhere"] else "and it was not started again on that worker" if z["verified"]
+             else "⚠️ unverified: these logs have no \"Starting task\" line, a restart of the task on that worker would not show")
+    return (f"🧟 {z['task']} {'still runs' if z['verified'] else 'may still run'} on {z['worker']} after its graceful stop failed there "
+            f"({z['stopped_at'].replace('T', ' ')}, {z['stop_file'].split('/')[-1]}:{z['stop_line']}): {z['errors']:,} "
+            f"ERROR/FATAL of the task on {z['worker']} afterwards, {z['first_error'].replace('T', ' ')} → "
+            f"{z['last_error'].replace('T', ' ')}, {where}. The worker no longer owns it (a restart or a delete of the "
+            f"connector does not reach it): restart the worker process of {z['worker']}, and find why the stop hung "
+            "(thread dump; task.shutdown.graceful.timeout.ms)")
+
 
 def task_workers(res: dict, files: List[dict]) -> dict:
     """🖥️ which worker ran which task, and when: the "Starting task <connector>-<n>" INFO lines of each worker (a task_start
@@ -2929,6 +3135,16 @@ ASK_FOR_CAUSES = [
      "the Schema Registry logs over the same period, and the subject: playground schema describe / history on an export",
      "the request refused, its subject and the compatibility level"),
 ]
+# with brokers on Confluent Cloud, their logs cannot be asked for: what tells why a client was refused instead
+CCLOUD_AUTH_ASK = ("the Confluent Cloud API key (key id, not the secret) and the service account the client uses, and what "
+                   "happened to them over the same period: the audit log of the organization (key deleted, rotated or "
+                   "created, role bindings changed), the API keys page of the Cloud Console",
+                   "the brokers are on Confluent Cloud (*.confluent.cloud): their logs are not available, the audit log "
+                   "says who deleted or changed the key or the permissions of the principal and when",
+                   "confluent api-key list --resource <lkc-id>; confluent audit-log describe, then the audit log topic of "
+                   "the organization over the period of the errors")
+
+
 def data_to_request(res: dict, files: List[dict]) -> List[dict]:
     """📥 what to ask the customer for next, each with why and how: the inputs not fully read, a window too short, workers
     whose logs miss their startup (no config dump, no version: the logs since the last (re)start), the logs of a component
@@ -2959,6 +3175,13 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
         ask("logs over a longer window, starting well before the incident",
             f"the logs only cover {human_duration(dur)}: the beginning of the incident (the first error, a restart, a "
             "config change) is probably not in them")
+    short = s.get("short_connect_logs") or []
+    if short and not (dur is not None and dur < SHORT_PERIOD_SECONDS):
+        ask("the Connect logs of " + ", ".join(x["worker"].split("/")[-1] for x in short[:4]) + (" …" if len(short) > 4 else "")
+            + " over a longer window, from at least 30 minutes before the problem started",
+            f"they cover only {human_duration(max(x['seconds'] for x in short))} or less: the start of the incident, the "
+            "restarts and the activity of the connectors are not in them",
+            "kubectl logs <pod> --since=<duration> (and --previous after a restart), or the rotated files of the worker")
     # the workers / brokers whose logs miss their startup: no config logged at startup, no "Instantiated connector … with
     # version" line, while they have errors
     with_start = {worker_of(c["file"]) for c in res["configuration"] if c.get("source") == "log" and c["title"] in START_CONFIGS}
@@ -2997,6 +3220,7 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
     has_gc = any(c["kind"] == "gc_log" for c in (res.get("other_files") or {}).get("commands") or [])
     has_dump = {c["kind"] for c in (res.get("other_files") or {}).get("commands") or []}
     by_index_all = {r.get("index"): r for f in res["files"] for r in f["records"]}
+    ccloud = s.get("confluent_cloud")
     for entry in ASK_FOR_CAUSES:
         causes, component, what, why = entry[:4]
         hit = [t for t in causes if t in titles]
@@ -3009,6 +3233,11 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
             if not any(rx.search(t) for t in texts):
                 continue
         if component and component in components:
+            continue
+        if component == "kafka" and ccloud:
+            # no broker log of Confluent Cloud: the API key and its audit log for a refused client, nothing else
+            if "🔑 Authentication failure" in causes:
+                ask(CCLOUD_AUTH_ASK[0], f"{hit[0]}: {CCLOUD_AUTH_ASK[1]}", CCLOUD_AUTH_ASK[2])
             continue
         if "GC logs" in what and has_gc and ("heap dump" not in what or "heap_dump" in has_dump) \
                 and ("thread dumps" not in what or "thread_dump" in has_dump):
@@ -3028,7 +3257,7 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
             "kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions / IsrShrinksPerSec, the CPU, disk and network of "
             "the hosts (Grafana / Control Center / Prometheus export), and the GC logs of the brokers")
     # 💥 bursts right after a broker event, without the broker logs
-    if "kafka" not in components and any(ev.get("effects") for ev in res.get("timeline") or []):
+    if "kafka" not in components and not ccloud and any(ev.get("effects") for ev in res.get("timeline") or []):
         ask("the broker logs over the same period", "errors pile up right after an event of the cluster: the broker logs say what happened")
     # the data to request of the CFK support bundles of the input (cfk-analysis: gaps of the bundle, --problem): one list
     for b in getattr(files, "cfk_bundles", None) or []:
@@ -3143,12 +3372,47 @@ def fixed_bugs_found(res: dict, files: List[dict]) -> List[dict]:
     The verdict is also put on the card of the connector"""
     cards = {c["connector"]: c for c in res["connectors"]}
     out = []
+    # the Confluent Platform version of each file (a bug of the Connect runtime): its own "Kafka version: x.y.z-ce", else
+    # the only one of the input
+    every_cp = [v for v in kafka_versions(files) if re.search(r"-(ce|ccs)$", v)]
+    def cp_of(f: dict) -> Optional[str]:
+        v = next((ev["detail"] for ev in f.get("events") or [] if ev["kind"] == "kafka_version" and re.search(r"-(ce|ccs)$", ev["detail"] or "")),
+                 every_cp[0] if len(every_cp) == 1 else None)
+        return re.sub(r"-(ce|ccs)$", "", v) if v else None
     for b in fixed_bugs.FIXED_BUGS:
-        rx, crx = re.compile(b["pattern"]), re.compile(b["classes"])
+        rx = re.compile(b["pattern"])
         matches = [(i, f, r) for i, f in enumerate(files) for r in f["records"]
                    if rx.search(r["text"] + "\n" + own_context(r))]
         if not matches:
             continue
+        if b.get("runtime") == "cp":
+            # one verdict per worker (file) from its CP version, the connectors of its records listed
+            conns, seen = [], set()
+            for _, f, r in matches:
+                version = cp_of(f)
+                v, upgrade = fixed_bugs.verdict(version, b["fixed_in"]) if version else ("unknown", None)
+                key = (r.get("connector"), version)
+                if key in seen:
+                    continue
+                seen.add(key)
+                conns.append({"connector": r.get("connector"), "version": version, "verdict": v, "upgrade_to": upgrade})
+                c = cards.get(r.get("connector") or "")
+                if c is not None and not any(x["ref"] == b["ref"] for x in c.get("fixed_bugs") or []):
+                    c.setdefault("fixed_bugs", []).append({"title": b["title"], "ref": b["ref"], "verdict": v,
+                                                           "version": version, "upgrade_to": upgrade, "runtime": "cp"})
+        else:
+            conns = None
+        if conns is not None:
+            _, first_f, first_r = earliest(matches)
+            out.append({"title": b["title"], "ref": b["ref"], "plugin": b["plugin"], "runtime": "cp", "fixed_in": b["fixed_in"],
+                        "advice": b["advice"], "occurrences": sum(r["count"] for _, _, r in matches),
+                        "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
+                        "connectors": conns,
+                        "verdict": "affected" if any(x["verdict"] == "affected" for x in conns) else
+                                   "unknown" if any(x["verdict"] == "unknown" for x in conns) else "fixed",
+                        "records": [r["index"] for _, _, r in matches if r.get("index") is not None]})
+            continue
+        crx = re.compile(b["classes"])
         names = list(OrderedDict((r["connector"], True) for _, _, r in matches if r.get("connector")))
         if not names:
             # logged without connector context: the connectors of that plugin
@@ -3184,6 +3448,18 @@ def fixed_bug_lines(b: dict) -> List[str]:
     lines = []
     for x in b["connectors"] or [{"connector": None, "version": None, "verdict": "unknown", "upgrade_to": None}]:
         who = f"{x['connector']} " if x["connector"] else ""
+        if b.get("runtime") == "cp":
+            # a bug of the Connect runtime: the CP version of the worker
+            on = f"{who}on " if who else ""
+            if x["verdict"] == "affected":
+                lines.append(f"⛔ {on}CP {x['version']}: affected, upgrade Confluent Platform to {x['upgrade_to']} or later "
+                             f"(playground cp-changelog --from {x['version']} --component kafka --grep {b['ref'].split('(PR-')[-1].rstrip(')')})")
+            elif x["verdict"] == "fixed":
+                lines.append(f"✅ {on}CP {x['version']}, which has the fix: another cause, or a regression")
+            else:
+                lines.append(f"❔ {who}CP version not in the logs (no \"Kafka version: x.y.z-ce\" line): fixed in "
+                             f"{', '.join(b['fixed_in'])}")
+            continue
         if x["verdict"] == "affected":
             lines.append(f"⛔ {who}runs {x['version']}: affected, upgrade to {x['upgrade_to']} or later "
                          f"(playground connector-plugin changelog -c {b['plugin']} --from {x['version']} --grep {b['ref'].split(' ')[0]})")
@@ -3198,7 +3474,7 @@ def fixed_bug_lines(b: dict) -> List[str]:
 def fixed_bugs_text(items: List[dict], top: int = 5) -> List[str]:
     if not items:
         return []
-    out = ["🩹 Known bugs fixed in a later version of the plugin (.fixed_bugs of --json)"]
+    out = ["🩹 Known bugs fixed in a later version of the plugin or of Confluent Platform (.fixed_bugs of --json)"]
     for b in items[:top]:
         out.append(f"   {b['title']} ×{b['occurrences']:,} · {b['ref']}, fixed in {', '.join(b['fixed_in'])}")
         out += [f"      {line}" for line in fixed_bug_lines(b)]
@@ -3220,9 +3496,10 @@ def fixed_bugs_html(items: List[dict], viewers: Dict[str, str]) -> str:
     return ("<style>tr.fb-affected td{background:#fef2f2}html[data-theme=dark] tr.fb-affected td{background:#3b1515}"
             ".fb-verdicts{margin:0;padding-left:18px}</style>"
             "<div class='table-card'><h2>🩹 Known bugs fixed in a later version</h2><p class='legend'>Errors of the logs that "
-            "match a bug of the connector plugin fixed in a later version (from its changelog and the pull request of the "
-            "fix), with a verdict from the version each connector runs (🏷️ on its card): ⛔ affected, upgrade; ✅ it runs a "
-            "version with the fix, so another cause (or a regression); ❔ the logs do not give its version.</p>"
+            "match a bug of the connector plugin (or of the Connect runtime of Confluent Platform) fixed in a later version "
+            "(from its changelog and the pull request of the fix), with a verdict from the version each connector runs (🏷️ "
+            "on its card; the CP version of the worker for the runtime): ⛔ affected, upgrade; ✅ it runs a version with the "
+            "fix, so another cause (or a regression); ❔ the logs do not give its version.</p>"
             "<table><tr><th>Bug</th><th>Verdict</th></tr>" + "".join(rows) + "</table></div>")
 
 
@@ -3760,7 +4037,7 @@ def connectors_health_html(cards: List[dict]) -> str:
                + "</div>" if c.get("workers") and len(c["workers"]) > 1 else "")
             + (f"<div class='tw-only'>🎯 errors only on {e(c['only_on'])}</div>" if c.get("only_on") else "")
             + "".join(f"<div class='conn-note-bug'>{VERDICT_ICONS[x['verdict']]} {e(x['title'])} ({e(x['ref'])})"
-                      + (f": upgrade to {e(x['upgrade_to'])} or later" if x["verdict"] == "affected" else
+                      + (f": upgrade {'Confluent Platform ' if x.get('runtime') == 'cp' else ''}to {e(x['upgrade_to'])} or later" if x["verdict"] == "affected" else
                          ": fixed in its version" if x["verdict"] == "fixed" else ": version unknown") + "</div>"
                       for x in c.get("fixed_bugs") or [])
             + (f"<details class='conn-lint' open><summary>🔀 {len(c['config_drift'])} key(s) of the Connector CR differ from the config logged</summary><ul>"
@@ -4268,6 +4545,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         if s["log_duration_seconds"] < SHORT_PERIOD_SECONDS:
             covered += f" ⚠️ shorter than {human_duration(SHORT_PERIOD_SECONDS)}: the logs may not cover the incident"
         out.append(covered)
+    if short_connect_logs_text(s):
+        out.append("   " + short_connect_logs_text(s))
     if time_zone_note(s):
         out.append("   " + time_zone_note(s))
     if s.get("ocr_files"):
@@ -4346,6 +4625,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += data_to_request_text(res.get("data_to_request") or [])
     # which worker ran which task, a connector failing on one worker only (🖥️ of the HTML report, .task_workers of --json)
     out += task_workers_text(res.get("task_workers"))
+    # 🧟 the tasks left running on a worker after their graceful stop failed (.task_workers.zombies of --json)
+    out += [zombie_text(z) for z in ((res.get("task_workers") or {}).get("zombies") or [])[:5]]
     # the known bugs fixed in a later version (🩹 of the HTML report, .fixed_bugs of --json)
     out += fixed_bugs_text(res.get("fixed_bugs") or [])
     # the files for another analyzer (🧰 of the HTML report, .other_files of --json)
@@ -4971,6 +5252,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
                + f" · {s['files_scanned']} {unit}(s)" + (f" ({human_size(s['bytes_read'])})" if s.get("bytes_read") is not None else "")
                + f", {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s)"
                + f" (FATAL {s['by_level']['FATAL']} · ERROR {s['by_level']['ERROR']} · WARN {s['by_level']['WARN']})")
+    if short_connect_logs_text(s):
+        out.append(f"**Short logs:** {md_cell(short_connect_logs_text(s))}")
     if s.get("kafka_versions"):
         out.append(f"**Kafka version:** {' → '.join(s['kafka_versions'])}")
     if s.get("jvm_versions"):
@@ -5029,13 +5312,17 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Data to request", ""]
         for x in asks[:8]:
             out.append(f"- **{md_cell(x['what'])}**: {md_cell(x['why'])}" + (f" — {md_cell(x['how'])}" if x.get("how") else ""))
+    zombies = (res.get("task_workers") or {}).get("zombies") or []
+    if zombies:
+        out += ["", "### Tasks still running after a failed graceful stop", ""]
+        out += [f"- {md_cell(zombie_text(z))}" for z in zombies[:5]]
     only = [c for c in (res.get("task_workers") or {}).get("connectors") or [] if c["only_on"]]
     if only:
         out += ["", "### Errors on one worker only", ""]
         out += [f"- {md_cell(only_on_text(c))}" for c in only[:5]]
     bugs = res.get("fixed_bugs") or []
     if bugs:
-        out += ["", "### Known bugs fixed in a later version of the plugin", ""]
+        out += ["", "### Known bugs fixed in a later version of the plugin or of Confluent Platform", ""]
         for b in bugs[:5]:
             out.append(f"- **{md_cell(b['title'])}** ({md_cell(b['ref'])}, fixed in {', '.join(b['fixed_in'])}), ×{b['occurrences']:,}")
             out += [f"  - {md_cell(line)}" for line in fixed_bug_lines(b)]

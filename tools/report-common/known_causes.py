@@ -33,7 +33,10 @@ KNOWN_CAUSES = [
                "sizes, and look at what fills the heap with playground debug heap-dump + playground analyze heap-dump"},
     {"name": "license_error", "severity": "critical", "category": "License Issues",
      "pattern": r"license has expired|license is invalid|LicenseManagerException|license verification failed"
-                r"|License manager.{0,40}error",
+                r"|License manager.{0,40}error"
+                # the license of a connector that could not be checked ("Invalid value …LicenseValidator$Failure: Could not
+                # verify '${secret:…}' for configuration confluent.license")
+                r"|LicenseValidator\$Failure",
      "title": "📜 License error",
      "advice": "the Confluent license is expired, invalid or cannot be verified: check confluent.license and the "
                "_confluent-command topic"},
@@ -83,6 +86,17 @@ KNOWN_CAUSES = [
                "the worker, or an IAM / bucket policy that denies the action (403 AccessDenied): check the credentials "
                "of the connector (aws.access.key.id / aws.secret.access.key, or its credentials provider) and the IAM "
                "policy"},
+    # a Kerberos client without a valid ticket (a connector writing to HDFS / Hive, a SASL GSSAPI client): its keytab,
+    # principal, ticket renewal or krb5.conf, not a wrong password of another system. Before authentication_failed
+    {"name": "kerberos_no_ticket", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"Failed to find any Kerberos tgt|GSS initiate failed|No valid credentials provided \(Mechanism level"
+                r"|Clock skew too great|Unable to obtain password from user",
+     "title": "🎫 Kerberos ticket not found or not valid",
+     "advice": "the client has no valid Kerberos ticket (TGT): the keytab or the principal of the client is wrong or "
+               "unreadable (connect.hdfs.keytab / connect.hdfs.principal of an HDFS / Hive connector, sasl.jaas.config "
+               "of a GSSAPI client), the ticket expired and was not renewed (a password rotated, renew_lifetime of "
+               "krb5.conf), krb5.conf is not found (java.security.krb5.conf) or the clock of the host is off: run kinit "
+               "-kt <keytab> <principal> then klist on the worker"},
     {"name": "authentication_failed", "severity": "high", "category": "Authentication Issues",
      "pattern": r"SaslAuthenticationException|AuthenticationException|authentication failed"
                 r"|failed authentication(?![^\n]{0,300}Client SASL mechanism '[^']+' not enabled)"
@@ -240,7 +254,8 @@ KNOWN_CAUSES = [
                "playground schema list shows the real subject names"},
     {"name": "serialization_error", "severity": "medium", "category": "Serialization Issues",
      "pattern": r"Converting byte\[\] to Kafka Connect data failed|SerializationException"
-                r"|^(?![\s\S]*Executing stage 'TRANSFORMATION')[\s\S]*?DataException",
+                # (not an SMT that throws: 🪄, nor a tombstone skipped by a sink: 🫥)
+                r"|^(?![\s\S]*(?:Executing stage 'TRANSFORMATION'|Skipping null value record))[\s\S]*?DataException",
      "title": "🔀 Serialization or conversion error",
      "advice": "the converter does not match the format of the records, or a record does not match the schema; "
                "errors.tolerance=all + a dead letter queue keeps the task running (playground topic dlq inspect)"},
@@ -332,7 +347,10 @@ KNOWN_CAUSES = [
     # \"x\" for configuration property \"acks\"", Java ConfigException
     {"name": "client_invalid_config", "severity": "high", "category": "Kafka Issues",
      "pattern": r"No such configuration property|Invalid value .{0,200} for configuration property"
-                r"|ConfigException: (?:Invalid value|Missing required configuration)",
+                # (not the license of a connector or a ${provider:…} placeholder not resolved: 📜 and 🧷 explain them, with
+                # their own advice)
+                r"|ConfigException: (?:Invalid value(?![^\n]{0,400}(?:LicenseValidator\$Failure|\$\{[\w-]{1,30}:"
+                r"|for configuration confluent\.license))|Missing required configuration)",
      "title": "⚙️ Invalid client configuration",
      "advice": "a property is unknown to this client, misspelled, or has an invalid value: librdkafka clients (C/C++, "
                "Python, Go, .NET, JavaScript) do not take the Java-only properties, and a client too old does not know "
@@ -441,6 +459,31 @@ KNOWN_CAUSES = [
      "advice": "a task or a connector did not stop within task.shutdown.graceful.timeout.ms (5 s by default): it may still "
                "run in the background (a duplicate task, connections or locks held). A thread dump shows where it is "
                "blocked: playground debug thread-dump, then playground analyze thread-dump"},
+    # a sink that gets records with a null value (tombstones): skipped with behavior.on.null.values=ignore (the ERROR
+    # comes from errors.log.enable / report.null.values.to.dlq), the task killed with fail
+    {"name": "null_value_record", "severity": "medium", "category": "Connect Issues",
+     "pattern": r"Skipping null value record|Null valued records are not writeable",
+     "title": "🫥 Null value (tombstone) records skipped by the sink",
+     "advice": "the sink received records with a null value (tombstones, a deleted key): behavior.on.null.values=ignore "
+               "skips them (the ERROR line of each one comes from errors.log.enable / report.null.values.to.dlq: "
+               "report.null.values.to.dlq=false stops it), fail kills the task. A consumer lag that never goes to 0 "
+               "behind trailing tombstones is a bug of the storage sinks fixed in a later version (🩹 below when the "
+               "plugin is known)"},
+    # the JDBC sink did not find the table (or a column) and may not create it
+    {"name": "jdbc_table_missing", "severity": "high", "category": "Connect Issues",
+     "pattern": r"TableAlterOrCreateException|is missing and auto-creation is disabled|auto-evolution is disabled",
+     "title": "🗄️ JDBC sink: table or column missing (auto.create / auto.evolve off)",
+     "advice": "the JDBC sink did not find the table (or a column of the record) and auto.create / auto.evolve is false: "
+               "create the table or the column, or set auto.create=true / auto.evolve=true; check table.name.format, "
+               "the case and quoting of the name (quote.sql.identifiers) and that the database user sees that schema"},
+    # debug traces of a plugin logged at ERROR ("ERROR DEBUG_ADD_RECORD: …"): a modified or debug build, not failures
+    {"name": "debug_traces_at_error", "severity": "low", "category": "Application Errors",
+     "pattern": r"\bERROR\b[^\n]{0,200}?\sDEBUG_[A-Z0-9]{2,}\w*:",
+     "title": "🪵 Debug traces logged at ERROR",
+     "advice": "these lines are debug traces (DEBUG_… messages, usually not in the upstream code: a modified or debug "
+               "build of the plugin) logged at ERROR: not failures, but they flood the logs, hide the real errors and "
+               "shorten the window the rotated files keep. Ask which build of the plugin runs, and to remove the traces "
+               "or log them at DEBUG"},
     # CreateTopics / AlterConfigs refused by a policy of the cluster (create.topic.policy.class.name, Confluent Cloud limits)
     {"name": "policy_violation", "severity": "medium", "category": "Kafka Issues",
      "pattern": r"PolicyViolationException|POLICY_VIOLATION",
@@ -508,16 +551,18 @@ HINT_ORDER = [
     "💥 OutOfMemoryError", "🪞 Secret registry: duplicate URLs, Connect does not start", "🚫 Connect worker failed to start",
     KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🧬 Not enough replicas",
-    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
+    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
     "🗝️ Empty or unreadable truststore", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
     "🪄 Transformation (SMT) failed", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",
-    "🔌 Connection failure",
+    "🔌 Connection failure", "🗄️ JDBC sink: table or column missing (auto.create / auto.evolve off)",
     "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost", "📥 Producer buffer full",
     "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system", "🌩️ HTTP 5xx from the external system",
     "⏭️ Records failed in a stage (errors.log.enable)",
+    "🫥 Null value (tombstone) records skipped by the sink",
     "🛑 Task or connector did not stop in time", "⏱️ Timeouts", "📏 Record too large", "🧹 Clients aborted while a task stopped",
     "❓ Unknown topic or partition", "⏮️ Offset out of range", "🚧 Request refused by a broker policy", "👑 Partition leadership changed",
+    "🪵 Debug traces logged at ERROR",
 ]
 
 
@@ -525,10 +570,16 @@ HINT_ORDER = [
 # "kb_title") and / or a docs.confluent.io page ("docs"). A list when the cause has several articles: an article with a
 # "pattern" (case-insensitive regex) is shown only when a record of the cause matches it (a variant: ORA-01017 among
 # the authentication failures, the S3 tiered storage among the cloud credentials), before the general ones,
-# MAX_KB_ARTICLES at most. A general article with "fallback": True is shown only when no variant matched.
+# MAX_KB_ARTICLES at most. A general article with "fallback": True is shown only when no variant matched. An article
+# about Confluent Cloud is not for a self-managed cluster: "ccloud": True shows it only when the input points at
+# Confluent Cloud (*.confluent.cloud hosts in the records or the configs: links(…, ccloud=True)), "ccloud": "records"
+# only when the records of the cause do (an authentication failure against Confluent Cloud, not against a database of a
+# worker that also uses Confluent Cloud).
 # Only URLs found in the knowledge base (support.confluent.io articles for signed-in users), never built by hand: a
 # cause without a good article has no entry
 KB = "https://support.confluent.io/hc/en-us/articles/"
+# a host of Confluent Cloud (pkc-xxxxx.<region>.<cloud>.confluent.cloud, psrc-…, the Cloud API)
+CCLOUD_PATTERN = r"\.confluent\.cloud\b"
 LINKS = {
     "📜 License error": {"kb": KB + "16805773531284-What-s-causing-Invalid-License-Failed-to-start-Error-during-startup-of-an-commercial-Confluent-Platform-component",
         "kb_title": "\"Invalid License! - Failed to start\" at startup"},
@@ -567,7 +618,7 @@ LINKS = {
         {"kb": KB + "4417243864980-What-can-cause-authorization-exceptions-when-accessing-a-Topic-in-Confluent-Cloud",
          "kb_title": "Authorization exceptions on a topic of Confluent Cloud", "pattern": r"TopicAuthorizationException|TOPIC_AUTHORIZATION_FAILED|Not authorized to access topics"},
         {"kb": KB + "29997697793684-What-ACLs-are-required-for-a-Kafka-Connect-Cluster-connecting-to-Confluent-Cloud",
-         "kb_title": "ACLs required by a Connect cluster on Confluent Cloud", "fallback": True},
+         "kb_title": "ACLs required by a Connect cluster on Confluent Cloud", "fallback": True, "ccloud": True},
     ],
     "🧬 Not enough replicas": {"kb": KB + "360046772492-How-to-interpret-NotEnoughReplicasException-within-Kafka-Broker-Logfile",
         "kb_title": "How to interpret NotEnoughReplicasException"},
@@ -649,7 +700,7 @@ LINKS = {
         {"kb": KB + "23119096873876-How-to-configure-Confluent-Supported-Libraries-to-use-Schema-Registry-with-an-API-Key",
          "kb_title": "Schema Registry API key of the clients (\"Unauthorized; error code: 401\")", "pattern": r"^(?![\s\S]*security\.auth\.client\.rest)[\s\S]*Unauthorized; error code:? ?401"},
         {"kb": KB + "27052383612948-What-to-check-if-a-connector-on-Confluent-Cloud-fails-with-authentication-issues",
-         "kb_title": "What to check when a Confluent Cloud connector fails to authenticate", "fallback": True},
+         "kb_title": "What to check when a Confluent Cloud connector fails to authenticate", "fallback": True, "ccloud": "records"},
     ],
     "🔀 Serialization or conversion error": {"kb": KB + "360052951911-What-is-JsonConverter-s-schemas-enable-configuration-responsible-for-in-Kafka-Connect",
         "kb_title": "What JsonConverter schemas.enable does", "pattern": r"schemas\.enable|JsonConverter"},
@@ -707,11 +758,17 @@ LINKS = {
 MAX_KB_ARTICLES = 3
 
 
-def _select(entries, texts):
+def _select(entries, texts, ccloud=False):
     """The entries whose pattern matches one of `texts` (the variants), then those without a pattern, except the
-    "fallback" ones when a variant matched (a general article too far from the variants: Confluent Cloud only…)"""
+    "fallback" ones when a variant matched (a general article too far from the variants: Confluent Cloud only…), and
+    the "ccloud" ones when the input (True) or the records of the cause ("records") do not point at Confluent Cloud"""
     variants, general = [], []
     for entry in entries:
+        need = entry.get("ccloud")
+        if need == "records" and not any(re.search(CCLOUD_PATTERN, t, re.IGNORECASE) for t in texts):
+            continue
+        if need and need != "records" and not ccloud:
+            continue
         pattern = entry.get("pattern")
         if not pattern:
             general.append(entry)
@@ -720,9 +777,10 @@ def _select(entries, texts):
     return variants + [e for e in general if not (variants and e.get("fallback"))]
 
 
-def links(title, texts=()):
+def links(title, texts=(), ccloud=False):
     """What to read about the known cause `title`, whose records are `texts`: {"kb", "kb_title" (the first article),
-    "kb_articles": [{"title", "url"}], "docs"} (the keys it has), or {}"""
+    "kb_articles": [{"title", "url"}], "docs"} (the keys it has), or {}. ccloud: the input points at Confluent Cloud
+    (the articles marked "ccloud" are shown)"""
     value = LINKS.get(title)
     if not value:
         return {}
@@ -730,7 +788,7 @@ def links(title, texts=()):
     texts = list(texts)[:500]
     out = {}
     articles = [{"title": e.get("kb_title") or "knowledge base article", "url": e["kb"]}
-                for e in _select(entries, texts) if e.get("kb")][:MAX_KB_ARTICLES]
+                for e in _select(entries, texts, ccloud) if e.get("kb")][:MAX_KB_ARTICLES]
     if articles:
         out.update(kb=articles[0]["url"], kb_title=articles[0]["title"], kb_articles=articles)
     docs = [e["docs"] for e in entries if e.get("docs")]
