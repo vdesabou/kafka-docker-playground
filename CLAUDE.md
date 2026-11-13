@@ -124,6 +124,7 @@ scripts/run-tests.sh ALL 8.3.0 cfk                        # pin CP version + env
 - `scripts/tests-retriable.txt` — scripts retried on failure (flaky, e.g. kerberos/hdfs).
 - **Each example is killed after `PLAYGROUND_TEST_TIMEOUT` (default `60m`)** by `run-tests.sh` (exit `124`, not retried), so a hung example no longer blocks its job until the 6 hours GitHub limit. In CI, the EXIT trap of `playground run` then deletes the fully managed connectors and the topics the run created (success, failure or timeout), except a topic that a connector of another job uses (the cluster is shared, and a few examples use the same topic names): `run-tests.sh` deletes those at the end of the job (`cloud-resources cleanup --recorded-topics-only`), podman nightly included.
 - CI also auto-skips a test if a GitHub issue titled `🔥 <dir>` is open with the label `CI ignore ⏭️`.
+- 🔥 issues are created, commented and closed by `playground update-readme` after the nightly. A run started with `test_name` only **closes** the 🔥 issue of a test whose scripts are all successful and at least one ran in that run (job `close-fixed-issues`); its failures never create or comment an issue.
 
 CI (`.github/workflows/ci.yml`) runs nightly (cron) and on `workflow_dispatch` with optional `test_name` / `playground_environment` inputs; `playground force-ci` / `scripts/launch-github-action.sh` trigger it.
 

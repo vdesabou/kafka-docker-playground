@@ -17,3 +17,19 @@ flags:
     required: false
     help: |-
       🔥 read the open GitHub issues (the badges of a failing test link to its 🔥 issue), but never create, comment, edit or close one: only the nightly CI manages them (used by the Update Docs workflow). The CI output logs, only used in issues, are not downloaded
+  - long: --tests
+    required: false
+    validate: not_empty
+    arg: tests
+    help: |-
+      📁 only process these test folders (space separated, example "connect/connect-http-sink ccloud/fm-aws-s3-sink") instead of the 🚀 lists of ci.yml
+  - long: --close-fixed-issues-only
+    required: false
+    help: |-
+      ✅ only close the 🔥 GitHub issues of the tests whose scripts are all successful: never create, comment or edit an issue, and do not generate the docs pages (used after a CI run started with test_name, see execute_one_test in ci.yml)
+  - long: --run-id
+    required: false
+    validate: not_empty
+    arg: run_id
+    help: |-
+      🆔 with --close-fixed-issues-only: only close the issue of a test when at least one of its result files was written by this GitHub Actions run (the other scripts can be recent successes that the run did not execute again)

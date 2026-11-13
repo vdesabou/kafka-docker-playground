@@ -1,6 +1,9 @@
 tags="${args[--tags]}"
 generate_for_kb="${args[--generate-for-kb]}"
 skip_gh_issues="${args[--skip-gh-issues]}"
+only_tests="${args[--tests]}"
+close_fixed_issues_only="${args[--close-fixed-issues-only]}"
+run_id="${args[--run-id]}"
 
 if [ -z "$tags" ]
 then
@@ -10,10 +13,24 @@ then
 fi
 # only the files of these CP versions are downloaded from s3://kafka-docker-playground/ (names start with <tag>-)
 s3_include_args=(--exclude "*")
+# with --tests, only the files of these tests (<tag>-<test folder with / replaced by ->-...)
+only_tests=$(echo "$only_tests" | tr ' ' '\n' | sed -e 's|/*$||' -e '/^$/d' | tr '\n' ' ')
 for image_version in $tags
 do
-  s3_include_args+=(--include "${image_version}-*")
+  if [ -n "$only_tests" ]
+  then
+    for only_test in $only_tests
+    do
+      s3_include_args+=(--include "${image_version}-$(echo "$only_test" | sed 's/\//-/g')-*")
+    done
+  else
+    s3_include_args+=(--include "${image_version}-*")
+  fi
 done
+if [ -n "$close_fixed_issues_only" ]
+then
+  log "✅ --close-fixed-issues-only: only closing the 🔥 GitHub issues of fixed tests${run_id:+ that run $run_id executed}, nothing else is created, commented or generated"
+fi
 
 set +e
 tmp_dir="/tmp/update-readme"
@@ -53,7 +70,7 @@ ci_output_folder="$tmp_dir/ci_output"
 rm -rf "$ci_output_folder"
 mkdir -p "$ci_output_folder"
 # the output logs only go into the body of the 🔥 GitHub issues
-if [ -z "$skip_gh_issues" ]
+if [ -z "$skip_gh_issues" ] && [ -z "$close_fixed_issues_only" ]
 then
   log "Getting ci output log files (${tags})"
   aws s3 cp --only-show-errors s3://kafka-docker-playground/ci_output/ "${ci_output_folder}/" --recursive --no-progress --region us-east-1 "${s3_include_args[@]}"
@@ -84,6 +101,11 @@ function get_open_issue_number () {
 refresh_open_issues
 
 test_list=$(grep "🚀" ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
+if [ -n "$only_tests" ]
+then
+  test_list="$only_tests"
+  log "📁 --tests: only processing $test_list"
+fi
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
 nb_total_tests=0
@@ -92,7 +114,7 @@ nb_total_fail=0
 nb_total_success=0
 
 # podman results (container_engine=podman in CI) are stored with a -podman suffix
-if [ -z "$skip_gh_issues" ] && ls "${ci_folder}"/*-podman > /dev/null 2>&1
+if [ -z "$skip_gh_issues" ] && [ -z "$close_fixed_issues_only" ] && ls "${ci_folder}"/*-podman > /dev/null 2>&1
 then
   gh label create "podman" --description "fails when run with podman" --color "892CA0" > /dev/null 2>&1 || true
 fi
@@ -133,6 +155,7 @@ do
   nb_tests=0
   nb_fail=0
   nb_success=0
+  nb_from_run_id=0
   cfk_placeholder=":cfk-${test}:"
   TEST_FAILED=()
   TEST_SUCCESS=()
@@ -259,6 +282,10 @@ do
         last_execution_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
+        if [ -n "$run_id" ] && [ "$gh_run_id" = "$run_id" ]
+        then
+          let "nb_from_run_id++"
+        fi
         
         if [ ! -f $tmp_dir/${gh_run_id}_1.json ]
         then
@@ -396,7 +423,8 @@ do
       title="🔥 ${t}${issue_title_suffix}"
       issue_number=$(get_open_issue_number "$title")
       log "Number of successful tests: $nb_success/${nb_tests}"
-      if [ ${nb_fail} -gt 0 ] && [ -n "$gh_issues_available" ]
+      # --close-fixed-issues-only: a failure of a targeted run (often a fix branch being tried) is left to the nightly CI
+      if [ ${nb_fail} -gt 0 ] && [ -n "$gh_issues_available" ] && [ -z "$close_fixed_issues_only" ]
       then
         if [ -n "$skip_gh_issues" ]
         then
@@ -432,7 +460,10 @@ do
       then
         # if all scripts in tests are now successful, close the issue
         issue_number=$(get_open_issue_number "$title")
-        if [ -n "$issue_number" ]
+        if [ -n "$issue_number" ] && [ -n "$run_id" ] && [ ${nb_from_run_id} -eq 0 ]
+        then
+          log "⏭️ GH issue #${issue_number} with title $title not closed: no result of this test comes from run $run_id"
+        elif [ -n "$issue_number" ]
         then
           echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
@@ -444,7 +475,7 @@ do
       fi
     fi
 
-    if [ -n "$is_podman_pass" ]
+    if [ -n "$is_podman_pass" ] || [ -n "$close_fixed_issues_only" ]
     then
       continue
     fi
@@ -629,6 +660,12 @@ done #end test_list
     nb_total_success=$saved_nb_total_success
   fi
 done #end environment_suffix loop
+
+if [ -n "$close_fixed_issues_only" ]
+then
+  log "✅ --close-fixed-issues-only: done, docs pages not generated"
+  exit 0
+fi
 
 cp_version_tested=""
 for image_version in $tags

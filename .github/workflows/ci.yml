@@ -824,6 +824,32 @@ jobs:
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2}}
 
+  # post-build (README, docs and 🔥 issues) only runs after the nightly: without this job, the issue of a test fixed
+  # by a targeted run (test_name) stays open until the next nightly reads the result again
+  close-fixed-issues:
+    name: Close fixed issues
+    runs-on: ubuntu-latest
+    if: ${{ always() && github.event.inputs.test_name != '' }}
+    needs: [execute_one_test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+
+      - name: Close the 🔥 issues of the tests fixed by this run
+        run: |
+          cd ./scripts/cli
+          # never creates, comments or edits an issue: a failure here is often a fix branch being tried
+          ./playground update-readme --tags "8.4.1" --tests "$TEST_NAME" --close-fixed-issues-only --run-id "$GITHUB_RUN_ID"
+        env:
+          TEST_NAME: ${{ github.event.inputs.test_name }}
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
+
   post-build:
     # runs in parallel with post-build-cleanup, they don't depend on each other
     name: Update README
