@@ -134,8 +134,10 @@ Each file also has `read_path`, where it is in this run (the tmp dir is still th
 
 `log_report.py` analyzes the `thread_dump` commands of the triage right away, in its process, with
 `tools/thread-analyzer/thread_dump_analyzer.py` (imported: `parse_file`, `analyze`, `html_report`; files over 512 MB are
-left to the command): `.thread_dumps` (one group per command: dumps, findings, CPU between the dumps, deadlocks, stuck
-threads, Connect task threads), the 🧵 🔬 **JVM dumps of the input** card right after the verdict, the worst finding in
+left to the command): `.thread_dumps` (one group per command and per JVM: dumps, findings, CPU between the dumps, deadlocks, stuck
+threads, lock stalls, Connect task threads; the dumps of 2 JVMs in one folder are 2 groups, each one with its files, its
+command, `jvm_index` / `jvm_count` and `JVM 2 of 2: <files>` after the JVM version, and its own thread report
+`<stem>-thread-dumps-<n>.html`), the 🧵 🔬 **JVM dumps of the input** card right after the verdict, the worst finding in
 the verdict, a `lifecycle` event per dump on the 🗓️ timeline (the time the JVM printed, without time zone), and the full
 thread report `<stem>-thread-dumps.html` next to the report (in the 📤 `.zip`). The heap dumps are only listed
 (`.heap_dumps`, with their `playground analyze heap-dump` command, in the same card and the verdict): MAT needs Docker

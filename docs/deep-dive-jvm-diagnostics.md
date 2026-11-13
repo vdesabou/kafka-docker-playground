@@ -92,7 +92,7 @@ Takes about 15 minutes to read and run.
 playground analyze thread-dump -c connect --output-dir /tmp/threads
 playground analyze thread-dump -c connect --count 5 --interval 10 --output-dir /tmp/threads
 
-# dumps from a customer: one -f per dump of the same JVM (or one file holding several)
+# dumps from a customer: one -f per dump (or one file holding several); the dumps of several JVMs are analyzed apart
 playground analyze thread-dump -f dump-1.txt -f dump-2.txt -f dump-3.txt --output-dir /tmp/threads
 
 # one dump to read yourself, in your editor
@@ -100,8 +100,10 @@ playground debug thread-dump -c connect
 ```
 
 What the analysis reports: thread states and pools, deadlocks, locks with their owner and waiters, the most common
-stacks, and with several dumps of the same JVM, the threads stuck on the same frames, the CPU each thread used between
-dumps, and growing thread pools (Kafka / Connect aware: task threads, herder, request handlers).
+stacks, and with several dumps of the same JVM, the threads stuck on the same frames, lock stalls (a thread waiting for
+a lock whose holder does not move in any dump, even a single waiter), threads stuck in a socket write, the CPU each
+thread used between dumps, and growing thread pools (Kafka / Connect aware: task threads, herder, request handlers).
+The dumps of 2 workers given together are 2 analyses (`🖥️ JVM 1 of 2: <files>`), each JVM compared with itself.
 
 Gotchas:
 

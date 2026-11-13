@@ -64,6 +64,22 @@ _IDLE_RUNNABLE = re.compile(
     r'FileDispatcherImpl\.read0.*System\.in|Signal\.dispatch|signalDispatcherThread|Reference\.waitForReferencePendingList|'
     r'ReferenceQueue\.remove|jdk\.internal\.misc\.Unsafe\.park')
 
+# Frames of a thread blocked in a socket write / read (java.net blocking sockets, plain or TLS; JDK 8 socketWrite0 /
+# socketRead0, JDK 13+ NioSocketImpl). A file write (FileChannel) also ends in FileDispatcherImpl.write0: a socket
+# frame is required too.
+_SOCKET_WRITE = re.compile(r'socketWrite0|SocketOutputStream\.socketWrite\b|FileDispatcherImpl\.write0|SocketDispatcher\.write\b|'
+                           r'NioSocketImpl\.(?:implWrite|tryWrite)\b')
+_SOCKET_READ = re.compile(r'socketRead0|SocketInputStream\.socketRead\b|FileDispatcherImpl\.read0|SocketDispatcher\.read\b|'
+                          r'NioSocketImpl\.(?:implRead|timedRead|tryRead|park)\b')
+_SOCKET_FRAME = re.compile(r'socketWrite0|socketRead0|SocketOutputStream|SocketInputStream|SocketDispatcher|NioSocketImpl|SSLSocket')
+# a thread parked to acquire a java.util.concurrent lock that has an owner (not a condition, a semaphore or a latch)
+_JUC_OWNED_LOCK = re.compile(r'ReentrantLock|ReentrantReadWriteLock')
+_JUC_ACQUIRE = re.compile(r'AbstractQueuedSynchronizer\.(?:acquire|acquireInterruptibly|tryAcquireNanos|acquireShared)\(|'
+                          r'ReentrantLock(?:\$\w+)?\.(?:lock|lockInterruptibly|tryLock)\(|ReentrantReadWriteLock\$\w+\.(?:lock|tryLock)\(')
+_LOCK_PLUMBING = ("java.util.concurrent.", "jdk.internal.misc.", "sun.misc.Unsafe")
+# below this share of a CPU between the first and last dump, a thread on the same frames is not working
+_NO_CPU_SHARE = 0.05
+
 _JDK_PREFIXES = ("java.", "javax.", "jdk.", "sun.", "com.sun.", "kotlin.", "scala.runtime.")
 
 # Kafka / Connect thread names
@@ -412,9 +428,164 @@ def _interval_seconds(a: Dump, b: Dump) -> Optional[float]:
 
 
 def same_jvm(a: Dump, b: Dump) -> bool:
-    ka = {t.key for t in a.threads if t.nid}
-    kb = {t.key for t in b.threads if t.nid}
-    return bool(ka) and len(ka & kb) >= 0.3 * min(len(ka), len(kb))
+    """30% of the threads in common (name and OS thread id), and not contradicted: two containers can share low OS thread
+    ids (the GC threads of 2 Connect workers), not the JVM version nor the thread numbers"""
+    if a.jvm and b.jvm and a.jvm != b.jvm:
+        return False
+    ta = {t.key: t for t in a.threads if t.nid}
+    tb = {t.key: t for t in b.threads if t.nid}
+    common = ta.keys() & tb.keys()
+    if not ta or len(common) < 0.3 * min(len(ta), len(tb)):
+        return False
+    # the thread number (#12) is given once per JVM: the same name and OS thread id with another number is another JVM
+    checked = [k for k in common if ta[k].num is not None and tb[k].num is not None]
+    return len([k for k in checked if ta[k].num != tb[k].num]) <= 0.5 * len(checked)
+
+
+def split_jvms(dumps: List[Dump]) -> List[List[Dump]]:
+    """the dumps (in time order) grouped by JVM: the dumps of 2 Connect workers given together are analyzed apart, each
+    one compared with the earlier dumps of its own JVM"""
+    groups: List[List[Dump]] = []
+    for d in dumps:
+        g = next((g for g in groups if same_jvm(g[-1], d)), None)
+        if g is not None:
+            g.append(d)
+        else:
+            groups.append([d])
+    return groups
+
+
+def _method(frame: str) -> str:
+    """'sun.nio.ch.FileDispatcherImpl.write0(java.base@17/Native Method)' -> 'sun.nio.ch.FileDispatcherImpl.write0'"""
+    return frame.split("(", 1)[0]
+
+
+def socket_io(t: ThreadInfo) -> Optional[Tuple[str, str]]:
+    """("write" | "read", frame) when the top frames of the thread are a blocking socket write / read (plain or TLS)"""
+    top = t.frames[:8]
+    if not any(_SOCKET_FRAME.search(f) for f in top):
+        return None
+    for f in top:
+        if _SOCKET_WRITE.search(f):
+            return "write", f
+        if _SOCKET_READ.search(f):
+            return "read", f
+    return None
+
+
+def lock_wait(t: ThreadInfo) -> Optional[Tuple[str, str, str]]:
+    """(addr, class, kind) of the lock the thread is trying to acquire: a monitor (BLOCKED) or a java.util.concurrent lock
+    with an owner (parked in lock(), not in a condition await, a semaphore or a latch)"""
+    if t.state == "BLOCKED":
+        w = t.waiting_lock()
+        return (w[0], w[1], "monitor") if w else None
+    if t.state in ("WAITING", "TIMED_WAITING"):
+        p = t.parking_on()
+        if p and _JUC_OWNED_LOCK.search(p[1]) and "ConditionObject" not in p[1] and any(_JUC_ACQUIRE.search(f) for f in t.frames[:8]):
+            return p[0], p[1], "j.u.c lock"
+    return None
+
+
+def _lock_caller(t: ThreadInfo) -> str:
+    """the first frame above the lock plumbing (SSLSocketImpl.closeNotify for a thread in ReentrantLock.lock)"""
+    return next((f for f in t.frames if not f.startswith(_LOCK_PLUMBING)), t.frames[0] if t.frames else "")
+
+
+def _class_of(frame: str) -> str:
+    return _method(frame).rsplit(".", 1)[0]
+
+
+def _name_affinity(a: str, b: str) -> int:
+    """length of the longest common prefix or suffix of 2 thread names (blc-keepalive-db:3306 / blc-db:3306)"""
+    pre = len(os.path.commonprefix([a, b]))
+    suf = len(os.path.commonprefix([a[::-1], b[::-1]]))
+    return max(pre, suf)
+
+
+def stalls(chain: List[Dump], secs: Optional[float]) -> Tuple[List[dict], List[dict]]:
+    """with 2+ dumps of the same JVM: (lock stalls, threads stuck in socket I/O)
+
+    - a lock stall: a thread waits for a lock of the same class, on the same frames, in every dump, and the holder of that
+      lock is the same thread on the same frames in every dump. When the dump has no lock owners (jstack without -l: no "Locked
+      ownable synchronizers"), the holder of a java.util.concurrent lock is inferred: a thread RUNNABLE in socket I/O on
+      the same frames in every dump, using no CPU, in the class that called lock() (one of the TLS socket for a thread
+      in SSLSocketImpl.closeNotify), the closest name first.
+    - stuck in I/O: a thread RUNNABLE in a socket write on the same frames in every dump, using no CPU (a write that does
+      not complete: the peer does not read, or the connection is dead without a reset). A socket read is only reported
+      as the holder of a stalled lock: an idle connection waits in a read too."""
+    maps = [{t.key: t for t in d.threads} for d in chain]
+    last = maps[-1]
+
+    def steady(key: str) -> bool:
+        t = last.get(key)
+        return bool(t and t.is_java and t.frames) and all(
+            key in m and m[key].state == t.state and m[key].frames[:5] == t.frames[:5] for m in maps)
+
+    def cpu_ms(key: str) -> Optional[float]:
+        a, b = maps[0][key].cpu_ms, last[key].cpu_ms
+        return round(b - a, 1) if a is not None and b is not None else None
+
+    def no_cpu(key: str) -> bool:
+        used = cpu_ms(key)
+        return used is None or not secs or used <= _NO_CPU_SHARE * secs * 1000
+
+    io_stuck = {}
+    for key, t in last.items():
+        if t.state == "RUNNABLE" and steady(key) and no_cpu(key):
+            io = socket_io(t)
+            if io:
+                io_stuck[key] = io
+
+    # the owner of each lock, per dump (a lock object can move between dumps: a GC, so compared by its class and owner)
+    owner_of = [{a: o.key for o in m.values() for a, _ in o.held_monitors()} for m in maps]
+    found: List[dict] = []
+    for key, t in last.items():
+        w = lock_wait(t)
+        if not w or not steady(key):
+            continue
+        waits = [lock_wait(m[key]) for m in maps]
+        if not all(x and x[1] == w[1] for x in waits):
+            continue
+        owners = [o.get(x[0]) if o.get(x[0]) != key else None for o, x in zip(owner_of, waits)]
+        inferred = False
+        if all(owners) and len(set(owners)) == 1:
+            holder = owners[0]
+            if not steady(holder):
+                continue  # the holder moves: contention, not a stall
+        elif not any(owners) and w[2] == "j.u.c lock":
+            caller = _class_of(_lock_caller(t))
+            cands = [k for k in io_stuck if k != key and any(f.startswith(caller + ".") for f in last[k].frames)]
+            if not cands:
+                holder = None
+            else:
+                cands.sort(key=lambda k: -_name_affinity(last[k].name, t.name))
+                best = _name_affinity(last[cands[0]].name, t.name)
+                ties = [k for k in cands if _name_affinity(last[k].name, t.name) == best]
+                holder = cands[0] if len(ties) == 1 else None
+                inferred = holder is not None
+        else:
+            continue  # owner seen in some dumps only, or a different owner: the lock moves
+        h = last.get(holder) if holder else None
+        if not h:
+            # owner not printed (jstack without -l) and no thread stuck in I/O to infer it from: a consumer heartbeat
+            # thread waits like that for the lock its poll() holds in epollWait, nothing to report
+            continue
+        io = io_stuck.get(holder) or socket_io(h)
+        found.append({"waiter": t.name, "waiter_state": t.state, "waiter_frame": _lock_caller(t), "lock": w[0], "class": w[1],
+                      "kind": w[2], "holder": h.name, "holder_state": h.state,
+                      "holder_frame": h.top_app_frame(), "inferred": inferred,
+                      "holder_io": io[0] if io else None, "holder_io_frame": _method(io[1]) if io else None,
+                      "holder_tls": any(f.startswith("sun.security.ssl.") for f in h.frames),
+                      "holder_key_update": any(".KeyUpdate" in f for f in h.frames), "holder_cpu_ms": cpu_ms(holder)})
+    holders = {s["holder"] for s in found}
+    stuck_io = []
+    for key, (kind, frame) in io_stuck.items():
+        t = last[key]
+        if kind != "write" or t.name in holders or _RE_CONNECT_TASK.match(t.name) or _RE_CONNECT_HERDER.match(t.name):
+            continue
+        stuck_io.append({"name": t.name, "io": kind, "io_frame": _method(frame), "frame": t.top_app_frame(),
+                         "tls": any(f.startswith("sun.security.ssl.") for f in t.frames), "cpu_ms": cpu_ms(key)})
+    return found, stuck_io
 
 
 def analyze(dumps: List[Dump], top: int) -> dict:
@@ -486,6 +657,9 @@ def analyze(dumps: List[Dump], top: int) -> dict:
                 busy = next((c for c in res["cpu_interval"] if c["name"] == t.name), None)
                 res["stuck"].append({"name": t.name, "state": t.state, "frame": t.top_app_frame(),
                                      "frames": t.frames[:8], "cpu_pct": busy["cpu_pct"] if busy else 0.0})
+        res["stalls"], res["stuck_io"] = stalls(chain, secs)
+    else:
+        res["stalls"], res["stuck_io"] = [], []
 
     # Kafka / Connect
     tasks = []
@@ -533,9 +707,48 @@ def findings(res: dict, dumps: List[Dump]) -> List[dict]:
 
     n = res["same_jvm_dumps"]
     if n >= 2:
-        # threads already explained by a deadlock or a contended lock are not repeated one by one
+        apart = f"{res.get('interval_s', '?')}s apart"
+        contended = {c["addr"] for c in res["contention"] if c["count"] >= 2}
+        in_deadlock = {t for dl in res["deadlocks"] for t in dl["threads"]}
+        stalled = []
+        for st in res.get("stalls") or []:
+            if st["lock"] in contended or st["waiter"] in in_deadlock:
+                continue  # already in the finding of the contended lock or of the deadlock
+            stalled.append(st)
+            what = f"the {st['kind']} <{st['lock']}> ({st['class']})"
+            # the words before the first ':' are the title of the finding in the verdict and the timeline
+            text = (f"Lock stall, the same in all {n} dumps ({apart}): \"{st['waiter']}\" ({st['waiter_state']}) waits for "
+                    f"{what} in {st['waiter_frame']}")
+            held = ("most likely held by" if st["inferred"] else "held by") + f" \"{st['holder']}\" ({st['holder_state']}"
+            if st["holder_io"]:
+                tls = (" over TLS (a TLS 1.3 KeyUpdate)" if st["holder_key_update"] else " over TLS") if st["holder_tls"] else ""
+                held += f", blocked in a socket {st['holder_io']}{tls}: {st['holder_io_frame']}, in {st['holder_frame']}"
+            else:
+                held += f", in {st['holder_frame']}"
+            held += ")"
+            text += f", {held}, both on the same frames in every dump"
+            if st["holder_cpu_ms"] is not None:
+                text += (f", the holder using {st['holder_cpu_ms']:g}ms of CPU" if st["holder_cpu_ms"] >= 1 else ", the holder using no CPU")
+            text += ". Neither progresses until the holder returns"
+            if st["holder_io"] == "write":
+                text += (" (a socket write that does not complete: the peer does not read, or the connection is dead without "
+                         "a reset; only the TCP retransmission timeout or a restart ends it)")
+            elif st["holder_io"] == "read":
+                text += " (a socket read with no timeout on a silent connection: only a reset, a socket timeout or a restart ends it)"
+            if st["inferred"]:
+                text += (". The dump has no lock owners (taken without -l): the holder is the thread stuck in "
+                         f"{_class_of(st['waiter_frame']).rsplit('.', 1)[-1]} code whose name is the closest")
+            add("HIGH" if (res.get("interval_s") or 0) >= 5 or st["holder_io"] else "MEDIUM", text + ".")
+        for s_io in res.get("stuck_io") or []:
+            add("MEDIUM", f"Stuck in a socket write in all {n} dumps ({apart}): thread \"{s_io['name']}\" is RUNNABLE in a "
+                          f"socket write{' over TLS' if s_io['tls'] else ''} on the same frames in every dump"
+                          + ("" if s_io["cpu_ms"] is None else f", using {s_io['cpu_ms']:g}ms of CPU" if s_io["cpu_ms"] >= 1 else ", using no CPU")
+                          + f": {s_io['io_frame']}, in {s_io['frame']}. The write does not complete: the peer does not read, "
+                          "or the connection is dead without a reset.")
+        # threads already explained by a deadlock, a contended lock or a stall are not repeated one by one
         explained = {t for dl in res["deadlocks"] for t in dl["threads"]}
         explained |= {w for c in res["contention"] if c["count"] >= 2 for w in c["waiters"]}
+        explained |= {st["waiter"] for st in stalled}
         other_blocked = []
         for s in res["stuck"]:
             if _RE_CONNECT_TASK.match(s["name"]):
@@ -843,19 +1056,33 @@ def main() -> int:
         dumps.sort(key=lambda d: d.timestamp)
     for i, d in enumerate(dumps, 1):
         d.index = i
-    res = analyze(dumps, max(1, args.top))
+    # the dumps of several JVMs (2 Connect workers): one analysis per JVM, each one with the dumps of its own JVM
+    groups = split_jvms(dumps)
+    results = [analyze(g, max(1, args.top)) for g in groups]
+    for i, (g, res) in enumerate(zip(groups, results), 1):
+        res["files"] = list(OrderedDict.fromkeys(d.source for d in g))
+        if len(groups) > 1:
+            res["jvm_index"], res["jvm_count"] = i, len(groups)
 
     if args.json:
-        print(json.dumps(res, indent=2, default=str))
+        # one JVM: the analysis; several: {"jvms": [one analysis per JVM]}
+        print(json.dumps(results[0] if len(results) == 1 else {"jvms": results}, indent=2, default=str))
     else:
-        print(text_report(res, max(1, args.top)))
+        for res in results:
+            if len(results) > 1:
+                print(f"\n🖥️  JVM {res['jvm_index']} of {res['jvm_count']}: {', '.join(res['files'])}")
+            print(text_report(res, max(1, args.top)))
     if args.html_out:
-        title = os.path.basename(files[0]) + (f" (+{len(files) - 1} files)" if len(files) > 1 else "")
-        with open(args.html_out, "w", encoding="utf-8") as fh:
-            # 📤 Share: the digest of the terminal as the summary, the findings of the page for a ticket
-            fh.write(report_html.with_share(html_report(res, title), summary=text_report(res, max(1, args.top)),
-                                            command="playground analyze thread-dump"))
-        print(f"HTML report: {args.html_out}", file=sys.stderr)
+        for i, res in enumerate(results, 1):
+            path = args.html_out if i == 1 else re.sub(r"(\.html?)?$", f"-jvm-{i}\\1", args.html_out, count=1)
+            title = res["files"][0] + (f" (+{len(res['files']) - 1} files)" if len(res["files"]) > 1 else "")
+            if len(results) > 1:
+                title += f", JVM {i} of {len(results)}"
+            with open(path, "w", encoding="utf-8") as fh:
+                # 📤 Share: the digest of the terminal as the summary, the findings of the page for a ticket
+                fh.write(report_html.with_share(html_report(res, title), summary=text_report(res, max(1, args.top)),
+                                                command="playground analyze thread-dump"))
+            print(f"HTML report{f' (JVM {i} of {len(results)})' if len(results) > 1 else ''}: {path}", file=sys.stderr)
     return 0
 
 

@@ -9,18 +9,23 @@ Thread dump analyzer behind `playground analyze thread-dump`. Standard library o
 - Several dumps per file (repeated `kill -3` in a log), several files, folders, `.gz`.
 - Container / application logs: lines interleaved with the dump are ignored.
 
-Dumps are ordered by the timestamp printed before `Full thread dump`. Consecutive dumps of the same JVM (same
-thread names and native ids) are compared.
+Dumps are ordered by the timestamp printed before `Full thread dump`, then grouped by JVM (30% of the threads with the
+same name and native id, and the same thread numbers `#12` and JVM version: 2 containers can share native ids). Each JVM
+is analyzed apart, its dumps compared with each other: the dumps of 2 Connect workers given together give 2 analyses
+(`🖥️ JVM 1 of 2: <files>` in the terminal, `{"jvms": [...]}` with `--json`, one HTML report per JVM: `<report>.html`,
+`<report>-jvm-2.html`). The output of a single JVM is unchanged.
 
 ## What it reports
 
 | Section | Content |
 | --- | --- |
 | Threads per dump | states (RUNNABLE / BLOCKED / WAITING / TIMED_WAITING / VM threads) |
-| Findings | deadlocks, contended locks, stuck threads, CPU-hungry threads, growing pools, saturated broker request handlers |
+| Findings | deadlocks, contended locks, lock stalls, threads stuck in a socket write, stuck threads, CPU-hungry threads, growing pools, saturated broker request handlers |
 | Deadlocks | cycles in the wait-for graph (monitors and `java.util.concurrent` locks), plus the JVM's own report |
 | Lock contention | each lock with its waiters and its owner (state and top application frame) |
 | Same frames in all dumps | non-idle threads (BLOCKED, or RUNNABLE outside a poll / accept / select) on the same top 5 frames |
+| Lock stalls (`stalls`) | a thread waiting for a lock (monitor, or a `ReentrantLock` / `ReentrantReadWriteLock` it parks to acquire) on the same frames in every dump, whose holder is the same thread on the same frames in every dump: `Lock stall, the same in all N dumps`, even with a single waiter (a lock with 2+ waiters stays a contended lock). Without lock owners in the dump (`jstack` without `-l`), the holder of a `java.util.concurrent` lock is inferred: the thread stuck in socket I/O, using no CPU, in the class that called `lock()`, the closest name first (`most likely held by`); none found: nothing reported (a consumer heartbeat thread waits like that for the lock its `poll()` holds) |
+| Stuck in socket I/O (`stuck_io`) | a thread RUNNABLE in a blocking socket write (`socketWrite0`, `NioSocketImpl` / `FileDispatcherImpl.write0`, plain or TLS) on the same frames in every dump with under 5% of a CPU between them (MEDIUM: the peer does not read, or the connection is dead without a reset). A socket read is only reported as the holder of a stalled lock: an idle connection waits in a read too; `epollWait` / `select` threads are idle |
 | CPU | per-thread CPU between the first and last dump (`cpu=` / `elapsed=`, JDK 11+), or since thread start |
 | Kafka Connect | `task-thread-<connector>-<n>` threads (idle / busy / stuck) and the `DistributedHerder` thread |
 | Kafka broker | busy `data-plane-kafka-request-handler-*` threads per dump |
