@@ -18,13 +18,18 @@ scheduling, …) with concrete remediation steps per category:
   / init image of every component, from `cluster-details.txt` and the CR specs. Checked against the
   [CFK support matrix](https://docs.confluent.io/operator/current/co-supported-environments.html): Kubernetes,
   Confluent Platform and Control Center versions outside the range of the CFK minor, `confluent-init-container`
-  on another version than the operator, components on different CP versions (`Compatibility` category).
+  on another version than the operator, components on different CP versions (`Compatibility` category). The CP
+  version is only read from the tag of a Confluent `cp-*` image (`cp-server`, `cp-server-connect`,
+  `cp-enterprise-control-center[-next-gen]`…, Docker Hub or a mirror): a custom or third-party image
+  (`my-connect:1.0.3`) has its own versioning and gives no CP version finding.
 - Recent changes, newest first: `metadata.managedFields` of the CRs (who changed which part of the spec, e.g.
   `Update by kubectl-edit: spec.image, spec.podTemplate`) and StatefulSets (operator rollouts), pod creation and
   container terminations. Pods and StatefulSets written without `kind` (`pods/pod-<name>.yaml`) are recognized.
 - `kubectl get pods` tables saved as text (`pods.txt` of a flat bundle, no pod manifest): a pod restarted 3 times or
   more (`6 (16m ago)`: medium, high from 10) and a STATUS that is a failure (`OOMKilled`, `CrashLoopBackOff`,
   `Error`, `ImagePullBackOff`, `Init:…`) are findings of the pod. A pod that also has a manifest is left to it.
+  `kubectl get all` (`misc/kubectl-all-<namespace>.txt`): only the pod section is read (`pod/kafka-0` is `kafka-0`),
+  each section (`service/`, `deployment.apps/`, `statefulset.apps/`…) has its own header and is skipped.
 - Operator reconcile loops (`Reconcile Loop` category): a CR that the operator fails to delete or apply 50 times or
   more, at 10 a minute or more over its log (a permanent error: the invalid MDS scope of a `Subject`
   ConfluentRolebinding, `forbidden to update role or principal`), is one finding with the rate, the error (the False

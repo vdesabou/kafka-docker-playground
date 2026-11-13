@@ -13,6 +13,7 @@ from contextlib import redirect_stdout
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import environment  # noqa: E402
 import problem as problem_statement  # noqa: E402
 from analyzer import CFKBundleAnalyzer  # noqa: E402
 
@@ -104,6 +105,75 @@ def test_reconcile_loop_and_pods_table():
         parsed = problem_statement.parse("CFK operator pod OOMKilled and restarting", results)
         verdict = problem_statement.correlate(results, parsed)
         check("--problem: explained by the loop", "Reconcile Loop" in verdict.get("verdict_text", ""), verdict.get("verdict_text"))
+
+
+KUBECTL_ALL = """\
+NAME                                     READY   STATUS             RESTARTS      AGE   IP          NODE
+pod/confluent-operator-5c94578d76-fjlb5  1/1     Running            1 (10d ago)   10d   10.0.0.11   node-1
+pod/connect-0                            0/1     CrashLoopBackOff   4 (2m ago)    13d   10.0.0.12   node-2
+pod/kafka-0                              1/1     Running            0             10d   10.0.0.13   node-3
+
+NAME                          TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                               AGE
+service/connect               ClusterIP   None         <none>        8083/TCP,7203/TCP,7777/TCP,7778/TCP   507d
+service/kafka-0-internal      ClusterIP   10.0.1.63    <none>        9074/TCP,9092/TCP,8090/TCP,7778/TCP   507d
+service/kafka-bootstrap-np    NodePort    10.0.1.126   <none>        9092:32524/TCP                        515d
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS           IMAGES
+deployment.apps/confluent-operator   1/1     1            1           507d   confluent-operator   confluentinc/confluent-operator:0.1514.76
+
+NAME                               DESIRED   CURRENT   READY   AGE    CONTAINERS   IMAGES
+replicaset.apps/grafana-cb8d5598   1         1         1       515d   grafana      grafana/grafana:latest
+
+NAME                               READY   AGE    CONTAINERS   IMAGES
+statefulset.apps/kafka             3/3     172d   kafka        confluentinc/cp-server:7.7.1
+"""
+
+
+def test_kubectl_get_all_sections():
+    """`kubectl get all`: the service / deployment / replicaset / statefulset sections have their own header, read
+    with the columns of the pod header they gave "Container service/kafka-0-internal Clus restarted 63 times"."""
+    with tempfile.TemporaryDirectory() as d:
+        with open(os.path.join(d, "kubectl-all-confluent.txt"), "w") as fh:
+            fh.write(KUBECTL_ALL)
+        results = analyze(d)
+        table = [i for i in results["issues"] if i["message"].startswith("Container ") and "kubectl get pods" in i["message"]]
+        messages = [i["message"] for i in table]
+        check("kubectl get all: no finding on a service / deployment / replicaset / statefulset row",
+              not any(k in m for m in messages for k in ("service/", ".apps/", "NAME ")), messages)
+        check("kubectl get all: the CrashLoopBackOff pod, without its pod/ prefix",
+              any(m.startswith("Container connect-0 status CrashLoopBackOff") for m in messages), messages)
+        check("kubectl get all: 3 restarts or more of a pod", any(m.startswith("Container connect-0 restarted 4 times")
+                                                                for m in messages), messages)
+        check("kubectl get all: only the pods counted", results["coverage"]["pods"] == 3, results["coverage"]["pods"])
+
+
+def test_cp_version_only_from_confluent_cp_images():
+    """a custom image tag (confluent-xstream-container:4.0.1, my-connect:1.0.3) is not a Confluent Platform version"""
+    check("cp_version: cp-server", environment.cp_version("registry.example.com:8083/confluentinc/cp-server:7.7.1") == "7.7.1")
+    check("cp_version: cp-server-connect ubi tag",
+          environment.cp_version("confluentinc/cp-server-connect:8.3.2-1-ubi9.amd64") == "8.3.2")
+    check("cp_version: Control Center next gen",
+          environment.cp_version("confluentinc/cp-enterprise-control-center-next-gen:2.4.0") == "2.4.0")
+    for image in ("registry.example.com:8083/confluentinc/confluent-xstream-container:4.0.1",
+                  "registry.example.com/team/my-connect:1.0.3", "confluentinc/confluent-init-container:3.2.3",
+                  "confluentinc/confluent-operator:0.1514.76", "registry.example.com/cp-connect-custom:1.2.0"):
+        check(f"cp_version: none for {image}", environment.cp_version(image) is None, environment.cp_version(image))
+    env = {"cfk_version": "3.2.3", "components": {
+        "connect": {"image": "registry.example.com:8083/confluentinc/confluent-xstream-container:4.0.1",
+                    "init_image": "registry.example.com:8083/confluentinc/confluent-init-container:3.2.3"},
+        "kafka": {"image": "registry.example.com:8083/confluentinc/cp-server:7.7.1",
+                  "init_image": "registry.example.com:8083/confluentinc/confluent-init-container:3.2.3"},
+        "schemaregistry": {"image": "confluentinc/cp-schema-registry:7.3.0",
+                           "init_image": "registry.example.com/team/custom-init:1.0.0"}}}
+    findings = environment.compatibility_findings(env)
+    messages = [f["message"] for f in findings]
+    check("compatibility: no CP version finding for a custom image", not any("4.0.1" in m for m in messages), messages)
+    check("compatibility: a cp- image outside the range is still high",
+          any(f["severity"] == "high" and f.get("instance") == "schemaregistry" for f in findings), messages)
+    check("compatibility: a custom init image is not compared with the operator",
+          not any("confluent-init-container" in m for m in messages), messages)
+    check("compatibility: different CP versions of the cp- images only",
+          any("7.3.0 (schemaregistry), 7.7.1 (kafka)" in m for m in messages), messages)
 
 
 def main():

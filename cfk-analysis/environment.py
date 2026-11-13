@@ -78,6 +78,27 @@ def image_version(image: str) -> Optional[str]:
     return m.group(1) if m else None
 
 
+def image_name(image: str) -> str:
+    """registry/repo/name:tag@sha -> name"""
+    return (image or '').split('@')[0].rsplit('/', 1)[-1].split(':', 1)[0]
+
+
+def cp_version(image: str) -> Optional[str]:
+    """Confluent Platform (or Control Center next gen) version of a Confluent image (cp-server, cp-server-connect,
+    cp-schema-registry, cp-enterprise-control-center[-next-gen]…, from Docker Hub or a mirror), None for any other
+    image: a custom or third-party image (my-connect:1.0, confluent-xstream-container:4.0.1) has its own versioning,
+    and the tag of confluent-init-container / confluent-operator is the CFK version, not a CP one."""
+    name = image_name(image)
+    version = image_version(image)
+    if not version or not name.startswith('cp-'):
+        return None
+    # Control Center next gen is 2.x, every Confluent Platform release since the cp- images is 5.x or later: a lower
+    # tag is a custom image named cp-something
+    if 'next-gen' not in name and _version_tuple(version)[0] < 5:
+        return None
+    return version
+
+
 def operator_release(tag_or_version: str) -> Optional[str]:
     """0.1718.99 -> 3.3.1, 3.3.1 -> 3.3.1, 0.1718.200 -> 3.3 (minor only)"""
     m = re.search(r'\d+\.\d+\.\d+', tag_or_version or '')
@@ -139,7 +160,7 @@ def compatibility_findings(env: Dict) -> List[Dict]:
     versions = {}
     for name, info in sorted((env.get('components') or {}).items()):
         image = info.get('image', '')
-        version = image_version(image)
+        version = cp_version(image)
         is_c3_next_gen = 'next-gen' in image or name.endswith('nextgen')
         if matrix and version:
             bounds = matrix[1] if is_c3_next_gen else matrix[0]
@@ -154,7 +175,8 @@ def compatibility_findings(env: Dict) -> List[Dict]:
             versions.setdefault(version, []).append(name)
 
         init = info.get('init_image', '')
-        init_version = image_version(init)
+        # a custom init image has its own versioning
+        init_version = image_version(init) if image_name(init) == 'confluent-init-container' else None
         if release and init_version and _version_tuple(release) and len(_version_tuple(release)) == 3 \
                 and init_version != release:
             findings.append({
