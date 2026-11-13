@@ -67,30 +67,30 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
+# one table per user: the workspace is shared, and a table created by someone else
+# makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
+# one topic per run: the connector skips (and never auto-creates the table for) records whose offset
+# is not above a file left under topics/<topic>/ in the shared staging bucket by an earlier run
+DATABRICKS_SUFFIX="$(echo "${USER:-playground}_${GITHUB_RUN_NUMBER:-$(date +%s)}_${TAG_BASE}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
+DATABRICKS_TOPIC="pageviews_fm_${DATABRICKS_SUFFIX}"
+DATABRICKS_TABLE_NAME="pageviews_fm_${DATABRICKS_SUFFIX}"
+
 set +e
-playground topic delete --topic pageviews
-sleep 3
-playground topic create --topic pageviews --nb-partitions 1
+playground topic create --topic "${DATABRICKS_TOPIC}" --nb-partitions 1
 set -e
 
-playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
+log "Sending messages to topic ${DATABRICKS_TOPIC}"
+playground topic produce --topic "${DATABRICKS_TOPIC}" --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
 
 connector_name="DatabricksDeltaLakeSink_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-# one table per user: the workspace is shared, and a table created by someone else
-# makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
-DATABRICKS_TABLE_NAME="pageviews_fm_$(echo "${USER:-playground}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
-
-log "Dropping table ${DATABRICKS_TABLE_NAME} if it exists, so that it holds only the records of this run"
-databricks_sql_statement "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "DROP TABLE IF EXISTS default.${DATABRICKS_TABLE_NAME}"
-
 log "Creating fully managed connector, writing to table ${DATABRICKS_TABLE_NAME}"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "topics": "pageviews",
+     "topics": "${DATABRICKS_TOPIC}",
      "input.data.format": "AVRO",
      "name": "$connector_name",
      "connector.class": "DatabricksDeltaLakeSink",
@@ -100,7 +100,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "delta.lake.host.name": "$DATABRICKS_SERVER_HOSTNAME",
      "delta.lake.http.path": "$DATABRICKS_HTTP_PATH",
      "delta.lake.token": "$DATABRICKS_TOKEN",
-     "delta.lake.topic2table.map": "pageviews:${DATABRICKS_TABLE_NAME}",
+     "delta.lake.topic2table.map": "${DATABRICKS_TOPIC}:${DATABRICKS_TABLE_NAME}",
      "delta.lake.table.auto.create": "true",
      "staging.s3.access.key.id": "$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID",
      "staging.s3.secret.access.key": "$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY",
@@ -120,3 +120,19 @@ log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
 playground connector delete --connector $connector_name
+
+log "Dropping table ${DATABRICKS_TABLE_NAME}, removing the staged files and deleting topic ${DATABRICKS_TOPIC}, as they are only for this run"
+if ! drop_output=$(databricks_sql_statement "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "DROP TABLE IF EXISTS default.${DATABRICKS_TABLE_NAME}")
+then
+     echo "$drop_output"
+     logwarn "🧱 could not drop table ${DATABRICKS_TABLE_NAME}"
+fi
+set +e
+(
+     export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
+     export AWS_SECRET_ACCESS_KEY="$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY"
+     export AWS_SESSION_TOKEN=""
+     aws s3 rm "s3://${DATABRICKS_AWS_BUCKET_NAME}/topics/${DATABRICKS_TOPIC}/" --recursive --region $DATABRICKS_AWS_BUCKET_REGION
+)
+playground topic delete --topic "${DATABRICKS_TOPIC}"
+set -e
