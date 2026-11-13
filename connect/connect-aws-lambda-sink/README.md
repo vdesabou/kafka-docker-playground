@@ -34,7 +34,7 @@ playground run -f lambda-sink.sh
 
 ## What the script does
 
-1. Creates an IAM role for Lambda (with the `AWSLambdaBasicExecutionRole` policy, to see the logs in CloudWatch) and a Lambda function (Python runtime) from `my-add-function/add.py`, which returns the sum of fields `a` and `b` of each record.
+1. Creates an IAM role for Lambda (with the `AWSLambdaBasicExecutionRole` policy, to see the logs in CloudWatch) and a Lambda function (Python runtime) from `my-add-function/add.py`, which returns the sum of fields `a` and `b` of each record. The function creation is retried (up to 10 times, 10 seconds apart) while Lambda cannot assume the new role yet (`The role defined for the function cannot be assumed by Lambda`: IAM is eventually consistent).
 2. Produces 10 Avro records (`a`, `b`) to topic `add-topic` with `playground topic produce`.
 3. Creates the AWS Lambda sink connector (`io.confluent.connect.aws.lambda.AwsLambdaSinkConnector`) with `aws.lambda.invocation.type=sync`, reporting results to `success-responses` and errors to `error-responses`.
 4. Verifies 10 results are received in `success-responses` (and checks `error-responses`) with `playground topic consume`.

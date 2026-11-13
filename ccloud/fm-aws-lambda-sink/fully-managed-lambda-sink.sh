@@ -35,7 +35,22 @@ cd ../../ccloud/fm-aws-lambda-sink/my-add-function
 rm -f add.zip
 zip add.zip add.py
 cp add.zip /tmp/
-aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.12 --role "$LAMBDA_ROLE" --tags "cflt_managed_by=user,cflt_managed_id=$USER"
+# IAM is eventually consistent: Lambda can refuse a role created seconds ago ("The role defined for the function cannot be assumed by Lambda")
+for attempt in 1 2 3 4 5 6 7 8 9 10
+do
+     if create_output=$(aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.12 --role "$LAMBDA_ROLE" --tags "cflt_managed_by=user,cflt_managed_id=$USER" 2>&1)
+     then
+          echo "$create_output"
+          break
+     fi
+     if [[ "$create_output" != *"cannot be assumed by Lambda"* ]] || [ $attempt -eq 10 ]
+     then
+          logerror "$create_output"
+          exit 1
+     fi
+     log "⏳ Lambda cannot assume role $LAMBDA_ROLE_NAME yet, retrying in 10 seconds (attempt $attempt/10)"
+     sleep 10
+done
 cd -
 
 log "Attaching AWSLambdaBasicExecutionRole policy to $LAMBDA_ROLE_NAME (to be able to see logs in Cloudwatch)"
