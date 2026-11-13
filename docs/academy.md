@@ -109,7 +109,7 @@ If this is setup, the 4th message would have been rejected by broker validation.
 
 * Skip the 4th message (also called *poison pill*) by altering the connector offsets
 
-> [!TIP] If you're Confluent customer, check this [Knowledge Base article](https://support.confluent.io/hc/en-us/articles/360031115091-How-to-skip-messages-in-Kafka-Connect-or-reset-a-connector-to-the-earliest-offset-for-sink-connectors)
+> [!TIP] If you're Confluent customer, search the Confluent support knowledge base for "How to skip messages in Kafka Connect or reset a connector to the earliest offset for sink connectors"
 
 Here is how you can do it with the CLI:
 

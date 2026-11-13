@@ -3,18 +3,21 @@ Known CFK issues: the log messages / events of the CFK triage table of Confluent
 what to do. Matched on the message and the `Caused by:` chain of every issue of the bundle (case-insensitive), so
 a bundle that hits a known issue shows it on top of the report, with the KB / docs to read.
 
-Public part: patterns, a short explanation and public links only (support.confluent.io KBs, docs.confluent.io).
+Public part: patterns, a short explanation and docs.confluent.io links only. The Confluent support knowledge-base
+articles (for signed-in customers) are not in this public repository: they come from the private file below ("kb").
 Confluent support keeps the internal runbook of each entry in an optional private file, mounted by
 playground analyze logs (PLAYGROUND_CFK_RUNBOOKS_FILE, default
 reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json), path in $CFK_RUNBOOKS_PRIVATE:
 
     {
       "links": {"<name>": [{"title": "...", "url": "https://..."}]},
+      "kb": {"<name>": [{"title": "...", "url": "https://support.confluent.io/..."}]},
       "runbooks": [{"name": "...", "title": "...", "pattern": "...", "advice": "...",
                     "links": [{"title": "...", "url": "..."}]}]
     }
 
-"links" adds internal links to the entries below (by name), "runbooks" adds entries. Internal links are shown with
+"links" adds internal links to the entries below (by name), "kb" their knowledge-base articles (shown as their
+public links, not as internal ones: a customer can read them), "runbooks" adds entries. Internal links are shown with
 a 🔒 in the text digest, the HTML report and --json.
 
 Patterns follow tools/report-common/known_causes.py: unbounded `.*` are written `.{0,N}`. "operator_info": True also
@@ -30,7 +33,6 @@ from typing import Dict, List, Optional
 
 _SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
-KB = "https://support.confluent.io/hc/en-us/articles/"
 DOCS = "https://docs.confluent.io/operator/current/"
 
 RUNBOOKS = [
@@ -40,9 +42,7 @@ RUNBOOKS = [
      "advice": "the operator cannot list the resources it watches before its timeout: check its RBAC (ClusterRole / "
                "Role of the namespaces it watches), the installed CRDs against the operator version, and the API "
                "server load",
-     "links": [{"title": "How to fix CFK operator pod in a crash loop", "url": KB + "7456942914964"},
-               {"title": "How to troubleshoot operator deployment issue with Confluent for Kubernetes",
-                "url": KB + "24547387707796"}]},
+     "links": []},
     {"name": "roll_blocked",
      "title": "Roll blocked by the pre-roll checks",
      "pattern": r"cluster not rollable from roll pre checks|brokers? reported under replicated partitions"
@@ -62,9 +62,8 @@ RUNBOOKS = [
      "title": "Could not obtain JAAS context (KRaft, SASL/PLAIN with and without LDAP)",
      "pattern": r"Could not obtain JAAS context",
      "advice": "a SASL/PLAIN listener (file based users) and a SASL/PLAIN with LDAP listener get mixed JAAS configs: "
-               "use jaasConfigPassThrough on the listener as the KB explains",
-     "links": [{"title": "How to bypass the exception \"Could not obtain JAAS context\" in KRaft mode with CFK",
-                "url": KB + "31693926274964"}]},
+               "use jaasConfigPassThrough on the listener",
+     "links": []},
     {"name": "kraft_migration",
      "title": "ZooKeeper to KRaft migration (KRaftMigrationJob)",
      "pattern": r"Migration current status \S+/SubPhase|missing inter replication credentials",
@@ -120,7 +119,7 @@ RUNBOOKS = [
      "advice": "the broker exits because the authorizer cannot load (confluent.authorizer.init.timeout.ms). Two known "
                "causes with the same message: the MDS writer cannot bind LDAP (expired LDAP CA, wrong credentials), "
                "or partitions misclassified as stray. Check the LDAP errors of the lowest-ordinal broker first",
-     "links": [{"title": "How to troubleshoot MDS Kafka Broker Startup Issues", "url": KB + "26698170020628"}]},
+     "links": []},
     {"name": "mds_endpoint_timeout",
      "title": "A component cannot call the MDS authorize endpoint (RBAC)",
      "pattern": r"Failed to send HTTP request to endpoint: \S{0,200}/security/1\.0/authorize",
@@ -249,6 +248,10 @@ class Catalog:
                 for name, links in (private.get("links") or {}).items():
                     if name in by_name and isinstance(links, list):
                         by_name[name]["internal_links"] += [l for l in links if isinstance(l, dict) and l.get("url")]
+                for name, links in (private.get("kb") or {}).items():
+                    if name in by_name and isinstance(links, list):
+                        by_name[name]["links"] = list(by_name[name].get("links") or []) + [
+                            l for l in links if isinstance(l, dict) and l.get("url")]
                 for extra in private.get("runbooks") or []:
                     if isinstance(extra, dict) and extra.get("name") and extra.get("pattern"):
                         entries.append(dict(extra, links=[], internal_links=list(extra.get("links") or [])))

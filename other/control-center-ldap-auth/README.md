@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [Configuring Control Center with LDAP authentication]([https://support.confluent.io/hc/en-us/articles/115003890503-Configuring-Control-Center-with-LDAP-authentication) to setup Control Center in read-only mode.
+Quickly test Configuring Control Center with LDAP authentication (Confluent support knowledge base, for signed-in customers) to setup Control Center in read-only mode.
 
 Configuration setup:
 

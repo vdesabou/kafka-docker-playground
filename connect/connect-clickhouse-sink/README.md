@@ -27,7 +27,7 @@ playground run -f clickhouse-sink.sh
 ## What the script does
 
 1. Drops and recreates the `playground` database in ClickHouse Cloud, then creates the `clickhouse_measures` table (`MergeTree`), using `clickhouse-client` in a `clickhouse/clickhouse-server` container.
-2. Checks connectivity to the ClickHouse HTTPS endpoint (port 8443) with a `SELECT 1` query (see [this KB](https://support.confluent.io/hc/en-us/articles/46567287376404-What-can-cause-a-ClickHouse-Sink-connector-on-Confluent-Cloud-to-fail-with-Connection-to-ClickHouse-is-not-active-Error)).
+2. Checks connectivity to the ClickHouse HTTPS endpoint (port 8443) with a `SELECT 1` query (see the article about a ClickHouse Sink connector on Confluent Cloud failing with "Connection to ClickHouse is not active" (Confluent support knowledge base, for signed-in customers)).
 3. Produces one Avro record to topic `clickhouse_measures` with `playground topic produce`.
 4. Creates the `clickhouse-sink` connector writing to database `playground`.
 5. Verifies the row with `SELECT * FROM clickhouse_measures`.

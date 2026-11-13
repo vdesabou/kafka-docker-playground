@@ -40,7 +40,7 @@ docker run -i --rm clickhouse/clickhouse-server bash -c "clickhouse-client --hos
 log "Creating ClickHouse table called clickhouse_measures"
 docker run -i --rm clickhouse/clickhouse-server bash -c "clickhouse-client --host $CLICKHOUSE_CLOUD_HOSTNAME --port 9440 --user $CLICKHOUSE_CLOUD_USERNAME --password \"${CLICKHOUSE_CLOUD_PASSWORD}\" --secure --database "playground" -q \"CREATE TABLE IF NOT EXISTS clickhouse_measures (measurement String, id Int32, product String, quantity Int32, price Float32) ENGINE = MergeTree() ORDER BY id\""
 
-# from https://support.confluent.io/hc/en-us/articles/46567287376404-What-can-cause-a-ClickHouse-Sink-connector-on-Confluent-Cloud-to-fail-with-Connection-to-ClickHouse-is-not-active-Error
+# from the article about a ClickHouse Sink connector on Confluent Cloud failing with "Connection to ClickHouse is not active" (Confluent support knowledge base, for signed-in customers)
 echo 'SELECT 1' | curl -H "X-ClickHouse-User: $CLICKHOUSE_CLOUD_USERNAME" -H "X-ClickHouse-Key: $CLICKHOUSE_CLOUD_PASSWORD" "https://$CLICKHOUSE_CLOUD_HOSTNAME:8443/?database=playground" -d @-
 echo "SELECT name FROM system.tables WHERE database='playground' AND name='clickhouse_measures'" | curl -H "X-ClickHouse-User: $CLICKHOUSE_CLOUD_USERNAME" -H "X-ClickHouse-Key: $CLICKHOUSE_CLOUD_PASSWORD" "https://$CLICKHOUSE_CLOUD_HOSTNAME:8443/?database=playground" -d @-
 

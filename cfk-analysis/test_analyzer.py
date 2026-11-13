@@ -186,5 +186,22 @@ def main():
     return 0
 
 
+
+def test_private_kb_links():
+    """the knowledge-base articles of the known CFK issues are private ("kb" of the private runbooks file): shown as
+    public links of the entry (a customer can read them), not as internal 🔒 ones; none in the public catalog"""
+    import json
+    import runbooks
+    check("no knowledge-base article in the public catalog",
+          not any("support.confluent.io" in l["url"] for e in runbooks.RUNBOOKS for l in e.get("links") or []))
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "runbooks-internal.json")
+        with open(path, "w") as fh:
+            json.dump({"kb": {"jaas_context": [{"title": "synthetic article", "url": "https://kb.example/jaas"}]},
+                       "links": {"jaas_context": [{"title": "synthetic runbook", "url": "https://wiki.example/jaas"}]}}, fh)
+        entry = runbooks.Catalog(path).by_name["jaas_context"]
+    check("kb: a public link of the entry", [l["url"] for l in entry["links"]] == ["https://kb.example/jaas"], entry["links"])
+    check("links: internal", [l["url"] for l in entry["internal_links"]] == ["https://wiki.example/jaas"], entry["internal_links"])
+
 if __name__ == "__main__":
     sys.exit(main())
