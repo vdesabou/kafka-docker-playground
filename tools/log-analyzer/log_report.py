@@ -7755,11 +7755,14 @@ def story_html(res: dict, levels: str) -> str:
     step("📈", "#ef4444", "Peak", plural(peak, what), f"in {human_duration(int(round(width / 60)) * 60)} around {at(t0 + peak_i * width)}, {share:.0f}% of all",
          "#" + TIME_CHART_ID, hot=True, title=f"the busiest {human_duration(int(width))} of the logs: zoom on it in 📈 Occurrences over time")
     views = sorted(((f.get("_view") or {}) for f in res.get("findings") or []), key=lambda v: -v.get("occurrences", 0))
-    main = next((v for v in views if v.get("title") and not v["title"].startswith("🌳")), None)
+    # the cause the verdict starts with (verdict_cause), else the known cause of the most occurrences
+    picked = (verdict_cause(res) or {}).get("title")
+    main = (next((v for v in views if v.get("title") == picked), None) if picked else None) \
+        or next((v for v in views if v.get("title") and not v["title"].startswith("🌳")), None)
     if main:
         step(main["title"].split(" ", 1)[0], "#a855f7", "Main cause", main["title"].split(" ", 1)[-1],
              f"{main.get('occurrences', 0):,} occurrence(s)", "#findings-overview",
-             title="the known cause with the most occurrences: 🏆 the top causes of 🔎 Findings",
+             title="the cause the verdict starts with (its ERROR / FATAL occurrences, weighted by severity): 🏆 the top causes of 🔎 Findings",
              # no 🏆 overview (fewer than 2 causes): its card
              alt="#" + finding_id(main["title"]))
     conns = res.get("connectors") or []
@@ -7963,6 +7966,34 @@ def verdict_text(head: str, lines: List[dict]) -> str:
     return head + "".join(l.get("glue", " ") + l["plain"] for l in lines)
 
 
+# 👉 start with: the known causes are in the order of the catalogue within a severity (a precise cause, 🌐 a host name
+# not resolved, before its consequence, 🔌 the connections that fail). A cause of a lower severity comes first only when
+# its ERROR / FATAL occurrences weigh more, each severity level worth 10 times the next one: 166,071 errors of a MEDIUM
+# 🪄 failing transformation before 6,024 of a HIGH 🎫 Kerberos failure of another connector, 3,302 HTTP 504 (MEDIUM)
+# before 20 errors of a HIGH cause; a CRITICAL one (OutOfMemoryError, license) still wins. Within a severity, a cause
+# further down the catalogue comes first only with more than 10 times the errors (🌐 23 host names not resolved stay
+# before 🔌 172 connections that fail, which they explain). Log hygiene (🪵) never is the verdict. The 📖 Main cause of
+# the story is the same cause
+VERDICT_WEIGHT = {"CRITICAL": 1000, "HIGH": 100, "MEDIUM": 10, "LOW": 1}
+VERDICT_SAME_SEVERITY_FACTOR = 10
+VERDICT_EXCLUDED = ("🪵 Debug traces logged at ERROR",)
+
+
+def verdict_cause(res: dict) -> Optional[dict]:
+    """the known cause the verdict starts with: the first one with an ERROR / FATAL record, replaced by a cause further
+    down whose weighted ERROR / FATAL occurrences (VERDICT_WEIGHT) are higher (more than VERDICT_SAME_SEVERITY_FACTOR
+    times higher at the same severity); None without any ERROR / FATAL"""
+    rank = lambda h: SEVERITY_ORDER.index(h["severity"]) if h.get("severity") in SEVERITY_ORDER else 9  # noqa: E731
+    score = lambda h: h.get("_errors", 0) * VERDICT_WEIGHT.get(h.get("severity"), 1)  # noqa: E731
+    pick = None
+    for h in res.get("known_causes") or []:
+        if not h.get("_errors") or h.get("title") in VERDICT_EXCLUDED:
+            continue
+        if pick is None or score(h) > score(pick) * (VERDICT_SAME_SEVERITY_FACTOR if rank(h) == rank(pick) else 1):
+            pick = h
+    return pick
+
+
 def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str, str, List[dict]]:
     """the verdict of the logs: its class, its headline and its lines ({icon, label, text, href, plain, glue}): the HTML
     report shows a line per finding under the headline (verdict_box_html), the text joins them (verdict_text)"""
@@ -8002,8 +8033,8 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
         lines: List[dict] = []
         # the first known cause, else the most frequent root cause
         if res["known_causes"]:
-            # the first known cause with an ERROR / FATAL record (the headline counts them), else the first one
-            title = next((h for h in res["known_causes"] if h.get("_errors", 1)), res["known_causes"][0])["title"]
+            # the known cause of the most weighted ERROR / FATAL occurrences (the headline counts them), else the first one
+            title = (verdict_cause(res) or res["known_causes"][0])["title"]
             lines.append({"icon": "👉", "label": "Start with", "text": title, "href": "#" + finding_id(title),
                           "plain": f": start with {title}.", "glue": ""})
         elif res["root_causes"]:
