@@ -877,7 +877,9 @@ function salesforce_get_jwt_keystore_base64() {
 }
 
 # Print "awake" when $SERVICENOW_URL (ending with /) answers the REST API with JSON (whatever the
-# credentials), "hibernating" when it answers the Instance Hibernating page, "unknown" otherwise.
+# credentials), "hibernating" when it answers the Instance Hibernating page, "waking" when it answers a
+# gateway error (502/503/504, what an instance answers for a minute or two while it wakes up),
+# "unknown" otherwise.
 function servicenow_instance_state() {
   local response=""
 
@@ -888,6 +890,9 @@ function servicenow_instance_state() {
   elif echo "$response" | grep -qi "hibernat"
   then
     echo "hibernating"
+  elif echo "$response" | grep -qiE "502 Bad Gateway|503 Service|504 Gateway"
+  then
+    echo "waking"
   else
     echo "unknown"
   fi
@@ -896,32 +901,37 @@ function servicenow_instance_state() {
 # Personal Developer Instances hibernate when unused. When $SERVICENOW_URL is hibernating, wake it up
 # with scripts/servicenow-instance-wakeup/wakeup.py (Playwright: logs in to developer.servicenow.com
 # with SERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD and clicks the wake up button of
-# "Manage my instance"), then wait for the REST API to answer. Does nothing when the instance is awake.
+# "Manage my instance"), then wait for the REST API to answer. The portal login alone usually wakes the
+# instance, so a failure of wakeup.py (status not readable on a redesigned page) is only a warning: the
+# REST API decides. When the instance is already waking up (gateway error), just wait. Does nothing
+# when the instance is awake.
 function servicenow_wake_up_instance() {
   local state="" wait=0 max_wait=900 out_dir=""
   local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null && pwd)/servicenow-instance-wakeup"
 
   state=$(servicenow_instance_state)
-  if [ "$state" != "hibernating" ]
+  if [ "$state" == "hibernating" ]
   then
+    if [ -z "$SERVICENOW_DEVELOPER_USERNAME" ] || [ -z "$SERVICENOW_DEVELOPER_PASSWORD" ]
+    then
+      logerror "❌ ServiceNow instance $SERVICENOW_URL is hibernating: wake it up at https://developer.servicenow.com (Manage my instance), or export SERVICENOW_DEVELOPER_USERNAME and SERVICENOW_DEVELOPER_PASSWORD (your ServiceNow ID) to do it automatically"
+      return 1
+    fi
+
+    log "🛌 ServiceNow instance $SERVICENOW_URL is hibernating, waking it up (it can take several minutes)"
+    out_dir=$(mktemp -d /tmp/servicenow-wakeup-XXXXXX)
+    chmod 777 "$out_dir"
+    if ! docker run --rm -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" \
+      -v "$script_dir:/wakeup:ro" -v "$out_dir:/out" mcr.microsoft.com/playwright/python:v1.48.0-noble \
+      bash -c "pip install -q --disable-pip-version-check --root-user-action=ignore playwright==1.48.0 > /dev/null && python3 -I /wakeup/wakeup.py /out 600"
+    then
+      logwarn "🛌 wakeup.py did not confirm that $SERVICENOW_URL is Online (screenshots in $out_dir), the portal login usually wakes it up anyway: checking the REST API"
+    fi
+  elif [ "$state" == "waking" ]
+  then
+    log "🛌 ServiceNow instance $SERVICENOW_URL is waking up (gateway error)"
+  else
     return 0
-  fi
-
-  if [ -z "$SERVICENOW_DEVELOPER_USERNAME" ] || [ -z "$SERVICENOW_DEVELOPER_PASSWORD" ]
-  then
-    logerror "❌ ServiceNow instance $SERVICENOW_URL is hibernating: wake it up at https://developer.servicenow.com (Manage my instance), or export SERVICENOW_DEVELOPER_USERNAME and SERVICENOW_DEVELOPER_PASSWORD (your ServiceNow ID) to do it automatically"
-    return 1
-  fi
-
-  log "🛌 ServiceNow instance $SERVICENOW_URL is hibernating, waking it up (it can take several minutes)"
-  out_dir=$(mktemp -d /tmp/servicenow-wakeup-XXXXXX)
-  chmod 777 "$out_dir"
-  if ! docker run --rm -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" \
-    -v "$script_dir:/wakeup:ro" -v "$out_dir:/out" mcr.microsoft.com/playwright/python:v1.48.0-noble \
-    bash -c "pip install -q --disable-pip-version-check --root-user-action=ignore playwright==1.48.0 > /dev/null && python3 -I /wakeup/wakeup.py /out 600"
-  then
-    logerror "❌ could not wake up ServiceNow instance $SERVICENOW_URL (screenshots in $out_dir): wake it up at https://developer.servicenow.com (Manage my instance)"
-    return 1
   fi
 
   log "⌛ Waiting up to $max_wait seconds for the REST API of $SERVICENOW_URL to answer"
@@ -929,13 +939,13 @@ function servicenow_wake_up_instance() {
   do
     if [ $wait -ge $max_wait ]
     then
-      logerror "❌ ServiceNow instance $SERVICENOW_URL still does not answer the REST API after $max_wait seconds (screenshots in $out_dir)"
+      logerror "❌ ServiceNow instance $SERVICENOW_URL still does not answer the REST API after $max_wait seconds${out_dir:+ (screenshots in $out_dir)}: wake it up at https://developer.servicenow.com (Manage my instance)"
       return 1
     fi
     sleep 15
     wait=$((wait + 15))
   done
-  rm -rf "$out_dir"
+  [ -n "$out_dir" ] && rm -rf "$out_dir"
   log "🛌 ServiceNow instance $SERVICENOW_URL is awake"
 }
 
