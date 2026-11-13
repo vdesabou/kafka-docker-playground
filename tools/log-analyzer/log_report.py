@@ -8006,6 +8006,23 @@ def verdict_cause(res: dict) -> Optional[dict]:
     return pick
 
 
+# 🤔 a verdict that does not explain most of the errors says so: more than half of the ERROR / FATAL occurrences belong
+# to root causes no known cause explains (🌳). Not the share of the cause itself: a precise cause (🌐 a host name not
+# resolved) is often a small part of the errors it causes (🔌 the connections that fail)
+VERDICT_UNEXPLAINED_SHARE = 0.5
+
+
+def weak_verdict_text(res: dict, cause: dict, errors: int) -> str:
+    """why the 👉 start with is weak, "" when it is not"""
+    if not errors:
+        return ""
+    unexplained = sum(m[2] for c in res.get("root_causes") or [] if not c.get("explained_by")
+                      for m in c.get("records_meta") or [] if m[0] in ("ERROR", "FATAL"))
+    if unexplained > VERDICT_UNEXPLAINED_SHARE * errors:
+        return f"{100 * unexplained / errors:.0f}% of the ERROR/FATAL occurrences have no known cause: read 🌳 All root causes"
+    return ""
+
+
 def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str, str, List[dict]]:
     """the verdict of the logs: its class, its headline and its lines ({icon, label, text, href, plain, glue}): the HTML
     report shows a line per finding under the headline (verdict_box_html), the text joins them (verdict_text)"""
@@ -8046,9 +8063,14 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
         # the first known cause, else the most frequent root cause
         if res["known_causes"]:
             # the known cause of the most weighted ERROR / FATAL occurrences (the headline counts them), else the first one
-            title = (verdict_cause(res) or res["known_causes"][0])["title"]
+            cause = verdict_cause(res) or res["known_causes"][0]
+            title = cause["title"]
             lines.append({"icon": "👉", "label": "Start with", "text": title, "href": "#" + finding_id(title),
                           "plain": f": start with {title}.", "glue": ""})
+            weak = weak_verdict_text(res, cause, errors)
+            if weak:
+                lines.append({"icon": "🤔", "label": "Weak verdict", "text": weak, "href": "#all-root-causes",
+                              "plain": f"🤔 {weak}."})
         elif res["root_causes"]:
             c = res["root_causes"][0]
             what = (f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"])[:160].rstrip(".")
