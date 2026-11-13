@@ -183,8 +183,13 @@ commands:
     replicas missing from the ISR. 🐢 The signals of a broker under pressure, read
     from INFO / WARN lines (ISR shrinks and expands per broker and partition,
     followers failing to fetch (ReplicaFetcher, not consumers), requests timed out, log cleaner failures,
-    quota throttling, responses to clients already gone), are counted by
+    quota throttling, responses to clients already gone, failed client
+    authentications per client IP and error), are counted by
     broker with their storms, and their bursts are on the incident timeline.
+    🔂 A sink of files that rotates with empty offsets and never commits is a
+    livelock. Lines logged twice in a row (two appenders) are collapsed, a
+    Grafana / Loki text export is read (header and prefix removed), and a
+    newest-first file is put back in the order of time (⚠️ in the summary).
     Only files with findings are
     shown. 🔭 When no file has findings, an overview says what the logs
     contain (period covered, records by level, top messages and loggers) and

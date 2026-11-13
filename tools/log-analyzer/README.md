@@ -30,6 +30,19 @@ pictures (`open` them; transcribe the lines to a `.log`), 📄 PDF (`pdftotext -
 (save as `.docx` / `.xlsx`). No OCR: tried with the Vision framework of macOS, it reads monospace log lines with errors
 that matter (`org.apache` read `orq.apache`, `json` read `ison`, a highlighted or wrapped line split in two).
 
+## Lines logged twice, Grafana / Loki text exports, newest-first files
+
+The digest collapses a line identical to the line before it when it has a timestamp to the millisecond (two appenders
+writing the same file: every count and event was doubled), and a multi-line record (a stack trace) identical to the record
+before it, by pairs (a WARN logged 4 times in the same millisecond through two appenders is 2 events). The count is the
+8th field of `@@PGFILE@@` (`.duplicated_lines` of `--json` and ⚠️ in the summary from 10 % of the lines of a file). A
+Grafana / Loki text export (Explore, Download as txt) has a header (`Common labels: {…"level":"ERROR"…}`, not a record)
+and an `<epoch ms or ns>\t<UTC time>Z\t` prefix before each line (looked for in the first 20 lines), removed. A file whose
+times go down from line to line (newest first, 4 times more descents than rises) has `newest_first` in the 9th field of
+`@@PGFILE@@`: first / last seen (lines and times), the order of the records and their times are put back in the order of
+time (`.newest_first_files`, ⚠️ in the summary). The text and the context of a record stay the ones of the first
+occurrence read (the newest one). A UUID in a message (the id of an event) is masked in the key of a record.
+
 ## JSON and CSV exports of log events
 
 `json_log_export.py <input> <output>` turns an export of log events back into plain log lines, oldest first, before
@@ -184,7 +197,11 @@ and file, keyed by broker: `isr_shrink` / `isr_expand` (`[Partition orders-0 bro
 1,3`), `replica_fetch_error` (`Error sending fetch request`, `Error in response for fetch request`: the leader it fetches
 from), `request_timeout` (`Disconnecting from node 2 due to request timeout`: the broker that did not answer),
 `log_cleaner` (`kafka-log-cleaner-thread-0]: Error due to`, `uncleanable`), `quota_throttle` (librdkafka `|THROTTLE|`,
-`ThrottlingQuotaExceeded`), `response_dropped` (`no open connection, connection id`). `log_report.py` counts them in
+`ThrottlingQuotaExceeded`), `response_dropped` (`no open connection, connection id`), `auth_failure` (`[SocketServer
+listenerType=BROKER, nodeId=1] Failed authentication with /10.0.0.1 (channelId=…) (errorMessage=…)`, `Failed
+re-authentication with`, INFO: handled before the other matches of a line, a storm is millions of lines; the exact count
+per broker, client IP and error message in `@@PGEVTN@@ auth_failure_by` lines, 500 per file, the reasons of its rows).
+`log_report.py` counts them in
 `.lifecycle` (`BROKER_KINDS`, a line without broker id: `broker (<file>)`), with the partitions or peers they happen to
 most as reason and a 🌀 storm as the rebalances, prints them in their own 🐢 block, groups them in bursts on the
 timeline (`broker_bursts`: less than 5 min apart, from 1 ISR shrink or log cleaner failure, 3 of the others, 20 per kind),
@@ -448,6 +465,11 @@ of 1 s or more of a GC log (`gc_pause`, detail `<ms> <what>`: unified `GC(12) Pa
 marks a 🌀 storm (`STORM_MIN` = 10 at `STORM_PER_HOUR` = 6 or more, a consumer leaving on purpose excluded): the 🔄 Restarts
 and rebalances section, a line on the 🔌 card of a connector, the (re)starts and the first 20 worker group rebalances in
 the 🗓️ timeline, the terminal summary, the summary for a ticket and `.lifecycle` of `--json`.
+🔂 `sink_empty_rotation`: `Starting commit and rotation for topic partition <p> with start offsets {} and end offsets {}`
+of a sink of files (HDFS), per connector, against the `Committed <file> for <partition>` it logs (`sink_commit`, counted
+only): `SINK_LIVELOCK_MIN` (10) of them or more and no commit is a **LIVELOCK** row (`livelock` of `.lifecycle`, first
+with the storms): the sink keeps rotating without data to commit and never logs Committed, a put() loop that does not
+progress.
 The 🔄 section draws them over time (a zoomable chart, one series per kind) and each row has a swimlane of its
 occurrences on the period of the table (`LC_BINS` = 120 buckets, a tick per bucket with occurrences, darker with more),
 from the times noted (`_times` of each row, left out of `--json`). Logs that cover less than an hour (`.lifecycle.hours`) show

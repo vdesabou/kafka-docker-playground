@@ -2190,6 +2190,48 @@ def test_short_connect_logs():
     check("data to request", any(x["what"].startswith("the Connect logs of") for x in res["data_to_request"]), res["data_to_request"])
 
 
+def test_digest_format_notes_auth_failures_and_sink_livelock():
+    """⚠️ the lines logged twice collapsed and the newest-first exports said by the digest (@@PGFILE@@ fields 8 and 9);
+    🚷 the failed authentications seen by a broker, with the exact count per client IP and error; 🔂 a sink of files that
+    rotates with empty offsets and never commits"""
+    rot = "".join(f"@@PGEVT@@|sink_empty_rotation|{10 + i}|2026-11-07T10:{i:02d}:00|hdfs-sink|hdfs-sink · orders-0\n" for i in range(12))
+    text = ("@@PGFILE@@|connect.log|400|1|1|2026-11-07T10:00:00|2026-11-07T11:00:00|42|\n"
+            "@@PGREC@@|ERROR|1|1|1|2026-11-07T10:40:00|2026-11-07T10:40:00\n"
+            "[2026-11-07 10:40:00,000] ERROR boom (x)\n"
+            "@@PGTS@@|2026-11-07T10:40:00\n" + rot +
+            "@@PGEVTN@@|sink_empty_rotation|hdfs-sink|12|0\n"
+            "@@PGEVT@@|sink_empty_rotation|30|2026-11-07T10:30:00|ok-sink|ok-sink · pay-0\n"
+            "@@PGEVTN@@|sink_empty_rotation|ok-sink|12|0\n@@PGEVTN@@|sink_commit|ok-sink|3|0\n"
+            "@@PGFILE@@|export.txt|10|1|1|2026-11-07T10:00:00|2026-11-07T10:05:00|0|newest_first\n"
+            "@@PGREC@@|ERROR|1|1|1|2026-11-07T10:01:00|2026-11-07T10:01:00\n"
+            "[2026-11-07 10:01:00,000] ERROR boom (x)\n"
+            "@@PGTS@@|2026-11-07T10:01:00\n"
+            "@@PGFILE@@|broker-1/server.log|1000|0|0|2026-11-07T10:00:00|2026-11-07T11:00:00|0|\n"
+            + "".join(f"@@PGEVT@@|auth_failure|{i}|2026-11-07T10:{i:02d}:00||broker 1 · /10.0.0.1 failed authentication: bad\n" for i in range(3))
+            + "@@PGEVTN@@|auth_failure|broker 1|5000|0\n"
+            "@@PGEVTN@@|auth_failure_by|broker 1 · /10.0.0.1 failed authentication: bad|4000|0\n"
+            "@@PGEVTN@@|auth_failure_by|broker 1 · /10.0.0.2 failed re-authentication: bad|1000|0\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        res = log_report.analyze(files)
+    check("fields of @@PGFILE@@", files[0]["duplicated_lines"] == 42 and not files[0]["newest_first"] and files[1]["newest_first"],
+          [(f["duplicated_lines"], f["newest_first"]) for f in files])
+    out = log_report.text_summary(res, [])
+    check("duplicated lines in the summary", "⚠️ 42 duplicated line(s) collapsed (the same line logged twice in a row: two appenders?) in connect.log" in out, out)
+    check("newest-first in the summary", "⚠️ newest-first export (the times go down from line to line) in export.txt" in out, out)
+    rows = {(r["kind"], r["who"]): r for r in res["lifecycle"]["rows"]}
+    auth = rows.get(("auth_failure", "broker 1"))
+    check("an auth row for broker 1, exact counts per IP", auth and auth["count"] == 5000 and auth["storm"]
+          and auth["reason"] == "/10.0.0.1 failed authentication: bad ×4,000, /10.0.0.2 failed re-authentication: bad ×1,000", auth)
+    check("🐢 broker signals text", any("broker 1: 5,000 failed client authentications" in x for x in log_report.broker_signals_text(res["lifecycle"])),
+          log_report.broker_signals_text(res["lifecycle"]))
+    lock = rows.get(("sink_empty_rotation", "hdfs-sink"))
+    check("🔂 livelock of hdfs-sink", lock and lock["livelock"] and log_report.SINK_LIVELOCK_TEXT in lock["reason"], lock)
+    check("a sink that commits is not", not rows[("sink_empty_rotation", "ok-sink")]["livelock"], rows[("sink_empty_rotation", "ok-sink")])
+    check("🔂 in the text", any(x.startswith("   🔂 LIVELOCK hdfs-sink: 12 sink rotations") for x in log_report.lifecycle_text(res["lifecycle"])),
+          log_report.lifecycle_text(res["lifecycle"]))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

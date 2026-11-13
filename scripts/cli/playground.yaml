@@ -4767,17 +4767,21 @@ subcommands:
       signals of a broker under pressure, read\nfrom INFO / WARN lines (ISR shrinks
       and expands per broker and partition,\nfollowers failing to fetch (ReplicaFetcher,
       not consumers), requests timed out, log cleaner failures,\nquota throttling,
-      responses to clients already gone), are counted by\nbroker with their storms,
-      and their bursts are on the incident timeline.\nOnly files with findings are\nshown.
-      \U0001F52D When no file has findings, an overview says what the logs\ncontain
-      (period covered, records by level, top messages and loggers) and\nwhat to ask
-      for next (a longer window, the logs of the component that\nfails, a new export
-      of a log console). The HTML report also has\nthe configuration: the configs
-      logged at startup (KafkaConfig values:,\nDistributedConfig, connector and client
-      configs…) and the .properties\nand connector JSON files of the input.\n\n⏳ A
-      large file (20 MB or more) shows a progress bar in the terminal\n(MB read, speed,
-      ETA), and with 20 MB or more of input (an archive counts\nfor its content, not
-      its compressed size) the report opens\nin the browser right away as a progress
+      responses to clients already gone, failed client\nauthentications per client
+      IP and error), are counted by\nbroker with their storms, and their bursts are
+      on the incident timeline.\n\U0001F502 A sink of files that rotates with empty
+      offsets and never commits is a\nlivelock. Lines logged twice in a row (two appenders)
+      are collapsed, a\nGrafana / Loki text export is read (header and prefix removed),
+      and a\nnewest-first file is put back in the order of time (⚠️ in the summary).\nOnly
+      files with findings are\nshown. \U0001F52D When no file has findings, an overview
+      says what the logs\ncontain (period covered, records by level, top messages
+      and loggers) and\nwhat to ask for next (a longer window, the logs of the component
+      that\nfails, a new export of a log console). The HTML report also has\nthe configuration:
+      the configs logged at startup (KafkaConfig values:,\nDistributedConfig, connector
+      and client configs…) and the .properties\nand connector JSON files of the input.\n\n⏳
+      A large file (20 MB or more) shows a progress bar in the terminal\n(MB read,
+      speed, ETA), and with 20 MB or more of input (an archive counts\nfor its content,
+      not its compressed size) the report opens\nin the browser right away as a progress
       page (step, a bar for the file\nbeing read and one for the whole input, elapsed
       time, speed, ETA of the file and of the whole input) that becomes the report
       when the analysis ends. The last line\ngives the size read and the time it took.
