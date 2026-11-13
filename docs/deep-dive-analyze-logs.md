@@ -251,7 +251,19 @@ Good to know:
    recovered the logs after the unclean stop (`Recovering N logs … since no clean shutdown file was found`). It is
    the first known cause and the 👉 of the verdict, before the authorization failures and timeouts of the other
    brokers and clients of a bundle: let the broker run past `confluent.authorizer.init.timeout.ms` instead of
-   restarting it, check `_confluent-metadata-auth` and take thread dumps.
+   restarting it, check `_confluent-metadata-auth` and take thread dumps. The recovery line says which stops made a
+   start recover the logs: during the authorizer wait, or during the log recovery of the previous start. When the
+   MDS writer is in the input (another broker, `Starting writer with generation N` in its `metadata-service.log`),
+   a detail line says whether it logged `Updating external auth store status to INITIALIZED for generation N` after
+   the last start of the stuck broker (healthy: the problem is on the reader side of the stuck broker) or `could not
+   be added to auth topic, writer resigning` / `LDAP search failed` without INITIALIZED after them (failing: fix the
+   writer first, LDAP and the leaders of `_confluent-metadata-auth`), and the advice ends with that verdict.
+   🏷️ **Several brokers in one input** (a folder per broker with the same `server.log`, `metadata-service.log`,
+   `kafka-authorizer.log`): each folder is named after the `node.id` / `broker.id` of its `KafkaConfig` dump (or the
+   `[BrokerServer id=N]` of its startup), and the verdict (`start with 🚧 … on broker 4 (logs)`), the restart loops,
+   the process rows of 🔄 (one per broker), the timeline (`broker 1 · server.log:7`) and the known causes (`on broker
+   1 in …`) name the broker of each finding, instead of mixing a healthy broker with a failing one. The root causes
+   and records are not split.
 3. **The HTML report is the deliverable.** The terminal digest is bounded (`--max-findings` per file); the report holds
    **every** record, a timeline of all the files, a card per connector, filters, links to each line of each file, and
    a 📤 Share panel. The filters are kept in the URL: 🔗 **Link to this view** points a colleague at one burst of one

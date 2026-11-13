@@ -6879,7 +6879,12 @@ function log_awk() {
 #              (Transition from SHUTDOWN to STARTING), before its "started" line (process_start)
 #   @@PGEVT@@<tab>authorizer_wait|authorizer_ready|authorizer_endpoint_wait|authorizer_endpoint_open|auth_reader_start|
 #              auth_reader_ready|unclean_recovery<tab>line<tab>timestamp<tab><tab>listener:port of an endpoint, number of
-#              logs recovered: the startup of a broker waiting for its authorizer (RBAC metadata service), 300 of each
+#              logs recovered, broker <id> of a wait: the startup of a broker waiting for its authorizer (RBAC metadata
+#              service), 300 of each
+#   @@PGEVT@@<tab>mds_writer_start|mds_writer_ready|mds_writer_resign|mds_ldap_failed|mds_writer_elsewhere<tab>line<tab>timestamp<tab>
+#              <tab>generation <n>, partition, writer URL: the metadata service writer of a broker (KafkaAuthWriter: Starting
+#              writer with generation, Updating external auth store status to INITIALIZED, writer resigning, LDAP search
+#              failed, Not starting writer … since new writer is …), the first 300 and the last 150 of each
 #   @@PGEVT@@<tab>dynamic_config<tab>line<tab>timestamp<tab><tab>broker <id> · node|cluster|default broker: key -> value, …: a
 #              broker config changed while it runs (DynamicConfigPublisher of KRaft, no restart)
 #   @@PGEVT@@<tab>replica_move<tab>line<tab>timestamp<tab><tab>broker <id> · topic: partition:broker,…: throttled replicas set on a
@@ -7739,12 +7744,30 @@ function summarize_log_errors() {
         # to load _confluent-metadata-auth): the wait of the broker and its end, the listeners that wait for it or open at once,
         # the reader of the auth topic started and loaded, and the log recovery of a start after an unclean stop. 300 of each
         # kind at most, not lifecycle rows (log_report.py: authorizer_stuck)
-        if (records_file != "" && (index($0, "authorizer futures") || index($0, "before enabling endpoint") || index($0, "Authorizer future for endpoint") || index($0, "Kafka Auth reader") || index($0, "no clean shutdown file"))) {
+        if (records_file != "" && (index($0, "authorizer futures") || index($0, "before enabling endpoint") || index($0, "Authorizer future for endpoint") || index($0, "Kafka Auth reader") || index($0, "no clean shutdown file") || index($0, "writer with generation") || index($0, "external auth store status to INITIALIZED") || index($0, "writer resigning") || index($0, "LDAP search failed") || index($0, "Not starting writer from node"))) {
             rb_kind = ""; rb_detail = ""
             if (index($0, "Finished waiting for all of the authorizer futures")) {
                 rb_kind = "authorizer_ready"
             } else if (index($0, "Waiting for all of the authorizer futures")) {
                 rb_kind = "authorizer_wait"
+                # the broker that waits: [BrokerServer id=4] (the per-broker split of a bundle of several brokers)
+                if (match($0, /(BrokerServer|KafkaServer) id=[0-9]+/)) { rb_detail = substr($0, RSTART, RLENGTH); sub(/^[A-Za-z]+ id=/, "broker ", rb_detail) }
+            } else if (index($0, "Starting writer with generation")) {
+                # the metadata service writer of the broker (MDS writer): a generation started, then INITIALIZED
+                rb_kind = "mds_writer_start"
+                if (match($0, /generation [0-9]+/)) rb_detail = substr($0, RSTART, RLENGTH)
+            } else if (index($0, "external auth store status to INITIALIZED")) {
+                rb_kind = "mds_writer_ready"
+                if (match($0, /generation [0-9]+/)) rb_detail = substr($0, RSTART, RLENGTH)
+            } else if (index($0, "writer resigning")) {
+                rb_kind = "mds_writer_resign"
+                if (match($0, /_confluent-metadata-auth-[0-9]+/)) rb_detail = substr($0, RSTART, RLENGTH)
+            } else if (index($0, "LDAP search failed")) {
+                rb_kind = "mds_ldap_failed"
+            } else if (index($0, "Not starting writer from node")) {
+                # another broker is the writer: since new writer is NodeMetadata(urls={http=http://broker-1:8091})
+                rb_kind = "mds_writer_elsewhere"
+                if (match($0, /new writer is NodeMetadata\(urls=\{[^}]*/)) { rb_detail = substr($0, RSTART + 33, RLENGTH - 33); sub(/^[a-z]+=/, "", rb_detail); sub(/,.*/, "", rb_detail) }
             } else if (index($0, "before enabling endpoint")) {
                 rb_kind = "authorizer_endpoint_wait"
             } else if (index($0, "Immediately resolve Authorizer future for endpoint")) {
@@ -7763,7 +7786,18 @@ function summarize_log_errors() {
                 rb_detail = substr($0, RSTART + 13, RLENGTH - 13); gsub(/[^A-Za-z0-9_.-]/, "", rb_detail)
                 if (match($0, /port=[0-9]+/)) rb_detail = rb_detail ":" substr($0, RSTART + 5, RLENGTH - 5)
             }
-            if (rb_kind != "" && ++rb_noted[rb_kind] <= 300) {
+            if (rb_kind ~ /^mds_/) {
+                # the writer runs for days (a generation per rebalance of the metadata coordinator, LDAP failures by the
+                # hundred): the first 300 and the last 150 of each kind (lc_ring, written at the end), the start of the
+                # broker that got stuck is often at the end of the log
+                if (++lc_noted[rb_kind] <= 300) {
+                    rb_line = NR
+                    ev[++nev] = rb_kind "\t" rb_line "\t" timestamp_of($0) "\t\t" rb_detail
+                } else {
+                    if (!(rb_kind in lc_ring_seen)) { lc_ring_seen[rb_kind] = 1; lc_ring_kinds[++nlc_ring] = rb_kind }
+                    lc_ring[rb_kind, (lc_noted[rb_kind] - 301) % 150] = NR "\t\t" rb_detail "\n" $0
+                }
+            } else if (rb_kind != "" && ++rb_noted[rb_kind] <= 300) {
                 rb_line = NR
                 ev[++nev] = rb_kind "\t" rb_line "\t" timestamp_of($0) "\t\t" rb_detail
             }
