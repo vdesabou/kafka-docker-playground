@@ -18,6 +18,7 @@ delta_configs
 *.tar
 *.gz
 *.rar
+*.pyc
 extfile
 keyfile.json
 .gradle
