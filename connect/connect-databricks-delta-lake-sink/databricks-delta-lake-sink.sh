@@ -94,7 +94,8 @@ set -e
 # makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
 # one topic per run: the connector skips (and never auto-creates the table for) records whose offset
 # is not above a file left under topics/<topic>/ in the shared staging bucket by an earlier run
-DATABRICKS_SUFFIX="$(echo "${USER:-playground}_${GITHUB_RUN_NUMBER:-$(date +%s)}_${TAG_BASE}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
+# the environment is in the name: CI runs this example in the plaintext and cfk jobs of the same run, at the same time
+DATABRICKS_SUFFIX="$(echo "${USER:-playground}_${GITHUB_RUN_NUMBER:-$(date +%s)}_${TAG_BASE}_${PLAYGROUND_ENVIRONMENT}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
 DATABRICKS_TOPIC="pageviews_${DATABRICKS_SUFFIX}"
 DATABRICKS_TABLE_NAME="pageviews_${DATABRICKS_SUFFIX}"
 
