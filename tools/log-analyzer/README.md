@@ -298,6 +298,17 @@ that could not be created (`No resolvable bootstrap urls given in bootstrap.serv
 the known cause, in the terminal, the HTML report and the summary for a ticket. The DNS records of a component that
 starts, like its connection failures, go to the one 🌅 LOW known cause.
 
+🚧 `authorizer_stuck()` (in `analyze()`, before `match_hints()`): a broker whose startup waits for its authorizer and never
+ends, from the events of the INFO lines (`authorizer_wait`, `authorizer_ready`, `authorizer_endpoint_wait|open`,
+`auth_reader_start|ready`, `unclean_recovery` of the digest): `Waiting for all of the authorizer futures to be completed`
+without `Finished waiting for …` nor a start of the broker before its next stop or the end of its log,
+`AUTHORIZER_STUCK_MIN_S` (2 min) or more later. One HIGH known cause without record (`AUTHORIZER_STUCK_TITLE`), a detail line
+per wait, the listeners of the same folder that wait for the authorizer vs opened at once, the reader of
+`_confluent-metadata-auth` (metadata service) started without `Kafka Auth reader initialized on all partitions`, the starts
+that recovered the logs after an unclean stop; the RBAC advice when the authorizer or metadata service logs are there.
+`_verdict_first`: `verdict_cause()` returns it before any cause with errors (the authorization failures and timeouts of the
+other brokers of a bundle follow from it), and the 🔁 restart loop of that broker names it.
+
 ## Versions
 
 The digest notes two INFO lines it does not keep otherwise, as `@@PGEVT@@` events of the records file: `Instantiated
@@ -326,7 +337,7 @@ kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report
 (`ANALYZE_LOGS_DOC`), and 🔁 Regenerate (`regenerate_button_html()`, from `--regenerate`): it copies the exact command that generated the report, which `analyze logs` builds from bashly's `command_line_args` with absolute paths for `-f`, `--output-dir` and `--compare` (`--output-dir` added when not given), each argument quoted for a shell. A report is a file opened from disk: it cannot run the command itself, and a link that runs one in a shared report would be a risk. Its gradient follows the verdict of the status pill: red with ERROR/FATAL, amber with WARN only,
 green without error. The verdict itself (`verdict_parts()`: a class, a headline, lines) is one sentence in the terminal,
 the Markdown and the pill (`verdict_text()`), and in the HTML report a headline with a line per finding under it
-(`verdict_box_html()`): 👉 start with (a link to the card of the known cause, `finding_id()`: `verdict_cause()`: known causes are ranked by severity, then the ones with ERROR / FATAL records before the ones seen in WARN records only, then `HINT_ORDER`; the verdict starts with the first one with an ERROR / FATAL record, replaced by a cause further down whose ERROR / FATAL occurrences weigh more, each severity level worth 10 times the next one (`VERDICT_WEIGHT`), more than 10 times more at the same severity; 🪵 log hygiene never; the 📖 Main cause of the story is the same cause), 🤔 Weak verdict (`weak_verdict_text()`: when more than half of the ERROR / FATAL occurrences belong to root causes no known cause explains, a link to 🌳 All root causes), 🔁 restart loop (a link to
+(`verdict_box_html()`): 👉 start with (a link to the card of the known cause, `finding_id()`: `verdict_cause()`: 🚧 a broker stuck in its startup first (`_verdict_first`), else known causes are ranked by severity, then the ones with ERROR / FATAL records before the ones seen in WARN records only, then `HINT_ORDER`; the verdict starts with the first one with an ERROR / FATAL record, replaced by a cause further down whose ERROR / FATAL occurrences weigh more, each severity level worth 10 times the next one (`VERDICT_WEIGHT`), more than 10 times more at the same severity; 🪵 log hygiene never; the 📖 Main cause of the story is the same cause), 🤔 Weak verdict (`weak_verdict_text()`: when more than half of the ERROR / FATAL occurrences belong to root causes no known cause explains, a link to 🌳 All root causes), 🔁 restart loop (a link to
 the 🔄 section, `#lc-section`), 🧵 / 🔬 / 🗺️ of the JVM dumps and the cluster layout, ☸️ of the CFK bundles. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
 `STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing with
 `STORY_STILL_MIN` errors or more at a tenth of the average rate or more, 📉 fading out below it, a few left under
@@ -522,8 +533,15 @@ the other connectors are hidden and the worker group rebalances and process star
 worker, stay.
 
 🔁 A restart loop (`restart_loops()`, `.lifecycle.loops` of `--json`): per worker or broker, its rotated files merged
-(`worker_of()`), `RESTART_LOOP_MIN` (3) failed starts or more, or `RESTART_LOOP_MIN` + 1 stops or more at a median interval of
-`RESTART_LOOP_EVERY_S` (30 min) or less. The service manager (systemd, Kubernetes) starts the process again and again and it
+(`worker_of()`), `RESTART_LOOP_MIN` (3) failed starts or more, `RESTART_LOOP_MIN` + 1 stops or more, or `RESTART_LOOP_MIN`
+stops each followed by a start or a start attempt (`process_starting`: `Transition from SHUTDOWN to STARTING`, not a row of the
+table; a broker killed while it starts never logs `started`: "was stopped and started again 3 times without finishing its
+startup"), at a median interval of `RESTART_LOOP_EVERY_S` (30 min) or less. The digest counts one stop per shutdown of a
+broker: the first of `Terminating process due to signal SIG…`, `Transition from … to SHUTTING_DOWN` and `[BrokerServer id=1]
+shutting down` (`ControllerServer`, `KafkaServer`), until the broker starts again; never the managers and fetchers it stops
+(`[ReplicaFetcherManager on broker 1] shutting down`, `Transitioning from PENDING_CONTROLLED_SHUTDOWN to SHUTTING_DOWN`: one
+graceful shutdown was 6 stops and a restart loop). Same for its start: `Transition from STARTING to STARTED` and `Kafka
+Server started` are one. The service manager (systemd, Kubernetes) starts the process again and again and it
 never runs, which the counts of the table alone do not tell (20 failed starts over a 2-day bundle read 0.4/h). Each loop gets a
 red banner at the top of the 🔄 section ("🔁 Restart loop: Kafka Connect (connect.log) failed to start 20 times, … a new attempt
 every ~5 min 40 s", with the known cause whose title says *start*), a 🔁 restart loop badge on its failed starts and stops

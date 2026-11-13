@@ -178,7 +178,9 @@ do
         grep -E '^🔎 ' "$out.digest" | sed "s|^|$(basename "$f"): |" >> "$out"
     done
     grep -E '^@@PGEVTN?@@' "$out.records" >> "$out"
-    expected=$'gc_pause 2\nprocess_stop 4\ncontroller_change 1'
+    # one stop per file until a start: the KafkaServer and BrokerServer lines of events.log are one stop (then the 2
+    # Kafka Connect stopping of events.log and config-changes.log)
+    expected=$'gc_pause 2\nprocess_stop 3\ncontroller_change 1'
     got=$(grep -E '^@@PGEVT@@'$'\t''(gc_pause|process_stop|controller_change)' "$out.records" | cut -f2 | sort | uniq -c | awk '{print $2, $1}' | sort -r -k1,1)
     if [ "$got" != "$(printf '%s\n' "$expected" | sort -r -k1,1)" ]
     then
@@ -198,6 +200,42 @@ do
     if [ "$got" != 2 ]
     then
         echo "❌ $awk_cmd: $got process start(s) in starts.log instead of 2"
+        failed=1
+    fi
+    # one graceful stop of a KRaft broker (the signal, its state, its own "shutting down", the managers and fetchers it stops,
+    # the lifecycle manager) is one stop, not a restart loop; a broker killed twice while it waits for its authorizer: two
+    # stops, three start attempts (process_starting), one start; the authorizer, its endpoints, the auth reader of the
+    # metadata service and the log recovery after the unclean stop
+    printf '%s\n' '[2026-11-07 12:00:00,000] INFO [BrokerServer id=1] Transition from STARTING to STARTED (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:00:00,100] INFO [KafkaRaftServer nodeId=1] Kafka Server started (kafka.server.KafkaRaftServer)' \
+        '[2026-11-07 12:10:00,000] INFO Terminating process due to signal SIGTERM (org.apache.kafka.common.utils.LoggingSignalHandler)' \
+        '[2026-11-07 12:10:00,100] INFO [BrokerServer id=1] Transition from STARTED to SHUTTING_DOWN (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:10:00,200] INFO [BrokerServer id=1] shutting down (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:10:00,300] INFO [ReplicaFetcherManager on broker 1] shutting down (kafka.server.ReplicaFetcherManager)' \
+        '[2026-11-07 12:10:00,400] INFO [data-plane Kafka Request Handler on Broker 1] shutting down (kafka.server.KafkaRequestHandlerPool)' \
+        '[2026-11-07 12:10:00,500] INFO [BrokerLifecycleManager id=1] Transitioning from PENDING_CONTROLLED_SHUTDOWN to SHUTTING_DOWN. (kafka.server.BrokerLifecycleManager)' \
+        '[2026-11-07 12:10:01,000] INFO [ReplicaFetcherThread-0-2-Default]: Shutting down (kafka.server.ReplicaFetcherThread)' \
+        '[2026-11-07 12:10:05,000] INFO [ControllerServer id=1] shutting down (kafka.server.ControllerServer)' \
+        '[2026-11-07 12:11:00,000] INFO [BrokerServer id=1] Transition from SHUTDOWN to STARTING (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:11:01,000] INFO Starting Kafka Auth reader (io.confluent.security.store.kafka.clients.KafkaReader)' \
+        "[2026-11-07 12:11:02,000] INFO Immediately resolve Authorizer future for endpoint: Endpoint(listenerName='REPLICATION', securityProtocol=SASL_SSL, host='broker-1.example.com', port=9091) (kafka.authorizer.logger)" \
+        "[2026-11-07 12:11:02,100] INFO Wait for authorizerServerStartFuture authorizerEnableEndpointsFuture futures to complete before enabling endpoint: Endpoint(listenerName='CLIENT', securityProtocol=SASL_SSL, host='broker-1.example.com', port=9092) (kafka.authorizer.logger)" \
+        '[2026-11-07 12:11:03,000] INFO [BrokerServer id=1] Waiting for all of the authorizer futures to be completed (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:25:00,000] INFO Terminating process due to signal SIGTERM (org.apache.kafka.common.utils.LoggingSignalHandler)' \
+        '[2026-11-07 12:25:10,000] INFO [BrokerServer id=1] Transition from SHUTDOWN to STARTING (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:25:20,000] INFO Recovering 4321 logs from /var/lib/kafka/data since no clean shutdown file was found (kafka.log.LogManager)' \
+        '[2026-11-07 12:26:00,000] INFO Kafka Auth reader initialized on all partitions (io.confluent.security.store.kafka.clients.KafkaReader)' \
+        '[2026-11-07 12:26:01,000] INFO [BrokerServer id=1] Finished waiting for all of the authorizer futures to be completed (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:26:02,000] INFO [BrokerServer id=1] Transition from STARTING to STARTED (kafka.server.BrokerServer)' \
+        '[2026-11-07 12:26:02,100] INFO [KafkaRaftServer nodeId=1] Kafka Server started (kafka.server.KafkaRaftServer)' \
+        '[2026-11-07 12:26:03,000] ERROR boom (x.Y)' > "$tmp/broker-stops.log"
+    : > "$out.bstops"
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.bstops" "$tmp/broker-stops.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" {print $3 " " $2 (($6 != "") ? "=" $6 : "")}' "$out.bstops" | tr '\n' ',')
+    expected='1 process_start=Kafka broker started,3 process_stop=Kafka broker stopping on SIGTERM,11 process_starting=Kafka broker starting,12 auth_reader_start,13 authorizer_endpoint_open=REPLICATION:9091,14 authorizer_endpoint_wait=CLIENT:9092,15 authorizer_wait,16 process_stop=Kafka broker stopping on SIGTERM,17 process_starting=Kafka broker starting,18 unclean_recovery=4321,19 auth_reader_ready,20 authorizer_ready,21 process_start=Kafka broker started,'
+    if [ "$got" != "$expected" ]
+    then
+        echo "❌ $awk_cmd: broker stops and starts of broker-stops.log: $got instead of $expected"
         failed=1
     fi
     # the signals of a broker under pressure (ISR changes, followers that cannot fetch, requests timing out, log cleaner,
