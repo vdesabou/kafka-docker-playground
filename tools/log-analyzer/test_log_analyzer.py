@@ -2145,6 +2145,12 @@ def test_zombie_task_after_failed_graceful_stop():
     check("no INFO lines: unverified zombie", len(z) == 1 and not z[0]["verified"] and "may still run" in log_report.zombie_text(z[0])
           and "unverified" in log_report.zombie_text(z[0]), z)
     check("no INFO lines: a MEDIUM finding", any(f.get("zombie") and f["severity"] == "MEDIUM" for f in res["findings"]))
+    # the card: a short title, then one line per fact (not one long sentence)
+    card = log_report.finding_view(next(f for f in res["findings"] if f.get("zombie")), {}, "file")
+    check("card: title, count, one line per fact", card["html"].count("<div class='fi-advice'>") == 3 and "🧟 orders-0 may still run on" in card["html"]
+          and "fi-count medium" in card["html"], card["html"])
+    lines = log_report.zombie_lines(z[0])
+    check("terminal: title then indented facts", len(lines) == 5 and lines[0].startswith("🧟 orders-0") and all(x.startswith("   ") for x in lines[1:]), lines)
 
 
 def test_confluent_cloud_kb_and_data_to_request():
@@ -2230,6 +2236,29 @@ def test_digest_format_notes_auth_failures_and_sink_livelock():
     check("a sink that commits is not", not rows[("sink_empty_rotation", "ok-sink")]["livelock"], rows[("sink_empty_rotation", "ok-sink")])
     check("🔂 in the text", any(x.startswith("   🔂 LIVELOCK hdfs-sink: 12 sink rotations") for x in log_report.lifecycle_text(res["lifecycle"])),
           log_report.lifecycle_text(res["lifecycle"]))
+
+
+def test_no_kafka_log_with_thread_dumps():
+    """an input of thread dumps only (2 dumps of a worker + a capture): the 🔎 verdict names the files of thread dumps
+    (🧵 below) instead of calling them files without a log level, and does not say that nothing here can show an error"""
+    with tempfile.TemporaryDirectory() as tmp:
+        only = ("@@PGFILE@@|worker-a-dump-1.txt|300|0|0||\n"
+                "@@PGFILE@@|worker-a-dump-2.txt|300|0|0||\n"
+                "@@PGFILE@@|mysql-notes.txt|20|0|0||\n")
+        not_logs = os.path.join(tmp, "not-logs")
+        with open(not_logs, "w") as fh:
+            fh.write("worker-a-dump-1.txt\tunleveled\nworker-a-dump-2.txt\tunleveled\nmysql-notes.txt\tunleveled\n")
+        files = log_report.parse_records(records_file(tmp, only))
+        log_report.mark_not_logs(files, not_logs)
+        res = log_report.analyze(files)
+    res["thread_dumps"] = [{"files": ["worker-a-dump-1.txt", "worker-a-dump-2.txt"], "dumps": [{}, {}], "findings": []}]
+    log_report.mark_thread_dump_files(res)
+    reasons = sorted(x["reason"] for x in res["summary"]["not_logs"])
+    check("thread dump files", reasons == ["thread_dump", "thread_dump", "unleveled"], reasons)
+    text = log_report.not_logs_text(res["summary"])
+    check("in words", text == "2 file(s) of thread dumps (🧵 below) and 1 file(s) without a line with a log level (captures of commands, tables…)", text)
+    cls, head, _ = log_report.logs_verdict_parts(res, "ERROR/FATAL")
+    check("verdict", cls == "warn" and "the thread dumps are analyzed below" in head and "nothing here can show an error" not in head, head)
 
 
 if __name__ == "__main__":

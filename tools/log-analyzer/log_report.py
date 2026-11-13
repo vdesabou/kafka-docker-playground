@@ -1314,8 +1314,8 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     # MEDIUM when the logs cannot show a restart of the task there
     zombies = res["task_workers"]["zombies"] = zombie_tasks(files)
     if zombies:
-        res["findings"] = sorted(res["findings"] + [{"severity": "HIGH" if z["verified"] else "MEDIUM", "text": zombie_text(z), "zombie": True}
-                                                    for z in zombies[:5]],
+        res["findings"] = sorted(res["findings"] + [{"severity": "HIGH" if z["verified"] else "MEDIUM", "text": zombie_text(z), "zombie": z,
+                                                     "id": f"finding-zombie-{i}"} for i, z in enumerate(zombies[:5])],
                                  key=lambda x: SEVERITY_ORDER.index(x["severity"]))
     res["config_lint"] = config_lint(res)
     # 🧩 a plugin class listed twice by GET /connector-plugins: a card of 🔎 Findings too (no 🔌 card shows it)
@@ -2779,16 +2779,34 @@ def iso_utc(seconds: Optional[float]) -> Optional[str]:
     return iso(seconds) if seconds is not None else None
 
 
+ZOMBIE_TODO = ("the worker no longer owns the task, so restarting or deleting the connector does not reach it: restart "
+               "the worker process, then find why the stop hung (a thread dump of that worker; task.shutdown.graceful.timeout.ms)")
+
+
+def zombie_parts(z: dict) -> Dict[str, str]:
+    """the facts of a 🧟 finding, one per line of its card: title, errors after the stop, where the task runs, what to do"""
+    t = lambda ts: (ts or "").replace("T", " ")  # noqa: E731
+    if z["started_elsewhere"]:
+        where = "🔀 started again on " + ", ".join(f"{x['worker']} ({t(x['time'])})" for x in z["started_elsewhere"])
+    elif z["verified"]:
+        where = "not started again on that worker"
+    else:
+        where = "⚠️ unverified: these logs have no \"Starting task\" line, so a restart of the task on that worker would not show"
+    return {"title": f"🧟 {z['task']} {'still runs' if z['verified'] else 'may still run'} on {z['worker']}",
+            "stop": f"graceful stop failed {t(z['stopped_at'])} ({z['stop_file'].split('/')[-1]}:{z['stop_line']})",
+            "errors": f"{z['errors']:,} ERROR/FATAL of the task on that worker afterwards, {t(z['first_error'])} → {t(z['last_error'])}",
+            "where": where}
+
+
 def zombie_text(z: dict) -> str:
-    where = ("while it started on " + ", ".join(f"{x['worker']} ({x['time'].replace('T', ' ')})" for x in z["started_elsewhere"])
-             if z["started_elsewhere"] else "and it was not started again on that worker" if z["verified"]
-             else "⚠️ unverified: these logs have no \"Starting task\" line, a restart of the task on that worker would not show")
-    return (f"🧟 {z['task']} {'still runs' if z['verified'] else 'may still run'} on {z['worker']} after its graceful stop failed there "
-            f"({z['stopped_at'].replace('T', ' ')}, {z['stop_file'].split('/')[-1]}:{z['stop_line']}): {z['errors']:,} "
-            f"ERROR/FATAL of the task on {z['worker']} afterwards, {z['first_error'].replace('T', ' ')} → "
-            f"{z['last_error'].replace('T', ' ')}, {where}. The worker no longer owns it (a restart or a delete of the "
-            f"connector does not reach it): restart the worker process of {z['worker']}, and find why the stop hung "
-            "(thread dump; task.shutdown.graceful.timeout.ms)")
+    p = zombie_parts(z)
+    return f"{p['title']} after its graceful stop failed there: {p['stop'][len('graceful stop failed '):]}; {p['errors']}; {p['where']}. 👉 {ZOMBIE_TODO}"
+
+
+def zombie_lines(z: dict) -> List[str]:
+    """the terminal: the title, then one indented line per fact"""
+    p = zombie_parts(z)
+    return [p["title"]] + [f"   {x}" for x in (p["stop"], p["errors"], p["where"], f"👉 {ZOMBIE_TODO}")]
 
 
 def task_workers(res: dict, files: List[dict]) -> dict:
@@ -4677,7 +4695,7 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     # which worker ran which task, a connector failing on one worker only (🖥️ of the HTML report, .task_workers of --json)
     out += task_workers_text(res.get("task_workers"))
     # 🧟 the tasks left running on a worker after their graceful stop failed (.task_workers.zombies of --json)
-    out += [zombie_text(z) for z in ((res.get("task_workers") or {}).get("zombies") or [])[:5]]
+    out += [line for z in ((res.get("task_workers") or {}).get("zombies") or [])[:5] for line in zombie_lines(z)]
     # the known bugs fixed in a later version (🩹 of the HTML report, .fixed_bugs of --json)
     out += fixed_bugs_text(res.get("fixed_bugs") or [])
     # the files for another analyzer (🧰 of the HTML report, .other_files of --json)
@@ -7894,8 +7912,12 @@ VERDICT_CSS = """<style>
 .verdict .vd-line{display:contents}
 .verdict .vd-icon{text-align:center}
 .verdict .vd-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;white-space:nowrap}
-.verdict .vd-text{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
-.verdict a.vd-text:hover{color:#2563eb;border-bottom-style:solid}
+/* the link hugs its text (a grid item stretches to the 1fr column: its underline ran to the edge of the box), a thin
+   faint underline under the words only, solid and blue on hover */
+.verdict .vd-text{justify-self:start;color:inherit}
+.verdict a.vd-text{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;
+  text-decoration-color:color-mix(in srgb,currentColor 35%,transparent)}
+.verdict a.vd-text:hover{color:#2563eb;text-decoration-color:currentColor}
 html[data-theme=dark] .verdict a.vd-text:hover{color:#93c5fd}
 </style>"""
 
@@ -7950,8 +7972,11 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
         return "warn", (f"⚠️ No {levels} record in the {s['files_scanned']} {unit}(s) read ({s['lines']} lines), but "
                         f"{len(incomplete)} input(s) were not fully read: the missing part may hold errors (⚠️ Not fully read below)."), []
     if not s["files_with_findings"] and s.get("no_kafka_log") and not res.get("_cfk_bundles"):
+        dumps = any(x["reason"] == "thread_dump" for x in s.get("not_logs") or [])
+        tail = ("no log here can show an error (the thread dumps are analyzed below): ask for the logs of the component "
+                "too" if dumps else "nothing here can show an error: ask for the logs of the component")
         return "warn", (f"🔎 No Kafka / Connect log in the input: the {s['files_scanned']} {unit}(s) read are "
-                        f"{not_logs_text(s)}, nothing here can show an error: ask for the logs of the component."), []
+                        f"{not_logs_text(s)}, {tail}."), []
     if not s["files_with_findings"]:
         # another part of the analysis found problems (the issues of a CFK bundle, made of the ERROR lines of its files;
         # a plugin class listed twice): not a ✅, the clauses of those parts follow (☸️ of verdict_parts)
@@ -8013,12 +8038,24 @@ def mark_not_logs(files: List[dict], path: Optional[str]) -> None:
             f["not_log"] = reasons[f["label"]]
 
 
+def mark_thread_dump_files(res: dict) -> None:
+    """the files of the input that hold the thread dumps analyzed in 🧵 are not "files without a line with a log level":
+    their reason becomes thread_dump (not_logs_text, the 🔎 verdict of an input without a Kafka log)"""
+    dumps = {os.path.basename(str(x)) for g in res.get("thread_dumps") or [] for x in g.get("files") or []}
+    for item in (res.get("summary") or {}).get("not_logs") or []:
+        if os.path.basename(item["file"].split(":")[-1]) in dumps:
+            item["reason"] = "thread_dump"
+
+
 def not_logs_text(s: dict) -> str:
-    """the files that are not logs, in words: GC logs, files without a log level"""
+    """the files that are not logs, in words: GC logs, thread dumps, files without a log level"""
     items = s.get("not_logs") or []
     gc = sum(1 for x in items if x["reason"] == "gc")
+    td = sum(1 for x in items if x["reason"] == "thread_dump")
+    rest = len(items) - gc - td
     parts = ([f"{gc} GC log(s) (🧰 Other files of the input)"] if gc else []) + (
-        [f"{len(items) - gc} file(s) without a line with a log level (captures of commands, tables…)"] if len(items) > gc else [])
+        [f"{td} file(s) of thread dumps (🧵 below)"] if td else []) + (
+        [f"{rest} file(s) without a line with a log level (captures of commands, tables…)"] if rest else [])
     return " and ".join(parts)
 
 
@@ -8361,6 +8398,16 @@ def finding_id(title: str) -> str:
 
 def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
     """the finding with html / html_details for findings_html: the same facts as its text, easier to read"""
+    z = f.get("zombie")
+    if isinstance(z, dict):
+        p = zombie_parts(z)
+        sev = f["severity"].lower()
+        head = (f"<span class='fi-title'>{e(p['title'])}</span><span class='fi-count {sev}'>{z['errors']:,}×</span>"
+                f"<span class='fi-meta'>graceful stop failed {e(z['stopped_at'].replace('T', ' '))} </span>"
+                + log_viewer.link(viewers, z["stop_file"], "📄", z["stop_line"])
+                + f"<div class='fi-advice'>🔴 {e(p['errors'])}</div><div class='fi-advice'>{e(p['where'])}</div>"
+                + f"<div class='fi-advice'>👉 {e(ZOMBIE_TODO)}</div>")
+        return dict(f, html=head)
     v = f.get("_view")
     if not v:
         return f
@@ -8978,13 +9025,14 @@ def main() -> int:
     res["_cfk_bundles"] = getattr(files, "cfk_bundles", None) or []
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
+    mark_thread_dump_files(res)
     if args.json:
         # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report
         compact = dict({k: v for k, v in res.items() if not k.startswith("_")}, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
                                    for f in res["files"]],
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
                        known_causes=[{k: v for k, v in h.items() if k != "records" and not k.startswith("_")} for h in res["known_causes"]],
-                       findings=[{k: v for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
+                       findings=[{k: (True if k == "zombie" else v) for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
         if res.get("lifecycle"):
             strip = lambda rows: [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]  # noqa: E731
             compact["lifecycle"] = {"rows": strip(res["lifecycle"]["rows"]), "storms": strip(res["lifecycle"]["storms"]),
