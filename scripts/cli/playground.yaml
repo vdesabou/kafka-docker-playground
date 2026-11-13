@@ -4791,16 +4791,16 @@ subcommands:
       to change it), their\noutput printed in order.\n\n☸️ A Confluent for Kubernetes
       (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk
       generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
-      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
-      or the YAML of a platform.confluent.io custom resource at its top), alone or
-      inside a folder or an archive, is detected and analyzed as a whole by the CFK
-      analyzer (a container image built on first use): Warning events, pods (phase,
-      waiting reasons, restarts, OOMKilled: from the pod YAML, or from the kubectl
-      get pods table of a flat bundle, pods.txt), every platform.confluent.io custom
-      resource (phase/state, ready replicas, False conditions, failed connector tasks),
-      the environment checked against the CFK support matrix (Kubernetes, CFK operator,
-      CP and init container versions), the recent changes (who edited which CR and
-      when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
+      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log,
+      several YAMLs of platform.confluent.io custom resources or one with a pod *.log
+      at its top), alone or inside a folder or an archive, is detected and analyzed
+      as a whole by the CFK analyzer (a container image built on first use): Warning
+      events, pods (phase, waiting reasons, restarts, OOMKilled: from the pod YAML,
+      or from the kubectl get pods table of a flat bundle, pods.txt), every platform.confluent.io
+      custom resource (phase/state, ready replicas, False conditions, failed connector
+      tasks), the environment checked against the CFK support matrix (Kubernetes,
+      CFK operator, CP and init container versions), the recent changes (who edited
+      which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
       zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
       rendered by CFK, configOverrides, config logged at startup, connector configs
       from the Connector CRs and the config dumps of the logs), a JVM default truststore
