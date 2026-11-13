@@ -26,6 +26,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `run-and-versions.sh` | [Running examples and changing versions (update-version steps only)](https://kafka-docker-playground.io/#/deep-dive-run-and-versions) |
 | `secured-environments.sh` | [Secured environments](https://kafka-docker-playground.io/#/deep-dive-secured-environments) (starts sasl-ssl then rbac-sasl-plain itself) |
 | `replication.sh` | [Replication between clusters](https://kafka-docker-playground.io/#/deep-dive-replication) (starts mdc-plaintext itself, replays Replicator, MirrorMaker 2 and Cluster Linking) |
+| `ansible.sh` | [cp-ansible](https://kafka-docker-playground.io/#/deep-dive-ansible) (starts the ansible environment itself, then a customer inventory with SASL_SSL, `ansible-customer-hosts.yml`) |
 | `cfk.sh` | [Confluent for Kubernetes](https://kafka-docker-playground.io/#/deep-dive-cfk) (runs in the cfk CI job only, exits 111 with any other environment) |
 | `fully-managed.sh` | [Fully managed connectors (Confluent Cloud)](https://kafka-docker-playground.io/#/deep-dive-fully-managed) — skipped without Confluent Cloud credentials |
 | `topic-administration.sh` | [Topic administration](https://kafka-docker-playground.io/#/deep-dive-topic-administration) |
