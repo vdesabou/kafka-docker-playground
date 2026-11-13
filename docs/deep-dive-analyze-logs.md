@@ -424,7 +424,7 @@ time ([🌊 the same view](reports/kafka-streams.html), from `playground streams
 
 Written in `--output-dir` (`./log-analysis-output` by default) as `<first input>-log-report.html`, opened in the
 browser from a terminal, with a page per file with findings in `<report>-files/` (📄 links open the file at the line,
-✏️ opens it in your editor). Open [🔥 the support bundle report](reports/logs/support_bundle-log-report.html) next to this table:
+✏️ opens it in your editor). 🔁 **Regenerate** in its header copies the exact command that generated it (absolute paths, same flags), to paste in a terminal after an update of the playground, as long as the input is still at that path. Open [🔥 the support bundle report](reports/logs/support_bundle-log-report.html) next to this table:
 
 | Section | What it answers |
 | --- | --- |

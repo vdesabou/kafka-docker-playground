@@ -30,6 +30,37 @@ eval "compare_array=(${args[--compare]})"
 since="${args[--since]}"
 until_ts="${args[--until]}"
 
+# 🔁 Regenerate of the HTML report: the command as it was typed (command_line_args, kept by bashly before parsing), with
+# absolute paths for -f, --output-dir and --compare (taken here, before any cd), --output-dir added when it was not given
+# (the report goes back to the same folder), each argument quoted for a shell
+regenerate_cmd="playground"
+regenerate_abs_next=""
+regenerate_has_output_dir=""
+for regenerate_arg in "${command_line_args[@]}"
+do
+    if [[ -n "$regenerate_abs_next" ]]
+    then
+        [[ "$regenerate_arg" == /* ]] || regenerate_arg="$PWD/$regenerate_arg"
+        regenerate_abs_next=""
+    else
+        case "$regenerate_arg" in
+            -f|--file|--compare) regenerate_abs_next=1 ;;
+            --output-dir) regenerate_abs_next=1; regenerate_has_output_dir=1 ;;
+            --file=*|--compare=*|--output-dir=*)
+                [[ "$regenerate_arg" == --output-dir=* ]] && regenerate_has_output_dir=1
+                [[ "${regenerate_arg#*=}" == /* ]] || regenerate_arg="${regenerate_arg%%=*}=$PWD/${regenerate_arg#*=}" ;;
+        esac
+    fi
+    regenerate_cmd+=" $(printf '%q' "$regenerate_arg")"
+done
+if [[ -z "$regenerate_has_output_dir" ]]
+then
+    regenerate_out="${output_dir:-.}"
+    regenerate_out="${regenerate_out#./}"
+    [[ "$regenerate_out" == /* ]] || regenerate_out="$PWD/$regenerate_out"
+    regenerate_cmd+=" --output-dir $(printf '%q' "${regenerate_out%/.}")"
+fi
+
 # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
 if [[ -n "$json_out" ]]
 then
@@ -1684,6 +1715,8 @@ report_args=(--records "$records_file" --title "$title" --levels "$levels" --ski
 report_args+=(--sources "$sources_file")
 # the GC logs and the files without a log level: not logs (period covered, verdict)
 report_args+=(--not-logs "$not_logs_file")
+# 🔁 Regenerate of the header: the command that generated the report
+report_args+=(--regenerate "$regenerate_cmd")
 # 🔒 --sanitize: the thread dumps of the input sanitized with the same placeholders, and nothing that holds raw lines next
 # to the report (file pages, search, full thread report), so that none of it ends up in the 📦 .zip of the report
 if [[ -n "$sanitize" ]]
