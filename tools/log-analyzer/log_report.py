@@ -1842,6 +1842,12 @@ def plugin_of_loggers(loggers: Sequence[str]) -> Tuple[Optional[str], Optional[s
     """(class, package that tells it) from the loggers of the lines of a connector: the longest prefix of PLUGIN_PACKAGES
     one of their packages starts with; (None, package) when none matches: its plugin package (it has .connect or
     .connector in it, a library does not), (None, None) when nothing tells"""
+    # the connector class logs itself ("Initial connection attempt with the database. (io.confluent.connect.jdbc.
+    # JdbcSourceConnector:94)"), in a package shared with its sink (io.confluent.connect.jdbc): the class, as is
+    classes = {cls for _, cls in PLUGIN_PACKAGES}
+    own = next((lg for lg in loggers if lg in classes), None)
+    if own:
+        return own, own.rsplit(".", 1)[0]
     best = None
     packages = [lg.rsplit(".", 1)[0] for lg in loggers if "." in lg]
     for pkg in packages:

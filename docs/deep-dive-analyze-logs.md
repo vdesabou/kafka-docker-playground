@@ -203,7 +203,8 @@ Good to know:
 
 1. **A digest, not a grep.** Every record with an explicit level (`ERROR`, `[ERROR]`, `level=error`, a librdkafka
    `%3|`, a Python traceback, a Go panic…) is kept, de-duplicated with an occurrence count, and its stack trace is cut
-   to its `Caused by:` chain plus 3 frames of the deepest cause. 1.1 million `failed authentication` lines of 321
+   to its `Caused by:` chain plus 3 frames of the deepest cause (the first ones outside the JDK: the driver or the
+   connector that opened the socket says more than `NioSocketImpl.connect`). 1.1 million `failed authentication` lines of 321
    connectors become **one** record with a count. INFO lines that merely contain "error" never count, and neither do
    the warnings of the JDK launcher on stderr (`WARNING: A terminally deprecated method in sun.misc.Unsafe has been
    called`, `WARNING: Use --enable-native-access=ALL-UNNAMED…`). 🙈 **Known harmless** records (telemetry not set up:

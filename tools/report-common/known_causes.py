@@ -498,6 +498,28 @@ KNOWN_CAUSES = [
      "advice": "the client sent a request to a broker that no longer leads the partition: expected during a broker "
                "restart, a rolling upgrade or a reassignment, the client retries. Many of them over a long period point "
                "at brokers restarting or leaders moving: playground broker health, playground topic describe"},
+    # IBM i (AS400) with the IBM Toolbox for Java (jt400) JDBC driver. With secure=true, jt400 20.0.8 and later first ask the
+    # server mapper (as-svrmap, TCP 449) for the port of the TLS host connection server (as-hostcnn-s, 9480, IBM i 7.6),
+    # whatever port the URL gives: a refused 449 or an IBM i without that server falls back to the database port, but a
+    # 449 (or 9480) silently dropped by a firewall times out ("Connect timed out" at PortMapper.getSocketConnection
+    # under AS400ImplRemote.hostcnnConnect) and the database port is never tried. Before connection_refused
+    {"name": "jt400_port_mapper_unreachable", "severity": "high", "category": "Network Issues",
+     "pattern": r"com\.ibm\.as400\.access\.(?:PortMapper\.getSocketConnection|AS400ImplRemote\.hostcnnConnect)",
+     "title": "🖥️ IBM i (jt400): server mapper port 449 unreachable",
+     "advice": "the jt400 driver could not reach the IBM i server mapper (TCP 449): with secure=true, jt400 20.0.8 and later "
+               "contact it before the database port of the URL, to look up the TLS host connection server (as-hostcnn-s, "
+               "9480, IBM i 7.6). Allow TCP 449 (and 9480 on IBM i 7.6 with the host connection server) from the Connect "
+               "workers to the IBM i: they go in no connector setting. A refused 449 falls back to the database port, a "
+               "dropped one times out. jt400 20.0.7 and earlier do not do this lookup"},
+    # jt400 that loses the connection during its first exchange (random seed): a plain connection to the TLS database port
+    # (9471) without secure=true, or a TLS one (secure=true) to the plain port 8471
+    {"name": "jt400_connection_dropped", "severity": "high", "category": "Network Issues",
+     "pattern": r"com\.ibm\.as400\.access\.(?:ConnectionDroppedException|AS400XChgRandSeedReplyDS)",
+     "title": "🖥️ IBM i (jt400): connection dropped at the first exchange",
+     "advice": "the IBM i (or a firewall, proxy or load balancer in between) closed the connection during the first exchange "
+               "of jt400: most often the TLS / plain port does not match secure= in the URL (9471 is the TLS database "
+               "port and needs secure=true, 8471 the plain one; the IBM i administrator can have changed them). Check the "
+               "port and secure=, then that the IBM i certificate CA is in the truststore of the Connect worker JVM"},
     {"name": "connection_refused", "severity": "high", "category": "Network Issues",
      "pattern": r"connection refused|Connection reset by peer|NoRouteToHostException|No route to host|Broken pipe"
                 r"|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|(?<!\d)\d{1,5}/\d{1,5} brokers are down|ALL_BROKERS_DOWN"

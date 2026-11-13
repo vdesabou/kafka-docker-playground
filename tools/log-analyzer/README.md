@@ -252,7 +252,9 @@ unknown or offline). Run `python3 -I tools/report-common/connector_icons.py` aga
 The class of a connector without "Instantiated connector" line nor config dump is inferred from the loggers of the lines
 of its tasks (`plugin_logger` events of `summarize_log_errors`): the digest looks for one in the first 20000 lines of the
 connector that end with a logger (a broker or DNS outage logs thousands of `NetworkClient` lines in its context first),
-then gives up after 500 lines without a new one.
+then gives up after 500 lines without a new one. A logger that is a connector class of `PLUGIN_PACKAGES` itself
+(`Initial connection attempt with the database. (io.confluent.connect.jdbc.JdbcSourceConnector:94)`) gives that class
+directly: its package, `io.confluent.connect.jdbc`, is shared by the source and the sink.
 
 ## Host names not resolved (🌐)
 
@@ -653,7 +655,8 @@ its durations, `mask_names()` and `DURATION_RX` of `mask_ids()`: one root cause 
 failed.` of 149 connectors, `[7336us]` / `[19ms]`, the one-shot clients `consumer-<connector>-<task>-<table>-<seq>`; the
 connectors are listed with it. `--compare` matches the root causes on that key, not on their label) and every record (with a 📋 Show context block: the raw lines around its first
 occurrence, from the `@@PGCTX@@` lines of the records file) and the ⚙️ configuration (the `<Class>Config values:`
-dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same
+dumps of the logs, keys indented with a tab, or with spaces when the log was copied from a ticket, a web console or an
+editor that converts tabs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a
 level and connector filter (connector taken from the
 `[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`)
@@ -753,7 +756,9 @@ the exceptions without package (`KafkaException`, `KafkaError`), the librdkafka 
 `epoch_iso()`), the Node.js objects of the JavaScript client logger (`js_rdkafka()`: `fac: 'FAIL'` / `'ERROR'`, written
 back as the librdkafka line), the .NET console logger (`fail:` / `crit:`, message joined by `join_second()`) and inner
 exceptions (` ---> `, a `Caused by:`), Python tracebacks (`mode == "py"`: the chained ones in one record, the chain
-outermost first, the 3 last frames of the deepest cause), Go panics (`mode == "go"`: the functions of the first
+outermost first, the 3 last frames of the deepest cause; for Java, the first 3 frames of the deepest cause outside the
+JDK: `java.*` / `javax.*` / `jdk.*` / `sun.*` frames, with or without their `java.base/` module, only when there is no
+other, so that `com.ibm.as400.access.PortMapper.getSocketConnection` shows rather than `NioSocketImpl.connect`), Go panics (`mode == "go"`: the functions of the first
 goroutine), Rust panics (message joined) and the uncaught `XxxError: …` lines of Node.js / Python / .NET. The record key
 is masked (digits, ids) **before** it is cut to 200 characters. `log_report.py` takes the .NET (`` `2[…] `` generic
 types), Python and Node.js exception names as root causes, and labels a librdkafka record `FAIL [rdkafka#producer-1]

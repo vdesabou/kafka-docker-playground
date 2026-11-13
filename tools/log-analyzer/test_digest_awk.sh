@@ -127,6 +127,32 @@ samples+=("$tmp/config-changes.log")
         '[2026-11-07 13:01:06,000] INFO [ok-sink|task-0] Starting commit and rotation for topic partition pay-0 with start offsets {pay-0=1} and end offsets {pay-0=9} (io.confluent.connect.hdfs3.TopicPartitionWriter:615)' \
         '[2026-11-07 13:01:07,000] INFO [ok-sink|task-0] Committed hdfs://nn/topics/pay/partition=0/pay+0+0000000001+0000000009.avro for pay-0 (io.confluent.connect.hdfs3.TopicPartitionWriter:880)'
 } > "$tmp/signals.log"
+# a config dump whose tab indentation became spaces (copied from a ticket or a web console), then a driver stack whose
+# deepest cause starts with JDK socket and reflection frames: the keys are read, and the frames shown are the driver's
+{
+    printf '%s\n' '[2026-11-07 14:00:00,000] INFO [db-source|worker] JdbcSourceConnectorConfig values:' \
+        '        connection.url = jdbc:as400://db.example.com:9471/LIB1;secure=true' \
+        '        mode = incrementing' \
+        '        table.whitelist = [SCHEMA1/VIEW1]' \
+        ' (org.apache.kafka.common.config.AbstractConfig:383)' \
+        '[2026-11-07 14:02:20,000] ERROR [db-source|worker] Failed to start connector (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2246)' \
+        'org.apache.kafka.connect.errors.ConnectException: java.sql.SQLNonTransientConnectionException: cannot establish the connection. (Connect timed out)' \
+        '        at io.confluent.connect.jdbc.util.CachedConnectionProvider.getConnection(CachedConnectionProvider.java:62)' \
+        'Caused by: java.net.SocketTimeoutException: Connect timed out' \
+        '        at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:551)' \
+        '        at java.base/java.net.Socket.connect(Socket.java:633)' \
+        '        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)' \
+        '        at java.base/java.lang.reflect.Method.invoke(Method.java:569)' \
+        '        at com.example.driver.PortLookup.open(PortLookup.java:289)' \
+        '        at com.example.driver.PortLookup.socket(PortLookup.java:177)' \
+        '        at com.example.driver.Session.connect(Session.java:3781)' \
+        '        at com.example.driver.Session.login(Session.java:1509)' \
+        '        ... 24 more'
+    # only JDK frames: they are kept
+    printf '%s\n' '[2026-11-07 14:03:00,000] ERROR [db-source|worker] other failure (x.Y:1)' \
+        'java.net.SocketTimeoutException: Read timed out' \
+        '        at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:288)'
+} > "$tmp/spaces.log"
 failed=0
 reference=""
 for awk_cmd in "$@"
@@ -246,6 +272,20 @@ do
     if [ "$got" != "max.poll.records=500->max.poll.records=100,offset.flush.interval.ms=10000->offset.flush.interval.ms=60000,tasks.max=1->tasks.max=4," ]
     then
         echo "❌ $awk_cmd: config changes of config-changes.log: $got"
+        failed=1
+    fi
+    # the config dump indented with spaces, and the frames of the driver rather than the JDK ones
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.spaces" "$tmp/spaces.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGCFG@@" {print "C " $2 " " $3} $1 == "@@PGCFGL@@" {print "L " $2}' "$out.spaces" | tr '\n' ',')
+    if [ "$got" != "C JdbcSourceConnectorConfig [db-source|worker],L connection.url=jdbc:as400://db.example.com:9471/LIB1;secure=true,L mode=incrementing,L table.whitelist=[SCHEMA1/VIEW1]," ]
+    then
+        echo "❌ $awk_cmd: config dump indented with spaces of spaces.log: $got"
+        failed=1
+    fi
+    got=$(grep -E '^ +at ' "$out.spaces" | sed 's/^ *//' | tr '\n' ',')
+    if [ "$got" != "at com.example.driver.PortLookup.open(PortLookup.java:289),at com.example.driver.PortLookup.socket(PortLookup.java:177),at com.example.driver.Session.connect(Session.java:3781),at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:288)," ]
+    then
+        echo "❌ $awk_cmd: frames of the deepest cause of spaces.log (the driver's, not the JDK's; the JDK's when alone): $got"
         failed=1
     fi
     if grep -q 'sun\.misc\.Unsafe' "$out.records"
