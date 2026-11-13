@@ -7912,8 +7912,12 @@ VERDICT_CSS = """<style>
 .verdict .vd-line{display:contents}
 .verdict .vd-icon{text-align:center}
 .verdict .vd-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;white-space:nowrap}
-.verdict .vd-text{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
-.verdict a.vd-text:hover{color:#2563eb;border-bottom-style:solid}
+/* the link hugs its text (a grid item stretches to the 1fr column: its underline ran to the edge of the box), a thin
+   faint underline under the words only, solid and blue on hover */
+.verdict .vd-text{justify-self:start;color:inherit}
+.verdict a.vd-text{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;
+  text-decoration-color:color-mix(in srgb,currentColor 35%,transparent)}
+.verdict a.vd-text:hover{color:#2563eb;text-decoration-color:currentColor}
 html[data-theme=dark] .verdict a.vd-text:hover{color:#93c5fd}
 </style>"""
 
