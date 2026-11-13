@@ -1707,6 +1707,178 @@ def test_sslexception_socket_error_is_not_tls():
         check(f"🔐 {want}: {line}", bool(re.search(tls, line, re.I)) == want, line)
 
 
+
+# 🧵 synthetic thread dumps (jstack -l shape) for the per-JVM analysis, the lock stalls and the threads stuck in socket I/O
+def _td_thread(name, num, nid, state, frames, cpu=100.0, elapsed=1000.0, locks=(), owned=None):
+    """one thread of a jstack dump: frames are 'pkg.Class.method' strings, locks [(index after frame, line)]"""
+    head = {"RUNNABLE": "runnable", "BLOCKED": "waiting for monitor entry"}.get(state, "waiting on condition")
+    detail = {"WAITING": " (parking)", "TIMED_WAITING": " (sleeping)", "BLOCKED": " (on object monitor)"}.get(state, "")
+    out = [f'"{name}" #{num} prio=5 os_prio=0 cpu={cpu:.2f}ms elapsed={elapsed:.2f}s tid=0x00007f00000{num:05x} '
+           f'nid={nid} {head}  [0x00007f0000000000]', f"   java.lang.Thread.State: {state}{detail}"]
+    lk = dict(locks)
+    for i, f in enumerate(frames):
+        out.append(f"\tat {f}(Unknown Source)")
+        if i in lk:
+            out.append(f"\t- {lk[i]}")
+    if owned is not None:
+        out += ["", "   Locked ownable synchronizers:"] + ([f"\t- {o}" for o in owned] or ["\t- None"])
+    return "\n".join(out) + "\n"
+
+
+_TD_LOCK = "<0x00000000aaaa0001> (a java.util.concurrent.locks.ReentrantLock$NonfairSync)"
+_TD_PARK = ["jdk.internal.misc.Unsafe.park", "java.util.concurrent.locks.LockSupport.park",
+            "java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire", "java.util.concurrent.locks.ReentrantLock$Sync.lock",
+            "java.util.concurrent.locks.ReentrantLock.lock", "sun.security.ssl.SSLSocketImpl.closeNotify",
+            "sun.security.ssl.SSLSocketImpl.shutdownOutput", "com.example.binlog.PacketChannel.close",
+            "com.example.binlog.BinlogClient$5.run", "java.lang.Thread.run"]
+_TD_WRITE = ["sun.nio.ch.FileDispatcherImpl.write0", "sun.nio.ch.SocketDispatcher.write", "sun.nio.ch.NioSocketImpl.tryWrite",
+             "sun.nio.ch.NioSocketImpl.implWrite", "java.net.Socket$SocketOutputStream.write",
+             "sun.security.ssl.SSLSocketOutputRecord.flush", "sun.security.ssl.KeyUpdate$KeyUpdateProducer.produce",
+             "sun.security.ssl.SSLSocketImpl.readApplicationRecord", "com.example.binlog.ByteArrayInputStream.read",
+             "com.example.binlog.BinlogClient.listen", "java.lang.Thread.run"]
+
+
+def _td_dump(ts, threads):
+    return f"{ts}\nFull thread dump OpenJDK 64-Bit Server VM (17.0.15+6-LTS mixed mode, sharing):\n\n" + "\n".join(threads) + "\n"
+
+
+def _td_common(base_num, nid0, elapsed, n=12):
+    """idle threads shared by the dumps of one JVM: a pool parked on a condition, a network thread in epollWait"""
+    cond = ["jdk.internal.misc.Unsafe.park", "java.util.concurrent.locks.LockSupport.park",
+            "java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await",
+            "java.util.concurrent.LinkedBlockingQueue.take", "java.util.concurrent.ThreadPoolExecutor.getTask", "java.lang.Thread.run"]
+    out = [_td_thread(f"pool-1-thread-{i}", base_num + i, hex(nid0 + i), "WAITING", cond, elapsed=elapsed,
+                      locks=[(0, "parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)")],
+                      owned=[]) for i in range(n)]
+    out.append(_td_thread("kafka-producer-network-thread | producer-1", base_num + 50, hex(nid0 + 50), "RUNNABLE",
+                          ["sun.nio.ch.EPoll.wait", "sun.nio.ch.EPollSelectorImpl.doSelect", "org.apache.kafka.common.network.Selector.select",
+                           "org.apache.kafka.clients.producer.internals.Sender.run", "java.lang.Thread.run"], elapsed=elapsed, owned=[]))
+    return out
+
+
+def _td_stall_jvm(times, with_owners=True, writer_cpu=(5000.0, 5000.0), extra=()):
+    """the dumps of a JVM where 'blc-keepalive-db.example.com:3306' waits for the TLS lock held by 'blc-db.example.com:3306',
+    blocked in a socket write in every dump"""
+    dumps = []
+    for i, ts in enumerate(times):
+        el = 5000.0 + 60 * i
+        th = _td_common(10, 0x1000, el)
+        th.append(_td_thread("blc-keepalive-db.example.com:3306", 350, "0x2001", "WAITING", _TD_PARK, cpu=11.0, elapsed=el,
+                             locks=[(0, "parking to wait for  " + _TD_LOCK)], owned=[] if with_owners else None))
+        th.append(_td_thread("blc-db.example.com:3306", 371, "0x2002", "RUNNABLE", _TD_WRITE, cpu=writer_cpu[min(i, 1)],
+                             elapsed=el, owned=[_TD_LOCK] if with_owners else None))
+        th += [x(i, el) for x in extra]
+        dumps.append(_td_dump(ts, th))
+    return dumps
+
+
+def _td_files(tmp, dumps_by_file):
+    paths = []
+    for name, text in dumps_by_file:
+        p = os.path.join(tmp, name)
+        with open(p, "w") as fh:
+            fh.write(text)
+        paths.append(p)
+    return paths
+
+
+def test_thread_dumps_of_two_jvms_analyzed_apart():
+    """🧵 the dumps of 2 JVMs given together: one analysis per JVM (before, a single chain from the first dump: the 2 dumps
+    of the second JVM were never compared, its lock stall never seen), the stall named, on the first dump of its JVM in the
+    timeline; the dumps of 2 containers sharing OS thread ids (other thread numbers) are 2 JVMs"""
+    import jvm_dumps
+    tda = jvm_dumps._import_analyzer()
+    healthy = [_td_dump(ts, _td_common(10, 0x5000, 100.0 + 60 * i)) for i, ts in
+               enumerate(("2026-11-03 10:00:00", "2026-11-03 10:01:00", "2026-11-03 10:05:00"))]
+    stalled = _td_stall_jvm(("2026-11-03 10:08:00", "2026-11-03 10:09:00"))
+    with tempfile.TemporaryDirectory() as tmp:
+        files = [(f"worker-8087-dump-{i}.txt", d) for i, d in enumerate(healthy, 1)] + \
+                [(f"worker-8086-dump-{i}.txt", d) for i, d in enumerate(stalled, 1)]
+        paths = _td_files(tmp, files)
+        dumps = [d for p in paths for d in tda.parse_file(p)]
+        dumps.sort(key=lambda d: d.timestamp)
+        for i, d in enumerate(dumps, 1):
+            d.index = i
+        check("2 JVMs: 3 + 2 dumps", [len(g) for g in tda.split_jvms(dumps)] == [3, 2], [len(g) for g in tda.split_jvms(dumps)])
+        labels = [f"b/{n}" for n, _ in files]
+        of = {"files": [{"label": x, "path": p, "kind": "thread_dump"} for x, p in zip(labels, paths)],
+              "commands": [{"kind": "thread_dump", "folder": "b", "files": labels, "command": "playground analyze thread-dump -f …"}]}
+        groups = jvm_dumps.thread_dumps(of, tmp, "case")
+        check("one group per JVM", len(groups) == 2 and [g["same_jvm"] for g in groups] == [3, 2], [(g.get("same_jvm"), g.get("error")) for g in groups])
+        check("files of each JVM", groups[1]["files"] == labels[3:] and groups[0]["files"] == labels[:3], [g["files"] for g in groups])
+        check("JVM named", "JVM 2 of 2: worker-8086-dump-1.txt, worker-8086-dump-2.txt" in (groups[1]["jvm"] or ""), groups[1]["jvm"])
+        check("command of the JVM", groups[1]["command"].count(" -f ") == 2 and "worker-8086-dump-2.txt" in groups[1]["command"], groups[1]["command"])
+        check("a thread report per JVM", all(os.path.isfile(os.path.join(tmp, f"case-thread-dumps-{n}.html")) for n in (1, 2)), os.listdir(tmp))
+        stall = [f for f in groups[1]["findings"] if f["text"].startswith("Lock stall")]
+        check("the stall of the second JVM, HIGH, waiter and holder named", stall and stall[0]["severity"] == "HIGH"
+              and '"blc-keepalive-db.example.com:3306" (WAITING) waits for the j.u.c lock <0x00000000aaaa0001>' in stall[0]["text"]
+              and 'held by "blc-db.example.com:3306" (RUNNABLE, blocked in a socket write over TLS (a TLS 1.3 KeyUpdate): '
+                  'sun.nio.ch.FileDispatcherImpl.write0' in stall[0]["text"] and "the holder using no CPU" in stall[0]["text"]
+              and "most likely" not in stall[0]["text"], groups[1]["findings"])
+        check("nothing on the healthy JVM", [f["severity"] for f in groups[0]["findings"]] == ["OK"], groups[0]["findings"])
+        tl = jvm_dumps.timeline_events(groups)
+        check("the stall on dump #4, the first of its JVM", [x["text"].split(":")[0] for x in tl if "HIGH" in x["text"]] == ["🧵 thread dump #4 (15 threads)"], tl)
+        res = {"summary": {}, "thread_dumps": groups, "heap_dumps": []}
+        cls, text = log_report.dumps_verdict(res, "ok", "✅ fine.")
+        check("verdict: the stall, not 'no deadlock nor stuck thread'", "1 critical / high finding(s), Lock stall, the same in all 2 dumps" in text, text)
+    # 2 containers: the same thread names and OS thread ids, other thread numbers
+    a = tda.Dump(threads=[tda.ThreadInfo(name=f"t-{i}", num=10 + i, nid=hex(i), state="WAITING") for i in range(10)])
+    b = tda.Dump(threads=[tda.ThreadInfo(name=f"t-{i}", num=40 + i, nid=hex(i), state="WAITING") for i in range(10)])
+    c = tda.Dump(threads=[tda.ThreadInfo(name=f"t-{i}", num=10 + i, nid=hex(i), state="WAITING") for i in range(10)])
+    check("same names and nids, other thread numbers: 2 JVMs", not tda.same_jvm(a, b) and tda.same_jvm(a, c))
+
+
+def test_thread_dump_single_waiter_stall_and_stuck_io():
+    """🧵 a single thread waiting for a lock whose holder does not move in any dump is a stall (before: dropped, a lock
+    with fewer than 2 waiters was never reported); without lock owners in the dump (jstack without -l) the holder is the
+    thread stuck in socket I/O in the class that called lock(); a socket write stuck in every dump is reported, not a
+    socket read of an idle connection, not a holder that uses CPU, not a single dump"""
+    import jvm_dumps
+    tda = jvm_dumps._import_analyzer()
+
+    def run(texts):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = _td_files(tmp, [(f"d{i}.txt", t) for i, t in enumerate(texts)])
+            dumps = [d for p in paths for d in tda.parse_file(p)]
+        for i, d in enumerate(dumps, 1):
+            d.index = i
+        return tda.analyze(dumps, 10)
+
+    times = ("2026-11-03 10:08:00", "2026-11-03 10:09:00", "2026-11-03 10:10:00")
+    r = run(_td_stall_jvm(times))
+    check("single waiter: a stall", len(r["stalls"]) == 1 and r["stalls"][0]["holder"] == "blc-db.example.com:3306"
+          and not r["stalls"][0]["inferred"], r["stalls"])
+    r = run(_td_stall_jvm(times, with_owners=False))
+    st = [f["text"] for f in r["findings"] if f["text"].startswith("Lock stall")]
+    check("no lock owners: the holder inferred", st and 'most likely held by "blc-db.example.com:3306"' in st[0]
+          and "taken without -l" in st[0], r["findings"])
+    r = run(_td_stall_jvm(times, with_owners=False, writer_cpu=(5000.0, 95000.0)))
+    check("a holder that uses CPU is not inferred stuck", not any(f["text"].startswith("Lock stall") for f in r["findings"]), r["findings"])
+    r = run(_td_stall_jvm(times[:1]))
+    check("a single dump: no stall", not r["stalls"] and not any("stall" in f["text"] for f in r["findings"]), r["findings"])
+
+    def writer(i, el):
+        return _td_thread("jdbc-writer", 400, "0x3001", "RUNNABLE",
+                          ["java.net.SocketOutputStream.socketWrite0", "java.net.SocketOutputStream.socketWrite",
+                           "java.net.SocketOutputStream.write", "org.example.db.Protocol.send", "org.example.db.Statement.execute",
+                           "java.lang.Thread.run"], cpu=700.0, elapsed=el, owned=[])
+
+    def reader(i, el):
+        return _td_thread("db-idle-reader", 401, "0x3002", "RUNNABLE",
+                          ["java.net.SocketInputStream.socketRead0", "java.net.SocketInputStream.socketRead",
+                           "java.net.SocketInputStream.read", "org.example.db.Protocol.readPacket", "java.lang.Thread.run"],
+                          cpu=10.0, elapsed=el, owned=[])
+    healthy = [_td_dump(ts, _td_common(10, 0x1000, 5000.0 + 60 * i) + [writer(i, 5000.0 + 60 * i), reader(i, 5000.0 + 60 * i)])
+               for i, ts in enumerate(times)]
+    r = run(healthy)
+    io = [f for f in r["findings"] if f["text"].startswith("Stuck in a socket write")]
+    check("a stuck socket write: MEDIUM", len(io) == 1 and io[0]["severity"] == "MEDIUM" and '"jdbc-writer"' in io[0]["text"]
+          and "java.net.SocketOutputStream.socketWrite0, in org.example.db.Protocol.send" in io[0]["text"], r["findings"])
+    check("not the idle reader, not the epollWait thread", not any("db-idle-reader" in f["text"] or "producer-network" in f["text"]
+                                                                  for f in r["findings"]), r["findings"])
+    check("JSON: stuck_io", [x["name"] for x in r["stuck_io"]] == ["jdbc-writer"], r["stuck_io"])
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

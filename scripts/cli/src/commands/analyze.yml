@@ -30,7 +30,7 @@ commands:
   help: |-
     🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry threads
 
-    📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several dumps per file and container logs included, and reports: thread states and pools, deadlocks, locks with their owner and waiters, the most common stacks, and with several dumps of the same JVM: threads stuck on the same frames, the CPU used by each thread between dumps, and growing thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).
+    📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several dumps per file and container logs included, and reports: thread states and pools, deadlocks, locks with their owner and waiters, the most common stacks, and with several dumps of the same JVM: threads stuck on the same frames, lock stalls (a thread waiting for a lock whose holder does not move, even a single waiter), threads stuck in a socket write, the CPU used by each thread between dumps, and growing thread pools. The dumps of several JVMs given together are analyzed apart, one analysis per JVM. Kafka / Connect aware (task threads, herder, broker request handlers).
 
     🐳 With --container (default: connect), it takes --count dumps --interval seconds apart with kill -3: the JVM prints them to the container logs, no JDK is needed in the image.
 
