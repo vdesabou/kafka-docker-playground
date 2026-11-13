@@ -1250,6 +1250,17 @@ def period_text(first: Optional[str], last: Optional[str]) -> str:
 SHORT_WORKER_LOG_SECONDS = 120
 
 
+# a database alert log (Oracle alert_<SID>.log): appended to for years (2019 → today in a real bundle), its ORA- errors
+# are records, but its dates are not the period of the Kafka / Connect logs nor their coverage gaps
+DATABASE_ALERT_LOG_RX = re.compile(r"(?:^|[/:])alert_[A-Za-z0-9_$#-]+\.log$")
+
+
+def outside_period(f: dict) -> bool:
+    """a file whose dates are not a period of the logs: not a log of a component (--not-logs: GC log, capture), or a
+    database alert log"""
+    return bool(f.get("not_log")) or bool(DATABASE_ALERT_LOG_RX.search(f.get("label") or ""))
+
+
 def short_connect_logs(files: List[dict]) -> List[dict]:
     """the Connect workers whose logs cover less than SHORT_WORKER_LOG_SECONDS: [{"worker", "seconds", "info"}] (info:
     their logs have INFO lines the digest recognized: starts, rebalances…)"""
@@ -1299,8 +1310,8 @@ def summary(files: List[dict]) -> dict:
     # not (a short window is a bundle that may not even contain the incident)
     log_first, log_last = None, None
     for f in files:
-        # a GC log, a capture of host commands (--not-logs): its dates are not a period of the logs
-        if f.get("not_log"):
+        # a GC log, a capture of host commands (--not-logs), a database alert log: its dates are not a period of the logs
+        if outside_period(f):
             continue
         for ts in (f.get("log_first_ts"), f.get("log_last_ts")):
             if not ts:
@@ -1393,7 +1404,7 @@ def coverage(files: List[dict]) -> dict:
     rotated logs): what happened then is not in the input. Also in --json: .coverage"""
     out_files = []
     for f in files:
-        if f.get("not_log"):
+        if outside_period(f):
             continue
         first, last = f.get("log_first_ts"), f.get("log_last_ts")
         a, b = ts_seconds(first), ts_seconds(last)
@@ -8483,6 +8494,9 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
             lines = [verdict_line(f"👉 Start with: {others[0]['text'][:160]}", "#findings")] if others else []
             return "warn", (f"🔎 No {levels} record in the {s['files_scanned']} {unit}(s) of the log digest ({s['lines']} lines), "
                             f"but {' and '.join(what)}."), lines
+        if not s["files_scanned"] and not res.get("thread_dumps") and not res.get("heap_dumps") and not bundles:
+            # not a ✅: nothing was read (an empty folder, only pictures or other binary files)
+            return "warn", "🔎 Nothing to read in the input: no text file (an empty folder, or only binary files).", []
         return "ok", f"✅ No {levels} record in the {s['files_scanned']} {unit}(s) scanned ({s['lines']} lines).", []
     errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
     if errors:

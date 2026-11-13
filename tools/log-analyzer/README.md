@@ -147,6 +147,22 @@ conversion failure`) and every record of the file was lost; its lines are cut wi
 - **Verdict**: no record in the logs but issues of a CFK bundle, or a critical / high finding of the input (a shadowed
   plugin): `🔎 No … record in the N file(s) of the log digest, but …`, never a ✅.
 
+## Inputs that are not what they look like
+
+Found by running the analyzer on 40 unrelated support downloads (empty folders, renamed files, database logs, very
+large CFK bundles):
+
+- **An archive is recognized by its content**, not only its name (`looks_like_archive()` of `analyze/logs.sh`: the
+  gzip, bzip2, xz, zip and 7z signatures, the `ustar` marker of a tar). A CSV export saved as `.tar`, a log renamed
+  `.zip`, is read as a file, with a ⚠️ "named like an archive, but its content is not one".
+- **Nothing to read** (an empty folder, only pictures or other binary files) is `🔎 Nothing to read in the input`, not a
+  ✅ "no record in 0 file(s)".
+- **A database alert log** (Oracle `alert_<SID>.log`, appended to for years) keeps its ORA- errors as records, but its
+  dates are not the 🕐 period covered nor the 🕰️ coverage of the Kafka / Connect logs (`outside_period()`): a real
+  bundle covered "2,756 days".
+- **Large folders**: the search for CFK bundles in the sub-folders of an input no longer forks a `dirname` per entry
+  (2.5 minutes for the 21,000 entries of one bundle: 375 s → 46 s for the whole input).
+
 ## Other files of the input (🧰 bundle triage)
 
 `analyze logs` writes `label<tab>path` of every file it walks (archives extracted) to `$tmp_dir/walked`.

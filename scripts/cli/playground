@@ -67106,6 +67106,17 @@ playground_analyze_logs_command() {
       fi
   }
 
+  # the content of an archive: gzip, bzip2, xz, zip, 7z signatures, or the ustar marker of a tar. A file named like an
+  # archive without any (a CSV export saved as .tar, a log renamed .zip) is read as a file
+  function looks_like_archive () {
+      local magic
+      magic=$(LC_ALL=C od -An -tx1 -N6 "$1" 2>/dev/null | tr -d ' \n')
+      case "$magic" in
+          1f8b*|425a68*|fd377a585a00*|504b0304*|504b0506*|504b0708*|377abcaf271c*) return 0 ;;
+      esac
+      [ "$(LC_ALL=C dd if="$1" bs=1 skip=257 count=5 2>/dev/null)" = "ustar" ]
+  }
+
   function is_archive_path () {
       case "$1" in
           *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz|*.7z) return 0 ;;
@@ -67203,7 +67214,8 @@ playground_analyze_logs_command() {
           then
               while IFS= read -r -d '' f
               do
-                  bundle_dir=$(dirname "$f")
+                  # (not $(dirname): a fork per entry, 2.5 minutes for the 21,000 entries of a big CFK bundle)
+                  bundle_dir=${f%/*}
                   # inside a bundle already found (the CR yamls and operator log of a support bundle), or checked
                   for d in "${found_bundles[@]}"
                   do
@@ -67254,7 +67266,13 @@ playground_analyze_logs_command() {
       then
           other_inputs=1
       fi
-      case "$path" in
+      local dispatch="$path"
+      if [ -f "$path" ] && is_archive_path "$path" && ! looks_like_archive "$path"
+      then
+          logwarn "⚠️ $label: named like an archive, but its content is not one: read as a file"
+          dispatch="$path.not-an-archive"
+      fi
+      case "$dispatch" in
           *.7z)
               # bsdtar (macOS tar, libarchive) reads 7z, else 7-Zip
               local seven_zip=""
@@ -67675,6 +67693,10 @@ playground_analyze_logs_command() {
   then
       # not a ✅: the CFK analysis above found issues (made of the ERROR lines of its files, its events…)
       log "🔎 no $levels record found in $nb_files file(s) of the log digest, but the CFK bundle analysis above found $cfk_nb_issues issue(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+  elif [ "$nb_files" -eq 0 ] && [ "$cfk_nb_issues" -eq 0 ]
+  then
+      # not a ✅: nothing was read (an empty folder, only pictures or other binary files)
+      logwarn "🔎 nothing to read in the input: no text file (an empty folder, or only binary files: $nb_skipped skipped)${duplicates_msg}"
   elif [ $nb_files_with_findings -eq 0 ]
   then
       log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
@@ -71215,6 +71237,17 @@ playground_debug_analyze_logs_command() {
       fi
   }
 
+  # the content of an archive: gzip, bzip2, xz, zip, 7z signatures, or the ustar marker of a tar. A file named like an
+  # archive without any (a CSV export saved as .tar, a log renamed .zip) is read as a file
+  function looks_like_archive () {
+      local magic
+      magic=$(LC_ALL=C od -An -tx1 -N6 "$1" 2>/dev/null | tr -d ' \n')
+      case "$magic" in
+          1f8b*|425a68*|fd377a585a00*|504b0304*|504b0506*|504b0708*|377abcaf271c*) return 0 ;;
+      esac
+      [ "$(LC_ALL=C dd if="$1" bs=1 skip=257 count=5 2>/dev/null)" = "ustar" ]
+  }
+
   function is_archive_path () {
       case "$1" in
           *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz|*.7z) return 0 ;;
@@ -71312,7 +71345,8 @@ playground_debug_analyze_logs_command() {
           then
               while IFS= read -r -d '' f
               do
-                  bundle_dir=$(dirname "$f")
+                  # (not $(dirname): a fork per entry, 2.5 minutes for the 21,000 entries of a big CFK bundle)
+                  bundle_dir=${f%/*}
                   # inside a bundle already found (the CR yamls and operator log of a support bundle), or checked
                   for d in "${found_bundles[@]}"
                   do
@@ -71363,7 +71397,13 @@ playground_debug_analyze_logs_command() {
       then
           other_inputs=1
       fi
-      case "$path" in
+      local dispatch="$path"
+      if [ -f "$path" ] && is_archive_path "$path" && ! looks_like_archive "$path"
+      then
+          logwarn "⚠️ $label: named like an archive, but its content is not one: read as a file"
+          dispatch="$path.not-an-archive"
+      fi
+      case "$dispatch" in
           *.7z)
               # bsdtar (macOS tar, libarchive) reads 7z, else 7-Zip
               local seven_zip=""
@@ -71784,6 +71824,10 @@ playground_debug_analyze_logs_command() {
   then
       # not a ✅: the CFK analysis above found issues (made of the ERROR lines of its files, its events…)
       log "🔎 no $levels record found in $nb_files file(s) of the log digest, but the CFK bundle analysis above found $cfk_nb_issues issue(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+  elif [ "$nb_files" -eq 0 ] && [ "$cfk_nb_issues" -eq 0 ]
+  then
+      # not a ✅: nothing was read (an empty folder, only pictures or other binary files)
+      logwarn "🔎 nothing to read in the input: no text file (an empty folder, or only binary files: $nb_skipped skipped)${duplicates_msg}"
   elif [ $nb_files_with_findings -eq 0 ]
   then
       log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"

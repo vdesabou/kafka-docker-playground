@@ -104,6 +104,16 @@ KNOWN_CAUSES = [
                 r"|\bunauthorized\b|http (?:status|code|error)[ :=]*401|Status code\s*:?\s*401",
      "title": "🔑 Authentication failure",
      "advice": "check the credentials (user, password, API key, keytab) of the client or of the external system"},
+    # an OAUTHBEARER login that cannot get its token (the callback handler of the client fails: the token endpoint, the
+    # metadata server or the credentials) or a token the broker cannot validate (JWKS keys, issuer, audience, expiry)
+    {"name": "oauth_token", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"(?:Login|Sasl)Exception: An internal error occurred while retrieving token from callback handler"
+                r"|InvalidJwtException|UnresolvableKeyException: Unable to find a suitable verification key",
+     "title": "🎟️ OAuth token cannot be obtained or validated",
+     "advice": "SASL/OAUTHBEARER: either the client cannot get its token (its callback handler fails: the token endpoint "
+               "or the metadata server is unreachable, or the client id / secret / user is wrong: look at the error just "
+               "before), or the broker cannot validate it (InvalidJwtException, no verification key: the JWKS endpoint "
+               "of the broker, the expected issuer and audience, a key rotated at the identity provider)"},
     {"name": "mds_error", "severity": "high", "category": "MDS/RBAC Issues",
      "pattern": r"MDS.{0,40}failed|metadata service.{0,40}error|TokenBasedSecurityStore.{0,80}Exception|RBAC.{0,40}token"
                 r"|MdsException"
@@ -478,7 +488,7 @@ KNOWN_CAUSES = [
                "the case and quoting of the name (quote.sql.identifiers) and that the database user sees that schema"},
     # debug traces of a plugin logged at ERROR ("ERROR DEBUG_ADD_RECORD: …"): a modified or debug build, not failures
     {"name": "debug_traces_at_error", "severity": "low", "category": "Application Errors",
-     "pattern": r"\bERROR\b[^\n]{0,200}?\sDEBUG_[A-Z0-9]{2,}\w*:",
+     "pattern": r"\bERROR\b[^\n]{0,200}?\sDEBUG_[A-Z0-9]{2,}\w*(?:\[\d+\])?:",
      "title": "🪵 Debug traces logged at ERROR",
      "advice": "these lines are debug traces (DEBUG_… messages, usually not in the upstream code: a modified or debug "
                "build of the plugin) logged at ERROR: not failures, but they flood the logs, hide the real errors and "
@@ -573,7 +583,7 @@ HINT_ORDER = [
     "💥 OutOfMemoryError", "🪞 Secret registry: duplicate URLs, Connect does not start", "🚫 Connect worker failed to start",
     KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🧬 Not enough replicas",
-    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
+    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎟️ OAuth token cannot be obtained or validated", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
     "🗝️ Empty or unreadable truststore", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
     "🪄 Transformation (SMT) failed", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",
@@ -829,7 +839,8 @@ def error_patterns():
 # in a 🙈 Known harmless section), unless --include-harmless. Keep it short and specific: a record hidden here is never
 # seen by the reader, so no WARN that is a real misconfiguration in production (replication factor 1, a deprecated key)
 HARMLESS = [
-    (r"Unable to submit events without credentials \(io\.confluent\.telemetry",
+    # (the CFK JSON log lines have no logger after the message)
+    (r"Unable to submit events without credentials(?: \(io\.confluent\.telemetry|\s*$|\s*\n)",
      "telemetry events to Confluent without a Confluent Cloud API key: telemetry is not set up"),
     (r"No client metrics available in request, skipping export", "telemetry: no client metrics to export yet"),
     (r"Ignoring redefinition of existing telemetry label", "telemetry: a label defined twice"),
@@ -846,6 +857,19 @@ HARMLESS = [
      "an internal topic created by another component first, at startup"),
     (r"Processing exception handler is not enabled for the GlobalThread",
      "Kafka Streams recommendation logged by every Streams application of 4.1+ (Control Center included)"),
+    # found in 3 to 5 unrelated support bundles each, never a cause
+    (r"Renouncing the leadership due to a metadata log event",
+     "a KRaft controller hands over the leadership (a controller change, in 🔄 Restarts and rebalances)"),
+    (r"Performing controller activation\. Loaded ZK migration state of NONE", "a KRaft controller becomes active (no ZooKeeper migration)"),
+    (r"Catching up to assignment's config offset", "a Connect worker reads the configs of its new assignment after a rebalance"),
+    (r"Jolokia Access Control is not enabled", "the Jolokia agent of the image without an access policy"),
+    (r"\bEmpty contextPath\b", "Jetty: a REST handler mounted at the root"),
+    (r"Ignoring notification of change event DEAD_BROKER .{0,80}while DataBalancer is not started",
+     "Self-Balancing not started yet on this node"),
+    (r"No value specified for metadata\.encoder\.secret", "no secret to encode sensitive dynamic broker configs (not used)"),
+    (r"Not initializing since the Jaas config file is not provided", "no JAAS file for this component (not using JAAS)"),
+    (r"Switching to END_SESSION because sequences have incremented due to a log switch",
+     "Oracle CDC: a redo log switch, the session moves on (normal)"),
 ]
 _HARMLESS_RX = [(re.compile(p), reason) for p, reason in HARMLESS]
 
