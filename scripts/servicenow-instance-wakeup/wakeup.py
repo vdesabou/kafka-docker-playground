@@ -8,7 +8,10 @@ then clicks Refresh until the status is Online.
 Run by servicenow_wake_up_instance (scripts/utils.sh) in mcr.microsoft.com/playwright/python:
     USERNAME=... PASSWORD=... python3 wakeup.py <output dir for screenshots> [timeout in seconds]
 
-Exit codes: 0 Online, 1 failure (screenshots and the visible buttons are left in the output dir).
+Exit codes: 0 Online, 1 failure (screenshots, the page text and the visible buttons are left in the
+output dir; the status area of the page and the buttons are also printed, for CI logs). The portal
+login alone usually wakes the instance, so servicenow_wake_up_instance treats 1 as a warning and lets
+the REST API of the instance decide.
 """
 import os
 import re
@@ -53,7 +56,13 @@ BUTTONS_JS = """() => {
   return [...new Set(r)];
 }"""
 
+# the status badge of the instance card: a known status word shortly after "Status" (the card layout
+# differs between Online and hibernating / waking up), else the word(s) between "Status" and a button
+KNOWN_STATUS_RE = re.compile(
+    r"\bStatus\b[\s:]*(?:\S+\s+){0,6}?(Online|Offline|Hibernating|Hibernated|Waking up|Waking|Starting|"
+    r"Stopping|Stopped|Sleeping|Provisioning|Upgrading|Resetting|Unavailable|In progress)\b", re.I)
 STATUS_RE = re.compile(r"\bStatus\s+([A-Za-z][A-Za-z ]{1,30}?)\s+(?:Refresh|Build agent|Wake)", re.S)
+PASSWORD_RE = re.compile(r"(password\W*)\S+", re.I)
 
 
 def log(msg):
@@ -91,8 +100,28 @@ def main():
 
         def status():
             text = page.evaluate(DEEP_TEXT_JS)
-            m = STATUS_RE.search(text)
+            m = KNOWN_STATUS_RE.search(text) or STATUS_RE.search(text)
             return m.group(1).strip() if m else ""
+
+        def status_area():
+            # the text around "Status" (passwords redacted), to adjust the regex from a CI log
+            text = page.evaluate(DEEP_TEXT_JS)
+            try:
+                with open(f"{out}/servicenow-wakeup-page.txt", "w") as f:
+                    f.write(text)
+            except Exception:
+                pass
+            spots = [m.start() for m in re.finditer(r"\b(?:Status|ibernat|[Ww]ak(?:e|ing))", text)][:3]
+            return " ... ".join(PASSWORD_RE.sub(r"\1***", text[max(0, i - 60):i + 200]) for i in spots)
+
+        def click_wake():
+            wake = page.get_by_role("button", name=re.compile(r"wake", re.I))
+            if wake.count() == 0:
+                return False
+            label = " ".join(wake.first.inner_text().split())
+            log(f"clicking '{label}'")
+            wake.first.click(timeout=15000)
+            return True
 
         def fail(msg):
             path = snap("failure")
@@ -124,6 +153,11 @@ def main():
             time.sleep(5)
             current = status()
         if not current:
+            log(f"status area of the page: {status_area() or '(no Status / hibernat / wake text)'}")
+            try:
+                click_wake()
+            except Exception as e:
+                log(f"could not click the wake button: {e}")
             return fail("could not read the status of the instance on 'Manage my instance' (portal changed?)")
         log(f"instance status: {current}")
         if current.lower() == "online":
@@ -131,12 +165,8 @@ def main():
             return 0
 
         snap("before-wake")
-        wake = page.get_by_role("button", name=re.compile(r"wake", re.I))
-        if wake.count() > 0:
-            label = " ".join(wake.first.inner_text().split())
-            log(f"clicking '{label}'")
-            wake.first.click(timeout=15000)
-        else:
+        log(f"status area of the page: {status_area()}")
+        if not click_wake():
             log("no button with 'wake' in its label, trying the legacy wake up link")
             page.goto(LEGACY_WAKE_URL, timeout=90000)
             time.sleep(20)
