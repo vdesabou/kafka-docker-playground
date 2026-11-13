@@ -90,21 +90,22 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
-log "Sending messages to topic pageviews"
-playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
-
 # one table per user: the workspace is shared, and a table created by someone else
 # makes COPY INTO fail with [INSUFFICIENT_PERMISSIONS] ... does not have SELECT on Table
-DATABRICKS_TABLE_NAME="pageviews_$(echo "${USER:-playground}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
+# one topic per run: the connector skips (and never auto-creates the table for) records whose offset
+# is not above a file left under topics/<topic>/ in the shared staging bucket by an earlier run
+DATABRICKS_SUFFIX="$(echo "${USER:-playground}_${GITHUB_RUN_NUMBER:-$(date +%s)}_${TAG_BASE}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '_')"
+DATABRICKS_TOPIC="pageviews_${DATABRICKS_SUFFIX}"
+DATABRICKS_TABLE_NAME="pageviews_${DATABRICKS_SUFFIX}"
 
-log "Dropping table ${DATABRICKS_TABLE_NAME} if it exists, so that it holds only the records of this run"
-databricks_sql_statement "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "DROP TABLE IF EXISTS default.${DATABRICKS_TABLE_NAME}"
+log "Sending messages to topic ${DATABRICKS_TOPIC}"
+playground topic produce --topic "${DATABRICKS_TOPIC}" --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
 
 log "Creating Databricks Delta Lake Sink connector, writing to table ${DATABRICKS_TABLE_NAME}"
 playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
 {
      "connector.class": "io.confluent.connect.databricks.deltalake.DatabricksDeltaLakeSinkConnector",
-     "topics": "pageviews",
+     "topics": "${DATABRICKS_TOPIC}",
      "s3.region": "$DATABRICKS_AWS_BUCKET_REGION",
      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
      "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -114,7 +115,7 @@ playground connector create-or-update --connector databricks-delta-lake-sink  <<
      "delta.lake.host.name": "$DATABRICKS_SERVER_HOSTNAME",
      "delta.lake.http.path": "$DATABRICKS_HTTP_PATH",
      "delta.lake.token": "$DATABRICKS_TOKEN",
-     "delta.lake.topic2table.map": "pageviews:${DATABRICKS_TABLE_NAME}",
+     "delta.lake.topic2table.map": "${DATABRICKS_TOPIC}:${DATABRICKS_TABLE_NAME}",
      "delta.lake.table.auto.create": "true",
      "staging.s3.access.key.id": "$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID",
      "staging.s3.secret.access.key": "$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY",
@@ -128,5 +129,10 @@ sleep 30
 
 playground connector show-lag --max-wait 120
 
-log "Verifying that the 100 records are in table ${DATABRICKS_TABLE_NAME} (the lag reaches 0 even when the COPY INTO fails)"
-databricks_wait_for_table_rows "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "default.${DATABRICKS_TABLE_NAME}" 100
+if [[ "$DATABRICKS_HTTP_PATH" == *"/warehouses/"* ]]
+then
+     log "Verifying that the 100 records are in table ${DATABRICKS_TABLE_NAME} (the lag reaches 0 even when the COPY INTO fails)"
+     databricks_wait_for_table_rows "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH" "default.${DATABRICKS_TABLE_NAME}" 100
+else
+     logwarn "🧱 Databricks http path is not a SQL warehouse (SQL Statement Execution API needs one), not verifying the rows in table ${DATABRICKS_TABLE_NAME}"
+fi
