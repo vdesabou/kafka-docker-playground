@@ -194,6 +194,16 @@ jobs:
             test -x /usr/local/bin/confluent
             export PATH=$PATH:/usr/local/bin
             sudo apt-get update
+            # some ubuntu-26.04 runner images (20261111.82.6, AWS hosted) ship without the Ubuntu archive in their apt sources:
+            # "E: Unable to locate package expect". Add it back when needed
+            if ! apt-cache show expect > /dev/null 2>&1
+            then
+              echo "expect not found in the apt sources, adding the Ubuntu archive"
+              codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+              printf 'Types: deb\nURIs: http://archive.ubuntu.com/ubuntu\nSuites: %s %s-updates %s-security\nComponents: main universe\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n' "$codename" "$codename" "$codename" \
+                | sudo tee /etc/apt/sources.list.d/kdp-ubuntu-archive.sources
+              sudo apt-get update
+            fi
             sudo apt-get install expect fzf coreutils -y
 
       # after "Free up disk space", which prunes docker, and before "Set up credentials",
@@ -516,6 +526,16 @@ jobs:
             test -x /usr/local/bin/confluent
             export PATH=$PATH:/usr/local/bin
             sudo apt-get update
+            # some ubuntu-26.04 runner images (20261111.82.6, AWS hosted) ship without the Ubuntu archive in their apt sources:
+            # "E: Unable to locate package expect". Add it back when needed
+            if ! apt-cache show expect > /dev/null 2>&1
+            then
+              echo "expect not found in the apt sources, adding the Ubuntu archive"
+              codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+              printf 'Types: deb\nURIs: http://archive.ubuntu.com/ubuntu\nSuites: %s %s-updates %s-security\nComponents: main universe\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n' "$codename" "$codename" "$codename" \
+                | sudo tee /etc/apt/sources.list.d/kdp-ubuntu-archive.sources
+              sudo apt-get update
+            fi
             sudo apt-get install expect fzf coreutils -y
             
       # after "Free up disk space", which prunes docker, and before "Set up credentials",
