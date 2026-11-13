@@ -27,6 +27,6 @@ services:
         - ../../connect/connect-ibm-mq-source/security/kafka.connect.keystore.jks:/tmp/keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
-      # https://support.confluent.io/hc/en-us/articles/360054967632-What-cause-the-IBMMQ-connector-fail-to-establish-a-SSL-connection-with-Cipher-Error
+      # the IBM MQ connector failing to establish an SSL connection with a cipher error (Confluent support knowledge base, for signed-in customers)
       KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false
                   # -Djavax.net.debug=all

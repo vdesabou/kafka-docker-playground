@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test the HTTP Sink connector writing to Elasticsearch v9, as described in [How to migrate to HTTP Sink Connector from Elasticsearch Sink connector for 9.0 versions](https://support.confluent.io/hc/en-us/articles/46240881943316-How-to-migrated-to-HTTP-Sink-Connector-from-Elasticsearch-Sink-connector-for-9-0-Versions).
+Quickly test the HTTP Sink connector writing to Elasticsearch v9, as described in How to migrate to HTTP Sink Connector from Elasticsearch Sink connector for 9.0 versions (Confluent support knowledge base, for signed-in customers).
 
 ## Prerequisites
 
