@@ -100,6 +100,36 @@ lab_expect_contains "streams2.log RUNNING 15:19:05 3 (0.5s) 1 RUNNING 0_1 - -"
 lab_expect_contains "streams3.log RUNNING 15:19:06 2 (2.7s) 1 RUNNING 0_2 - -"
 lab_expect_contains "❌ streams.log: the client is ERROR since 2026-11-05 15:19:21"
 
+log "Section 3: shapes of customer files (synthetic samples)"
+lab_run playground analyze logs --sample connect_workers --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "connectors-status.txt: Kafka Connect REST API output: 3 connector status(es) with 1 FAILED connector(s) / task(s) (their trace read as ERROR records)"
+lab_expect_contains "ERROR [payments-sink|task-0] REST status: task payments-sink-0 is FAILED on worker 10.0.0.13:8083 (sink connector)"
+lab_expect_contains "[HIGH] 🧲 Unknown magic byte ×1 in connectors-status.txt (first at line 1)"
+lab_expect_contains "⚠️ 19 duplicated line(s) collapsed (the same line logged twice in a row: two appenders?) in connect.log: the counts are of the events, once each"
+lab_expect_contains "🔌 by connector: orders-cdc 8, payments-sink 1"
+lab_expect_contains "2 of the same JVM 60.0s apart · OpenJDK 64-Bit Server VM (17.0.15+6-LTS mixed mode, sharing) · JVM 1 of 2: worker-a-dump-1.txt, worker-a-dump-2.txt"
+lab_expect_contains "2 of the same JVM 60.0s apart · OpenJDK 64-Bit Server VM (17.0.15+6-LTS mixed mode, sharing) · JVM 2 of 2: worker-b-dump-1.txt, worker-b-dump-2.txt"
+lab_expect_contains "[HIGH] Lock stall, the same in all 2 dumps (60.0s apart): \"blc-keepalive-db.example.com:3306\" (WAITING) waits for the j.u.c lock <0x00000000aaaa0001>"
+lab_expect_contains "held by \"blc-db.example.com:3306\" (RUNNABLE, blocked in a socket write over TLS (a TLS 1.3 KeyUpdate): sun.nio.ch.FileDispatcherImpl.write0"
+lab_expect_contains "🧟 orders-cdc-0 still runs on worker-b/connect.log"
+lab_expect_contains "5 ERROR/FATAL of the task on that worker afterwards, 2026-11-10 10:32:05 → 2026-11-10 10:40:05"
+lab_expect_contains "🔀 started again on worker-a/connect.log (2026-11-10 10:30:24)"
+lab_expect_contains "🔂 LIVELOCK archive-sink: 20 sink rotations with empty offsets (start offsets {} and end offsets {}), 29.9/h · events-0"
+lab_run playground analyze logs --sample loki_export --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "🔎 3 distinct record(s), 6 occurrence(s), in 17 lines"
+lab_expect_contains "🕐 Period covered: 2026-11-10 10:30:00 → 11:04:06 (34 min 6 s)"
+lab_expect_contains "⚠️ newest-first export (the times go down from line to line) in grafana-loki-export.txt: first and last seen are given in the order of time"
+lab_expect_contains "[HIGH] ☁️ Cloud credentials or permission refused ×5 in grafana-loki-export.txt (first at line 15, 2026-11-10 11:00:05)"
+lab_expect_not_contains "1794305046000000000"
+lab_run playground analyze logs --sample connector_cr --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_not_contains "CFK support bundle detected"
+lab_expect_contains "📊 1 file(s) with findings out of 2 scanned"
+lab_expect_contains "[HIGH] 🔌 Connection failure ×3 in connect-0.txt (first at line 17, 2026-11-10 09:40:09)"
+lab_expect_contains "orders-sink: 1 ERROR/FATAL, 3 WARN, 🧨 1 task kill(s), 🏷️ 10.8.4 (JdbcSinkConnector), 🗄️ PostgreSQL (from org.postgresql.util.PSQLException)"
+
 log "Section 4: errors right after a change"
 cat > "$work/change.log" << 'EOF'
 [2026-11-06 10:00:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 

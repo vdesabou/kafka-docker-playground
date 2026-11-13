@@ -191,6 +191,10 @@ do
             file_array+=("$root_folder/tools/log-analyzer/samples/compare/after.log")
             [[ ${#compare_array[@]} -eq 0 ]] && compare_array=("$root_folder/tools/log-analyzer/samples/compare/before.log")
             ;;
+        # the input shapes of customer files, synthetic (tools/log-analyzer/samples/generate_synthetic_shapes.py)
+        connect_workers) file_array+=("$root_folder/tools/log-analyzer/samples/connect-workers") ;;
+        loki_export) file_array+=("$root_folder/tools/log-analyzer/samples/grafana-loki-export.txt") ;;
+        connector_cr) file_array+=("$root_folder/tools/log-analyzer/samples/connector-cr") ;;
         cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
         cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
         cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;

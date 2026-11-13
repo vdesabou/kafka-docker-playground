@@ -1,0 +1,22 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: orders-sink
+  namespace: confluent
+spec:
+  class: io.confluent.connect.jdbc.JdbcSinkConnector
+  taskMax: 1
+  connectClusterRef:
+    name: connect
+  configs:
+    connection.url: jdbc:postgresql://db.example.com:5432/orders
+    connection.user: connect
+    connection.password: ${file:/mnt/secrets/postgres/credentials.properties:password}
+    topics: orders
+    insert.mode: upsert
+    pk.mode: record_key
+    auto.create: "true"
+status:
+  state: CREATED
+  connectorState: RUNNING
+  tasksReady: 0/1

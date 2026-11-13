@@ -1,0 +1,17 @@
+"10 lines shown — 0.02% (40min) of 1h"
+Total bytes processed: "48.2  kB"
+Common labels: {"app":"connect","namespace":"confluent","pod":"connect-0","service_name":"connect"}
+
+
+1794305046000000000	2026-11-10T10:04:06.000Z	[2026-11-10 11:04:06,000] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:235)
+1794305045900000000	2026-11-10T10:04:05.900Z	[2026-11-10 11:04:05,900] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: Unable to upload part 1 of orders/partition=0/orders+0+0000004200.avro
+	at io.confluent.connect.s3.storage.S3OutputStream.uploadPart(S3OutputStream.java:190)
+Caused by: com.amazonaws.services.s3.model.AmazonS3Exception: Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: 0000000000000000)
+	at com.amazonaws.http.AmazonHttpClient$RequestExecutor.handleErrorResponse(AmazonHttpClient.java:1880)
+1794304985300000000	2026-11-10T10:03:05.300Z	[2026-11-10 11:03:05,300] WARN [s3-sink|task-0] Failed to upload part 1 of orders/partition=0/orders+0+0000004200.avro, retrying (4/4): Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied) (io.confluent.connect.s3.storage.S3OutputStream:178)
+1794304925200000000	2026-11-10T10:02:05.200Z	[2026-11-10 11:02:05,200] WARN [s3-sink|task-0] Failed to upload part 1 of orders/partition=0/orders+0+0000004200.avro, retrying (3/4): Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied) (io.confluent.connect.s3.storage.S3OutputStream:178)
+1794304865100000000	2026-11-10T10:01:05.100Z	[2026-11-10 11:01:05,100] WARN [s3-sink|task-0] Failed to upload part 1 of orders/partition=0/orders+0+0000004200.avro, retrying (2/4): Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied) (io.confluent.connect.s3.storage.S3OutputStream:178)
+1794304805000000000	2026-11-10T10:00:05.000Z	[2026-11-10 11:00:05,000] WARN [s3-sink|task-0] Failed to upload part 1 of orders/partition=0/orders+0+0000004200.avro, retrying (1/4): Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied) (io.confluent.connect.s3.storage.S3OutputStream:178)
+1794303001120000000	2026-11-10T09:30:01.120Z	[2026-11-10 10:30:01,120] INFO [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Executing sink task (org.apache.kafka.connect.runtime.WorkerSinkTask:213)
+1794303000000000000	2026-11-10T09:30:00.000Z	[2026-11-10 10:30:00,000] INFO [s3-sink|task-0] Started S3 connector task with assigned partitions [orders-0, orders-1] (io.confluent.connect.s3.S3SinkTask:150)
