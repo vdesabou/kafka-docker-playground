@@ -2527,6 +2527,39 @@ def test_info_anomalies():
     check("HTML card", "id='info-anomalies'" in html and "Reconnecting to the database" in html and "Committing offsets" not in html, html[:300])
     check("nothing on a file without INFO templates", log_report.info_anomalies_text(log_report.info_anomalies(res, files[:0])) == [])
 
+def test_sample_connect_workers_bugs():
+    """found by the connect_workers sample: a thread dump file (no log level) is not a short Connect log; a REST status
+    dump is not a worker log missing its startup; 🎯 errors on one worker only steps aside for the 🧟 task left on that
+    worker; a thread dump finding is a title then one line per fact"""
+    files = log_report.parse_records(records_file(tempfile.mkdtemp(), (
+        "@@PGFILE@@|worker-a/worker-a-dump-1.txt|300|0|0|2026-11-10T10:00:00|2026-11-10T10:00:00\n"
+        "@@PGFILE@@|worker-a/connectors-status.txt|40|1|1||\n"
+        "@@PGREC@@|ERROR|1|1|5||\n"
+        "ERROR [orders-sink|task-0] REST status: task orders-sink-0 is FAILED on worker 10.0.0.3:8083 (rest)\n"
+        "    org.apache.kafka.connect.errors.ConnectException: boom\n"
+        "@@PGTS@@|\n")))
+    files[0]["not_log"] = "unleveled"
+    check("a thread dump file is not a short Connect log", log_report.short_connect_logs(files) == [], log_report.short_connect_logs(files))
+    res = log_report.analyze(files)
+    asks = " ".join(x["what"] for x in log_report.data_to_request(res, files))
+    check("a REST status dump is not a worker log missing its startup", "since the last (re)start" not in asks, asks)
+    # 🎯 / 🧟: the connector card and the task_workers entry lose only_on when a zombie of its task is on that worker
+    res2 = {"task_workers": {"connectors": [{"connector": "orders-cdc", "only_on": "worker-b", "workers": []}]},
+            "connectors": [{"connector": "orders-cdc", "only_on": "worker-b"}]}
+    z = {"task": "orders-cdc-0", "worker": "worker-b/connect.log"}
+    log_report.drop_only_on_for_zombies(res2, [z])
+    check("🎯 steps aside for the 🧟 of its task (worker-b and worker-b/connect.log)",
+          res2["task_workers"]["connectors"][0]["only_on"] is None and res2["connectors"][0]["only_on"] is None, res2)
+    html = log_report.jvm_finding_html({"severity": "HIGH", "text": "Lock stall, the same in all 2 dumps (60s apart): a waits for b.",
+                                        "details": ["⏳ waiting: a", "🔒 Held by b", "👉 why"]})
+    check("dump finding: the badge in its own column, a title, one line per fact",
+          "<span class='jd-title'>Lock stall, the same in all 2 dumps (60s apart)</span>" in html and html.count("<div class='jd-line'>") == 3
+          and "<div class='jd-body'>" in html, html)
+    plain = log_report.jvm_finding_html({"severity": "MEDIUM", "text": "Stuck in a socket write in all 2 dumps: thread x is RUNNABLE."})
+    check("dump finding without details: title then the rest", "<span class='jd-title'>Stuck in a socket write in all 2 dumps</span>" in plain
+          and "thread x is RUNNABLE." in plain, plain)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

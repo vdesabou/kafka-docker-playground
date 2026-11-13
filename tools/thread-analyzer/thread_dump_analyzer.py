@@ -186,6 +186,18 @@ class Dump:
 
 # ── Parsing ───────────────────────────────────────────────────────────────────
 
+
+def _finding_body(f):
+    """the text of a finding in the HTML report: its title (the words before the first ': ') in bold, then its details
+    one per line when it has some, else the rest of its text"""
+    title, sep, rest = (f.get("text") or "").partition(": ")
+    if not sep or len(title) > 90:
+        title, rest = "", f.get("text") or ""
+    head = f"<strong>{_e(title)}</strong>" if title else ""
+    lines = f.get("details") or ([rest] if rest else [])
+    return head + "".join(f'<div style="margin-top:3px">{_e(x)}</div>' for x in lines)
+
+
 def _read_lines(path: str) -> List[str]:
     opener = gzip.open if path.endswith(".gz") else open
     with opener(path, "rt", errors="replace") as fh:
@@ -687,8 +699,10 @@ def analyze(dumps: List[Dump], top: int) -> dict:
 def findings(res: dict, dumps: List[Dump]) -> List[dict]:
     out: List[dict] = []
 
-    def add(sev, text):
-        out.append({"severity": sev, "text": text})
+    def add(sev, text, details=None):
+        # details: the same facts one per line, for the cards of the HTML reports (the text stays the one sentence of
+        # the terminal and --json)
+        out.append(dict({"severity": sev, "text": text}, **({"details": details} if details else {})))
 
     for dl in res["deadlocks"]:
         add("CRITICAL", f"Deadlock between {', '.join(dl['threads'])} (dump {dl['dump']}): each one waits for a lock "
@@ -738,7 +752,19 @@ def findings(res: dict, dumps: List[Dump]) -> List[dict]:
             if st["inferred"]:
                 text += (". The dump has no lock owners (taken without -l): the holder is the thread stuck in "
                          f"{_class_of(st['waiter_frame']).rsplit('.', 1)[-1]} code whose name is the closest")
-            add("HIGH" if (res.get("interval_s") or 0) >= 5 or st["holder_io"] else "MEDIUM", text + ".")
+            why = ("a socket write that does not complete: the peer does not read, or the connection is dead without a "
+                   "reset; only the TCP retransmission timeout or a restart ends it" if st["holder_io"] == "write" else
+                   "a socket read with no timeout on a silent connection: only a reset, a socket timeout or a restart ends it"
+                   if st["holder_io"] == "read" else "neither progresses until the holder returns")
+            details = [f"⏳ waiting: \"{st['waiter']}\" ({st['waiter_state']}) for {what}, in {st['waiter_frame']}",
+                       f"🔒 {held[0].upper() + held[1:]}"
+                       + ("" if st["holder_cpu_ms"] is None else f", using {st['holder_cpu_ms']:g}ms of CPU" if st["holder_cpu_ms"] >= 1
+                          else ", using no CPU"),
+                       f"👉 the same frames in every dump: {why}"]
+            if st["inferred"]:
+                details.append("ℹ️ the dump has no lock owners (taken without -l): the holder is the thread stuck in "
+                               f"{_class_of(st['waiter_frame']).rsplit('.', 1)[-1]} code whose name is the closest")
+            add("HIGH" if (res.get("interval_s") or 0) >= 5 or st["holder_io"] else "MEDIUM", text + ".", details)
         for s_io in res.get("stuck_io") or []:
             add("MEDIUM", f"Stuck in a socket write in all {n} dumps ({apart}): thread \"{s_io['name']}\" is RUNNABLE in a "
                           f"socket write{' over TLS' if s_io['tls'] else ''} on the same frames in every dump"
@@ -960,7 +986,7 @@ def html_report(res: dict, title: str) -> str:
             "warn" if res["stuck"] else ""),
     ])
     recs = "".join(f'<div class="rec-card {f["severity"].lower()}"><span class="rec-badge {f["severity"].lower()}">{SEVERITY_ICONS.get(f["severity"], "")} {_e(f["severity"])}</span>'
-                   f'<span class="rec-text">{_e(f["text"])}</span></div>' for f in res["findings"])
+                   f'<span class="rec-text">{_finding_body(f)}</span></div>' for f in res["findings"])
 
     if res["cpu_interval"]:
         cpu_rows = [(c["name"], c["cpu_pct"], "#f97316") for c in res["cpu_interval"][:12]]

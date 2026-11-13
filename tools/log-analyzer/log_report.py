@@ -1115,7 +1115,8 @@ def short_connect_logs(files: List[dict]) -> List[dict]:
     spans: "OrderedDict[str, List]" = OrderedDict()
     for f in files:
         # (not a config file of the worker: connect-distributed.properties, a connector JSON)
-        if file_component(f["label"]) != "connect" or re.search(r"\.(?:properties|json|ya?ml|xml|conf|cfg|ini)$", f["label"], re.I):
+        if (file_component(f["label"]) != "connect" or f.get("not_log")
+                or re.search(r"\.(?:properties|json|ya?ml|xml|conf|cfg|ini)$", f["label"], re.I)):
             continue
         a, b = ts_seconds(f.get("log_first_ts")), ts_seconds(f.get("log_last_ts"))
         if a is None or b is None:
@@ -1340,6 +1341,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     # 🧟 a task left running on a worker after its graceful stop failed: a finding (what to do: restart that worker),
     # MEDIUM when the logs cannot show a restart of the task there
     zombies = res["task_workers"]["zombies"] = zombie_tasks(files)
+    drop_only_on_for_zombies(res, zombies)
     if zombies:
         res["findings"] = sorted(res["findings"] + [{"severity": "HIGH" if z["verified"] else "MEDIUM", "text": zombie_text(z), "zombie": z,
                                                      "id": f"finding-zombie-{i}"} for i, z in enumerate(zombies[:5])],
@@ -3023,6 +3025,19 @@ def zombie_parts(z: dict) -> Dict[str, str]:
             "where": where}
 
 
+def drop_only_on_for_zombies(res: dict, zombies: List[dict]) -> None:
+    """🎯 "its errors all come from one worker: compare that host" is the wrong advice when a 🧟 copy of its task left on
+    that worker explains them: the 🧟 finding says what to do (restart that worker), the 🎯 steps aside (🎯 names the
+    worker, 🧟 its log file: worker-b and worker-b/connect.log)"""
+    for z in zombies:
+        conn = z["task"].rsplit("-", 1)[0]
+        for c in list((res.get("task_workers") or {}).get("connectors") or []) + list(res.get("connectors") or []):
+            if c.get("connector") == conn and c.get("only_on") and c["only_on"] in (z["worker"], worker_of(z["worker"]),
+                                                                                    z["worker"].rsplit("/", 1)[0]):
+                c["only_on"] = None
+                c["zombie"] = z["task"]
+
+
 def zombie_text(z: dict) -> str:
     p = zombie_parts(z)
     return f"{p['title']} after its graceful stop failed there: {p['stop'][len('graceful stop failed '):]}; {p['errors']}; {p['where']}. 👉 {ZOMBIE_TODO}"
@@ -3483,7 +3498,9 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
     # Streams application do not)
     no_start = sorted({worker_of(f["label"]) for f in res["files"] if file_component(f["label"]) in ("connect", "kafka")
                        and not f["label"].endswith(OCR_SUFFIX)
-                       and any(r["level"] in ("ERROR", "FATAL") for r in f["records"])} - with_start)
+                       and any(r["level"] in ("ERROR", "FATAL") for r in f["records"])
+                       # a REST status dump (connectors?expand=status): its records are the traces of the FAILED tasks
+                       and not all(" REST status: " in (r.get("text") or "")[:400] for r in f["records"])} - with_start)
     if no_start:
         ask("the logs since the last (re)start of " + ", ".join(no_start[:4]) + (" …" if len(no_start) > 4 else "")
             + " (the rotated files before these: connect.log.1, server.log.1…)",
@@ -3957,12 +3974,29 @@ def cluster_layout_html(cl: Optional[dict]) -> str:
 
 JVM_DUMPS_CSS = """<style>
 .jd-card{border-left:4px solid #6366f1}.jd-card h3{margin:12px 0 4px;font-size:.95rem}
-.jd-find{list-style:none;margin:6px 0;padding:0}.jd-find li{margin:4px 0;padding:6px 10px;border-radius:8px;background:#f8fafc;font-size:.85rem}
-.jd-sev{display:inline-block;min-width:68px;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:#fff;border-radius:999px;padding:1px 8px;margin-right:6px;text-align:center}
+.jd-find{list-style:none;margin:6px 0;padding:0}.jd-find li{margin:4px 0;padding:6px 10px;border-radius:8px;background:#f8fafc;font-size:.85rem;
+display:flex;gap:8px;align-items:flex-start}
+.jd-body{flex:1;min-width:0}.jd-title{font-weight:700}.jd-line{margin-top:3px;overflow-wrap:anywhere}
+.jd-sev{display:inline-block;flex:none;min-width:68px;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:#fff;border-radius:999px;padding:1px 8px;margin-right:6px;text-align:center}
 .jd-CRITICAL{background:#dc2626}.jd-HIGH{background:#ea580c}.jd-MEDIUM{background:#ca8a04}.jd-LOW,.jd-OK{background:#16a34a}.jd-INFO{background:#2563eb}
 .jd-cmd{white-space:pre-wrap;word-break:break-all;font-size:.78rem}.jd-copy{float:right;margin:0 0 4px 8px;font-size:.72rem}
 html[data-theme=dark] .jd-find li{background:#1e293b}
 </style>"""
+
+
+def jvm_finding_html(f: dict) -> str:
+    """a finding of a thread dump: its badge in a column of its own (the text wraps beside it, not under it), the words
+    before the first ':' as its title, then its details one per line (or the rest of its text)"""
+    text = f.get("text") or ""
+    title, sep, rest = text.partition(": ")
+    if not sep or len(title) > 90:
+        title, rest = "", text
+    body = (f"<span class='jd-title'>{e(title)}</span>" if title else "")
+    if f.get("details"):
+        body += "".join(f"<div class='jd-line'>{e(d)}</div>" for d in f["details"])
+    elif rest:
+        body += f"<div class='jd-line'>{e(rest)}</div>"
+    return f"<li><span class='jd-sev jd-{e(f['severity'])}'>{e(f['severity'])}</span><div class='jd-body'>{body}</div></li>"
 
 
 def jvm_dumps_html(res: dict) -> str:
@@ -3987,8 +4021,7 @@ def jvm_dumps_html(res: dict) -> str:
         link = (f" · <a href='{e(quote(os.path.basename(g['report'])))}' target='_blank' rel='noopener'>🌐 open the full thread report</a>"
                 if g.get("report") else
                 f" · 🔒 no full thread report ({e(g['no_report'])}): its command is under ‘the same analysis in a terminal’" if g.get("no_report") else "")
-        items = "".join(f"<li><span class='jd-sev jd-{e(f['severity'])}'>{e(f['severity'])}</span>{e(f['text'])}</li>"
-                        for f in g.get("findings") or [])
+        items = "".join(jvm_finding_html(f) for f in g.get("findings") or [])
         more = (f"<p class='fi-meta'>… {g['findings_total'] - len(g['findings'])} more finding(s) in the thread report</p>"
                 if (g.get("findings_total") or 0) > len(g.get("findings") or []) else "")
         cpu = ""
