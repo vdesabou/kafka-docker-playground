@@ -181,6 +181,21 @@ def test_fixed_bugs_verdict():
         check("verdict", got == expected, f"{version}: {got} instead of {expected}")
 
 
+def test_fixed_bugs_regression_verdict():
+    """🩹 a regression (introduced_in): a version before the first affected version of its line, or a line older than
+    every affected line, is not affected; the introduced_in of the entry is found from its fixed_in list"""
+    fixed, intro = ["2.7.10", "2.8.6", "2.9.4"], ["2.7.8", "2.8.4", "2.9.2"]
+    for version, expected in [("2.7.5", ("fixed", None)), ("2.7.8", ("affected", "2.7.10")), ("2.7.10", ("fixed", None)),
+                              ("2.8.3", ("fixed", None)), ("2.8.5", ("affected", "2.8.6")), ("2.6.4", ("fixed", None)),
+                              ("2.15.2", ("fixed", None)), ("x", ("unknown", None))]:
+        got = fixed_bugs.verdict(version, fixed, intro)
+        check("regression verdict", got == expected, f"{version}: {got} instead of {expected}")
+    bug = next(b for b in fixed_bugs.FIXED_BUGS if b["ref"] == "CC-23454")
+    check("introduced_in of the entry", fixed_bugs.verdict("2.7.5", bug["fixed_in"]) == ("fixed", None)
+          and fixed_bugs.verdict("2.9.3", bug["fixed_in"]) == ("affected", "2.9.4"))
+    check("not a regression: unchanged", fixed_bugs.verdict("2.7.5", list(bug["fixed_in"])) == ("affected", "2.7.10"))
+
+
 def test_fixed_bugs_patterns_and_speed():
     import re
     for b in fixed_bugs.FIXED_BUGS:
@@ -188,6 +203,18 @@ def test_fixed_bugs_patterns_and_speed():
         need = {"title", "plugin", "pattern", "fixed_in", "ref", "advice"} | ({"runtime"} if b.get("runtime") else {"classes"})
         check("fields", need <= set(b) and b.get("runtime") in (None, "cp"), b.get("title"))
         check("fixed_in parse", all(fixed_bugs.parse_version(v) for v in b["fixed_in"]), b["title"])
+        # one first fixed version per minor line (the verdict picks the one of the line), and the same for a regression
+        for key in ("fixed_in", "introduced_in"):
+            lines = [fixed_bugs.parse_version(v)[:2] for v in b.get(key) or []]
+            check(f"{key} one version per line", len(lines) == len(set(lines)), b["title"])
+        check("introduced_in parse", all(fixed_bugs.parse_version(v) for v in b.get("introduced_in") or []), b["title"])
+        check("title, ref, advice", b["title"].startswith("🩹 ") and b["ref"].strip() and len(b["advice"]) > 20, b["title"])
+        check("plugin owner/name", b.get("runtime") or re.match(r"^[\w.-]+/[\w.-]+$", b["plugin"]), b["title"])
+        if b.get("classes"):
+            re.compile(b["classes"])
+        if b.get("runtime"):
+            # cp-changelog --grep <PR> of the ⛔ line
+            check("cp ref has its pull request", re.search(r"\(PR-\d+\)$", b["ref"]), b["ref"])
         regex = re.compile(b["pattern"])
         for line in ADVERSARIAL + ["java.lang.NullPointerException\n" * 3000]:
             start = time.time()

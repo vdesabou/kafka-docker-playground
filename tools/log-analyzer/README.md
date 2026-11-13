@@ -435,6 +435,15 @@ cp-changelog --from <x.y.0> --component kafka --grep <PR>`) and gets its verdict
 logged the record (`Kafka version: x.y.z-ce` / `-ccs` of the same file, else the only one of the input), one per
 connector and version.
 
+The catalogue (37 entries: Oracle CDC, Oracle XStream CDC, JDBC, S3, HDFS 3, Azure Blob / Data Lake Gen2, IBM MQ,
+Salesforce, ServiceNow, BigQuery, Kinesis, SFTP, and the Connect runtime, MirrorMaker 2 and the broker) comes from the
+release notes: `playground connector-plugin changelog -c <plugin> --from <old version> --json` and `playground
+cp-changelog --from 7.4.0 --component kafka --json`, keeping a note only when it names a symptom visible in the logs (an
+exception and its message, a quoted error, an ORA- code) and its fixed versions, and the frame or message checked in the
+code of the fix. A regression has `introduced_in` (the first affected version of each line, from the note): a version
+before it, or a line older than all of them, gets `fixed` (not this bug). Plugins without a changelog feed (Debezium,
+Replicator, Snowflake, Splunk, MongoDB) have no entry.
+
 ## Config lint
 
 `config_lint()` checks the last dump of the configuration of each connector (`SinkConnectorConfig`,

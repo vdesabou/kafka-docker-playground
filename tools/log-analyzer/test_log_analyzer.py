@@ -2131,6 +2131,52 @@ def test_known_causes_and_fixed_bugs_from_audit():
     check("🩹 KAFKA-19697 unknown without a CP version", bug and bug["verdict"] == "unknown" and "CP version not in the logs" in log_report.fixed_bug_lines(bug)[0], res["fixed_bugs"])
 
 
+def test_fixed_bugs_from_release_notes():
+    """🩹 entries from the release notes (synthetic lines of the same shape): a plugin bug gets ⛔ / ✅ / ❔ from the
+    version of the connector, a regression (ORA-00310, CC-23454) does not affect a version before it, the same ORA- code
+    logged by a connector of another plugin is not that bug, and a bug of the runtime (MirrorMaker 2, KAFKA-15607) gets
+    its verdict from the CP version"""
+    def bugs_of(body, events="", cp=""):
+        text = ("@@PGFILE@@|connect.log|100|1|3|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+                f"@@PGREC@@|ERROR|3|10|20|2026-10-24T17:00:01|2026-10-24T17:00:09\n{body}\n@@PGTS@@|2026-10-24T17:00:01 2026-10-24T17:00:09\n"
+                + events + (f"@@PGEVT@@|kafka_version|1|2026-10-24T17:00:00||{cp}\n" if cp else ""))
+        return {b["ref"]: b for b in analyzed(text)["fixed_bugs"]}
+    def card(name, version, cls):
+        return f"@@PGEVT@@|plugin_version|1|2026-10-24T17:00:00|{name}|{version} {cls}\n"
+    cdc = "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector"
+    npe = ("[2026-10-24 17:00:01,000] ERROR [cdc-src|task-0] WorkerSourceTask{id=cdc-src-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask:1)\n"
+           "    java.lang.NullPointerException\n"
+           "        at io.confluent.connect.oracle.cdc.transaction.TransactionAwareBlockingQueue.isRemoveTransactionRecord(TransactionAwareBlockingQueue.java:349)")
+    got = bugs_of(npe, card("cdc-src", "2.10.2", cdc)).get("CC-27327")
+    check("⛔ CC-27327 on 2.10.2", got and got["connectors"] == [{"connector": "cdc-src", "version": "2.10.2", "verdict": "affected", "upgrade_to": "2.10.6"}], got)
+    got = bugs_of(npe, card("cdc-src", "2.12.5", cdc)).get("CC-27327")
+    check("✅ CC-27327 on 2.12.5", got and got["verdict"] == "fixed", got)
+    got = bugs_of(npe).get("CC-27327")
+    check("❔ CC-27327 without a version", got and got["verdict"] == "unknown", got)
+    ora = ("[2026-10-24 17:00:01,000] ERROR [cdc-src|task-0] Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue:1)\n"
+           "    java.sql.SQLException: ORA-00310: archived log contains sequence 1203; sequence 1200 required")
+    got = bugs_of(ora, card("cdc-src", "2.8.5", cdc)).get("CC-23454")
+    check("⛔ ORA-00310 regression on 2.8.5", got and got["connectors"][0]["verdict"] == "affected" and got["connectors"][0]["upgrade_to"] == "2.8.6", got)
+    got = bugs_of(ora, card("cdc-src", "2.8.2", cdc)).get("CC-23454")
+    check("✅ ORA-00310 before the regression (2.8.2)", got and got["verdict"] == "fixed", got)
+    got = bugs_of(ora, card("cdc-src", "2.15.2", cdc)).get("CC-23454")
+    check("✅ ORA-00310 on 2.15.2", got and got["verdict"] == "fixed", got)
+    other = ora.replace("cdc-src", "jdbc-src")
+    check("ORA-00310 of a JDBC source: not the Oracle CDC bug",
+          "CC-23454" not in bugs_of(other, card("jdbc-src", "10.8.4", "io.confluent.connect.jdbc.JdbcSourceConnector")))
+    mm2 = ("[2026-10-24 17:00:01,000] ERROR [mm2-checkpoint|worker] Scheduler for MirrorCheckpointConnector caught exception in scheduled task: syncing offsets (org.apache.kafka.connect.mirror.Scheduler:1)\n"
+           "    java.lang.NullPointerException\n"
+           "        at org.apache.kafka.connect.mirror.MirrorCheckpointTask.syncGroupOffset(MirrorCheckpointTask.java:338)")
+    got = bugs_of(mm2, cp="7.5.1-ce").get("KAFKA-15607 (PR-14587)")
+    check("⛔ KAFKA-15607 on CP 7.5.1", got and got["connectors"][0]["verdict"] == "affected" and got["connectors"][0]["upgrade_to"] == "7.5.3", got)
+    got = bugs_of(mm2, cp="7.6.0-ccs").get("KAFKA-15607 (PR-14587)")
+    check("✅ KAFKA-15607 on CP 7.6.0", got and got["verdict"] == "fixed", got)
+    warn = ("[2026-10-24 17:00:01,000] ERROR Ignoring offset partition key with an unexpected format for the second element in the partition key list. "
+            "Expected type: java.util.Map, actual type: null (org.apache.kafka.connect.storage.OffsetUtils:1)")
+    check("KAFKA-16392 on CP 7.5.0", bugs_of(warn, cp="7.5.0-ce").get("KAFKA-16392 (PR-15562)", {}).get("verdict") == "affected")
+    check("a Map partition is not KAFKA-16392", "KAFKA-16392 (PR-15562)" not in bugs_of(warn.replace("actual type: null", "actual type: java.lang.String"), cp="7.5.0-ce"))
+
+
 def test_zombie_task_after_failed_graceful_stop():
     """🧟 errors of a task on a worker after its graceful stop failed there, while it started on another worker: a HIGH
     finding; not when the task was started again on the same worker"""
