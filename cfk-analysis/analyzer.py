@@ -1655,18 +1655,33 @@ class CFKBundleAnalyzer:
         and a STATUS that is a failure (OOMKilled, CrashLoopBackOff, Error, ImagePullBackOff, Pending…). A pod that
         also has a manifest is left to it (_check_pod_config reads the same and more)."""
         for rel, lines in self.pod_tables:
-            header = next(line for line in lines if line.strip())
-            # columns at the positions of the header: RESTARTS holds spaces ("6 (16m ago)")
-            starts = [m.start() for m in re.finditer(r'\S+', header)]
-            names = header.split()
+            # `kubectl get all` writes one table per kind (pod/, service/, deployment.apps/…), separated by a blank
+            # line, each with its own header: re-read the header of each section and only read the pod sections
+            names, starts, new_section = None, [], True
             for line_number, line in enumerate(lines, 1):
-                if not line.strip() or _POD_TABLE_HEADER_RE.match(line):
+                if not line.strip():
+                    new_section = True
+                    continue
+                if new_section:
+                    new_section = False
+                    if _POD_TABLE_HEADER_RE.match(line):
+                        # columns at the positions of the header: RESTARTS holds spaces ("6 (16m ago)")
+                        starts = [m.start() for m in re.finditer(r'\S+', line)]
+                        names = line.split()
+                    else:
+                        names = None
+                    continue
+                if names is None:
                     continue
                 cols = {}
                 for i, name in enumerate(names):
                     end = starts[i + 1] if i + 1 < len(starts) else None
                     cols[name] = line[starts[i]:end].strip()
                 pod, status, ready = cols.get('NAME', ''), cols.get('STATUS', ''), cols.get('READY', '')
+                kind, _, short = pod.rpartition('/')
+                if kind and kind != 'pod':
+                    continue
+                pod = short  # pod/kafka-0 (kubectl get all) -> kafka-0, the name of its manifest
                 if not pod or pod in self.pod_health:
                     continue
                 self.coverage['pods'] += 1
