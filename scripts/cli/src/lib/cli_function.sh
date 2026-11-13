@@ -4537,7 +4537,7 @@ function add_connector_config_based_on_environment () {
       # rendered for the inventory (nothing to do with plaintext)
       local ansible_client_properties ansible_sr_https=false
       get_connect_container
-      ansible_client_properties=$(docker exec "${connect_container:-connect}" cat /etc/kafka/client.properties 2> /dev/null)
+      ansible_client_properties=$(docker exec "${connect_container:-connect}" cat /etc/kafka/client.properties 2> /dev/null || true)
       [ "$(ansible_rest_scheme schema-registry)" == "https" ] && ansible_sr_https=true
       if [ -z "$ansible_client_properties" ] && [ "$ansible_sr_https" == "false" ]
       then

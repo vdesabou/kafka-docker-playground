@@ -322,7 +322,7 @@ then
     bootstrap_server="$broker_container:9092"
     get_connect_container
     container=$connect_container
-    ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null)
+    ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null || true)
     if [ -n "$ansible_client_properties" ]
     then
         security="$producer_config_name /etc/kafka/client.properties"
