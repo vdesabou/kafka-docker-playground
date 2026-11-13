@@ -4864,8 +4864,8 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - cfk\n    - cfk-rbac\n    - 2way-ssl\n    - kerberos\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - rbac-sasl-plain\n    - rbac-oauth\n    - sasl-oauthbearer\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is\n    then\n    added to the flags of the run), plaintext otherwise. Not available with\n    ccloud examples (they run against Confluent Cloud).\n    This is only supported when example is a connector example\n"
-    printf "    %s\n" "Allowed: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer"
+    printf "    🔐 The environment to start when running a connector example \n    \n    - plaintext\n    - ccloud\n    - cfk\n    - cfk-rbac\n    - ansible (cp-ansible: Confluent Platform installed by the\n    confluent.platform.all playbook)\n    - 2way-ssl\n    - kerberos\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - rbac-sasl-plain\n    - rbac-oauth\n    - sasl-oauthbearer\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is\n    then\n    added to the flags of the run), plaintext otherwise. Not available with\n    ccloud examples (they run against Confluent Cloud).\n    This is only supported when example is a connector example\n"
+    printf "    %s\n" "Allowed: ccloud, cfk, cfk-rbac, ansible, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer"
     echo
 
     # :flag.usage
@@ -5502,7 +5502,7 @@ playground_find_command_usage() {
 playground_start_environment_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground start-environment\n\n"
-    printf "  🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n  \n  - ccloud\n  - 2way-ssl\n  - cfk\n  - cfk-rbac\n  - kerberos\n  - ldap-authorizer-sasl-plain\n  - ldap-sasl-plain\n  - mdc-kerberos\n  - mdc-plaintext\n  - mdc-sasl-plain\n  - plaintext\n  - rbac-sasl-plain\n  - rbac-oauth\n  - sasl-oauthbearer\n  - sasl-plain\n  - sasl-scram\n  - sasl-ssl\n  - ssl_kerberos\n  \n  Note: when running an example with <playground run>, it is already\n  automatically done\n  \n  The environment brings up the Kafka cluster and its companions with the\n  right security configuration; the example then layers its own containers\n  on top with --docker-compose-override-file. Optional components\n  (control-center, ksqldb, flink, rest-proxy, grafana, kcat, conduktor) are\n  enabled with the --enable-* flags of 'playground run'.\n  \n  Any running environment is stopped first, and the full docker compose\n  command is saved in playground.ini so that 'playground stop',\n  'playground container recreate' and 'playground re-run' can replay it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-secured-environments\n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%90-the-same-example-under-sasl_ssl-and-rbac\n\n"
+    printf "  🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n  \n  - ccloud\n  - 2way-ssl\n  - ansible (cp-ansible: Confluent Platform installed by the\n  confluent.platform.all playbook in systemd containers)\n  - cfk\n  - cfk-rbac\n  - kerberos\n  - ldap-authorizer-sasl-plain\n  - ldap-sasl-plain\n  - mdc-kerberos\n  - mdc-plaintext\n  - mdc-sasl-plain\n  - plaintext\n  - rbac-sasl-plain\n  - rbac-oauth\n  - sasl-oauthbearer\n  - sasl-plain\n  - sasl-scram\n  - sasl-ssl\n  - ssl_kerberos\n  \n  Note: when running an example with <playground run>, it is already\n  automatically done\n  \n  The environment brings up the Kafka cluster and its companions with the\n  right security configuration; the example then layers its own containers\n  on top with --docker-compose-override-file. Optional components\n  (control-center, ksqldb, flink, rest-proxy, grafana, kcat, conduktor) are\n  enabled with the --enable-* flags of 'playground run'.\n  \n  Any running environment is stopped first, and the full docker compose\n  command is saved in playground.ini so that 'playground stop',\n  'playground container recreate' and 'playground re-run' can replay it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-secured-environments\n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%90-the-same-example-under-sasl_ssl-and-rbac\n\n"
   else
     printf "playground start-environment - 🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n\n"
   fi
@@ -5520,8 +5520,8 @@ playground_start_environment_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--environment ENVIRONMENT")"
-    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - cfk\n    - cfk-rbac\n    - kerberos\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - rbac-oauth\n    - sasl-oauthbearer\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
-    printf "    %s\n" "Allowed: ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos"
+    printf "    🔐 The environment to start . \n    \n    - ccloud\n    - 2way-ssl\n    - ansible\n    - cfk\n    - cfk-rbac\n    - kerberos\n    - ldap-authorizer-sasl-plain\n    - ldap-sasl-plain\n    - mdc-kerberos\n    - mdc-plaintext\n    - mdc-sasl-plain\n    - plaintext\n    - rbac-sasl-plain\n    - rbac-oauth\n    - sasl-oauthbearer\n    - sasl-plain\n    - sasl-scram\n    - sasl-ssl\n    - ssl_kerberos\n    \n    Default is plaintext\n"
+    printf "    %s\n" "Allowed: ccloud, 2way-ssl, ansible, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos"
     printf "    %s\n" "Default: plaintext"
     echo
 
@@ -24158,7 +24158,22 @@ function resolve_traffic_destination_ips() {
 
 function is_container_running() {
   container_name=$1
-  docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"
+  local state
+  state=$(docker inspect -f '{{.State.Running}} {{.Config.Image}}' "$container_name" 2>/dev/null)
+  [[ "$state" == true* ]] || return 1
+  # a host of environment/ansible runs when its confluent-* services do (playground broker stop stops the service,
+  # not the host). A host where the playbook installed nothing yet counts as running
+  if [[ "$state" == "true kdp-ansible-host"* ]]
+  then
+    local units
+    units=$(ansible_host_units "$container_name")
+    if [ -n "$units" ]
+    then
+      docker exec "$container_name" systemctl is-active --quiet $units
+      return $?
+    fi
+  fi
+  return 0
 }
 
 function get_connect_container() {
@@ -24965,6 +24980,13 @@ function get_running_cp_tag() {
     echo "$tag"
     return
   fi
+  if [[ "$running_environment" == ansible* ]]
+  then
+    # no cp images: the version cp-ansible installed in the broker host
+    tag=$(get_container_cp_tag broker)
+    echo "$tag"
+    return
+  fi
   images=$(docker ps --format '{{.Image}}')
   tag=$(echo "$images" | grep -E 'confluentinc/cp-.*-connect.*:' | head -1 | awk -F':' '{print $2}')
   if [ -z "$tag" ]
@@ -25014,6 +25036,11 @@ function get_security_broker() {
       security="$config_file_name /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [[ "$environment" == ansible* ]]
+  then
+      # written by cp-ansible with the security of the inventory (client_config_file), linked to /etc/kafka by
+      # environment/ansible/start.sh for an archive install
+      security="$config_file_name /etc/kafka/client.properties"
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"
@@ -25100,7 +25127,7 @@ function get_admin_tool_cp_tag() {
   get_environment_used
   if [[ "$environment" != "ccloud" ]] && [[ "$environment" != cfk* ]]
   then
-    tag=$(get_security_broker "--command-config" > /dev/null 2>&1; docker inspect -f '{{.Config.Image}}' "$container" 2> /dev/null | awk -F ':' '{print $NF}')
+    tag=$(get_security_broker "--command-config" > /dev/null 2>&1; get_container_cp_tag "$container")
   fi
   if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
   then
@@ -26557,7 +26584,7 @@ function get_container_env_value() {
     kubectl -n confluent exec "$container" -- printenv "$variable" 2> /dev/null
     return 0
   fi
-  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | sed -n "s/^${variable}=//p" | head -1
+  container_env_dump "$container" 2> /dev/null | sed -n "s/^${variable}=//p" | head -1
   return 0
 }
 
@@ -26884,6 +26911,15 @@ function filter_not_cfk_environment() {
   if [[ "$environment" == cfk* ]]
   then
     logerror "this command is not available with $environment (the brokers are pods managed by Confluent for Kubernetes)"
+  fi
+}
+
+function filter_not_ansible_environment() {
+  get_environment_used
+
+  if [[ "$environment" == ansible* ]]
+  then
+    logerror "this command is not available with $environment: the containers are hosts where cp-ansible installed Confluent Platform, recreating them deletes the installation. Change the inventory environment/ansible/inventory/hosts.yml (<component>_service_environment_overrides for environment variables, <component>_custom_properties for properties), then run the playbook again: docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
   fi
 }
 
@@ -28992,7 +29028,7 @@ function get_example_supported_environments () {
   then
     skips_cfk=1
   fi
-  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  for environment_name in plaintext ccloud cfk cfk-rbac ansible 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
   do
     if [[ "$environment_name" == cfk* ]] && [ $skips_cfk == 1 ]
     then
@@ -32924,12 +32960,33 @@ function reset_container_engine_detection() {
 # log4j lines removed) into the output file.
 # $1: container (as given on the command line), $2: number of dumps, $3: seconds between dumps, $4: output file
 # Returns 0 when at least one dump was captured.
+# pid of the JVM of container $1 (resolved name): 1 in the cp images, else the first java process. On a host of
+# environment/ansible, PID 1 is systemd (attaching jmap/jcmd to it, or sending it SIGQUIT, stops the host): the
+# MainPID of its confluent-* service
+function container_java_pid() {
+  local resolved_container="$1" unit pid
+  if is_ansible_host "$resolved_container"
+  then
+    for unit in $(ansible_host_units "$resolved_container")
+    do
+      pid=$(docker exec "$resolved_container" systemctl show -p MainPID --value "$unit" 2> /dev/null)
+      if [ -n "$pid" ] && [ "$pid" != "0" ]
+      then
+        echo "$pid"
+        return 0
+      fi
+    done
+    return 1
+  fi
+  playground --output-level ERROR container exec --container "$resolved_container" --command "if ls -l /proc/1/exe 2>/dev/null | grep -q java; then echo 1; else for p in /proc/[0-9]*; do if tr '\\000' ' ' < \$p/cmdline 2>/dev/null | grep -q '^[^ ]*java '; then echo \${p#/proc/}; break; fi; done; fi" 2>/dev/null | tr -d '\r' | head -1
+}
+
 function take_thread_dumps_with_kill_quit() {
   local container="$1" count="$2" interval="$3" output_file="$4"
   local resolved_container pid start since raw_file i
 
   resolved_container=$(resolve_container_name_for_environment "$container")
-  pid=$(playground --output-level ERROR container exec --container "$resolved_container" --command "if ls -l /proc/1/exe 2>/dev/null | grep -q java; then echo 1; else for p in /proc/[0-9]*; do if tr '\\000' ' ' < \$p/cmdline 2>/dev/null | grep -q '^[^ ]*java '; then echo \${p#/proc/}; break; fi; done; fi" 2>/dev/null | tr -d '\r' | head -1)
+  pid=$(container_java_pid "$resolved_container")
   if [[ -z "$pid" ]]
   then
     logwarn "no java process found in container $container"
@@ -33645,7 +33702,7 @@ function benchmark_collect_setup () {
   local jvm=""
   if [ -n "$first_worker" ]
   then
-    heap=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
+    heap=$(container_env_dump "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
     jvm=$(printf 'get -b java.lang:type=Runtime VmVersion\nget -b java.lang:type=OperatingSystem AvailableProcessors\nget -b java.lang:type=Memory HeapMemoryUsage\nexit\n' | benchmark_jmxterm "$first_worker" "$(echo "$workers" | head -1 | awk '{ print $2 }')")
   fi
   jvm_version=$(echo "$jvm" | sed -n 's/^VmVersion = \(.*\);$/\1/p')
@@ -34461,7 +34518,7 @@ function display_newer_cp_patch_hint () {
   current_cp_version=""
   for container in broker connect
   do
-    current_cp_version=$(docker inspect -f '{{.Config.Image}}' $container 2> /dev/null | cut -d ":" -f 2)
+    current_cp_version=$(get_container_cp_tag $container)
     if [ -n "$current_cp_version" ]
     then
       break
@@ -35004,7 +35061,7 @@ function run_kafka_admin_subcommand_tool () {
 
 # id of the broker run by docker container $1 (running or stopped), empty when it is not a broker
 function get_broker_id_of_container () {
-  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2>/dev/null | grep -E "^KAFKA_(BROKER|NODE)_ID=" | head -1 | cut -d= -f2
+  container_env_dump "$1" 2>/dev/null | grep -E "^KAFKA_(BROKER|NODE)_ID=" | head -1 | cut -d= -f2
 }
 
 # docker containers of the brokers (running or stopped), one "<id> <container>" per line, sorted by id
@@ -35038,7 +35095,7 @@ function get_controller_containers () {
   for c in $candidates
   do
     is_container_running "$c" || continue
-    id=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$c" 2>/dev/null | grep -E "^KAFKA_NODE_ID=" | head -1 | cut -d= -f2)
+    id=$(container_env_dump "$c" 2>/dev/null | grep -E "^KAFKA_NODE_ID=" | head -1 | cut -d= -f2)
     [[ -n "$id" ]] && echo "$id $c"
   done | sort -n
 }
@@ -35824,7 +35881,7 @@ function jmx_glob_re(g,    r, i, c) {
 # or the attribute doesn't exist). Returns 1 when the JMX metrics of the container can't be read.
 function jmx_digest_read () {
     local container="$1" spec="$2" port raw="" jar beans work_dir
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2>/dev/null | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    port=$(container_env_dump "$container" 2>/dev/null | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
     if [[ -z "$port" ]]
     then
         logwarn "⚠️ JMX is not enabled on container $container (no *_JMX_PORT environment variable), skipped"
@@ -36400,7 +36457,7 @@ function db_container_env () {
     then
       db_container_env_cache=$(kubectl -n confluent get pod "$db_container" -o jsonpath='{range .spec.containers[0].env[*]}{.name}={.value}{"\n"}{end}' 2>/dev/null)
     else
-      db_container_env_cache=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$db_container" 2>/dev/null)
+      db_container_env_cache=$(container_env_dump "$db_container" 2>/dev/null)
     fi
   fi
   for var in "$@"
@@ -39953,16 +40010,29 @@ function get_tool_jdk_jvm_args() {
   echo "--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
 }
 
+# CP version of container $1: the tag of its image or, on a host of environment/ansible (no cp image), the version
+# cp-ansible installed (archive folder, or the confluent-server / confluent-kafka-connect... package)
+function get_container_cp_tag () {
+  local container="$1"
+  if is_ansible_host "$container"
+  then
+    docker exec "$container" sh -c 'ls -d /opt/confluent/confluent-[0-9]* 2> /dev/null | sed "s|.*/confluent-||" | sort -V | tail -1; dpkg-query -W -f="\${Version}\n" "confluent-*" 2> /dev/null | cut -d "-" -f 1' 2> /dev/null | grep -E '^[0-9]+\.[0-9]+' | tail -1
+    return 0
+  fi
+  docker inspect -f '{{.Config.Image}}' "$container" 2> /dev/null | awk -F ':' '{print $NF}'
+  return 0
+}
+
 function get_connect_image() {
   set +e
-  CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  CP_CONNECT_TAG=$(get_container_cp_tag connect)
   # mdc-* environments have no connect container but connect-us and connect-europe (same version): without them, the
   # default TAG was used, and a 7.x environment got the options of the CP 8.2+ tools
   if [ -z "$CP_CONNECT_TAG" ]
   then
     for mdc_connect_container in "connect-${PLAYGROUND_CLUSTER:-us}" connect-us connect-europe
     do
-      CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' "$mdc_connect_container" 2> /dev/null | cut -d ":" -f 2)
+      CP_CONNECT_TAG=$(get_container_cp_tag "$mdc_connect_container")
       if [ -n "$CP_CONNECT_TAG" ]
       then
         break
@@ -40581,7 +40651,7 @@ function get_jmx_metrics() {
       return 1
     fi
     # KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT, KSQL_JMX_PORT... set in the docker compose files of the environments
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    port=$(container_env_dump "$container" | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
     if [[ -z "$port" ]]
     then
       logerror "❌ JMX is not enabled on container $container (no *_JMX_PORT environment variable)"
@@ -43002,17 +43072,114 @@ function benchmark_jms_load () {
   echo "BENCHMARK_RECORDS=$records"
 }
 
+# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform
+function is_ansible_host () {
+  [[ "$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)" == kdp-ansible-host* ]]
+}
+
+# confluent-* systemd services of a host of environment/ansible (confluent-server, confluent-kcontroller,
+# confluent-kafka-connect...), stopped or failed ones included
+function ansible_host_units () {
+  docker exec "$1" systemctl list-units 'confluent-*' --type=service --all --no-legend --plain 2> /dev/null | awk '{print $1}'
+}
+
+# environment variables of container $1, one VAR=value per line: the env of its docker image or, on a host of
+# environment/ansible, the env of the JVM of its confluent-* services (KAFKA_HEAP_OPTS, KAFKA_JMX_PORT... set by the
+# <component>_service_environment_overrides of the inventory), plus KAFKA_NODE_ID from the node.id of its properties file
+function container_env_dump () {
+  local container="$1"
+  if ! is_ansible_host "$container"
+  then
+    docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null
+    return 0
+  fi
+  docker exec "$container" sh -c '
+    for unit in $(systemctl list-units "confluent-*" --type=service --all --no-legend --plain | awk "{print \$1}")
+    do
+      pid=$(systemctl show -p MainPID --value "$unit")
+      if [ "${pid:-0}" = "0" ]
+      then
+        # service stopped (playground broker stop): its properties file from the unit, so the broker is still found
+        props=$(systemctl show -p ExecStart --value "$unit" | grep -o "[^ ]*\.properties" | head -1)
+      else
+        tr "\0" "\n" < /proc/$pid/environ
+        props=$(tr "\0" "\n" < /proc/$pid/cmdline | grep "\.properties$" | tail -1)
+      fi
+      if [ -n "$props" ] && [ -f "$props" ]
+      then
+        sed -n "s/^node\.id=/KAFKA_NODE_ID=/p" "$props"
+      fi
+    done' 2> /dev/null
+  return 0
+}
+
+# docker container logs [--tail N|all] [--since S] [-f] <container>. On a host of environment/ansible, docker logs only
+# shows systemd: read instead the journald logs of its confluent-* services (log4j output and JVM stdout/stderr)
+function container_logs () {
+  local container="${@: -1}"
+  if ! is_ansible_host "$container"
+  then
+    docker container logs "$@"
+    return
+  fi
+  local journal_args=(--no-pager -o cat) value units unit
+  while [ $# -gt 1 ]
+  do
+    case "$1" in
+      --tail|--since)
+        value="$2"
+        set -- "$1=$value" "${@:3}"
+        continue
+        ;;
+      --tail=*)
+        value="${1#--tail=}"
+        if [ "$value" != "all" ]
+        then
+          journal_args+=(-n "$value")
+        fi
+        ;;
+      --since=*)
+        value="${1#--since=}"
+        # docker: 10m, 1h30m or 2026-11-13T15:00:00 -> journalctl: -10m or "2026-11-13 15:00:00"
+        if [[ "$value" =~ ^[0-9]+[smhd]([0-9]+[smhd])*$ ]]
+        then
+          value="-$value"
+        else
+          value=$(echo "$value" | sed -e 's/T/ /' -e 's/Z$//' -e 's/\.[0-9]*$//')
+        fi
+        journal_args+=(--since "$value")
+        ;;
+      -f|--follow)
+        journal_args+=(-f)
+        ;;
+    esac
+    shift
+  done
+  units=$(ansible_host_units "$container")
+  if [ -z "$units" ]
+  then
+    # the playbook did not install anything (yet) on this host
+    docker container logs "$container"
+    return
+  fi
+  for unit in $units
+  do
+    journal_args+=(-u "$unit")
+  done
+  docker exec "$container" journalctl "${journal_args[@]}"
+}
+
 function wait_for_log () {
   message="$1"
   container=${2:-connect}
   max_wait=${3:-600}
   cur_wait=0
   log "⌛ Waiting up to $max_wait seconds for message $message to be present in $container container logs..."
-  docker container logs ${container} > /tmp/out.txt 2>&1
+  container_logs ${container} > /tmp/out.txt 2>&1
   while ! grep "$message" /tmp/out.txt > /dev/null;
   do
   sleep 10
-  docker container logs ${container} > /tmp/out.txt 2>&1
+  container_logs ${container} > /tmp/out.txt 2>&1
   cur_wait=$(( cur_wait+10 ))
   if [[ "$cur_wait" -gt "$max_wait" ]]; then
     logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'."
@@ -52736,7 +52903,7 @@ playground_run_command() {
   if [[ -z "$environment" ]] && [[ -n "$PLAYGROUND_ENVIRONMENT" ]] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ] && [[ $test_file_rel != *"ccloud"* ]]
   then
     case "$PLAYGROUND_ENVIRONMENT" in
-      ccloud|cfk|cfk-rbac|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer)
+      ccloud|cfk|cfk-rbac|ansible|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer)
         if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
         if [ -n "$connector_paths" ]
         then
@@ -56173,6 +56340,12 @@ playground_update_version_command() {
   if [[ "$environment" == cfk* ]]
   then
     logerror "❌ update-version is not available with the $environment environment: run the example again with playground run --tag / --connector-tag"
+    exit 1
+  fi
+  if [[ "$environment" == ansible* ]]
+  then
+    logerror "❌ update-version is not available with the ansible environment: an upgrade is the playbook again with a new version"
+    log "    set confluent_package_version in environment/ansible/inventory/hosts.yml, then: docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
     exit 1
   fi
   if [ "$(playground state get run.connector_type)" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
@@ -65910,7 +66083,7 @@ playground_analyze_thread_dump_command() {
               : > "$dumps_file"
               for i in $(seq 1 "$count")
               do
-                  playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l 1" >> "$dumps_file" 2>&1
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l $(container_java_pid "$resolved_container" || echo 1)" >> "$dumps_file" 2>&1
                   [[ $i -lt $count ]] && sleep "$interval"
               done
           fi
@@ -66353,7 +66526,7 @@ playground_analyze_logs_command() {
               fi
           else
               fetch_status=0
-              docker container logs "$container" > "$container_log" 2>&1 || fetch_status=$?
+              container_logs "$container" > "$container_log" 2>&1 || fetch_status=$?
           fi
           if [[ $fetch_status -ne 0 ]]
           then
@@ -69248,7 +69421,7 @@ playground_analyze_flight_recorder_command() {
 
   # ── Container mode: record the JVM over JMX ──
   if [[ -n "$container" ]]; then
-      port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1)
+      port=$(container_env_dump "$container" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1)
       if [[ -z "$port" ]]; then
           logerror "❌ container $container is not running or has no JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...): the flight recorder is driven over JMX"
           exit 1
@@ -69787,7 +69960,9 @@ playground_debug_thread_dump_command() {
           log "💡 playground container change-jdk --version 17 installs a JDK, but it RESTARTS the container: the state you want to look at is lost"
           return 1
       fi
-      playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l 1" > "$filename" 2>&1
+      local java_pid
+      java_pid=$(container_java_pid "$resolved_container")
+      playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l ${java_pid:-1}" > "$filename" 2>&1
   }
 
   # Convert space-separated string to array
@@ -69899,7 +70074,7 @@ playground_debug_thread_analyze_command() {
               : > "$dumps_file"
               for i in $(seq 1 "$count")
               do
-                  playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l 1" >> "$dumps_file" 2>&1
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l $(container_java_pid "$resolved_container" || echo 1)" >> "$dumps_file" 2>&1
                   [[ $i -lt $count ]] && sleep "$interval"
               done
           fi
@@ -70000,6 +70175,9 @@ playground_debug_heap_dump_command() {
   for container in "${container_array[@]}"
   do
       resolved_container=$(resolve_container_name_for_environment "$container")
+      # 1 in the cp images, the JVM of the service on environment/ansible (PID 1 is systemd there)
+      java_pid=$(container_java_pid "$resolved_container")
+      java_pid=${java_pid:-1}
       target_container_name=$(get_cfk_target_container_name "$container")
 
       playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
@@ -70049,7 +70227,7 @@ playground_debug_heap_dump_command() {
               then
                   kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo:live 1" > /tmp/${filename}
               else
-                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo:live 1" > /tmp/${filename}
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo:live $java_pid" > /tmp/${filename}
               fi
           else
               log "📊 Taking histo (without live option) heap dump on container ${container}"
@@ -70057,7 +70235,7 @@ playground_debug_heap_dump_command() {
               then
                   kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo 1" > /tmp/${filename}
               else
-                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo 1" > /tmp/${filename}
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo $java_pid" > /tmp/${filename}
               fi
           fi
           if [ $? -eq 0 ]
@@ -70076,7 +70254,7 @@ playground_debug_heap_dump_command() {
               then
                   kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:live,format=b,file=/tmp/${filename} 1"
               else
-                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:live,format=b,file=/tmp/${filename} 1"
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:live,format=b,file=/tmp/${filename} $java_pid"
               fi
           else
               log "🎯 Taking heap dump (without live option) on container ${container}"
@@ -70084,7 +70262,7 @@ playground_debug_heap_dump_command() {
               then
                   kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:format=b,file=/tmp/${filename} 1"
               else
-                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:format=b,file=/tmp/${filename} 1"
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:format=b,file=/tmp/${filename} $java_pid"
               fi
           fi
           if [ $? -eq 0 ]
@@ -70484,7 +70662,7 @@ playground_debug_analyze_logs_command() {
               fi
           else
               fetch_status=0
-              docker container logs "$container" > "$container_log" 2>&1 || fetch_status=$?
+              container_logs "$container" > "$container_log" 2>&1 || fetch_status=$?
           fi
           if [[ $fetch_status -ne 0 ]]
           then
@@ -73413,7 +73591,7 @@ playground_debug_jscissors_command() {
       then
           return 0
       fi
-      docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
+      container_env_dump "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
   }
 
   function in_container () {
@@ -73733,7 +73911,7 @@ playground_debug_flight_recorder_command() {
   #   jmx <jmx port> <recording id> <settings> <start epoch>   recording driven over JMX (FlightRecorderMXBean)
   #   jcmd - dump1 <settings> <start epoch>                    recording started with jcmd (cfk pods, no JMX port)
   function jmx_port_of () {
-      docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
+      container_env_dump "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
   }
 
   function format_epoch () {
@@ -73800,7 +73978,7 @@ playground_debug_flight_recorder_command() {
                   remote_settings="/tmp/$(basename "$settings_file")"
                   playground container cp --source "$settings_file" --destination "$container:$remote_settings" > /dev/null 2>&1
               fi
-              if playground --output-level ERROR container exec --container "$container" --command "jcmd 1 JFR.start name=dump1 settings=$remote_settings"
+              if playground --output-level ERROR container exec --container "$container" --command "jcmd $(container_java_pid "$container" || echo 1) JFR.start name=dump1 settings=$remote_settings"
               then
                   playground state set "flight_recorder.$container" "jcmd - dump1 $settings $(date +%s)"
                   log "🛩️ flight recorder is now started on $container with jcmd (settings $settings)"
@@ -73829,7 +74007,7 @@ playground_debug_flight_recorder_command() {
                   mv "$recorded" "$filename"
               else
                   remote="/tmp/$(basename "$filename")"
-                  if ! playground --output-level ERROR container exec --container "$container" --command "jcmd 1 JFR.stop name=dump1 filename=$remote"
+                  if ! playground --output-level ERROR container exec --container "$container" --command "jcmd $(container_java_pid "$container" || echo 1) JFR.stop name=dump1 filename=$remote"
                   then
                       playground state del "flight_recorder.$container" > /dev/null 2>&1
                       logerror "❌ failed to stop the flight recorder of $container with jcmd"
@@ -74414,6 +74592,12 @@ playground_container_recreate_command() {
       logerror "❌ container recreate is not supported in cfk mode"
       exit 1
   fi
+  if [[ "$environment" == ansible* ]]
+  then
+      logerror "❌ container recreate is not supported in ansible mode: a recreated host loses what the playbook installed, run the playbook again instead"
+      log "    docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
+      exit 1
+  fi
 
   export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
@@ -74826,7 +75010,7 @@ playground_container_logs_command() {
               fi
               kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
           else
-              docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
+              container_logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
           fi
           continue
       fi
@@ -74899,7 +75083,7 @@ playground_container_logs_command() {
       if [[ -n "$open" ]]
       then
           filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
-          docker container logs "$resolved_container" > "$filename" 2>&1
+          container_logs "$resolved_container" > "$filename" 2>&1
           if [ $? -eq 0 ]
           then
               playground open --file "${filename}"
@@ -74913,21 +75097,21 @@ playground_container_logs_command() {
       then
           if [[ -n "$run_in_background" ]]; then
               # For multiple containers, filter and prefix each stream in parallel.
-              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+              container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
           elif [ ${#container_array[@]} -gt 1 ]; then
-              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /"
+              container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /"
           else
-              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep"
+              container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep"
           fi
       else
           if [[ -n "$run_in_background" ]]; then
               # Add container prefix to distinguish logs from different containers
-              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+              container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
           elif [ ${#container_array[@]} -gt 1 ]; then
-              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /"
+              container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /"
           else
               # For single container, use normal behavior without prefix
-              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container"
+              container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container"
           fi
       fi
   done
@@ -75080,7 +75264,7 @@ playground_container_display_error_all_command() {
           then
               digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
           else
-              digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
+              digest=$(container_logs "${since_opt[@]}" "$container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
           fi
           # a failed assertion (no record received, wrong count) usually logs no error at all, so connect tail is always shown
           if [[ "$digest" == "✅"* ]] && [[ "$container" != connect* ]]
@@ -75103,7 +75287,7 @@ playground_container_display_error_all_command() {
               then
                   kubectl -n confluent logs "$container" --tail=50
               else
-                  docker container logs --tail=50 "$container"
+                  container_logs --tail=50 "$container"
               fi
           fi
           log "####################################################"
@@ -76598,7 +76782,7 @@ playground_topic_get_number_records_command() {
       then
           committed_tag="$cached_cfk_tag"
       else
-          container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+          container_tag=$(get_container_cp_tag "$container")
           if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
           then
               committed_tag="$container_tag"
@@ -76705,7 +76889,7 @@ playground_topic_get_number_records_command() {
           else
               # GetOffsetShell runs in $container (the broker, or the kerberos client): its version, not the one of
               # connect (--connect-tag), decides the class name
-              container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+              container_tag=$(get_container_cp_tag "$container")
               if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
               then
                   tag="$container_tag"
@@ -82207,7 +82391,19 @@ playground_broker_stop_command() {
       logwarn "⚠️ broker $broker is the only running broker: the cluster is unavailable until it starts again"
   fi
 
-  if [[ -n "$kill" ]]
+  if is_ansible_host "$container"
+  then
+      # environment/ansible: the host stays up, its service stops (Restart=no in the cp-ansible units: a killed broker stays down)
+      units=$(ansible_host_units "$container")
+      if [[ -n "$kill" ]]
+      then
+          log "🔫 Killing broker $broker (systemctl kill -s KILL $units on host $container): no controlled shutdown, like a crash"
+          docker exec "$container" systemctl kill -s KILL $units || exit 1
+      else
+          log "🛑 Stopping broker $broker (systemctl stop $units on host $container): controlled shutdown, its leaders move to the other replicas first"
+          docker exec "$container" systemctl stop $units || exit 1
+      fi
+  elif [[ -n "$kill" ]]
   then
       log "🔫 Killing broker $broker (container $container): no controlled shutdown, like a crash"
       docker kill "$container" > /dev/null || exit 1
@@ -82235,8 +82431,16 @@ playground_broker_start_command() {
   then
       logwarn "🤷 broker $broker (container $container) is already running"
   else
-      log "▶️ Starting broker $broker (container $container)"
-      docker start "$container" > /dev/null || exit 1
+      if is_ansible_host "$container" && docker inspect -f '{{.State.Running}}' "$container" 2> /dev/null | grep -q true
+      then
+          # environment/ansible: the host is up, its service was stopped
+          units=$(ansible_host_units "$container")
+          log "▶️ Starting broker $broker (systemctl start $units on host $container)"
+          docker exec "$container" systemctl start $units || exit 1
+      else
+          log "▶️ Starting broker $broker (container $container)"
+          docker start "$container" > /dev/null || exit 1
+      fi
   fi
 
   if [[ -n "$no_wait" ]]
@@ -82309,7 +82513,13 @@ playground_broker_rolling_restart_command() {
       container="$broker_id_container"
       broker_start_time=$SECONDS
       log "🔄 [$i/$nb] Restarting broker $id (container $container)"
-      docker restart -t 60 "$container" > /dev/null || exit 1
+      if is_ansible_host "$container"
+      then
+          # environment/ansible: restart the service, as on a real host
+          docker exec "$container" systemctl restart $(ansible_host_units "$container") || exit 1
+      else
+          docker restart -t 60 "$container" > /dev/null || exit 1
+      fi
       wait_for_broker_registered "$id" "$max_wait" || exit 1
       # at least 10s left for the health check, even when the registration took most of --max-wait
       remaining=$((max_wait - (SECONDS - broker_start_time)))
@@ -83273,6 +83483,15 @@ playground_ksqldb_sql_command() {
 
   get_ksqldb_url_and_security
   container="ksqldb-cli"
+  timeout_options=""
+  if is_ansible_host ksqldb-server
+  then
+      # environment/ansible: no ksqldb-cli container, the ksql cli of the archive is on the ksqldb-server host
+      container="ksqldb-server"
+      # with docker exec -t, timeout runs the cli in a background process group, and the cli is stopped as soon as it
+      # touches the terminal (it never returns): keep it in the foreground (the timeout still stops it)
+      timeout_options="--foreground"
+  fi
   if [[ -z "$(docker ps --filter "name=^${container}$" --filter "status=running" --format "{{.Names}}")" ]]
   then
       logerror "❌ the $container container is not running: start an example with playground run --enable-ksqldb"
@@ -83306,7 +83525,7 @@ playground_ksqldb_sql_command() {
   rc=0
   # -t + stty: the cli formats the tables for the terminal width. --file runs every statement, even after a failing one,
   # and prints the errors in red
-  output=$(docker exec -t "$container" sh -c "stty cols $width 2>/dev/null; timeout $max_wait ksql $cli_options --file /tmp/playground-ksqldb-statements.sql http://ksqldb-server:8088" 2>&1) || rc=$?
+  output=$(docker exec -t "$container" sh -c "stty cols $width 2>/dev/null; timeout $timeout_options $max_wait ksql $cli_options --file /tmp/playground-ksqldb-statements.sql http://ksqldb-server:8088" 2>&1) || rc=$?
   output=$(printf '%s\n' "$output" | tr -d '\r')
 
   # the errors of the statements are the red lines
@@ -89631,6 +89850,11 @@ playground_connector_smt_test_command() {
   if [ $connect_running -eq 1 ]
   then
       hub_image=$(docker inspect -f '{{.Config.Image}}' "$smt_connect_container")
+      if is_ansible_host "$smt_connect_container"
+      then
+          # environment/ansible: the worker is not a cp image, confluent-hub runs in the cp image of the same version
+          hub_image="confluentinc/cp-server-connect:$(get_container_cp_tag "$smt_connect_container")"
+      fi
   fi
   for spec in "${smt_plugins[@]}"
   do
@@ -89664,8 +89888,8 @@ playground_connector_smt_test_command() {
       release=$(smt_tester_java_release "$java_version")
       classes=$(smt_tester_classes "$jar_dir" "$release") || return 1
       # the classpath and the properties file of the running worker jvm
-      classpath=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
-      worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+      classpath=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/$(container_java_pid "$smt_connect_container" || echo 1)/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
+      worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/$(container_java_pid "$smt_connect_container" || echo 1)/cmdline | tail -1" 2> /dev/null)
       plugin_path=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
       playground --output-level ERROR container exec --container "$smt_connect_container" --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
       playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination "$smt_connect_container":/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
@@ -89699,7 +89923,7 @@ playground_connector_smt_test_command() {
       then
           # same network and worker settings as the running example, for --from-topic and schema registry
           network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$smt_connect_container" | awk '{print $1}')
-          worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+          worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/$(container_java_pid "$smt_connect_container" || echo 1)/cmdline | tail -1" 2> /dev/null)
           playground --output-level ERROR container cp --source "$smt_connect_container:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
       fi
       [ -f "$work/worker.properties" ] || echo "bootstrap.servers=broker:9092" > "$work/worker.properties"
@@ -94983,7 +95207,7 @@ playground_connector_metrics_command() {
   # "extra|<object name>|<attribute>|<value>" lines for the other MBeans of the connector (Debezium, MongoDB, Oracle CDC...)
   function read_task_mbeans() {
       local connector="$1" container="$2" prefix="$3" port output
-      port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
+      port=$(container_env_dump "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
       if [[ -z "$port" ]]
       then
           # stderr: this function runs inside $(...), stdout is the data
@@ -110615,8 +110839,8 @@ playground_run_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|cfk|cfk-rbac|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|cfk|cfk-rbac|ansible|plaintext|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, cfk, cfk-rbac, ansible, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer" >&2
     exit 1
   fi
   if [[ ${args['--cluster-cloud']:-} ]] && [[ ! ${args['--cluster-cloud']:-} =~ ^(aws|gcp|azure)$ ]]; then
@@ -111479,8 +111703,8 @@ playground_start_environment_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|cfk|cfk-rbac|kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
-    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
+  if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(ccloud|2way-ssl|ansible|cfk|cfk-rbac|kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|mdc-kerberos|mdc-plaintext|mdc-sasl-plain|plaintext|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer|sasl-plain|sasl-scram|sasl-ssl|ssl_kerberos)$ ]]; then
+    printf "%s\n" "--environment must be one of: ccloud, 2way-ssl, ansible, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos" >&2
     exit 1
   fi
 
@@ -114665,6 +114889,13 @@ playground_get_docker_compose_parse_requirements() {
 
     esac
   done
+
+  # :command.user_filter
+  filter_error=$(filter_not_ansible_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
 
 }
 
@@ -120073,6 +120304,13 @@ playground_tcp_proxy_start_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--break-service-response BREAK-SERVICE-RESPONSE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_ansible_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
   fi
 
 }
@@ -130077,6 +130315,13 @@ playground_container_update_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
 
+  # :command.user_filter
+  filter_error=$(filter_not_ansible_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -130853,6 +131098,13 @@ playground_container_change_jdk_parse_requirements() {
     exit 1
   fi
 
+  # :command.user_filter
+  filter_error=$(filter_not_ansible_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -131558,6 +131810,13 @@ playground_container_set_environment_variables_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.user_filter
+  filter_error=$(filter_not_ansible_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
 
 }
 
@@ -160501,6 +160760,7 @@ playground_run_completion() {
             "ccloud"
             "cfk"
             "cfk-rbac"
+            "ansible"
             "plaintext"
             "sasl-ssl"
             "sasl-plain"
@@ -161305,6 +161565,7 @@ playground_start_environment_completion() {
           local -a completion_values=(
             "ccloud"
             "2way-ssl"
+            "ansible"
             "cfk"
             "cfk-rbac"
             "kerberos"

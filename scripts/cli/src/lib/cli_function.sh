@@ -312,7 +312,22 @@ function resolve_traffic_destination_ips() {
 
 function is_container_running() {
   container_name=$1
-  docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"
+  local state
+  state=$(docker inspect -f '{{.State.Running}} {{.Config.Image}}' "$container_name" 2>/dev/null)
+  [[ "$state" == true* ]] || return 1
+  # a host of environment/ansible runs when its confluent-* services do (playground broker stop stops the service,
+  # not the host). A host where the playbook installed nothing yet counts as running
+  if [[ "$state" == "true kdp-ansible-host"* ]]
+  then
+    local units
+    units=$(ansible_host_units "$container_name")
+    if [ -n "$units" ]
+    then
+      docker exec "$container_name" systemctl is-active --quiet $units
+      return $?
+    fi
+  fi
+  return 0
 }
 
 function get_connect_container() {
@@ -1121,6 +1136,13 @@ function get_running_cp_tag() {
     echo "$tag"
     return
   fi
+  if [[ "$running_environment" == ansible* ]]
+  then
+    # no cp images: the version cp-ansible installed in the broker host
+    tag=$(get_container_cp_tag broker)
+    echo "$tag"
+    return
+  fi
   images=$(docker ps --format '{{.Image}}')
   tag=$(echo "$images" | grep -E 'confluentinc/cp-.*-connect.*:' | head -1 | awk -F':' '{print $2}')
   if [ -z "$tag" ]
@@ -1170,6 +1192,11 @@ function get_security_broker() {
       security="$config_file_name /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [[ "$environment" == ansible* ]]
+  then
+      # written by cp-ansible with the security of the inventory (client_config_file), linked to /etc/kafka by
+      # environment/ansible/start.sh for an archive install
+      security="$config_file_name /etc/kafka/client.properties"
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"
@@ -1256,7 +1283,7 @@ function get_admin_tool_cp_tag() {
   get_environment_used
   if [[ "$environment" != "ccloud" ]] && [[ "$environment" != cfk* ]]
   then
-    tag=$(get_security_broker "--command-config" > /dev/null 2>&1; docker inspect -f '{{.Config.Image}}' "$container" 2> /dev/null | awk -F ':' '{print $NF}')
+    tag=$(get_security_broker "--command-config" > /dev/null 2>&1; get_container_cp_tag "$container")
   fi
   if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
   then
@@ -2713,7 +2740,7 @@ function get_container_env_value() {
     kubectl -n confluent exec "$container" -- printenv "$variable" 2> /dev/null
     return 0
   fi
-  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | sed -n "s/^${variable}=//p" | head -1
+  container_env_dump "$container" 2> /dev/null | sed -n "s/^${variable}=//p" | head -1
   return 0
 }
 
@@ -3041,6 +3068,15 @@ function filter_not_cfk_environment() {
   if [[ "$environment" == cfk* ]]
   then
     logerror "this command is not available with $environment (the brokers are pods managed by Confluent for Kubernetes)"
+  fi
+}
+
+function filter_not_ansible_environment() {
+  get_environment_used
+
+  if [[ "$environment" == ansible* ]]
+  then
+    logerror "this command is not available with $environment: the containers are hosts where cp-ansible installed Confluent Platform, recreating them deletes the installation. Change the inventory environment/ansible/inventory/hosts.yml (<component>_service_environment_overrides for environment variables, <component>_custom_properties for properties), then run the playbook again: docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
   fi
 }
 
@@ -5114,7 +5150,7 @@ function get_example_supported_environments () {
   then
     skips_cfk=1
   fi
-  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  for environment_name in plaintext ccloud cfk cfk-rbac ansible 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
   do
     if [[ "$environment_name" == cfk* ]] && [ $skips_cfk == 1 ]
     then
@@ -9046,12 +9082,33 @@ function reset_container_engine_detection() {
 # log4j lines removed) into the output file.
 # $1: container (as given on the command line), $2: number of dumps, $3: seconds between dumps, $4: output file
 # Returns 0 when at least one dump was captured.
+# pid of the JVM of container $1 (resolved name): 1 in the cp images, else the first java process. On a host of
+# environment/ansible, PID 1 is systemd (attaching jmap/jcmd to it, or sending it SIGQUIT, stops the host): the
+# MainPID of its confluent-* service
+function container_java_pid() {
+  local resolved_container="$1" unit pid
+  if is_ansible_host "$resolved_container"
+  then
+    for unit in $(ansible_host_units "$resolved_container")
+    do
+      pid=$(docker exec "$resolved_container" systemctl show -p MainPID --value "$unit" 2> /dev/null)
+      if [ -n "$pid" ] && [ "$pid" != "0" ]
+      then
+        echo "$pid"
+        return 0
+      fi
+    done
+    return 1
+  fi
+  playground --output-level ERROR container exec --container "$resolved_container" --command "if ls -l /proc/1/exe 2>/dev/null | grep -q java; then echo 1; else for p in /proc/[0-9]*; do if tr '\\000' ' ' < \$p/cmdline 2>/dev/null | grep -q '^[^ ]*java '; then echo \${p#/proc/}; break; fi; done; fi" 2>/dev/null | tr -d '\r' | head -1
+}
+
 function take_thread_dumps_with_kill_quit() {
   local container="$1" count="$2" interval="$3" output_file="$4"
   local resolved_container pid start since raw_file i
 
   resolved_container=$(resolve_container_name_for_environment "$container")
-  pid=$(playground --output-level ERROR container exec --container "$resolved_container" --command "if ls -l /proc/1/exe 2>/dev/null | grep -q java; then echo 1; else for p in /proc/[0-9]*; do if tr '\\000' ' ' < \$p/cmdline 2>/dev/null | grep -q '^[^ ]*java '; then echo \${p#/proc/}; break; fi; done; fi" 2>/dev/null | tr -d '\r' | head -1)
+  pid=$(container_java_pid "$resolved_container")
   if [[ -z "$pid" ]]
   then
     logwarn "no java process found in container $container"
@@ -9767,7 +9824,7 @@ function benchmark_collect_setup () {
   local jvm=""
   if [ -n "$first_worker" ]
   then
-    heap=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
+    heap=$(container_env_dump "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
     jvm=$(printf 'get -b java.lang:type=Runtime VmVersion\nget -b java.lang:type=OperatingSystem AvailableProcessors\nget -b java.lang:type=Memory HeapMemoryUsage\nexit\n' | benchmark_jmxterm "$first_worker" "$(echo "$workers" | head -1 | awk '{ print $2 }')")
   fi
   jvm_version=$(echo "$jvm" | sed -n 's/^VmVersion = \(.*\);$/\1/p')
@@ -10585,7 +10642,7 @@ function display_newer_cp_patch_hint () {
   current_cp_version=""
   for container in broker connect
   do
-    current_cp_version=$(docker inspect -f '{{.Config.Image}}' $container 2> /dev/null | cut -d ":" -f 2)
+    current_cp_version=$(get_container_cp_tag $container)
     if [ -n "$current_cp_version" ]
     then
       break
@@ -11128,7 +11185,7 @@ function run_kafka_admin_subcommand_tool () {
 
 # id of the broker run by docker container $1 (running or stopped), empty when it is not a broker
 function get_broker_id_of_container () {
-  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2>/dev/null | grep -E "^KAFKA_(BROKER|NODE)_ID=" | head -1 | cut -d= -f2
+  container_env_dump "$1" 2>/dev/null | grep -E "^KAFKA_(BROKER|NODE)_ID=" | head -1 | cut -d= -f2
 }
 
 # docker containers of the brokers (running or stopped), one "<id> <container>" per line, sorted by id
@@ -11162,7 +11219,7 @@ function get_controller_containers () {
   for c in $candidates
   do
     is_container_running "$c" || continue
-    id=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$c" 2>/dev/null | grep -E "^KAFKA_NODE_ID=" | head -1 | cut -d= -f2)
+    id=$(container_env_dump "$c" 2>/dev/null | grep -E "^KAFKA_NODE_ID=" | head -1 | cut -d= -f2)
     [[ -n "$id" ]] && echo "$id $c"
   done | sort -n
 }
@@ -11948,7 +12005,7 @@ function jmx_glob_re(g,    r, i, c) {
 # or the attribute doesn't exist). Returns 1 when the JMX metrics of the container can't be read.
 function jmx_digest_read () {
     local container="$1" spec="$2" port raw="" jar beans work_dir
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2>/dev/null | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    port=$(container_env_dump "$container" 2>/dev/null | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
     if [[ -z "$port" ]]
     then
         logwarn "⚠️ JMX is not enabled on container $container (no *_JMX_PORT environment variable), skipped"

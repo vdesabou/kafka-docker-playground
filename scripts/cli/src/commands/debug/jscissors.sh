@@ -40,7 +40,7 @@ function jmx_port_of () {
     then
         return 0
     fi
-    docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
+    container_env_dump "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
 }
 
 function in_container () {

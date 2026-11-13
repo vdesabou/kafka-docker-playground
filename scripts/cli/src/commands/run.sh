@@ -293,7 +293,7 @@ test_file_rel=$(example_relative_path "$test_file")
 if [[ -z "$environment" ]] && [[ -n "$PLAYGROUND_ENVIRONMENT" ]] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ] && [[ $test_file_rel != *"ccloud"* ]]
 then
   case "$PLAYGROUND_ENVIRONMENT" in
-    ccloud|cfk|cfk-rbac|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer)
+    ccloud|cfk|cfk-rbac|ansible|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain|rbac-oauth|sasl-oauthbearer)
       if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
       if [ -n "$connector_paths" ]
       then

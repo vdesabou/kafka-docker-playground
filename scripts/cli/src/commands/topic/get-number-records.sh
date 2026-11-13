@@ -109,7 +109,7 @@ then
     then
         committed_tag="$cached_cfk_tag"
     else
-        container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+        container_tag=$(get_container_cp_tag "$container")
         if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
         then
             committed_tag="$container_tag"
@@ -216,7 +216,7 @@ do
         else
             # GetOffsetShell runs in $container (the broker, or the kerberos client): its version, not the one of
             # connect (--connect-tag), decides the class name
-            container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+            container_tag=$(get_container_cp_tag "$container")
             if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
             then
                 tag="$container_tag"

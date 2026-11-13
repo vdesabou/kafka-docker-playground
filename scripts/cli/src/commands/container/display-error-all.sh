@@ -126,7 +126,7 @@ else
         then
             digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
         else
-            digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
+            digest=$(container_logs "${since_opt[@]}" "$container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
         fi
         # a failed assertion (no record received, wrong count) usually logs no error at all, so connect tail is always shown
         if [[ "$digest" == "✅"* ]] && [[ "$container" != connect* ]]
@@ -149,7 +149,7 @@ else
             then
                 kubectl -n confluent logs "$container" --tail=50
             else
-                docker container logs --tail=50 "$container"
+                container_logs --tail=50 "$container"
             fi
         fi
         log "####################################################"

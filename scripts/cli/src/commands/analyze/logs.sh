@@ -242,7 +242,7 @@ then
             fi
         else
             fetch_status=0
-            docker container logs "$container" > "$container_log" 2>&1 || fetch_status=$?
+            container_logs "$container" > "$container_log" 2>&1 || fetch_status=$?
         fi
         if [[ $fetch_status -ne 0 ]]
         then

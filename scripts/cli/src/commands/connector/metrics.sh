@@ -161,7 +161,7 @@ common_spec=$(echo "$common_spec" | sed 's/^[[:space:]]*//')
 # "extra|<object name>|<attribute>|<value>" lines for the other MBeans of the connector (Debezium, MongoDB, Oracle CDC...)
 function read_task_mbeans() {
     local connector="$1" container="$2" prefix="$3" port output
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
+    port=$(container_env_dump "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
     if [[ -z "$port" ]]
     then
         # stderr: this function runs inside $(...), stdout is the data

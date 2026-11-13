@@ -88,7 +88,7 @@ do
             fi
             kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
         else
-            docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
+            container_logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
         fi
         continue
     fi
@@ -161,7 +161,7 @@ do
     if [[ -n "$open" ]]
     then
         filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
-        docker container logs "$resolved_container" > "$filename" 2>&1
+        container_logs "$resolved_container" > "$filename" 2>&1
         if [ $? -eq 0 ]
         then
             playground open --file "${filename}"
@@ -175,21 +175,21 @@ do
     then
         if [[ -n "$run_in_background" ]]; then
             # For multiple containers, filter and prefix each stream in parallel.
-            docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+            container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
         elif [ ${#container_array[@]} -gt 1 ]; then
-            docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /"
+            container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /"
         else
-            docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep"
+            container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep"
         fi
     else
         if [[ -n "$run_in_background" ]]; then
             # Add container prefix to distinguish logs from different containers
-            docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+            container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
         elif [ ${#container_array[@]} -gt 1 ]; then
-            docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /"
+            container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /"
         else
             # For single container, use normal behavior without prefix
-            docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container"
+            container_logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container"
         fi
     fi
 done

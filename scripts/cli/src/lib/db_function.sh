@@ -121,7 +121,7 @@ function db_container_env () {
     then
       db_container_env_cache=$(kubectl -n confluent get pod "$db_container" -o jsonpath='{range .spec.containers[0].env[*]}{.name}={.value}{"\n"}{end}' 2>/dev/null)
     else
-      db_container_env_cache=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$db_container" 2>/dev/null)
+      db_container_env_cache=$(container_env_dump "$db_container" 2>/dev/null)
     fi
   fi
   for var in "$@"

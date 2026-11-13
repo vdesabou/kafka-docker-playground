@@ -59,7 +59,7 @@ done
 
 # ── Container mode: record the JVM over JMX ──
 if [[ -n "$container" ]]; then
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1)
+    port=$(container_env_dump "$container" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1)
     if [[ -z "$port" ]]; then
         logerror "❌ container $container is not running or has no JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...): the flight recorder is driven over JMX"
         exit 1

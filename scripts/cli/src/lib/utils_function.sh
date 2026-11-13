@@ -1283,16 +1283,29 @@ function get_tool_jdk_jvm_args() {
   echo "--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
 }
 
+# CP version of container $1: the tag of its image or, on a host of environment/ansible (no cp image), the version
+# cp-ansible installed (archive folder, or the confluent-server / confluent-kafka-connect... package)
+function get_container_cp_tag () {
+  local container="$1"
+  if is_ansible_host "$container"
+  then
+    docker exec "$container" sh -c 'ls -d /opt/confluent/confluent-[0-9]* 2> /dev/null | sed "s|.*/confluent-||" | sort -V | tail -1; dpkg-query -W -f="\${Version}\n" "confluent-*" 2> /dev/null | cut -d "-" -f 1' 2> /dev/null | grep -E '^[0-9]+\.[0-9]+' | tail -1
+    return 0
+  fi
+  docker inspect -f '{{.Config.Image}}' "$container" 2> /dev/null | awk -F ':' '{print $NF}'
+  return 0
+}
+
 function get_connect_image() {
   set +e
-  CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  CP_CONNECT_TAG=$(get_container_cp_tag connect)
   # mdc-* environments have no connect container but connect-us and connect-europe (same version): without them, the
   # default TAG was used, and a 7.x environment got the options of the CP 8.2+ tools
   if [ -z "$CP_CONNECT_TAG" ]
   then
     for mdc_connect_container in "connect-${PLAYGROUND_CLUSTER:-us}" connect-us connect-europe
     do
-      CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' "$mdc_connect_container" 2> /dev/null | cut -d ":" -f 2)
+      CP_CONNECT_TAG=$(get_container_cp_tag "$mdc_connect_container")
       if [ -n "$CP_CONNECT_TAG" ]
       then
         break
@@ -1911,7 +1924,7 @@ function get_jmx_metrics() {
       return 1
     fi
     # KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT, KSQL_JMX_PORT... set in the docker compose files of the environments
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    port=$(container_env_dump "$container" | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
     if [[ -z "$port" ]]
     then
       logerror "❌ JMX is not enabled on container $container (no *_JMX_PORT environment variable)"
@@ -4330,17 +4343,114 @@ function benchmark_jms_load () {
   echo "BENCHMARK_RECORDS=$records"
 }
 
+# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform
+function is_ansible_host () {
+  [[ "$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)" == kdp-ansible-host* ]]
+}
+
+# confluent-* systemd services of a host of environment/ansible (confluent-server, confluent-kcontroller,
+# confluent-kafka-connect...), stopped or failed ones included
+function ansible_host_units () {
+  docker exec "$1" systemctl list-units 'confluent-*' --type=service --all --no-legend --plain 2> /dev/null | awk '{print $1}'
+}
+
+# environment variables of container $1, one VAR=value per line: the env of its docker image or, on a host of
+# environment/ansible, the env of the JVM of its confluent-* services (KAFKA_HEAP_OPTS, KAFKA_JMX_PORT... set by the
+# <component>_service_environment_overrides of the inventory), plus KAFKA_NODE_ID from the node.id of its properties file
+function container_env_dump () {
+  local container="$1"
+  if ! is_ansible_host "$container"
+  then
+    docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null
+    return 0
+  fi
+  docker exec "$container" sh -c '
+    for unit in $(systemctl list-units "confluent-*" --type=service --all --no-legend --plain | awk "{print \$1}")
+    do
+      pid=$(systemctl show -p MainPID --value "$unit")
+      if [ "${pid:-0}" = "0" ]
+      then
+        # service stopped (playground broker stop): its properties file from the unit, so the broker is still found
+        props=$(systemctl show -p ExecStart --value "$unit" | grep -o "[^ ]*\.properties" | head -1)
+      else
+        tr "\0" "\n" < /proc/$pid/environ
+        props=$(tr "\0" "\n" < /proc/$pid/cmdline | grep "\.properties$" | tail -1)
+      fi
+      if [ -n "$props" ] && [ -f "$props" ]
+      then
+        sed -n "s/^node\.id=/KAFKA_NODE_ID=/p" "$props"
+      fi
+    done' 2> /dev/null
+  return 0
+}
+
+# docker container logs [--tail N|all] [--since S] [-f] <container>. On a host of environment/ansible, docker logs only
+# shows systemd: read instead the journald logs of its confluent-* services (log4j output and JVM stdout/stderr)
+function container_logs () {
+  local container="${@: -1}"
+  if ! is_ansible_host "$container"
+  then
+    docker container logs "$@"
+    return
+  fi
+  local journal_args=(--no-pager -o cat) value units unit
+  while [ $# -gt 1 ]
+  do
+    case "$1" in
+      --tail|--since)
+        value="$2"
+        set -- "$1=$value" "${@:3}"
+        continue
+        ;;
+      --tail=*)
+        value="${1#--tail=}"
+        if [ "$value" != "all" ]
+        then
+          journal_args+=(-n "$value")
+        fi
+        ;;
+      --since=*)
+        value="${1#--since=}"
+        # docker: 10m, 1h30m or 2026-11-13T15:00:00 -> journalctl: -10m or "2026-11-13 15:00:00"
+        if [[ "$value" =~ ^[0-9]+[smhd]([0-9]+[smhd])*$ ]]
+        then
+          value="-$value"
+        else
+          value=$(echo "$value" | sed -e 's/T/ /' -e 's/Z$//' -e 's/\.[0-9]*$//')
+        fi
+        journal_args+=(--since "$value")
+        ;;
+      -f|--follow)
+        journal_args+=(-f)
+        ;;
+    esac
+    shift
+  done
+  units=$(ansible_host_units "$container")
+  if [ -z "$units" ]
+  then
+    # the playbook did not install anything (yet) on this host
+    docker container logs "$container"
+    return
+  fi
+  for unit in $units
+  do
+    journal_args+=(-u "$unit")
+  done
+  docker exec "$container" journalctl "${journal_args[@]}"
+}
+
 function wait_for_log () {
   message="$1"
   container=${2:-connect}
   max_wait=${3:-600}
   cur_wait=0
   log "⌛ Waiting up to $max_wait seconds for message $message to be present in $container container logs..."
-  docker container logs ${container} > /tmp/out.txt 2>&1
+  container_logs ${container} > /tmp/out.txt 2>&1
   while ! grep "$message" /tmp/out.txt > /dev/null;
   do
   sleep 10
-  docker container logs ${container} > /tmp/out.txt 2>&1
+  container_logs ${container} > /tmp/out.txt 2>&1
   cur_wait=$(( cur_wait+10 ))
   if [[ "$cur_wait" -gt "$max_wait" ]]; then
     logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'playground container logs --open --container <container>'."

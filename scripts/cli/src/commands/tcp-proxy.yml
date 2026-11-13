@@ -25,6 +25,8 @@ help: |-
 commands:
 
 - name: start
+  filters:
+  - not_ansible_environment
   help: |-
     💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998
 

@@ -33,6 +33,13 @@ Every security example: `playground find-example --category security --limit 50`
 | Which operator code logs this error? | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |
 | What would a bundle of my repro look like? | `playground debug cfk generate-bundle`, then `analyze logs` on it |
 
+### 🅰️ cp-ansible
+
+| Question | Command or example |
+| --- | --- |
+| The playbook fails, renders a wrong properties file, or an upgrade breaks | `playground start-environment --environment ansible` (`--tag` for CP, `ANSIBLE_CP_VERSION` / `ANSIBLE_CORE_VERSION` for the customer's cp-ansible and ansible-core), then edit `environment/ansible/inventory/hosts.yml` and run the playbook again: recipes in [environment/ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ansible) |
+| A connector, ksqlDB or Control Center on a cluster deployed by cp-ansible | any `connect/` example with `--environment ansible` (`--enable-ksqldb`, `--enable-control-center`, `--enable-multiple-brokers`… add hosts): the example's compose override becomes inventory variables, and the `playground` commands work on the hosts (logs from journald, `broker stop` through systemd) |
+
 ### 🔐 Security
 
 | Question | Command or example |
