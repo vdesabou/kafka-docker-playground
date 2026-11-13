@@ -277,6 +277,71 @@ def records_file(tmp, text):
     return path
 
 
+def test_authorizer_stuck_startup():
+    """🚧 a broker whose startup waits for its RBAC authorizer and is killed each time (SIGTERM, then a start that recovers
+    the logs after the unclean stop), the last wait still going at the end of its log: the first known cause, the 👉 of the
+    verdict before the authorization failures of a healthy broker of the same bundle, its details (the listeners closed, the
+    metadata service reader never loaded, the unclean restarts), and a 🔁 restart loop that no "started" line shows. The
+    healthy broker, stopped once and started again after its wait ended, is neither stuck nor in a loop. Synthetic lines"""
+    def ev(kind, line, t, detail=""):
+        return f"@@PGEVT@@|{kind}|{line}|2026-11-07T{t}||{detail}\n"
+    stuck = ev("process_starting", 1, "09:40:00", "Kafka broker starting") + ev("authorizer_wait", 50, "09:45:00")
+    line = 100
+    for stop, start, wait in (("10:00:00", "10:00:10", "10:05:00"), ("10:20:00", "10:20:10", "10:30:00"), ("10:45:00", "10:45:10", "10:55:00")):
+        stuck += (ev("process_stop", line, stop, "Kafka broker stopping on SIGTERM") + ev("process_starting", line + 1, start, "Kafka broker starting")
+                  + ev("unclean_recovery", line + 2, start[:6] + "20", "4321") + ev("authorizer_wait", line + 3, wait))
+        line += 100
+    authz = "".join(ev("authorizer_endpoint_open", 10 + i, f"{t}:10", "REPLICATION:9091") + ev("authorizer_endpoint_wait", 11 + i, f"{t}:10", "CLIENT:9092")
+                    + ev("authorizer_endpoint_wait", 12 + i, f"{t}:10", "EXTERNAL:9093") for i, t in enumerate(("09:40", "10:00", "10:20", "10:45")))
+    mds = "".join(ev("auth_reader_start", 5 + i, f"{t}:05") for i, t in enumerate(("09:40", "10:00", "10:20", "10:45")))
+    denied = ("@@PGREC@@|ERROR|50|7|900|2026-11-07T09:30:00|2026-11-07T11:00:00\n"
+              "[2026-11-07 09:30:00,000] ERROR [KafkaApi-1] Unexpected error handling request (kafka.server.KafkaApis)\n"
+              "org.apache.kafka.common.errors.ClusterAuthorizationException: Request DESCRIBE_ACLS needs DESCRIBE permission.\n"
+              "@@PGTS@@|2026-11-07T09:30:00\n")
+    healthy = (ev("process_stop", 400, "10:10:00", "Kafka broker stopping on SIGTERM") + ev("process_starting", 410, "10:10:10", "Kafka broker starting")
+               + ev("authorizer_wait", 420, "10:10:20") + ev("authorizer_ready", 421, "10:10:30") + ev("process_start", 430, "10:10:40", "Kafka broker started"))
+    text = ("@@PGFILE@@|bundle/broker-4/server.log|1000|0|0|2026-11-07T09:40:00|2026-11-07T11:20:00\n" + stuck
+            + "@@PGEVTN@@|process_stop|broker|3\n@@PGEVTN@@|process_starting|broker|4\n"
+            + "@@PGFILE@@|bundle/broker-4/kafka-authorizer.log|500|0|0|2026-11-07T09:40:00|2026-11-07T11:20:00\n" + authz
+            + "@@PGFILE@@|bundle/broker-4/metadata-service.log|500|0|0|2026-11-07T09:40:00|2026-11-07T11:20:00\n" + mds
+            + "@@PGFILE@@|bundle/broker-1/server.log|1000|1|50|2026-11-07T09:30:00|2026-11-07T11:20:00\n" + denied + healthy
+            + "@@PGEVTN@@|process_stop|broker|1\n@@PGEVTN@@|process_starting|broker|1\n@@PGEVTN@@|process_start|broker|1\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    titles = [h["title"] for h in res["known_causes"]]
+    check("stuck first", titles[0] == log_report.AUTHORIZER_STUCK_TITLE and "🚫 Authorization failure" in titles, titles)
+    h = res["known_causes"][0]
+    check("4 waits that never ended, first one", h["severity"] == "HIGH" and h["occurrences"] == 4
+          and h["first"] == {"file": "broker-4/server.log", "line": 50, "timestamp": "2026-11-07T09:45:00"}, h)
+    details = "\n".join(h["details"])
+    check("stopped while waiting", "broker-4/server.log:50 2026-11-07 09:45:00 waiting for the authorizer futures, still waiting 15 min "
+          "later when it was stopped (Kafka broker stopping on SIGTERM, line 100)" in details, details)
+    check("still waiting at the end", "server.log:303 2026-11-07 10:55:00 waiting for the authorizer futures, still waiting at the end of the log, 25 min later" in details, details)
+    check("unclean restarts", "3 start(s) since the first stop during the wait found no clean shutdown file and recovered 4321 logs first" in details, details)
+    check("listeners", "listeners waiting for the authorizer (closed until it is ready): CLIENT:9092, EXTERNAL:9093 · opened at once (inter-broker): REPLICATION:9091" in details, details)
+    check("auth reader", "the metadata service reader of _confluent-metadata-auth started 4 time(s) without logging Kafka Auth reader initialized on all partitions" in details, details)
+    check("RBAC advice", "_confluent-metadata-auth" in h["advice"] and "confluent.authorizer.init.timeout.ms" in h["advice"], h["advice"])
+    verdict = log_report.logs_verdict(res, "ERROR")[1]
+    check("verdict starts with the stuck broker", f"start with {log_report.AUTHORIZER_STUCK_TITLE}." in verdict, verdict)
+    loops = {lp["worker"]: lp for lp in res["lifecycle"]["loops"]}
+    check("only the stuck broker loops", set(loops) == {"broker-4/server.log"}, loops)
+    lp = loops["broker-4/server.log"]
+    check("restarts", lp["stops"] == 3 and lp["restarts"] == 3 and lp["never_started"] and lp["known_cause"] == log_report.AUTHORIZER_STUCK_TITLE, lp)
+    check("loop text", log_report.restart_loop_text(lp) == "the broker (broker-4/server.log) was stopped and started again 3 times without "
+          "finishing its startup, 2026-11-07 10:00:00 → 10:45:00, a new attempt every ~25 min", log_report.restart_loop_text(lp))
+    check("in the verdict", "🔁 Restart loop: the broker (broker-4/server.log) was stopped and started again 3 times" in verdict, verdict)
+    # without the stuck broker: the healthy one alone is no known cause, and the verdict goes back to the errors
+    with tempfile.TemporaryDirectory() as tmp:
+        alone = log_report.analyze(log_report.parse_records(records_file(tmp, text[text.index("@@PGFILE@@|bundle/broker-1/"):])))
+    check("healthy broker alone", log_report.AUTHORIZER_STUCK_TITLE not in [x["title"] for x in alone["known_causes"]]
+          and not alone["lifecycle"]["loops"], alone["known_causes"])
+    # a wait that is still going 1 minute before the end of the log is a startup in progress, not stuck
+    with tempfile.TemporaryDirectory() as tmp:
+        short = log_report.analyze(log_report.parse_records(records_file(tmp,
+            "@@PGFILE@@|b/server.log|10|0|0|2026-11-07T10:00:00|2026-11-07T10:06:00\n" + ev("authorizer_wait", 5, "10:05:00"))))
+    check("a recent wait", not short["known_causes"], short["known_causes"])
+
+
 def test_infra_events_and_bursts():
     """♻️ GC pauses, 🛑 stops and 👑 controller changes in the timeline; 💥 a burst of errors right after one, only when
     well above the usual rate"""

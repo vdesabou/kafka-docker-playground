@@ -6875,6 +6875,11 @@ function log_awk() {
 #   @@PGEVT@@<tab>member_eviction<tab>line<tab>timestamp<tab>connector<tab>group · timeout: members of a classic consumer group
 #              removed by the group coordinator of a broker (session timeout, rebalance timeout, pending sync expired)
 #   @@PGEVT@@<tab>gc_pause<tab>line<tab>timestamp<tab><tab><ms> <what>: a GC pause of 1 s or more (GC log, unified or legacy)
+#   @@PGEVT@@<tab>process_starting<tab>line<tab>timestamp<tab><tab>Kafka broker starting: a start attempt of a broker
+#              (Transition from SHUTDOWN to STARTING), before its "started" line (process_start)
+#   @@PGEVT@@<tab>authorizer_wait|authorizer_ready|authorizer_endpoint_wait|authorizer_endpoint_open|auth_reader_start|
+#              auth_reader_ready|unclean_recovery<tab>line<tab>timestamp<tab><tab>listener:port of an endpoint, number of
+#              logs recovered: the startup of a broker waiting for its authorizer (RBAC metadata service), 300 of each
 #   @@PGEVT@@<tab>dynamic_config<tab>line<tab>timestamp<tab><tab>broker <id> · node|cluster|default broker: key -> value, …: a
 #              broker config changed while it runs (DynamicConfigPublisher of KRaft, no restart)
 #   @@PGEVT@@<tab>replica_move<tab>line<tab>timestamp<tab><tab>broker <id> · topic: partition:broker,…: throttled replicas set on a
@@ -7730,9 +7735,42 @@ function summarize_log_errors() {
                 ev[++nev] = "connector_hint\t" ch_line "\t" timestamp_of($0) "\t" ch_conn "\tdirection " ch_dir
             }
         }
+        # 🚧 the startup of a broker waiting for its authorizer (RBAC: the Confluent authorizer waits for the metadata service
+        # to load _confluent-metadata-auth): the wait of the broker and its end, the listeners that wait for it or open at once,
+        # the reader of the auth topic started and loaded, and the log recovery of a start after an unclean stop. 300 of each
+        # kind at most, not lifecycle rows (log_report.py: authorizer_stuck)
+        if (records_file != "" && (index($0, "authorizer futures") || index($0, "before enabling endpoint") || index($0, "Authorizer future for endpoint") || index($0, "Kafka Auth reader") || index($0, "no clean shutdown file"))) {
+            rb_kind = ""; rb_detail = ""
+            if (index($0, "Finished waiting for all of the authorizer futures")) {
+                rb_kind = "authorizer_ready"
+            } else if (index($0, "Waiting for all of the authorizer futures")) {
+                rb_kind = "authorizer_wait"
+            } else if (index($0, "before enabling endpoint")) {
+                rb_kind = "authorizer_endpoint_wait"
+            } else if (index($0, "Immediately resolve Authorizer future for endpoint")) {
+                rb_kind = "authorizer_endpoint_open"
+            } else if (index($0, "Starting Kafka Auth reader")) {
+                rb_kind = "auth_reader_start"
+            } else if (index($0, "Kafka Auth reader initialized on all partitions")) {
+                rb_kind = "auth_reader_ready"
+            } else if (index($0, "since no clean shutdown file was found")) {
+                rb_kind = "unclean_recovery"
+                if (match($0, /Recovering [0-9]+ logs/)) rb_detail = substr($0, RSTART + 11, RLENGTH - 16)
+            }
+            # the listener of an endpoint: Endpoint(listenerName=<quoted CLIENT>, securityProtocol=SASL_SSL, host=…, port=9092)
+            # (no quote character in this program: it is a single-quoted shell argument)
+            if (rb_kind ~ /^authorizer_endpoint/ && match($0, /listenerName=[^,)]*/)) {
+                rb_detail = substr($0, RSTART + 13, RLENGTH - 13); gsub(/[^A-Za-z0-9_.-]/, "", rb_detail)
+                if (match($0, /port=[0-9]+/)) rb_detail = rb_detail ":" substr($0, RSTART + 5, RLENGTH - 5)
+            }
+            if (rb_kind != "" && ++rb_noted[rb_kind] <= 300) {
+                rb_line = NR
+                ev[++nev] = rb_kind "\t" rb_line "\t" timestamp_of($0) "\t\t" rb_detail
+            }
+        }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id|DynamicConfigPublisher|Starting commit and rotation|Committed [^ ]+ for /) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Terminating process due to signal SIG|Transition from SHUTDOWN to STARTING|\] starting \(kafka\.server|Kafka Connect stopping|Failed to start Connect|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(|Shrinking ISR|Expanding ISR|Error sending fetch request|Error in response for fetch request|due to request timeout|kafka-log-cleaner-thread|uncleanable|\|THROTTLE\||ThrottlingQuotaExceeded|no open connection, connection id|DynamicConfigPublisher|Starting commit and rotation|Committed [^ ]+ for /) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
             if ((index($0, "|task-") || index($0, "|worker")) && match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
@@ -7775,15 +7813,36 @@ function summarize_log_errors() {
                     lc_init_pending = index($0, "Kafka Connect started") ? 0 : 1; lc_init_file = FILENAME
                 }
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
-                lc_kind = "process_start"; lc_who = "broker"; cfg_end(); lc_detail = "Kafka broker started"
+                # one start of a KRaft broker logs "Transition from STARTING to STARTED" and "Kafka Server started": one start,
+                # the first line, until the broker stops or starts again
+                if (!(FILENAME in lc_bstarted)) { lc_kind = "process_start"; lc_who = "broker"; cfg_end(); lc_detail = "Kafka broker started" }
+                lc_bstarted[FILENAME] = 1
+                if (FILENAME in lc_bstopping) delete lc_bstopping[FILENAME]
             } else if (index($0, "Failed to start Connect")) {
                 # ERROR Failed to start Connect (AbstractConnectCli): the worker gave up during its startup and exits. Several of
                 # them in a file is a restart loop (the service manager starts it again, it fails again): 🔁 in the report
                 lc_kind = "process_start_failed"; lc_who = "connect"; lc_detail = "Kafka Connect failed to start"; lc_init_pending = 0
             } else if (index($0, "Kafka Connect stopping")) {
                 lc_kind = "process_stop"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker stopping"; lc_init_pending = 0
-            } else if ($0 ~ /\] shutting down \(kafka\.server|to SHUTTING_DOWN/) {
-                lc_kind = "process_stop"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker shutting down"
+            } else if ($0 ~ /Terminating process due to signal SIG|\[(KafkaServer|BrokerServer|ControllerServer|KafkaRaftServer)[^]]*\] shutting down \(kafka\.server|Transition from [A-Z_]+ to SHUTTING_DOWN \(kafka\.server/) {
+                # one stop of a broker: the signal (LoggingSignalHandler, only registered by the broker / controller JVM), then
+                # "Transition from STARTED to SHUTTING_DOWN" and "[BrokerServer id=1] shutting down" (and the ControllerServer of a
+                # combined node): one stop, the first line, until the broker starts again. Not the "[ReplicaFetcherManager on broker
+                # 1] shutting down", "Request Handler on Broker 1] shutting down" or "Transitioning from PENDING_CONTROLLED_SHUTDOWN
+                # to SHUTTING_DOWN" of the components it stops (one graceful shutdown was 6 stops, a 🔁 restart loop)
+                if (!(FILENAME in lc_bstopping)) {
+                    lc_kind = "process_stop"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker shutting down"
+                    if (match($0, /signal SIG[A-Z]+/)) lc_detail = "Kafka broker stopping on " substr($0, RSTART + 7, RLENGTH - 7)
+                }
+                lc_bstopping[FILENAME] = 1
+                if (FILENAME in lc_bstarted) delete lc_bstarted[FILENAME]
+            } else if ($0 ~ /Transition from SHUTDOWN to STARTING|\[KafkaServer id=[0-9]+\] starting \(kafka\.server/) {
+                # a broker starting: a start attempt, before its startup ends ("Transition from STARTING to STARTED"). A broker
+                # stopped again before that, again and again, is in a 🔁 restart loop that no "started" line shows. Not a
+                # lifecycle row (log_report.py: restart loops and the 🚧 startup stuck on the authorizer only)
+                lc_kind = "process_starting"; lc_who = "broker"; lc_detail = "Kafka broker starting"
+                if (FILENAME in lc_bstopping) delete lc_bstopping[FILENAME]
+                if (FILENAME in lc_bstarted) delete lc_bstarted[FILENAME]
             } else if ($0 ~ /Becoming the active controller|elected as the controller/) {
                 lc_kind = "controller_change"; lc_who = "controller"; lc_detail = "a new active controller"
                 if (match($0, /(QuorumController|KafkaController) id=[0-9]+/)) {
@@ -7884,7 +7943,7 @@ function summarize_log_errors() {
                 if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
             }
             if (lc_kind != "") {
-                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_start_failed|process_stop|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped|dynamic_config|replica_move)$/ ? lc_who : lc_conn)
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_start_failed|process_stop|process_starting|controller_change|gc_pause|member_eviction|isr_shrink|isr_expand|replica_fetch_error|request_timeout|log_cleaner|quota_throttle|response_dropped|dynamic_config|replica_move)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
                 # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):

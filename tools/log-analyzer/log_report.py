@@ -627,6 +627,147 @@ def match_hints(files: List[dict], unit: str = "file", ccloud: bool = False) -> 
     return out
 
 
+# 🚧 a broker whose startup waits for its authorizer and never ends: "[BrokerServer id=4] Waiting for all of the authorizer
+# futures to be completed" without "Finished waiting for …" nor "Transition from STARTING to STARTED" after it, before the
+# broker is stopped (often a SIGTERM of the service manager that gave up) or before the end of its log, AUTHORIZER_STUCK_MIN_S
+# or more later. INFO lines only: no record shows it, and the errors of the other brokers and clients (authorization
+# failures, timeouts) hide it. With RBAC, the Confluent authorizer waits for the metadata service to read
+# _confluent-metadata-auth ("Starting Kafka Auth reader" without "Kafka Auth reader initialized on all partitions"): only
+# the inter-broker listener opens ("Immediately resolve Authorizer future for endpoint"), the client listeners wait ("Wait
+# for authorizerServerStartFuture … before enabling endpoint"). The first known cause and the 👉 of the verdict
+AUTHORIZER_STUCK_TITLE = "🚧 Broker startup stuck waiting for the authorizer"
+AUTHORIZER_STUCK_MIN_S = 120
+AUTHORIZER_STUCK_ADVICE = (
+    "the broker never finished its startup: it waits for its authorizer, so only the inter-broker listener is open and the "
+    "client listeners stay closed. With RBAC the Confluent authorizer waits for the metadata service (MDS) of the broker to "
+    "read _confluent-metadata-auth. Do not restart it again: a stop during the wait is an unclean shutdown, and the next start "
+    "recovers all the logs first (Recovering N logs … since no clean shutdown file was found), which makes the wait longer; "
+    "let it run past confluent.authorizer.init.timeout.ms. Check the health of _confluent-metadata-auth (kafka-topics "
+    "--describe --topic _confluent-metadata-auth on the inter-broker listener: leaders, ISR, offline or under-replicated "
+    "partitions), take thread dumps of the broker during the wait (playground analyze thread-dump), and look at the broker "
+    "that writes the metadata (MDS writer: Starting writer with generation, Updating external auth store status to "
+    "INITIALIZED in its metadata-service.log)")
+AUTHORIZER_STUCK_ADVICE_PLAIN = (
+    "the broker never finished its startup: it waits for its authorizer, so its listeners stay closed. In KRaft the "
+    "StandardAuthorizer waits for the broker to catch up with the metadata log (look at the controller quorum and at "
+    "the metadata loading of the broker); with RBAC the Confluent authorizer waits for the metadata service. Do not restart "
+    "it again: a stop during the wait is an unclean shutdown, and the next start recovers all the logs first; take thread "
+    "dumps of the broker during the wait (playground analyze thread-dump)")
+AUTHORIZER_KINDS = ("authorizer_wait", "authorizer_ready", "authorizer_endpoint_wait", "authorizer_endpoint_open",
+                    "auth_reader_start", "auth_reader_ready", "unclean_recovery")
+
+
+def authorizer_stuck(files: List[dict]) -> List[dict]:
+    """🚧 the known cause of the brokers whose startup waits for the authorizer and never ends (AUTHORIZER_STUCK_TITLE): one
+    hint, without record (INFO lines), a detail line per wait that did not end, the listeners waiting, the metadata service
+    reader not loaded and the log recoveries after the unclean stops. [] when no broker of the input is stuck"""
+    # per worker (a broker, its rotated files merged): (time, file label, line, detail) of each kind; the metadata service and
+    # authorizer logs of a broker are other files of its folder
+    by_worker: Dict[str, Dict[str, list]] = {}
+    by_folder: Dict[str, Dict[str, list]] = {}
+    ends: Dict[str, float] = {}
+    for f in files:
+        w = worker_of(f["label"])
+        folder = w.rpartition("/")[0]
+        last = ts_seconds(f.get("log_last_ts"))
+        if last is not None:
+            ends[w] = max(ends.get(w, last), last)
+        for ev in f.get("events") or []:
+            t = ts_seconds(ev.get("time"))
+            if t is None:
+                continue
+            kind = ev["kind"]
+            if kind in ("process_start", "process_stop", STARTING_KIND) and "Connect" in (ev.get("detail") or ""):
+                continue
+            if kind in AUTHORIZER_KINDS or kind in ("process_start", "process_stop", STARTING_KIND):
+                item = (t, f["label"], ev.get("line"), ev.get("detail") or "")
+                by_worker.setdefault(w, {}).setdefault(kind, []).append(item)
+                by_folder.setdefault(folder, {}).setdefault(kind, []).append(item)
+    for d in list(by_worker.values()) + list(by_folder.values()):
+        for xs in d.values():
+            xs.sort(key=lambda x: (x[0], x[2] or 0))
+    stamp = lambda x: datetime.fromtimestamp(x, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: E731
+    stuck, details, workers, labels = [], [], [], []
+    rbac = False
+    for w, d in sorted(by_worker.items()):
+        mine = []
+        for t, label, line, _ in d.get("authorizer_wait") or []:
+            stop = next((x for x in d.get("process_stop") or [] if x[0] >= t and (x[1] != label or (x[2] or 0) > (line or 0))), None)
+            end = ends.get(w)
+            # the end of the wait ("Finished waiting", a start of the broker: a later line of the same file) before the next
+            # stop, else before the end of the log
+            ready = min((x[0] for x in (d.get("authorizer_ready") or []) + (d.get("process_start") or [])
+                         if x[0] >= t and (x[1] != label or (x[2] or 0) > (line or 0))), default=None)
+            limit = stop[0] if stop else end
+            if limit is None or (ready is not None and ready <= limit):
+                continue
+            if limit - t < AUTHORIZER_STUCK_MIN_S:
+                continue
+            mine.append((t, label, line, stop, limit))
+        if not mine:
+            continue
+        workers.append(w)
+        for t, label, line, stop, limit in mine:
+            stuck.append((t, label, line))
+            labels.append(label)
+            if stop:
+                details.append(f"{label}:{line} {stamp(t)} waiting for the authorizer futures, still waiting "
+                               f"{human_duration(int(limit - t))} later when it was stopped ({stop[3] or 'stopped'}, line {stop[2]})")
+            else:
+                details.append(f"{label}:{line} {stamp(t)} waiting for the authorizer futures, still waiting at the end of the "
+                               f"log, {human_duration(int(limit - t))} later: the broker never opened its client listeners")
+        # the starts after an unclean stop: each kill during the wait makes the next start recover all the logs first
+        unclean = [x for x in d.get("unclean_recovery") or [] if any(x[0] >= m[3][0] for m in mine if m[3])]
+        if unclean:
+            n = unclean[-1][3]
+            details.append(f"{len(unclean)} start(s) since the first stop during the wait found no clean shutdown file and recovered "
+                           f"{(n + ' logs') if n else 'all the logs'} first (the last at {unclean[-1][1]}:{unclean[-1][2]} "
+                           f"{stamp(unclean[-1][0])}): an unclean restart loop, each stop during the wait makes the next start longer")
+        fd = by_folder.get(w.rpartition("/")[0]) or {}
+        # the listeners of the last start before the first wait that did not end: waiting for the authorizer, opened at once
+        since = max((x[0] for x in (fd.get(STARTING_KIND) or []) + (fd.get("process_stop") or []) if x[0] <= mine[-1][0]),
+                    default=None)
+        def listeners(kind: str) -> List[str]:
+            xs = [x[3] for x in fd.get(kind) or [] if x[3] and (since is None or x[0] >= since - 60) and x[0] <= mine[-1][0]]
+            return list(OrderedDict((x, True) for x in xs))
+        waiting, opened = listeners("authorizer_endpoint_wait"), listeners("authorizer_endpoint_open")
+        waiting = [x for x in waiting if x not in opened]
+        if waiting or opened:
+            rbac = True
+            details.append("listeners waiting for the authorizer (closed until it is ready): " + (", ".join(waiting[:10]) or "none")
+                           + " · opened at once (inter-broker): " + (", ".join(opened[:10]) or "none"))
+        # the reader of _confluent-metadata-auth (metadata service) started without "initialized on all partitions" before
+        # its next start or the end of the logs
+        starts = fd.get("auth_reader_start") or []
+        readies = [x[0] for x in fd.get("auth_reader_ready") or []]
+        if starts:
+            rbac = True
+            unloaded = [x for i, x in enumerate(starts)
+                        if not any(x[0] <= r < (starts[i + 1][0] if i + 1 < len(starts) else float("inf")) for r in readies)]
+            if unloaded:
+                details.append(f"the metadata service reader of _confluent-metadata-auth started {len(unloaded)} time(s) without "
+                               f"logging Kafka Auth reader initialized on all partitions (the last: Starting Kafka Auth reader at "
+                               f"{unloaded[-1][1]}:{unloaded[-1][2]} {stamp(unloaded[-1][0])}): the authorizer waits for it")
+            else:
+                details.append(f"the metadata service reader of _confluent-metadata-auth logged Kafka Auth reader initialized on "
+                               f"all partitions after each of its {len(starts)} start(s): look at what else the authorizer waits for")
+    if not stuck:
+        return []
+    labels = list(OrderedDict((x, True) for x in labels))
+    first = min(stuck)
+    advice = AUTHORIZER_STUCK_ADVICE if rbac else AUTHORIZER_STUCK_ADVICE_PLAIN
+    first_text = f"line {first[2]}, {stamp(first[0])}"
+    where = (f"in {len(labels)} files (first at {first[1]} {first_text})" if len(labels) > 1 else f"in {first[1]} (first at {first_text})")
+    hint = {"severity": "HIGH", "title": AUTHORIZER_STUCK_TITLE, "occurrences": len(stuck), "files": labels, "where": where,
+            "advice": advice, "text": f"{AUTHORIZER_STUCK_TITLE}: {len(stuck)} startup wait(s) that never ended {where}: {advice}",
+            "first": {"file": first[1], "line": first[2], "timestamp": datetime.fromtimestamp(first[0], timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")},
+            "records": [], "_errors": 0, "_chains": [], "details": details,
+            # the 👉 of the verdict, before the errors it causes (the authorization failures and timeouts of the others)
+            "_verdict_first": True, "_workers": workers}
+    hint.update(known_causes.links(AUTHORIZER_STUCK_TITLE, [], False))
+    return [hint]
+
+
 CONNECTION_TITLE = "🔌 Connection failure"
 DNS_TITLE = "🌐 Host name not resolved (DNS)"
 # the host of a failed lookup: Java "UnknownHostException: db.acme.corp[: Name or service not known]", "DNS resolution
@@ -1301,7 +1442,8 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
             r["index"], r["file_index"] = index, file_index
             index += 1
     ccloud = points_at_confluent_cloud(files)
-    hints = match_hints(files, unit, ccloud)
+    # 🚧 a broker stuck in its startup (INFO lines, no record) comes first: the errors of the others follow from it
+    hints = authorizer_stuck(files) + match_hints(files, unit, ccloud)
     causes = root_causes(files)
     # the "<Class>Config values:" dumps of the logs and the config files of the input (.properties, connector JSON)
     configuration = [dict({k: v for k, v in c.items() if k != "lines"}, file=f["label"], text="\n".join(c["lines"]))
@@ -2134,10 +2276,14 @@ SINK_LIVELOCK_TEXT = ("no Committed line: the sink keeps rotating without data t
 
 # the kinds of a worker or a broker (re)started or stopped: one row per process ("connect", "broker"), not per connector
 PROCESS_KINDS = ("process_start", "process_start_failed", "process_stop")
-# 🔁 a restart loop: a worker that failed to start RESTART_LOOP_MIN times in a file (ERROR Failed to start Connect), or a
-# process of a file stopped RESTART_LOOP_MIN + 1 times, every RESTART_LOOP_EVERY_S or less (median): it never runs for long
+# 🔁 a restart loop: a worker that failed to start RESTART_LOOP_MIN times in a file (ERROR Failed to start Connect), a
+# process of a file stopped RESTART_LOOP_MIN + 1 times, or stopped and started again (a start attempt after each stop: a
+# broker killed while it starts never logs "started") RESTART_LOOP_MIN times, every RESTART_LOOP_EVERY_S or less (median):
+# it never runs for long
 RESTART_LOOP_MIN = 3
 RESTART_LOOP_EVERY_S = 30 * 60
+# a broker starting (Transition from SHUTDOWN to STARTING): not a lifecycle row, the start attempts of the restart loops
+STARTING_KIND = "process_starting"
 
 
 def restart_loops(res: dict, files: List[dict]) -> List[dict]:
@@ -2149,17 +2295,19 @@ def restart_loops(res: dict, files: List[dict]) -> List[dict]:
     for f in files:
         w = worker_of(f["label"])
         for c in f.get("event_counts") or []:
-            if c["kind"] in PROCESS_KINDS:
+            if c["kind"] in PROCESS_KINDS or c["kind"] == STARTING_KIND:
                 counts.setdefault(w, Counter())[(c["kind"], c["who"])] += c["count"]
         for ev in f.get("events") or []:
             t = ts_seconds(ev.get("time"))
-            if ev["kind"] in PROCESS_KINDS and t is not None:
+            if (ev["kind"] in PROCESS_KINDS or ev["kind"] == STARTING_KIND) and t is not None:
                 who = "connect" if "Connect" in (ev.get("detail") or "") else "broker"
                 times.setdefault((w, ev["kind"], who), []).append(t)
-    titles = [h["title"] for h in res.get("known_causes") or []]
+    titles = [h["title"] for h in res.get("known_causes") or [] if h["title"] != AUTHORIZER_STUCK_TITLE]
     # the known cause of a process that does not start (secret registry, a port in use, a bad config…): the first one
     # whose title says so
     cause = next((t for t in titles if re.search(r"start", t, re.I)), None)
+    # 🚧 the brokers whose startup waits for the authorizer: the cause of their loop
+    stuck = {w for h in res.get("known_causes") or [] if h["title"] == AUTHORIZER_STUCK_TITLE for w in h.get("_workers") or []}
     out = []
     for w, cnt in counts.items():
         for who in sorted({x for _, x in cnt}):
@@ -2167,21 +2315,38 @@ def restart_loops(res: dict, files: List[dict]) -> List[dict]:
             ts = sorted(times.get((w, "process_start_failed" if failed >= RESTART_LOOP_MIN else "process_stop", who)) or [])
             gaps = sorted(b - a for a, b in zip(ts, ts[1:]))
             every = gaps[len(gaps) // 2] if gaps else None
-            if not (failed >= RESTART_LOOP_MIN
-                    or (stops >= RESTART_LOOP_MIN + 1 and every is not None and every <= RESTART_LOOP_EVERY_S)):
+            # the stops followed by a start (or a start attempt) before the next stop
+            stop_ts = sorted(times.get((w, "process_stop", who)) or [])
+            started = sorted(times.get((w, "process_start", who)) or [])
+            start_ts = sorted(started + (times.get((w, STARTING_KIND, who)) or []))
+            restarts = sum(1 for i, t in enumerate(stop_ts)
+                           if any(t < x <= (stop_ts[i + 1] if i + 1 < len(stop_ts) else float("inf")) for x in start_ts))
+            fast = every is not None and every <= RESTART_LOOP_EVERY_S
+            if not (failed >= RESTART_LOOP_MIN or (stops >= RESTART_LOOP_MIN + 1 and fast) or (restarts >= RESTART_LOOP_MIN and fast)):
                 continue
             stamp_of = lambda x: datetime.fromtimestamp(x, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: E731
             out.append({"worker": w, "who": who, "failed": failed, "stops": stops, "starts": cnt[("process_start", who)],
+                        "restarts": restarts,
+                        # a broker started again after each stop that never logged "started" since the first one
+                        "never_started": bool(who == "broker" and stop_ts and restarts and not any(x > stop_ts[0] for x in started)),
                         "first": stamp_of(ts[0]) if ts else None, "last": stamp_of(ts[-1]) if ts else None,
                         "every_seconds": int(every) if every is not None else None,
-                        "known_cause": cause if who == "connect" and failed else None})
+                        "known_cause": (cause if who == "connect" and failed else
+                                        AUTHORIZER_STUCK_TITLE if who == "broker" and w in stuck else None)})
     return sorted(out, key=lambda lp: (-lp["failed"], -lp["stops"]))
 
 
 def restart_loop_text(lp: dict) -> str:
     """🔁 one line for a restart loop: "connect (connect.log) failed to start 20 times, 09:46 → 11:37, every ~5 min" """
     name = "Kafka Connect" if lp["who"] == "connect" else "the broker" if lp["who"] == "broker" else lp["who"]
-    what = f"failed to start {lp['failed']:,} times" if lp["failed"] >= RESTART_LOOP_MIN else f"stopped {lp['stops']:,} times"
+    if lp["failed"] >= RESTART_LOOP_MIN:
+        what = f"failed to start {lp['failed']:,} times"
+    elif lp["stops"] >= RESTART_LOOP_MIN + 1:
+        what = f"stopped {lp['stops']:,} times"
+    else:
+        what = f"was stopped and started again {lp.get('restarts', 0):,} times"
+    if lp.get("never_started"):
+        what += " without finishing its startup"
     when = f", {period_text(lp['first'], lp['last'])}" if lp.get("first") else ""
     every = f", a new attempt every ~{human_duration(lp['every_seconds'])}" if lp.get("every_seconds") else ""
     return f"{name} ({lp['worker']}) {what}{when}{every}"
@@ -2794,6 +2959,9 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
         + ("Each start ends with <code>ERROR Failed to start Connect</code>: the worker never runs, so its REST API, its "
            "connectors and tasks stay down, and its service manager starts it again. The error logged just before each "
            "failure is the cause" if lp["failed"] >= RESTART_LOOP_MIN else
+           "It is stopped before its startup ends, each time: look at what the startup waits for before each stop (🚧 the "
+           "authorizer, a long log recovery after an unclean stop), and at what stops it (the service manager, a liveness "
+           "probe, a timeout of the operator)" if lp.get("never_started") else
            "It never runs for long: look at what it logs just before each stop (an ERROR, a JVM crash, a kill by the "
            "service manager or a liveness probe)")
         + (f": {e(lp['known_cause'])} (🔎 Findings)." if lp.get("known_cause") else ".") + "</div>"
@@ -2812,7 +2980,8 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
             "with more), between its first and last one. It follows the connector filter (click a connector name to set it): "
             "the rows of the other connectors are hidden, the worker group rebalances and process starts stay. 🔁 a restart "
             f"loop: a worker that failed to start (ERROR Failed to start Connect) {RESTART_LOOP_MIN} times or more, or a "
-            f"process stopped {RESTART_LOOP_MIN + 1} times or more, every {RESTART_LOOP_EVERY_S // 60} min or less. Click a row: "
+            f"process stopped {RESTART_LOOP_MIN + 1} times or more, or stopped and started again {RESTART_LOOP_MIN} times "
+            f"or more (a broker killed while it starts), every {RESTART_LOOP_EVERY_S // 60} min or less. Click a row: "
             "the chart shows it alone, on its period, and its occurrences open under it, each with a link to its line in the "
             "log file (again: every row).</p>"
             + "<p class='legend lc-picked-note' hidden>🔍 only <b class='lc-picked-who'></b> in the chart and its occurrences "
@@ -8251,6 +8420,10 @@ def verdict_cause(res: dict) -> Optional[dict]:
     times higher at the same severity); None without any ERROR / FATAL"""
     rank = lambda h: SEVERITY_ORDER.index(h["severity"]) if h.get("severity") in SEVERITY_ORDER else 9  # noqa: E731
     score = lambda h: h.get("_errors", 0) * VERDICT_WEIGHT.get(h.get("severity"), 1)  # noqa: E731
+    # 🚧 a broker stuck in its startup: what the errors of the other brokers and clients follow from
+    first = next((h for h in res.get("known_causes") or [] if h.get("_verdict_first")), None)
+    if first:
+        return first
     pick = None
     for h in res.get("known_causes") or []:
         if not h.get("_errors") or h.get("title") in VERDICT_EXCLUDED:
@@ -8338,7 +8511,11 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
         head = (f"🚨 {errors:,} ERROR/FATAL occurrence(s), {s['distinct']:,} distinct record(s) in "
                 f"{s['files_with_findings']} {unit}(s)")
         return "danger", head + ("" if lines and lines[0]["icon"] == "👉" else "."), lines
-    return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL.", []
+    # 🚧 a broker stuck in its startup logs no ERROR
+    first = next((h for h in res.get("known_causes") or [] if h.get("_verdict_first")), None)
+    lines = [{"icon": "👉", "label": "Start with", "text": first["title"], "href": "#" + finding_id(first["title"]),
+              "plain": f" Start with {first['title']}.", "glue": ""}] if first else []
+    return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL.", lines
 
 
 def mark_not_logs(files: List[dict], path: Optional[str]) -> None:
