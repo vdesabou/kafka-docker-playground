@@ -232,10 +232,33 @@ do
     : > "$out.bstops"
     PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.bstops" "$tmp/broker-stops.log" > /dev/null 2>&1
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" {print $3 " " $2 (($6 != "") ? "=" $6 : "")}' "$out.bstops" | tr '\n' ',')
-    expected='1 process_start=Kafka broker started,3 process_stop=Kafka broker stopping on SIGTERM,11 process_starting=Kafka broker starting,12 auth_reader_start,13 authorizer_endpoint_open=REPLICATION:9091,14 authorizer_endpoint_wait=CLIENT:9092,15 authorizer_wait,16 process_stop=Kafka broker stopping on SIGTERM,17 process_starting=Kafka broker starting,18 unclean_recovery=4321,19 auth_reader_ready,20 authorizer_ready,21 process_start=Kafka broker started,'
+    expected='1 process_start=Kafka broker started,3 process_stop=Kafka broker stopping on SIGTERM,11 process_starting=Kafka broker starting,12 auth_reader_start,13 authorizer_endpoint_open=REPLICATION:9091,14 authorizer_endpoint_wait=CLIENT:9092,15 authorizer_wait=broker 1,16 process_stop=Kafka broker stopping on SIGTERM,17 process_starting=Kafka broker starting,18 unclean_recovery=4321,19 auth_reader_ready,20 authorizer_ready,21 process_start=Kafka broker started,'
     if [ "$got" != "$expected" ]
     then
         echo "❌ $awk_cmd: broker stops and starts of broker-stops.log: $got instead of $expected"
+        failed=1
+    fi
+    # the metadata service writer (MDS writer) of a broker: a generation started and INITIALIZED, a status not written
+    # (writer resigning), LDAP searches that fail (460: the first 300 and the last 150 noted), and the writer seen by
+    # another broker (its URL)
+    {
+        printf '%s\n' '[2026-11-07 13:00:00,000] INFO Starting writer with generation 172 (io.confluent.security.auth.store.kafka.KafkaAuthWriter)' \
+            '[2026-11-07 13:00:10,000] INFO Updating external auth store status to INITIALIZED for generation 172 (io.confluent.security.auth.store.kafka.KafkaAuthWriter)' \
+            '[2026-11-07 13:01:00,000] ERROR [PartitionWriter _confluent-metadata-auth-4]Status StatusKey(partition=4):StatusValue(status=INITIALIZING, generationId=172, writerBrokerId=1, errorMessage=null) could not be added to auth topic, writer resigning (io.confluent.security.store.kafka.clients.KafkaPartitionWriter)' \
+            '[2026-11-07 13:01:30,000] INFO Not starting writer from node NodeMetadata(urls={http=http://broker-2.example.com:8091}) since new writer is NodeMetadata(urls={http=http://broker-1.example.com:8091}) (io.confluent.security.store.kafka.coordinator.MetadataServiceCoordinator)'
+        for i in $(seq 1 460)
+        do
+            printf '[2026-11-07 14:%02d:%02d,000] ERROR LDAP search failed, search will be retried. (io.confluent.security.auth.provider.ldap.LdapGroupManager)\n' $((i / 60)) $((i % 60))
+        done
+    } > "$tmp/mds-writer.log"
+    : > "$out.mds"
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.mds" "$tmp/mds-writer.log" > /dev/null 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 != "mds_ldap_failed" {print $3 " " $2 (($6 != "") ? "=" $6 : "")}' "$out.mds" | tr '\n' ',')
+    got="$got$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "mds_ldap_failed" {n++; last = $3 " " $4} END {print n " LDAP, the last " last}' "$out.mds")"
+    expected='1 mds_writer_start=generation 172,2 mds_writer_ready=generation 172,3 mds_writer_resign=_confluent-metadata-auth-4,4 mds_writer_elsewhere=http://broker-1.example.com:8091,450 LDAP, the last 464 2026-11-07T14:07:40'
+    if [ "$got" != "$expected" ]
+    then
+        echo "❌ $awk_cmd: MDS writer of mds-writer.log: $got instead of $expected"
         failed=1
     fi
     # the signals of a broker under pressure (ISR changes, followers that cannot fetch, requests timing out, log cleaner,

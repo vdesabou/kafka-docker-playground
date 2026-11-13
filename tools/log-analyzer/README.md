@@ -321,9 +321,30 @@ without `Finished waiting for …` nor a start of the broker before its next sto
 `AUTHORIZER_STUCK_MIN_S` (2 min) or more later. One HIGH known cause without record (`AUTHORIZER_STUCK_TITLE`), a detail line
 per wait, the listeners of the same folder that wait for the authorizer vs opened at once, the reader of
 `_confluent-metadata-auth` (metadata service) started without `Kafka Auth reader initialized on all partitions`, the starts
-that recovered the logs after an unclean stop; the RBAC advice when the authorizer or metadata service logs are there.
+that recovered the logs after an unclean stop (each classified by the stop before it: during the authorizer wait, during the
+log recovery of the previous start, other); the RBAC advice when the authorizer or metadata service logs are there.
+`authorizer_writer()`: the MDS writer of the input (the folder whose `mds_writer_start`, `Starting writer with generation N`,
+is the last before the end of the wait, often another broker), between the last start of the stuck broker and the end of its
+wait: `Updating external auth store status to INITIALIZED for generation N` (`mds_writer_ready`) after the last `writer
+resigning` / `LDAP search failed` (`mds_writer_resign`, `mds_ldap_failed`) is healthy ("the problem is on the reader side of
+the stuck broker" in the advice), failures without INITIALIZED after them is failing ("fix the writer first: LDAP, the leaders
+of `_confluent-metadata-auth`"), `mds_writer` of the hint. Without the writer in the input, the `Not starting writer from node
+… since new writer is …` line of the stuck broker (`mds_writer_elsewhere`) is quoted by file:line, never its URL (a host name).
+The digest keeps the first 300 and the last 150 of each `mds_*` kind (`lc_ring`): the writer runs for days.
 `_verdict_first`: `verdict_cause()` returns it before any cause with errors (the authorization failures and timeouts of the
 other brokers of a bundle follow from it), and the 🔁 restart loop of that broker names it.
+
+🏷️ `find_brokers()` (`BROKERS`, at the top of `analyze()`): an input that holds the logs of several brokers (a folder per
+broker with the same file names `server.log`, `metadata-service.log`, `kafka-authorizer.log`, or one file per broker in a
+folder). The id of a broker comes from `node.id` / `broker.id` of the last `KafkaConfig` dump of its file
+(`process.roles = controller`: a controller), else from the `[BrokerServer id=N]` of its `authorizer_wait` (detail `broker N`
+of the digest); a folder with one broker gives its id to its other files. Only with two brokers or more (`{}` otherwise:
+single-broker inputs and the samples read as before). `broker_of(label)` then names the broker of a file, "broker 4 (logs)":
+`summary.brokers` (a `🏷️ N brokers in the input` line, `**Brokers:**` in the summary for a ticket), `brokers` of each known
+cause and `on broker 4` in its `where`, `verdict_broker()` (👉 start with … on broker 4 (logs) when the cause comes from one
+broker), the 🚧 detail lines, the restart loops (`broker`, `row_who`) and the process rows of 🔄 (one row per broker instead
+of one "broker" row), and `broker` of each timeline event (`ev_where()`, the HTML timeline). Not split: the root causes, the
+records and the 🐢 broker signals (keyed by the broker of each line already).
 
 ## Versions
 

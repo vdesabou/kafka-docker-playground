@@ -317,7 +317,8 @@ def test_authorizer_stuck_startup():
     check("stopped while waiting", "broker-4/server.log:50 2026-11-07 09:45:00 waiting for the authorizer futures, still waiting 15 min "
           "later when it was stopped (Kafka broker stopping on SIGTERM, line 100)" in details, details)
     check("still waiting at the end", "server.log:303 2026-11-07 10:55:00 waiting for the authorizer futures, still waiting at the end of the log, 25 min later" in details, details)
-    check("unclean restarts", "3 start(s) since the first stop during the wait found no clean shutdown file and recovered 4321 logs first" in details, details)
+    check("unclean restarts", "3 start(s) after a stop during the authorizer wait found no clean shutdown file and recovered 4321 logs first" in details, details)
+    check("one broker: no broker names", "brokers" not in res["summary"] and not details.startswith("broker "), details)
     check("listeners", "listeners waiting for the authorizer (closed until it is ready): CLIENT:9092, EXTERNAL:9093 · opened at once (inter-broker): REPLICATION:9091" in details, details)
     check("auth reader", "the metadata service reader of _confluent-metadata-auth started 4 time(s) without logging Kafka Auth reader initialized on all partitions" in details, details)
     check("RBAC advice", "_confluent-metadata-auth" in h["advice"] and "confluent.authorizer.init.timeout.ms" in h["advice"], h["advice"])
@@ -340,6 +341,99 @@ def test_authorizer_stuck_startup():
         short = log_report.analyze(log_report.parse_records(records_file(tmp,
             "@@PGFILE@@|b/server.log|10|0|0|2026-11-07T10:00:00|2026-11-07T10:06:00\n" + ev("authorizer_wait", 5, "10:05:00"))))
     check("a recent wait", not short["known_causes"], short["known_causes"])
+
+
+def test_authorizer_stuck_multi_broker():
+    """🏷️ a bundle of two brokers (a folder each, the same file names): broker 4 (node.id of its KafkaConfig dump) stuck on
+    its authorizer, broker 1 (its "[BrokerServer id=1] Waiting for all of the authorizer futures") healthy, the MDS writer.
+    The verdict, the 🚧 details, the restart loop, the process rows of 🔄 and the timeline name the broker; the writer
+    INITIALIZED after each stuck start is healthy (the reader side of the stuck broker), resigning and failing LDAP
+    searches without INITIALIZED after them is failing (fix the writer). A stop during the log recovery of a start is not
+    counted as a stop during the wait. Synthetic lines"""
+    def ev(kind, line, t, detail=""):
+        return f"@@PGEVT@@|{kind}|{line}|2026-11-07T{t}||{detail}\n"
+    config = ("@@PGCFG@@|KafkaConfig||20|2026-11-07T09:40:01|\n@@PGCFGL@@|\tnode.id = 4\n"
+              "@@PGCFGL@@|\tprocess.roles = broker\n@@PGCFGL@@|\tbroker.id = 4\n")
+    # broker 4: stuck at 09:45, stopped at 10:00, a start stopped again during its log recovery (10:02), a start stuck at
+    # 10:10, stopped at 10:30, the last start stuck at 10:40 until the end of the log
+    stuck = (ev("process_starting", 1, "09:40:00", "Kafka broker starting") + ev("authorizer_wait", 50, "09:45:00")
+             + ev("process_stop", 100, "10:00:00", "Kafka broker stopping on SIGTERM") + ev("process_starting", 101, "10:00:10", "Kafka broker starting")
+             + ev("unclean_recovery", 102, "10:00:20", "4321")
+             + ev("process_stop", 200, "10:02:00", "Kafka broker stopping on SIGTERM") + ev("process_starting", 201, "10:02:10", "Kafka broker starting")
+             + ev("unclean_recovery", 202, "10:02:20", "4321") + ev("authorizer_wait", 203, "10:10:00")
+             + ev("process_stop", 300, "10:30:00", "Kafka broker stopping on SIGTERM") + ev("process_starting", 301, "10:30:10", "Kafka broker starting")
+             + ev("unclean_recovery", 302, "10:30:20", "4321") + ev("authorizer_wait", 303, "10:40:00"))
+    reader = "".join(ev("auth_reader_start", 5 + i, f"{t}:30") + ev("mds_writer_elsewhere", 6 + i, f"{t}:40", "http://broker-1.example.com:8091")
+                     for i, t in enumerate(("09:40", "10:00", "10:02", "10:30")))
+    denied = ("@@PGREC@@|ERROR|50|7|900|2026-11-07T09:30:00|2026-11-07T11:00:00\n"
+              "[2026-11-07 09:30:00,000] ERROR [KafkaApi-1] Unexpected error handling request (kafka.server.KafkaApis)\n"
+              "org.apache.kafka.common.errors.ClusterAuthorizationException: Request DESCRIBE_ACLS needs DESCRIBE permission.\n"
+              "@@PGTS@@|2026-11-07T09:30:00\n")
+    healthy = (ev("process_stop", 400, "09:20:00", "Kafka broker stopping on SIGTERM") + ev("process_starting", 410, "09:20:10", "Kafka broker starting")
+               + ev("authorizer_wait", 420, "09:20:20", "broker 1") + ev("authorizer_ready", 421, "09:20:30") + ev("process_start", 430, "09:20:40", "Kafka broker started"))
+    gens = [("09:41", 170), ("10:00", 171), ("10:02", 172), ("10:30", 173)]
+    writer_ok = "".join(ev("mds_writer_start", 10 + i, f"{t}:50", f"generation {g}") + ev("mds_writer_ready", 11 + i, f"{t}:59", f"generation {g}")
+                        for i, (t, g) in enumerate(gens))
+    writer_ko = (writer_ok.split(ev("mds_writer_start", 13, "10:30:50", "generation 173"))[0] + ev("mds_writer_start", 13, "10:30:50", "generation 173")
+                 + ev("mds_writer_resign", 14, "10:31:00", "_confluent-metadata-auth-4") + ev("mds_ldap_failed", 15, "10:31:05")
+                 + ev("mds_ldap_failed", 16, "10:45:00"))
+
+    def bundle(writer):
+        return ("@@PGFILE@@|bundle/broker-4/server.log|1000|0|0|2026-11-07T09:40:00|2026-11-07T11:00:00\n" + config + stuck
+                + "@@PGEVTN@@|process_stop|broker|3\n@@PGEVTN@@|process_starting|broker|4\n"
+                + "@@PGFILE@@|bundle/broker-4/metadata-service.log|500|0|0|2026-11-07T09:40:00|2026-11-07T11:00:00\n" + reader
+                + "@@PGFILE@@|bundle/broker-1/server.log|1000|1|50|2026-11-07T09:20:00|2026-11-07T11:00:00\n" + denied + healthy
+                + "@@PGEVTN@@|process_stop|broker|1\n@@PGEVTN@@|process_starting|broker|1\n@@PGEVTN@@|process_start|broker|1\n"
+                + "@@PGFILE@@|bundle/broker-1/metadata-service.log|500|0|0|2026-11-07T09:20:00|2026-11-07T11:00:00\n" + writer)
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, bundle(writer_ok))))
+    check("brokers", res["summary"].get("brokers") == [{"broker": "broker 4", "place": "broker-4"}, {"broker": "broker 1", "place": "broker-1"}],
+          res["summary"].get("brokers"))
+    h = res["known_causes"][0]
+    check("stuck on broker 4", h["title"] == log_report.AUTHORIZER_STUCK_TITLE and h["occurrences"] == 3
+          and h["where"].startswith("on broker 4 in broker-4/server.log") and h.get("brokers") == ["broker 4 (broker-4)"], h)
+    details = "\n".join(h["details"])
+    check("waits named", "broker 4 · broker-4/server.log:50 2026-11-07 09:45:00 waiting for the authorizer futures" in details, details)
+    check("unclean starts by stop", "broker 4 · 3 start(s) since the first stop during the authorizer wait found no clean shutdown file and "
+          "recovered 4321 logs first (the last at broker-4/server.log:302 2026-11-07 10:30:20): 2 after a stop during the authorizer wait, "
+          "1 after a stop during the log recovery of the previous start" in details, details)
+    check("writer healthy", "MDS writer broker 1 (broker-1) (the new writer of the Not starting writer lines of the stuck broker, "
+          "broker-4/metadata-service.log:9): logged Updating external auth store status to INITIALIZED for generation 173 at "
+          "broker-1/metadata-service.log:14 2026-11-07 10:30:59, after the last start of the stuck broker at 2026-11-07 10:30:10, "
+          "and during each of its 3 waits that never ended: the writer is healthy" in details, details)
+    check("no host name", "example.com" not in details, details)
+    check("advice healthy", "MDS writer healthy, broker 1 (broker-1): the problem is on the reader side of the stuck broker" in h["advice"]
+          and h.get("mds_writer") == "healthy", h["advice"])
+    authz = next(x for x in res["known_causes"] if x["title"] == "🚫 Authorization failure")
+    check("authorization on broker 1", authz.get("brokers") == ["broker 1 (broker-1)"] and authz["where"].startswith("on broker 1 in "), authz)
+    verdict = log_report.logs_verdict(res, "ERROR")[1]
+    check("verdict names the stuck broker", f"start with {log_report.AUTHORIZER_STUCK_TITLE} on broker 4 (broker-4)." in verdict
+          and "🔁 Restart loop: broker 4 (broker-4/server.log) was stopped and started again 3 times" in verdict, verdict)
+    rows = {(r["kind"], r["who"]): r for r in res["lifecycle"]["rows"]}
+    check("process rows per broker", rows[("process_stop", "broker 4 (broker-4)")]["count"] == 3 and rows[("process_stop", "broker 4 (broker-4)")]["loop"]
+          and rows[("process_stop", "broker 1 (broker-1)")]["count"] == 1 and not rows[("process_stop", "broker 1 (broker-1)")]["loop"]
+          and ("process_stop", "broker") not in rows, list(rows))
+    tl = log_report.timeline_text(res["timeline"])
+    check("timeline names the broker", "2 brokers: each event names its broker" in tl[0]
+          and any("Authorization failure" in x and "(broker 1 · server.log:7)" in x for x in tl)
+          and any("🚧" in x and "(broker 4 · server.log:50)" in x for x in tl), tl)
+    # the writer resigning and failing its LDAP searches after the last stuck start, without INITIALIZED after them
+    with tempfile.TemporaryDirectory() as tmp:
+        ko = log_report.analyze(log_report.parse_records(records_file(tmp, bundle(writer_ko))))
+    h = ko["known_causes"][0]
+    details = "\n".join(h["details"])
+    check("writer failing", "after the last start of the stuck broker (2026-11-07 10:30:10) it logged 1 writer resigning and 2 LDAP search "
+          "failed (the last at broker-1/metadata-service.log:16 2026-11-07 10:45:00), and no Updating external auth store status to "
+          "INITIALIZED after them: the writer is failing" in details, details)
+    check("advice failing", "MDS writer failing, broker 1 (broker-1): fix the writer first (LDAP, the leaders of _confluent-metadata-auth)"
+          in h["advice"] and h.get("mds_writer") == "failing", h["advice"])
+    # the writer not in the input: where the stuck broker names it, without its host name
+    with tempfile.TemporaryDirectory() as tmp:
+        alone = log_report.analyze(log_report.parse_records(records_file(tmp, bundle("")[:bundle("").index("@@PGFILE@@|bundle/broker-1/")])))
+    details = "\n".join(alone["known_causes"][0]["details"])
+    check("one broker left: no names", "brokers" not in alone["summary"] and "broker 4 ·" not in details, details)
+    check("writer elsewhere", "MDS writer: another broker, named by the stuck broker in Not starting writer from node … since new writer is … "
+          "(metadata-service.log:9), whose metadata-service.log is not in the input" in details and "example.com" not in details, details)
 
 
 def test_infra_events_and_bursts():
