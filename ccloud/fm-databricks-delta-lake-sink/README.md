@@ -20,8 +20,8 @@ The `aws` CLI must be configured with access to the staging bucket (the script e
 | `DATABRICKS_AWS_BUCKET_REGION` | S3 staging bucket region |
 | `DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID` | AWS access key id used by the connector for the staging bucket |
 | `DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY` | AWS secret access key used by the connector for the staging bucket |
-| `DATABRICKS_SERVER_HOSTNAME` | Databricks SQL warehouse server hostname |
-| `DATABRICKS_HTTP_PATH` | Databricks SQL warehouse HTTP path |
+| `DATABRICKS_SERVER_HOSTNAME` | Databricks server hostname |
+| `DATABRICKS_HTTP_PATH` | HTTP path of a Databricks SQL warehouse (`/sql/1.0/warehouses/...`) or all-purpose cluster (`sql/protocolv1/o/...`) |
 | `DATABRICKS_TOKEN` | Databricks personal access token |
 
 ## How to run
@@ -43,10 +43,10 @@ playground run -f fully-managed-databricks-delta-lake-sink.sh
 
 ## What the script does
 
-1. Makes sure the Databricks SQL warehouse is running. Stops with the Databricks error if the warehouse start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
+1. Makes sure the Databricks SQL warehouse is running (skipped when the http path is an all-purpose cluster). Stops with the Databricks error if the warehouse start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 2. Empties the S3 staging bucket.
-3. Creates topic `pageviews` and produces 100 Avro records with `playground topic produce` (datagen `pageviews` schema).
-4. Creates the fully managed `DatabricksDeltaLakeSink` connector (`delta.lake.topic2table.map` `pageviews:pageviews_fm_<user>`, `delta.lake.table.auto.create`). The table is per user (`$USER` in lower case, other characters than letters and digits replaced by `_`) because the Databricks workspace is shared: writing into a table created by someone else fails with `[INSUFFICIENT_PERMISSIONS] Insufficient privileges: Principal '...' does not have SELECT on Table '...'`. The table is dropped first (`DROP TABLE IF EXISTS`), so it only holds the records of this run.
+3. Creates topic `pageviews_fm_<user>_<run>_<cp version>` and produces 100 Avro records with `playground topic produce` (datagen `pageviews` schema). `<user>` is `$USER` and `<run>` is `$GITHUB_RUN_NUMBER` (the epoch when not set), in lower case, other characters than letters and digits replaced by `_`. One topic per run because the connector skips, and never auto-creates the table for, records whose offset is not above a file left under `topics/<topic>/` in the staging bucket by an earlier run (the bucket is not always emptied, for example when the caller is not allowed to).
+4. Creates the fully managed `DatabricksDeltaLakeSink` connector, mapping the topic to a table of the same name (`delta.lake.topic2table.map`), created by the connector (`delta.lake.table.auto.create`). The table includes the user because the Databricks workspace is shared: writing into a table created by someone else fails with `[INSUFFICIENT_PERMISSIONS] Insufficient privileges: Principal '...' does not have SELECT on Table '...'`. The table is new on each run, so it only holds the records of this run.
 5. Waits for the connector lag to reach 0 with `playground connector show-lag`.
-6. Checks that the 100 records are in the table with `SELECT COUNT(*)` (SQL Statement Execution API of the warehouse, `databricks_wait_for_table_rows`), and fails otherwise. The lag alone proves nothing: the staging S3 writer commits the offsets before the `COPY INTO`, so the lag reaches 0 even when the `COPY INTO` fails and the task is `FAILED`. When the `COPY INTO` fails, the connector log only shows `java.sql.SQLException (SQLState=HY000, vendorCode=500051)`: the real error is in the Query History of the SQL warehouse, for example `PERMISSION_DENIED: Principal '...' does not have READ FILES on External Location '...'` (the principal of the token needs `READ FILES` on the external location of the staging bucket).
-7. Deletes the connector at the end of the run.
+6. Checks that the 100 records are in the table with `SELECT COUNT(*)` (`databricks_wait_for_table_rows`: SQL Statement Execution API when the http path is a SQL warehouse, Command Execution API when it is an all-purpose cluster), and fails otherwise. The lag alone proves nothing: the staging S3 writer commits the offsets before the `COPY INTO`, so the lag reaches 0 even when the `COPY INTO` fails and the task is `FAILED`. When the `COPY INTO` fails, the connector log only shows `java.sql.SQLException (SQLState=HY000, vendorCode=500051)`: the real error is in the Query History of the SQL warehouse, for example `PERMISSION_DENIED: Principal '...' does not have READ FILES on External Location '...'` (the principal of the token needs `READ FILES` on the external location of the staging bucket).
+7. Deletes the connector, then drops the table, removes the staged files of the topic (with the staging S3 keys) and deletes the topic, as they are only for this run. A failure of these cleanups only logs a warning.
