@@ -28390,7 +28390,7 @@ function add_connector_config_based_on_environment () {
       # rendered for the inventory (nothing to do with plaintext)
       local ansible_client_properties ansible_sr_https=false
       get_connect_container
-      ansible_client_properties=$(docker exec "${connect_container:-connect}" cat /etc/kafka/client.properties 2> /dev/null)
+      ansible_client_properties=$(docker exec "${connect_container:-connect}" cat /etc/kafka/client.properties 2> /dev/null || true)
       [ "$(ansible_rest_scheme schema-registry)" == "https" ] && ansible_sr_https=true
       if [ -z "$ansible_client_properties" ] && [ "$ansible_sr_https" == "false" ]
       then
@@ -78508,7 +78508,7 @@ playground_topic_consume_command() {
       bootstrap_server="$broker_container:9092"
       get_connect_container
       container=$connect_container
-      ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null)
+      ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null || true)
       if [ -n "$ansible_client_properties" ]
       then
           security="$consumer_config_name /etc/kafka/client.properties"
@@ -79908,7 +79908,7 @@ playground_topic_produce_command() {
       bootstrap_server="$broker_container:9092"
       get_connect_container
       container=$connect_container
-      ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null)
+      ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null || true)
       if [ -n "$ansible_client_properties" ]
       then
           security="$producer_config_name /etc/kafka/client.properties"
