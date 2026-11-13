@@ -508,11 +508,15 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
         first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
         where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
                  else f"in {first_f['label']} (first at {first})")
+        # ERROR / FATAL occurrences among them: a cause seen in WARN records only comes after the ones of its severity
+        # that failed something, and is never the 👉 start with of the verdict when some cause has an ERROR (one WARN
+        # "Communications link failure" of another connector ranked before 166,000 ERROR records of the real cause)
+        errors = sum(r["count"] for _, _, r in matches if r["level"] in ("ERROR", "FATAL"))
         hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
                 "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
                 "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
                 # the records it matched (index set by analyze()): how much of it is in the current selection
-                "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
+                "records": [r["index"] for _, _, r in matches if r.get("index") is not None], "_errors": errors}
         # what to read about it: a knowledge-base article and / or a docs page
         # (an article of a variant only when one of the records matched is that variant)
         texts = [r["text"] for _, _, r in matches]
@@ -548,7 +552,7 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
                 hint["not_enough_replicas"] = ner
                 hint["details"] = not_enough_replicas_details(ner)
         out.append(hint)
-    out.sort(key=lambda h: SEVERITY_ORDER.index(h["severity"]))
+    out.sort(key=lambda h: (SEVERITY_ORDER.index(h["severity"]), 0 if h["_errors"] else 1))
     return out
 
 
@@ -7568,7 +7572,8 @@ def logs_verdict_parts(res: dict, levels: str, unit: str = "file") -> Tuple[str,
         lines: List[dict] = []
         # the first known cause, else the most frequent root cause
         if res["known_causes"]:
-            title = res["known_causes"][0]["title"]
+            # the first known cause with an ERROR / FATAL record (the headline counts them), else the first one
+            title = next((h for h in res["known_causes"] if h.get("_errors", 1)), res["known_causes"][0])["title"]
             lines.append({"icon": "👉", "label": "Start with", "text": title, "href": "#" + finding_id(title),
                           "plain": f": start with {title}.", "glue": ""})
         elif res["root_causes"]:
@@ -8540,7 +8545,7 @@ def main() -> int:
         compact = dict({k: v for k, v in res.items() if not k.startswith("_")}, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
                                    for f in res["files"]],
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
-                       known_causes=[{k: v for k, v in h.items() if k not in ("records", "_chains")} for h in res["known_causes"]],
+                       known_causes=[{k: v for k, v in h.items() if k != "records" and not k.startswith("_")} for h in res["known_causes"]],
                        findings=[{k: v for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
         if res.get("lifecycle"):
             strip = lambda rows: [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]  # noqa: E731
