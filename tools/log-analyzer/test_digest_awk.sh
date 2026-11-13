@@ -19,7 +19,9 @@ printf '%s\n' 'header' '[2026-11-01 10:00:00,000] ERROR old' '  at a.b(C.java:1)
 printf '%s\n' '%3|1793896102.923|FAIL|rdkafka#producer-1| new' '%3|1700000000.000|FAIL|rdkafka#producer-1| old' > "$tmp/window-epoch.log"
 printf '%s\n' 'no time on this line' 'ERROR nor on this one' > "$tmp/window-none.log"
 samples=("$root/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log" "$root"/tools/log-analyzer/samples/kafka-clients/*.log
-         "$root"/tools/log-analyzer/samples/kafka-streams/*.log "$root"/tools/log-analyzer/samples/compare/*.log)
+         "$root"/tools/log-analyzer/samples/kafka-streams/*.log "$root"/tools/log-analyzer/samples/compare/*.log
+         "$root"/tools/log-analyzer/samples/connect-workers/worker-?/connect.log "$root/tools/log-analyzer/samples/grafana-loki-export.txt"
+         "$root/tools/log-analyzer/samples/connector-cr/connect-0.txt")
 # the events of the INFO lines (lifecycle, GC pauses of 1 s or more, process stops and failed starts, controller changes): same with every awk
 cat > "$tmp/events.log" << 'EOF'
 [2026-11-07 10:00:00,000] INFO [KafkaServer id=2] started (kafka.server.KafkaServer)

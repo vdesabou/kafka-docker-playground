@@ -5033,7 +5033,18 @@ subcommands:
         \                        other/client-*: a broker that refuses connections
         or does not resolve, records\n                         timed out, an unknown
         property, and crashes (Python traceback, .NET unhandled\n                         exception,
-        Go and Rust panics, uncaught Node.js error)\n  cfk_bundle             CFK
+        Go and Rust panics, uncaught Node.js error)\n  connect_workers        2 Connect
+        workers (one logging each line twice: ⚠️ duplicated lines collapsed),\n                         2
+        thread dumps of each (\U0001F9F5 per JVM: a lock stall of the binlog keepalive
+        thread\n                         behind a TLS socket write), a task whose
+        graceful stop failed and that still runs\n                         (\U0001F9DF),
+        an HDFS sink rotating with empty offsets (\U0001F502 livelock) and a\n                         /connectors?expand=status
+        output whose FAILED task trace becomes a record\n  loki_export            Grafana
+        / Loki text export (header, epoch and UTC time before each line, newest\n
+        \                        first) of an S3 sink denied by S3: prefix removed,
+        put back in the order of time\n  connector_cr           a folder with one
+        CFK Connector custom resource and the log of its worker saved as\n                         .txt:
+        read as log files, not as a CFK support bundle\n  cfk_bundle             CFK
         support bundle: kafka-2 crash-looping on an expired certificate, pending volume,\n
         \                        OOMKilled Connect pod, failed connector task, Schema
         Registry authentication\n                         failure, operator reconcile
@@ -5048,8 +5059,8 @@ subcommands:
         \                        complete): --sample cfk_rollout --sample cfk_rollout_after
         compares the two\n\nRepeatable: ✓ Yes\nAllowed values: connect_task_failure,
         connect_many_connectors, support_bundle, broker_pressure, jvm_dumps, kafka_streams,
-        kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout,
-        cfk_rollout_after\nConflicts with: --from-containers"
+        kafka_clients, compare_fix, connect_workers, loki_export, connector_cr, cfk_bundle,
+        cfk_kraft_migration, cfk_rollout, cfk_rollout_after\nConflicts with: --from-containers"
     - names:
       - "--errors-only"
       argument: ''

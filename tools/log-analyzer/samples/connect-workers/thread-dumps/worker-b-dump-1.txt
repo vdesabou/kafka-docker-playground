@@ -1,0 +1,204 @@
+2026-11-10 10:36:30
+Full thread dump OpenJDK 64-Bit Server VM (17.0.15+6-LTS mixed mode, sharing):
+
+"pool-1-thread-0" #30 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f000000001e nid=0x1000 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-1" #31 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f000000001f nid=0x1001 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-2" #32 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000020 nid=0x1002 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-3" #33 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000021 nid=0x1003 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-4" #34 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000022 nid=0x1004 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-5" #35 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000023 nid=0x1005 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-6" #36 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000024 nid=0x1006 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-7" #37 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000025 nid=0x1007 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-8" #38 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000026 nid=0x1008 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-9" #39 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000027 nid=0x1009 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-10" #40 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000028 nid=0x100a waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-1-thread-11" #41 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000029 nid=0x100b waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000bbbb0001> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)
+	at java.util.concurrent.LinkedBlockingQueue.take(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"kafka-producer-network-thread | connector-producer-orders-cdc-0" #80 prio=5 os_prio=0 cpu=100.00ms elapsed=2190.00s tid=0x00007f0000000050 nid=0x1032 runnable  [0x00007f0000000000]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(Unknown Source)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(Unknown Source)
+	at org.apache.kafka.common.network.Selector.select(Unknown Source)
+	at org.apache.kafka.clients.producer.internals.Sender.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"blc-keepalive-db.example.com:3306" #350 prio=5 os_prio=0 cpu=11.00ms elapsed=2190.00s tid=0x00007f000000015e nid=0x2001 waiting on condition  [0x00007f0000000000]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(Unknown Source)
+	- parking to wait for  <0x00000000aaaa0001> (a java.util.concurrent.locks.ReentrantLock$NonfairSync)
+	at java.util.concurrent.locks.LockSupport.park(Unknown Source)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(Unknown Source)
+	at java.util.concurrent.locks.ReentrantLock$Sync.lock(Unknown Source)
+	at java.util.concurrent.locks.ReentrantLock.lock(Unknown Source)
+	at sun.security.ssl.SSLSocketImpl.closeNotify(Unknown Source)
+	at sun.security.ssl.SSLSocketImpl.shutdownOutput(Unknown Source)
+	at com.github.shyiko.mysql.binlog.network.protocol.PacketChannel.close(Unknown Source)
+	at com.github.shyiko.mysql.binlog.BinaryLogClient$5.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- None
+
+"blc-db.example.com:3306" #371 prio=5 os_prio=0 cpu=5000.00ms elapsed=2190.00s tid=0x00007f0000000173 nid=0x2002 runnable  [0x00007f0000000000]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.FileDispatcherImpl.write0(Unknown Source)
+	at sun.nio.ch.SocketDispatcher.write(Unknown Source)
+	at sun.nio.ch.NioSocketImpl.tryWrite(Unknown Source)
+	at sun.nio.ch.NioSocketImpl.implWrite(Unknown Source)
+	at java.net.Socket$SocketOutputStream.write(Unknown Source)
+	at sun.security.ssl.SSLSocketOutputRecord.flush(Unknown Source)
+	at sun.security.ssl.KeyUpdate$KeyUpdateProducer.produce(Unknown Source)
+	at sun.security.ssl.SSLSocketImpl.readApplicationRecord(Unknown Source)
+	at com.github.shyiko.mysql.binlog.io.ByteArrayInputStream.read(Unknown Source)
+	at com.github.shyiko.mysql.binlog.BinaryLogClient.listen(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+
+   Locked ownable synchronizers:
+	- <0x00000000aaaa0001> (a java.util.concurrent.locks.ReentrantLock$NonfairSync)
+

@@ -1,0 +1,35 @@
+[admin@bastion ~]$ curl -s "http://connect.example.com:8083/connectors?expand=status" | jq .
+{
+  "archive-sink": {
+    "status": {
+      "name": "archive-sink",
+      "connector": {"state": "RUNNING", "worker_id": "10.0.0.11:8083"},
+      "tasks": [{"id": 0, "state": "RUNNING", "worker_id": "10.0.0.11:8083"}],
+      "type": "sink"
+    }
+  },
+  "orders-cdc": {
+    "status": {
+      "name": "orders-cdc",
+      "connector": {"state": "RUNNING", "worker_id": "10.0.0.12:8083"},
+      "tasks": [{"id": 0, "state": "RUNNING", "worker_id": "10.0.0.11:8083"}],
+      "type": "source"
+    }
+  },
+  "payments-sink": {
+    "status": {
+      "name": "payments-sink",
+      "connector": {"state": "RUNNING", "worker_id": "10.0.0.13:8083"},
+      "tasks": [
+        {
+          "id": 0,
+          "state": "FAILED",
+          "worker_id": "10.0.0.13:8083",
+          "trace": "org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler\n\tat org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:230)\n\tat org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:518)\n\tat org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:337)\nCaused by: org.apache.kafka.connect.errors.DataException: Failed to deserialize data for topic payments to Avro: \n\tat io.confluent.connect.avro.AvroConverter.toConnectData(AvroConverter.java:148)\nCaused by: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!\n\tat io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.getByteBuffer(AbstractKafkaSchemaSerDe.java:600)\n"
+        }
+      ],
+      "type": "sink"
+    }
+  }
+}
+[admin@bastion ~]$

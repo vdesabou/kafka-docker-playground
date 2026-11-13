@@ -1,0 +1,35 @@
+[2026-11-10 09:00:00,000] INFO Kafka version: 8.1.2-ce (org.apache.kafka.common.utils.AppInfoParser:124)
+[2026-11-10 09:00:00,001] INFO Kafka commitId: 4f5cd2a0c1b8e3d9 (org.apache.kafka.common.utils.AppInfoParser:125)
+[2026-11-10 09:00:02,140] INFO Kafka Connect worker initialization took 2140ms (org.apache.kafka.connect.cli.AbstractConnectCli:144)
+[2026-11-10 09:00:03,021] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect:57)
+[2026-11-10 09:00:04,028] INFO [Worker clientId=connect-connect-0.connect.confluent.svc.cluster.local:8083, groupId=connect-cluster] Rebalance started (org.apache.kafka.connect.runtime.distributed.WorkerCoordinator:242)
+[2026-11-10 09:00:06,010] INFO [Worker clientId=connect-connect-0.connect.confluent.svc.cluster.local:8083, groupId=connect-cluster] Starting connector orders-sink (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-10 09:00:06,020] INFO [orders-sink|worker] Instantiated connector orders-sink with version 10.8.4 of type class io.confluent.connect.jdbc.JdbcSinkConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-10 09:00:06,030] INFO [Worker clientId=connect-connect-0.connect.confluent.svc.cluster.local:8083, groupId=connect-cluster] Starting task orders-sink-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-10 09:00:06,040] INFO [orders-sink|task-0] Instantiated task orders-sink-0 with version 10.8.4 of type io.confluent.connect.jdbc.sink.JdbcSinkTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-10 09:05:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:10:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:15:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:20:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:25:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:30:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:35:00,000] INFO [orders-sink|task-0] Completed write operation for 500 records to the database (io.confluent.connect.jdbc.sink.JdbcSinkTask:96)
+[2026-11-10 09:40:09,100] WARN [orders-sink|task-0] Write of 500 records failed, remainingRetries=2 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+org.postgresql.util.PSQLException: Connection to db.example.com:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+[2026-11-10 09:40:12,200] WARN [orders-sink|task-0] Write of 500 records failed, remainingRetries=1 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+org.postgresql.util.PSQLException: Connection to db.example.com:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+[2026-11-10 09:40:18,300] WARN [orders-sink|task-0] Write of 500 records failed, remainingRetries=0 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+org.postgresql.util.PSQLException: Connection to db.example.com:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+[2026-11-10 09:40:30,400] ERROR [orders-sink|task-0] WorkerSinkTask{id=orders-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: java.sql.SQLException: Exception chain:
+org.postgresql.util.PSQLException: Connection to db.example.com:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:130)
