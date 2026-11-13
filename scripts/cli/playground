@@ -67919,7 +67919,8 @@ playground_analyze_watch_command() {
   # topic_describe, log_dirs, screenshot, document. Nothing is copied or moved (no --keep-dir)
   triage_kinds() {
       local walked
-      walked=$(mktemp -t kdp-watch-walked)
+      # the X's are required by GNU mktemp (Linux): without them it fails with "too few X's in template"
+      walked=$(mktemp -t kdp-watch-walked-XXXXXXXXXX)
       cat > "$walked"
       python3 -I "$root_folder/tools/log-analyzer/bundle_triage.py" --walked "$walked" 2> /dev/null \
           | python3 -I -c 'import json, sys; [print(f["kind"] + "\t" + f["path"]) for f in json.load(sys.stdin).get("files", []) if f.get("path") and "\t" not in f["path"] and "\n" not in f["path"]]' 2> /dev/null
