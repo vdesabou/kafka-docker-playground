@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flight recording analysis</title><style>
+.viz-root {
+  color-scheme: light;
+  --page: #f1f5f9; --surface-1: #ffffff; --text-primary: #1e293b; --text-secondary: #475569; --text-muted: #64748b;
+  --grid: #e2e8f0; --axis: #cbd5e1; --border: rgba(15,23,42,0.10); --series-1: #2a78d6;
+  --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
+  --good: #0ca30c; --good-text: #006300; --critical: #d03b3b; --warning: #fab219;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0f172a; --surface-1: #1e293b; --text-primary: #e2e8f0; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
+    --grid: #334155; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --good-text: #0ca30c;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0f172a; --surface-1: #1e293b; --text-primary: #e2e8f0; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
+  --grid: #334155; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+  --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+  --good-text: #0ca30c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+/* the blue header banner of the other playground reports (tools/report-common/report_html.py) */
+header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; border-radius: 12px; padding: 22px 28px; }
+header .sub { color: #fff; opacity: .85; }
+header a { color: #fff; }
+header .theme-toggle { color: #fff; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); }
+
+h1 { font-size: 1.35rem; margin: 0 0 4px; font-weight: 600; }
+h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
+.sub { color: var(--text-secondary); font-size: .875rem; margin: 0; }
+a { color: var(--series-1); }
+.theme-toggle { white-space: nowrap; flex-shrink: 0; font: inherit; font-size: .8rem; color: var(--text-secondary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; }
+.card .sub { margin-bottom: 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 16px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: inherit; }
+.tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 9px; font-size: .78rem; box-shadow: 0 2px 8px rgba(0,0,0,.12); display: none; white-space: nowrap; z-index: 2; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .8rem; color: var(--text-secondary); margin: 2px 0 6px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: -1px; }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 500; }
+td.num, th.num { text-align: right; }
+details { margin-top: 12px; } summary { cursor: pointer; font-weight: 600; font-size: .9rem; padding: 6px 0; }
+.full { grid-column: 1 / -1; }
+.empty { color: var(--text-muted); font-size: .875rem; padding: 24px 0; }
+footer { color: var(--text-muted); font-size: .78rem; margin-top: 24px; }
+
+.jfr-section { margin-top: 26px; }
+.jfr-section > h2 { font-size: 1.15rem; margin: 0 0 4px; }
+.jfr-findings { list-style: none; margin: 14px 0 18px; padding: 0; display: grid; gap: 8px; }
+.jfr-findings li { background: var(--surface-1); border: 1px solid var(--border); border-left: 4px solid var(--sev); border-radius: 8px;
+  padding: 10px 14px; font-size: .875rem; line-height: 1.45; }
+.jfr-findings .title { font-weight: 600; margin-right: 6px; }
+.jfr-findings .next { color: var(--text-secondary); display: block; margin-top: 3px; }
+.jfr-section code { font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: .78rem; }
+.jfr-section .muted { color: var(--text-muted); }
+.jfr-verdict { margin: 18px 0 0; padding: 12px 16px; border-left: 4px solid var(--sev); font-size: 1rem; font-weight: 500; }
+.jfr-section td code { word-break: break-all; }
+</style><style>
+header{position:relative;overflow:hidden;border-radius:18px;padding:26px 32px 22px;
+background:radial-gradient(1200px 300px at 0% 0%,rgba(56,189,248,.35),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(236,72,153,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#312e81 45%,#6d28d9 75%,#a21caf 100%);box-shadow:0 10px 30px rgba(49,46,129,.35)}
+/* the verdict tints the header: red with ERROR/FATAL, amber with WARN only, green without error (the progress page keeps the default) */
+header.danger{background:radial-gradient(1200px 300px at 0% 0%,rgba(251,113,133,.30),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(249,115,22,.40),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#4c0519 45%,#9f1239 75%,#c2410c 100%);box-shadow:0 10px 30px rgba(159,18,57,.35)}
+header.warn{background:radial-gradient(1200px 300px at 0% 0%,rgba(253,224,71,.22),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(251,191,36,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#422006 45%,#92400e 75%,#d97706 100%);box-shadow:0 10px 30px rgba(146,64,14,.35)}
+header.ok{background:radial-gradient(1200px 300px at 0% 0%,rgba(110,231,183,.25),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(45,212,191,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#064e3b 45%,#047857 75%,#0d9488 100%);box-shadow:0 10px 30px rgba(4,120,87,.35)}
+header{color:#fff}.lr-brand{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;
+letter-spacing:.04em;color:#fff;text-decoration:none;padding:3px 12px 3px 6px;border-radius:999px;background:rgba(255,255,255,.12);
+border:1px solid rgba(255,255,255,.22);transition:background .15s}
+.lr-brand:hover{background:rgba(255,255,255,.22)}
+.lr-whale{font-size:1.25rem;line-height:1;display:inline-block;animation:lr-swim 4s ease-in-out infinite}
+@keyframes lr-swim{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-6deg)}}
+@media (prefers-reduced-motion:reduce){.lr-whale{animation:none}}
+header .lr-brand{margin-bottom:10px}header a.lr-brand,header a.lr-brand:visited{color:#fff;text-decoration:none}header h1{font-weight:800;letter-spacing:-.01em}</style></head>
+<body><div class="viz-root">
+<header class='ok'><div><div><a class='lr-brand' href='https://kafka-docker-playground.io/' title='kafka-docker-playground: the playground CLI that generated this report'><span class='lr-whale'>🐳</span> kafka-docker-playground</a></div><h1>🛩️ Flight recording analysis</h1><p class="sub">recording.jfr · OpenJDK 64-Bit Server VM (17.0.21.0.3+1-LTS)</p></div>
+<button class="theme-toggle" id="theme-toggle" type="button">Toggle theme</button></header>
+<div class="card jfr-verdict" style="--sev: var(--good)">✅ Nothing alarming in this recording.</div>
+<section class="jfr-section"><h2>🔎 Where the time goes</h2><p class="sub">Java Flight Recorder, 31 s · task threads <code>task-thread-http-sink-0</code> … <code>task-thread-http-sink-9</code> · recording <a href="/home/runner/work/kafka-docker-playground/kafka-docker-playground/other/cli/flight-recorder-connect-2026-11-12-23-53-06.jfr">flight-recorder-connect-2026-11-12-23-53-06.jfr</a> (opens in JDK Mission Control)</p><ul class="jfr-findings"><li style="--sev: var(--axis)"><span class="title">ℹ️ The tasks wait for records from Kafka.</span>The task threads spent 100% of the recording in the Kafka consumer (poll, fetch).<span class="next">→ Either the topic had no data (the load is slower than the connector), or the fetch is the limit: consumer.override.max.poll.records, fetch.max.bytes, max.partition.fetch.bytes and fetch.min.bytes, and the number of partitions of the topic (one task reads its partitions one fetch at a time).</span></li><li style="--sev: var(--axis)"><span class="title">ℹ️ Few CPU samples.</span>Only 0 execution samples of the task threads: the tasks were rarely running Java code, the CPU by layer and the hot methods are not meaningful.</li></ul><div class="grid"><div class="card"><h2>🧵 Task thread time, by state</h2><p class="sub">Share of the recording each task thread spent running, blocked or waiting (calls of 1 ms or more; the rest is split by native samples)</p><div class="legend"><span style="--c: var(--series-3)">Kafka client (poll, send)</span></div><svg viewBox="0 0 640 386" role="img" aria-label="Task thread time by state"><line x1="150.0" x2="150.0" y1="2" y2="358" stroke="var(--grid)"/><text x="150.0" y="372" fill="var(--text-muted)" font-size="11" text-anchor="middle">0%</text><line x1="270.5" x2="270.5" y1="2" y2="358" stroke="var(--grid)"/><text x="270.5" y="372" fill="var(--text-muted)" font-size="11" text-anchor="middle">25%</text><line x1="391.0" x2="391.0" y1="2" y2="358" stroke="var(--grid)"/><text x="391.0" y="372" fill="var(--text-muted)" font-size="11" text-anchor="middle">50%</text><line x1="511.5" x2="511.5" y1="2" y2="358" stroke="var(--grid)"/><text x="511.5" y="372" fill="var(--text-muted)" font-size="11" text-anchor="middle">75%</text><line x1="632.0" x2="632.0" y1="2" y2="358" stroke="var(--grid)"/><text x="632.0" y="372" fill="var(--text-muted)" font-size="11" text-anchor="middle">100%</text><text x="142" y="22.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-0</text><rect x="150.0" y="6" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-0 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="22.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="58.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-1</text><rect x="150.0" y="42" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-1 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="58.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="94.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-2</text><rect x="150.0" y="78" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-2 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="94.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="130.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-3</text><rect x="150.0" y="114" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-3 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="130.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="166.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-4</text><rect x="150.0" y="150" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-4 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="166.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="202.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-5</text><rect x="150.0" y="186" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-5 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="202.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="238.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-6</text><rect x="150.0" y="222" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-6 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="238.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="274.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-7</text><rect x="150.0" y="258" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-7 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="274.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="310.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-8</text><rect x="150.0" y="294" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-8 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="310.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text><text x="142" y="346.0" fill="var(--text-secondary)" font-size="12" text-anchor="end">http-sink-9</text><rect x="150.0" y="330" width="480.0" height="24" rx="3" fill="var(--series-3)" data-tip="task-thread-http-sink-9 · Kafka client (poll, send): 100%" tabindex="0"/><text x="390.0" y="346.0" fill="#fff" font-size="11" font-weight="600" text-anchor="middle" pointer-events="none">100%</text></svg><details><summary>Table</summary><table><tr><th>Thread</th><th class=num>Running (CPU)</th><th class=num>Blocked on network I/O</th><th class=num>Kafka client (poll, send)</th><th class=num>Lock contention</th><th class=num>Waiting (sleep, park, wait)</th><th class=num>File I/O</th><th class=num>Not attributed</th></tr><tr><td>task-thread-http-sink-0</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-1</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-2</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-3</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-4</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-5</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-6</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-7</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-8</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr><tr><td>task-thread-http-sink-9</td><td class=num>0%</td><td class=num>0%</td><td class=num>100%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td><td class=num>0%</td></tr></table></details><div class="tooltip"></div></div><div class="card"><h2>🔥 CPU of the task threads, by layer</h2><p class="sub">0 execution samples, each classified by its first frame outside the JDK</p><div class="empty">🤷 no execution sample of the task threads</div><details><summary>Table</summary><table><tr><th>Layer</th><th>Top packages</th><th class=num>CPU samples</th></tr></table></details><div class="tooltip"></div></div><div class="card"><h2>🌐 Network I/O of the task threads</h2><p class="sub">Socket reads and writes of 1 ms or more (events), and shorter calls seen by the native samples, by remote</p><table><tr><th>Remote</th><th class=num>Calls ≥ 1 ms</th><th class=num>Avg ms</th><th class=num>Total s</th><th class=num>Task time</th><th class=num>Shorter calls</th></tr><tr><td><code>broker:9092</code> <span class="muted">broker</span></td><td class=num>1</td><td class=num>1.1</td><td class=num>0.0</td><td class=num>0%</td><td class=num>0%</td></tr></table></div><div class="card"><h2>💾 Allocation by class</h2><p class="sub">Task threads, 102.2 kB/s in total (8.2 MB/s for the whole JVM)</p><table><tr><th>Class</th><th class=num>MB/s</th><th class=num>Share</th></tr><tr><td><code>java.util.HashMap$KeyIterator</code></td><td class=num>0</td><td class=num>16%</td></tr><tr><td><code>java.util.Collections$UnmodifiableSet</code></td><td class=num>0</td><td class=num>16%</td></tr><tr><td><code>java.util.stream.ReferencePipeline$2</code></td><td class=num>0</td><td class=num>16%</td></tr><tr><td><code>java.util.ArrayList$Itr</code></td><td class=num>0</td><td class=num>16%</td></tr><tr><td><code>java.util.HashMap$EntryIterator</code></td><td class=num>0</td><td class=num>16%</td></tr><tr><td><code>java.util.LinkedHashMap$LinkedValueIterator</code></td><td class=num>0</td><td class=num>16%</td></tr></table></div><div class="card"><h2>🔒 Locks and waits (task threads)</h2><p class="sub">🔒 Locks (monitor enter)</p><table><tr><th>Site</th><th>Monitor</th><th class=num>Waits</th><th class=num>Total s</th></tr><tr><td><code>AbstractCoordinator.pollHeartbeat</code></td><td>org.apache.kafka.clients.consumer.internals.ConsumerCoordinator</td><td class=num>7</td><td class=num>0.0</td></tr></table></div><div class="card"><h2>🔥 Busiest threads of the JVM</h2><p class="sub">CPU cores used, average over the recording</p><table><tr><th>Thread</th><th class=num>Cores</th></tr><tr><td>qtp670959005-75</td><td class=num>0.00</td></tr><tr><td>kafka-producer-network-thread | connect-cluster-connect-adminclient-producer-offsets</td><td class=num>0.00</td></tr><tr><td>idle-timeout-task</td><td class=num>0.00</td></tr><tr><td>PyroscopeProfilingScheduler</td><td class=num>0.00</td></tr><tr><td>task-thread-http-sink-8 <span class="muted">task</span></td><td class=num>0.00</td></tr><tr><td>task-thread-http-sink-9 <span class="muted">task</span></td><td class=num>0.00</td></tr><tr><td>task-thread-http-sink-6 <span class="muted">task</span></td><td class=num>0.00</td></tr><tr><td>task-thread-http-sink-7 <span class="muted">task</span></td><td class=num>0.00</td></tr></table></div><div class="card"><h2>✅ Other signals</h2><p class="sub">Checked and found normal</p><table><tr><th>Signal</th><th>Value</th></tr><tr><td>✅ Network I/O</td><td>0% of the task time blocked on calls of 1 ms or more</td></tr><tr><td>✅ Lock contention</td><td>0% of the task time</td></tr><tr><td>✅ Allocation</td><td>102.2 kB/s by the task threads</td></tr><tr><td>✅ Exceptions thrown</td><td>0 per second</td></tr></table></div></div></section>
+<footer>🛠️ Generated by playground analyze flight-recorder. Open the recording in JDK Mission Control (https://jdk.java.net/jmc/) for the details.</footer>
+</div>
+<script>
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+</script>
+
+<script>
+(function () {
+  document.querySelectorAll(".jfr-section .card").forEach(card => {
+    const tt = card.querySelector(".tooltip");
+    if (!tt) return;
+    card.querySelectorAll("[data-tip]").forEach(el => {
+      const show = e => {
+        const r = card.getBoundingClientRect();
+        tt.textContent = el.dataset.tip; tt.style.display = "block";
+        const x = (e.clientX !== undefined ? e.clientX : el.getBoundingClientRect().left) - r.left + 12;
+        const y = (e.clientY !== undefined ? e.clientY : el.getBoundingClientRect().top) - r.top + 12;
+        tt.style.left = Math.min(x, r.width - tt.offsetWidth - 8) + "px"; tt.style.top = y + "px";
+      };
+      el.addEventListener("pointermove", show); el.addEventListener("focus", show);
+      el.addEventListener("pointerleave", () => tt.style.display = "none"); el.addEventListener("blur", () => tt.style.display = "none");
+    });
+  });
+})();
+</script>
+
+<style>
+.share-open{font:inherit;cursor:pointer}
+.share-hero{font-size:.85rem;font-weight:700;padding:6px 16px;border-radius:999px;border:0;background:#fff;color:#4c1d95;
+box-shadow:0 4px 14px rgba(15,23,42,.25);transition:transform .1s;white-space:nowrap}.share-hero:hover{transform:translateY(-1px);background:#f5f3ff}
+.header-meta .share-hero{margin-left:auto}
+.share-next{margin-left:auto;align-self:flex-start}
+/* below the fixed Toggle theme of the page (top right of the window) */
+.share-corner{position:absolute;top:44px;right:24px;z-index:2}
+.share-float{position:fixed;top:12px;right:16px;z-index:30;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;border:0;background:#7c3aed;color:#fff}
+.share-dlg{border:0;border-radius:18px;padding:0;width:min(660px,92vw);max-width:660px;max-height:88vh;overflow:auto;
+box-shadow:0 30px 80px rgba(15,23,42,.45);background:#fff;color:#1e293b;position:fixed;inset:0;margin:auto;height:fit-content;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
+.share-dlg[open]{animation:sd-in .22s cubic-bezier(.22,1,.36,1)}
+@keyframes sd-in{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.share-dlg::backdrop{background:rgba(15,23,42,.6);backdrop-filter:blur(3px)}
+.sd-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;color:#fff;
+background:radial-gradient(500px 120px at 0% 0%,rgba(56,189,248,.35),transparent 60%),linear-gradient(120deg,#312e81,#6d28d9 60%,#a21caf)}
+.sd-head h3{font-size:1.1rem;margin:0;color:#fff!important;border:0;padding:0}
+.sd-x{border:0!important;background:rgba(255,255,255,.16)!important;color:#fff!important;width:30px;height:30px;padding:0!important;border-radius:50%!important;font-size:.9rem}
+.sd-x:hover{background:rgba(255,255,255,.3)!important}
+.sd-body{padding:16px 20px 6px}
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+.share-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;text-decoration:none;cursor:pointer;
+padding:12px 14px;border-radius:14px;border:1px solid #e2e8f0;background:#f8fafc;transition:transform .12s,box-shadow .12s,border-color .12s,background .12s}
+.share-card:hover{transform:translateY(-2px);border-color:#a78bfa;box-shadow:0 10px 24px -12px rgba(109,40,217,.5);background:#faf5ff}
+.share-card:focus-visible{outline:2px solid #7c3aed;outline-offset:2px}
+.sc-icon{flex:none;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;font-size:1.25rem;
+background:linear-gradient(135deg,#ede9fe,#e0f2fe)}
+.sc-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sc-body b{font-size:.9rem}.sc-body small{font-size:.74rem;color:#64748b;line-height:1.35}
+.sc-go{margin-left:auto;font-size:1.3rem;color:#a78bfa;transition:transform .12s}.share-card:hover .sc-go{transform:translateX(3px)}
+.share-card.sc-primary{color:#fff;border:0;padding:14px 16px;background:linear-gradient(120deg,#2563eb,#7c3aed);box-shadow:0 12px 28px -14px rgba(37,99,235,.8)}
+.share-card.sc-primary:hover{background:linear-gradient(120deg,#1d4ed8,#6d28d9)}
+.share-card.sc-primary .sc-icon{background:rgba(255,255,255,.18)}.share-card.sc-primary small{color:rgba(255,255,255,.85)}
+.share-card.sc-primary .sc-go{color:#fff}
+.share-card.sc-done{border-color:#22c55e!important;background:#f0fdf4!important}
+.share-card.sc-done .sc-icon{background:#bbf7d0}
+.share-done{min-height:1.4em;margin:8px 0 0;font-size:.82rem;font-weight:600;color:#15803d}
+.sd-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 16px}
+.sd-meta{font-size:.75rem;color:#64748b}
+@media (max-width:560px){.share-grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.share-dlg[open]{animation:none}.share-card{transition:none}}
+.share-warn{background:#fef3c7;color:#92400e;border-radius:12px;padding:10px 14px;font-size:.82rem;border-left:4px solid #f59e0b;margin:0 0 12px}
+.share-close{font:inherit;font-size:.8rem;padding:3px 12px;border-radius:6px;border:1px solid #cbd5e1;background:transparent;color:inherit;cursor:pointer}
+html[data-theme=dark] .share-hero{background:#ede9fe;color:#4c1d95}
+html[data-theme=dark] .share-dlg{background:#1e293b;color:#e2e8f0}
+html[data-theme=dark] .share-card{background:#0f172a;border-color:#334155}
+html[data-theme=dark] .share-card:hover{background:#1e1b4b;border-color:#7c3aed}
+html[data-theme=dark] .sc-icon{background:linear-gradient(135deg,#312e81,#0c4a6e)}
+html[data-theme=dark] .sc-body small,html[data-theme=dark] .sd-meta{color:#94a3b8}
+html[data-theme=dark] .share-card.sc-primary{background:linear-gradient(120deg,#2563eb,#7c3aed)}
+html[data-theme=dark] .share-card.sc-primary small{color:rgba(255,255,255,.85)}
+html[data-theme=dark] .share-card.sc-done{background:#052e16!important}
+html[data-theme=dark] .share-done{color:#86efac}
+html[data-theme=dark] .share-warn{background:#422006;color:#fcd34d}
+html[data-theme=dark] .share-close{border-color:#334155}
+</style><script type='text/plain' id='pg-share-summary'>🛩️  Flight recording of 31 s, 10 task thread(s)
+
+Findings
+  ℹ️  The tasks wait for records from Kafka. The task threads spent 100% of the recording in the Kafka consumer (poll, fetch).
+     → Either the topic had no data (the load is slower than the connector), or the fetch is the limit: consumer.override.max.poll.records, fetch.max.bytes, max.partition.fetch.bytes and fetch.min.bytes, and the number of partitions of the topic (one task reads its partitions one fetch at a time).
+  ℹ️  Few CPU samples. Only 0 execution samples of the task threads: the tasks were rarely running Java code, the CPU by layer and the hot methods are not meaningful.
+
+Task thread time, by state (mean of the task threads)
+  Kafka client (poll, send)       100%
+
+Network I/O of the task threads (calls of 1 ms or more, and shorter calls seen by the native samples)
+  broker:9092                           1 calls       0.0 s     0% +   0% shorter of the task time
+
+Checked and normal: Network I/O: 0% of the task time blocked on calls of 1 ms or more; Lock contention: 0% of the task time; Allocation: 102.2 kB/s by the task threads; Exceptions thrown: 0 per second</script><script type='text/plain' id='pg-share-ticket'>## 🛩️ Flight recording analysis
+
+**Verdict:** ✅ Nothing alarming in this recording.
+
+### Findings
+
+| Severity | Finding |
+| --- | --- |
+| ℹ️ INFO | The tasks wait for records from Kafka. The task threads spent 100% of the recording in the Kafka consumer (poll, fetch). → Either the topic had no data (the load is slower than the connector), or the fetch is the limit: consumer.override.max.poll.records, fetch.max.bytes, max.partition.fetch.bytes and fetch.min.bytes, and the number of partitions of the topic (one task reads its partitions one fetch at a time). |
+| ℹ️ INFO | Few CPU samples. Only 0 execution samples of the task threads: the tasks were rarely running Java code, the CPU by layer and the hot methods are not meaningful. |
+
+_Generated by `playground analyze flight-recorder` (kafka-docker-playground)._
+</script><script type='text/plain' id='pg-share-slack'>*🛩️ Flight recording analysis*
+
+*Verdict:* ✅ Nothing alarming in this recording.
+
+*Findings*
+• ℹ️ INFO · The tasks wait for records from Kafka. The task threads spent 100% of the recording in the Kafka consumer (poll, fetch). → Either the topic had no data (the load is slower than the connector), or the fetch is the limit: consumer.override.max.poll.records, fetch.max.bytes, max.partition.fetch.bytes and fetch.min.bytes, and the number of partitions of the topic (one task reads its partitions one fetch at a time).
+• ℹ️ INFO · Few CPU samples. Only 0 execution samples of the task threads: the tasks were rarely running Java code, the CPU by layer and the hot methods are not meaningful.
+
+_Generated by `playground analyze flight-recorder` (kafka-docker-playground)._
+</script><script type='text/plain' id='pg-share-html'>\u003cdiv style='font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45;color:#111827'>\u003ch2 style='font-size:18px;margin:12px 0 6px'>🛩️ Flight recording analysis\u003c/h2>\u003cp style='margin:4px 0'>\u003cb>Verdict:\u003c/b> ✅ Nothing alarming in this recording.\u003c/p>\u003ch3 style='font-size:15px;margin:14px 0 6px'>Findings\u003c/h3>\u003ctable style='border-collapse:collapse;margin:4px 0 8px;font-size:13px'>\u003ctr>\u003cth style='border:1px solid #d1d5db;padding:4px 8px;background:#f3f4f6;text-align:left;font-weight:600'>Severity\u003c/th>\u003cth style='border:1px solid #d1d5db;padding:4px 8px;background:#f3f4f6;text-align:left;font-weight:600'>Finding\u003c/th>\u003c/tr>\u003ctr>\u003ctd style='border:1px solid #d1d5db;padding:4px 8px;vertical-align:top'>ℹ️ INFO\u003c/td>\u003ctd style='border:1px solid #d1d5db;padding:4px 8px;vertical-align:top'>The tasks wait for records from Kafka. The task threads spent 100% of the recording in the Kafka consumer (poll, fetch). → Either the topic had no data (the load is slower than the connector), or the fetch is the limit: consumer.override.max.poll.records, fetch.max.bytes, max.partition.fetch.bytes and fetch.min.bytes, and the number of partitions of the topic (one task reads its partitions one fetch at a time).\u003c/td>\u003c/tr>\u003ctr>\u003ctd style='border:1px solid #d1d5db;padding:4px 8px;vertical-align:top'>ℹ️ INFO\u003c/td>\u003ctd style='border:1px solid #d1d5db;padding:4px 8px;vertical-align:top'>Few CPU samples. Only 0 execution samples of the task threads: the tasks were rarely running Java code, the CPU by layer and the hot methods are not meaningful.\u003c/td>\u003c/tr>\u003c/table>\u003cp style='margin:4px 0'>_Generated by \u003ccode style='font-family:Menlo,Consolas,monospace;font-size:12px;background:#f3f4f6;padding:1px 4px;border-radius:3px'>playground analyze flight-recorder\u003c/code> (kafka-docker-playground)._\u003c/p>\u003c/div></script><dialog class='share-dlg' aria-labelledby='pg-share-h' data-title='Flight recording analysis'><div class='sd-head'><h3 id='pg-share-h'>📤 Share this report</h3><button type='button' class='share-close sd-x' aria-label='close'>✕</button></div><div class='sd-body'><p class='share-warn'>⚠️ Internal to Confluent: the report can contain hostnames, IPs and other details of its input. Review it before sending it outside.</p><button type='button' class='share-card sc-primary' data-share='download'><span class='sc-icon'>💾</span><span class='sc-body'><b>Download this report (.html)</b><small>one self-contained file: attach it to a ticket, a mail or a Slack message</small></span><span class='sc-go' aria-hidden='true'>›</span></button><div class='share-grid'><button type='button' class='share-card' data-share='summary'><span class='sc-icon'>💬</span><span class='sc-body'><b>Copy the summary</b><small>the verdict and the findings as plain text, like the terminal</small></span><span class='sc-go' aria-hidden='true'>›</span></button><button type='button' class='share-card' data-share='ticket'><span class='sc-icon'>🎫</span><span class='sc-body'><b>Copy for a ticket</b><small>Markdown with a table of the findings: paste it in Zendesk or Jira</small></span><span class='sc-go' aria-hidden='true'>›</span></button><button type='button' class='share-card' data-share='slack'><span class='sc-icon'>🧵</span><span class='sc-body'><b>Copy for Slack</b><small>the same, in Slack formatting: paste it in a Slack message</small></span><span class='sc-go' aria-hidden='true'>›</span></button><button type='button' class='share-card' data-share='html'><span class='sc-icon'>📝</span><span class='sc-body'><b>Copy as rich text (HTML)</b><small>the same with real tables: paste it in Zendesk, Gmail, Confluence or Google Docs</small></span><span class='sc-go' aria-hidden='true'>›</span></button><button type='button' class='share-card' data-share='path'><span class='sc-icon'>🔗</span><span class='sc-body'><b>Copy the path</b><small>where the report is on this machine</small></span><span class='sc-go' aria-hidden='true'>›</span></button><button type='button' class='share-card' data-share='mail'><span class='sc-icon'>✉️</span><span class='sc-body'><b>Email the summary</b><small>a new mail with the summary: attach the downloaded .html</small></span><span class='sc-go' aria-hidden='true'>›</span></button></div><p class='share-done' aria-live='polite'></p></div><div class='sd-foot'><span class='sd-meta'>S opens this dialog, Esc closes it</span><button type='button' class='share-close'>Close</button></div></dialog><script>
+(function () {
+  const dlg = document.querySelector(".share-dlg");
+  if (!dlg) return;
+  // 💾 the page as it was loaded: taken now (this script runs at the end of the body, before the DOMContentLoaded
+  // handlers of the report fill or change the page), without the open dialog; the copy has its dialog too
+  const snapshot = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  function addOpen(where, cls, before) {
+    if (!where) return null;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "share-open " + cls; b.textContent = "📤 Share";
+    b.title = "send this report to a colleague: download it, copy the summary for Slack or a ticket, an email (S)";
+    b.setAttribute("aria-haspopup", "dialog");
+    b.addEventListener("click", () => dlg.showModal());
+    if (before) where.insertBefore(b, before); else where.appendChild(b);
+    return b;
+  }
+  function place() {
+    if (document.querySelector(".share-open")) return;
+    // the header of report_html (header_html / page): in its meta pills
+    const meta = document.querySelector(".header .header-meta");
+    if (meta) { addOpen(meta, "share-hero"); return; }
+    // a <header> of its own (benchmark, flight recorder, SMT test, CFK bundle): next to its Toggle theme, else top right
+    const header = document.querySelector("header");
+    if (header) {
+      const toggle = header.querySelector(".theme-toggle");
+      if (toggle && toggle.parentElement === header) { addOpen(header, "share-hero share-next", toggle); return; }
+      if (getComputedStyle(header).position === "static") header.style.position = "relative";
+      addOpen(header, "share-hero share-corner");
+      return;
+    }
+    addOpen(document.body, "share-float");
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", place); else place();
+  document.addEventListener("keydown", function (ev) {
+    if ((ev.key === "s" || ev.key === "S") && !ev.metaKey && !ev.ctrlKey && !ev.altKey
+        && !(ev.target && ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable]")) && !dlg.open) {
+      ev.preventDefault();
+      dlg.showModal();
+    }
+  });
+  const done = dlg.querySelector(".share-done");
+  // embed_text() back: \u003c is <, \u005c is \ (in one pass: a \u003c of the text, written \u005cu003c, stays as it was)
+  function unembed(t) { return t.replace(/\\u00(3c|5c)/g, (m, h) => h === "3c" ? "<" : "\\"); }
+  function embedded(id) { const el = document.getElementById(id); return el ? unembed(el.textContent) : ""; }
+  const summary = embedded("pg-share-summary");
+  const said = what => { done.textContent = "✅ " + what; };
+  function fallback(text, what) {
+    const ta = document.createElement("textarea");
+    ta.value = text; dlg.appendChild(ta); ta.select();
+    // execCommand returns false when the copy is refused (it does not always throw): the text stays there to copy by hand
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+    if (!copied) { done.textContent = "the copy failed: select the text and copy it"; return; }
+    said(what + " copied to the clipboard");
+    ta.remove();
+  }
+  function copy(text, what) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => said(what + " copied to the clipboard"), () => fallback(text, what));
+    } else fallback(text, what);
+  }
+  function fallbackRich(htmlText, what) {
+    const box = document.createElement("div");
+    box.contentEditable = "true";
+    box.style.cssText = "position:fixed;left:-9999px;top:0";
+    box.innerHTML = htmlText;
+    dlg.appendChild(box);
+    const range = document.createRange(), sel = window.getSelection();
+    range.selectNodeContents(box); sel.removeAllRanges(); sel.addRange(range);
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+    if (copied) said(what + " copied to the clipboard");
+    else done.textContent = "the copy failed: use 🎫 Copy for a ticket";
+    sel.removeAllRanges();
+    box.remove();
+  }
+  // rich text: text/html for the editors that take it (Zendesk, Gmail, Confluence, Docs), the Markdown as text/plain
+  function copyRich(htmlText, plain, what) {
+    if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({"text/html": new Blob([htmlText], {type: "text/html"}),
+                                                    "text/plain": new Blob([plain], {type: "text/plain"})})])
+        .then(() => said(what + " copied to the clipboard"), () => fallbackRich(htmlText, what));
+    } else fallbackRich(htmlText, what);
+  }
+  function fileName() {
+    const page = decodeURIComponent(location.pathname).split("/").pop();
+    if (/\.html?$/i.test(page)) return page;
+    return (dlg.dataset.title || "report").replace(/[^\w.-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) + ".html";
+  }
+  dlg.addEventListener("click", function (ev) {
+    if (ev.target.closest(".share-close") || ev.target === dlg) { dlg.close(); return; }
+    const b = ev.target.closest("[data-share]");
+    if (!b) return;
+    b.classList.add("sc-done"); setTimeout(() => b.classList.remove("sc-done"), 1600);
+    const path = decodeURIComponent(location.pathname);
+    const what = b.dataset.share;
+    if (what === "download") {
+      const url = URL.createObjectURL(new Blob([snapshot], {type: "text/html"}));
+      const a = document.createElement("a");
+      a.href = url; a.download = fileName(); document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      said(fileName() + " downloaded");
+    }
+    else if (what === "summary") copy(summary, "the summary");
+    else if (what === "ticket") copy(embedded("pg-share-ticket"), "the summary for a ticket");
+    else if (what === "slack") copy(embedded("pg-share-slack"), "the summary for Slack");
+    else if (what === "html") copyRich(embedded("pg-share-html"), embedded("pg-share-ticket"), "the summary as rich text");
+    else if (what === "path") copy(path, "the path");
+    else if (what === "mail") {
+      const body = "Report: " + path.split("/").pop() + " (attached)\n\n" + summary;
+      location.href = "mailto:?subject=" + encodeURIComponent("📤 " + (dlg.dataset.title || "playground report"))
+        // cut by code points: a cut in the middle of an emoji (a surrogate pair) makes encodeURIComponent throw
+        + "&body=" + encodeURIComponent(Array.from(body).length > 1800 ? Array.from(body).slice(0, 1800).join("") + "\n…" : body);
+    }
+  });
+})();
+</script></body></html>
