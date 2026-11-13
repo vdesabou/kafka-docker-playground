@@ -966,7 +966,7 @@ def root_causes(files: List[dict]) -> List[dict]:
                else mask_ids(mask_names(cause_key_text(plain), conn))[:160])
         c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": label, "key": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
                                     "connectors": OrderedDict(), "example": r["root_cause_message"] or plain, "level": r["level"],
-                                    "records_meta": []})
+                                    "records_meta": [], "_text": (r.get("text") or r.get("message") or "")[:4000]})
         c["occurrences"] += r["count"]
         c["records"] += 1
         c["files"][f["label"]] = True
@@ -984,6 +984,10 @@ def root_causes(files: List[dict]) -> List[dict]:
         c["files"] = list(c["files"])
         # most frequent first
         c["connectors"] = sorted(c["connectors"], key=lambda n: -c["connectors"][n])
+        # 📚 the knowledge base articles whose error message is in its first record (kb_errors.json)
+        kb = known_causes.kb_for_texts([c.pop("_text")])
+        if kb:
+            c["kb_articles"] = kb
         out.append(c)
     out.sort(key=lambda c: (LEVEL_ORDER.get(c["level"], 9), -c["occurrences"]))
     return out
@@ -1031,7 +1035,7 @@ def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int 
         res.append({"severity": sev, "text": f"{c['level']} ×{c['occurrences']} in {where}: {what[:300]}",
                     "records": [m[4] for m in c["records_meta"] if m[4] >= 0],
                     "_view": dict({"kind": "root", "cause_index": i, "level": c["level"], "occurrences": c["occurrences"], "files": c["files"],
-                                   "root_cause": c["root_cause"], "example": c["example"]},
+                                   "root_cause": c["root_cause"], "example": c["example"], "kb_articles": c.get("kb_articles") or []},
                                   **root_cause_chains(c, by_index))})
         added += 1
     res.sort(key=lambda x: SEVERITY_ORDER.index(x["severity"]))
@@ -4676,6 +4680,7 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["example"]
             who = f" · {len(c['connectors'])} connector(s): {first_names(c['connectors'])}" if c["connectors"] else ""
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
+            out += [f"      📚 KB: {a['title']}: {a['url']}" for a in (c.get("kb_articles") or [])[:2]]
     # what changed against the input of --compare (🔁 Comparison of the HTML report, .comparison of --json)
     out += compare_text(res.get("comparison"))
     # several --compare: the trend over all the inputs (📈 Trend of the HTML report, .trend of --json)
@@ -5406,7 +5411,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Errors no known cause explains (most frequent)", ""]
         for c in others:
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c.get("root_cause") else c.get("example") or c["label"]
-            out.append(f"- `{c['level']} ×{c['occurrences']:,}` {md_cell(what[:240])}" + (f" ({md_cell(first_names(c['connectors']))})" if c.get("connectors") else ""))
+            out.append(f"- `{c['level']} ×{c['occurrences']:,}` {md_cell(what[:240])}" + (f" ({md_cell(first_names(c['connectors']))})" if c.get("connectors") else "")
+                       + "".join(f" · 📚 [KB: {md_cell(a['title'])}]({a['url']})" for a in (c.get("kb_articles") or [])[:2]))
     cmp = res.get("comparison")
     if cmp:
         c = cmp["counts"]
@@ -8485,7 +8491,10 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
             + (f"<span class='fi-meta'> · </span>{first_html(viewers, first['file'], first['line'], first['timestamp'])}" if first else "")
             + chains_note(chains, CHAINS_SHOWN)
             + "<div class='fi-advice'>👉 no known cause matches it: read its exception chain and its context (📄)"
-            + f" · <a href='#root-cause-{v['cause_index']}' title='its row in the 🌳 All root causes table'>🌳 in the table</a></div>")
+            + f" · <a href='#root-cause-{v['cause_index']}' title='its row in the 🌳 All root causes table'>🌳 in the table</a></div>"
+            # 📚 a knowledge base article explains this exact message (kb_errors.json)
+            + ("<div class='fi-advice fi-read'>" + " · ".join(f"<a href='{e(a['url'])}' target='_blank' rel='noopener'>📚 KB: {e(a['title'])}</a>"
+                                                         for a in v.get("kb_articles") or []) + "</div>" if v.get("kb_articles") else ""))
     rows = chain_rows(chains, CHAINS_SHOWN, sev, viewers)
     if not rows:
         rows = [f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span>{exception_html(v['example'][:400])}"]

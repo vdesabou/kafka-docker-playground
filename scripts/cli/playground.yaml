@@ -4878,11 +4878,12 @@ subcommands:
       default: use it before sharing the output outside Confluent, and review it anyway
       (best effort).\n\n\U0001F9ED After the digest of each file, a short summary:
       time range, occurrences by connector, known causes with what to do (\U0001F4DA
-      and a Confluent knowledge-base article for many of them, \U0001F512 the internal
-      runbooks of Confluent support when the private reproduction-models repository
-      is there), root causes no known cause explains, and the configuration logged
-      at startup (connectors, components, clients) with the keys changed between restarts.
-      Also: \U0001F3F7️ the version of each connector plugin (with the playground
+      the Confluent knowledge-base articles of the known causes and of the errors
+      no known cause explains, matched by their error message, and \U0001F512 the
+      internal runbooks of Confluent support, when the private reproduction-models
+      repository is there), root causes no known cause explains, and the configuration
+      logged at startup (connectors, components, clients) with the keys changed between
+      restarts. Also: \U0001F3F7️ the version of each connector plugin (with the playground
       connector-plugin changelog command since that version) and of Kafka, \U0001F4E5
       the data to request next from the customer, each with why and how (a complete
       copy of a file not fully read, a longer window, the logs since the last restart

@@ -494,20 +494,9 @@ The failed starts are 💥 events of the 🗓️ timeline.
 A click on a 🔄 row (`LIFECYCLE_SCRIPT`): the chart (`lc-chart`) is drawn again with the times of that row only (`data-times`, `encode_times()`, in its series `data-series`: `box.setTimes()`), zoomed on its first → last occurrence, and the `tr.lc-occ` row under it opens: the `_occ` of the row, (time, file, line) of the first `LC_OCC_SHOWN` (100) noted, each a link to its line in the page of the file (`write_viewers()` marks these lines, so the page of a big file keeps them). Again, ⤺ every row or Esc: every row; the connector filter hiding the row unpicks it.
 ## Knowledge-base articles
 
-`LINKS` in `tools/report-common/known_causes.py` gives a known cause one or more Confluent support knowledge-base
-articles (`kb`, `kb_title`) and / or a docs page (`docs`). A cause with several articles has a list; an article with a
-`pattern` (case-insensitive regex) is about one variant of the cause and is shown only when a record of the cause matches
-it, before the general ones (`MAX_KB_ARTICLES` = 3 at most; a general article marked `fallback`, too far from the
-variants, only when none matched; an article about Confluent Cloud is not for a self-managed cluster: `"ccloud": True`
-only when the input points at Confluent Cloud, `links(…, ccloud=True)`, `"ccloud": "records"` only when the records of
-the cause name a `*.confluent.cloud` host, the 🔑 one: not for the database login failures of a worker that also uses
-Confluent Cloud): ORA-01017, MySQL `Access denied for user` and SASL
-`Invalid username or password` are three authentication failures with three articles. They are in `--json`
-(`known_causes[].kb_articles`, and `kb` / `kb_title` for the first one), a `📚` line each in the terminal summary, the
-What to do column of the summary for a ticket and the finding card of the HTML report. Only articles found in the
-knowledge base for signed-in users (most GTS runbooks are internal), and only when they explain the cause (or the
-variant) in general, not a connector that merely quotes the error in a stack trace: a cause without a good article has
-no entry. Never build a URL by hand.
+📚 What to read about a known cause. `LINKS` in `tools/report-common/known_causes.py` only holds its public docs.confluent.io page (`docs`). Its Confluent support knowledge-base articles (for signed-in users) are **not in this public repository**: they come from the private `reproduction-models/_miscellaneous/log-analysis/kb-links.json` (`kb_links()`, `$PLAYGROUND_KB_LINKS_FILE` gives another file), `{"links": {"<known cause title>": [{"kb", "kb_title", "pattern", "fallback", "ccloud"}]}}`. A cause with several articles has a list; an article with a `pattern` (case-insensitive regex) is about one variant of the cause and is shown only when a record of the cause matches it, before the general ones (`MAX_KB_ARTICLES` = 3 at most; a general article marked `fallback` only when none matched; `"ccloud": True` only when the input points at Confluent Cloud, `"ccloud": "records"` only when the records of the cause name a `*.confluent.cloud` host). They are in `--json` (`known_causes[].kb_articles`, and `kb` / `kb_title` for the first one), a `📚` line each in the terminal summary, the What to do column of the summary for a ticket and the finding card of the HTML report. Without the private repository (a fork, CI), the known causes keep their docs pages only. Never build a URL by hand.
+
+📚 The knowledge base by error message: the private `kb_index.json` (same folder, `$PLAYGROUND_KB_INDEX_FILE`) lists the articles that explain one precise log message, each with the signature of that message (a regex, its longest literal run used as a quick filter) and, when the title names a product, a `context` regex the records must match too: patterns taken from the titles, plus the messages quoted in the body of the articles, checked word for word (`"verified": true`). `kb_for_texts()` matches them in the records, the most specific signature first: a root cause no known cause explains gets `kb_articles` (`--json` `root_causes[].kb_articles`, a `📚 KB` line on its 🌳 card, in the terminal and in the summary for a ticket), and a known cause gets them after its curated articles, in the room left. An article of `kb-links.json` keeps its rule there (its variant pattern, the records it must not match) and is never looked up.
 
 The internal runbooks of Confluent support (GTS Confluence pages, support.confluent.io articles restricted to
 *Confluent - Internal*: PKIX, SASL investigations, authorization triage, converters, DLQ, consumer group rebalancing…)
@@ -521,7 +510,7 @@ leave Confluent). Without the private repository (a fork, CI), nothing changes.
 ```text
    [HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)
       → the producer gave up on records not acknowledged within message.timeout.ms (librdkafka) / …
-      📚 KB: "TimeoutException: expiring records for topic": https://support.confluent.io/hc/en-us/articles/32304589191444-How-to-resolve-the-TimeoutException-expiring-records-for-topic-producer-error
+      📚 KB: "TimeoutException: expiring records for topic": <the article, from the private kb-links.json>
 ```
 
 ## Summary for a ticket
