@@ -2280,6 +2280,21 @@ def test_verdict_cause_weighted_by_severity():
           and pick([kc("🪵 Debug traces logged at ERROR", "LOW", 9)]) is None)
 
 
+def test_regenerate_button():
+    """🔁 Regenerate of the header copies the command that generated the report, escaped (a quote in a path cannot break
+    out of the attribute); none without --regenerate"""
+    cmd = "playground analyze logs -f /tmp/in/it\\'s\\ a\\ log.txt --output-dir /tmp/out"
+    html = log_report.regenerate_button_html(cmd)
+    check("button", "class='lr-regen'" in html and "🔁 Regenerate" in html, html[-300:])
+    m = re.search(r"data-copy='([^']*)'", html)
+    import html as html_mod
+    check("the exact command, escaped", m and html_mod.unescape(m.group(1)) == cmd, m and m.group(1))
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, "@@PGFILE@@|connect.log|10|0|0||\n")))
+    check("in the header", "lr-regen" in log_report.html_report(res, "t", "ERROR/FATAL", 0, regenerate=cmd))
+    check("none without it", "lr-regen" not in log_report.html_report(res, "t", "ERROR/FATAL", 0))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

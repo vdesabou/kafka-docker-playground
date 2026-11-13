@@ -8575,11 +8575,39 @@ def overlaps_html() -> str:
             f"<ul style='margin:6px 0 0 18px;font-weight:400'>{items}</ul></div>")
 
 
+# 🔁 Regenerate of the header: a report is a file opened from disk, it cannot run a command (and a link that runs one,
+# in a report that holds customer text and gets shared, would be a risk): the button copies the exact command that
+# generated the report, with the absolute paths of the input and its flags, to paste in a terminal
+REGENERATE_CSS = """<style>
+.header:has(.lr-title) .header-meta span:has(.lr-regen){background:rgba(52,211,153,.2);border-color:rgba(110,231,183,.55)}
+.lr-regen{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+.lr-regen:hover{text-decoration:underline}
+</style>"""
+
+REGENERATE_SCRIPT = """<script>
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest(".lr-regen");
+  if (!b) return;
+  const label = b.textContent;
+  const done = () => { b.textContent = "✅ Command copied: paste it in a terminal"; setTimeout(() => { b.textContent = label; }, 2500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(b.dataset.copy).then(done, () => window.prompt("Copy it:", b.dataset.copy));
+  else window.prompt("Copy it:", b.dataset.copy);
+});
+</script>"""
+
+
+def regenerate_button_html(command: str) -> str:
+    """🔁 Regenerate: copies the command that generated the report (its input must still be at the same path)"""
+    return (REGENERATE_CSS + REGENERATE_SCRIPT
+            + f"<button type='button' class='lr-regen' data-copy='{e(command)}' title='copies the command that generated this "
+              f"report, to paste in a terminal (the input must still be at the same path): {e(command)}'>🔁 Regenerate</button>")
+
+
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
                 sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
                 html_sections: List[Tuple[str, str]] = (), share_zip: str = "", search_index: Optional[dict] = None,
-                share_extra: Sequence[str] = ()) -> str:
+                share_extra: Sequence[str] = (), regenerate: str = "") -> str:
     """unit: what a label is (file, container, script); links: (label, url) in the header; sections: (title, text)
     shown as is after the findings (the last lines of a failed CI script...); viewers: label -> page of the file
     (log_viewer), the labels and line numbers link to it"""
@@ -8827,6 +8855,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     brand = kdp_brand()
     meta.append(f"<a class='lr-howto' href='{ANALYZE_LOGS_DOC}' title='how to generate this report: playground analyze logs, "
                 "also offline without the playground (deep dive page)'>❓ How to generate this report</a>")
+    if regenerate:
+        meta.append(regenerate_button_html(regenerate))
     h1 = (f"{brand}{what}<span class='lr-status {vcls}' title='{e(vtext)}'>{e(status)}</span><span class='lr-sub'>📄 {sub}</span>"
           + HEADER_CSS)
     return page(page_title, h1, meta, "".join(body),
@@ -8904,6 +8934,8 @@ def main() -> int:
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
     ap.add_argument("--heading", default="🔥 Log Analysis", help="title of the report")
     ap.add_argument("--command", default="playground analyze logs", help="command named in the footer")
+    ap.add_argument("--regenerate", default="", help="the exact command that generated the report (absolute paths): "
+                    "🔁 Regenerate of the header copies it")
     ap.add_argument("--unit", default="file", help="what a label is: file, container, script")
     ap.add_argument("--link", nargs=2, action="append", default=[], metavar=("LABEL", "URL"), help="link in the header")
     ap.add_argument("--section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
@@ -9110,7 +9142,7 @@ def main() -> int:
                         bool((res["summary"].get("time_zone") or {}).get("converted_to_utc")))
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
                                  [tuple(l) for l in args.link], sections, viewers, html_sections, args.share_zip,
-                                 search_index, share_extra=args.share_extra))
+                                 search_index, share_extra=args.share_extra, regenerate=args.regenerate))
         os.replace(tmp_out, args.html_out)
     return 0
 
