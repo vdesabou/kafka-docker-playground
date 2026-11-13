@@ -2022,6 +2022,174 @@ def test_cfk_bundle_detection():
     check("support bundle", bundle({"cluster-details.txt": "x\n"}))
 
 
+def analyzed(text):
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        res = log_report.analyze(files)
+        res["data_to_request"] = log_report.data_to_request(res, files)
+    return res
+
+
+def test_root_cause_keys_without_names_and_durations():
+    """the same message of the Connect runtime for several connectors is one root cause (a graceful stop of 149 tasks at
+    once: one row, not 149), so are a duration ([7336us] / [19ms]) and a one-shot client id; the timeline has no "first
+    ERROR" row for a root cause that a known cause already covers, except where that known cause starts"""
+    def rec(level, line, t, body, count=1):
+        return f"@@PGREC@@|{level}|{count}|{line}|{line}|2026-10-23T{t}|2026-10-23T{t}\n{body}\n@@PGTS@@|2026-10-23T{t}\n"
+    text = ("@@PGFILE@@|connect.log|1000|6|6|2026-10-23T18:00:00|2026-10-23T19:00:00\n"
+            + rec("ERROR", 10, "18:30:24", "[2026-10-23 18:30:24,000] ERROR [orders-sink|task-0] Graceful stop of task orders-sink-0 failed. (org.apache.kafka.connect.runtime.Worker:1393)")
+            + rec("ERROR", 11, "18:31:29", "[2026-10-23 18:31:29,000] ERROR [payments-src|task-0] Graceful stop of task payments-src-0 failed. (org.apache.kafka.connect.runtime.Worker:1393)")
+            + rec("ERROR", 12, "18:31:35", "[2026-10-23 18:31:35,000] ERROR [audit-sink|task-3] Graceful stop of task audit-sink-3 failed. (org.apache.kafka.connect.runtime.Worker:1393)")
+            + rec("ERROR", 20, "18:40:00", "[2026-10-23 18:40:00,000] ERROR [cb-src|task-0] [com.example.io][AuthFailedEvent][7336us] User authentication failed; check username and password. {\"remote\":\"db.example.com:11207\"} (com.example.Core:1)")
+            + rec("ERROR", 21, "18:41:00", "[2026-10-23 18:41:00,000] ERROR [cb-src|task-0] [com.example.io][AuthFailedEvent][19ms] User authentication failed; check username and password. {\"remote\":\"db.example.com:11207\"} (com.example.Core:1)")
+            + rec("WARN", 30, "18:42:00", "[2026-10-23 18:42:00,000] WARN [cdc-src|task-4] App info kafka.consumer for consumer-cdc-src-4-ORDERS-9967419 unregistered (org.apache.kafka.common.utils.AppInfoParser:1)")
+            + rec("WARN", 31, "18:43:00", "[2026-10-23 18:43:00,000] WARN [cdc-src|task-5] App info kafka.consumer for consumer-cdc-src-5-PAYMENTS-9967422 unregistered (org.apache.kafka.common.utils.AppInfoParser:1)"))
+    res = analyzed(text)
+    stops = [c for c in res["root_causes"] if "Graceful stop of task" in c["label"]]
+    check("one root cause for the graceful stops of 3 connectors", len(stops) == 1 and stops[0]["occurrences"] == 3
+          and set(stops[0]["connectors"]) == {"orders-sink", "payments-src", "audit-sink"}, [c["label"] for c in res["root_causes"]])
+    auth = [c for c in res["root_causes"] if "AuthFailedEvent" in c["label"]]
+    check("one root cause for [7336us] and [19ms]", len(auth) == 1 and auth[0]["occurrences"] == 2, [c["label"] for c in res["root_causes"]])
+    apps = [c for c in res["root_causes"] if "App info kafka.consumer" in c["label"]]
+    check("one root cause for the one-shot client ids", len(apps) == 1 and apps[0]["occurrences"] == 2, [c["label"] for c in res["root_causes"]])
+    rows = [ev for ev in res["timeline"] if "Graceful stop" in ev["text"] or "🛑" in " ".join(ev.get("known_causes") or [])]
+    check("one timeline row for the stops, with its known cause", len(rows) == 1 and rows[0].get("known_causes") == ["🛑 Task or connector did not stop in time"]
+          and rows[0]["time"] == "2026-10-23T18:30:24", [(ev["time"], ev["text"], ev.get("known_causes")) for ev in res["timeline"]])
+    check("mask_names", log_report.mask_ids(log_report.mask_names("WorkerSinkTask{id=orders-sink-3} Commit of offsets timed out", "orders-sink"))
+          == "WorkerSinkTask{id=<task>} Commit of offsets timed out")
+    check("a connector name is masked as a whole word only", log_report.mask_names("at io.confluent.connect.jdbc.sink.JdbcSinkTask, group connect-jdbc", "jdbc")
+          == "at io.confluent.connect.jdbc.sink.JdbcSinkTask, group connect-<connector>")
+
+
+def test_known_causes_and_fixed_bugs_from_audit():
+    """causes found missing by the audit of past cases (synthetic lines of the same shape): S3 tombstones skipped (and 🩹
+    CC-43920 from the plugin version), Kerberos without a ticket, a JDBC table missing, DEBUG_ traces at ERROR, a license
+    that could not be checked is 📜 / 🧷 and not ⚙️ (librdkafka advice), and 🩹 KAFKA-19697 from the CP version"""
+    def causes_of(body, events="", cp=""):
+        text = ("@@PGFILE@@|connect.log|100|1|3|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+                f"@@PGREC@@|ERROR|3|10|20|2026-10-24T17:00:01|2026-10-24T17:00:09\n{body}\n@@PGTS@@|2026-10-24T17:00:01 2026-10-24T17:00:09\n"
+                + events + (f"@@PGEVT@@|kafka_version|1|2026-10-24T17:00:00||{cp}\n" if cp else ""))
+        res = analyzed(text)
+        return [h["title"] for h in res["known_causes"]], res
+    got, res = causes_of("[2026-10-24 17:00:01,000] ERROR [s3-sink|task-0] Error encountered in task s3-sink-0. Executing stage 'TASK_PUT' with class "
+                         "'org.apache.kafka.connect.sink.SinkTask'. (org.apache.kafka.connect.runtime.errors.LogReporter)\n"
+                         "    org.apache.kafka.connect.errors.DataException: Skipping null value record.",
+                         "@@PGEVT@@|plugin_version|1|2026-10-24T17:00:00|s3-sink|12.1.13 io.confluent.connect.s3.S3SinkConnector\n")
+    check("S3 tombstones: 🫥, not 🔀", "🫥 Null value (tombstone) records skipped by the sink" in got and "🔀 Serialization or conversion error" not in got, got)
+    bug = next((b for b in res["fixed_bugs"] if b["ref"].startswith("CC-43920")), None)
+    check("🩹 CC-43920 affected on 12.1.13", bug and bug["connectors"][0]["verdict"] == "affected" and bug["connectors"][0]["upgrade_to"] == "12.1.14", res["fixed_bugs"])
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [hdfs-sink|task-0] Exception on topic partition orders-1:  (io.confluent.connect.hdfs.TopicPartitionWriter:487)\n"
+                       "    org.apache.kafka.connect.errors.ConnectException: java.io.IOException: javax.security.sasl.SaslException: GSS initiate failed "
+                       "[Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]\n"
+                       "    Caused by: GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)")
+    check("Kerberos: 🎫 first", got and got[0] == "🎫 Kerberos ticket not found or not valid", got)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [jdbc-sink|task-0] Error encountered in task jdbc-sink-0. Executing stage 'TASK_PUT' (org.apache.kafka.connect.runtime.errors.LogReporter)\n"
+                       "    io.confluent.connect.jdbc.sink.TableAlterOrCreateException: Table \"db\".\"public\".\"orders\" is missing and auto-creation is disabled")
+    check("JDBC table missing: 🗄️", "🗄️ JDBC sink: table or column missing (auto.create / auto.evolve off)" in got, got)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR DEBUG_ADD_RECORD: #198 - topic=orders, partition=10, offset=15, opType=i (io.confluent.connect.jdbc.sink.BufferedRecords:120)")
+    check("DEBUG_ traces at ERROR: 🪵 only", got == ["🪵 Debug traces logged at ERROR"], got)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [hub-sink|task-0] Failed to start task hub-sink-0 (org.apache.kafka.connect.runtime.Worker:1)\n"
+                       "    org.apache.kafka.common.config.ConfigException: Invalid value io.confluent.connect.utils.licensing.LicenseValidator$Failure: "
+                       "Could not verify '${secret:hub-sink:confluent.license}' for configuration confluent.license")
+    check("license not verified: 📜 and 🧷, not ⚙️", "📜 License error" in got and "🧷 Config provider placeholder not resolved" in got
+          and "⚙️ Invalid client configuration" not in got, got)
+    got, _ = causes_of("[2026-10-24 17:00:01,000] ERROR [app] %3|1793896102.923|CONFERR|rdkafka#producer-1| No such configuration property: \"bogus.property\"")
+    check("⚙️ kept for a client property", "⚙️ Invalid client configuration" in got, got)
+    npe = ("[2026-10-24 17:00:01,000] ERROR [mq-src|task-1] Failed to start task mq-src-1 (org.apache.kafka.connect.runtime.Worker:1)\n"
+           "    java.lang.NullPointerException\n"
+           "        at org.apache.kafka.connect.runtime.Worker$ConnectorStatusMetricsGroup.recordTaskRemoved(Worker.java:2760)")
+    _, res = causes_of(npe, cp="7.9.5-ce")
+    bug = next((b for b in res["fixed_bugs"] if b["ref"].startswith("KAFKA-19697")), None)
+    check("🩹 KAFKA-19697 affected on CP 7.9.5", bug and bug["connectors"] == [{"connector": "mq-src", "version": "7.9.5", "verdict": "affected", "upgrade_to": "7.9.8"}], res["fixed_bugs"])
+    check("CP upgrade line", "upgrade Confluent Platform to 7.9.8" in log_report.fixed_bug_lines(bug)[0], log_report.fixed_bug_lines(bug))
+    _, res = causes_of(npe, cp="8.3.0-ce")
+    bug = next((b for b in res["fixed_bugs"] if b["ref"].startswith("KAFKA-19697")), None)
+    check("🩹 KAFKA-19697 fixed on CP 8.3.0", bug and bug["verdict"] == "fixed", res["fixed_bugs"])
+    _, res = causes_of(npe)
+    bug = next((b for b in res["fixed_bugs"] if b["ref"].startswith("KAFKA-19697")), None)
+    check("🩹 KAFKA-19697 unknown without a CP version", bug and bug["verdict"] == "unknown" and "CP version not in the logs" in log_report.fixed_bug_lines(bug)[0], res["fixed_bugs"])
+
+
+def test_zombie_task_after_failed_graceful_stop():
+    """🧟 errors of a task on a worker after its graceful stop failed there, while it started on another worker: a HIGH
+    finding; not when the task was started again on the same worker"""
+    def start(t, task, w=""):
+        return f"@@PGEVT@@|task_start|1|2026-10-23T{t}|{task.rsplit('-', 1)[0]}|{task}\n"
+    late = " ".join(f"2026-10-23T{h}:{m:02d}:00" for h in ("11", "12") for m in range(0, 60, 10))
+    def text(restart_here=""):
+        return ("@@PGFILE@@|w1/connect.log|100|0|0|2026-10-23T09:00:00|2026-10-23T13:00:00\n" + start("09:00:00", "other-0") + start("10:31:00", "orders-0")
+                + "@@PGFILE@@|w2/connect.log|100|2|13|2026-10-23T09:00:00|2026-10-23T13:00:00\n"
+                "@@PGREC@@|ERROR|1|50|50|2026-10-23T10:30:24|2026-10-23T10:30:24\n"
+                "[2026-10-23 10:30:24,000] ERROR [orders|task-0] Graceful stop of task orders-0 failed. (org.apache.kafka.connect.runtime.Worker:1393)\n"
+                "@@PGTS@@|2026-10-23T10:30:24\n"
+                "@@PGREC@@|ERROR|12|60|90|2026-10-23T11:00:00|2026-10-23T12:50:00\n"
+                "[2026-10-23 11:00:00,000] ERROR [orders|task-0] Failed to authenticate (org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule:319)\n"
+                f"@@PGTS@@|{late}\n" + start("09:00:00", "orders-0") + restart_here)
+    res = analyzed(text())
+    z = res["task_workers"].get("zombies") or []
+    check("one zombie", len(z) == 1 and z[0]["task"] == "orders-0" and z[0]["worker"] == "w2/connect.log" and z[0]["errors"] == 12
+          and z[0]["verified"] and z[0]["started_elsewhere"] == [{"worker": "w1/connect.log", "time": "2026-10-23T10:31:00"}], z)
+    check("a HIGH finding", any(f.get("zombie") and f["severity"] == "HIGH" and "🧟 orders-0 still runs on w2/connect.log" in f["text"] for f in res["findings"]),
+          [f["text"][:80] for f in res["findings"]])
+    check("in the summary", "🧟 orders-0 still runs on w2/connect.log" in log_report.text_summary(res, []))
+    check("in the ticket", "### Tasks still running after a failed graceful stop" in log_report.ticket_markdown(res, "t", "ERROR/FATAL/WARN"))
+    res = analyzed(text(start("10:32:00", "orders-0")))
+    check("restarted on the same worker: no zombie", not res["task_workers"].get("zombies"), res["task_workers"].get("zombies"))
+    # logs without any "Starting task" line (no INFO lines): a few errors after the stop are not enough (the task may have
+    # been started again there), a loop of them is reported, unverified, a MEDIUM finding
+    res = analyzed(re.sub(r"@@PGEVT@@[^\n]*\n", "", text()))
+    check("no INFO lines, 12 errors: no zombie", not res["task_workers"].get("zombies"), res["task_workers"].get("zombies"))
+    res = analyzed(re.sub(r"@@PGEVT@@[^\n]*\n", "", text()).replace("@@PGREC@@|ERROR|12|60|90|", "@@PGREC@@|ERROR|1200|60|90|")
+                   .replace(f"@@PGTS@@|{late}", f"@@PGTS@@|x100 {late}"))
+    z = res["task_workers"].get("zombies") or []
+    check("no INFO lines: unverified zombie", len(z) == 1 and not z[0]["verified"] and "may still run" in log_report.zombie_text(z[0])
+          and "unverified" in log_report.zombie_text(z[0]), z)
+    check("no INFO lines: a MEDIUM finding", any(f.get("zombie") and f["severity"] == "MEDIUM" for f in res["findings"]))
+
+
+def test_confluent_cloud_kb_and_data_to_request():
+    """the Confluent Cloud article of 🔑 and the API key / audit log request only when the records point at Confluent
+    Cloud; a self-managed cluster gets the broker logs, not the Confluent Cloud article"""
+    def run(host):
+        text = ("@@PGFILE@@|connect.log|100|1|3|2026-11-06T08:00:00|2026-11-06T09:00:00\n"
+                "@@PGREC@@|ERROR|3|128|130|2026-11-06T08:50:22|2026-11-06T08:50:30\n"
+                f"[2026-11-06 08:50:22,000] ERROR [AdminClient clientId=adminclient-3] Connection to node -1 ({host}/10.0.0.1:9092) failed authentication due to: "
+                "Authentication failed (org.apache.kafka.clients.NetworkClient:1)\n"
+                "    org.apache.kafka.common.errors.SaslAuthenticationException: Authentication failed\n"
+                "@@PGTS@@|2026-11-06T08:50:22 2026-11-06T08:50:30\n")
+        res = analyzed(text)
+        auth = next(h for h in res["known_causes"] if h["title"] == "🔑 Authentication failure")
+        return res, [a["title"] for a in auth.get("kb_articles") or []], [x["what"] for x in res["data_to_request"]]
+    res, kb, asks = run("pkc-abc12.us-west-2.aws.confluent.cloud")
+    check("ccloud detected", res["summary"]["confluent_cloud"] is True)
+    check("ccloud: the Confluent Cloud article", any("Confluent Cloud" in t for t in kb), kb)
+    kc = log_report.known_causes
+    check("ccloud input, auth failure of another system: no Confluent Cloud article", not any("Confluent Cloud" in a["title"] for a in kc.links("🔑 Authentication failure", ["User authentication failed; check username and password. {\"remote\":\"db.example.com:11207\"}"], True).get("kb_articles", [])))
+    check("ccloud input: the ACL article of a Connect cluster on Confluent Cloud", any("Confluent Cloud" in a["title"] for a in kc.links("🚫 Authorization failure", ["AuthorizationException: Principal = User:sa-1 is denied operation Describe"], True)["kb_articles"]))
+    check("self-managed: no ACL article of Confluent Cloud", not any("Confluent Cloud" in a["title"] for a in kc.links("🚫 Authorization failure", ["AuthorizationException: Principal = User:sa-1 is denied operation Describe"], False).get("kb_articles", [])))
+    check("ccloud: the API key and audit log, no broker logs", any("API key" in w for w in asks) and not any("broker logs" in w for w in asks), asks)
+    res, kb, asks = run("broker-1.example.com")
+    check("self-managed: no Confluent Cloud article", not any("Confluent Cloud" in t for t in kb), kb)
+    check("self-managed: the broker logs", any("broker logs" in w for w in asks) and not any("API key" in w for w in asks), asks)
+
+
+def test_short_connect_logs():
+    """⚠️ Connect workers whose logs cover less than 2 minutes, while the brokers of the input cover days: in the 🧭
+    summary, the ticket and the data to request"""
+    text = ("@@PGFILE@@|bundle/connect/logs/connect-0.log|50|1|1|2026-10-25T11:21:07|2026-10-25T11:21:17\n"
+            "@@PGREC@@|ERROR|1|5|5|2026-10-25T11:21:10|2026-10-25T11:21:10\n[2026-10-25 11:21:10,000] ERROR [jdbc-sink|task-0] boom (x:1)\n@@PGTS@@|2026-10-25T11:21:10\n"
+            "@@PGFILE@@|bundle/connect/logs/connect-1.log|50|0|0|2026-10-25T11:21:00|2026-10-25T11:22:55\n"
+            "@@PGFILE@@|bundle/kafka/logs/kafka-0.log|5000|0|0|2026-10-15T00:00:00|2026-10-25T14:00:00\n"
+            "@@PGFILE@@|bundle/connect/connect-distributed.properties|100|0|0|2026-10-20T08:00:00|2026-10-20T08:00:00\n")
+    res = analyzed(text)
+    short = res["summary"]["short_connect_logs"]
+    check("two short workers", [x["seconds"] for x in short] == [10, 115], short)
+    out = log_report.text_summary(res, [])
+    check("summary", "⚠️ the logs of connect-0.log, connect-1.log cover only 10 s to 1 min 55 s" in out, out[:600])
+    check("ticket", "**Short logs:**" in log_report.ticket_markdown(res, "t", "ERROR/FATAL/WARN"))
+    check("data to request", any(x["what"].startswith("the Connect logs of") for x in res["data_to_request"]), res["data_to_request"])
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

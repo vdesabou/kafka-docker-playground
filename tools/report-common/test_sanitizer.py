@@ -184,7 +184,9 @@ def test_fixed_bugs_verdict():
 def test_fixed_bugs_patterns_and_speed():
     import re
     for b in fixed_bugs.FIXED_BUGS:
-        check("fields", {"title", "plugin", "classes", "pattern", "fixed_in", "ref", "advice"} <= set(b), b.get("title"))
+        # a bug of the Connect runtime ("runtime": "cp") has no connector classes: its verdict is from the CP version
+        need = {"title", "plugin", "pattern", "fixed_in", "ref", "advice"} | ({"runtime"} if b.get("runtime") else {"classes"})
+        check("fields", need <= set(b) and b.get("runtime") in (None, "cp"), b.get("title"))
         check("fixed_in parse", all(fixed_bugs.parse_version(v) for v in b["fixed_in"]), b["title"])
         regex = re.compile(b["pattern"])
         for line in ADVERSARIAL + ["java.lang.NullPointerException\n" * 3000]:

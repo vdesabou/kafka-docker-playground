@@ -350,7 +350,11 @@ startup is not in the input (no `START_CONFIGS` dump, no `process_start` event);
 with errors when only that is missing; per `ASK_FOR_CAUSES`, the logs of a component the known causes point at when the
 input has none (a regex on their records keeps the broker logs out for a database login failure) and the heap dump, GC
 logs, thread dumps or certificates (the chain the server sends, the truststore) that explain a known cause (not when 🧰
-found them in the input); and the broker logs when 💥 a burst follows a cluster event without them. It never asks for logs
+found them in the input); and the broker logs when 💥 a burst follows a cluster event without them. When the input points
+at Confluent Cloud (`points_at_confluent_cloud()`: a `*.confluent.cloud` host in the records, their context or the
+configs, `.summary.confluent_cloud`), no broker log is asked for: an authentication failure asks for the API key, its
+service account and the audit log of the organization instead (`CCLOUD_AUTH_ASK`). The Connect workers whose logs cover
+less than `SHORT_WORKER_LOG_SECONDS` (`.summary.short_connect_logs`) get a request for a longer window. It never asks for logs
 at DEBUG (nor `-Djavax.net.debug`): the support team does not ask customers for them. Shown in the summary, the 📥 section of the HTML report, the summary for a ticket and
 `.data_to_request` of `--json`.
 
@@ -364,7 +368,14 @@ cooperative protocol) of each file. A worker is a file without its rotation suff
 and the ERROR / WARN of the connector in that worker's logs) and `only_on` when the errors (`ONLY_ON_MIN_ERRORS` = 3 or
 more) all come from one worker while a task of the connector ran on another worker during those errors, its logs covering
 that time (`clean_overlap`: an incident that ended before the tasks moved, or the logs of a worker that start later, is not
-a difference of the host); `start` / `end` the period of the swimlanes (first
+a difference of the host); `zombies` (`zombie_tasks()`, 🧟): a task whose `Graceful stop of task X failed` is on a worker
+and that logs ERROR / FATAL records (its `[connector|task-N]` context) on that worker more than `ZOMBIE_AFTER_S` (60 s)
+after it, `ZOMBIE_MIN_ERRORS` (3) or more, before any new start of the task there, with its starts on the other workers
+since (the instance that replaced it): the worker cancelled and forgot it but its threads still run (a client retrying
+its login every 10 s locks an account), only a restart of that worker stops it; a HIGH finding, a line of the summary
+and of the summary for a ticket. On a worker whose logs have no `Starting task` line, a restart of the task there would
+not show: only a loop of errors (`ZOMBIE_MIN_ERRORS_UNVERIFIED` = 100 or more) is reported, `verified: false`, a MEDIUM
+finding; `start` / `end` the period of the swimlanes (first
 task start, last line of the logs of the workers). Shown in the summary, the 🖥️ section of the HTML report, the 🔌 card,
 the summary for a ticket and `.task_workers` of `--json`.
 
@@ -399,7 +410,11 @@ line above it); `fixed` when its line has the fix (a line newer than every fixed
 version. A connector of another plugin (its class does not match `classes`) is left out. Shown in the summary, the 🩹
 section of the HTML report (after the findings), on the 🔌 card, in the summary for a ticket and in `.fixed_bugs` of
 `--json`. A new entry: the changelog line (`playground connector-plugin changelog -c <plugin> --grep <ref>`, the first
-fixed version of each line) and the pull request of the fix, which gives the exception and the frames to match.
+fixed version of each line) and the pull request of the fix, which gives the exception and the frames to match. A bug
+of the Connect runtime (`"runtime": "cp"`, KAFKA-19697) has Confluent Platform versions in `fixed_in` (`playground
+cp-changelog --from <x.y.0> --component kafka --grep <PR>`) and gets its verdict from the CP version of the worker that
+logged the record (`Kafka version: x.y.z-ce` / `-ccs` of the same file, else the only one of the input), one per
+connector and version.
 
 ## Config lint
 
@@ -459,7 +474,10 @@ A click on a 🔄 row (`LIFECYCLE_SCRIPT`): the chart (`lc-chart`) is drawn agai
 articles (`kb`, `kb_title`) and / or a docs page (`docs`). A cause with several articles has a list; an article with a
 `pattern` (case-insensitive regex) is about one variant of the cause and is shown only when a record of the cause matches
 it, before the general ones (`MAX_KB_ARTICLES` = 3 at most; a general article marked `fallback`, too far from the
-variants, only when none matched): ORA-01017, MySQL `Access denied for user` and SASL
+variants, only when none matched; an article about Confluent Cloud is not for a self-managed cluster: `"ccloud": True`
+only when the input points at Confluent Cloud, `links(…, ccloud=True)`, `"ccloud": "records"` only when the records of
+the cause name a `*.confluent.cloud` host, the 🔑 one: not for the database login failures of a worker that also uses
+Confluent Cloud): ORA-01017, MySQL `Access denied for user` and SASL
 `Invalid username or password` are three authentication failures with three articles. They are in `--json`
 (`known_causes[].kb_articles`, and `kb` / `kb_title` for the first one), a `📚` line each in the terminal summary, the
 What to do column of the summary for a ticket and the finding card of the HTML report. Only articles found in the
@@ -500,8 +518,9 @@ decompressed as a stream: 101 MB of memory instead of 175 MB for a 44 MB log.
 ## Incident timeline
 
 `incident_timeline()` (in `analyze()`, `.timeline` of `--json`, at most `TIMELINE_LIMIT` = 200 events) merges all the
-files in one chronological list: the first occurrence of each root cause (the record's own message, `record_label()`),
-the first occurrence of each known cause (one row with the error when they are on the same line), the (re)starts of the
+files in one chronological list: the first occurrence of each root cause (the record's own message, `record_label()`;
+not for a root cause whose first record a known cause covers, unless it is where that known cause starts: the known cause
+row says it), the first occurrence of each known cause (one row with the error when they are on the same line), the (re)starts of the
 components (a `START_CONFIGS` dump logged at startup: `DistributedConfig`, `KafkaConfig`…), the connectors (re)configured
 (once per connector and minute) and the config keys changed between restarts (`@@PGCFGCHG@@`). A dump is keyed by its
 class, its `[connector|task-0]` context and its `client.id` (else `name`, `converter.type`, `task.class`); a run starts at
@@ -590,8 +609,11 @@ the `@@PGFILE@@` line of each file ends with the **first and the last timestampe
 only the records): that is the period the logs cover, in `.summary.log_first_timestamp` / `.log_last_timestamp` /
 `.log_duration_seconds` of `--json`, in the 🕐 **Period covered** tile of the report and in its header. A window
 shorter than `SHORT_PERIOD_SECONDS` (10 min) turns the tile orange (`⚠️ short window`) and adds a line to the 🧭
-summary: the bundle may not even contain the incident. A records file written before that (no field 5 and 6) falls
-back to the span of the records.
+summary: the bundle may not even contain the incident. The Connect workers whose own logs (all their rotated files)
+cover less than `SHORT_WORKER_LOG_SECONDS` (2 min) while the input as a whole covers more (a CFK bundle keeps the end of
+each pod log, the brokers cover days) are `.summary.short_connect_logs`: a ⚠️ line of the 🧭 summary and of the summary
+for a ticket (`short_connect_logs_text()`), and a request for a longer window in 📥. A records file written before that
+(no field 5 and 6) falls back to the span of the records.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
 (task killed, with one line per distinct exception chain of the killed tasks (an exception without a message,
 `WakeupException`, `NullPointerException`: 📍 where it was thrown, `thrown_at()`, its first frame and the first one of its
@@ -604,7 +626,10 @@ per file with its component, the occurrences with a bar split by level, the leve
 file; `pgFilesTable()` counts them again for the filters), root causes
 (deepest exception of each record; a record without exception by its message, `root_causes()` ignoring its numbers, its
 `{…}` maps and its `(A|B|C)` lists: one root cause for an Oracle CDC `Failed to commit consumer offset {0=36227957} for
-tables 0=DB.T24(A|B|C)` of every task, and `--compare` matches the root causes on that key, not on their label) and every record (with a 📋 Show context block: the raw lines around its first
+tables 0=DB.T24(A|B|C)` of every task; and, in the key of both, the name of its connector and task, its client ids and
+its durations, `mask_names()` and `DURATION_RX` of `mask_ids()`: one root cause for `Graceful stop of task <name>
+failed.` of 149 connectors, `[7336us]` / `[19ms]`, the one-shot clients `consumer-<connector>-<task>-<table>-<seq>`; the
+connectors are listed with it. `--compare` matches the root causes on that key, not on their label) and every record (with a 📋 Show context block: the raw lines around its first
 occurrence, from the `@@PGCTX@@` lines of the records file) and the ⚙️ configuration (the `<Class>Config values:`
 dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a
