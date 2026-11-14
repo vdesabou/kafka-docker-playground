@@ -61,6 +61,15 @@ Number of records processed per parallel chunk when task.parallel.transform.enab
 ==========================
 Connection
 ==========================
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
 🔘 couchbase.password
 
 Password of the Couchbase user.
@@ -82,15 +91,6 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
-
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
