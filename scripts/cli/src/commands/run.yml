@@ -183,6 +183,7 @@ flags:
     With Control Center Next Gen (default), this is the version of the confluentinc/cp-enterprise-control-center-next-gen image (for example 2.2.0, default is latest)
 
     With --enable-legacy-control-center, this is a CP version (< 8), by default the one of --tag
+- import: src/flags/ansible-inventory.yml
 - long: --client-version
   arg: client_version
   required: false
