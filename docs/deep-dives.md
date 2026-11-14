@@ -167,6 +167,11 @@ CLI change that makes a page wrong shows up as a failing test.
 - 🧠 Commands: `run --environment cfk`, `start-environment --environment cfk|cfk-rbac`, `debug cfk generate-bundle`, `analyze logs` (CFK bundle detected)
 - 🎬 Bite size session: [☸️ What is wrong in this CFK cluster?](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster) (`analyze logs` on a CFK bundle)
 
+### 🅰️ cp-ansible: the ansible environment, the customer's inventory
+
+- 📖 [Read the deep dive](/deep-dive-ansible.md)
+- 🧠 Commands: `run --environment ansible|ansible-sasl-ssl`, `start-environment --environment ansible|ansible-sasl-ssl`, `--ansible-inventory <hosts.yml>`, and what every command does on hosts deployed by cp-ansible (journald logs, `broker stop` through systemd)
+
 ### 🐌 A slow or broken network, on purpose
 
 - 📖 [Read the deep dive](/deep-dive-network-traffic.md)

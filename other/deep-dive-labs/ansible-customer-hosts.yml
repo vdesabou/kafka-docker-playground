@@ -1,0 +1,39 @@
+# a customer inventory for the lab of https://kafka-docker-playground.io/#/deep-dive-ansible (step 4): SSH connection,
+# FQDN host names, a vault value, customer certificates and a package mirror, like the hosts.yml attached to a case
+all:
+  vars:
+    ansible_connection: ssh
+    ansible_user: deploy
+    ansible_become: true
+    installation_method: archive
+    # the internal mirror, vaulted because its URL holds credentials
+    confluent_common_repository_baseurl: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      62313365396662343061393464336163383764373764613633653634306231386433626436623361
+    sasl_protocol: plain
+    ssl_enabled: true
+    ssl_custom_certs: true
+    ssl_ca_cert_filepath: /home/deploy/certs/ca.pem
+    ssl_signed_cert_filepath: "/home/deploy/certs/{{inventory_hostname}}.pem"
+    ssl_key_filepath: "/home/deploy/certs/{{inventory_hostname}}.key"
+  children:
+    kafka_controller:
+      hosts:
+        kc1.prod.example.com:
+          ansible_host: 10.20.0.11
+    kafka_broker:
+      vars:
+        kafka_broker_custom_properties:
+          num.partitions: 6
+      hosts:
+        kb1.prod.example.com:
+          ansible_host: 10.20.0.21
+    schema_registry:
+      hosts:
+        sr1.prod.example.com:
+    kafka_connect:
+      vars:
+        kafka_connect_custom_properties:
+          producer.bootstrap.servers: kb1.prod.example.com:9092
+      hosts:
+        kco1.prod.example.com:
