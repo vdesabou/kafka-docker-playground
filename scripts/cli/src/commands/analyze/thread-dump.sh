@@ -59,7 +59,7 @@ if [[ -n "$container" ]]; then
             : > "$dumps_file"
             for i in $(seq 1 "$count")
             do
-                playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l 1" >> "$dumps_file" 2>&1
+                playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l $(container_java_pid "$resolved_container" || echo 1)" >> "$dumps_file" 2>&1
                 [[ $i -lt $count ]] && sleep "$interval"
             done
         fi

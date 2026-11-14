@@ -24,7 +24,19 @@ then
     logwarn "⚠️ broker $broker is the only running broker: the cluster is unavailable until it starts again"
 fi
 
-if [[ -n "$kill" ]]
+if is_ansible_host "$container"
+then
+    # environment/ansible: the host stays up, its service stops (Restart=no in the cp-ansible units: a killed broker stays down)
+    units=$(ansible_host_units "$container")
+    if [[ -n "$kill" ]]
+    then
+        log "🔫 Killing broker $broker (systemctl kill -s KILL $units on host $container): no controlled shutdown, like a crash"
+        docker exec "$container" systemctl kill -s KILL $units || exit 1
+    else
+        log "🛑 Stopping broker $broker (systemctl stop $units on host $container): controlled shutdown, its leaders move to the other replicas first"
+        docker exec "$container" systemctl stop $units || exit 1
+    fi
+elif [[ -n "$kill" ]]
 then
     log "🔫 Killing broker $broker (container $container): no controlled shutdown, like a crash"
     docker kill "$container" > /dev/null || exit 1

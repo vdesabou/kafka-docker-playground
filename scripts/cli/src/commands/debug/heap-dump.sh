@@ -37,6 +37,9 @@ IFS=' ' read -ra container_array <<< "$containers"
 for container in "${container_array[@]}"
 do
     resolved_container=$(resolve_container_name_for_environment "$container")
+    # 1 in the cp images, the JVM of the service on environment/ansible (PID 1 is systemd there)
+    java_pid=$(container_java_pid "$resolved_container")
+    java_pid=${java_pid:-1}
     target_container_name=$(get_cfk_target_container_name "$container")
 
     playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
@@ -86,7 +89,7 @@ do
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo:live 1" > /tmp/${filename}
             else
-                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo:live 1" > /tmp/${filename}
+                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo:live $java_pid" > /tmp/${filename}
             fi
         else
             log "📊 Taking histo (without live option) heap dump on container ${container}"
@@ -94,7 +97,7 @@ do
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo 1" > /tmp/${filename}
             else
-                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo 1" > /tmp/${filename}
+                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo $java_pid" > /tmp/${filename}
             fi
         fi
         if [ $? -eq 0 ]
@@ -113,7 +116,7 @@ do
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:live,format=b,file=/tmp/${filename} 1"
             else
-                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:live,format=b,file=/tmp/${filename} 1"
+                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:live,format=b,file=/tmp/${filename} $java_pid"
             fi
         else
             log "🎯 Taking heap dump (without live option) on container ${container}"
@@ -121,7 +124,7 @@ do
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:format=b,file=/tmp/${filename} 1"
             else
-                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:format=b,file=/tmp/${filename} 1"
+                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:format=b,file=/tmp/${filename} $java_pid"
             fi
         fi
         if [ $? -eq 0 ]

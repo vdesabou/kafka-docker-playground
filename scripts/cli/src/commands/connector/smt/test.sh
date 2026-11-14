@@ -119,6 +119,11 @@ hub_image="confluentinc/cp-server-connect:${cp_versions[0]:-8.3.2}"
 if [ $connect_running -eq 1 ]
 then
     hub_image=$(docker inspect -f '{{.Config.Image}}' "$smt_connect_container")
+    if is_ansible_host "$smt_connect_container"
+    then
+        # environment/ansible: the worker is not a cp image, confluent-hub runs in the cp image of the same version
+        hub_image="confluentinc/cp-server-connect:$(get_container_cp_tag "$smt_connect_container")"
+    fi
 fi
 for spec in "${smt_plugins[@]}"
 do
@@ -152,8 +157,8 @@ function run_in_worker () {
     release=$(smt_tester_java_release "$java_version")
     classes=$(smt_tester_classes "$jar_dir" "$release") || return 1
     # the classpath and the properties file of the running worker jvm
-    classpath=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
-    worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+    classpath=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/$(container_java_pid "$smt_connect_container" || echo 1)/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
+    worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/$(container_java_pid "$smt_connect_container" || echo 1)/cmdline | tail -1" 2> /dev/null)
     plugin_path=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
     playground --output-level ERROR container exec --container "$smt_connect_container" --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
     playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination "$smt_connect_container":/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
@@ -187,7 +192,7 @@ function run_in_image () {
     then
         # same network and worker settings as the running example, for --from-topic and schema registry
         network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$smt_connect_container" | awk '{print $1}')
-        worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+        worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/$(container_java_pid "$smt_connect_container" || echo 1)/cmdline | tail -1" 2> /dev/null)
         playground --output-level ERROR container cp --source "$smt_connect_container:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
     fi
     [ -f "$work/worker.properties" ] || echo "bootstrap.servers=broker:9092" > "$work/worker.properties"

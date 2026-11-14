@@ -10,8 +10,16 @@ if is_container_running "$container"
 then
     logwarn "🤷 broker $broker (container $container) is already running"
 else
-    log "▶️ Starting broker $broker (container $container)"
-    docker start "$container" > /dev/null || exit 1
+    if is_ansible_host "$container" && docker inspect -f '{{.State.Running}}' "$container" 2> /dev/null | grep -q true
+    then
+        # environment/ansible: the host is up, its service was stopped
+        units=$(ansible_host_units "$container")
+        log "▶️ Starting broker $broker (systemctl start $units on host $container)"
+        docker exec "$container" systemctl start $units || exit 1
+    else
+        log "▶️ Starting broker $broker (container $container)"
+        docker start "$container" > /dev/null || exit 1
+    fi
 fi
 
 if [[ -n "$no_wait" ]]

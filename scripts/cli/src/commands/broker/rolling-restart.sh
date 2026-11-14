@@ -47,7 +47,13 @@ do
     container="$broker_id_container"
     broker_start_time=$SECONDS
     log "🔄 [$i/$nb] Restarting broker $id (container $container)"
-    docker restart -t 60 "$container" > /dev/null || exit 1
+    if is_ansible_host "$container"
+    then
+        # environment/ansible: restart the service, as on a real host
+        docker exec "$container" systemctl restart $(ansible_host_units "$container") || exit 1
+    else
+        docker restart -t 60 "$container" > /dev/null || exit 1
+    fi
     wait_for_broker_registered "$id" "$max_wait" || exit 1
     # at least 10s left for the health check, even when the registration took most of --max-wait
     remaining=$((max_wait - (SECONDS - broker_start_time)))

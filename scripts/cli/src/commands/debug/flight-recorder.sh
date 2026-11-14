@@ -36,7 +36,7 @@ fi
 #   jmx <jmx port> <recording id> <settings> <start epoch>   recording driven over JMX (FlightRecorderMXBean)
 #   jcmd - dump1 <settings> <start epoch>                    recording started with jcmd (cfk pods, no JMX port)
 function jmx_port_of () {
-    docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
+    container_env_dump "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
 }
 
 function format_epoch () {
@@ -103,7 +103,7 @@ do
                 remote_settings="/tmp/$(basename "$settings_file")"
                 playground container cp --source "$settings_file" --destination "$container:$remote_settings" > /dev/null 2>&1
             fi
-            if playground --output-level ERROR container exec --container "$container" --command "jcmd 1 JFR.start name=dump1 settings=$remote_settings"
+            if playground --output-level ERROR container exec --container "$container" --command "jcmd $(container_java_pid "$container" || echo 1) JFR.start name=dump1 settings=$remote_settings"
             then
                 playground state set "flight_recorder.$container" "jcmd - dump1 $settings $(date +%s)"
                 log "🛩️ flight recorder is now started on $container with jcmd (settings $settings)"
@@ -132,7 +132,7 @@ do
                 mv "$recorded" "$filename"
             else
                 remote="/tmp/$(basename "$filename")"
-                if ! playground --output-level ERROR container exec --container "$container" --command "jcmd 1 JFR.stop name=dump1 filename=$remote"
+                if ! playground --output-level ERROR container exec --container "$container" --command "jcmd $(container_java_pid "$container" || echo 1) JFR.stop name=dump1 filename=$remote"
                 then
                     playground state del "flight_recorder.$container" > /dev/null 2>&1
                     logerror "❌ failed to stop the flight recorder of $container with jcmd"

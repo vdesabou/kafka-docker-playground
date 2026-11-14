@@ -6,6 +6,12 @@ then
     logerror "❌ container recreate is not supported in cfk mode"
     exit 1
 fi
+if [[ "$environment" == ansible* ]]
+then
+    logerror "❌ container recreate is not supported in ansible mode: a recreated host loses what the playbook installed, run the playbook again instead"
+    log "    docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
+    exit 1
+fi
 
 export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 

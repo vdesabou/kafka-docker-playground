@@ -61,7 +61,9 @@ take_thread_dump_with_jstack() {
         log "💡 playground container change-jdk --version 17 installs a JDK, but it RESTARTS the container: the state you want to look at is lost"
         return 1
     fi
-    playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l 1" > "$filename" 2>&1
+    local java_pid
+    java_pid=$(container_java_pid "$resolved_container")
+    playground --output-level ERROR container exec --container "$resolved_container" --command "date '+%Y-%m-%d %H:%M:%S'; jstack -l ${java_pid:-1}" > "$filename" 2>&1
 }
 
 # Convert space-separated string to array

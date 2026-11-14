@@ -1,5 +1,7 @@
 name: get-docker-compose
 group: Container
+filters:
+- not_ansible_environment
 help: |-
   🐋 Get docker-compose
 

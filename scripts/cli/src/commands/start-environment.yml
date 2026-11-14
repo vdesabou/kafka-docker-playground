@@ -6,6 +6,7 @@ help: |-
 
   - ccloud
   - 2way-ssl
+  - ansible (cp-ansible: Confluent Platform installed by the confluent.platform.all playbook in systemd containers)
   - cfk
   - cfk-rbac
   - kerberos
@@ -44,12 +45,13 @@ flags:
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    allowed: [ccloud, 2way-ssl, ansible, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
     help: |-
       🔐 The environment to start . 
       
       - ccloud
       - 2way-ssl
+      - ansible
       - cfk
       - cfk-rbac
       - kerberos

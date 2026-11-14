@@ -97,7 +97,7 @@ flags:
   long: --environment
   required: false
   arg: environment
-  allowed: [ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer]
+  allowed: [ccloud, cfk, cfk-rbac, ansible, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer]
   help: |-
     🔐 The environment to start when running a connector example 
     
@@ -105,6 +105,7 @@ flags:
     - ccloud
     - cfk
     - cfk-rbac
+    - ansible (cp-ansible: Confluent Platform installed by the confluent.platform.all playbook)
     - 2way-ssl
     - kerberos
     - ldap-authorizer-sasl-plain

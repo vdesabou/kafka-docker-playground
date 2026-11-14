@@ -503,6 +503,10 @@ Using Confluent for Kubernetes (CFK) on k3d
 - [CFK](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/cfk): no security
 - [CFK with RBAC](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/cfk-rbac): RBAC with no SSL encryption, SASL/PLAIN authentication against LDAP, configured with CFK resources (`ConfluentRolebinding`, `KafkaRestClass`)
 
+Using cp-ansible (Ansible playbooks)
+
+- [cp-ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ansible): no security, Confluent Platform installed by the `confluent.platform.all` playbook in systemd containers, at the customer's cp-ansible and ansible-core versions (`playground start-environment --environment ansible`, or any connector example with `--environment ansible`)
+
 Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 - [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext): no security :environment/mdc-plaintext:
