@@ -115,6 +115,11 @@ then
             plaintext|sasl-plain|ldap-authorizer-sasl-plain|ldap-sasl-plain|sasl-scram|sasl-oauthbearer|kerberos|ssl_kerberos)
                 plaintext_schema_registry_snippet
             ;;
+            ansible*)
+                # 'playground connector create-or-update' switches the converters to the https schema registry of
+                # environment/ansible-sasl-ssl (and adds the truststore of the worker) itself
+                plaintext_schema_registry_snippet
+            ;;
             ccloud)
                 if [ -f $root_folder/.ccloud/env.delta ]
                 then

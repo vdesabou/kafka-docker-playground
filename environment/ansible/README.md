@@ -15,7 +15,8 @@ reaches them with the `community.docker.docker` connection (`docker exec`), not 
 - `start.sh` generates the inventory `inventory/hosts.yml`, runs `confluent.platform.all` from `ansible-controller`, then
   hands the cluster over to the `playground` commands
 
-This is a deployment with no security:
+This is a deployment with no security (see [ansible-sasl-ssl](../ansible-sasl-ssl/) for SASL/PLAIN and SSL on every
+listener):
 
 * 1 KRaft controller
 * 1 broker
