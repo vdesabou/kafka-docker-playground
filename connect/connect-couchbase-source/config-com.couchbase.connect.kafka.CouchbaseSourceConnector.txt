@@ -61,15 +61,6 @@ Number of records processed per parallel chunk when task.parallel.transform.enab
 ==========================
 Connection
 ==========================
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.password
 
 Password of the Couchbase user.
@@ -77,6 +68,15 @@ Password of the Couchbase user.
 May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 
 	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
