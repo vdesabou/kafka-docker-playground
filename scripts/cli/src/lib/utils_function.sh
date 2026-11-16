@@ -104,7 +104,18 @@ function yq() {
   verbose_begin
   if [[ $(type -f yq 2>&1) =~ "not found" ]]
   then
-    docker run --quiet  -u0 -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp --rm -i mikefarah/yq "$@"
+    # no yq on the host (a codespace, a Linux box): the files it reads or edits in place (yq -i) must be visible in the
+    # container at the same path, so the current folder and the folder of each file argument are mounted as they are
+    local yq_mounts=(-v "${PLAYGROUND_HOST_TMP_DIR}:/tmp" -v "${PWD}:${PWD}") yq_arg yq_dir
+    for yq_arg in "$@"
+    do
+      if [ -f "$yq_arg" ]
+      then
+        yq_dir="$(cd "$(dirname "$yq_arg")" && pwd)"
+        yq_mounts+=(-v "${yq_dir}:${yq_dir}")
+      fi
+    done
+    docker run --quiet -u0 "${yq_mounts[@]}" -w "${PWD}" --rm -i mikefarah/yq "$@"
   else
     $(type -f yq | awk '{print $3}') "$@"
   fi
