@@ -4475,14 +4475,14 @@ then
       prefix="${spec#*:}"
       if [ -f "$file" ]
       then
-        derived=$(sed -n -E "s/^${prefix//./\\.}(security\.protocol|sasl\.[a-z.]+|ssl\.(truststore|keystore|key|endpoint)[a-z.]*)=/\1=/p" "$file")
+        derived=$(sed -n -E "s/^${prefix//./\\.}(bootstrap\.servers|security\.protocol|sasl\.[a-z.]+|ssl\.(truststore|keystore|key|endpoint)[a-z.]*)=/\1=/p" "$file")
         source_file="$file"
         break 2
       fi
     done
   done
-  # nothing to set with plaintext (security.protocol=PLAINTEXT only)
-  if [ -n "$derived" ] && echo "$derived" | grep -qv "^security.protocol=PLAINTEXT$"
+  # nothing to set with plaintext (security.protocol=PLAINTEXT only, bootstrap.servers aside)
+  if [ -n "$derived" ] && echo "$derived" | grep -v "^bootstrap.servers=" | grep -qv "^security.protocol=PLAINTEXT$"
   then
     printf '# derived by playground from %s\n%s\n' "$source_file" "$derived" > /etc/kafka/client.properties
   else

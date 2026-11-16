@@ -1,0 +1,6 @@
+---
+services:
+  connect:
+    environment:
+      # the FileStream connectors of the archive: translated into plugin.path by environment/ansible/start.sh
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors

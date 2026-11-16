@@ -288,7 +288,8 @@ then
   archive_share_dir=""
   if [ "$ANSIBLE_INSTALLATION_METHOD" == "archive" ]
   then
-    archive_share_dir="/opt/confluent/confluent-${cp_version}/share/"
+    # a jinja expression of the inventory, not the version: the plugin path follows an upgrade (playground ansible upgrade)
+    archive_share_dir="/opt/confluent/confluent-{{ confluent_package_version }}/share/"
   fi
   # host group prefix skip(regex) env(regex): variables starting with <prefix> are properties, except <skip> (log4j
   # settings of the cp images, ignored) and <env> (JVM settings); variables without the prefix go to the environment
