@@ -375,6 +375,20 @@ function ansible_rest_scheme () {
   fi
 }
 
+# environment/ansible*: bootstrap servers for the Kafka tools run in container $1 with its /etc/kafka/client.properties:
+# the bootstrap.servers of the component (kept by the hand-over in the derived client.properties: connect can use
+# another listener than 9092), or on a broker the listener of its client.properties, the inter-broker one for
+# cp-ansible (BROKER, 9091, when the security of the listeners differs). broker:9092 when there is no client.properties
+function ansible_client_bootstrap () {
+  local container="$1" bootstrap
+  bootstrap=$(docker exec "$container" sh -c "sed -n 's/^bootstrap.servers=//p' /etc/kafka/client.properties 2> /dev/null" 2> /dev/null | head -1)
+  if [ -z "$bootstrap" ] && docker exec "$container" test -e /etc/kafka/client.properties 2> /dev/null
+  then
+    bootstrap=$(docker exec "$container" sh -c 'f=$(ls /opt/confluent/etc/kafka/server.properties /etc/kafka/server.properties 2> /dev/null | head -1); [ -n "$f" ] || exit 0; name=$(sed -n "s/^inter.broker.listener.name=//p" "$f"); port=$(sed -n "s/^listeners=//p" "$f" | tr "," "\n" | grep "^${name}://" | sed "s/.*://"); [ -n "$port" ] && echo "$(hostname):$port"' 2> /dev/null)
+  fi
+  echo "${bootstrap:-$container:9092}"
+}
+
 # environment/ansible*: curl options for the https REST API of host $1 published on localhost port $2. The certificates
 # of cp-ansible (or of the customer) are issued for the host name, not localhost: it is resolved to 127.0.0.1, and the
 # CA of the cluster (exported by environment/ansible/start.sh) verifies them
@@ -1244,8 +1258,9 @@ function get_security_broker() {
   elif [[ "$environment" == ansible* ]]
   then
       # written by cp-ansible with the security of the inventory (client_config_file), linked to /etc/kafka by
-      # environment/ansible/start.sh for an archive install
+      # environment/ansible/start.sh for an archive install: the security of the inter-broker listener
       security="$config_file_name /etc/kafka/client.properties"
+      bootstrap_server=$(ansible_client_bootstrap "$broker_container")
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"

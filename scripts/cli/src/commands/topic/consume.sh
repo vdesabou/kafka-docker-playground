@@ -127,6 +127,8 @@ then
     ansible_client_properties=$(docker exec "$container" cat /etc/kafka/client.properties 2> /dev/null || true)
     if [ -n "$ansible_client_properties" ]
     then
+        # the listener of the component (connect can be moved to another listener than 9092)
+        bootstrap_server=$(ansible_client_bootstrap "$container")
         security="$consumer_config_name /etc/kafka/client.properties"
     fi
     if [ "$(ansible_rest_scheme schema-registry)" == "https" ]

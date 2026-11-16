@@ -19,7 +19,7 @@ lab_run playground start-environment --environment ansible --docker-compose-over
 lab_expect_exit 0
 lab_expect_contains "🖥️ hosts: controller broker schema-registry connect"
 lab_expect_contains "🧩 translating the example's docker compose override docker-compose.plaintext.yml into inventory variables"
-lab_expect_contains "connect: plugin.path=/opt/confluent/confluent-${TAG_BASE:-$TAG}/share/filestream-connectors (kafka_connect_custom_properties)"
+lab_expect_contains "connect: plugin.path=/opt/confluent/confluent-{{ confluent_package_version }}/share/filestream-connectors (kafka_connect_custom_properties)"
 lab_expect_contains "▶️ Running the playbook (a few minutes): docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
 lab_expect_contains "PLAY RECAP"
 lab_expect_not_contains "failed=1"

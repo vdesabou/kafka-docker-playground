@@ -92,7 +92,7 @@ The example's docker compose override is translated, because the hosts are not c
 | the other services (databases, http servers…) | started as they are |
 
 Plugin paths of the cp images (`/usr/share/filestream-connectors`, `/usr/share/java/…`) point to the archive
-(`/opt/confluent/confluent-<version>/share/…`). The connector plugins installed by `playground run` are in
+(`/opt/confluent/confluent-{{ confluent_package_version }}/share/…`, a jinja expression: it follows an upgrade). The connector plugins installed by `playground run` are in
 `confluent-hub/`, mounted at `/usr/share/confluent-hub-components` in `connect`, as in the other environments.
 
 ### The customer's inventory (`--ansible-inventory`)
