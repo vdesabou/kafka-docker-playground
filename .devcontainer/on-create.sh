@@ -1,6 +1,6 @@
 #!/bin/bash
 # Runs once when a GitHub Codespace (or a VS Code dev container, or a Codespaces prebuild) is created from .devcontainer/devcontainer.json:
-# installs fzf, python3, podman and the Confluent CLI, and puts playground and its completion in the PATH, like https://kafka-docker-playground.io/install.sh
+# installs fzf, python3, podman, yq and the Confluent CLI, and puts playground and its completion in the PATH, like https://kafka-docker-playground.io/install.sh
 # does on a laptop. The block uses the same markers as install.sh, so 'install.sh --uninstall' removes it too.
 set -e
 
@@ -49,6 +49,21 @@ then
     sleep 10
   done
   command -v confluent > /dev/null 2>&1 || echo "⚠️ the Confluent CLI is not installed: curl -sL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin"
+fi
+
+# yq (mikefarah, Go): the CLI runs the mikefarah/yq image when it is missing, one container per call, and the ansible
+# environment calls it a lot. Not the apt package, which is the python yq (kislyuk), with another syntax. Best effort
+if ! command -v yq > /dev/null 2>&1
+then
+  echo "📦 installing yq"
+  yq_arch="$(dpkg --print-architecture 2> /dev/null || echo amd64)"
+  if sudo curl -fsSL --retry 3 -o /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${yq_arch}"
+  then
+    sudo chmod +x /usr/local/bin/yq
+  else
+    sudo rm -f /usr/local/bin/yq
+    echo "⚠️ yq is not installed, the CLI uses the mikefarah/yq image instead"
+  fi
 fi
 
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"

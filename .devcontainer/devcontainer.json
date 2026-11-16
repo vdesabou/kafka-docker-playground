@@ -22,7 +22,7 @@
     "memory": "16gb",
     "storage": "32gb"
   },
-  // installs fzf, python3 (pip, venv), podman and the Confluent CLI, and puts playground (and its completion) in the PATH of bash and zsh.
+  // installs fzf, python3 (pip, venv), podman, yq and the Confluent CLI, and puts playground (and its completion) in the PATH of bash and zsh.
   // onCreateCommand and updateContentCommand also run in a Codespaces prebuild, whose snapshot keeps their result
   "onCreateCommand": "bash .devcontainer/on-create.sh",
   // pulls the images of a default run (cp-server, cp-server-connect, cp-schema-registry at the default TAG), so

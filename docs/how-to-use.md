@@ -9,7 +9,7 @@ Nothing to install: click the button, log in to GitHub, and after about 2 minute
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1)
 
-The codespace is an Ubuntu 26.04 machine (x86_64, 4 cores, 16 GB) set up by [.devcontainer/devcontainer.json](https://github.com/vdesabou/kafka-docker-playground/blob/master/.devcontainer/devcontainer.json): Docker with compose v2, bash 5, fzf, python3 (with pip and venv), the Confluent CLI, podman 5 with its rootful socket already started (Docker is the default engine, [playground switch-podman](/playground%20switch-podman) runs the examples on podman), and `playground` with its completion in the `PATH`. [playground doctor](/playground%20doctor) runs each time it starts. Control Center (port 9021) and Grafana (port 3000) are forwarded to your browser when an example starts them.
+The codespace is an Ubuntu 26.04 machine (x86_64, 4 cores, 16 GB) set up by [.devcontainer/devcontainer.json](https://github.com/vdesabou/kafka-docker-playground/blob/master/.devcontainer/devcontainer.json): Docker with compose v2, bash 5, fzf, python3 (with pip and venv), yq, the Confluent CLI, podman 5 with its rootful socket already started (Docker is the default engine, [playground switch-podman](/playground%20switch-podman) runs the examples on podman), and `playground` with its completion in the `PATH`. [playground doctor](/playground%20doctor) runs each time it starts. Control Center (port 9021) and Grafana (port 3000) are forwarded to your browser when an example starts them.
 
 | Good to know | |
 | --- | --- |
