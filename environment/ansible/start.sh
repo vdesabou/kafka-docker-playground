@@ -37,11 +37,20 @@ function set_cp_versions () {
 set_cp_versions "${TAG_BASE:-$TAG}"
 ANSIBLE_INSTALLATION_METHOD="${ANSIBLE_INSTALLATION_METHOD:-archive}"
 
-# the docker connection plugin of the controller talks to the engine through its socket
-export ANSIBLE_DOCKER_SOCKET="/var/run/docker.sock"
-if [[ "${DOCKER_HOST:-}" == unix://* ]]
+# the docker connection plugin of the controller talks to the engine through its socket: the one of DOCKER_HOST, else
+# the one of the current docker context (playground switch-podman uses a context, unix:///run/podman-api/podman.sock in
+# a codespace, while /var/run/docker.sock stays the socket of the docker engine, without the hosts). Linux only: on
+# macOS the socket of a context (Docker Desktop's ~/.docker/run/docker.sock, a podman machine) is a host path that the
+# containers can't mount, /var/run/docker.sock is the one to use
+docker_endpoint="${DOCKER_HOST:-}"
+if [ -z "$docker_endpoint" ] && [ "$(uname -s)" == "Linux" ]
 then
-  export ANSIBLE_DOCKER_SOCKET="${DOCKER_HOST#unix://}"
+  docker_endpoint=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2> /dev/null)
+fi
+export ANSIBLE_DOCKER_SOCKET="/var/run/docker.sock"
+if [[ "$docker_endpoint" == unix://* ]]
+then
+  export ANSIBLE_DOCKER_SOCKET="${docker_endpoint#unix://}"
 fi
 
 # installation_method archive: the Confluent Platform archive (~1.4 GB) is downloaded once, then every host unpacks it
