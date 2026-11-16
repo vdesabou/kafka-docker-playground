@@ -1,0 +1,11 @@
+dn: cn=kafka-connect1,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: kafka-connect1
+sn: kafka-connect1
+cn: kafka-connect1
+uidNumber: 10003
+gidNumber: 5000
+userPassword: kafka-connect1-secret
+homeDirectory: /home/kafka-connect1

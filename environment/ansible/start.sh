@@ -260,7 +260,9 @@ do
         # worker settings of the other playground environments, the examples rely on them
         kafka_connect_custom_properties:
           key.converter: org.apache.kafka.connect.storage.StringConverter
-          config.providers: file
+          # next to the secret provider of cp-ansible with RBAC (kafka_connect_secret_registry_enabled): replacing it
+          # leaves ConnectSecretRegistryExtension waiting for it forever, and the REST API of connect answers 404
+          config.providers: "file{{ ',secret' if kafka_connect_secret_registry_enabled | bool else '' }}"
           config.providers.file.class: org.apache.kafka.common.config.provider.FileConfigProvider
 EOF
     fi

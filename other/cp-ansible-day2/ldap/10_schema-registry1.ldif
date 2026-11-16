@@ -1,0 +1,11 @@
+dn: cn=schema-registry1,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: schema-registry1
+sn: schema-registry1
+cn: schema-registry1
+uidNumber: 10002
+gidNumber: 5000
+userPassword: schema-registry1-secret
+homeDirectory: /home/schema-registry1
