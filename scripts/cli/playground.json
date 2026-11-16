@@ -8685,7 +8685,7 @@
     },
     {
       "name": "ansible",
-      "description": "🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n\nThe day-2 operations of a cluster deployed by cp-ansible: change the\ninventory, run the playbook again, upgrade Confluent Platform.\n\n  playbook    run confluent.platform.all (or another playbook) again\n  inventory   read and change environment/ansible/inventory/hosts.yml\n  upgrade     move the cluster to another Confluent Platform version\n\nAfter each playbook run, the cluster is handed over to the playground\ncommands again (wrappers of the binaries of the new version, client\nsecurity of each host, CA of the https REST APIs).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ansible",
+      "description": "🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n\nThe day-2 operations of a cluster deployed by cp-ansible: change the\ninventory, run the playbook again, upgrade Confluent Platform.\n\n  playbook    run confluent.platform.all (or another playbook) again\n  inventory   read and change environment/ansible/inventory/hosts.yml\n  add-host    add hosts to the running cluster (brokers, controllers, workers...)\n  upgrade     move the cluster to another Confluent Platform version\n\nAfter each playbook run, the cluster is handed over to the playground\ncommands again (wrappers of the binaries of the new version, client\nsecurity of each host, CA of the https REST APIs).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ansible",
       "usage": "playground ansible COMMAND",
       "options": [],
       "subcommands": [
@@ -8764,6 +8764,12 @@
               "options": []
             }
           ]
+        },
+        {
+          "name": "add-host",
+          "description": "🖥️ Add hosts to the running cluster\n\nStarts the containers of the hosts (empty hosts: systemd and a JDK) and\nadds them to their group of the inventory, with the JMX port they have in\nthe other environments. Then deploy them with 'playground ansible\nplaybook --limit <hosts>': the running hosts are not touched.\n\nHosts: broker2, broker3, controller2, controller3 (dynamic KRaft quorum\nonly), connect2, connect3, ksqldb-server, rest-proxy, control-center.",
+          "usage": "playground ansible add-host HOST...",
+          "options": []
         },
         {
           "name": "upgrade",

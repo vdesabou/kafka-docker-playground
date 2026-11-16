@@ -19,6 +19,8 @@ The workload (`day2-utils.bash`):
 | --- | --- | --- |
 | `rolling-upgrade.sh` | CP 8.3.2 → the default CP version (or `--tag`), 3 brokers | the feature level is not finalized by cp-ansible; a change applied with the default `deployment_strategy` (`parallel`) restarts every broker at once |
 | `enable-sasl-ssl.sh` | PLAINTEXT → SASL_SSL in 3 steps: a SASL_SSL listener next to PLAINTEXT, the clients moved, PLAINTEXT closed | a client left on PLAINTEXT: it stops producing, with `Bootstrap broker broker:9092 … disconnected` in a loop, or `java.lang.OutOfMemoryError` in its network thread |
+| `scale-out-brokers.sh` | 1 → 3 brokers (`playground ansible add-host broker2 broker3`, playbook on the new hosts only) | the new brokers hold nothing until the topics are reassigned; the internal topics (`__consumer_offsets`, the topics of connect) keep one replica |
+| `static-to-dynamic-quorum.sh` | static KRaft quorum → dynamic (`confluent.platform.StaticToDynamicQuorumMigration`), then 2 controllers added while the cluster runs | `kraft_dynamic_quorum_enabled` set and the normal playbook run on a static cluster: cp-ansible refuses it |
 
 Each example starts its own ansible environment and takes 15 to 25 minutes.
 
@@ -27,13 +29,15 @@ Each example starts its own ansible environment and takes 15 to 25 minutes.
 ```bash
 playground run -f other/cp-ansible-day2/rolling-upgrade.sh
 playground run -f other/cp-ansible-day2/enable-sasl-ssl.sh
+playground run -f other/cp-ansible-day2/scale-out-brokers.sh
+playground run -f other/cp-ansible-day2/static-to-dynamic-quorum.sh
 ```
 
 `rolling-upgrade.sh` goes from 8.3.2 (`DAY2_OLD_VERSION`) to the CP version of the run: `--tag` for another target.
 
 The same commands work by hand on any ansible environment, including a customer inventory
 (`--ansible-inventory`): `playground ansible inventory set`, `playground ansible playbook --rolling`,
-`playground ansible upgrade --to <version>`.
+`playground ansible upgrade --to <version>`, `playground ansible add-host <host>`.
 
 ## What you see
 
@@ -84,4 +88,33 @@ it in a single rolling run breaks the replication between the brokers already re
 
 Good to know: cp-ansible writes the broker's `client.properties` with the security of the **inter-broker** listener, not
 of `INTERNAL`: the playground commands pair it with that listener's port (9091 here).
+
+### `scale-out-brokers.sh` (9 min 56 s)
+
+```text
+✅ all brokers are registered: 1,2,3                                                       <- step 2, add-host + playbook --limit broker2,broker3
+📊 after adding the brokers (producer): 3242 records acked, 0 send errors
+Topic: day2	Partition: 0	Leader: 1	Replicas: 1	Isr: 1                                       <- step 3, nothing moved to the new brokers
+Topic: __consumer_offsets	Partition: 0	Leader: 1	Replicas: 1	Isr: 1
+Topic: day2	Partition: 0	Leader: 1	Replicas: 1,2,3	Isr: 1,2,3                               <- step 4, playground topic reassign --partition N --replicas …
+📤 records acked while broker 1 was down: 702                                              <- step 5
+🔎 acked by the producer: 5003, records in topic day2: 5003, lines written by the sink connector: 5003
+```
+
+The internal topics created while the cluster had one broker (`__consumer_offsets`, the topics of connect, `_schemas`)
+keep one replica on broker 1: reassign them too, or the consumer groups and connect stop with broker 1.
+
+### `static-to-dynamic-quorum.sh` (11 min 21 s)
+
+```text
+Feature: kraft.version  SupportedMinVersion: 0  SupportedMaxVersion: 1  FinalizedVersionLevel: 0   <- step 1, static quorum
+controller.quorum.voters=9991@controller:9093
+   ❌ controller: Detected a running static KRaft cluster (kraft.version=0). Applying dynamic quorum configuration directly is unsafe. Run playbooks/StaticToDynamicQuorumMigration.yaml …   <- step 2
+Feature: kraft.version  SupportedMinVersion: 0  SupportedMaxVersion: 1  FinalizedVersionLevel: 1   <- step 3, after the migration playbook
+controller.quorum.bootstrap.servers=controller:9093
+9991  …  Leader                                                                             <- step 4, controller2 and controller3 added
+9992  …  Follower
+9993  …  Follower
+🔎 acked by the producer: 6824, records in topic day2: 6824, lines written by the sink connector: 6824
+```
 

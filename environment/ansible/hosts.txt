@@ -1,0 +1,18 @@
+# hosts of environment/ansible, read by start.sh and 'playground ansible add-host'
+# <host> <cp-ansible group> <JMX variable of the playground commands> <JMX port> <compose profile>
+zookeeper zookeeper KAFKA_JMX_PORT 9999 zookeeper
+zookeeper2 zookeeper KAFKA_JMX_PORT 12999 zookeeper
+zookeeper3 zookeeper KAFKA_JMX_PORT 13999 zookeeper
+controller kafka_controller KAFKA_JMX_PORT 10005 -
+controller2 kafka_controller KAFKA_JMX_PORT 12005 controller-nodes
+controller3 kafka_controller KAFKA_JMX_PORT 13005 controller-nodes
+broker kafka_broker KAFKA_JMX_PORT 10000 -
+broker2 kafka_broker KAFKA_JMX_PORT 12000 kafka-nodes
+broker3 kafka_broker KAFKA_JMX_PORT 13000 kafka-nodes
+schema-registry schema_registry SCHEMA_REGISTRY_JMX_PORT 10001 -
+connect kafka_connect KAFKA_JMX_PORT 10002 -
+connect2 kafka_connect KAFKA_JMX_PORT 10022 connect-nodes
+connect3 kafka_connect KAFKA_JMX_PORT 10032 connect-nodes
+ksqldb-server ksql KSQL_JMX_PORT 10003 ksqldb
+rest-proxy kafka_rest - - rest-proxy
+control-center control_center_next_gen - - control-center

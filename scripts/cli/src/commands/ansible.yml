@@ -9,6 +9,7 @@ help: |-
 
     playbook    run confluent.platform.all (or another playbook) again
     inventory   read and change environment/ansible/inventory/hosts.yml
+    add-host    add hosts to the running cluster (brokers, controllers, workers...)
     upgrade     move the cluster to another Confluent Platform version
 
   After each playbook run, the cluster is handed over to the playground
@@ -123,6 +124,30 @@ commands:
       help: yq path, for example .all.vars.sasl_protocol
     examples:
     - playground ansible inventory delete .all.vars.sasl_protocol
+
+- name: add-host
+  group: Run
+  filters:
+  - ansible_environment
+  help: |-
+    🖥️ Add hosts to the running cluster
+
+    Starts the containers of the hosts (empty hosts: systemd and a JDK) and
+    adds them to their group of the inventory, with the JMX port they have in
+    the other environments. Then deploy them with 'playground ansible
+    playbook --limit <hosts>': the running hosts are not touched.
+
+    Hosts: broker2, broker3, controller2, controller3 (dynamic KRaft quorum
+    only), connect2, connect3, ksqldb-server, rest-proxy, control-center.
+  args:
+  - name: host
+    required: true
+    repeatable: true
+    allowed: [broker2, broker3, controller2, controller3, connect2, connect3, ksqldb-server, rest-proxy, control-center, zookeeper2, zookeeper3]
+    help: 🖥️ Host to add
+  examples:
+  - playground ansible add-host broker2 broker3
+  - playground ansible add-host ksqldb-server
 
 - name: upgrade
   group: Run

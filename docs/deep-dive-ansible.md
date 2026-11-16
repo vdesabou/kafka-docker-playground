@@ -16,6 +16,8 @@ about 15 minutes to read, and about 12 minutes to run the lab.
 | more hosts | `--enable-multiple-brokers`, `--enable-multiple-controllers`, `--enable-multiple-connect-workers`, `--enable-ksqldb`, `--enable-rest-proxy`, `--enable-control-center` |
 | change a variable and deploy again | `playground ansible inventory set <yq path> <value>`, then `playground ansible playbook --rolling [--limit connect] [--tags …] [--verbose]` |
 | upgrade Confluent Platform | `playground ansible upgrade --to <version>` (archive, collection, playbook rolling) |
+| add brokers, workers, controllers (dynamic quorum) | `playground ansible add-host <host>…`, then `playground ansible playbook --limit <hosts>` |
+| day-2 changes with a workload running through them (upgrade, SASL_SSL, scale out, KRaft quorum) | `playground run -f other/cp-ansible-day2/<example>.sh` |
 | what cp-ansible rendered | `playground container get-properties -c broker`, `docker exec broker systemctl status confluent-server` |
 | the playbook output | `/tmp/playground-ansible-playbook.log` |
 
