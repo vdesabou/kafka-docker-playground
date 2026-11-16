@@ -24490,8 +24490,9 @@ function is_container_running() {
   state=$(docker inspect -f '{{.State.Running}} {{.Config.Image}}' "$container_name" 2>/dev/null)
   [[ "$state" == true* ]] || return 1
   # a host of environment/ansible runs when its confluent-* services do (playground broker stop stops the service,
-  # not the host). A host where the playbook installed nothing yet counts as running
-  if [[ "$state" == "true kdp-ansible-host"* ]]
+  # not the host). A host where the playbook installed nothing yet counts as running. podman gives the full image name
+  # (docker.io/library/kdp-ansible-host:<tag>)
+  if [[ "${state##*/}" == kdp-ansible-host* || "$state" == "true kdp-ansible-host"* ]]
   then
     local units
     units=$(ansible_host_units "$container_name")
@@ -39279,7 +39280,24 @@ function yq() {
   verbose_begin
   if [[ $(type -f yq 2>&1) =~ "not found" ]]
   then
-    docker run --quiet  -u0 -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp --rm -i mikefarah/yq "$@"
+    # no yq on the host (a codespace, a Linux box): the files it reads or edits in place (yq -i) must be visible in the
+    # container at the same path, so the current folder and the folder of each file argument are mounted as they are
+    # and the variables the expression reads with env(NAME) / strenv(NAME) (PROPS=... yq '... strenv(PROPS)') are
+    # passed to the container, which does not inherit the environment
+    local yq_mounts=(-v "${PLAYGROUND_HOST_TMP_DIR}:/tmp" -v "${PWD}:${PWD}") yq_arg yq_dir yq_var
+    for yq_arg in "$@"
+    do
+      if [ -f "$yq_arg" ]
+      then
+        yq_dir="$(cd "$(dirname "$yq_arg")" && pwd)"
+        yq_mounts+=(-v "${yq_dir}:${yq_dir}")
+      fi
+      for yq_var in $(printf '%s' "$yq_arg" | grep -oE 'env\([A-Za-z_][A-Za-z0-9_]*\)' | sed -E 's/^env\((.*)\)$/\1/' | sort -u)
+      do
+        yq_mounts+=(-e "$yq_var")
+      done
+    done
+    docker run --quiet -u0 "${yq_mounts[@]}" -w "${PWD}" --rm -i mikefarah/yq "$@"
   else
     $(type -f yq | awk '{print $3}') "$@"
   fi
@@ -43517,7 +43535,6 @@ function benchmark_jms_load () {
   echo "BENCHMARK_RECORDS=$records"
 }
 
-# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform
 # environment/ansible: root folder of the playground, from the CLI (root_folder) or from an example (scripts/utils.sh)
 function ansible_root_folder () {
   if [ -n "$root_folder" ]
@@ -43685,8 +43702,12 @@ EOF
   fi
 }
 
+# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform. Its image
+# is kdp-ansible-host:<tag> with docker, docker.io/library/kdp-ansible-host:<tag> with podman (full name)
 function is_ansible_host () {
-  [[ "$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)" == kdp-ansible-host* ]]
+  local image
+  image="$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)"
+  [[ "${image##*/}" == kdp-ansible-host* ]]
 }
 
 # confluent-* systemd services of a host of environment/ansible (confluent-server, confluent-kcontroller,
