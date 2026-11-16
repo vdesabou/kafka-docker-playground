@@ -24172,8 +24172,9 @@ function is_container_running() {
   state=$(docker inspect -f '{{.State.Running}} {{.Config.Image}}' "$container_name" 2>/dev/null)
   [[ "$state" == true* ]] || return 1
   # a host of environment/ansible runs when its confluent-* services do (playground broker stop stops the service,
-  # not the host). A host where the playbook installed nothing yet counts as running
-  if [[ "$state" == "true kdp-ansible-host"* ]]
+  # not the host). A host where the playbook installed nothing yet counts as running. podman gives the full image name
+  # (docker.io/library/kdp-ansible-host:<tag>)
+  if [[ "${state##*/}" == kdp-ansible-host* || "$state" == "true kdp-ansible-host"* ]]
   then
     local units
     units=$(ansible_host_units "$container_name")
@@ -43192,9 +43193,12 @@ function benchmark_jms_load () {
   echo "BENCHMARK_RECORDS=$records"
 }
 
-# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform
+# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform. Its image
+# is kdp-ansible-host:<tag> with docker, docker.io/library/kdp-ansible-host:<tag> with podman (full name)
 function is_ansible_host () {
-  [[ "$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)" == kdp-ansible-host* ]]
+  local image
+  image="$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)"
+  [[ "${image##*/}" == kdp-ansible-host* ]]
 }
 
 # confluent-* systemd services of a host of environment/ansible (confluent-server, confluent-kcontroller,

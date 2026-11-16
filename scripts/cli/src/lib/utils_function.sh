@@ -4360,9 +4360,12 @@ function benchmark_jms_load () {
   echo "BENCHMARK_RECORDS=$records"
 }
 
-# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform
+# true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform. Its image
+# is kdp-ansible-host:<tag> with docker, docker.io/library/kdp-ansible-host:<tag> with podman (full name)
 function is_ansible_host () {
-  [[ "$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)" == kdp-ansible-host* ]]
+  local image
+  image="$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)"
+  [[ "${image##*/}" == kdp-ansible-host* ]]
 }
 
 # confluent-* systemd services of a host of environment/ansible (confluent-server, confluent-kcontroller,
