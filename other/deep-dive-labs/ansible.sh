@@ -60,8 +60,10 @@ lab_expect_exit 1
 lab_expect_contains "this command is not available with ansible: the containers are hosts where cp-ansible installed Confluent Platform"
 
 log "Step 3: change the inventory, run the playbook again"
-yq -i '.all.children.kafka_connect.vars.kafka_connect_custom_properties["consumer.max.poll.records"] = 100' "${DIR}/../../environment/ansible/inventory/hosts.yml"
-lab_run docker exec -e ANSIBLE_FORCE_COLOR=0 ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all --limit connect
+lab_run playground ansible inventory set '.all.children.kafka_connect.vars.kafka_connect_custom_properties["consumer.max.poll.records"]' 100
+lab_expect_exit 0
+lab_expect_contains "+          consumer.max.poll.records: 100"
+lab_run playground ansible playbook --limit connect
 lab_expect_exit 0
 lab_expect_contains "connect                    : ok="
 lab_expect_contains "failed=0"

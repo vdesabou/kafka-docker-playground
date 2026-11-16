@@ -132,9 +132,11 @@ Run the playbook again, after editing `environment/ansible/inventory/hosts.yml` 
 playbook fails):
 
 ```bash
-docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all
-docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all --tags kafka_broker -vvv
-docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all --limit connect
+playground ansible inventory set '.all.children.kafka_broker.vars.kafka_broker_custom_properties["num.partitions"]' 6
+playground ansible playbook --rolling                     # one host at a time: what to use on a running cluster
+playground ansible playbook --tags kafka_broker --verbose  # -vvv
+playground ansible playbook --limit connect
+playground ansible upgrade --to 8.4.1                     # archive, collection of the version, playbook rolling
 ```
 
 Example, a connector plugin: cp-ansible's default `plugin.path` doesn't include the connectors of the archive (creating
@@ -151,8 +153,14 @@ FileStreamSink`). Add the folder in the inventory, or plugins from Confluent Hub
           plugin.path: /opt/confluent/confluent-8.4.1/share/java/connect_plugins,/usr/share/java/connect_plugins,/opt/confluent/confluent-8.4.1/share/filestream-connectors
 ```
 
-Upgrade: set a new `confluent_package_version` in the inventory (and the matching archive in
-`confluent_archive_file_source`), then run the playbook again.
+Upgrade: `playground ansible upgrade --to <version>` downloads the archive, sets `confluent_package_version` and
+`confluent_archive_file_source`, installs the `confluent.platform` collection of the same major.minor in the controller,
+and runs the playbook with `deployment_strategy=rolling` (controller, then one broker at a time, then the other
+components). It does not finalize the feature level: `kafka-features upgrade --feature confluent.metadata.version=<level>`
+once every broker runs the new version (see [other/cp-ansible-day2](../../other/cp-ansible-day2/)).
+
+`deployment_strategy` is `parallel` by default in cp-ansible: a change applied without `--rolling` restarts every broker
+at the same time (the topics are unavailable while they restart).
 
 What cp-ansible generated (archive install: under `/opt/confluent/etc`, package install: under `/etc`):
 

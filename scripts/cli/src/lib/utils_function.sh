@@ -4344,6 +4344,173 @@ function benchmark_jms_load () {
 }
 
 # true for a host of environment/ansible: a systemd container where cp-ansible installed Confluent Platform
+# environment/ansible: root folder of the playground, from the CLI (root_folder) or from an example (scripts/utils.sh)
+function ansible_root_folder () {
+  if [ -n "$root_folder" ]
+  then
+    echo "$root_folder"
+  else
+    ( cd "${DIR_UTILS:-$(dirname "${BASH_SOURCE[0]}")}/.." >/dev/null && pwd )
+  fi
+}
+
+# environment/ansible: the Confluent Platform archive of version $1 (~1.4 GB), downloaded once to
+# ANSIBLE_ARCHIVE_CACHE_DIR (~/.playground-ansible-cache), mounted in /cache of every host
+function ansible_download_archive () {
+  local version="$1" cache_dir="${ANSIBLE_ARCHIVE_CACHE_DIR:-$HOME/.playground-ansible-cache}" archive_file archive_url
+  archive_file="confluent-${version}.tar.gz"
+  mkdir -p "$cache_dir"
+  if [ -f "$cache_dir/$archive_file" ]
+  then
+    return 0
+  fi
+  archive_url="https://packages.confluent.io/archive/$(echo "$version" | cut -d "." -f 1,2)/${archive_file}"
+  log "📥 Downloading $archive_url to $cache_dir (once, ~1.4 GB)"
+  if ! curl -fSL --progress-bar -o "$cache_dir/$archive_file.part" "$archive_url"
+  then
+    rm -f "$cache_dir/$archive_file.part"
+    logerror "❌ could not download $archive_url: is $version a released Confluent Platform version?"
+    return 1
+  fi
+  mv "$cache_dir/$archive_file.part" "$cache_dir/$archive_file"
+}
+
+# environment/ansible: runs a playbook in ansible-controller against /inventory/hosts.yml, output in
+# /tmp/playground-ansible-playbook.log, then prints the PLAY RECAP and, when it fails, the error of each host.
+# $@: ansible-playbook arguments after the inventory (default: confluent.platform.all). Returns the exit code of the playbook
+function ansible_run_playbook () {
+  local playbook_log="${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-ansible-playbook.log" rc
+  local playbook_args=("$@")
+  if [ ${#playbook_args[@]} -eq 0 ]
+  then
+    playbook_args=(confluent.platform.all)
+  fi
+  log "▶️ Running the playbook (a few minutes): docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml ${playbook_args[*]}"
+  log "📄 Playbook output: tail -f $playbook_log"
+  set +e
+  docker exec -e ANSIBLE_FORCE_COLOR=0 ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}" > "$playbook_log" 2>&1
+  rc=$?
+  set -e
+  sed -n '/^PLAY RECAP/,/^$/p' "$playbook_log"
+  if [ $rc -ne 0 ]
+  then
+    # the task that failed and its error ("fatal:" for a task, "failed:" for an item of a loop)
+    grep -E "^(fatal|failed): " "$playbook_log" | sed -E 's/^(fatal|failed): \[([^]]*)\].*"msg": "([^"]*).*/   ❌ \2: \3/' | sort -u | head -20
+    logerror "❌ the playbook failed (exit code $rc), full output in $playbook_log"
+    log "🎓 the hosts are still running: fix the inventory (playground ansible inventory set …), then run the playbook again (playground ansible playbook, --verbose for -vvv)"
+  fi
+  return $rc
+}
+
+# environment/ansible: the hosts of the inventory that run as containers
+function ansible_inventory_hosts () {
+  local inventory_file
+  inventory_file="$(ansible_root_folder)/environment/ansible/inventory/hosts.yml"
+  yq '.. | select(has("hosts")) | .hosts | keys | .[]' "$inventory_file" 2> /dev/null | sort -u | while read -r host
+  do
+    if docker inspect -f '{{.State.Running}}' "$host" 2> /dev/null | grep -q true
+    then
+      echo "$host"
+    fi
+  done
+}
+
+# environment/ansible: hand the cluster over to the playground commands, after each playbook run (an upgrade changes the
+# folder of the binaries, a security change the clients):
+#  - wrappers of the binaries of the archive in /usr/local/bin (an archive install is not on the PATH; wrappers, not
+#    symlinks: kafka-run-class finds its jars relative to its own path), for the confluent_package_version of the inventory
+#  - /etc/kafka/client.properties: the one cp-ansible writes on the brokers, else derived from the client settings of the
+#    component (connect worker, kafkastore.* of schema registry, ksqlDB server, client.* of REST Proxy), none with plaintext
+#  - environment/ansible/inventory/ca.pem: the CA of the cluster for the https REST APIs (truststore of connect or broker)
+function ansible_handover () {
+  local inventory_dir version hosts host ca_host truststore truststore_password
+  inventory_dir="$(ansible_root_folder)/environment/ansible/inventory"
+  version=$(yq '.all.vars.confluent_package_version // ""' "$inventory_dir/hosts.yml" 2> /dev/null)
+  hosts=$(ansible_inventory_hosts)
+  for host in $hosts
+  do
+    docker exec -i -e VERSION="$version" "$host" bash << 'EOF'
+bin_dir="/opt/confluent/confluent-${VERSION}/bin"
+if [ ! -d "$bin_dir" ]
+then
+  bin_dir=$(ls -d /opt/confluent/confluent-[0-9]*/bin 2> /dev/null | sort -V | tail -1)
+fi
+mkdir -p /etc/kafka
+if [ -n "$bin_dir" ]
+then
+  etc_dir="${bin_dir%/bin}/etc"
+  for f in "$bin_dir"/*
+  do
+    [ -f "$f" ] && [ -x "$f" ] || continue
+    target="/usr/local/bin/$(basename "$f")"
+    rm -f "$target"
+    cat > "$target" << WRAPPER
+#!/bin/sh
+# environment/ansible: $f, with the log4j configuration of the tools (an archive install has no bin/../config)
+export KAFKA_LOG4J_OPTS="\${KAFKA_LOG4J_OPTS:--Dlog4j2.configurationFile=file:$etc_dir/kafka/tools-log4j2.yaml}"
+export SCHEMA_REGISTRY_LOG4J_OPTS="\${SCHEMA_REGISTRY_LOG4J_OPTS:--Dlog4j2.configurationFile=file:$etc_dir/kafka/tools-log4j2.yaml}"
+exec $f "\$@"
+WRAPPER
+    chmod 755 "$target"
+  done
+  # the playground commands pass the paths of the cp images: /etc/kafka/tools-log4j2.yaml
+  for file in "$etc_dir"/kafka/tools-log4j*
+  do
+    [ -f "$file" ] && ln -sfn "$file" "/etc/kafka/$(basename "$file")"
+  done
+fi
+# client.properties: the broker's (archive install: a link, cp-ansible keeps it up to date; package install: written by
+# cp-ansible in /etc/kafka, left as it is), else derived again on each run
+if [ -f /opt/confluent/etc/kafka/client.properties ]
+then
+  ln -sfn /opt/confluent/etc/kafka/client.properties /etc/kafka/client.properties
+elif [ ! -e /etc/kafka/client.properties ] || head -1 /etc/kafka/client.properties | grep -q "^# derived by playground"
+then
+  derived=""
+  for root in /opt/confluent/etc /etc
+  do
+    for spec in kafka/connect-distributed.properties: schema-registry/schema-registry.properties:kafkastore. ksqldb/ksql-server.properties: kafka-rest/kafka-rest.properties:client.
+    do
+      file="$root/${spec%%:*}"
+      prefix="${spec#*:}"
+      if [ -f "$file" ]
+      then
+        derived=$(sed -n -E "s/^${prefix//./\\.}(security\.protocol|sasl\.[a-z.]+|ssl\.(truststore|keystore|key|endpoint)[a-z.]*)=/\1=/p" "$file")
+        source_file="$file"
+        break 2
+      fi
+    done
+  done
+  # nothing to set with plaintext (security.protocol=PLAINTEXT only)
+  if [ -n "$derived" ] && echo "$derived" | grep -qv "^security.protocol=PLAINTEXT$"
+  then
+    printf '# derived by playground from %s\n%s\n' "$source_file" "$derived" > /etc/kafka/client.properties
+  else
+    rm -f /etc/kafka/client.properties
+  fi
+fi
+EOF
+  done
+  rm -f "${inventory_dir}/ca.pem"
+  ca_host="connect"
+  if [[ " $(echo $hosts) " != *" connect "* ]]
+  then
+    ca_host="broker"
+  fi
+  truststore=$(docker exec "$ca_host" sh -c 'sed -n "s/^ssl.truststore.location=//p" /etc/kafka/client.properties 2> /dev/null' 2> /dev/null | head -1)
+  truststore_password=$(docker exec "$ca_host" sh -c 'sed -n "s/^ssl.truststore.password=//p" /etc/kafka/client.properties 2> /dev/null' 2> /dev/null | head -1)
+  if [ -n "$truststore" ]
+  then
+    docker exec "$ca_host" keytool -list -rfc -keystore "$truststore" -storepass "$truststore_password" 2> /dev/null | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' > "${inventory_dir}/ca.pem"
+    log "🔐 security of the cluster: $(docker exec "$ca_host" sed -n 's/^security.protocol=//p' /etc/kafka/client.properties), CA of the REST APIs in ${inventory_dir}/ca.pem"
+    if [[ " $(echo $hosts) " == *" ksqldb-server "* ]]
+    then
+      # the ksql cli of playground ksqldb sql: the truststore of the ksqlDB host for its https listener
+      docker exec ksqldb-server sh -c 'sed -n -E "s/^(ssl\.truststore\.(location|password))=/\1=/p" /etc/kafka/client.properties > /etc/kafka/ksql-cli.properties'
+    fi
+  fi
+}
+
 function is_ansible_host () {
   [[ "$(docker inspect -f '{{.Config.Image}}' "$1" 2> /dev/null)" == kdp-ansible-host* ]]
 }

@@ -233,6 +233,8 @@ commands:
 
 - import: src/commands/broker.yml
 
+- import: src/commands/ansible.yml
+
 - import: src/commands/consumer-group.yml
 
 - import: src/commands/flink.yml
