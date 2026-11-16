@@ -47,9 +47,11 @@ function wait_for_output () {
     done
 }
 
-# kafka-consumer-groups --describe of a group, on one cluster (broker-us or broker-europe)
+# kafka-consumer-groups --describe of a group, on one cluster (broker-us or broker-europe). Its stderr is dropped:
+# "Consumer group '<group>' has no active members." goes to stderr, and docker exec carries stdout and stderr as two
+# streams, so once merged with 2>&1 that line can land in the middle of an offsets row and break the check
 function describe_group () {
-    playground container exec -c "$1" --command "kafka-consumer-groups --bootstrap-server $1:9092 --describe --group $2"
+    playground container exec -c "$1" --command "kafka-consumer-groups --bootstrap-server $1:9092 --describe --group $2 2> /dev/null"
 }
 
 log "Step 1: two clusters, one environment"
@@ -140,7 +142,8 @@ lab_expect_contains "sales_EUROPE (us) has as many records as sales_EUROPE (euro
 wait_for_output "offsets of app-with-interceptor translated in us" 180 "sales_EUROPE" describe_group broker-us app-with-interceptor
 echo "$LAB_OUTPUT"
 lab_expect_contains "app-with-interceptor sales_EUROPE 0 10 20 10"
-lab_run describe_group broker-us app-without-interceptor
+# the error is on stderr: not with describe_group
+lab_run playground container exec -c broker-us --command "kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group app-without-interceptor"
 lab_expect_contains "GroupIdNotFoundException: Group app-without-interceptor not found."
 lab_run playground container exec -c broker-us --command "kafka-console-consumer --bootstrap-server broker-us:9092 --topic sales_EUROPE --max-messages 10 --timeout-ms 60000 --group app-with-interceptor"
 lab_expect_contains "Processed a total of 10 messages"
