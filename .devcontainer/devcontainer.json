@@ -3,14 +3,14 @@
   // Open it in one click: https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1
   // Docs: https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces
   "name": "kafka-docker-playground",
-  // Ubuntu with bash 5 and git: no bash upgrade needed, unlike macOS.
-  // Pinned to 24.04 (noble): the floating 'ubuntu' tag moved to 26.04 (resolute), where the docker-in-docker
-  // feature refuses to install Moby ("The 'moby' option is not supported on ubuntu 'resolute'")
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  // Ubuntu 26.04 (resolute) with bash 5 and git: no bash upgrade needed, unlike macOS. 26.04 rather than 24.04 for
+  // podman 5 ('playground switch-podman'): 24.04 only has podman 4.9, which 'playground doctor' rejects (#9063)
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu26.04",
   "features": {
-    // a Docker engine with compose v2 inside the codespace
+    // a Docker engine with compose v2 inside the codespace. Docker CE from download.docker.com, not Moby: the
+    // feature refuses to install Moby on 26.04 ("The 'moby' option is not supported on ubuntu 'resolute'", #10184)
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "moby": true
+      "moby": false
     },
     // an SSH server, for 'playground codespace ssh' ('gh codespace ssh' and 'gh codespace cp' need one).
     // gh tunnels it through its own authenticated connection: no port is opened to the internet
@@ -22,7 +22,7 @@
     "memory": "16gb",
     "storage": "32gb"
   },
-  // installs fzf and puts playground (and its completion) in the PATH of bash and zsh.
+  // installs fzf, python3 (pip, venv), podman and the Confluent CLI, and puts playground (and its completion) in the PATH of bash and zsh.
   // onCreateCommand and updateContentCommand also run in a Codespaces prebuild, whose snapshot keeps their result
   "onCreateCommand": "bash .devcontainer/on-create.sh",
   // pulls the images of a default run (cp-server, cp-server-connect, cp-schema-registry at the default TAG), so
@@ -30,8 +30,18 @@
   "updateContentCommand": "bash .devcontainer/pull-images.sh",
   // the codespace opens once onCreateCommand is done, without waiting for the images
   "waitFor": "onCreateCommand",
-  // checks that the container engine is ready, each time the codespace starts
-  "postStartCommand": "bash scripts/cli/playground doctor || true",
+  // podman's image storage: a volume, like /var/lib/docker for docker-in-docker, because podman's overlay driver
+  // cannot sit on the overlayfs of the container itself
+  "mounts": [
+    {
+      "source": "kdp-podman-${devcontainerId}",
+      "target": "/var/lib/containers",
+      "type": "volume"
+    }
+  ],
+  // starts the rootful podman socket (no systemd in a codespace), then checks that the container engine is ready,
+  // each time the codespace starts
+  "postStartCommand": "bash .devcontainer/start-podman.sh; bash scripts/cli/playground doctor || true",
   "portsAttributes": {
     "9021": { "label": "Control Center", "onAutoForward": "notify" },
     "3000": { "label": "Grafana", "onAutoForward": "notify" }
