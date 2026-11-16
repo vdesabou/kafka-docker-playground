@@ -316,8 +316,9 @@ function is_container_running() {
   state=$(docker inspect -f '{{.State.Running}} {{.Config.Image}}' "$container_name" 2>/dev/null)
   [[ "$state" == true* ]] || return 1
   # a host of environment/ansible runs when its confluent-* services do (playground broker stop stops the service,
-  # not the host). A host where the playbook installed nothing yet counts as running
-  if [[ "$state" == "true kdp-ansible-host"* ]]
+  # not the host). A host where the playbook installed nothing yet counts as running. podman gives the full image name
+  # (docker.io/library/kdp-ansible-host:<tag>)
+  if [[ "${state##*/}" == kdp-ansible-host* || "$state" == "true kdp-ansible-host"* ]]
   then
     local units
     units=$(ansible_host_units "$container_name")
