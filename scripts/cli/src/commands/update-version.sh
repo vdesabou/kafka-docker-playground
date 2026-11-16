@@ -16,7 +16,7 @@ fi
 if [[ "$environment" == ansible* ]]
 then
   logerror "❌ update-version is not available with the ansible environment: an upgrade is the playbook again with a new version"
-  log "    set confluent_package_version in environment/ansible/inventory/hosts.yml, then: docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
+  log "    playground ansible upgrade --to <version> (rolling, the archive and the collection of the version included)"
   exit 1
 fi
 if [ "$(playground state get run.connector_type)" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]

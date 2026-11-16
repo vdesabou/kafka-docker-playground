@@ -9,7 +9,7 @@ fi
 if [[ "$environment" == ansible* ]]
 then
     logerror "❌ container recreate is not supported in ansible mode: a recreated host loses what the playbook installed, run the playbook again instead"
-    log "    docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
+    log "    playground ansible playbook (playground ansible inventory set <path> <value> to change a variable first)"
     exit 1
 fi
 

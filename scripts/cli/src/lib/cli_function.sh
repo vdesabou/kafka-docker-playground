@@ -3120,12 +3120,21 @@ function filter_not_cfk_environment() {
   fi
 }
 
+function filter_ansible_environment() {
+  get_environment_used
+
+  if [[ "$environment" != ansible* ]]
+  then
+    logerror "this command needs the ansible or ansible-sasl-ssl environment (it is ${environment:-not set}): playground start-environment --environment ansible"
+  fi
+}
+
 function filter_not_ansible_environment() {
   get_environment_used
 
   if [[ "$environment" == ansible* ]]
   then
-    logerror "this command is not available with $environment: the containers are hosts where cp-ansible installed Confluent Platform, recreating them deletes the installation. Change the inventory environment/ansible/inventory/hosts.yml (<component>_service_environment_overrides for environment variables, <component>_custom_properties for properties), then run the playbook again: docker exec -it ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all"
+    logerror "this command is not available with $environment: the containers are hosts where cp-ansible installed Confluent Platform, recreating them deletes the installation. Change the inventory environment/ansible/inventory/hosts.yml (<component>_service_environment_overrides for environment variables, <component>_custom_properties for properties), then run the playbook again: playground ansible inventory set <path> <value>, playground ansible playbook --rolling"
   fi
 }
 

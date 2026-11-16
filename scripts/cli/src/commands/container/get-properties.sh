@@ -22,6 +22,20 @@ then
 fi
 cat \$propertie_file | grep -v None | grep .
 EOF
+elif is_ansible_host "$resolved_container"
+then
+  # environment/ansible: the properties file of the confluent-* service (other java processes run there too, the
+  # Kafka tools of the playground commands)
+  java_pid=$(container_java_pid "$resolved_container")
+  docker exec -i -e JAVA_PID="$java_pid" "$resolved_container" sh << 'EOF'
+propertie_file=$(tr '\0' '\n' < /proc/$JAVA_PID/cmdline | grep '\.properties$' | tail -1)
+if [ ! -f "$propertie_file" ]
+then
+  echo 'ERROR: Could not determine properties file!'
+  exit 1
+fi
+cat "$propertie_file" | grep -v None | grep .
+EOF
 else
 docker exec -i "$resolved_container" sh << EOF
 ps -ef | grep properties | grep java | grep -v grep | sed -e 's/[[:space:]]*\$//' -e 's/.*[[:space:]]//' > /tmp/propertie_file
