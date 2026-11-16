@@ -97,22 +97,8 @@ fi
 # has in the other playground environments (used by the playground commands that read JMX metrics: JMX_PORT is read
 # by the *-run-class scripts, KAFKA_JMX_PORT / SCHEMA_REGISTRY_JMX_PORT / KSQL_JMX_PORT by the playground commands)
 # <host> <cp-ansible group> <JMX variable of the playground commands> <JMX port> <compose profile>
-ansible_hosts_table="zookeeper zookeeper KAFKA_JMX_PORT 9999 zookeeper
-zookeeper2 zookeeper KAFKA_JMX_PORT 12999 zookeeper
-zookeeper3 zookeeper KAFKA_JMX_PORT 13999 zookeeper
-controller kafka_controller KAFKA_JMX_PORT 10005 -
-controller2 kafka_controller KAFKA_JMX_PORT 12005 controller-nodes
-controller3 kafka_controller KAFKA_JMX_PORT 13005 controller-nodes
-broker kafka_broker KAFKA_JMX_PORT 10000 -
-broker2 kafka_broker KAFKA_JMX_PORT 12000 kafka-nodes
-broker3 kafka_broker KAFKA_JMX_PORT 13000 kafka-nodes
-schema-registry schema_registry SCHEMA_REGISTRY_JMX_PORT 10001 -
-connect kafka_connect KAFKA_JMX_PORT 10002 -
-connect2 kafka_connect KAFKA_JMX_PORT 10022 connect-nodes
-connect3 kafka_connect KAFKA_JMX_PORT 10032 connect-nodes
-ksqldb-server ksql KSQL_JMX_PORT 10003 ksqldb
-rest-proxy kafka_rest - - rest-proxy
-control-center control_center_next_gen - - control-center"
+# environment/ansible/hosts.txt, also read by 'playground ansible add-host'
+ansible_hosts_table=$(grep -v "^#" "${DIR}/hosts.txt")
 enabled_profiles=()
 [ -n "$ENABLE_CONTROLLER_NODES" ] && enabled_profiles+=(controller-nodes)
 [ -n "$ENABLE_KAFKA_NODES" ] && enabled_profiles+=(kafka-nodes)

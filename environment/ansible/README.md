@@ -137,6 +137,7 @@ playground ansible playbook --rolling                     # one host at a time: 
 playground ansible playbook --tags kafka_broker --verbose  # -vvv
 playground ansible playbook --limit connect
 playground ansible upgrade --to 8.4.1                     # archive, collection of the version, playbook rolling
+playground ansible add-host broker2 broker3               # new hosts in the inventory, then: playground ansible playbook --limit broker2,broker3
 ```
 
 Example, a connector plugin: cp-ansible's default `plugin.path` doesn't include the connectors of the archive (creating

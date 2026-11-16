@@ -141,6 +141,7 @@ playground_usage() {
   printf "  %s   🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n" "$(green "ansible")                                   "
   printf "  %s   ▶️ Run the playbook again on the hosts\n" "$(green "ansible playbook")                          "
   printf "  %s   📋 Read and change the inventory of the ansible environment\n" "$(green "ansible inventory")                         "
+  printf "  %s   🖥️ Add hosts to the running cluster\n" "$(green "ansible add-host")                          "
   printf "  %s   ⬆️ Upgrade (or downgrade) Confluent Platform with cp-ansible\n" "$(green "ansible upgrade")                           "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
@@ -16955,7 +16956,7 @@ playground_broker_metrics_usage() {
 playground_ansible_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ansible\n\n"
-    printf "  🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n  \n  The day-2 operations of a cluster deployed by cp-ansible: change the\n  inventory, run the playbook again, upgrade Confluent Platform.\n  \n    playbook    run confluent.platform.all (or another playbook) again\n    inventory   read and change environment/ansible/inventory/hosts.yml\n    upgrade     move the cluster to another Confluent Platform version\n  \n  After each playbook run, the cluster is handed over to the playground\n  commands again (wrappers of the binaries of the new version, client\n  security of each host, CA of the https REST APIs).\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ansible\n\n"
+    printf "  🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n  \n  The day-2 operations of a cluster deployed by cp-ansible: change the\n  inventory, run the playbook again, upgrade Confluent Platform.\n  \n    playbook    run confluent.platform.all (or another playbook) again\n    inventory   read and change environment/ansible/inventory/hosts.yml\n    add-host    add hosts to the running cluster (brokers, controllers,\n  workers...)\n    upgrade     move the cluster to another Confluent Platform version\n  \n  After each playbook run, the cluster is handed over to the playground\n  commands again (wrappers of the binaries of the new version, client\n  security of each host, CA of the https REST APIs).\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ansible\n\n"
   else
     printf "playground ansible - 🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n\n"
   fi
@@ -16968,6 +16969,7 @@ playground_ansible_usage() {
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   ▶️ Run the playbook again on the hosts\n" "$(green "playbook") "
   printf "  %s   📋 Read and change the inventory of the ansible environment\n" "$(green "inventory")"
+  printf "  %s   🖥️ Add hosts to the running cluster\n" "$(green "add-host") "
   printf "  %s   ⬆️ Upgrade (or downgrade) Confluent Platform with cp-ansible\n" "$(green "upgrade")  "
   echo
 
@@ -17206,6 +17208,48 @@ playground_ansible_inventory_delete_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground ansible inventory delete .all.vars.sasl_protocol\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ansible_add_host_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ansible add-host\n\n"
+    printf "  🖥️ Add hosts to the running cluster\n  \n  Starts the containers of the hosts (empty hosts: systemd and a JDK) and\n  adds them to their group of the inventory, with the JMX port they have in\n  the other environments. Then deploy them with 'playground ansible\n  playbook --limit <hosts>': the running hosts are not touched.\n  \n  Hosts: broker2, broker3, controller2, controller3 (dynamic KRaft quorum\n  only), connect2, connect3, ksqldb-server, rest-proxy, control-center.\n\n"
+  else
+    printf "playground ansible add-host - 🖥️ Add hosts to the running cluster\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ansible add-host HOST...\n"
+  printf "  playground ansible add-host --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "HOST...")"
+    printf "    🖥️ Host to add\n"
+    printf "    %s\n" "Allowed: broker2, broker3, controller2, controller3, connect2, connect3, ksqldb-server, rest-proxy, control-center, zookeeper2, zookeeper3"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ansible add-host broker2 broker3\n"
+    printf "  playground ansible add-host ksqldb-server\n"
     echo
 
   fi
@@ -83805,6 +83849,60 @@ playground_ansible_inventory_delete_command() {
 }
 
 # :command.function
+playground_ansible_add_host_command() {
+
+  # src/commands/ansible/add-host.sh
+  hosts="${args[host]}"
+
+  hosts_file="$root_folder/environment/ansible/hosts.txt"
+  inventory_file="$root_folder/environment/ansible/inventory/hosts.yml"
+  docker_command=$(playground state get run.docker_command)
+  if [ -z "$docker_command" ]
+  then
+    logerror "❌ no docker compose command saved in playground.ini: start the environment with playground start-environment --environment ansible"
+    exit 1
+  fi
+
+  eval "host_array=($hosts)"
+  for host in "${host_array[@]}"
+  do
+    line=$(grep -v "^#" "$hosts_file" | awk -v h="$host" '$1 == h')
+    if [ -z "$line" ]
+    then
+      logerror "❌ $host is not a host of the ansible environment: $(grep -v '^#' "$hosts_file" | awk '{print $1}' | tr '\n' ' ')"
+      exit 1
+    fi
+    read -r _ group jmx_var jmx_port profile <<< "$line"
+    if [ "$group" == "kafka_controller" ] && [ "$(yq '.all.vars.kraft_dynamic_quorum_enabled // false' "$inventory_file")" != "true" ]
+    then
+      logwarn "⚠️ $host: the KRaft quorum is static (controller.quorum.voters): a controller can only join a dynamic quorum, migrate first (playground ansible playbook --playbook confluent.platform.StaticToDynamicQuorumMigration, see other/cp-ansible-day2/static-to-dynamic-quorum.sh)"
+    fi
+    if docker inspect -f '{{.State.Running}}' "$host" 2> /dev/null | grep -q true
+    then
+      logwarn "🤷 $host is already running"
+    else
+      # the saved docker compose command, with the profile of the host: also what playground stop replays
+      if [ "$profile" != "-" ] && [[ "$docker_command" != *"--profile $profile "* ]]
+      then
+        docker_command="${docker_command/ up -d/ --profile $profile up -d}"
+        playground state set run.docker_command "$docker_command"
+      fi
+      log "🖥️ starting host $host (an empty host: the playbook installs Confluent Platform)"
+      bash -c "$docker_command $host" > /tmp/playground-ansible-add-host.log 2>&1 || { tail -5 /tmp/playground-ansible-add-host.log; logerror "❌ could not start $host"; exit 1; }
+    fi
+    if [ "$jmx_var" != "-" ]
+    then
+      HOST="$host" GROUP="$group" JMX_VAR="$jmx_var" JMX_PORT="$jmx_port" yq -i -P '.all.children[strenv(GROUP)].hosts[strenv(HOST)][strenv(GROUP) + "_service_environment_overrides"] = {"JMX_PORT": (strenv(JMX_PORT) | tonumber), strenv(JMX_VAR): (strenv(JMX_PORT) | tonumber)}' "$inventory_file"
+    else
+      HOST="$host" GROUP="$group" yq -i -P '.all.children[strenv(GROUP)].hosts[strenv(HOST)] = (.all.children[strenv(GROUP)].hosts[strenv(HOST)] // null)' "$inventory_file"
+    fi
+    log "📋 $host added to group $group of the inventory"
+  done
+  log "🎓 deploy them with: playground ansible playbook --limit $(echo "${host_array[*]}" | tr ' ' ',')"
+
+}
+
+# :command.function
 playground_ansible_upgrade_command() {
 
   # src/commands/ansible/upgrade.sh
@@ -140948,6 +141046,13 @@ playground_ansible_parse_requirements() {
       shift $#
       ;;
 
+    add-host)
+      action="add-host"
+      shift
+      playground_ansible_add_host_parse_requirements "$@"
+      shift $#
+      ;;
+
     upgrade)
       action="upgrade"
       shift
@@ -141503,6 +141608,108 @@ playground_ansible_inventory_delete_parse_requirements() {
 
     exit 1
   fi
+
+  # :command.user_filter
+  filter_error=$(filter_ansible_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ansible_add_host_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ansible_add_host_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ansible add-host"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_repeatable
+          # :argument.case_repeatable
+          escaped="$(printf '%q' "$1")"
+          if [[ -z ${args['host']+x} ]]; then
+            args['host']="$escaped"
+          else
+            args['host']="${args['host']} $escaped"
+
+          fi
+          shift
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_repeatable
+        # :argument.case_repeatable
+        escaped="$(printf '%q' "$1")"
+        if [[ -z ${args['host']+x} ]]; then
+          args['host']="$escaped"
+        else
+          args['host']="${args['host']} $escaped"
+
+        fi
+        shift
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['host']+x} ]]; then
+    printf "missing required argument: HOST\nusage: playground ansible add-host HOST...\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground ansible add-host broker2 broker3\n" >&2
+    printf "  playground ansible add-host ksqldb-server\n" >&2
+
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  input_array=''
+  eval "input_array=(${args[host]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(broker2|broker3|controller2|controller3|connect2|connect3|ksqldb-server|rest-proxy|control-center|zookeeper2|zookeeper3)$ ]]; then
+      printf "%s\n" "host must be one of: broker2, broker3, controller2, controller3, connect2, connect3, ksqldb-server, rest-proxy, control-center, zookeeper2, zookeeper3" >&2
+      exit 1
+    fi
+  done
 
   # :command.user_filter
   filter_error=$(filter_ansible_environment)
@@ -178052,6 +178259,11 @@ playground_ansible_completion() {
         playground_ansible_inventory_completion "$completion_current" "$@"
         return
         ;;
+      add-host)
+        shift
+        playground_ansible_add_host_completion "$completion_current" "$@"
+        return
+        ;;
       upgrade)
         shift
         playground_ansible_upgrade_completion "$completion_current" "$@"
@@ -178066,7 +178278,7 @@ playground_ansible_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" playbook inventory upgrade
+  completion_candidates "$completion_current" playbook inventory add-host upgrade
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -178275,6 +178487,55 @@ playground_ansible_inventory_delete_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_ansible_add_host_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -lt 0 ]]; then
+          completion_arg_index=$((completion_arg_index + 1))
+        fi
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+  if [[ $completion_current != -* ]]; then
+    case "$completion_arg_index" in
+      0)
+        local -a completion_values=(
+          "broker2"
+          "broker3"
+          "controller2"
+          "controller3"
+          "connect2"
+          "connect3"
+          "ksqldb-server"
+          "rest-proxy"
+          "control-center"
+          "zookeeper2"
+          "zookeeper3"
+        )
+        completion_candidates "$completion_current" "${completion_values[@]}"
+        ;;
+    esac
   fi
 
 }
@@ -187077,6 +187338,7 @@ run() {
     "ansible inventory get") playground_ansible_inventory_get_command ;;
     "ansible inventory set") playground_ansible_inventory_set_command ;;
     "ansible inventory delete") playground_ansible_inventory_delete_command ;;
+    "ansible add-host") playground_ansible_add_host_command ;;
     "ansible upgrade") playground_ansible_upgrade_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
