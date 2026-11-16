@@ -1,0 +1,6 @@
+dn: cn=day2apps,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: top
+objectClass: posixGroup
+cn: day2apps
+gidNumber: 5000
+memberUid: cn=day2app,ou=users,{{ LDAP_BASE_DN }}

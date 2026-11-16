@@ -37,6 +37,11 @@ function day2_bootstrap () {
 # $1: port of the listener the producer uses (default 9092), $2: client properties file on the connect host (optional)
 function day2_start_workload () {
     local port="${1:-9092}" client_config="$2" nb_brokers rf=1 min_isr=1
+    # a secured cluster: the client settings of the connect host (written by the hand-over of the playbook)
+    if [ -z "$client_config" ] && docker exec connect test -f /etc/kafka/client.properties 2> /dev/null
+    then
+        client_config=/etc/kafka/client.properties
+    fi
     nb_brokers=$(day2_bootstrap | tr ',' '\n' | grep -c .)
     if [ "$nb_brokers" -ge 3 ]
     then

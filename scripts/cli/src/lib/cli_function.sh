@@ -388,6 +388,25 @@ function ansible_client_bootstrap () {
   echo "${bootstrap:-$container:9092}"
 }
 
+# environment/ansible*: basic auth of the REST APIs when the inventory enables RBAC (rbac_enabled): the MDS super user of
+# the inventory (mds_super_user / mds_super_user_password), empty otherwise
+function ansible_rest_basic_auth () {
+  local root="$root_folder" inventory_file user password
+  if [ -z "$root" ]
+  then
+    # filter functions run before the before hook, which sets root_folder
+    root="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." >/dev/null && pwd )"
+  fi
+  inventory_file="$root/environment/ansible/inventory/hosts.yml"
+  if [ "$(yq '.all.vars.rbac_enabled // false' "$inventory_file" 2> /dev/null)" != "true" ]
+  then
+    return 0
+  fi
+  user=$(yq '.all.vars.mds_super_user // "mds"' "$inventory_file")
+  password=$(yq '.all.vars.mds_super_user_password // "password"' "$inventory_file")
+  echo "-u $user:$password"
+}
+
 # environment/ansible*: curl options for the https REST API of host $1 published on localhost port $2. The certificates
 # of cp-ansible (or of the customer) are issued for the host name, not localhost: it is resolved to 127.0.0.1, and the
 # CA of the cluster (exported by environment/ansible/start.sh) verifies them
@@ -571,6 +590,8 @@ function get_connect_url_and_security() {
           connect_url="https://$connect_host:$connect_port"
           security="$(ansible_curl_security "$connect_host" "$connect_port")"
       fi
+      # RBAC: the MDS super user of the inventory
+      security="$security $(ansible_rest_basic_auth)"
   fi
 }
 
@@ -917,6 +938,7 @@ function get_sr_url_and_security() {
           sr_url="https://schema-registry:8081"
           sr_security="$(ansible_curl_security schema-registry 8081)"
       fi
+      sr_security="$sr_security $(ansible_rest_basic_auth)"
     elif [[ "$environment" == cfk* ]]
     then
         # CFK Schema Registry is exposed as a Kubernetes service.

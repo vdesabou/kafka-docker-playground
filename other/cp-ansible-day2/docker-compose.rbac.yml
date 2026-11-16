@@ -1,0 +1,19 @@
+---
+services:
+  connect:
+    environment:
+      # the FileStream connectors of the archive: translated into plugin.path by environment/ansible/start.sh
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors
+
+  # the LDAP directory of enable-rbac.sh: users mds, schema-registry1, kafka-connect1, day2app (password: <user>-secret)
+  openldap:
+    image: osixia/openldap:1.3.0
+    hostname: openldap
+    container_name: openldap
+    environment:
+      LDAP_ORGANISATION: "ConfluentDemo"
+      LDAP_DOMAIN: "confluentdemo.io"
+      LDAP_BASE_DN: "dc=confluentdemo,dc=io"
+    volumes:
+      - ../../other/cp-ansible-day2/ldap:/container/service/slapd/assets/config/bootstrap/ldif/custom
+    command: "--copy-service"
