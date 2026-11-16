@@ -9,7 +9,7 @@ Nothing to install: click the button, log in to GitHub, and after about 2 minute
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1)
 
-The codespace is an Ubuntu machine (x86_64, 4 cores, 16 GB) set up by [.devcontainer/devcontainer.json](https://github.com/vdesabou/kafka-docker-playground/blob/master/.devcontainer/devcontainer.json): Docker with compose v2, bash 5, fzf, and `playground` with its completion in the `PATH`. [playground doctor](/playground%20doctor) runs each time it starts. Control Center (port 9021) and Grafana (port 3000) are forwarded to your browser when an example starts them.
+The codespace is an Ubuntu 26.04 machine (x86_64, 4 cores, 16 GB) set up by [.devcontainer/devcontainer.json](https://github.com/vdesabou/kafka-docker-playground/blob/master/.devcontainer/devcontainer.json): Docker with compose v2, bash 5, fzf, python3 (with pip and venv), the Confluent CLI, podman 5 with its rootful socket already started (Docker is the default engine, [playground switch-podman](/playground%20switch-podman) runs the examples on podman), and `playground` with its completion in the `PATH`. [playground doctor](/playground%20doctor) runs each time it starts. Control Center (port 9021) and Grafana (port 3000) are forwarded to your browser when an example starts them.
 
 | Good to know | |
 | --- | --- |
@@ -261,6 +261,9 @@ sudo systemctl restart podman.socket
 playground switch-podman    # points docker and docker compose at the podman socket, ends with playground doctor
 ```
 
+- In a GitHub Codespace, podman is already set up: just run `playground switch-podman`. A codespace has no
+  systemd, so `.devcontainer/start-podman.sh` starts the same socket with `podman system service` each time the
+  codespace starts.
 - The socket is moved out of `/run/podman`, which Podman creates as `0700 root`: a socket in there
   stays unreachable for a regular user whatever its own permissions.
 - Instead of `playground switch-podman`, you can also `export DOCKER_HOST="unix:///run/podman-api/podman.sock"`.
