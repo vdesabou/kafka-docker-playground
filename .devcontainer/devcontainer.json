@@ -39,7 +39,8 @@
       "type": "volume"
     }
   ],
-  // starts the rootful podman socket (no systemd in a codespace), then checks that the container engine is ready,
+  // starts the rootful podman socket (no systemd in a codespace), lets the podman containers through the FORWARD DROP
+  // of docker (DOCKER-USER), then checks that the container engine is ready,
   // each time the codespace starts
   "postStartCommand": "bash .devcontainer/start-podman.sh; bash scripts/cli/playground doctor || true",
   "portsAttributes": {
