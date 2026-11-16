@@ -13,6 +13,28 @@ then
   exit 0
 fi
 
+# the internet from the podman containers: the docker engine of docker-in-docker sets '-P FORWARD DROP' with
+# iptables-legacy, and the kernel applies it to the traffic of the podman bridges too (netavark's rules are in nftables),
+# so a podman container reaches nothing outside the codespace (apt, packages.confluent.io, even DNS). Accept the
+# podman bridges (podman0, podman1…) in DOCKER-USER, the chain docker evaluates first and never flushes. Waits for
+# docker, which creates the chain, then applies it with the iptables (legacy or nft) where the chain is
+function accept_podman_bridges () {
+  local ipt
+  for _ in $(seq 1 30)
+  do
+    docker info > /dev/null 2>&1 && break
+    sleep 1
+  done
+  for ipt in iptables-legacy iptables-nft
+  do
+    command -v "$ipt" > /dev/null 2>&1 || continue
+    sudo "$ipt" -S DOCKER-USER > /dev/null 2>&1 || continue
+    sudo "$ipt" -C DOCKER-USER -i podman+ -j ACCEPT > /dev/null 2>&1 || sudo "$ipt" -I DOCKER-USER -i podman+ -j ACCEPT
+    sudo "$ipt" -C DOCKER-USER -o podman+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT > /dev/null 2>&1 || sudo "$ipt" -I DOCKER-USER -o podman+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+  done
+}
+accept_podman_bridges
+
 if [ -S "$podman_socket" ] && curl -fsS --unix-socket "$podman_socket" http://d/_ping > /dev/null 2>&1
 then
   exit 0
