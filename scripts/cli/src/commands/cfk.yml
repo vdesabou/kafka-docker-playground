@@ -12,6 +12,7 @@ help: |-
     roll       restart the pods of a custom resource, the supported way
     upgrade    move every custom resource to another Confluent Platform version
     operator   upgrade the CFK operator (helm chart, CRDs, init containers)
+    kraft-migration   ZooKeeper to KRaft with a KRaftMigrationJob (start, status, finalize, release-lock)
 
   Each change waits for the operator: the statefulset changed or not, every
   pod restarted on the new revision (printed as they roll), the custom
@@ -162,3 +163,112 @@ commands:
     examples:
     - playground cfk operator upgrade --to 3.4.0
     - playground cfk operator upgrade --to 3.3.1 --no-block-reconcile
+
+- name: kraft-migration
+  group: Run
+  help: |-
+    🚚 ZooKeeper to KRaft migration with a KRaftMigrationJob
+
+    The steps of docs.confluent.io/operator/current/co-migrate-kraft.html,
+    like the kubectl confluent cluster kraft-migration plugin, with every
+    kubectl command printed:
+
+      start          KRaftController on HOLD + KRaftMigrationJob, until DUAL-WRITE
+      status         phase, sub-phase, the CRs, the locks, what to do next
+      finalize       the finalize annotation (irreversible), wait for COMPLETE
+      release-lock   release the locks on the CRs, remove use-log4j1
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/day-2-operations
+  commands:
+  - name: start
+    group: Run
+    filters:
+    - cfk_environment
+    help: |-
+      🚚 Start the migration and wait for DUAL-WRITE
+
+      Creates the KRaftController CR with the images of the Kafka CR and the
+      annotations kraft-migration-hold-krc-creation (status HOLD, no pod yet)
+      and use-log4j1 (CP 7.x with CFK 3), then the KRaftMigrationJob CR, and
+      prints each phase and sub-phase as the operator goes through SETUP,
+      MIGRATE and DUAL-WRITE, with the time spent in each. From then on the
+      ZooKeeper, Kafka and KRaftController CRs are locked.
+    flags:
+    - long: --controllers
+      arg: number
+      default: "3"
+      validate: integer
+      help: 🗳️ Replicas of the KRaftController (an odd number)
+    - long: --preflight
+      help: 🔎 Enable the ZooKeeper metadata preflight check (annotation kraft-migration-enable-preflight)
+    - long: --name
+      arg: name
+      default: "kraftmigrationjob"
+      help: 🏷️ Name of the KRaftMigrationJob
+    - long: --timeout
+      arg: seconds
+      default: "3600"
+      validate: integer
+      help: ⏱️ How long to wait for DUAL-WRITE
+    examples:
+    - playground cfk kraft-migration start
+    - playground cfk kraft-migration start --controllers 1 --preflight
+
+  - name: status
+    group: Run
+    filters:
+    - cfk_environment
+    help: 🔎 Phase, sub-phase, the CRs, the locks and what to do next
+    flags:
+    - long: --name
+      arg: name
+      default: "kraftmigrationjob"
+      help: 🏷️ Name of the KRaftMigrationJob
+    examples:
+    - playground cfk kraft-migration status
+
+  - name: finalize
+    group: Run
+    filters:
+    - cfk_environment
+    help: |-
+      🏁 Finalize the migration (irreversible) and wait for COMPLETE
+
+      Annotation kraft-migration-trigger-finalize-to-kraft=true on the
+      KRaftMigrationJob in DUAL-WRITE: the brokers lose their ZooKeeper
+      dependency, no rollback after it.
+    flags:
+    - long: --name
+      arg: name
+      default: "kraftmigrationjob"
+      help: 🏷️ Name of the KRaftMigrationJob
+    - long: --timeout
+      arg: seconds
+      default: "3600"
+      validate: integer
+      help: ⏱️ How long to wait for COMPLETE
+    examples:
+    - playground cfk kraft-migration finalize
+
+  - name: release-lock
+    group: Run
+    filters:
+    - cfk_environment
+    help: |-
+      🔓 Release the locks of the migration on the CRs
+
+      Annotation kraft-migration-release-cr-lock=true on the KRaftMigrationJob,
+      then waits for the kraft-migration-cr-lock annotations to leave the
+      Kafka and KRaftController CRs: until then every change of these CRs is
+      rejected (GitOps reconciliations fail). --remove-log4j1 then removes
+      the use-log4j1 annotation of the KRaftController (one roll).
+    flags:
+    - long: --name
+      arg: name
+      default: "kraftmigrationjob"
+      help: 🏷️ Name of the KRaftMigrationJob
+    - long: --remove-log4j1
+      help: 🪵 Also remove the use-log4j1 annotation of the KRaftController (it rolls)
+    examples:
+    - playground cfk kraft-migration release-lock --remove-log4j1
+

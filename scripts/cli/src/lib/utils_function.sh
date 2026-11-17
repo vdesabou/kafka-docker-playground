@@ -7599,3 +7599,61 @@ function cfk_print_versions () {
     done
     kubectl -n confluent get pods -o json | jq -r '.items[] | select(.metadata.labels["platform.confluent.io/type"] != null) | "   pod \(.metadata.name): \(.spec.containers[0].image)"' | sort
 }
+
+function cfk_kmj_wait () {
+    # $1 KRaftMigrationJob, $2 phase to reach (DUAL-WRITE, COMPLETE), $3 timeout in seconds: prints each phase and
+    # sub-phase of the job as the operator goes through them, with the time spent in the previous one
+    local job="$1" target="$2" timeout="$3"
+    local start now deadline state previous="" previous_at phase sub message
+    start=$(date +%s)
+    previous_at=$start
+    deadline=$(( start + timeout ))
+    log_command --polled kubectl -n confluent get kraftmigrationjob "$job" -o 'jsonpath={.status.phase} {.status.subPhase}'
+    while true
+    do
+        now=$(date +%s)
+        state=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.phase} {.status.subPhase}' 2> /dev/null)
+        phase="${state%% *}"
+        sub="${state#* }"
+        if [[ -n "$phase" ]] && [[ "$state" != "$previous" ]]
+        then
+            if [[ -n "$previous" ]]
+            then
+                log "🚚 $(printf '%-11s %-48s' "$phase" "$sub") (previous step: $(( now - previous_at )) s, total $(( now - start )) s)"
+            else
+                log "🚚 $(printf '%-11s %-48s' "$phase" "$sub")"
+            fi
+            previous="$state"
+            previous_at=$now
+        fi
+        if [[ "$phase" == "$target" ]]
+        then
+            log "✅ KRaftMigrationJob $job: $target after $(( now - start )) s"
+            return 0
+        fi
+        if [[ "$phase" == "FAILURE" ]] || [[ $now -gt $deadline ]]
+        then
+            message=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.message}' 2> /dev/null)
+            logerror "❌ KRaftMigrationJob $job: ${phase:-?} / ${sub:-?} after $(( now - start )) s${message:+: $message}"
+            log_command kubectl -n confluent logs deployment/confluent-operator --tail=200
+            kubectl -n confluent logs deployment/confluent-operator --tail=200 2> /dev/null | grep -iE "migration|error" | tail -10 | cut -c1-300
+            kubectl -n confluent get pods
+            return 1
+        fi
+        sleep 10
+    done
+}
+
+function cfk_kmj_locks () {
+    # the CRs that still carry the lock annotation of the migration
+    local cr lock locked=""
+    for cr in kafka/kafka kraftcontroller/kraftcontroller zookeeper/zookeeper
+    do
+        lock=$(kubectl -n confluent get "$cr" -o json 2> /dev/null | jq -r '[.metadata.annotations // {} | to_entries[] | select(.key | test("kraft-migration-cr-lock"))] | length')
+        if [[ "${lock:-0}" != "0" ]]
+        then
+            locked="${locked:+$locked }$cr"
+        fi
+    done
+    echo "$locked"
+}
