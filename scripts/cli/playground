@@ -18121,7 +18121,7 @@ playground_flink_cancel_usage() {
 playground_ksqldb_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ksqldb\n\n"
-    printf "  🧮 ksqlDB commands\n  \n  Run ksqlDB statements and inspect the streams, tables and queries of the\n  ksqlDB server started with 'playground run --enable-ksqldb' (the ksqldb/\n  examples enable it), without docker exec or curl.\n  \n    sql        run ksqlDB statements (stdin or --file) with the ksql cli\n    list       streams, tables and persistent queries with their state\n    describe   fields, queries, statistics, errors and lag of a stream or table\n    wait       wait until the persistent queries are RUNNING and have no lag\n    metrics    query states (running, ERROR, rebalancing) and messages per\n  second, over JMX\n  \n  🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.\n  The records that fail a query are in the KSQL_PROCESSING_LOG stream.\n\n"
+    printf "  🧮 ksqlDB commands\n  \n  Run ksqlDB statements and inspect the streams, tables and queries of the\n  ksqlDB server started with 'playground run --enable-ksqldb' (the ksqldb/\n  examples enable it), without docker exec or curl.\n  \n    sql        run ksqlDB statements (stdin or --file) with the ksql cli\n    list       streams, tables and persistent queries with their state\n    describe   fields, queries, statistics, errors and lag of a stream or table\n    wait       wait until the persistent queries are RUNNING and have no lag\n    metrics    query states (running, ERROR, rebalancing) and messages per\n  second, over JMX\n  \n  🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.\n  The records that fail a query are in the KSQL_PROCESSING_LOG stream.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb\n\n"
   else
     printf "playground ksqldb - 🧮 ksqlDB commands\n\n"
   fi
@@ -18156,7 +18156,7 @@ playground_ksqldb_usage() {
 playground_ksqldb_sql_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ksqldb sql\n\n"
-    printf "  🧮 Run ksqlDB statements with the ksql cli\n  \n  The statements are read from stdin (heredoc) or --file, and run in one\n  ksql cli session (ksql --file) in the ksqldb-cli container: so SET\n  'auto.offset.reset' = 'earliest' applies to the statements that follow\n  it in the same call. DDL, INSERT INTO, pull and push queries, PRINT,\n  SHOW, DESCRIBE... are all supported, and their results are printed as\n  tables.\n  \n  Every statement is run, even after a failing one. The errors are\n  printed with ❌, and the command then exits with code 1, unless\n  --ignore-errors is set (a statement that is expected to fail, to\n  show the error).\n  \n  🎓 Tip: a push query (EMIT CHANGES) never ends without a LIMIT: add\n  LIMIT <n>, or --query-timeout. Otherwise the cli is stopped after\n  --max-wait seconds. To wait for a CREATE ... AS SELECT to process its\n  input before querying it, use 'playground ksqldb wait' instead of a sleep.\n\n"
+    printf "  🧮 Run ksqlDB statements with the ksql cli\n  \n  The statements are read from stdin (heredoc) or --file, and run in one\n  ksql cli session (ksql --file) in the ksqldb-cli container: so SET\n  'auto.offset.reset' = 'earliest' applies to the statements that follow\n  it in the same call. DDL, INSERT INTO, pull and push queries, PRINT,\n  SHOW, DESCRIBE... are all supported, and their results are printed as\n  tables.\n  \n  Every statement is run, even after a failing one. The errors are\n  printed with ❌, and the command then exits with code 1, unless\n  --ignore-errors is set (a statement that is expected to fail, to\n  show the error).\n  \n  🎓 Tip: a push query (EMIT CHANGES) never ends without a LIMIT: add\n  LIMIT <n>, or --query-timeout. Otherwise the cli is stopped after\n  --max-wait seconds. To wait for a CREATE ... AS SELECT to process its\n  input before querying it, use 'playground ksqldb wait' instead of a sleep.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb\n\n"
   else
     printf "playground ksqldb sql - 🧮 Run ksqlDB statements with the ksql cli\n\n"
   fi
@@ -18316,7 +18316,7 @@ playground_ksqldb_describe_usage() {
 playground_ksqldb_wait_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ksqldb wait\n\n"
-    printf "  ⏳ Wait until the persistent queries are RUNNING and have no lag\n  \n  Waits until every query writing to --source (or every persistent\n  query) is RUNNING and has committed all the records of its input\n  topics, so that its result is complete: use it instead of a sleep\n  after a CREATE ... AS SELECT and the records it reads.\n  \n  A query that has not committed any offset yet is done when its input\n  topics are empty, or when it is still without commit after 20 seconds\n  RUNNING: it has nothing to process from where it started (a CREATE\n  sent without SET 'auto.offset.reset' = 'earliest' reads from the end\n  of its topics), and a warning says so.\n  \n  Exits with code 1 when a query is in ERROR, or after --max-wait seconds.\n\n"
+    printf "  ⏳ Wait until the persistent queries are RUNNING and have no lag\n  \n  Waits until every query writing to --source (or every persistent\n  query) is RUNNING and has committed all the records of its input\n  topics, so that its result is complete: use it instead of a sleep\n  after a CREATE ... AS SELECT and the records it reads.\n  \n  A source table (CREATE SOURCE TABLE) is waited for too: its CST_ query\n  materializes it for pull queries and has no sink, its lag is read from\n  its consumer group (_confluent-ksql-<service id>query_<query id>).\n  \n  A query that has not committed any offset yet is done when its input\n  topics are empty, or when it is still without commit after 20 seconds\n  RUNNING: it has nothing to process from where it started (a CREATE\n  sent without SET 'auto.offset.reset' = 'earliest' reads from the end\n  of its topics), and a warning says so.\n  \n  Exits with code 1 when a query is in ERROR, or after --max-wait seconds.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb\n\n"
   else
     printf "playground ksqldb wait - ⏳ Wait until the persistent queries are RUNNING and have no lag\n\n"
   fi
@@ -18334,7 +18334,7 @@ playground_ksqldb_wait_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--source, -s SOURCE (repeatable)")"
-    printf "    🧮 Only wait for the queries writing to this stream or table (repeatable)\n    \n    ℹ️ If not set, all persistent queries\n"
+    printf "    🧮 Only wait for the queries writing to this stream or table (repeatable)\n    \n    ℹ️ If not set, all persistent queries (and the source tables)\n"
     echo
 
     # :flag.usage
@@ -85539,16 +85539,32 @@ playground_ksqldb_wait_command() {
           logerror "❌ could not list the queries: $(echo "$queries" | jq -r '.message // .' 2>/dev/null)"
           exit 1
       fi
+      # the sinks of the persistent queries, plus the source tables (CREATE SOURCE TABLE): their CST_ query
+      # materializes the table for pull queries and has no sink
       while IFS= read -r s
       do
           [[ -n "$s" ]] && sources+=("$s")
-      done < <(echo "$queries" | jq -r '[.[0].queries[] | select(.queryType == "PERSISTENT") | .sinks[]] | unique[]')
+      done < <(echo "$queries" | jq -r '[.[0].queries[] | select(.queryType == "PERSISTENT")
+          | (.sinks[]?, (select(.id | startswith("CST_")) | .queryString // "" | capture("(?i)^\\s*CREATE\\s+SOURCE\\s+TABLE\\s+(IF\\s+NOT\\s+EXISTS\\s+)?(?<name>[^\\s(]+)").name // empty))] | unique[]')
       if [ ${#sources[@]} -eq 0 ]
       then
           log "🔎 No persistent query, nothing to wait for"
           exit 0
       fi
   fi
+
+  # the consumer group of a persistent query is _confluent-ksql-<ksql.service.id>query_<query id>
+  ksql_service_id=$(curl $ksqldb_security -s "${ksqldb_url}/info" | jq -r '.KsqlServerInfo.ksqlServiceId // empty' 2>/dev/null)
+  ksql_service_id=${ksql_service_id:-default_}
+
+  # lag of the consumer group of the query $1 (sum over its partitions), empty when it has not committed any offset:
+  # for the CST_ query of a source table, DESCRIBE EXTENDED has no offsets
+  function query_consumer_group_lag () {
+      local output
+      output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "_confluent-ksql-${ksql_service_id}query_$1" 2>&1 || true)
+      # LAG is the 6th column, "-" without committed offset for the partition
+      echo "$output" | awk '$1 != "GROUP" && $6 ~ /^[0-9]+$/ {sum += $6; found = 1} END {if (found) print sum}'
+  }
 
   # true when every input topic of the query $1 is empty (its sources from EXPLAIN, their topic from DESCRIBE): such a
   # query never commits offsets, and has nothing to process
@@ -85589,6 +85605,8 @@ playground_ksqldb_wait_command() {
               exit 1
           fi
           description=$(echo "$response" | jq '.[0].sourceDescription')
+          # the queries writing to $s, or the CST_ query that materializes a source table (in its readQueries)
+          description=$(echo "$description" | jq '.writeQueries = ((.writeQueries // []) + [(.readQueries // [])[] | select(.id | startswith("CST_"))])')
           if [[ "$(echo "$description" | jq '.writeQueries | length')" -eq 0 ]]
           then
               if [[ -n "$first_pass" ]]
@@ -85609,6 +85627,10 @@ playground_ksqldb_wait_command() {
           while IFS=$'\t' read -r query_id query_state query_lag
           do
               [[ -z "$query_id" ]] && continue
+              if [[ -z "$query_lag" ]] && [[ "$query_id" == CST_* ]] && [[ "$query_state" == "RUNNING" ]]
+              then
+                  query_lag=$(query_consumer_group_lag "$query_id")
+              fi
               if [[ "$query_state" != "RUNNING" ]]
               then
                   pending="${pending}${query_id}: ${query_state}"$'\n'

@@ -619,6 +619,8 @@ playground ksqldb describe --source orders_by_product    # fields, queries with 
 
 A failing statement makes `playground ksqldb sql` exit with code 1 (the other statements are still run): add `--ignore-errors` when the failure is expected. A push query (`EMIT CHANGES`) needs a `LIMIT` or `--query-timeout`, otherwise it is stopped after `--max-wait` seconds.
 
+🍪 Pull vs push queries, an empty table, skipped records and the processing log, tombstones: read the [ksqlDB deep dive](/deep-dive-ksqldb.md).
+
 ### 💠 Enabling Control Center
 
 By default, `control-center` container (see [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml)) is not started for every test.
