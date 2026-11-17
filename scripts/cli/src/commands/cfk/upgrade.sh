@@ -22,6 +22,7 @@ log "📦 Versions after the upgrade"
 cfk_print_versions
 if kubectl -n confluent get kraftcontroller > /dev/null 2>&1 && [[ -n "$(kubectl -n confluent get kraftcontroller -o name 2>/dev/null)" ]]
 then
-    log "🏷️ Feature levels (kafka-features describe): metadata.version stays at the old version until 'kafka-features upgrade'"
+    log "🏷️ Feature levels: metadata.version stays at the old version until 'kafka-features upgrade'"
+    log_command kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server kafka:9071 describe
     kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server kafka:9071 describe 2>/dev/null | grep -E "metadata.version|kraft.version" | sed 's/^/   /' || logwarn "⚠️ kafka-features describe failed (secured listener?)"
 fi

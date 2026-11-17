@@ -51,6 +51,7 @@ fi
 day2_features describe | grep -E 'confluent.metadata.version'
 
 log "Step 5: the classic mistake, a JSON merge patch of configOverrides: the list is replaced, not merged"
+log_command kubectl -n confluent get kafka kafka -o 'jsonpath={.spec.configOverrides.server}'
 log "configOverrides.server before: $(kubectl -n confluent get kafka kafka -o jsonpath='{.spec.configOverrides.server}')"
 since=$(day2_now)
 playground cfk patch kafka/kafka '{"spec": {"configOverrides": {"server": ["log.retention.hours=72"]}}}'
@@ -62,6 +63,8 @@ log "Step 6: the same kind of change with a JSON patch (an item added to the lis
 since=$(day2_now)
 playground cfk patch kafka/kafka '[{"op": "add", "path": "/spec/configOverrides/server/-", "value": "num.io.threads=16"}]' --type json
 day2_pod_restarts kafka "$since"
+log_command kubectl -n confluent exec kafka-0 -c kafka -- grep '^num.io.threads=' /opt/confluentinc/etc/kafka/kafka.properties
+log_command kubectl -n confluent exec "$DAY2_CLIENT_POD" -- kafka-configs --bootstrap-server "$DAY2_BOOTSTRAP" --describe --all --entity-type brokers --entity-name 0
 in_file=$(kubectl -n confluent exec kafka-0 -c kafka -- sh -c "grep '^num.io.threads=' /opt/confluentinc/etc/kafka/kafka.properties" 2> /dev/null | cut -d '=' -f 2)
 running=$(day2_client "kafka-configs --bootstrap-server $DAY2_BOOTSTRAP --describe --all --entity-type brokers --entity-name 0" 2> /dev/null | sed -n 's/^ *num.io.threads=\([0-9]*\).*/\1/p' | head -1)
 log "🔎 num.io.threads of broker 0: ${in_file:-?} in the kafka.properties of kafka-0, ${running:-?} in the running broker"

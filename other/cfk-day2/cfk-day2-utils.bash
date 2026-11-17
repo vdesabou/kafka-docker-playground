@@ -47,8 +47,8 @@ function day2_start_workload () {
     local image="confluentinc/cp-server:${1:-$TAG}"
     log "🧑‍💻 client pod $DAY2_CLIENT_POD ($image), not managed by CFK: the producer survives the rolls"
     kubectl -n confluent delete pod "$DAY2_CLIENT_POD" --ignore-not-found --wait=true > /dev/null
-    kubectl -n confluent run "$DAY2_CLIENT_POD" --image "$image" --restart Never --command -- sleep infinity > /dev/null
-    kubectl -n confluent wait --for=condition=Ready "pod/$DAY2_CLIENT_POD" --timeout=300s > /dev/null
+    run_logged kubectl -n confluent run "$DAY2_CLIENT_POD" --image "$image" --restart Never --command -- sleep infinity > /dev/null
+    run_logged kubectl -n confluent wait --for=condition=Ready "pod/$DAY2_CLIENT_POD" --timeout=300s > /dev/null
     playground topic create --topic "$DAY2_TOPIC" --nb-partitions 3 --if-not-exists --replication-factor 3 --config min.insync.replicas=2
     day2_start_producer
     playground connector create-or-update --connector day2-sink --wait << EOF
@@ -69,6 +69,7 @@ EOF
 function day2_start_producer () {
     local name="${1:-producer}" topic="${2:-$DAY2_TOPIC}"
     log "📤 $name: kafka-verifiable-producer in pod $DAY2_CLIENT_POD, topic $topic, 20 records/s, acks=all, no retries, bootstrap $DAY2_BOOTSTRAP"
+    log_command kubectl -n confluent exec "$DAY2_CLIENT_POD" -- sh -c "nohup kafka-verifiable-producer --bootstrap-server $DAY2_BOOTSTRAP --topic $topic --throughput 20 --max-messages -1 --acks -1 >> /tmp/day2-$name.log 2>&1 &"
     kubectl -n confluent exec "$DAY2_CLIENT_POD" -- sh -c "nohup kafka-verifiable-producer --bootstrap-server $DAY2_BOOTSTRAP --topic $topic --throughput 20 --max-messages -1 --acks -1 >> /tmp/day2-$name.log 2>&1 &"
 }
 
@@ -147,6 +148,8 @@ function day2_pod_restarts () {
 # the times, the total in DAY2_POD_STOPS
 function day2_pod_stops () {
     local since_s=$(( $1 / 1000 )) lines
+    log "🛑 pod stops since $(date -d "@$since_s" +%H:%M:%S 2> /dev/null || date -r "$since_s" +%H:%M:%S) (Killing events):"
+    log_command kubectl -n confluent get events --field-selector reason=Killing --sort-by=.lastTimestamp
     lines=$(kubectl -n confluent get events --field-selector reason=Killing -o json | jq -r --argjson since "$since_s" '
         [.items[]
          | select(.involvedObject.name | test("^(kraftcontroller|zookeeper|kafka|connect|schemaregistry|ksqldb|kafkarestproxy|controlcenter)-[0-9]+$"))
@@ -169,6 +172,7 @@ function day2_broker_versions () {
 
 # kafka-features in a broker pod (the internal listener of the cfk environment is PLAINTEXT)
 function day2_features () {
+    log_command kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server "$DAY2_BOOTSTRAP" "$@"
     kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server "$DAY2_BOOTSTRAP" "$@"
 }
 
@@ -180,6 +184,7 @@ function day2_check_no_loss () {
     day2_report_workload "workload stopped"
     acked=$(day2_count producer_send_success producer)
     records=$(playground topic get-number-records -t "$DAY2_TOPIC" 2> /dev/null | tail -1)
+    log_command --polled kubectl -n confluent exec "$DAY2_CLIENT_POD" -- kafka-consumer-groups --bootstrap-server "$DAY2_BOOTSTRAP" --describe --group connect-day2-sink
     for i in $(seq 1 30)
     do
         lag=$(day2_client "kafka-consumer-groups --bootstrap-server $DAY2_BOOTSTRAP --describe --group connect-day2-sink 2> /dev/null" | awk -v t="$DAY2_TOPIC" '$2 == t && $6 ~ /^[0-9]+$/ { lag += $6 } END { print lag + 0 }')

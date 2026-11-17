@@ -4401,7 +4401,8 @@ function ansible_run_playbook () {
   then
     playbook_args=(confluent.platform.all)
   fi
-  log "▶️ Running the playbook (a few minutes): docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml ${playbook_args[*]}"
+  log "▶️ Running the playbook (a few minutes)"
+  log_command docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}"
   log "📄 Playbook output: tail -f $playbook_log"
   set +e
   docker exec -e ANSIBLE_FORCE_COLOR=0 ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}" > "$playbook_log" 2>&1
@@ -7426,6 +7427,35 @@ function get_cfk_helm_chart_version() {
   esac
 }
 
+# 🔧 the low-level commands a playground command runs (kubectl, helm, docker exec, ansible-galaxy...), printed so that
+# the user sees what is done and can replay it by hand. log_command prints (on stderr), run_logged prints then runs
+function log_command () {
+    # --polled: a command a wait loop runs again and again, printed once
+    local prefix="🔧"
+    if [[ "$1" == "--polled" ]]
+    then
+        prefix="🔎 polled:"
+        shift
+    fi
+    local line="" arg special='[][[:space:]'"'"'"{}*$;&|<>()`\\!?#~]'
+    for arg in "$@"
+    do
+        if [[ -z "$arg" ]] || [[ "$arg" =~ $special ]]
+        then
+            line+=" '${arg//\'/\'\\\'\'}'"
+        else
+            line+=" $arg"
+        fi
+    done
+    # on stderr: still printed when the output of the command is redirected (> /dev/null) or captured ($(...))
+    log "${prefix}${line}" >&2
+}
+
+function run_logged () {
+    log_command "$@"
+    "$@"
+}
+
 # ☸️ playground cfk: the custom resources of the cfk environments, in the order of an upgrade (controllers first)
 CFK_CR_KINDS="kraftcontroller zookeeper kafka connect schemaregistry ksqldb kafkarestproxy controlcenter"
 
@@ -7445,6 +7475,8 @@ function cfk_statefulset_generation () {
 function cfk_print_events () {
     # $1 name of the custom resource, $2 epoch seconds: the events of the CR and of its pods since then
     local name="$1" since="$2"
+    log "📣 events of $name and its pods since $(date -d "@$since" +%H:%M:%S 2> /dev/null || date -r "$since" +%H:%M:%S) (Warning, and Normal except the pod lifecycle):"
+    log_command kubectl -n confluent get events --sort-by=.lastTimestamp
     kubectl -n confluent get events -o json 2>/dev/null | jq -r --arg n "$name" --argjson since "$since" '
         .items[]
         | select((.involvedObject.name == $n) or (.involvedObject.name | test("^" + $n + "-[0-9]+$")))
@@ -7462,6 +7494,8 @@ function cfk_wait_rollout () {
     local kind="${cr%%/*}" name="${cr#*/}"
     local deadline=$(( $(date +%s) + timeout ))
     local generation="" i
+    log "⏳ $cr: waiting for CFK to reconcile the change (up to 120 s: does it change the statefulset?)"
+    log_command --polled kubectl -n confluent get statefulset "$name" -o 'jsonpath={.metadata.generation}'
     for i in $(seq 1 60)
     do
         generation=$(cfk_statefulset_generation "$name")
@@ -7478,6 +7512,8 @@ function cfk_wait_rollout () {
         local selector replicas update_revision observed rolled="" pod pods_ready
         selector=$(kubectl -n confluent get statefulset "$name" -o json | jq -r '.spec.selector.matchLabels | to_entries | map("\(.key)=\(.value)") | join(",")')
         log "⏳ $cr: CFK rolls the pods of statefulset $name (generation $generation_before → $generation), one at a time"
+        log_command --polled kubectl -n confluent get statefulset "$name" -o 'jsonpath={.status.updateRevision}'
+        log_command --polled kubectl -n confluent get pods -l "$selector" -L controller-revision-hash
         while true
         do
             # CFK can change the statefulset more than once during a roll: compare with its current generation
@@ -7512,6 +7548,7 @@ function cfk_wait_rollout () {
         done
     fi
     local phase=""
+    log_command --polled kubectl -n confluent get "$kind" "$name" -o 'jsonpath={.status.phase}'
     while true
     do
         phase=$(kubectl -n confluent get "$kind" "$name" -o jsonpath='{.status.phase}' 2>/dev/null)
@@ -7536,6 +7573,7 @@ function cfk_patch_and_wait () {
     local name="${cr#*/}" generation_before since output
     generation_before=$(cfk_statefulset_generation "$name")
     since=$(date +%s)
+    log_command kubectl -n confluent patch "$cr" --type "$type" -p "$patch"
     if ! output=$(kubectl -n confluent patch "$cr" --type "$type" -p "$patch" 2>&1)
     then
         logerror "❌ kubectl patch $cr failed: $output"

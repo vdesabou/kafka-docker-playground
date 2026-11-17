@@ -72,6 +72,7 @@ function day2_start_producer () {
         config_option="--producer.config $client_config"
     fi
     log "📤 $name: kafka-verifiable-producer on the connect host, topic $DAY2_TOPIC, 20 records/s, acks=all, bootstrap $(day2_bootstrap "$port")${client_config:+, $client_config}"
+    log_command docker exec -d connect sh -c "kafka-verifiable-producer --bootstrap-server $(day2_bootstrap "$port") --topic $DAY2_TOPIC --throughput 20 --max-messages -1 --acks -1 $config_option >> /tmp/day2-$name.log 2>&1"
     docker exec -d connect sh -c "kafka-verifiable-producer --bootstrap-server $(day2_bootstrap "$port") --topic $DAY2_TOPIC --throughput 20 --max-messages -1 --acks -1 $config_option >> /tmp/day2-$name.log 2>&1"
 }
 
@@ -115,6 +116,8 @@ function day2_now () {
 # and the last restart in DAY2_RESTART_SPREAD (seconds)
 function day2_broker_restarts () {
     local since_s=$(( $1 / 1000 )) b t first="" last=""
+    log "🕐 broker restarts since $(date -r "$since_s" '+%H:%M:%S' 2> /dev/null || date -d "@$since_s" '+%H:%M:%S') (journald of each broker host):"
+    log_command docker exec broker journalctl -u confluent-server --no-pager -o short-unix --since "@$since_s"
     for b in broker broker2 broker3
     do
         if ! docker inspect -f '{{.State.Running}}' "$b" 2> /dev/null | grep -q true
@@ -159,6 +162,8 @@ function day2_check_no_loss () {
     day2_stop_producer
     day2_report_workload "workload stopped"
     # the acked records of every producer of the example
+    log_command docker exec connect sh -c 'cat /tmp/day2-*.log | grep -c "\"producer_send_success\""'
+    log_command --polled docker exec connect sh -c 'wc -l < /tmp/day2-sink.txt'
     acked=$(docker exec connect sh -c 'cat /tmp/day2-*.log | grep -c "\"producer_send_success\""' 2> /dev/null || echo 0)
     records=$(playground topic get-number-records -t "$DAY2_TOPIC" 2> /dev/null | tail -1)
     # the sink catches up

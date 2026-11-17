@@ -43925,7 +43925,8 @@ function ansible_run_playbook () {
   then
     playbook_args=(confluent.platform.all)
   fi
-  log "▶️ Running the playbook (a few minutes): docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml ${playbook_args[*]}"
+  log "▶️ Running the playbook (a few minutes)"
+  log_command docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}"
   log "📄 Playbook output: tail -f $playbook_log"
   set +e
   docker exec -e ANSIBLE_FORCE_COLOR=0 ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}" > "$playbook_log" 2>&1
@@ -46921,6 +46922,35 @@ function get_cfk_helm_chart_version() {
   esac
 }
 
+# 🔧 the low-level commands a playground command runs (kubectl, helm, docker exec, ansible-galaxy...), printed so that
+# the user sees what is done and can replay it by hand. log_command prints (on stderr), run_logged prints then runs
+function log_command () {
+    # --polled: a command a wait loop runs again and again, printed once
+    local prefix="🔧"
+    if [[ "$1" == "--polled" ]]
+    then
+        prefix="🔎 polled:"
+        shift
+    fi
+    local line="" arg special='[][[:space:]'"'"'"{}*$;&|<>()`\\!?#~]'
+    for arg in "$@"
+    do
+        if [[ -z "$arg" ]] || [[ "$arg" =~ $special ]]
+        then
+            line+=" '${arg//\'/\'\\\'\'}'"
+        else
+            line+=" $arg"
+        fi
+    done
+    # on stderr: still printed when the output of the command is redirected (> /dev/null) or captured ($(...))
+    log "${prefix}${line}" >&2
+}
+
+function run_logged () {
+    log_command "$@"
+    "$@"
+}
+
 # ☸️ playground cfk: the custom resources of the cfk environments, in the order of an upgrade (controllers first)
 CFK_CR_KINDS="kraftcontroller zookeeper kafka connect schemaregistry ksqldb kafkarestproxy controlcenter"
 
@@ -46940,6 +46970,8 @@ function cfk_statefulset_generation () {
 function cfk_print_events () {
     # $1 name of the custom resource, $2 epoch seconds: the events of the CR and of its pods since then
     local name="$1" since="$2"
+    log "📣 events of $name and its pods since $(date -d "@$since" +%H:%M:%S 2> /dev/null || date -r "$since" +%H:%M:%S) (Warning, and Normal except the pod lifecycle):"
+    log_command kubectl -n confluent get events --sort-by=.lastTimestamp
     kubectl -n confluent get events -o json 2>/dev/null | jq -r --arg n "$name" --argjson since "$since" '
         .items[]
         | select((.involvedObject.name == $n) or (.involvedObject.name | test("^" + $n + "-[0-9]+$")))
@@ -46957,6 +46989,8 @@ function cfk_wait_rollout () {
     local kind="${cr%%/*}" name="${cr#*/}"
     local deadline=$(( $(date +%s) + timeout ))
     local generation="" i
+    log "⏳ $cr: waiting for CFK to reconcile the change (up to 120 s: does it change the statefulset?)"
+    log_command --polled kubectl -n confluent get statefulset "$name" -o 'jsonpath={.metadata.generation}'
     for i in $(seq 1 60)
     do
         generation=$(cfk_statefulset_generation "$name")
@@ -46973,6 +47007,8 @@ function cfk_wait_rollout () {
         local selector replicas update_revision observed rolled="" pod pods_ready
         selector=$(kubectl -n confluent get statefulset "$name" -o json | jq -r '.spec.selector.matchLabels | to_entries | map("\(.key)=\(.value)") | join(",")')
         log "⏳ $cr: CFK rolls the pods of statefulset $name (generation $generation_before → $generation), one at a time"
+        log_command --polled kubectl -n confluent get statefulset "$name" -o 'jsonpath={.status.updateRevision}'
+        log_command --polled kubectl -n confluent get pods -l "$selector" -L controller-revision-hash
         while true
         do
             # CFK can change the statefulset more than once during a roll: compare with its current generation
@@ -47007,6 +47043,7 @@ function cfk_wait_rollout () {
         done
     fi
     local phase=""
+    log_command --polled kubectl -n confluent get "$kind" "$name" -o 'jsonpath={.status.phase}'
     while true
     do
         phase=$(kubectl -n confluent get "$kind" "$name" -o jsonpath='{.status.phase}' 2>/dev/null)
@@ -47031,6 +47068,7 @@ function cfk_patch_and_wait () {
     local name="${cr#*/}" generation_before since output
     generation_before=$(cfk_statefulset_generation "$name")
     since=$(date +%s)
+    log_command kubectl -n confluent patch "$cr" --type "$type" -p "$patch"
     if ! output=$(kubectl -n confluent patch "$cr" --type "$type" -p "$patch" 2>&1)
     then
         logerror "❌ kubectl patch $cr failed: $output"
@@ -84359,6 +84397,7 @@ playground_ansible_inventory_set_command() {
   trap 'rm -f "$before"' EXIT
   cp "$inventory_file" "$before"
   # the value is yaml: numbers, booleans, maps and lists keep their type
+  log_command yq -i "${path} = $(printf '%s' "$value" | tr '\n' ' ')" environment/ansible/inventory/hosts.yml
   if ! VALUE="$value" yq -i -P "${path} = (strenv(VALUE) | from_yaml)" "$inventory_file"
   then
     logerror "❌ could not set $path in $inventory_file"
@@ -84431,10 +84470,12 @@ playground_ansible_add_host_command() {
         playground state set run.docker_command "$docker_command"
       fi
       log "🖥️ starting host $host (an empty host: the playbook installs Confluent Platform)"
+      log "🔧 $docker_command $host"
       bash -c "$docker_command $host" > /tmp/playground-ansible-add-host.log 2>&1 || { tail -5 /tmp/playground-ansible-add-host.log; logerror "❌ could not start $host"; exit 1; }
     fi
     if [ "$jmx_var" != "-" ]
     then
+      log "🔧 yq -i '.all.children.${group}.hosts.${host}.${group}_service_environment_overrides = {\"JMX_PORT\": ${jmx_port}, \"${jmx_var}\": ${jmx_port}}' $inventory_file"
       HOST="$host" GROUP="$group" JMX_VAR="$jmx_var" JMX_PORT="$jmx_port" yq -i -P '.all.children[strenv(GROUP)].hosts[strenv(HOST)][strenv(GROUP) + "_service_environment_overrides"] = {"JMX_PORT": (strenv(JMX_PORT) | tonumber), strenv(JMX_VAR): (strenv(JMX_PORT) | tonumber)}' "$inventory_file"
     else
       HOST="$host" GROUP="$group" yq -i -P '.all.children[strenv(GROUP)].hosts[strenv(HOST)] = (.all.children[strenv(GROUP)].hosts[strenv(HOST)] // null)' "$inventory_file"
@@ -84477,6 +84518,7 @@ playground_ansible_upgrade_command() {
   fi
   installed=$(docker exec ansible-controller ansible-galaxy collection list confluent.platform 2> /dev/null | awk '$1 == "confluent.platform" {print $2}' | head -1)
   log "🅰️ confluent.platform collection: ${installed:-?} -> confluent.platform:$spec"
+  log_command docker exec ansible-controller ansible-galaxy collection install "confluent.platform:$spec" --force
   if ! docker exec ansible-controller ansible-galaxy collection install "confluent.platform:$spec" --force > /tmp/playground-ansible-galaxy.log 2>&1
   then
     tail -5 /tmp/playground-ansible-galaxy.log
@@ -84543,7 +84585,6 @@ playground_cfk_patch_command() {
           exit 1
       fi
   fi
-  log "🩹 kubectl patch $resource --type $type -p '$patch'"
   cfk_patch_and_wait "$resource" "$patch" "$type" "$timeout" "$no_wait"
 
 }
@@ -84573,8 +84614,7 @@ playground_cfk_roll_command() {
       *)
           generation_before=$(cfk_statefulset_generation "$name")
           since=$(date +%s)
-          log "🔁 kubectl rollout restart statefulset/$name"
-          kubectl -n confluent rollout restart "statefulset/$name"
+          run_logged kubectl -n confluent rollout restart "statefulset/$name"
           cfk_wait_rollout "$resource" "$generation_before" "$timeout" "$since"
           ;;
   esac
@@ -84609,7 +84649,8 @@ playground_cfk_upgrade_command() {
   cfk_print_versions
   if kubectl -n confluent get kraftcontroller > /dev/null 2>&1 && [[ -n "$(kubectl -n confluent get kraftcontroller -o name 2>/dev/null)" ]]
   then
-      log "🏷️ Feature levels (kafka-features describe): metadata.version stays at the old version until 'kafka-features upgrade'"
+      log "🏷️ Feature levels: metadata.version stays at the old version until 'kafka-features upgrade'"
+      log_command kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server kafka:9071 describe
       kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server kafka:9071 describe 2>/dev/null | grep -E "metadata.version|kraft.version" | sed 's/^/   /' || logwarn "⚠️ kafka-features describe failed (secured listener?)"
   fi
 
@@ -84638,9 +84679,9 @@ playground_cfk_operator_upgrade_command() {
   log "☸️ CFK operator: $current_chart → confluent-for-kubernetes-$chart_version (CFK $to)"
   if ! helm repo list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
   then
-      helm repo add confluentinc https://packages.confluent.io/helm > /dev/null
+      run_logged helm repo add confluentinc https://packages.confluent.io/helm > /dev/null
   fi
-  helm repo update confluentinc > /dev/null
+  run_logged helm repo update confluentinc > /dev/null
 
   day1_crs=$(cfk_cr_list)
   # every custom resource of the namespace, day-1 and day-2 (KafkaTopic, Connector, ConfluentRolebinding...)
@@ -84654,7 +84695,7 @@ playground_cfk_operator_upgrade_command() {
       log "⏸️ Step 1: block reconciliation on the $(echo "$all_crs" | sed '/^$/d' | wc -l | tr -d ' ') custom resources (platform.confluent.io/block-reconcile=true): the operator upgrade does not roll anything"
       for cr in $all_crs
       do
-          kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile=true --overwrite > /dev/null
+          run_logged kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile=true --overwrite > /dev/null
       done
   else
       logwarn "⚠️ reconciliation not blocked (--no-block-reconcile): the new operator reconciles every custom resource as soon as it starts, all components roll at the same time"
@@ -84669,9 +84710,9 @@ playground_cfk_operator_upgrade_command() {
   else
       tmp_dir=$(mktemp -d)
       trap 'rm -rf "$tmp_dir"' EXIT
-      helm pull confluentinc/confluent-for-kubernetes --version "$chart_version" --untar --untardir "$tmp_dir"
       log "📜 Step 2: apply the CRDs of the new chart (helm never upgrades them)"
-      kubectl apply --server-side --force-conflicts -f "$tmp_dir/confluent-for-kubernetes/crds/" | sed 's/^/   /'
+      run_logged helm pull confluentinc/confluent-for-kubernetes --version "$chart_version" --untar --untardir "$tmp_dir"
+      run_logged kubectl apply --server-side --force-conflicts -f "$tmp_dir/confluent-for-kubernetes/crds/" | sed 's/^/   /'
   fi
 
   declare -A generation_before
@@ -84684,8 +84725,8 @@ playground_cfk_operator_upgrade_command() {
   # --reset-then-reuse-values: the defaults of the new chart (image.tag of the new operator) plus the values given at
   # install. --reuse-values would keep the computed values of the old release, image.tag included: the new chart with the
   # old operator image
-  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$chart_version" --namespace confluent --reset-then-reuse-values > /dev/null
-  kubectl -n confluent rollout status deployment/confluent-operator --timeout=300s
+  run_logged helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$chart_version" --namespace confluent --reset-then-reuse-values > /dev/null
+  run_logged kubectl -n confluent rollout status deployment/confluent-operator --timeout=300s
   operator_image=$(kubectl -n confluent get deployment confluent-operator -o jsonpath='{.spec.template.spec.containers[0].image}')
   if [[ "$operator_image" != *":$chart_version" ]]
   then
@@ -84710,7 +84751,7 @@ playground_cfk_operator_upgrade_command() {
           then
               cfk_patch_and_wait "$cr" "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" merge "$timeout" || exit 1
           else
-              kubectl -n confluent patch "$cr" --type merge -p "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" > /dev/null
+              run_logged kubectl -n confluent patch "$cr" --type merge -p "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" > /dev/null
           fi
       done
   }
@@ -84728,7 +84769,7 @@ playground_cfk_operator_upgrade_command() {
       do
           cr_since=$(date +%s)
           cr_generation=$(cfk_statefulset_generation "${cr#*/}")
-          kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null
+          run_logged kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null
           if ! cfk_wait_rollout "$cr" "$cr_generation" "$timeout" "$cr_since"
           then
               rc=1
@@ -84737,7 +84778,10 @@ playground_cfk_operator_upgrade_command() {
       done
       for cr in $all_crs
       do
-          kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null 2>&1 || true
+          if [[ -n "$(kubectl -n confluent get "$cr" -o jsonpath='{.metadata.annotations.platform\.confluent\.io/block-reconcile}' 2> /dev/null)" ]]
+          then
+              run_logged kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null 2>&1 || true
+          fi
       done
   else
       log "⏳ the new operator reconciles every component at once"

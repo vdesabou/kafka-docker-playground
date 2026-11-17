@@ -34,10 +34,12 @@ do
       playground state set run.docker_command "$docker_command"
     fi
     log "🖥️ starting host $host (an empty host: the playbook installs Confluent Platform)"
+    log "🔧 $docker_command $host"
     bash -c "$docker_command $host" > /tmp/playground-ansible-add-host.log 2>&1 || { tail -5 /tmp/playground-ansible-add-host.log; logerror "❌ could not start $host"; exit 1; }
   fi
   if [ "$jmx_var" != "-" ]
   then
+    log "🔧 yq -i '.all.children.${group}.hosts.${host}.${group}_service_environment_overrides = {\"JMX_PORT\": ${jmx_port}, \"${jmx_var}\": ${jmx_port}}' $inventory_file"
     HOST="$host" GROUP="$group" JMX_VAR="$jmx_var" JMX_PORT="$jmx_port" yq -i -P '.all.children[strenv(GROUP)].hosts[strenv(HOST)][strenv(GROUP) + "_service_environment_overrides"] = {"JMX_PORT": (strenv(JMX_PORT) | tonumber), strenv(JMX_VAR): (strenv(JMX_PORT) | tonumber)}' "$inventory_file"
   else
     HOST="$host" GROUP="$group" yq -i -P '.all.children[strenv(GROUP)].hosts[strenv(HOST)] = (.all.children[strenv(GROUP)].hosts[strenv(HOST)] // null)' "$inventory_file"

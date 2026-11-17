@@ -8,6 +8,11 @@ that no record was lost. They follow the procedures CFK documents, with the
 [`playground cfk`](https://kafka-docker-playground.io/#/deep-dive-cfk) commands, on the
 [cfk environment](../../environment/cfk/) (k3d, 3 KRaft controllers, 3 brokers, schema registry, connect).
 
+Every low-level command is printed before it runs (`🔧 kubectl …`, `🔧 helm …`, `🔧 docker exec ansible-controller
+ansible-playbook …`, and `🔎 polled: …` for what a wait loop checks), quoted so that it can be replayed by hand. The
+overview of all the day-2 examples, cp-ansible and CFK side by side, the findings and the recipes for support cases:
+[🔁 Day-2 operations](https://kafka-docker-playground.io/#/day-2-operations).
+
 The workload (`cfk-day2-utils.bash`):
 
 - `kafka-verifiable-producer` in its own pod (`day2-client`, not managed by CFK: the pods of CFK are rolled by the

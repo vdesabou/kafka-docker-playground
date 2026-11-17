@@ -19,8 +19,7 @@ case "$kind" in
     *)
         generation_before=$(cfk_statefulset_generation "$name")
         since=$(date +%s)
-        log "🔁 kubectl rollout restart statefulset/$name"
-        kubectl -n confluent rollout restart "statefulset/$name"
+        run_logged kubectl -n confluent rollout restart "statefulset/$name"
         cfk_wait_rollout "$resource" "$generation_before" "$timeout" "$since"
         ;;
 esac

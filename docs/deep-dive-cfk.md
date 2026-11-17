@@ -29,7 +29,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | restart Kafka or KRaft the supported way (annotation `kafkacluster-manual-roll`), or another component | `playground cfk roll <kind>/<name>` |
 | upgrade Confluent Platform, one custom resource at a time | `playground cfk upgrade --to <cp version>` |
 | upgrade the CFK operator with the documented procedure | `playground cfk operator upgrade --to <cfk version>` (`--no-block-reconcile` for the classic mistake) |
-| day-2 changes with a workload running through them (CP upgrade, operator upgrade) | `playground run -f other/cfk-day2/<example>.sh --environment cfk` |
+| day-2 changes with a workload running through them (CP upgrade, operator upgrade) | `playground run -f other/cfk-day2/<example>.sh --environment cfk`, see [🔁 Day-2 operations](/day-2-operations.md) |
 
 ---
 
@@ -156,6 +156,23 @@ Gotchas:
 - **`playground stop` leaves the cluster up** (and its memory reserved): `k3d cluster stop playground-cfk` to pause
   it, `k3d cluster delete playground-cfk` to start from scratch (the next run creates it again and reinstalls the
   operator).
+
+
+### Day-2 operations: `playground cfk`
+
+Changes on the running cluster, each one waiting for the operator and printing the low-level commands it runs (`🔧`
+before a command, `🔎 polled:` for what a wait loop checks), so that the same steps can be replayed by hand:
+
+| Command | What it does |
+| --- | --- |
+| `playground cfk patch <kind>/<name> '<patch>'` | `kubectl patch` (merge by default, `--type json` to add to a list), then the roll: statefulset changed or not, each pod restarted on the new revision and Ready, the CR back to `RUNNING`, the events since the change |
+| `playground cfk roll <kind>/<name>` | restart the supported way: annotation `kafkacluster-manual-roll` for Kafka and KRaft, `kubectl rollout restart` for the others |
+| `playground cfk upgrade --to <cp version>` | the image of every CR, controllers first, one CR at a time |
+| `playground cfk operator upgrade --to <cfk version>` | the CFK upgrade procedure: block reconcile, CRDs, `helm upgrade --reset-then-reuse-values`, init containers staged, reconcile enabled one component at a time (`--no-block-reconcile`: the classic mistake) |
+
+With a workload running through each change, the classic mistakes and the measured results:
+[🔁 Day-2 operations](/day-2-operations.md) and the examples of
+[`other/cfk-day2`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cfk-day2).
 
 ---
 

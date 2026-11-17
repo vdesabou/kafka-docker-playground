@@ -17,9 +17,9 @@ fi
 log "☸️ CFK operator: $current_chart → confluent-for-kubernetes-$chart_version (CFK $to)"
 if ! helm repo list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
 then
-    helm repo add confluentinc https://packages.confluent.io/helm > /dev/null
+    run_logged helm repo add confluentinc https://packages.confluent.io/helm > /dev/null
 fi
-helm repo update confluentinc > /dev/null
+run_logged helm repo update confluentinc > /dev/null
 
 day1_crs=$(cfk_cr_list)
 # every custom resource of the namespace, day-1 and day-2 (KafkaTopic, Connector, ConfluentRolebinding...)
@@ -33,7 +33,7 @@ then
     log "⏸️ Step 1: block reconciliation on the $(echo "$all_crs" | sed '/^$/d' | wc -l | tr -d ' ') custom resources (platform.confluent.io/block-reconcile=true): the operator upgrade does not roll anything"
     for cr in $all_crs
     do
-        kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile=true --overwrite > /dev/null
+        run_logged kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile=true --overwrite > /dev/null
     done
 else
     logwarn "⚠️ reconciliation not blocked (--no-block-reconcile): the new operator reconciles every custom resource as soon as it starts, all components roll at the same time"
@@ -48,9 +48,9 @@ then
 else
     tmp_dir=$(mktemp -d)
     trap 'rm -rf "$tmp_dir"' EXIT
-    helm pull confluentinc/confluent-for-kubernetes --version "$chart_version" --untar --untardir "$tmp_dir"
     log "📜 Step 2: apply the CRDs of the new chart (helm never upgrades them)"
-    kubectl apply --server-side --force-conflicts -f "$tmp_dir/confluent-for-kubernetes/crds/" | sed 's/^/   /'
+    run_logged helm pull confluentinc/confluent-for-kubernetes --version "$chart_version" --untar --untardir "$tmp_dir"
+    run_logged kubectl apply --server-side --force-conflicts -f "$tmp_dir/confluent-for-kubernetes/crds/" | sed 's/^/   /'
 fi
 
 declare -A generation_before
@@ -63,8 +63,8 @@ log "⬆️ Step 3: helm upgrade confluent-operator --version $chart_version"
 # --reset-then-reuse-values: the defaults of the new chart (image.tag of the new operator) plus the values given at
 # install. --reuse-values would keep the computed values of the old release, image.tag included: the new chart with the
 # old operator image
-helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$chart_version" --namespace confluent --reset-then-reuse-values > /dev/null
-kubectl -n confluent rollout status deployment/confluent-operator --timeout=300s
+run_logged helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$chart_version" --namespace confluent --reset-then-reuse-values > /dev/null
+run_logged kubectl -n confluent rollout status deployment/confluent-operator --timeout=300s
 operator_image=$(kubectl -n confluent get deployment confluent-operator -o jsonpath='{.spec.template.spec.containers[0].image}')
 if [[ "$operator_image" != *":$chart_version" ]]
 then
@@ -89,7 +89,7 @@ function stage_init_images () {
         then
             cfk_patch_and_wait "$cr" "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" merge "$timeout" || exit 1
         else
-            kubectl -n confluent patch "$cr" --type merge -p "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" > /dev/null
+            run_logged kubectl -n confluent patch "$cr" --type merge -p "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" > /dev/null
         fi
     done
 }
@@ -107,7 +107,7 @@ then
     do
         cr_since=$(date +%s)
         cr_generation=$(cfk_statefulset_generation "${cr#*/}")
-        kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null
+        run_logged kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null
         if ! cfk_wait_rollout "$cr" "$cr_generation" "$timeout" "$cr_since"
         then
             rc=1
@@ -116,7 +116,10 @@ then
     done
     for cr in $all_crs
     do
-        kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null 2>&1 || true
+        if [[ -n "$(kubectl -n confluent get "$cr" -o jsonpath='{.metadata.annotations.platform\.confluent\.io/block-reconcile}' 2> /dev/null)" ]]
+        then
+            run_logged kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null 2>&1 || true
+        fi
     done
 else
     log "⏳ the new operator reconciles every component at once"

@@ -23,5 +23,4 @@ then
         exit 1
     fi
 fi
-log "🩹 kubectl patch $resource --type $type -p '$patch'"
 cfk_patch_and_wait "$resource" "$patch" "$type" "$timeout" "$no_wait"
