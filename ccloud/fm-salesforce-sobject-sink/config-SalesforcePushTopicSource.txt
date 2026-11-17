@@ -105,6 +105,15 @@ Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CR
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 salesforce.instance
 
 Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS and the OAuth 2.0 Authorization Code grant, set this to your org's My Domain URL (for example https://MyDomainName.my.salesforce.com). Defaults to https://login.salesforce.com.
@@ -245,6 +254,36 @@ Flag to determine if the Salesforce PushTopic should respond to updates. This co
 OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
 
 	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+Select the secret manager to use for retrieving sensitive data.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.managed.configs
+
+Select the configurations to fetch their values from the secret manager.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.provider.integration.id
+
+Select an existing provider integration that has access to your secret manager.
+
+	 - Type: STRING
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
