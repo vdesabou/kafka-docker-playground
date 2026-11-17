@@ -16,6 +16,7 @@ Everything you need once an example runs, one page per topic.
 | [☁️ Fully managed connectors](/toolkit-fully-managed.md) | Reproduce what customers do with fully managed connectors: a service account with the least ACLs, or Terraform. |
 | [♨️ Connectors and JDKs](/toolkit-environment.md) | Add other connector plugins or SMTs to an example, or replace the JDK of a container image. |
 | [🏎️ Performance](/toolkit-performance.md) | Measure the throughput and the latency of a connector, compare versions, and keep a database busy while you watch. |
+| [🧹 Cleanup and scheduled jobs](/toolkit-cleanup.md) | Delete what examples leave behind in Confluent Cloud, AWS, GCP and Azure, stop forgotten EC2 instances, free the disk of the container engine, on demand or on a schedule. |
 
 ## ⚡ Everyday commands
 

@@ -22,6 +22,7 @@
   - [☁️ Fully managed connectors](/toolkit-fully-managed.md)
   - [♨️ Connectors and JDKs](/toolkit-environment.md)
   - [🏎️ Performance](/toolkit-performance.md)
+  - [🧹 Cleanup and scheduled jobs](/toolkit-cleanup.md)
 - [🧑‍🎓 Academy](/academy.md)
 - [🤖 Claude Code](/claude-code.md)
 
