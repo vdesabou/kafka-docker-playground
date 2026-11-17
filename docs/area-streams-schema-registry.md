@@ -4,6 +4,14 @@ For cases about **Schema Registry** (compatibility, subjects and ids, deletion, 
 CSFLE), **ksqlDB**, **Flink SQL** (local or Confluent Cloud), **Kafka Streams** and **non-Java clients** (.NET,
 JavaScript, Python, Go, Rust, C/C++ librdkafka). Schema Registry comes with every environment, ksqlDB and Flink are one flag away.
 
+> [!TIP]
+> **🐳 A log bundle, with nothing installed but Docker.** `playground analyze logs` is also a public image: run it on
+> the logs of the Kafka Streams instances or of a non-Java client attached to the case, from the folder that holds it, with no clone, no CLI and no environment.
+> `--network none`: the logs never leave the machine.
+> `docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f <bundle>.zip --sanitize`
+> (to try it first: `cd /tmp && docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs --sample kafka_streams`).
+> More: [🐳 With nothing installed but Docker](/deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker).
+
 ## 🚀 5 commands to try
 
 ```bash
