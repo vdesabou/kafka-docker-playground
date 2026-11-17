@@ -161,7 +161,7 @@ playground docker-cleanup run --dry-run
 # 🔎 dry-run, would run: docker image prune --force   # 27 dangling image(s), the ones used by a container are kept
 # 🔎 dry-run, would run: docker builder prune --force --max-used-space 10GB   # build cache now: 73.02GB
 playground docker-cleanup run
-# ✅ freed 8.3GB of dangling images and 10.7GB of build cache (images 239.4GB → 231.1GB, build cache 73.02GB → 62.35GB)
+# ✅ freed 18.97GB (images 239.4GB → 231.1GB, build cache 73.02GB → 62.35GB)
 # 🎓 51.92GB of the build cache are layers shared with images: freed with the images only (playground remove-cp-docker-images)
 ```
 
