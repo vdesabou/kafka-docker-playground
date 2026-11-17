@@ -138,16 +138,6 @@ playground_usage() {
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                 "
   printf "  %s   📜 Open playground changelog (https://kafka-docker-playground.io/#/changelog)\n" "$(green "open-changelog")                            "
   printf "  %s   📜 Show what changed in Confluent Platform between two versions\n" "$(green "cp-changelog")                              "
-  printf "  %s   🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n" "$(green "ansible")                                   "
-  printf "  %s   ▶️ Run the playbook again on the hosts\n" "$(green "ansible playbook")                          "
-  printf "  %s   📋 Read and change the inventory of the ansible environment\n" "$(green "ansible inventory")                         "
-  printf "  %s   🖥️ Add hosts to the running cluster\n" "$(green "ansible add-host")                          "
-  printf "  %s   ⬆️ Upgrade (or downgrade) Confluent Platform with cp-ansible\n" "$(green "ansible upgrade")                           "
-  printf "  %s   ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n" "$(green "cfk")                                       "
-  printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "cfk patch")                                 "
-  printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "cfk roll")                                  "
-  printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "cfk upgrade")                               "
-  printf "  %s   ☸️ The CFK operator\n" "$(green "cfk operator")                              "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -321,6 +311,20 @@ playground_usage() {
   printf "  %s   🔬 Describe consumer group\n" "$(green "consumer-group describe")                   "
   printf "  %s   ⏪ Reset the committed offsets of a consumer group\n" "$(green "consumer-group reset-offsets")              "
   printf "  %s   🗑️ Delete a consumer group, or its offsets for one topic\n" "$(green "consumer-group delete")                     "
+  echo
+  printf "%s\n" "$(bold "Ansible commands:")"
+  printf "  %s   🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)\n" "$(green "ansible")                                   "
+  printf "  %s   ▶️ Run the playbook again on the hosts\n" "$(green "ansible playbook")                          "
+  printf "  %s   📋 Read and change the inventory of the ansible environment\n" "$(green "ansible inventory")                         "
+  printf "  %s   🖥️ Add hosts to the running cluster\n" "$(green "ansible add-host")                          "
+  printf "  %s   ⬆️ Upgrade (or downgrade) Confluent Platform with cp-ansible\n" "$(green "ansible upgrade")                           "
+  echo
+  printf "%s\n" "$(bold "CFK commands:")"
+  printf "  %s   ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n" "$(green "cfk")                                       "
+  printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "cfk patch")                                 "
+  printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "cfk roll")                                  "
+  printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "cfk upgrade")                               "
+  printf "  %s   ☸️ The CFK operator\n" "$(green "cfk operator")                              "
   echo
   printf "%s\n" "$(bold "Flink commands:")"
   printf "  %s   🐿️ Flink commands\n" "$(green "flink")                                     "
@@ -16971,7 +16975,7 @@ playground_ansible_usage() {
   printf "  playground ansible [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Run commands:")"
+  printf "%s\n" "$(bold "Ansible commands:")"
   printf "  %s   ▶️ Run the playbook again on the hosts\n" "$(green "playbook") "
   printf "  %s   📋 Read and change the inventory of the ansible environment\n" "$(green "inventory")"
   printf "  %s   🖥️ Add hosts to the running cluster\n" "$(green "add-host") "
@@ -17080,7 +17084,7 @@ playground_ansible_inventory_usage() {
   printf "  playground ansible inventory [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Run commands:")"
+  printf "%s\n" "$(bold "Ansible commands:")"
   printf "  %s   🔎 Display the inventory, or the value of a yq path\n" "$(green "get")   "
   printf "  %s   ✏️ Set the value of a yq path, and print the change\n" "$(green "set")   "
   printf "  %s   🗑️ Remove a yq path from the inventory, and print the change\n" "$(green "delete")"
@@ -17328,7 +17332,7 @@ playground_cfk_usage() {
   printf "  playground cfk [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Run commands:")"
+  printf "%s\n" "$(bold "CFK commands:")"
   printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "patch")   "
   printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "roll")    "
   printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "upgrade") "
@@ -17515,7 +17519,7 @@ playground_cfk_operator_usage() {
   printf "  playground cfk operator [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Run commands:")"
+  printf "%s\n" "$(bold "CFK commands:")"
   printf "  %s   ⬆️ Upgrade the CFK operator, with the CFK upgrade procedure\n" "$(green "upgrade")"
   echo
 

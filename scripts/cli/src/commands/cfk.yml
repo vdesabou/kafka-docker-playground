@@ -1,6 +1,6 @@
 name: cfk
 expose: always
-group: Run
+group: CFK
 help: |-
   ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)
 
@@ -22,7 +22,7 @@ help: |-
 commands:
 
 - name: patch
-  group: Run
+  group: CFK
   filters:
   - cfk_environment
   help: |-
@@ -65,7 +65,7 @@ commands:
     playground cfk patch kafka/kafka '[{"op": "add", "path": "/spec/configOverrides/server/-", "value": "num.io.threads=16"}]' --type json
 
 - name: roll
-  group: Run
+  group: CFK
   filters:
   - cfk_environment
   help: |-
@@ -94,7 +94,7 @@ commands:
   - playground cfk roll connect/connect
 
 - name: upgrade
-  group: Run
+  group: CFK
   filters:
   - cfk_environment
   help: |-
@@ -120,11 +120,11 @@ commands:
   - playground cfk upgrade --to 8.4.1
 
 - name: operator
-  group: Run
+  group: CFK
   help: ☸️ The CFK operator
   commands:
   - name: upgrade
-    group: Run
+    group: CFK
     filters:
     - cfk_environment
     help: |-
