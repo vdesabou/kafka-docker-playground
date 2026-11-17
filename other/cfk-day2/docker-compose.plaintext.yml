@@ -1,0 +1,9 @@
+---
+# Not passed to start-environment (the examples start the cfk environment with day2_start_cfk, cfk-day2-utils.bash, and
+# the Connect CR of the cfk environment already has /usr/share/filestream-connectors in its plugin.path): it tells
+# playground run that the examples of this folder run a connector (the FileStream sink), so that --environment cfk is
+# accepted (get_connector_paths reads it when the script has no start-environment line, like other/deep-dive-labs)
+services:
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors
