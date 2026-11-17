@@ -76,6 +76,85 @@ function confirm_deletion () {
     done
 }
 
+# --nightly: read the given variables from the secrets store, unless reading it may wait for someone (1Password with no
+# service account token asks for Touch ID): the job runs at night, nobody answers
+function nightly_load_secrets () {
+    if [ "$(get_secret_backend)" == "op" ]
+    then
+        op_load_service_account_token
+        if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]
+        then
+            return 0
+        fi
+    fi
+    load_secrets_env_vars "$@" 2> /dev/null
+}
+
+# --nightly, AWS / GCP / Azure: true when the cloud $1 can be cleaned up without a prompt (no 'az login' in a browser,
+# no Touch ID, no exit 1 that would stop the other clouds); otherwise says why, notifies and the cloud is skipped
+function nightly_cloud_ready () {
+    local resource="$1" reason=""
+    case "$resource" in
+        aws)
+            nightly_load_secrets AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+            if ! command -v aws > /dev/null 2>&1
+            then
+                reason="the aws CLI is not installed"
+            elif [ ! -f "$HOME/.aws/credentials" ] && { [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; }
+            then
+                reason="no $HOME/.aws/credentials, and AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY not readable from the secrets store at night"
+            elif [ -z "$AWS_REGION" ] && [ -z "$(aws configure get region 2> /dev/null)" ]
+            then
+                reason="no region: AWS_REGION, or region in $HOME/.aws/config"
+            fi
+        ;;
+        gcp)
+            nightly_load_secrets GCP_PROJECT GCP_KEYFILE_CONTENT
+            if [ -z "$GCP_KEYFILE_CONTENT" ] || [ -z "$GCP_PROJECT" ]
+            then
+                reason="GCP_PROJECT / GCP_KEYFILE_CONTENT not readable from the secrets store at night"
+            elif ! docker info > /dev/null 2>&1
+            then
+                reason="Docker is not running (the GCP cleanup runs gcloud in a container)"
+            fi
+        ;;
+        azure)
+            nightly_load_secrets AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME
+            if ! command -v az > /dev/null 2>&1
+            then
+                reason="the az CLI is not installed"
+            elif [ -n "$AZ_CLIENT_ID" ] && [ -n "$AZ_CLIENT_SECRET" ] && [ -n "$AZ_TENANT_ID" ]
+            then
+                # service principal: login_and_maybe_set_azure_subscription logs in without a browser, but exits on
+                # a wrong subscription: checked in a subshell, so it can't stop the other clouds
+                if ! ( login_and_maybe_set_azure_subscription > /dev/null 2>&1 )
+                then
+                    reason="service principal login or subscription selection failed (AZ_CLIENT_ID, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME)"
+                fi
+            elif ! az account show > /dev/null 2>&1
+            then
+                reason="no service principal (AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID) and no saved az login session (it would open a browser)"
+            elif [ -z "$AZURE_SUBSCRIPTION_NAME" ] && [[ "$(az account show --query user.name -o tsv 2> /dev/null)" == *"confluent.io"* ]]
+            then
+                reason="confluent.io account without AZURE_SUBSCRIPTION_NAME"
+            elif [ -n "$AZURE_SUBSCRIPTION_NAME" ] && ! az account set --subscription "$AZURE_SUBSCRIPTION_NAME" > /dev/null 2>&1
+            then
+                reason="subscription $AZURE_SUBSCRIPTION_NAME not found"
+            fi
+        ;;
+    esac
+    if [ -n "$reason" ]
+    then
+        logwarn "🌙⏭️ skipping $resource: $reason"
+        if [[ -z "$dry_run" ]]
+        then
+            nightly_cleanup_notify "skipped $resource: $reason"
+        fi
+        return 1
+    fi
+    return 0
+}
+
 function cleanup_aws () {
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
     then
@@ -204,7 +283,10 @@ function cleanup_aws () {
 }
 
 function cleanup_azure () {
-    login_and_maybe_set_azure_subscription
+    if [[ -z "$nightly" ]] || [ -n "$AZ_CLIENT_ID" ]
+    then
+        login_and_maybe_set_azure_subscription
+    fi
 
     log "Cleanup Azure Resource groups"
     for group in $(az group list --query '[].name' --output tsv)
@@ -624,6 +706,11 @@ function cleanup_salesforce () {
 
 for resource in "${resources[@]}"
 do
+    if [[ -n "$nightly" ]] && [[ "$resource" =~ ^(aws|gcp|azure)$ ]]
+    then
+        log "🌙 nightly cleanup of $(date '+%Y-%m-%d %H:%M') for $user: $resource"
+        nightly_cloud_ready "$resource" || continue
+    fi
     case "${resource}" in
 
         "aws")

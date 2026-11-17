@@ -715,8 +715,8 @@ subcommands:
     Only one command deletes anything:\n\n  cloud-resources cleanup             delete
     the leftovers in aws, gcp,\n                                      azure, ccloud
     and salesforce\n                                      (--resource, --dry-run first)\n\n\U0001F319
-    and it can run by itself every night, for Confluent Cloud:\n\n  cloud-resources
-    nightly-cleanup enable|disable|status"
+    and it can run by itself every night (Confluent Cloud, and AWS, GCP, Azure\nwith
+    --resource):\n\n  cloud-resources nightly-cleanup enable|disable|status"
   usage: playground cloud-resources COMMAND
   options: []
   subcommands:
@@ -1048,31 +1048,47 @@ subcommands:
         when no cluster is known (CLUSTER_NAME, or a previous ccloud run):\nfinding
         one would create it.\n\nConflicts with: --recorded-topics-only"
   - name: nightly-cleanup
-    description: "\U0001F319 Delete what your fully managed examples left running
-      in Confluent Cloud, every night, automatically\n\n  enable     schedule it (default
-      02:00), then show what tonight's run would delete\n  disable    remove the schedule\n
-      \ status     is it scheduled, when, and what the last runs did\n\nEvery night
-      it runs 'playground cloud-resources cleanup --resource ccloud\n--force', limited
-      to what costs money or clutters a shared cluster:\n\n  \U0001F916 connectors
-      named *_<user>, on any cluster of the organization, with\n     their dlq, success
-      and error topics\n  \U0001F310 environments pg-<user>-sa-* (the stacks the playground
-      created when\n     no CLUSTER_NAME was set), with their clusters\n  \U0001F4DD
-      on shared clusters, the topics recorded as created by your own runs\n\nIt keeps
-      your own clusters and their topics (playground ccloud setup),\nand never deletes
-      service accounts or API keys: the secrets store may be\nlocked at night, so
-      the keys in use can't be told apart. Run\n'playground cloud-resources cleanup
-      --resource ccloud' yourself for those.\n\nmacOS: a launchd agent (~/Library/LaunchAgents),
-      which also runs when the\nMac wakes up if it was asleep at that time. Linux:
-      a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'.\n\n\U0001F3D7️
-      Works best with your own clusters, set up once: 'playground ccloud\nsetup'.
-      'playground cloud-resources ccloud list' shows what is left."
+    description: "\U0001F319 Delete what your examples left running in Confluent Cloud
+      (and AWS, GCP, Azure with --resource), every night, automatically\n\n  enable
+      \    schedule it (default 02:00), then show what tonight's run would delete\n
+      \ disable    remove the schedule\n  status     is it scheduled, when, and what
+      the last runs did\n\nEvery night it runs 'playground cloud-resources cleanup
+      --resource ccloud\n--force', limited to what costs money or clutters a shared
+      cluster:\n\n  \U0001F916 connectors named *_<user>, on any cluster of the organization,
+      with\n     their dlq, success and error topics\n  \U0001F310 environments pg-<user>-sa-*
+      (the stacks the playground created when\n     no CLUSTER_NAME was set), with
+      their clusters\n  \U0001F4DD on shared clusters, the topics recorded as created
+      by your own runs\n\nIt keeps your own clusters and their topics (playground
+      ccloud setup),\nand never deletes service accounts or API keys: the secrets
+      store may be\nlocked at night, so the keys in use can't be told apart. Run\n'playground
+      cloud-resources cleanup --resource ccloud' yourself for those.\n\n☁️ 'enable
+      --resource aws --resource gcp --resource azure' adds what\n'playground cloud-resources
+      cleanup' deletes in those clouds (Kinesis\nstreams, SQS queues, Redshift clusters,
+      DynamoDB tables, Azure resource\ngroups, GCS buckets, BigQuery datasets, Spanner
+      and Bigtable instances…,\nnamed pg…<user>…). Nothing interactive at night: a
+      cloud whose\ncredentials can't be read without a prompt is skipped, with a\nnotification,
+      and the others still run:\n  aws      ~/.aws/credentials, or AWS_ACCESS_KEY_ID
+      and\n           AWS_SECRET_ACCESS_KEY in the secrets store\n  azure    AZ_CLIENT_ID,
+      AZ_CLIENT_SECRET and AZ_TENANT_ID (service\n           principal) in the secrets
+      store, or a saved 'az login'\n           session; AZURE_SUBSCRIPTION_NAME for
+      a confluent.io account\n  gcp      GCP_PROJECT and GCP_KEYFILE_CONTENT in the
+      secrets store, and\n           Docker running\nThe secrets store is read at
+      night unless it is 1Password without a\nservice account token (it would wait
+      for Touch ID).\n⚠️ Like the connectors in Confluent Cloud, the resources of
+      an example\nstill running at that time are deleted too: pick a time you don't
+      use.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when
+      the\nMac wakes up if it was asleep at that time. Linux: a crontab line. The\nconfluent
+      CLI must stay logged in: 'confluent login --save'.\n\n\U0001F3D7️ Works best
+      with your own clusters, set up once: 'playground ccloud\nsetup'. 'playground
+      cloud-resources ccloud list' shows what is left."
     usage: playground cloud-resources nightly-cleanup COMMAND
     options: []
     subcommands:
     - name: enable
       description: "\U0001F319 Schedule the nightly cleanup, then show what tonight's
-        run would delete\n\nRun it again to change the time. The job uses this checkout
-        of the\nplayground and the PATH of the shell you run it from."
+        run would delete\n\nRun it again to change the time or the clouds. The job
+        uses this\ncheckout of the playground and the PATH of the shell you run it
+        from."
       usage: playground cloud-resources nightly-cleanup enable [OPTIONS]
       options:
       - names:
@@ -1080,6 +1096,13 @@ subcommands:
         argument: TIME
         description: "\U0001F551 Time of the run, HH:MM, local time\n\nDefault value:
           02:00"
+      - names:
+        - "--resource"
+        argument: RESOURCE
+        description: "☁️ Cloud to clean up every night (default: ccloud only)\n\n\U0001F393
+          Tip: repeat it, --resource ccloud --resource aws. Salesforce is\nnot offered:
+          nothing there is billed.\n\nRepeatable: ✓ Yes\nDefault value: [\"ccloud\"]\nAllowed
+          values: ccloud, aws, gcp, azure"
     - name: disable
       description: "\U0001F6D1 Remove the nightly cleanup schedule"
       usage: playground cloud-resources nightly-cleanup disable
@@ -9632,7 +9655,8 @@ subcommands:
     the persistent queries are RUNNING and have no lag\n  metrics    query states
     (running, ERROR, rebalancing) and messages per second, over JMX\n\n\U0001F393
     Tip: the REST API of ksqldb-server is published on http://localhost:8088.\nThe
-    records that fail a query are in the KSQL_PROCESSING_LOG stream."
+    records that fail a query are in the KSQL_PROCESSING_LOG stream.\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb"
   usage: playground ksqldb COMMAND
   options: []
   subcommands:
@@ -9648,7 +9672,8 @@ subcommands:
       the error).\n\n\U0001F393 Tip: a push query (EMIT CHANGES) never ends without
       a LIMIT: add\nLIMIT <n>, or --query-timeout. Otherwise the cli is stopped after\n--max-wait
       seconds. To wait for a CREATE ... AS SELECT to process its\ninput before querying
-      it, use 'playground ksqldb wait' instead of a sleep."
+      it, use 'playground ksqldb wait' instead of a sleep.\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-ksqldb"
     usage: playground ksqldb sql [OPTIONS]
     options:
     - names:
@@ -9728,21 +9753,19 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
   - name: wait
-    description: |-
-      ⏳ Wait until the persistent queries are RUNNING and have no lag
-
-      Waits until every query writing to --source (or every persistent
-      query) is RUNNING and has committed all the records of its input
-      topics, so that its result is complete: use it instead of a sleep
-      after a CREATE ... AS SELECT and the records it reads.
-
-      A query that has not committed any offset yet is done when its input
-      topics are empty, or when it is still without commit after 20 seconds
-      RUNNING: it has nothing to process from where it started (a CREATE
-      sent without SET 'auto.offset.reset' = 'earliest' reads from the end
-      of its topics), and a warning says so.
-
-      Exits with code 1 when a query is in ERROR, or after --max-wait seconds.
+    description: "⏳ Wait until the persistent queries are RUNNING and have no lag\n\nWaits
+      until every query writing to --source (or every persistent\nquery) is RUNNING
+      and has committed all the records of its input\ntopics, so that its result is
+      complete: use it instead of a sleep\nafter a CREATE ... AS SELECT and the records
+      it reads.\n\nA source table (CREATE SOURCE TABLE) is waited for too: its CST_
+      query\nmaterializes it for pull queries and has no sink, its lag is read from\nits
+      consumer group (_confluent-ksql-<service id>query_<query id>).\n\nA query that
+      has not committed any offset yet is done when its input\ntopics are empty, or
+      when it is still without commit after 20 seconds\nRUNNING: it has nothing to
+      process from where it started (a CREATE\nsent without SET 'auto.offset.reset'
+      = 'earliest' reads from the end\nof its topics), and a warning says so.\n\nExits
+      with code 1 when a query is in ERROR, or after --max-wait seconds.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb"
     usage: playground ksqldb wait [OPTIONS]
     options:
     - names:
@@ -9750,8 +9773,8 @@ subcommands:
       - "-s"
       argument: SOURCE
       description: "\U0001F9EE Only wait for the queries writing to this stream or
-        table (repeatable)\n\nℹ️ If not set, all persistent queries\n\nRepeatable:
-        ✓ Yes"
+        table (repeatable)\n\nℹ️ If not set, all persistent queries (and the source
+        tables)\n\nRepeatable: ✓ Yes"
     - names:
       - "--max-wait"
       - "-w"
@@ -13311,12 +13334,14 @@ subcommands:
     \             provision the instance with Cloud Formation\n  open                open
     it in VS Code over SSH, as if it were local\n  push-secrets        send your credentials
     to it, over ssh\n  sync-repro-folder   keep reproduction-models in step, both
-    directions\n  list / status / start / stop / delete\n\n\U0001F4B0 The instance
-    is billed while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground
-    ec2 delete' when you are done;\n   'playground status' reminds you when one is
-    still up.\n\n\U0001F510 A pem file is created at the root of the repository when
-    the instance\n   is created. Back it up, it is the only way in, and only your
-    current\n   ip address is allowed to connect.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2"
+    directions\n  list / status / start / stop / delete\n  auto-stop           stop
+    the instances left running, every evening\n\n\U0001F4B0 The instance is billed
+    while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground ec2
+    delete' when you are done;\n   'playground status' reminds you when one is still
+    up, and\n   'playground ec2 auto-stop enable' stops them every evening if idle.\n\n\U0001F510
+    A pem file is created at the root of the repository when the instance\n   is created.
+    Back it up, it is the only way in, and only your current\n   ip address is allowed
+    to connect.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2"
   usage: playground ec2 COMMAND
   options: []
   subcommands:
@@ -13422,6 +13447,78 @@ subcommands:
       description: "\U0001F5A5️ ec2 instance (need to use completion to get all required
         details)\n\n\U0001F393 Tip: If not specified, the command will apply to all
         ec2 instances"
+  - name: auto-stop
+    description: "⏰ Stop your EC2 instances left running, every evening, automatically\n\n
+      \ enable     schedule it (default 20:00), then show what it would stop\n  disable
+      \   remove the schedule\n  status     is it scheduled, when, and what the last
+      runs did\n  run        what the job does, now (--dry-run to only show it)\n\nEvery
+      day at --time, your playground instances (pg-<user>-*) still\nrunning are stopped,
+      like 'playground ec2 stop': the disk is kept,\n'playground ec2 start' gets your
+      work back. A macOS notification tells\nwhich ones.\n\nAn instance is kept when:\n
+      \ \U0001F525 it was busy: its CPU (CloudWatch CPUUtilization, 5 minute averages)\n
+      \    reached 5% in the last --idle-minutes (default 60), so a long run\n     or
+      benchmark started detached goes on. --idle-minutes 0 stops it\n     whatever
+      it is doing\n  \U0001F550 it was started less than --idle-minutes ago\n  \U0001F3F7️
+      it has the tag playground-keep-running=true (aws ec2 create-tags\n     --resources
+      <instance id> --tags Key=playground-keep-running,Value=true)\n\nmacOS: a launchd
+      agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it
+      was asleep at that time. Linux: a crontab line. The\naws CLI must work without
+      a prompt: ~/.aws/credentials (no SSO login to\nrenew) and a region (AWS_REGION
+      or ~/.aws/config)."
+    usage: playground ec2 auto-stop COMMAND
+    options: []
+    subcommands:
+    - name: enable
+      description: |-
+        ⏰ Schedule the auto-stop, then show what tonight's run would stop
+
+        Run it again to change the time or the idle time. The job uses this
+        checkout of the playground and the PATH of the shell you run it from.
+      usage: playground ec2 auto-stop enable [OPTIONS]
+      options:
+      - names:
+        - "--time"
+        argument: TIME
+        description: "\U0001F557 Time of the run, HH:MM, local time\n\nDefault value:
+          20:00"
+      - names:
+        - "--idle-minutes"
+        argument: MINUTES
+        description: "\U0001F4A4 Keep an instance whose CPU reached 5% in the last
+          <minutes>, or started less than <minutes> ago (0: stop it whatever it is
+          doing)\n\nDefault value: 60"
+    - name: disable
+      description: "\U0001F6D1 Remove the auto-stop schedule"
+      usage: playground ec2 auto-stop disable
+      options: []
+    - name: status
+      description: "\U0001F50E Is the auto-stop scheduled, at what time, and what
+        did its last runs do"
+      usage: playground ec2 auto-stop status [OPTIONS]
+      options:
+      - names:
+        - "--lines"
+        argument: LINES
+        description: "\U0001F4C4 Number of lines of the log to show\n\nDefault value:
+          40"
+    - name: run
+      description: |-
+        ⏰ Stop now your idle EC2 instances still running, as the scheduled job does
+
+        Use --dry-run to see what tonight's run would stop.
+      usage: playground ec2 auto-stop run [OPTIONS]
+      options:
+      - names:
+        - "--idle-minutes"
+        argument: MINUTES
+        description: "\U0001F4A4 Keep an instance whose CPU reached 5% in the last
+          <minutes>, or started less than <minutes> ago (0: stop it whatever it is
+          doing)\n\nDefault value: 60"
+      - names:
+        - "--dry-run"
+        argument: ''
+        description: "\U0001F50E Only show which instances would be stopped, and why
+          the others are kept"
   - name: start
     description: "\U0001F7E2 Start an EC2 instance\n\nBoots an instance stopped earlier.
       Its public address changes, so use\n'playground ec2 open' rather than a bookmarked

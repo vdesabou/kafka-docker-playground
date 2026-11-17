@@ -14,6 +14,14 @@ the CLI then talks to the secured cluster for you.
 > quorum. Each one shows the classic mistake next to the right procedure, measured on the same cluster, prints every
 > `kubectl` / `helm` / `ansible-playbook` command it runs, and ends with a no-record-lost check.
 
+> [!TIP]
+> **🐳 A log bundle, with nothing installed but Docker.** `playground analyze logs` is also a public image: run it on
+> the CFK support bundle attached to the case, from the folder that holds it, with no clone, no CLI and no environment.
+> `--network none`: the logs never leave the machine.
+> `docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f <bundle>.zip --sanitize`
+> (to try it first: `cd /tmp && docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs --sample cfk_bundle`).
+> More: [🐳 With nothing installed but Docker](/deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker).
+
 ## 🚀 5 commands to try
 
 ```bash
