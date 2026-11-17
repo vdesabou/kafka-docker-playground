@@ -329,6 +329,12 @@ then
         bootstrap_server=$(ansible_client_bootstrap "$container")
         security="$producer_config_name /etc/kafka/client.properties"
     fi
+    # RBAC: the schema registry asks for the MDS super user of the inventory
+    ansible_basic_auth=$(ansible_rest_basic_auth)
+    if [ -n "$ansible_basic_auth" ]
+    then
+        security="$property_name basic.auth.credentials.source=USER_INFO $property_name basic.auth.user.info=${ansible_basic_auth#-u } $security"
+    fi
     if [ "$(ansible_rest_scheme schema-registry)" == "https" ]
     then
         sr_url_cli="https://schema-registry:8081"

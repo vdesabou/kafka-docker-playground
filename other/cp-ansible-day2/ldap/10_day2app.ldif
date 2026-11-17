@@ -1,0 +1,11 @@
+dn: cn=day2app,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: day2app
+sn: day2app
+cn: day2app
+uidNumber: 10004
+gidNumber: 5000
+userPassword: day2app-secret
+homeDirectory: /home/day2app

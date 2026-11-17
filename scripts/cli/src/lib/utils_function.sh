@@ -4439,13 +4439,20 @@ function ansible_inventory_hosts () {
 #    component (connect worker, kafkastore.* of schema registry, ksqlDB server, client.* of REST Proxy), none with plaintext
 #  - environment/ansible/inventory/ca.pem: the CA of the cluster for the https REST APIs (truststore of connect or broker)
 function ansible_handover () {
-  local inventory_dir version hosts host ca_host truststore truststore_password
+  local inventory_dir version hosts host ca_host truststore truststore_password mds_user="" mds_password=""
   inventory_dir="$(ansible_root_folder)/environment/ansible/inventory"
   version=$(yq '.all.vars.confluent_package_version // ""' "$inventory_dir/hosts.yml" 2> /dev/null)
+  # RBAC: the Kafka tools of the playground commands log in as the MDS super user of the inventory (a component's own
+  # user only has the role bindings of the component)
+  if [ "$(yq '.all.vars.rbac_enabled // false' "$inventory_dir/hosts.yml" 2> /dev/null)" == "true" ]
+  then
+    mds_user=$(yq '.all.vars.mds_super_user // "mds"' "$inventory_dir/hosts.yml")
+    mds_password=$(yq '.all.vars.mds_super_user_password // "password"' "$inventory_dir/hosts.yml")
+  fi
   hosts=$(ansible_inventory_hosts)
   for host in $hosts
   do
-    docker exec -i -e VERSION="$version" "$host" bash << 'EOF'
+    docker exec -i -e VERSION="$version" -e MDS_USER="$mds_user" -e MDS_PASSWORD="$mds_password" "$host" bash << 'EOF'
 bin_dir="/opt/confluent/confluent-${VERSION}/bin"
 if [ ! -d "$bin_dir" ]
 then
@@ -4500,6 +4507,10 @@ then
   # nothing to set with plaintext (security.protocol=PLAINTEXT only, bootstrap.servers aside)
   if [ -n "$derived" ] && echo "$derived" | grep -v "^bootstrap.servers=" | grep -qv "^security.protocol=PLAINTEXT$"
   then
+    if [ -n "$MDS_USER" ]
+    then
+      derived=$(echo "$derived" | sed -E "s/username=\"[^\"]*\"/username=\"$MDS_USER\"/; s/password=\"[^\"]*\"/password=\"$MDS_PASSWORD\"/")
+    fi
     printf '# derived by playground from %s\n%s\n' "$source_file" "$derived" > /etc/kafka/client.properties
   else
     rm -f /etc/kafka/client.properties
