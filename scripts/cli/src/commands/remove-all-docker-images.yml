@@ -1,5 +1,5 @@
 name: remove-all-docker-images
-group: Run
+group: Cleanup
 help: |-
   🧨 Remove all docker images (including docker volumes)
 

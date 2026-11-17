@@ -1,5 +1,5 @@
 name: remove-cp-docker-images
-group: Run
+group: Cleanup
 help: |-
   🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)
 

@@ -1,5 +1,5 @@
 name: docker-cleanup
-group: Run
+group: Cleanup
 help: |-
   🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache
 
