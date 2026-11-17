@@ -47196,6 +47196,12 @@ function cfk_print_events () {
         | "   " + (if .type == "Warning" then "⚠️ " else "ℹ️ " end) + ((.lastTimestamp // .eventTime // .metadata.creationTimestamp) | sub("\\.[0-9]+"; "") | sub("Z$"; "") | sub("^.*T"; "")) + " " + .involvedObject.name + " " + .reason + ": " + (.message | gsub("\n"; " ") | .[0:220])' 2>/dev/null | sort -k2 | uniq
 }
 
+function cfk_apply_failed () {
+    # $1 kind/name: the message of a reconcile the operator fails (condition reason ApplyFailed), empty otherwise. The
+    # CR stays in phase RUNNING meanwhile: kubectl get and the phase say nothing
+    kubectl -n confluent get "$1" -o json 2> /dev/null | jq -r '[.status.conditions[]? | select(.reason == "ApplyFailed" and .status == "False") | .message] | first // empty'
+}
+
 function cfk_wait_rollout () {
     # $1 kind/name of the custom resource, $2 statefulset generation before the change, $3 timeout in seconds, $4 epoch
     # seconds of the change. Waits for CFK to reconcile the change: the statefulset changed or not (120 s: a busy operator
@@ -47218,6 +47224,16 @@ function cfk_wait_rollout () {
     done
     if [[ -z "$generation" ]] || [[ "$generation" == "$generation_before" ]]
     then
+        local apply_failed
+        apply_failed=$(cfk_apply_failed "$cr")
+        if [[ -n "$apply_failed" ]]
+        then
+            logerror "❌ $cr: the operator does not apply the change (condition ApplyFailed, the CR still says RUNNING): $apply_failed"
+            log_command kubectl -n confluent get "$kind" "$name" -o 'jsonpath={.status.conditions}'
+            log_command kubectl -n confluent logs deployment/confluent-operator --tail=50
+            kubectl -n confluent logs deployment/confluent-operator --tail=100 2> /dev/null | grep -E '"level":"(ERROR|WARN)"' | grep "\"name\":\"$name\"" | tail -3 | jq -r '"   " + .level + " " + .msg + ": " + (.error // "")' 2> /dev/null | cut -c1-300
+            return 1
+        fi
         log "ℹ️ $cr: statefulset $name unchanged, no pod restarted"
     else
         local selector replicas update_revision observed rolled="" pod pods_ready

@@ -10,6 +10,10 @@
 DAY2_TOPIC="day2"
 DAY2_CLIENT_POD="day2-client"
 DAY2_BOOTSTRAP="kafka:9071"
+# client properties file in the client pod, for the checks once the listeners are secured (cfk-enable-sasl-ssl.sh), and
+# the bootstrap servers they use
+DAY2_CLIENT_CONFIG=""
+DAY2_CHECK_BOOTSTRAP="$DAY2_BOOTSTRAP"
 
 # the examples start their own cfk environment: run them from the cfk CI job only (k3d, kubectl, helm), like the cfk.sh
 # deep dive lab
@@ -34,7 +38,14 @@ function day2_start_cfk () {
             unset ENABLE_KRAFT ENABLE_ZOOKEEPER KRAFT_MODE_LOGGED
             export TAG="$1" TAG_BASE="$1"
         fi
-        export ENABLE_KAFKA_NODES=1 ENABLE_CONTROLLER_NODES=1
+        export ENABLE_CONTROLLER_NODES=1
+        # DAY2_SINGLE_BROKER=1: one broker (cfk-scale-out-brokers.sh)
+        if [ -z "$DAY2_SINGLE_BROKER" ]
+        then
+            export ENABLE_KAFKA_NODES=1
+        else
+            unset ENABLE_KAFKA_NODES
+        fi
         playground start-environment --environment cfk
     )
 }
@@ -51,7 +62,13 @@ function day2_start_workload () {
     kubectl -n confluent delete pod "$DAY2_CLIENT_POD" --ignore-not-found --wait=true > /dev/null
     run_logged kubectl -n confluent run "$DAY2_CLIENT_POD" --image "$image" --restart Never --command -- sleep infinity > /dev/null
     run_logged kubectl -n confluent wait --for=condition=Ready "pod/$DAY2_CLIENT_POD" --timeout=300s > /dev/null
-    playground topic create --topic "$DAY2_TOPIC" --nb-partitions 3 --if-not-exists --replication-factor 3 --config min.insync.replicas=2
+    # DAY2_SINGLE_BROKER=1: replication factor 1 (one broker)
+    if [ -z "$DAY2_SINGLE_BROKER" ]
+    then
+        playground topic create --topic "$DAY2_TOPIC" --nb-partitions 3 --if-not-exists --replication-factor 3 --config min.insync.replicas=2
+    else
+        playground topic create --topic "$DAY2_TOPIC" --nb-partitions 3 --if-not-exists --replication-factor 1
+    fi
     day2_start_producer
     playground connector create-or-update --connector day2-sink --wait << EOF
 {
@@ -67,16 +84,36 @@ EOF
     day2_report_workload "workload started"
 }
 
-# (re)starts a producer in the client pod, appending to its log: $1 name, $2 topic
+# (re)starts a producer in the client pod, appending to its log: $1 name, $2 topic, $3 bootstrap servers, $4 client
+# properties file in the client pod
 function day2_start_producer () {
-    local name="${1:-producer}" topic="${2:-$DAY2_TOPIC}"
-    log "📤 $name: kafka-verifiable-producer in pod $DAY2_CLIENT_POD, topic $topic, 20 records/s, acks=all, no retries, bootstrap $DAY2_BOOTSTRAP"
-    log_command kubectl -n confluent exec "$DAY2_CLIENT_POD" -- sh -c "nohup kafka-verifiable-producer --bootstrap-server $DAY2_BOOTSTRAP --topic $topic --throughput 20 --max-messages -1 --acks -1 >> /tmp/day2-$name.log 2>&1 &"
-    kubectl -n confluent exec "$DAY2_CLIENT_POD" -- sh -c "nohup kafka-verifiable-producer --bootstrap-server $DAY2_BOOTSTRAP --topic $topic --throughput 20 --max-messages -1 --acks -1 >> /tmp/day2-$name.log 2>&1 &"
+    local name="${1:-producer}" topic="${2:-$DAY2_TOPIC}" bootstrap="${3:-$DAY2_BOOTSTRAP}" config="$4"
+    local cmd="nohup kafka-verifiable-producer --bootstrap-server $bootstrap --topic $topic --throughput 20 --max-messages -1 --acks -1${config:+ --producer.config $config} >> /tmp/day2-$name.log 2>&1 &"
+    log "📤 $name: kafka-verifiable-producer in pod $DAY2_CLIENT_POD, topic $topic, 20 records/s, acks=all, no retries, bootstrap $bootstrap${config:+, $config}"
+    log_command kubectl -n confluent exec "$DAY2_CLIENT_POD" -- sh -c "$cmd"
+    kubectl -n confluent exec "$DAY2_CLIENT_POD" -- sh -c "$cmd"
 }
 
+# stops a producer ($1 name: the java process writing to /tmp/day2-<name>.log), all of them without it
 function day2_stop_producers () {
-    day2_client 'pkill -f VerifiableProducer; sleep 3' || true
+    if [ -n "$1" ]
+    then
+        kubectl -n confluent exec "$DAY2_CLIENT_POD" -- env LOG="/tmp/day2-$1.log" sh -c 'for p in $(pgrep -f VerifiableProducer); do if ls -l /proc/$p/fd 2> /dev/null | grep -q "$LOG"; then kill $p; fi; done; sleep 3' || true
+    else
+        day2_client 'pkill -f VerifiableProducer; sleep 3' || true
+    fi
+}
+
+# number of records of a topic ($1): playground topic get-number-records, or through the client pod with
+# DAY2_CLIENT_CONFIG once the listener of the playground commands is secured
+function day2_topic_records () {
+    if [ -n "$DAY2_CLIENT_CONFIG" ]
+    then
+        log_command kubectl -n confluent exec "$DAY2_CLIENT_POD" -- kafka-get-offsets --bootstrap-server "$DAY2_CHECK_BOOTSTRAP" --command-config "$DAY2_CLIENT_CONFIG" --topic "$1" >&2
+        day2_client "kafka-get-offsets --bootstrap-server $DAY2_CHECK_BOOTSTRAP --command-config $DAY2_CLIENT_CONFIG --topic $1 2> /dev/null" | awk -F ':' '{ n += $3 } END { print n + 0 }'
+    else
+        playground topic get-number-records -t "$1" 2> /dev/null | tail -1
+    fi
 }
 
 # number of lines of a type in the log of a producer: $1 type (producer_send_success, producer_send_error), $2 name
@@ -185,11 +222,11 @@ function day2_check_no_loss () {
     day2_stop_producers
     day2_report_workload "workload stopped"
     acked=$(day2_count producer_send_success producer)
-    records=$(playground topic get-number-records -t "$DAY2_TOPIC" 2> /dev/null | tail -1)
-    log_command --polled kubectl -n confluent exec "$DAY2_CLIENT_POD" -- kafka-consumer-groups --bootstrap-server "$DAY2_BOOTSTRAP" --describe --group connect-day2-sink
+    records=$(day2_topic_records "$DAY2_TOPIC")
+    log_command --polled kubectl -n confluent exec "$DAY2_CLIENT_POD" -- kafka-consumer-groups --bootstrap-server "$DAY2_CHECK_BOOTSTRAP" ${DAY2_CLIENT_CONFIG:+--command-config "$DAY2_CLIENT_CONFIG"} --describe --group connect-day2-sink
     for i in $(seq 1 30)
     do
-        lag=$(day2_client "kafka-consumer-groups --bootstrap-server $DAY2_BOOTSTRAP --describe --group connect-day2-sink 2> /dev/null" | awk -v t="$DAY2_TOPIC" '$2 == t && $6 ~ /^[0-9]+$/ { lag += $6 } END { print lag + 0 }')
+        lag=$(day2_client "kafka-consumer-groups --bootstrap-server $DAY2_CHECK_BOOTSTRAP ${DAY2_CLIENT_CONFIG:+--command-config $DAY2_CLIENT_CONFIG} --describe --group connect-day2-sink 2> /dev/null" | awk -v t="$DAY2_TOPIC" '$2 == t && $6 ~ /^[0-9]+$/ { lag += $6 } END { print lag + 0 }')
         if [ "$lag" -eq 0 ]
         then
             break
