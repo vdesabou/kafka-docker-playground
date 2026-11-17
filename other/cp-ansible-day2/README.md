@@ -8,6 +8,11 @@ They follow the procedures cp-ansible documents (change the inventory, run `conf
 `deployment_strategy=rolling`), with the [`playground ansible`](https://kafka-docker-playground.io/#/deep-dive-ansible)
 commands, on the [ansible environment](../../environment/ansible/).
 
+Every low-level command is printed before it runs (`🔧 kubectl …`, `🔧 helm …`, `🔧 docker exec ansible-controller
+ansible-playbook …`, and `🔎 polled: …` for what a wait loop checks), quoted so that it can be replayed by hand. The
+overview of all the day-2 examples, cp-ansible and CFK side by side, the findings and the recipes for support cases:
+[🔁 Day-2 operations](https://kafka-docker-playground.io/#/day-2-operations).
+
 The workload (`day2-utils.bash`):
 
 - `kafka-verifiable-producer` on the connect host, 20 records/s, `acks=all`, **no retries**: every leader move, every

@@ -26,6 +26,7 @@ else
 fi
 installed=$(docker exec ansible-controller ansible-galaxy collection list confluent.platform 2> /dev/null | awk '$1 == "confluent.platform" {print $2}' | head -1)
 log "🅰️ confluent.platform collection: ${installed:-?} -> confluent.platform:$spec"
+log_command docker exec ansible-controller ansible-galaxy collection install "confluent.platform:$spec" --force
 if ! docker exec ansible-controller ansible-galaxy collection install "confluent.platform:$spec" --force > /tmp/playground-ansible-galaxy.log 2>&1
 then
   tail -5 /tmp/playground-ansible-galaxy.log

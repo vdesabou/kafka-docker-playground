@@ -19,6 +19,7 @@ day2_require_plaintext
 
 function day2_mds () {
     # $1 method, $2 path, $3 json body (MDS REST API, as the MDS super user, from the broker host)
+    log_command docker exec broker curl -sk -u mds:mds-secret -X "$1" -H "Content-Type: application/json" ${3:+-d "$3"} "https://broker:8090$2"
     docker exec broker curl -sk -u mds:mds-secret -X "$1" -H "Content-Type: application/json" ${3:+-d "$3"} "https://broker:8090$2"
 }
 

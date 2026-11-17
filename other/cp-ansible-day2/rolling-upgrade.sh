@@ -39,6 +39,7 @@ log "Step 4: the feature level is not upgraded by cp-ansible: finalize it once e
 playground container exec -c broker --command "kafka-features --bootstrap-server broker:9092 --command-config /etc/kafka/client.properties describe | grep -E 'confluent.metadata.version|Feature: metadata.version'"
 # --release-version is the Apache Kafka version of the CP version: CP 8.4 is Kafka 4.4
 kafka_release="$(( $(echo "$NEW_VERSION" | cut -d '.' -f 1) - 4 )).$(echo "$NEW_VERSION" | cut -d '.' -f 2)"
+log_command docker exec broker sh -c "kafka-features --bootstrap-server broker:9092 --command-config /etc/kafka/client.properties upgrade --release-version $kafka_release --dry-run"
 level=$(docker exec broker sh -c "kafka-features --bootstrap-server broker:9092 --command-config /etc/kafka/client.properties upgrade --release-version $kafka_release --dry-run" 2> /dev/null | sed -n 's/^confluent.metadata.version can be upgraded to \([0-9]*\)\..*/\1/p')
 if [ -n "$level" ]
 then

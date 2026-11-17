@@ -25,6 +25,11 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | the operator code that logs an error, at the version of a bundle (Confluent only) | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |
 | what is wrong in a support bundle (yours or the customer's) | `playground analyze logs -f <dir\|.tar.gz\|.zip>` |
 | is this example red on CFK in CI? | `playground get-ci-result --test <dir> --environment cfk --logs` |
+| change a custom resource and watch the operator roll it | `playground cfk patch <kind>/<name> '<patch>'` (waits for the roll, prints the pods as they restart and the events) |
+| restart Kafka or KRaft the supported way (annotation `kafkacluster-manual-roll`), or another component | `playground cfk roll <kind>/<name>` |
+| upgrade Confluent Platform, one custom resource at a time | `playground cfk upgrade --to <cp version>` |
+| upgrade the CFK operator with the documented procedure | `playground cfk operator upgrade --to <cfk version>` (`--no-block-reconcile` for the classic mistake) |
+| day-2 changes with a workload running through them (CP upgrade, operator upgrade) | `playground run -f other/cfk-day2/<example>.sh --environment cfk`, see [🔁 Day-2 operations](/day-2-operations.md) |
 
 ---
 
@@ -151,6 +156,23 @@ Gotchas:
 - **`playground stop` leaves the cluster up** (and its memory reserved): `k3d cluster stop playground-cfk` to pause
   it, `k3d cluster delete playground-cfk` to start from scratch (the next run creates it again and reinstalls the
   operator).
+
+
+### Day-2 operations: `playground cfk`
+
+Changes on the running cluster, each one waiting for the operator and printing the low-level commands it runs (`🔧`
+before a command, `🔎 polled:` for what a wait loop checks), so that the same steps can be replayed by hand:
+
+| Command | What it does |
+| --- | --- |
+| `playground cfk patch <kind>/<name> '<patch>'` | `kubectl patch` (merge by default, `--type json` to add to a list), then the roll: statefulset changed or not, each pod restarted on the new revision and Ready, the CR back to `RUNNING`, the events since the change |
+| `playground cfk roll <kind>/<name>` | restart the supported way: annotation `kafkacluster-manual-roll` for Kafka and KRaft, `kubectl rollout restart` for the others |
+| `playground cfk upgrade --to <cp version>` | the image of every CR, controllers first, one CR at a time |
+| `playground cfk operator upgrade --to <cfk version>` | the CFK upgrade procedure: block reconcile, CRDs, `helm upgrade --reset-then-reuse-values`, init containers staged, reconcile enabled one component at a time (`--no-block-reconcile`: the classic mistake) |
+
+With a workload running through each change, the classic mistakes and the measured results:
+[🔁 Day-2 operations](/day-2-operations.md) and the examples of
+[`other/cfk-day2`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cfk-day2).
 
 ---
 
@@ -557,7 +579,12 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | "which operator code logs this error? is it fixed after version X?" | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>" [--compare-with <version>]` (private repository, Confluent only) |
 | "what would a support bundle of my repro look like?" | `playground debug cfk generate-bundle`, then `analyze logs` on it |
 | "RBAC on CFK: `ConfluentRolebinding`, MDS, LDAP" | `--environment cfk-rbac`, `playground rbac role-binding list --principal User:connectorSA`, `kubectl -n confluent get confluentrolebinding` |
-| "another CFK version" | `CFK_VERSION=3.2.3 playground run -f <example> --environment cfk` (2.9.5 to 3.3.0) |
+| "another CFK version" | `CFK_VERSION=3.2.3 playground run -f <example> --environment cfk` (2.9.5 to 3.4.0, and later versions found in the helm repository) |
+| "we upgraded CP with CFK, what do the clients see?" | `playground cfk upgrade --to <version>` on a running environment; with a workload running through it: `other/cfk-day2/cfk-rolling-upgrade.sh` |
+| "we upgraded the CFK operator and every component restarted at once / twice" | `playground cfk operator upgrade --to <version> --no-block-reconcile` (what they did) against `playground cfk operator upgrade --to <version>` (block reconcile, CRDs, init containers staged, enable reconcile one component at a time); with a workload: `other/cfk-day2/cfk-operator-upgrade.sh` |
+| "we ran helm upgrade to the new CFK chart, the operator still runs the old version" | `helm upgrade --reuse-values` keeps the computed values of the old release, `image.tag` included: `helm -n confluent get values confluent-operator --all \| grep tag`; `playground cfk operator upgrade` uses `--reset-then-reuse-values` and checks the operator image |
+| "we changed configOverrides, the ConfigMap has it, the brokers still run the old value" | compare the file of the pod (`playground container exec -c kafka-0 --command "grep <key> /opt/confluentinc/etc/kafka/kafka.properties"`) with the running broker (`kafka-configs --describe --all --entity-type brokers --entity-name 0`); `other/cfk-day2/cfk-rolling-upgrade.sh` applies a change right after a roll and checks it (seen in 2 runs out of 3: CFK wrote the ConfigMap, did not roll the brokers); `playground cfk roll kafka/kafka` restarts the brokers the supported way |
+| "a configOverrides change removed our other overrides" | a JSON merge patch replaces the whole list: `playground cfk patch kafka/kafka '<merge patch>'` shows it, `--type json` with an `add` operation keeps the list |
 | "is this example also red on CFK in CI?" | `playground get-ci-result --test <dir> --environment cfk --logs`; `playground start-ci --cfk --test-list "<dir>"` to run it there |
 
 In a repro model, keep `PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"cfk"}` at the top: `playground run` without

@@ -172,6 +172,11 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-ansible.md)
 - 🧠 Commands: `run --environment ansible|ansible-sasl-ssl`, `start-environment --environment ansible|ansible-sasl-ssl`, `--ansible-inventory <hosts.yml>`, and what every command does on hosts deployed by cp-ansible (journald logs, `broker stop` through systemd)
 
+### 🔁 Day-2 operations: upgrades and changes on a running cluster (cp-ansible and CFK)
+
+- 📖 [Read the page](/day-2-operations.md): seven examples with a workload running through each change (CP upgrades, a CFK operator upgrade, SASL_SSL, RBAC, scale out, KRaft quorum), the classic mistake next to the right procedure, every `kubectl` / `helm` / `ansible-playbook` command printed as it runs
+- 🧠 Commands: `ansible playbook`, `ansible inventory set`, `ansible add-host`, `ansible upgrade`, `cfk patch`, `cfk roll`, `cfk upgrade`, `cfk operator upgrade`
+
 ### 🐌 A slow or broken network, on purpose
 
 - 📖 [Read the deep dive](/deep-dive-network-traffic.md)

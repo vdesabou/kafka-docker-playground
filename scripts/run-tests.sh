@@ -77,8 +77,9 @@ do
         continue
     fi
 
-    # Skip non-connect examples when using CfK environment (except the deep dive labs: cfk.sh runs there, see below)
-    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && [[ ! "$dir" =~ ^connect/ ]] && [ "$dir" != "other/deep-dive-labs" ]
+    # Skip non-connect examples when using CfK environment (except the deep dive labs: cfk.sh runs there, see below, and
+    # the CFK day-2 examples)
+    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && [[ ! "$dir" =~ ^connect/ ]] && [ "$dir" != "other/deep-dive-labs" ] && [ "$dir" != "other/cfk-day2" ]
     then
         log "####################################################"
         log "⏭ skipping dir $dir, CfK environment only supports connect/ examples"

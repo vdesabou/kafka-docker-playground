@@ -4401,7 +4401,8 @@ function ansible_run_playbook () {
   then
     playbook_args=(confluent.platform.all)
   fi
-  log "▶️ Running the playbook (a few minutes): docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml ${playbook_args[*]}"
+  log "▶️ Running the playbook (a few minutes)"
+  log_command docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}"
   log "📄 Playbook output: tail -f $playbook_log"
   set +e
   docker exec -e ANSIBLE_FORCE_COLOR=0 ansible-controller ansible-playbook -i /inventory/hosts.yml "${playbook_args[@]}" > "$playbook_log" 2>&1
@@ -7366,4 +7367,235 @@ function sanitize_ci_log () {
     return 1
   fi
   mv "$file.sanitized" "$file"
+}
+
+# helm chart version of a CFK version (environment/cfk/start.sh, playground cfk operator upgrade)
+function get_cfk_helm_chart_version() {
+  local cfk_version="$1"
+  
+  case "$cfk_version" in
+    3.4.0) echo "0.2038.1" ;;
+    3.3.1) echo "0.1718.99" ;;
+    3.3.0) echo "0.1718.10" ;;
+    3.2.4) echo "0.1514.158" ;;
+    3.2.3) echo "0.1514.76" ;;
+    3.2.2) echo "0.1514.40" ;;
+    3.2.1) echo "0.1514.19" ;;
+    3.2.0) echo "0.1514.1" ;;
+    3.1.3) echo "0.1351.147" ;;
+    3.1.2) echo "0.1351.103" ;;
+    3.1.1) echo "0.1351.59" ;;
+    3.1.0) echo "0.1351.24" ;;
+    3.0.5) echo "0.1263.163" ;;
+    3.0.4) echo "0.1263.124" ;;
+    3.0.3) echo "0.1263.105" ;;
+    3.0.2) echo "0.1263.79" ;;
+    3.0.1) echo "0.1263.34" ;;
+    3.0.0) echo "0.1263.8" ;;
+    2.11.6) echo "0.1193.192" ;;
+    2.11.5) echo "0.1193.151" ;;
+    2.11.4) echo "0.1193.108" ;;
+    2.11.3) echo "0.1193.70" ;;
+    2.11.2) echo "0.1193.47" ;;
+    2.11.1) echo "0.1193.34" ;;
+    2.11.0) echo "0.1193.1" ;;
+    2.10.6) echo "0.1145.181" ;;
+    2.10.5) echo "0.1145.141" ;;
+    2.10.4) echo "0.1145.102" ;;
+    2.10.3) echo "0.1145.71" ;;
+    2.10.2) echo "0.1145.50" ;;
+    2.10.1) echo "0.1145.35" ;;
+    2.9.10) echo "0.1033.238" ;;
+    2.9.9) echo "0.1033.196" ;;
+    2.9.8) echo "0.1033.150" ;;
+    2.9.7) echo "0.1033.110" ;;
+    2.9.6) echo "0.1033.87" ;;
+    2.9.5) echo "0.1033.71" ;;
+    *)
+      # a version released after this table: the latest chart of that app version in the helm repository
+      local chart
+      chart=$(helm search repo confluentinc/confluent-for-kubernetes --versions -o json 2> /dev/null | jq -r --arg v "$cfk_version" '[.[] | select(.app_version == $v)][0].version // empty')
+      if [[ -n "$chart" ]]
+      then
+        echo "$chart"
+        return 0
+      fi
+      logerror "❌ CFK version $cfk_version is not supported (not in the table of playground, nor in the helm repository confluentinc: helm repo update confluentinc?)"
+      logerror "   Supported versions: 3.4.0, 3.3.1, 3.3.0, 3.2.4, 3.2.3, 3.2.2, 3.2.1, 3.2.0, 3.1.3, 3.1.2, 3.1.1, 3.1.0, 3.0.5, 3.0.4, 3.0.3, 3.0.2, 3.0.1, 3.0.0, 2.11.6, 2.11.5, 2.11.4, 2.11.3, 2.11.2, 2.11.1, 2.11.0, 2.10.6, 2.10.5, 2.10.4, 2.10.3, 2.10.2, 2.10.1, 2.9.10, 2.9.9, 2.9.8, 2.9.7, 2.9.6, 2.9.5"
+      return 1
+      ;;
+  esac
+}
+
+# 🔧 the low-level commands a playground command runs (kubectl, helm, docker exec, ansible-galaxy...), printed so that
+# the user sees what is done and can replay it by hand. log_command prints (on stderr), run_logged prints then runs
+function log_command () {
+    # --polled: a command a wait loop runs again and again, printed once
+    local prefix="🔧"
+    if [[ "$1" == "--polled" ]]
+    then
+        prefix="🔎 polled:"
+        shift
+    fi
+    local line="" arg special='[][[:space:]'"'"'"{}*$;&|<>()`\\!?#~]'
+    for arg in "$@"
+    do
+        if [[ -z "$arg" ]] || [[ "$arg" =~ $special ]]
+        then
+            line+=" '${arg//\'/\'\\\'\'}'"
+        else
+            line+=" $arg"
+        fi
+    done
+    # on stderr: still printed when the output of the command is redirected (> /dev/null) or captured ($(...))
+    log "${prefix}${line}" >&2
+}
+
+function run_logged () {
+    log_command "$@"
+    "$@"
+}
+
+# ☸️ playground cfk: the custom resources of the cfk environments, in the order of an upgrade (controllers first)
+CFK_CR_KINDS="kraftcontroller zookeeper kafka connect schemaregistry ksqldb kafkarestproxy controlcenter"
+
+function cfk_cr_list () {
+    # "kind/name" of every CFK custom resource of the namespace, controllers first
+    local kind
+    for kind in $CFK_CR_KINDS
+    do
+        kubectl -n confluent get "$kind" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | sed "/^$/d; s|^|${kind}/|"
+    done
+}
+
+function cfk_statefulset_generation () {
+    kubectl -n confluent get statefulset "$1" -o jsonpath='{.metadata.generation}' 2>/dev/null
+}
+
+function cfk_print_events () {
+    # $1 name of the custom resource, $2 epoch seconds: the events of the CR and of its pods since then
+    local name="$1" since="$2"
+    log "📣 events of $name and its pods since $(date -d "@$since" +%H:%M:%S 2> /dev/null || date -r "$since" +%H:%M:%S) (Warning, and Normal except the pod lifecycle):"
+    log_command kubectl -n confluent get events --sort-by=.lastTimestamp
+    kubectl -n confluent get events -o json 2>/dev/null | jq -r --arg n "$name" --argjson since "$since" '
+        .items[]
+        | select((.involvedObject.name == $n) or (.involvedObject.name | test("^" + $n + "-[0-9]+$")))
+        | select(((.lastTimestamp // .eventTime // .metadata.creationTimestamp) | sub("\\.[0-9]+"; "") | fromdateiso8601) >= $since)
+        | select(.type == "Warning" or ((.reason | IN("Pulled", "Pulling", "Created", "Started", "Scheduled", "SuccessfulCreate", "NoPods")) | not))
+        | "   " + (if .type == "Warning" then "⚠️ " else "ℹ️ " end) + ((.lastTimestamp // .eventTime // .metadata.creationTimestamp) | sub("\\.[0-9]+"; "") | sub("Z$"; "") | sub("^.*T"; "")) + " " + .involvedObject.name + " " + .reason + ": " + (.message | gsub("\n"; " ") | .[0:220])' 2>/dev/null | sort -k2 | uniq
+}
+
+function cfk_wait_rollout () {
+    # $1 kind/name of the custom resource, $2 statefulset generation before the change, $3 timeout in seconds, $4 epoch
+    # seconds of the change. Waits for CFK to reconcile the change: the statefulset changed or not (120 s: a busy operator
+    # was seen reconciling a change 57 s after it), every pod
+    # restarted on the new revision and Ready (printed as they roll), then the CR back to phase RUNNING
+    local cr="$1" generation_before="$2" timeout="$3" since="$4"
+    local kind="${cr%%/*}" name="${cr#*/}"
+    local deadline=$(( $(date +%s) + timeout ))
+    local generation="" i
+    log "⏳ $cr: waiting for CFK to reconcile the change (up to 120 s: does it change the statefulset?)"
+    log_command --polled kubectl -n confluent get statefulset "$name" -o 'jsonpath={.metadata.generation}'
+    for i in $(seq 1 60)
+    do
+        generation=$(cfk_statefulset_generation "$name")
+        if [[ -n "$generation" ]] && [[ "$generation" != "$generation_before" ]]
+        then
+            break
+        fi
+        sleep 2
+    done
+    if [[ -z "$generation" ]] || [[ "$generation" == "$generation_before" ]]
+    then
+        log "ℹ️ $cr: statefulset $name unchanged, no pod restarted"
+    else
+        local selector replicas update_revision observed rolled="" pod pods_ready
+        selector=$(kubectl -n confluent get statefulset "$name" -o json | jq -r '.spec.selector.matchLabels | to_entries | map("\(.key)=\(.value)") | join(",")')
+        log "⏳ $cr: CFK rolls the pods of statefulset $name (generation $generation_before → $generation), one at a time"
+        log_command --polled kubectl -n confluent get statefulset "$name" -o 'jsonpath={.status.updateRevision}'
+        log_command --polled kubectl -n confluent get pods -l "$selector" -L controller-revision-hash
+        while true
+        do
+            # CFK can change the statefulset more than once during a roll: compare with its current generation
+            read -r replicas update_revision observed generation < <(kubectl -n confluent get statefulset "$name" -o jsonpath='{.spec.replicas} {.status.updateRevision} {.status.observedGeneration} {.metadata.generation}')
+            pods_ready=$(kubectl -n confluent get pods -l "$selector" -o json | jq -r --arg rev "$update_revision" '
+                .items[]
+                | select(.metadata.labels["controller-revision-hash"] == $rev)
+                | select(.metadata.deletionTimestamp == null)
+                | select([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length > 0)
+                | .metadata.name' | sort)
+            for pod in $pods_ready
+            do
+                if [[ " $rolled " != *" $pod "* ]]
+                then
+                    rolled="$rolled $pod"
+                    log "   🔁 $pod restarted on the new revision and Ready ($(date +%H:%M:%S))"
+                fi
+            done
+            if [[ "$observed" == "$generation" ]] && [[ $(echo "$pods_ready" | sed '/^$/d' | wc -l | tr -d ' ') -ge "$replicas" ]]
+            then
+                break
+            fi
+            if [[ $(date +%s) -gt $deadline ]]
+            then
+                logerror "❌ $cr: the pods did not all restart on the new revision in ${timeout}s"
+                kubectl -n confluent get pods -l "$selector" -o wide
+                kubectl -n confluent get pods -l "$selector" -o json | jq -r '.items[] | .metadata.name as $p | .status.containerStatuses[]? | select(.state.waiting != null) | "   ❌ \($p) \(.name): \(.state.waiting.reason) \(.state.waiting.message // "" | .[0:200])"'
+                cfk_print_events "$name" "$since"
+                return 1
+            fi
+            sleep 5
+        done
+    fi
+    local phase=""
+    log_command --polled kubectl -n confluent get "$kind" "$name" -o 'jsonpath={.status.phase}'
+    while true
+    do
+        phase=$(kubectl -n confluent get "$kind" "$name" -o jsonpath='{.status.phase}' 2>/dev/null)
+        if [[ "$phase" == "RUNNING" ]]
+        then
+            break
+        fi
+        if [[ $(date +%s) -gt $deadline ]]
+        then
+            logerror "❌ $cr: phase $phase, not RUNNING after ${timeout}s"
+            cfk_print_events "$name" "$since"
+            return 1
+        fi
+        sleep 5
+    done
+    log "✅ $cr: RUNNING"
+}
+
+function cfk_patch_and_wait () {
+    # $1 kind/name, $2 patch, $3 patch type (merge, json, strategic), $4 timeout in seconds, $5 1 to not wait
+    local cr="$1" patch="$2" type="${3:-merge}" timeout="${4:-900}" no_wait="$5"
+    local name="${cr#*/}" generation_before since output
+    generation_before=$(cfk_statefulset_generation "$name")
+    since=$(date +%s)
+    log_command kubectl -n confluent patch "$cr" --type "$type" -p "$patch"
+    if ! output=$(kubectl -n confluent patch "$cr" --type "$type" -p "$patch" 2>&1)
+    then
+        logerror "❌ kubectl patch $cr failed: $output"
+        return 1
+    fi
+    log "☸️ $output"
+    if [[ "$output" == *"(no change)"* ]] || [[ "$no_wait" == "1" ]]
+    then
+        return 0
+    fi
+    local rc=0
+    cfk_wait_rollout "$cr" "$generation_before" "$timeout" "$since" || rc=1
+    cfk_print_events "$name" "$since"
+    return $rc
+}
+
+function cfk_print_versions () {
+    # image and phase of each custom resource, and the image each pod runs
+    local cr
+    for cr in $(cfk_cr_list)
+    do
+        printf "   %-28s %-10s %s\n" "$cr" "$(kubectl -n confluent get "$cr" -o jsonpath='{.status.phase}')" "$(kubectl -n confluent get "$cr" -o jsonpath='{.spec.image.application} (init {.spec.image.init})')"
+    done
+    kubectl -n confluent get pods -o json | jq -r '.items[] | select(.metadata.labels["platform.confluent.io/type"] != null) | "   pod \(.metadata.name): \(.spec.containers[0].image)"' | sort
 }

@@ -1,0 +1,164 @@
+name: cfk
+expose: always
+group: Run
+help: |-
+  ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)
+
+  The day-2 operations of a cluster deployed by CFK: change a custom
+  resource and watch the operator roll it, upgrade Confluent Platform,
+  upgrade the operator.
+
+    patch      change a custom resource, wait for CFK to roll it
+    roll       restart the pods of a custom resource, the supported way
+    upgrade    move every custom resource to another Confluent Platform version
+    operator   upgrade the CFK operator (helm chart, CRDs, init containers)
+
+  Each change waits for the operator: the statefulset changed or not, every
+  pod restarted on the new revision (printed as they roll), the custom
+  resource back to RUNNING, then the events of the custom resource and its
+  pods since the change.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk
+commands:
+
+- name: patch
+  group: Run
+  filters:
+  - cfk_environment
+  help: |-
+    🩹 Change a custom resource and wait for CFK to roll it
+
+    kubectl patch <kind>/<name> in the confluent namespace (a JSON merge
+    patch by default), then waits for the operator: the statefulset of the
+    custom resource changed or not, every pod restarted on the new revision
+    and Ready, the custom resource back to phase RUNNING. Prints the events
+    of the custom resource and its pods since the change.
+
+    A configOverrides list replaces the whole list with a merge patch: give
+    every property, or use --type json with an "add" operation.
+  args:
+  - name: resource
+    required: true
+    help: 🎯 kind/name of the custom resource, for example kafka/kafka, connect/connect, kraftcontroller/kraftcontroller
+  - name: patch
+    required: true
+    help: 🩹 The patch, JSON or YAML
+  flags:
+  - long: --type
+    arg: type
+    default: "merge"
+    allowed: ["merge", "json", "strategic"]
+    help: 🧩 Patch type (kubectl patch --type)
+  - long: --timeout
+    arg: seconds
+    default: "900"
+    validate: integer
+    help: ⏱️ How long to wait for the roll
+  - long: --no-wait
+    help: 🏃 Only patch, don't wait for the roll
+  examples:
+  - |-
+    playground cfk patch kafka/kafka '{"spec": {"configOverrides": {"server": ["log.retention.hours=72"]}}}'
+  - |-
+    playground cfk patch connect/connect '{"spec": {"replicas": 2}}'
+  - |-
+    playground cfk patch kafka/kafka '[{"op": "add", "path": "/spec/configOverrides/server/-", "value": "num.io.threads=16"}]' --type json
+
+- name: roll
+  group: Run
+  filters:
+  - cfk_environment
+  help: |-
+    🔁 Restart the pods of a custom resource, the way CFK supports
+
+    Kafka and KRaft: a new value of the annotation kafkacluster-manual-roll in
+    spec.podTemplate, the only supported way to restart them: CFK rolls one
+    pod at a time, with its health checks (no under-replicated partitions).
+    The other components: kubectl rollout restart of their statefulset.
+    Waits for the roll like playground cfk patch.
+
+    When to use: a change in a Secret (credentials, license), or a change of
+    the custom resource the pods did not get.
+  args:
+  - name: resource
+    required: true
+    help: 🎯 kind/name of the custom resource, for example kafka/kafka, connect/connect
+  flags:
+  - long: --timeout
+    arg: seconds
+    default: "900"
+    validate: integer
+    help: ⏱️ How long to wait for the roll
+  examples:
+  - playground cfk roll kafka/kafka
+  - playground cfk roll connect/connect
+
+- name: upgrade
+  group: Run
+  filters:
+  - cfk_environment
+  help: |-
+    ⬆️ Move every custom resource to another Confluent Platform version
+
+    Changes the tag of spec.image.application of each custom resource,
+    controllers first, then kafka, connect, schema registry, ksqlDB, REST
+    proxy and control center, and waits for CFK to roll each one before the
+    next (playground cfk patch). Then prints the image of each pod and, for
+    KRaft, the finalized metadata.version: the feature level stays at the old
+    version until it is upgraded (kafka-features upgrade).
+  flags:
+  - long: --to
+    arg: version
+    required: true
+    help: 🎯 Confluent Platform version, for example 8.4.1
+  - long: --timeout
+    arg: seconds
+    default: "1200"
+    validate: integer
+    help: ⏱️ How long to wait for the roll of each custom resource
+  examples:
+  - playground cfk upgrade --to 8.4.1
+
+- name: operator
+  group: Run
+  help: ☸️ The CFK operator
+  commands:
+  - name: upgrade
+    group: Run
+    filters:
+    - cfk_environment
+    help: |-
+      ⬆️ Upgrade the CFK operator, with the CFK upgrade procedure
+
+      The steps of docs.confluent.io/operator/current/co-upgrade-cfk.html:
+      reconciliation blocked on every custom resource
+      (platform.confluent.io/block-reconcile=true), the CRDs of the new chart
+      applied (helm never upgrades them; CFK 3.4.0 and later manage their own
+      CRDs), helm upgrade of confluent-operator, the init container image of
+      every custom resource staged, then reconciliation enabled again one
+      component at a time, controllers first: each component rolls once, with
+      the new operator and the new init container together.
+
+      --no-block-reconcile shows the classic mistake: the new operator
+      reconciles every component as soon as it starts (controllers, brokers,
+      connect... roll at the same time), then the new init container images
+      roll everything a second time.
+    flags:
+    - long: --to
+      arg: version
+      required: true
+      help: 🎯 CFK version, for example 3.4.0
+    - long: --no-block-reconcile
+      help: 💥 Don't block reconciliation during the upgrade (the classic mistake)
+    - long: --skip-crds
+      help: 📜 Don't apply the CRDs of the new chart (CFK before 3.4.0)
+    - long: --keep-init-images
+      help: 🧷 Don't change the init container image of the custom resources
+    - long: --timeout
+      arg: seconds
+      default: "1200"
+      validate: integer
+      help: ⏱️ How long to wait for the roll of each custom resource
+    examples:
+    - playground cfk operator upgrade --to 3.4.0
+    - playground cfk operator upgrade --to 3.3.1 --no-block-reconcile

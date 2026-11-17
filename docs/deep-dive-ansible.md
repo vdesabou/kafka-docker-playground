@@ -17,7 +17,7 @@ about 15 minutes to read, and about 12 minutes to run the lab.
 | change a variable and deploy again | `playground ansible inventory set <yq path> <value>`, then `playground ansible playbook --rolling [--limit connect] [--tags …] [--verbose]` |
 | upgrade Confluent Platform | `playground ansible upgrade --to <version>` (archive, collection, playbook rolling) |
 | add brokers, workers, controllers (dynamic quorum) | `playground ansible add-host <host>…`, then `playground ansible playbook --limit <hosts>` |
-| day-2 changes with a workload running through them (upgrade, SASL_SSL, scale out, KRaft quorum) | `playground run -f other/cp-ansible-day2/<example>.sh` |
+| day-2 changes with a workload running through them (upgrade, SASL_SSL, RBAC, scale out, KRaft quorum) | `playground run -f other/cp-ansible-day2/<example>.sh`, see [🔁 Day-2 operations](/day-2-operations.md) |
 | what cp-ansible rendered | `playground container get-properties -c broker`, `docker exec broker systemctl status confluent-server` |
 | the playbook output | `/tmp/playground-ansible-playbook.log` |
 
@@ -71,6 +71,23 @@ cp images: `CONNECT_PLUGIN_PATH` → `plugin.path` in `kafka_connect_custom_prop
 `kafka_connect_custom_java_args`, other variables → `kafka_connect_service_environment_overrides`, `*_LOG4J_*` ignored
 with a warning. The image, command and entrypoint of the hosts are removed, their volumes kept; the other services of
 the example (databases, http servers) start as they are.
+
+
+### Day-2 operations: `playground ansible`
+
+Changes on the running cluster, the way the cp-ansible procedures describe them, each one printing the low-level
+commands it runs (`🔧`):
+
+| Command | What it does |
+| --- | --- |
+| `playground ansible inventory set <yq path> <value>` | `yq` on `environment/ansible/inventory/hosts.yml`, then the diff (`get` and `delete` too) |
+| `playground ansible playbook [--rolling] [--limit h]` | `ansible-playbook … confluent.platform.all` in the ansible-controller container (`--rolling`: `deployment_strategy=rolling`, one host at a time; the default of cp-ansible restarts every host at once), the PLAY RECAP, the error of each failed host, then the hand-over to the playground commands |
+| `playground ansible upgrade --to <version>` | the archive, the collection of that version (`ansible-galaxy collection install`), the playbook `rolling` |
+| `playground ansible add-host <host>…` | the containers of the new hosts, added to their group of the inventory; then `playground ansible playbook --limit <hosts>` |
+
+With a workload running through each change (upgrade, SASL_SSL, RBAC, scale out, KRaft quorum), the classic mistakes
+and the measured results: [🔁 Day-2 operations](/day-2-operations.md) and the examples of
+[`other/cp-ansible-day2`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-day2).
 
 ---
 
