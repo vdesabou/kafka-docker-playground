@@ -4,6 +4,14 @@ For cases about **Kafka brokers** (KRaft, replication, transactions, broker fail
 **Control Center** and **metrics**. No connector needed: every command below works on a bare environment, local or
 on Confluent Cloud when it says so.
 
+> [!TIP]
+> **🐳 A log bundle, with nothing installed but Docker.** `playground analyze logs` is also a public image: run it on
+> the broker support bundle attached to the case, from the folder that holds it, with no clone, no CLI and no environment.
+> `--network none`: the logs never leave the machine.
+> `docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f <bundle>.zip --sanitize`
+> (to try it first: `cd /tmp && docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs --sample support_bundle`).
+> More: [🐳 With nothing installed but Docker](/deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker).
+
 ## 🚀 5 commands to try
 
 ```bash

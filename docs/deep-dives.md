@@ -193,10 +193,10 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-flink.md)
 - 🧠 Commands: `run --enable-flink`, `flink sql`, `flink list-jobs`, `flink cancel`, the same with `--environment ccloud` for Confluent Cloud statements
 
-### 🧮 ksqlDB: run statements, list, describe and wait for queries
+### 🧮 ksqlDB: pull and push queries, wait for queries, the processing log
 
-- 📖 [Read how to enable it](/how-to-use?id=🚀-enabling-ksqldb), the `ksqldb/` examples use these commands
-- 🧠 Commands: `run --enable-ksqldb`, `ksqldb sql`, `ksqldb list`, `ksqldb describe`, `ksqldb wait`
+- 📖 [Read the deep dive](/deep-dive-ksqldb.md)
+- 🧠 Commands: `run --enable-ksqldb`, `ksqldb sql`, `ksqldb wait`, `ksqldb list`, `ksqldb describe`, `ksqldb metrics`
 
 ### 🛠 Reproduction models: bootstrap, check, export, import
 

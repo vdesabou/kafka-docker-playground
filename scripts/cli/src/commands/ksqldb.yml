@@ -18,6 +18,8 @@ help: |-
 
   🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.
   The records that fail a query are in the KSQL_PROCESSING_LOG stream.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb
 commands:
 
   - name: sql
@@ -41,6 +43,8 @@ commands:
       LIMIT <n>, or --query-timeout. Otherwise the cli is stopped after
       --max-wait seconds. To wait for a CREATE ... AS SELECT to process its
       input before querying it, use 'playground ksqldb wait' instead of a sleep.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb
     flags:
     - long: --file
       short: -f
@@ -177,6 +181,10 @@ commands:
       topics, so that its result is complete: use it instead of a sleep
       after a CREATE ... AS SELECT and the records it reads.
 
+      A source table (CREATE SOURCE TABLE) is waited for too: its CST_ query
+      materializes it for pull queries and has no sink, its lag is read from
+      its consumer group (_confluent-ksql-<service id>query_<query id>).
+
       A query that has not committed any offset yet is done when its input
       topics are empty, or when it is still without commit after 20 seconds
       RUNNING: it has nothing to process from where it started (a CREATE
@@ -184,6 +192,8 @@ commands:
       of its topics), and a warning says so.
 
       Exits with code 1 when a query is in ERROR, or after --max-wait seconds.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb
     flags:
     - long: --source
       short: -s
@@ -196,7 +206,7 @@ commands:
       help: |-
         🧮 Only wait for the queries writing to this stream or table (repeatable)
 
-        ℹ️ If not set, all persistent queries
+        ℹ️ If not set, all persistent queries (and the source tables)
     - long: --max-wait
       short: -w
       required: false

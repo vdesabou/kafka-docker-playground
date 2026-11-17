@@ -17,10 +17,12 @@ help: |-
     push-secrets        send your credentials to it, over ssh
     sync-repro-folder   keep reproduction-models in step, both directions
     list / status / start / stop / delete
+    auto-stop           stop the instances left running, every evening
 
   💰 The instance is billed while it runs. Use 'playground ec2 stop' when
      you pause, and 'playground ec2 delete' when you are done;
-     'playground status' reminds you when one is still up.
+     'playground status' reminds you when one is still up, and
+     'playground ec2 auto-stop enable' stops them every evening if idle.
 
   🔐 A pem file is created at the root of the repository when the instance
      is created. Back it up, it is the only way in, and only your current
@@ -198,6 +200,87 @@ commands:
     compute and find your work again on 'playground ec2 start'.
   flags:
     - *instance
+
+- name: auto-stop
+  help: |-
+    ⏰ Stop your EC2 instances left running, every evening, automatically
+
+      enable     schedule it (default 20:00), then show what it would stop
+      disable    remove the schedule
+      status     is it scheduled, when, and what the last runs did
+      run        what the job does, now (--dry-run to only show it)
+
+    Every day at --time, your playground instances (pg-<user>-*) still
+    running are stopped, like 'playground ec2 stop': the disk is kept,
+    'playground ec2 start' gets your work back. A macOS notification tells
+    which ones.
+
+    An instance is kept when:
+      🔥 it was busy: its CPU (CloudWatch CPUUtilization, 5 minute averages)
+         reached 5% in the last --idle-minutes (default 60), so a long run
+         or benchmark started detached goes on. --idle-minutes 0 stops it
+         whatever it is doing
+      🕐 it was started less than --idle-minutes ago
+      🏷️ it has the tag playground-keep-running=true (aws ec2 create-tags
+         --resources <instance id> --tags Key=playground-keep-running,Value=true)
+
+    macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the
+    Mac wakes up if it was asleep at that time. Linux: a crontab line. The
+    aws CLI must work without a prompt: ~/.aws/credentials (no SSO login to
+    renew) and a region (AWS_REGION or ~/.aws/config).
+  commands:
+  - name: enable
+    help: |-
+      ⏰ Schedule the auto-stop, then show what tonight's run would stop
+
+      Run it again to change the time or the idle time. The job uses this
+      checkout of the playground and the PATH of the shell you run it from.
+    flags:
+    - long: --time
+      arg: time
+      default: "20:00"
+      help: |-
+        🕗 Time of the run, HH:MM, local time
+    - &idle_minutes
+      long: --idle-minutes
+      arg: minutes
+      default: "60"
+      validate: integer
+      help: |-
+        💤 Keep an instance whose CPU reached 5% in the last <minutes>, or started less than <minutes> ago (0: stop it whatever it is doing)
+    examples:
+    - playground ec2 auto-stop enable
+    - playground ec2 auto-stop enable --time 19:00 --idle-minutes 120
+  - name: disable
+    help: |-
+      🛑 Remove the auto-stop schedule
+  - name: status
+    help: |-
+      🔎 Is the auto-stop scheduled, at what time, and what did its last runs do
+    flags:
+    - long: --lines
+      arg: lines
+      default: "40"
+      validate: integer
+      help: |-
+        📄 Number of lines of the log to show
+  - name: run
+    help: |-
+      ⏰ Stop now your idle EC2 instances still running, as the scheduled job does
+
+      Use --dry-run to see what tonight's run would stop.
+    flags:
+    - *idle_minutes
+    - long: --dry-run
+      help: |-
+        🔎 Only show which instances would be stopped, and why the others are kept
+    - long: --scheduled
+      private: true
+      help: |-
+        ⏰ run by the launchd agent / crontab line: macOS notification of what was stopped
+    examples:
+    - playground ec2 auto-stop run --dry-run
+    - playground ec2 auto-stop run --idle-minutes 0
 
 - name: start
   help: |-

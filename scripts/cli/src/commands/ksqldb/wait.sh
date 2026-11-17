@@ -11,16 +11,32 @@ then
         logerror "❌ could not list the queries: $(echo "$queries" | jq -r '.message // .' 2>/dev/null)"
         exit 1
     fi
+    # the sinks of the persistent queries, plus the source tables (CREATE SOURCE TABLE): their CST_ query
+    # materializes the table for pull queries and has no sink
     while IFS= read -r s
     do
         [[ -n "$s" ]] && sources+=("$s")
-    done < <(echo "$queries" | jq -r '[.[0].queries[] | select(.queryType == "PERSISTENT") | .sinks[]] | unique[]')
+    done < <(echo "$queries" | jq -r '[.[0].queries[] | select(.queryType == "PERSISTENT")
+        | (.sinks[]?, (select(.id | startswith("CST_")) | .queryString // "" | capture("(?i)^\\s*CREATE\\s+SOURCE\\s+TABLE\\s+(IF\\s+NOT\\s+EXISTS\\s+)?(?<name>[^\\s(]+)").name // empty))] | unique[]')
     if [ ${#sources[@]} -eq 0 ]
     then
         log "🔎 No persistent query, nothing to wait for"
         exit 0
     fi
 fi
+
+# the consumer group of a persistent query is _confluent-ksql-<ksql.service.id>query_<query id>
+ksql_service_id=$(curl $ksqldb_security -s "${ksqldb_url}/info" | jq -r '.KsqlServerInfo.ksqlServiceId // empty' 2>/dev/null)
+ksql_service_id=${ksql_service_id:-default_}
+
+# lag of the consumer group of the query $1 (sum over its partitions), empty when it has not committed any offset:
+# for the CST_ query of a source table, DESCRIBE EXTENDED has no offsets
+function query_consumer_group_lag () {
+    local output
+    output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "_confluent-ksql-${ksql_service_id}query_$1" 2>&1 || true)
+    # LAG is the 6th column, "-" without committed offset for the partition
+    echo "$output" | awk '$1 != "GROUP" && $6 ~ /^[0-9]+$/ {sum += $6; found = 1} END {if (found) print sum}'
+}
 
 # true when every input topic of the query $1 is empty (its sources from EXPLAIN, their topic from DESCRIBE): such a
 # query never commits offsets, and has nothing to process
@@ -61,6 +77,8 @@ do
             exit 1
         fi
         description=$(echo "$response" | jq '.[0].sourceDescription')
+        # the queries writing to $s, or the CST_ query that materializes a source table (in its readQueries)
+        description=$(echo "$description" | jq '.writeQueries = ((.writeQueries // []) + [(.readQueries // [])[] | select(.id | startswith("CST_"))])')
         if [[ "$(echo "$description" | jq '.writeQueries | length')" -eq 0 ]]
         then
             if [[ -n "$first_pass" ]]
@@ -81,6 +99,10 @@ do
         while IFS=$'\t' read -r query_id query_state query_lag
         do
             [[ -z "$query_id" ]] && continue
+            if [[ -z "$query_lag" ]] && [[ "$query_id" == CST_* ]] && [[ "$query_state" == "RUNNING" ]]
+            then
+                query_lag=$(query_consumer_group_lag "$query_id")
+            fi
             if [[ "$query_state" != "RUNNING" ]]
             then
                 pending="${pending}${query_id}: ${query_state}"$'\n'
