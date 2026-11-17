@@ -86,11 +86,49 @@ KNOWN_CAUSES = [
                "the worker, or an IAM / bucket policy that denies the action (403 AccessDenied): check the credentials "
                "of the connector (aws.access.key.id / aws.secret.access.key, or its credentials provider) and the IAM "
                "policy"},
+    # the ticket expiry of a Kafka GSSAPI client (KerberosLogin), lines reproduced by other/kerberos-ticket-expiry. The
+    # refresh thread fails, but the open connections keep working (connections.max.reauth.ms 0): the break shows at the
+    # next reconnect (broker restart, roll, rebalance), as "terminated during authentication". Before kerberos_no_ticket
+    {"name": "kerberos_ticket_cache_expired", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"Could not renew TGT due to problem running shell command|Ticket expired while renewing credentials"
+                # a last ticket (capped by renew-until) that expires in less than the minimum refresh interval: the
+                # thread exits with an ERROR that blames the clock
+                r"|NextRefresh: .{0,60} is in the past: exiting refresh thread",
+     "title": "🎫 Kerberos ticket cache past its renewable lifetime",
+     "advice": "the client logs in from a ticket cache (useTicketCache=true in sasl.jaas.config, after a kinit) and "
+               "Kafka renews it with kinit -R, which fails once the renew-until time of the ticket has passed: the "
+               "refresh thread exits, the open connections keep working until they reconnect (or until "
+               "connections.max.reauth.ms on the broker), then every new connection fails. Use a keytab instead "
+               "(useKeyTab=true keyTab=… principal=…: Kafka logs in again by itself), or renew the cache outside the "
+               "client before renew-until; check the dates with klist (renew until). \"NextRefresh … is in the past: "
+               "exiting refresh thread. Check clock sync\" is often the same end of the renewable lifetime (a last "
+               "ticket of less than 60 s, sasl.kerberos.min.time.before.relogin), not a clock skew: compare the TGT "
+               "expires lines of KerberosLogin with the renew until time first"},
+    {"name": "kerberos_keytab_outdated", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"LoginException: (?:Checksum failed|Pre-authentication information was invalid)"
+                r"|Specified version of key is not available",
+     "title": "🎫 Kerberos keytab out of date (key changed on the KDC)",
+     "advice": "the keytab of the client no longer matches the key of its principal on the KDC (a ktadd without "
+               "-norandkey, a password change in Active Directory): the process keeps working with the ticket it "
+               "already has and fails at its next login (Kafka logs in again at about 80 % of the ticket lifetime). "
+               "Deploy the new keytab and compare the key version: klist -kte <keytab> on the worker, "
+               "kvno <principal> or getprinc <principal> on the KDC"},
+    {"name": "kerberos_relogin_failed", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"Error when trying to re-Login|No TGT found: will try again"
+                r"|Principal could not be determined from Subject",
+     "title": "🎫 Kerberos re-login failing",
+     "advice": "the Kerberos refresh thread of the Kafka client (KerberosLogin) cannot log in again: the exception "
+               "logged with it says why (Checksum failed: keytab out of date, Cannot contact any KDC: network or "
+               "krb5.conf, Clock skew too great: time of the host). The client keeps its open connections, but after a "
+               "failed re-login it has no principal any more: every new connection fails with \"Principal could not "
+               "be determined from Subject\" (a broker restart or roll is enough to stop it). Fix the login, then "
+               "restart the client"},
     # a Kerberos client without a valid ticket (a connector writing to HDFS / Hive, a SASL GSSAPI client): its keytab,
     # principal, ticket renewal or krb5.conf, not a wrong password of another system. Before authentication_failed
     {"name": "kerberos_no_ticket", "severity": "high", "category": "Authentication Issues",
      "pattern": r"Failed to find any Kerberos tgt|GSS initiate failed|No valid credentials provided \(Mechanism level"
-                r"|Clock skew too great|Unable to obtain password from user",
+                r"|Clock skew too great|Unable to obtain password from user"
+                r"|client is being asked for a password, but the Kafka client code does not currently support",
      "title": "🎫 Kerberos ticket not found or not valid",
      "advice": "the client has no valid Kerberos ticket (TGT): the keytab or the principal of the client is wrong or "
                "unreadable (connect.hdfs.keytab / connect.hdfs.principal of an HDFS / Hive connector, sasl.jaas.config "
@@ -348,6 +386,17 @@ KNOWN_CAUSES = [
      "advice": "the client does not speak the protocol of the listener: PLAINTEXT on an SSL or SASL listener, or another "
                "SASL mechanism: check security.protocol, sasl.mechanism(s) and the port against the listeners of the "
                "brokers (playground debug tcp-dump shows the handshake)"},
+    # the Java client closed the connection before its SASL / TLS authentication completed. Its own text blames a
+    # firewall or TLS, but a GSSAPI client whose Kerberos ticket expired (other/kerberos-ticket-expiry) logs only this,
+    # on a SASL_PLAINTEXT listener too, and the broker logs nothing
+    {"name": "terminated_during_authentication", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"Connection to node -?\d+ .{0,200} terminated during authentication",
+     "title": "🪓 Connection terminated during authentication",
+     "advice": "the client gave up before the authentication with the broker completed. Despite the TLS hint of the "
+               "message, check the client side first: a SASL GSSAPI client with no valid Kerberos ticket (look for the "
+               "🎫 Kerberos causes and for KerberosLogin lines: a ticket cache past its renew-until, a keytab out of "
+               "date) fails like this, and the broker logs nothing; then security.protocol against the listener, "
+               "the truststore, and a firewall or proxy that cuts the connection (playground debug tcp-dump)"},
     # a producer record not acknowledged in time: librdkafka "Local: Message timed out" (message.timeout.ms), Java
     # "Expiring 3 record(s) for orders-0: 120001 ms has passed since batch creation" (delivery.timeout.ms). Before timeout
     {"name": "client_message_timed_out", "severity": "high", "category": "Kafka Issues",
@@ -595,10 +644,10 @@ HINT_ORDER = [
     "💥 OutOfMemoryError", "🪞 Secret registry: duplicate URLs, Connect does not start", "🚫 Connect worker failed to start",
     KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🧬 Not enough replicas",
-    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎟️ OAuth token cannot be obtained or validated", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
+    "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎟️ OAuth token cannot be obtained or validated", "🎫 Kerberos ticket cache past its renewable lifetime", "🎫 Kerberos keytab out of date (key changed on the KDC)", "🎫 Kerberos re-login failing", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
     "🗝️ Empty or unreadable truststore", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
-    "🪄 Transformation (SMT) failed", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🌐 Host name not resolved (DNS)",
+    "🪄 Transformation (SMT) failed", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🪓 Connection terminated during authentication", "🌐 Host name not resolved (DNS)",
     "🔌 Connection failure", "🗄️ JDBC sink: table or column missing (auto.create / auto.evolve off)",
     "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost", "📥 Producer buffer full",
     "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system", "🌩️ HTTP 5xx from the external system",
