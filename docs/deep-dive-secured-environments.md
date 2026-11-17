@@ -88,6 +88,12 @@ Gotchas:
 - **Kerberos needs FQDNs**: the broker is `broker.kerberos-demo.local:9092`, the console clients run in the `client`
   container after `kinit -k -t /var/lib/secret/kafka-connect.key connect` (the CLI does it). A short name fails the
   GSSAPI handshake.
+- **An expired Kerberos ticket breaks nothing that is open**: the broker authenticates a connection when it opens
+  (and every `connections.max.reauth.ms`, 0 by default), so a client whose ticket could not be renewed keeps working
+  until it reconnects (a broker restart, a roll, a rebalance). Then it logs only `terminated during authentication`
+  (with a TLS hint even on `SASL_PLAINTEXT`) or, after a failed keytab re-login, `Principal could not be determined
+  from Subject`, and the broker logs nothing. The four cases, with 3 minute tickets:
+  [other/kerberos-ticket-expiry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kerberos-ticket-expiry).
 - **SSL certificates are regenerated on every start**: `start.sh` of the SSL types runs `playground tools cert create`
   in `environment/<type>/security`. The CA and the certificates are valid 9999 days; a `security/` folder copied
   before that fix has a CA valid one year only, which then invalidates every certificate it signed: regenerate it with
@@ -300,6 +306,7 @@ playground stop
 | "we use OAuth / OIDC (Okta, Azure AD / Entra ID, Keycloak…)", `invalid_token`, `Allowed URL list: []` | `sasl-oauthbearer`: Keycloak issues the tokens, the brokers validate them with the JWKS endpoint. Key rotation, token lifespan, issuer / audience mismatch recipes: [environment/sasl-oauthbearer/README.md](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-oauthbearer) |
 | "RBAC with OAuth / OIDC, no LDAP" (MDS with Okta, Entra ID, Keycloak…), a `Group:` role binding that does not apply, REST API `401` with a token | `rbac-oauth`: Keycloak clients are the users, their groups come from the `groups` claim, MDS and the REST APIs take bearer tokens. `playground rbac user add --user <client> --group <group>` adds a Keycloak client: [environment/rbac-oauth/README.md](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-oauth) |
 | "Kerberos ticket / principal errors" | `--environment kerberos` (or `ssl_kerberos`), principals and keytabs in `environment/kerberos/` |
+| "Kerberos: it works for hours, then fails at the next restart / reconnect" | [other/kerberos-ticket-expiry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kerberos-ticket-expiry): tickets of 3 minutes (`kadmin.local -q 'modprinc -maxlife "3 minutes" <principal>'`), keytab vs ticket cache, keytab out of date, `connections.max.reauth.ms` |
 | "users in LDAP, ACLs per group" | `ldap-authorizer-sasl-plain` |
 | "`kafka-acls --list` shows nothing but the user is authorized" / centralized ACLs, DENY vs role binding, LDAP group ACLs with RBAC | [other/rbac-centralized-acls](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-centralized-acls): `playground rbac acl create\|list\|delete` (MDS) next to `--kafka-acls` |
 | "Schema Registry over HTTPS with client certificates" | `sasl-ssl` / `2way-ssl`: the converter keys get the keystore / truststore, `playground schema …` uses the client certificate |

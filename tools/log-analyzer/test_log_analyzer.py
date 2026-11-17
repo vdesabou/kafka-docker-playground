@@ -1822,6 +1822,55 @@ def test_known_causes_from_past_cases():
           log_report.file_component("logs/server_20261101_bk01.log"))
 
 
+def test_kerberos_ticket_expiry_causes():
+    """the lines of a Kafka GSSAPI client whose Kerberos ticket expires, as other/kerberos-ticket-expiry reproduces them
+    (synthetic principals and hosts): a ticket cache past its renew-until, a keytab out of date after a key change on
+    the KDC, a failing re-login, a client started without a ticket, and the reconnect that ends in "terminated during
+    authentication", which is not a TLS problem on a GSSAPI client"""
+    def causes_of(body, level="WARN"):
+        text = ("@@PGFILE@@|connect.log|100|1|0|2026-10-24T17:00:00|2026-10-24T18:00:00\n"
+                f"@@PGREC@@|{level}|3|10|20|2026-10-24T17:00:01|2026-10-24T17:00:09\n{body}\n@@PGTS@@|2026-10-24T17:00:01 2026-10-24T17:00:09\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    got = causes_of("[2026-10-24 17:00:01,000] WARN [Principal=null]: Could not renew TGT due to problem running shell command: '/usr/bin/kinit -R'. "
+                    "Exiting refresh thread. (org.apache.kafka.common.security.kerberos.KerberosLogin)\n"
+                    "    org.apache.kafka.common.utils.internals.Shell$ExitCodeException: kinit: Ticket expired while renewing credentials")
+    check("ticket cache past renew-until: 🎫 cache first", got and got[0] == "🎫 Kerberos ticket cache past its renewable lifetime", got)
+    got = causes_of("[2026-10-24 17:00:01,000] ERROR [Principal=null]: NextRefresh: 2026-10-24T17:00:01.208+0000 is in the past: exiting refresh thread. "
+                    "Check clock sync between this host and KDC - (KDC's clock is likely ahead of this host). Manual intervention will be required for "
+                    "this client to successfully authenticate. Exiting refresh thread. (org.apache.kafka.common.security.kerberos.KerberosLogin)", "ERROR")
+    check("last ticket under 60 s: 🎫 cache, not a clock skew", got and got[0] == "🎫 Kerberos ticket cache past its renewable lifetime", got)
+    got = causes_of("[2026-10-24 17:00:01,000] WARN [Principal=app@EXAMPLE.COM]: Error when trying to re-Login, but will retry  "
+                    "(org.apache.kafka.common.security.kerberos.KerberosLogin)\n"
+                    "    javax.security.auth.login.LoginException: Checksum failed")
+    check("re-login with an old keytab: 🎫 keytab first, then 🎫 re-login",
+          got[:2] == ["🎫 Kerberos keytab out of date (key changed on the KDC)", "🎫 Kerberos re-login failing"], got)
+    got = causes_of("[2026-10-24 17:00:01,000] WARN [Principal=app@EXAMPLE.COM]: No TGT found: will try again at 2026-10-24T17:01:01.000+0000 "
+                    "(org.apache.kafka.common.security.kerberos.KerberosLogin)")
+    check("No TGT found: 🎫 re-login", got == ["🎫 Kerberos re-login failing"], got)
+    got = causes_of("[2026-10-24 17:00:01,000] WARN [Producer clientId=app-producer] Error connecting to node broker.example.com:9092 (id: 1 rack: null "
+                    "isFenced: false) (org.apache.kafka.clients.NetworkClient)\n"
+                    "    java.io.IOException: Channel could not be created for socket java.nio.channels.SocketChannel[closed]\n"
+                    "    Caused by: org.apache.kafka.common.errors.SaslAuthenticationException: Failed to configure SaslClientAuthenticator\n"
+                    "    Caused by: org.apache.kafka.common.KafkaException: Principal could not be determined from Subject, this may be a transient "
+                    "failure due to Kerberos re-login")
+    check("no principal after a failed re-login: 🎫 re-login", "🎫 Kerberos re-login failing" in got, got)
+    got = causes_of("[2026-10-24 17:00:01,000] ERROR [worker] Failed to create producer (org.apache.kafka.connect.runtime.Worker)\n"
+                    "    org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Could not login: the client is being asked "
+                    "for a password, but the Kafka client code does not currently support obtaining a password from the user. not available to "
+                    "garner  authentication information from the user", "ERROR")
+    check("started without a ticket: 🎫 not found", "🎫 Kerberos ticket not found or not valid" in got, got)
+    got = causes_of("[2026-10-24 17:00:01,000] WARN [Producer clientId=app-producer] Connection to node -1 (broker.example.com/10.0.0.1:9092) terminated "
+                    "during authentication. This may happen due to any of the following reasons: (1) Firewall blocking Kafka TLS traffic (eg it may "
+                    "only allow HTTPS traffic), (2) Transient network issue. (org.apache.kafka.clients.NetworkClient)")
+    check("terminated during authentication: 🪓, not 🔐 TLS", got == ["🪓 Connection terminated during authentication"], got)
+    # a CRC error of a record batch is not a Kerberos keytab
+    got = causes_of("[2026-10-24 17:00:01,000] ERROR [sink|task-0] failed (org.apache.kafka.connect.runtime.WorkerSinkTask)\n"
+                    "    org.apache.kafka.common.errors.CorruptRecordException: Record batch checksum failed", "ERROR")
+    check("record checksum: not 🎫", not any(t.startswith("🎫") for t in got), got)
+
+
 def test_verdict_prefers_causes_with_errors():
     """a HIGH cause seen once in a WARN of another connector is not the 👉 start with ahead of thousands of ERROR records
     of a MEDIUM cause; within a severity, the causes with ERROR records come first; only WARN records: catalogue order"""
