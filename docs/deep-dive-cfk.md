@@ -25,6 +25,11 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | the operator code that logs an error, at the version of a bundle (Confluent only) | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |
 | what is wrong in a support bundle (yours or the customer's) | `playground analyze logs -f <dir\|.tar.gz\|.zip>` |
 | is this example red on CFK in CI? | `playground get-ci-result --test <dir> --environment cfk --logs` |
+| change a custom resource and watch the operator roll it | `playground cfk patch <kind>/<name> '<patch>'` (waits for the roll, prints the pods as they restart and the events) |
+| restart Kafka or KRaft the supported way (annotation `kafkacluster-manual-roll`), or another component | `playground cfk roll <kind>/<name>` |
+| upgrade Confluent Platform, one custom resource at a time | `playground cfk upgrade --to <cp version>` |
+| upgrade the CFK operator with the documented procedure | `playground cfk operator upgrade --to <cfk version>` (`--no-block-reconcile` for the classic mistake) |
+| day-2 changes with a workload running through them (CP upgrade, operator upgrade) | `playground run -f other/cfk-day2/<example>.sh --environment cfk` |
 
 ---
 
@@ -557,7 +562,12 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | "which operator code logs this error? is it fixed after version X?" | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>" [--compare-with <version>]` (private repository, Confluent only) |
 | "what would a support bundle of my repro look like?" | `playground debug cfk generate-bundle`, then `analyze logs` on it |
 | "RBAC on CFK: `ConfluentRolebinding`, MDS, LDAP" | `--environment cfk-rbac`, `playground rbac role-binding list --principal User:connectorSA`, `kubectl -n confluent get confluentrolebinding` |
-| "another CFK version" | `CFK_VERSION=3.2.3 playground run -f <example> --environment cfk` (2.9.5 to 3.3.0) |
+| "another CFK version" | `CFK_VERSION=3.2.3 playground run -f <example> --environment cfk` (2.9.5 to 3.4.0, and later versions found in the helm repository) |
+| "we upgraded CP with CFK, what do the clients see?" | `playground cfk upgrade --to <version>` on a running environment; with a workload running through it: `other/cfk-day2/cfk-rolling-upgrade.sh` |
+| "we upgraded the CFK operator and every component restarted at once / twice" | `playground cfk operator upgrade --to <version> --no-block-reconcile` (what they did) against `playground cfk operator upgrade --to <version>` (block reconcile, CRDs, init containers staged, enable reconcile one component at a time); with a workload: `other/cfk-day2/cfk-operator-upgrade.sh` |
+| "we ran helm upgrade to the new CFK chart, the operator still runs the old version" | `helm upgrade --reuse-values` keeps the computed values of the old release, `image.tag` included: `helm -n confluent get values confluent-operator --all \| grep tag`; `playground cfk operator upgrade` uses `--reset-then-reuse-values` and checks the operator image |
+| "we changed configOverrides, the ConfigMap has it, the brokers still run the old value" | compare the file of the pod (`playground container exec -c kafka-0 --command "grep <key> /opt/confluentinc/etc/kafka/kafka.properties"`) with the running broker (`kafka-configs --describe --all --entity-type brokers --entity-name 0`); `other/cfk-day2/cfk-rolling-upgrade.sh` applies a change right after a roll and checks it (seen in 2 runs out of 3: CFK wrote the ConfigMap, did not roll the brokers); `playground cfk roll kafka/kafka` restarts the brokers the supported way |
+| "a configOverrides change removed our other overrides" | a JSON merge patch replaces the whole list: `playground cfk patch kafka/kafka '<merge patch>'` shows it, `--type json` with an `add` operation keeps the list |
 | "is this example also red on CFK in CI?" | `playground get-ci-result --test <dir> --environment cfk --logs`; `playground start-ci --cfk --test-list "<dir>"` to run it there |
 
 In a repro model, keep `PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"cfk"}` at the top: `playground run` without

@@ -9094,6 +9094,137 @@ subcommands:
       argument: ''
       description: "⏸️ Only change the inventory and the collection, run the playbook
         yourself"
+- name: cfk
+  description: "☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n\nThe
+    day-2 operations of a cluster deployed by CFK: change a custom\nresource and watch
+    the operator roll it, upgrade Confluent Platform,\nupgrade the operator.\n\n  patch
+    \     change a custom resource, wait for CFK to roll it\n  roll       restart
+    the pods of a custom resource, the supported way\n  upgrade    move every custom
+    resource to another Confluent Platform version\n  operator   upgrade the CFK operator
+    (helm chart, CRDs, init containers)\n\nEach change waits for the operator: the
+    statefulset changed or not, every\npod restarted on the new revision (printed
+    as they roll), the custom\nresource back to RUNNING, then the events of the custom
+    resource and its\npods since the change.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk"
+  usage: playground cfk COMMAND
+  options: []
+  subcommands:
+  - name: patch
+    description: "\U0001FA79 Change a custom resource and wait for CFK to roll it\n\nkubectl
+      patch <kind>/<name> in the confluent namespace (a JSON merge\npatch by default),
+      then waits for the operator: the statefulset of the\ncustom resource changed
+      or not, every pod restarted on the new revision\nand Ready, the custom resource
+      back to phase RUNNING. Prints the events\nof the custom resource and its pods
+      since the change.\n\nA configOverrides list replaces the whole list with a merge
+      patch: give\nevery property, or use --type json with an \"add\" operation."
+    usage: playground cfk patch RESOURCE PATCH [OPTIONS]
+    options:
+    - names:
+      - "--type"
+      argument: TYPE
+      description: "\U0001F9E9 Patch type (kubectl patch --type)\n\nDefault value:
+        merge\nAllowed values: merge, json, strategic"
+    - names:
+      - "--timeout"
+      argument: SECONDS
+      description: |-
+        ⏱️ How long to wait for the roll
+
+        Default value: 900
+    - names:
+      - "--no-wait"
+      argument: ''
+      description: "\U0001F3C3 Only patch, don't wait for the roll"
+  - name: roll
+    description: "\U0001F501 Restart the pods of a custom resource, the way CFK supports\n\nKafka
+      and KRaft: a new value of the annotation kafkacluster-manual-roll in\nspec.podTemplate,
+      the only supported way to restart them: CFK rolls one\npod at a time, with its
+      health checks (no under-replicated partitions).\nThe other components: kubectl
+      rollout restart of their statefulset.\nWaits for the roll like playground cfk
+      patch.\n\nWhen to use: a change in a Secret (credentials, license), or a change
+      of\nthe custom resource the pods did not get."
+    usage: playground cfk roll RESOURCE [OPTIONS]
+    options:
+    - names:
+      - "--timeout"
+      argument: SECONDS
+      description: |-
+        ⏱️ How long to wait for the roll
+
+        Default value: 900
+  - name: upgrade
+    description: |-
+      ⬆️ Move every custom resource to another Confluent Platform version
+
+      Changes the tag of spec.image.application of each custom resource,
+      controllers first, then kafka, connect, schema registry, ksqlDB, REST
+      proxy and control center, and waits for CFK to roll each one before the
+      next (playground cfk patch). Then prints the image of each pod and, for
+      KRaft, the finalized metadata.version: the feature level stays at the old
+      version until it is upgraded (kafka-features upgrade).
+    usage: playground cfk upgrade [OPTIONS]
+    options:
+    - names:
+      - "--to"
+      argument: VERSION
+      description: "\U0001F3AF Confluent Platform version, for example 8.4.1\n\nRequired:
+        ✓ Yes"
+    - names:
+      - "--timeout"
+      argument: SECONDS
+      description: |-
+        ⏱️ How long to wait for the roll of each custom resource
+
+        Default value: 1200
+  - name: operator
+    description: "☸️ The CFK operator"
+    usage: playground cfk operator COMMAND
+    options: []
+    subcommands:
+    - name: upgrade
+      description: |-
+        ⬆️ Upgrade the CFK operator, with the CFK upgrade procedure
+
+        The steps of docs.confluent.io/operator/current/co-upgrade-cfk.html:
+        reconciliation blocked on every custom resource
+        (platform.confluent.io/block-reconcile=true), the CRDs of the new chart
+        applied (helm never upgrades them; CFK 3.4.0 and later manage their own
+        CRDs), helm upgrade of confluent-operator, the init container image of
+        every custom resource staged, then reconciliation enabled again one
+        component at a time, controllers first: each component rolls once, with
+        the new operator and the new init container together.
+
+        --no-block-reconcile shows the classic mistake: the new operator
+        reconciles every component as soon as it starts (controllers, brokers,
+        connect... roll at the same time), then the new init container images
+        roll everything a second time.
+      usage: playground cfk operator upgrade [OPTIONS]
+      options:
+      - names:
+        - "--to"
+        argument: VERSION
+        description: "\U0001F3AF CFK version, for example 3.4.0\n\nRequired: ✓ Yes"
+      - names:
+        - "--no-block-reconcile"
+        argument: ''
+        description: "\U0001F4A5 Don't block reconciliation during the upgrade (the
+          classic mistake)"
+      - names:
+        - "--skip-crds"
+        argument: ''
+        description: "\U0001F4DC Don't apply the CRDs of the new chart (CFK before
+          3.4.0)"
+      - names:
+        - "--keep-init-images"
+        argument: ''
+        description: "\U0001F9F7 Don't change the init container image of the custom
+          resources"
+      - names:
+        - "--timeout"
+        argument: SECONDS
+        description: |-
+          ⏱️ How long to wait for the roll of each custom resource
+
+          Default value: 1200
 - name: consumer-group
   description: "\U0001F465 Consumer group commands\n\nInspect any consumer group (not
     only the ones of sink connectors): which\ngroups exist, their state and members,

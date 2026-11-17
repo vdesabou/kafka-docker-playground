@@ -143,6 +143,11 @@ playground_usage() {
   printf "  %s   📋 Read and change the inventory of the ansible environment\n" "$(green "ansible inventory")                         "
   printf "  %s   🖥️ Add hosts to the running cluster\n" "$(green "ansible add-host")                          "
   printf "  %s   ⬆️ Upgrade (or downgrade) Confluent Platform with cp-ansible\n" "$(green "ansible upgrade")                           "
+  printf "  %s   ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n" "$(green "cfk")                                       "
+  printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "cfk patch")                                 "
+  printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "cfk roll")                                  "
+  printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "cfk upgrade")                               "
+  printf "  %s   ☸️ The CFK operator\n" "$(green "cfk operator")                              "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -17304,6 +17309,284 @@ playground_ansible_upgrade_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground ansible upgrade --to 8.4.1\n"
     printf "  playground ansible upgrade --to 8.4.1 --ansible-cp-version 8.4.0\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk\n\n"
+    printf "  ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n  \n  The day-2 operations of a cluster deployed by CFK: change a custom\n  resource and watch the operator roll it, upgrade Confluent Platform,\n  upgrade the operator.\n  \n    patch      change a custom resource, wait for CFK to roll it\n    roll       restart the pods of a custom resource, the supported way\n    upgrade    move every custom resource to another Confluent Platform version\n    operator   upgrade the CFK operator (helm chart, CRDs, init containers)\n  \n  Each change waits for the operator: the statefulset changed or not, every\n  pod restarted on the new revision (printed as they roll), the custom\n  resource back to RUNNING, then the events of the custom resource and its\n  pods since the change.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
+  else
+    printf "playground cfk - ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk COMMAND\n"
+  printf "  playground cfk [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Run commands:")"
+  printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "patch")   "
+  printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "roll")    "
+  printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "upgrade") "
+  printf "  %s   ☸️ The CFK operator\n" "$(green "operator")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_patch_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk patch\n\n"
+    printf "  🩹 Change a custom resource and wait for CFK to roll it\n  \n  kubectl patch <kind>/<name> in the confluent namespace (a JSON merge\n  patch by default), then waits for the operator: the statefulset of the\n  custom resource changed or not, every pod restarted on the new revision\n  and Ready, the custom resource back to phase RUNNING. Prints the events\n  of the custom resource and its pods since the change.\n  \n  A configOverrides list replaces the whole list with a merge patch: give\n  every property, or use --type json with an \"add\" operation.\n\n"
+  else
+    printf "playground cfk patch - 🩹 Change a custom resource and wait for CFK to roll it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk patch RESOURCE PATCH [OPTIONS]\n"
+  printf "  playground cfk patch --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--type TYPE")"
+    printf "    🧩 Patch type (kubectl patch --type)\n"
+    printf "    %s\n" "Allowed: merge, json, strategic"
+    printf "    %s\n" "Default: merge"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout SECONDS")"
+    printf "    ⏱️ How long to wait for the roll\n"
+    printf "    %s\n" "Default: 900"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-wait")"
+    printf "    🏃 Only patch, don't wait for the roll\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "RESOURCE")"
+    printf "    🎯 kind/name of the custom resource, for example kafka/kafka,\n    connect/connect, kraftcontroller/kraftcontroller\n"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "PATCH")"
+    printf "    🩹 The patch, JSON or YAML\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk patch kafka/kafka '{\"spec\": {\"configOverrides\": {\"server\":\n  [\"log.retention.hours=72\"]}}}'\n"
+    printf "  playground cfk patch connect/connect '{\"spec\": {\"replicas\": 2}}'\n"
+    printf "  playground cfk patch kafka/kafka '[{\"op\": \"add\", \"path\":\n  \"/spec/configOverrides/server/-\", \"value\": \"num.io.threads=16\"}]' --type json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_roll_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk roll\n\n"
+    printf "  🔁 Restart the pods of a custom resource, the way CFK supports\n  \n  Kafka and KRaft: a new value of the annotation kafkacluster-manual-roll in\n  spec.podTemplate, the only supported way to restart them: CFK rolls one\n  pod at a time, with its health checks (no under-replicated partitions).\n  The other components: kubectl rollout restart of their statefulset.\n  Waits for the roll like playground cfk patch.\n  \n  When to use: a change in a Secret (credentials, license), or a change of\n  the custom resource the pods did not get.\n\n"
+  else
+    printf "playground cfk roll - 🔁 Restart the pods of a custom resource, the way CFK supports\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk roll RESOURCE [OPTIONS]\n"
+  printf "  playground cfk roll --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout SECONDS")"
+    printf "    ⏱️ How long to wait for the roll\n"
+    printf "    %s\n" "Default: 900"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "RESOURCE")"
+    printf "    🎯 kind/name of the custom resource, for example kafka/kafka, connect/connect\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk roll kafka/kafka\n"
+    printf "  playground cfk roll connect/connect\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_upgrade_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk upgrade\n\n"
+    printf "  ⬆️ Move every custom resource to another Confluent Platform version\n  \n  Changes the tag of spec.image.application of each custom resource,\n  controllers first, then kafka, connect, schema registry, ksqlDB, REST\n  proxy and control center, and waits for CFK to roll each one before the\n  next (playground cfk patch). Then prints the image of each pod and, for\n  KRaft, the finalized metadata.version: the feature level stays at the old\n  version until it is upgraded (kafka-features upgrade).\n\n"
+  else
+    printf "playground cfk upgrade - ⬆️ Move every custom resource to another Confluent Platform version\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk upgrade [OPTIONS]\n"
+  printf "  playground cfk upgrade --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to VERSION (required)")"
+    printf "    🎯 Confluent Platform version, for example 8.4.1\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout SECONDS")"
+    printf "    ⏱️ How long to wait for the roll of each custom resource\n"
+    printf "    %s\n" "Default: 1200"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk upgrade --to 8.4.1\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_operator_usage() {
+  printf "playground cfk operator - ☸️ The CFK operator\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk operator COMMAND\n"
+  printf "  playground cfk operator [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Run commands:")"
+  printf "  %s   ⬆️ Upgrade the CFK operator, with the CFK upgrade procedure\n" "$(green "upgrade")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_operator_upgrade_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk operator upgrade\n\n"
+    printf "  ⬆️ Upgrade the CFK operator, with the CFK upgrade procedure\n  \n  The steps of docs.confluent.io/operator/current/co-upgrade-cfk.html:\n  reconciliation blocked on every custom resource\n  (platform.confluent.io/block-reconcile=true), the CRDs of the new chart\n  applied (helm never upgrades them; CFK 3.4.0 and later manage their own\n  CRDs), helm upgrade of confluent-operator, the init container image of\n  every custom resource staged, then reconciliation enabled again one\n  component at a time, controllers first: each component rolls once, with\n  the new operator and the new init container together.\n  \n  --no-block-reconcile shows the classic mistake: the new operator\n  reconciles every component as soon as it starts (controllers, brokers,\n  connect... roll at the same time), then the new init container images\n  roll everything a second time.\n\n"
+  else
+    printf "playground cfk operator upgrade - ⬆️ Upgrade the CFK operator, with the CFK upgrade procedure\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk operator upgrade [OPTIONS]\n"
+  printf "  playground cfk operator upgrade --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to VERSION (required)")"
+    printf "    🎯 CFK version, for example 3.4.0\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-block-reconcile")"
+    printf "    💥 Don't block reconciliation during the upgrade (the classic mistake)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-crds")"
+    printf "    📜 Don't apply the CRDs of the new chart (CFK before 3.4.0)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keep-init-images")"
+    printf "    🧷 Don't change the init container image of the custom resources\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout SECONDS")"
+    printf "    ⏱️ How long to wait for the roll of each custom resource\n"
+    printf "    %s\n" "Default: 1200"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk operator upgrade --to 3.4.0\n"
+    printf "  playground cfk operator upgrade --to 3.3.1 --no-block-reconcile\n"
     echo
 
   fi
@@ -46545,6 +46828,200 @@ function sanitize_ci_log () {
     return 1
   fi
   mv "$file.sanitized" "$file"
+}
+
+# helm chart version of a CFK version (environment/cfk/start.sh, playground cfk operator upgrade)
+function get_cfk_helm_chart_version() {
+  local cfk_version="$1"
+
+  case "$cfk_version" in
+    3.4.0) echo "0.2038.1" ;;
+    3.3.1) echo "0.1718.99" ;;
+    3.3.0) echo "0.1718.10" ;;
+    3.2.4) echo "0.1514.158" ;;
+    3.2.3) echo "0.1514.76" ;;
+    3.2.2) echo "0.1514.40" ;;
+    3.2.1) echo "0.1514.19" ;;
+    3.2.0) echo "0.1514.1" ;;
+    3.1.3) echo "0.1351.147" ;;
+    3.1.2) echo "0.1351.103" ;;
+    3.1.1) echo "0.1351.59" ;;
+    3.1.0) echo "0.1351.24" ;;
+    3.0.5) echo "0.1263.163" ;;
+    3.0.4) echo "0.1263.124" ;;
+    3.0.3) echo "0.1263.105" ;;
+    3.0.2) echo "0.1263.79" ;;
+    3.0.1) echo "0.1263.34" ;;
+    3.0.0) echo "0.1263.8" ;;
+    2.11.6) echo "0.1193.192" ;;
+    2.11.5) echo "0.1193.151" ;;
+    2.11.4) echo "0.1193.108" ;;
+    2.11.3) echo "0.1193.70" ;;
+    2.11.2) echo "0.1193.47" ;;
+    2.11.1) echo "0.1193.34" ;;
+    2.11.0) echo "0.1193.1" ;;
+    2.10.6) echo "0.1145.181" ;;
+    2.10.5) echo "0.1145.141" ;;
+    2.10.4) echo "0.1145.102" ;;
+    2.10.3) echo "0.1145.71" ;;
+    2.10.2) echo "0.1145.50" ;;
+    2.10.1) echo "0.1145.35" ;;
+    2.9.10) echo "0.1033.238" ;;
+    2.9.9) echo "0.1033.196" ;;
+    2.9.8) echo "0.1033.150" ;;
+    2.9.7) echo "0.1033.110" ;;
+    2.9.6) echo "0.1033.87" ;;
+    2.9.5) echo "0.1033.71" ;;
+    *)
+      # a version released after this table: the latest chart of that app version in the helm repository
+      local chart
+      chart=$(helm search repo confluentinc/confluent-for-kubernetes --versions -o json 2> /dev/null | jq -r --arg v "$cfk_version" '[.[] | select(.app_version == $v)][0].version // empty')
+      if [[ -n "$chart" ]]
+      then
+        echo "$chart"
+        return 0
+      fi
+      logerror "❌ CFK version $cfk_version is not supported (not in the table of playground, nor in the helm repository confluentinc: helm repo update confluentinc?)"
+      logerror "   Supported versions: 3.4.0, 3.3.1, 3.3.0, 3.2.4, 3.2.3, 3.2.2, 3.2.1, 3.2.0, 3.1.3, 3.1.2, 3.1.1, 3.1.0, 3.0.5, 3.0.4, 3.0.3, 3.0.2, 3.0.1, 3.0.0, 2.11.6, 2.11.5, 2.11.4, 2.11.3, 2.11.2, 2.11.1, 2.11.0, 2.10.6, 2.10.5, 2.10.4, 2.10.3, 2.10.2, 2.10.1, 2.9.10, 2.9.9, 2.9.8, 2.9.7, 2.9.6, 2.9.5"
+      return 1
+      ;;
+  esac
+}
+
+# ☸️ playground cfk: the custom resources of the cfk environments, in the order of an upgrade (controllers first)
+CFK_CR_KINDS="kraftcontroller zookeeper kafka connect schemaregistry ksqldb kafkarestproxy controlcenter"
+
+function cfk_cr_list () {
+    # "kind/name" of every CFK custom resource of the namespace, controllers first
+    local kind
+    for kind in $CFK_CR_KINDS
+    do
+        kubectl -n confluent get "$kind" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | sed "/^$/d; s|^|${kind}/|"
+    done
+}
+
+function cfk_statefulset_generation () {
+    kubectl -n confluent get statefulset "$1" -o jsonpath='{.metadata.generation}' 2>/dev/null
+}
+
+function cfk_print_events () {
+    # $1 name of the custom resource, $2 epoch seconds: the events of the CR and of its pods since then
+    local name="$1" since="$2"
+    kubectl -n confluent get events -o json 2>/dev/null | jq -r --arg n "$name" --argjson since "$since" '
+        .items[]
+        | select((.involvedObject.name == $n) or (.involvedObject.name | test("^" + $n + "-[0-9]+$")))
+        | select(((.lastTimestamp // .eventTime // .metadata.creationTimestamp) | sub("\\.[0-9]+"; "") | fromdateiso8601) >= $since)
+        | select(.type == "Warning" or ((.reason | IN("Pulled", "Pulling", "Created", "Started", "Scheduled", "SuccessfulCreate", "NoPods")) | not))
+        | "   " + (if .type == "Warning" then "⚠️ " else "ℹ️ " end) + ((.lastTimestamp // .eventTime // .metadata.creationTimestamp) | sub("\\.[0-9]+"; "") | sub("Z$"; "") | sub("^.*T"; "")) + " " + .involvedObject.name + " " + .reason + ": " + (.message | gsub("\n"; " ") | .[0:220])' 2>/dev/null | sort -k2 | uniq
+}
+
+function cfk_wait_rollout () {
+    # $1 kind/name of the custom resource, $2 statefulset generation before the change, $3 timeout in seconds, $4 epoch
+    # seconds of the change. Waits for CFK to reconcile the change: the statefulset changed or not (120 s: a busy operator
+    # was seen reconciling a change 57 s after it), every pod
+    # restarted on the new revision and Ready (printed as they roll), then the CR back to phase RUNNING
+    local cr="$1" generation_before="$2" timeout="$3" since="$4"
+    local kind="${cr%%/*}" name="${cr#*/}"
+    local deadline=$(( $(date +%s) + timeout ))
+    local generation="" i
+    for i in $(seq 1 60)
+    do
+        generation=$(cfk_statefulset_generation "$name")
+        if [[ -n "$generation" ]] && [[ "$generation" != "$generation_before" ]]
+        then
+            break
+        fi
+        sleep 2
+    done
+    if [[ -z "$generation" ]] || [[ "$generation" == "$generation_before" ]]
+    then
+        log "ℹ️ $cr: statefulset $name unchanged, no pod restarted"
+    else
+        local selector replicas update_revision observed rolled="" pod pods_ready
+        selector=$(kubectl -n confluent get statefulset "$name" -o json | jq -r '.spec.selector.matchLabels | to_entries | map("\(.key)=\(.value)") | join(",")')
+        log "⏳ $cr: CFK rolls the pods of statefulset $name (generation $generation_before → $generation), one at a time"
+        while true
+        do
+            # CFK can change the statefulset more than once during a roll: compare with its current generation
+            read -r replicas update_revision observed generation < <(kubectl -n confluent get statefulset "$name" -o jsonpath='{.spec.replicas} {.status.updateRevision} {.status.observedGeneration} {.metadata.generation}')
+            pods_ready=$(kubectl -n confluent get pods -l "$selector" -o json | jq -r --arg rev "$update_revision" '
+                .items[]
+                | select(.metadata.labels["controller-revision-hash"] == $rev)
+                | select(.metadata.deletionTimestamp == null)
+                | select([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length > 0)
+                | .metadata.name' | sort)
+            for pod in $pods_ready
+            do
+                if [[ " $rolled " != *" $pod "* ]]
+                then
+                    rolled="$rolled $pod"
+                    log "   🔁 $pod restarted on the new revision and Ready ($(date +%H:%M:%S))"
+                fi
+            done
+            if [[ "$observed" == "$generation" ]] && [[ $(echo "$pods_ready" | sed '/^$/d' | wc -l | tr -d ' ') -ge "$replicas" ]]
+            then
+                break
+            fi
+            if [[ $(date +%s) -gt $deadline ]]
+            then
+                logerror "❌ $cr: the pods did not all restart on the new revision in ${timeout}s"
+                kubectl -n confluent get pods -l "$selector" -o wide
+                kubectl -n confluent get pods -l "$selector" -o json | jq -r '.items[] | .metadata.name as $p | .status.containerStatuses[]? | select(.state.waiting != null) | "   ❌ \($p) \(.name): \(.state.waiting.reason) \(.state.waiting.message // "" | .[0:200])"'
+                cfk_print_events "$name" "$since"
+                return 1
+            fi
+            sleep 5
+        done
+    fi
+    local phase=""
+    while true
+    do
+        phase=$(kubectl -n confluent get "$kind" "$name" -o jsonpath='{.status.phase}' 2>/dev/null)
+        if [[ "$phase" == "RUNNING" ]]
+        then
+            break
+        fi
+        if [[ $(date +%s) -gt $deadline ]]
+        then
+            logerror "❌ $cr: phase $phase, not RUNNING after ${timeout}s"
+            cfk_print_events "$name" "$since"
+            return 1
+        fi
+        sleep 5
+    done
+    log "✅ $cr: RUNNING"
+}
+
+function cfk_patch_and_wait () {
+    # $1 kind/name, $2 patch, $3 patch type (merge, json, strategic), $4 timeout in seconds, $5 1 to not wait
+    local cr="$1" patch="$2" type="${3:-merge}" timeout="${4:-900}" no_wait="$5"
+    local name="${cr#*/}" generation_before since output
+    generation_before=$(cfk_statefulset_generation "$name")
+    since=$(date +%s)
+    if ! output=$(kubectl -n confluent patch "$cr" --type "$type" -p "$patch" 2>&1)
+    then
+        logerror "❌ kubectl patch $cr failed: $output"
+        return 1
+    fi
+    log "☸️ $output"
+    if [[ "$output" == *"(no change)"* ]] || [[ "$no_wait" == "1" ]]
+    then
+        return 0
+    fi
+    local rc=0
+    cfk_wait_rollout "$cr" "$generation_before" "$timeout" "$since" || rc=1
+    cfk_print_events "$name" "$since"
+    return $rc
+}
+
+function cfk_print_versions () {
+    # image and phase of each custom resource, and the image each pod runs
+    local cr
+    for cr in $(cfk_cr_list)
+    do
+        printf "   %-28s %-10s %s\n" "$cr" "$(kubectl -n confluent get "$cr" -o jsonpath='{.status.phase}')" "$(kubectl -n confluent get "$cr" -o jsonpath='{.spec.image.application} (init {.spec.image.init})')"
+    done
+    kubectl -n confluent get pods -o json | jq -r '.items[] | select(.metadata.labels["platform.confluent.io/type"] != null) | "   pod \(.metadata.name): \(.spec.containers[0].image)"' | sort
 }
 
 # src/lib/validations/validate_client_version.sh
@@ -83993,6 +84470,249 @@ playground_ansible_upgrade_command() {
 }
 
 # :command.function
+playground_cfk_patch_command() {
+
+  # src/commands/cfk/patch.sh
+  resource="${args[resource]}"
+  patch="${args[patch]}"
+  type="${args[--type]}"
+  timeout="${args[--timeout]}"
+  no_wait="${args[--no-wait]}"
+
+  if [[ "$resource" != */* ]]
+  then
+      logerror "❌ give the custom resource as kind/name, for example kafka/kafka (one of: $(cfk_cr_list | tr '\n' ' '))"
+      exit 1
+  fi
+  if ! kubectl -n confluent get "$resource" > /dev/null 2>&1
+  then
+      logerror "❌ custom resource $resource not found in namespace confluent, the custom resources are: $(cfk_cr_list | tr '\n' ' ')"
+      exit 1
+  fi
+  if [[ "$patch" != \{* ]] && [[ "$patch" != \[* ]]
+  then
+      # YAML patch: kubectl patch only takes JSON
+      if ! patch=$(echo "$patch" | yq -o=json -I=0 '.' 2>&1)
+      then
+          logerror "❌ the patch is neither JSON nor YAML: $patch"
+          exit 1
+      fi
+  fi
+  log "🩹 kubectl patch $resource --type $type -p '$patch'"
+  cfk_patch_and_wait "$resource" "$patch" "$type" "$timeout" "$no_wait"
+
+}
+
+# :command.function
+playground_cfk_roll_command() {
+
+  # src/commands/cfk/roll.sh
+  resource="${args[resource]}"
+  timeout="${args[--timeout]}"
+
+  if [[ "$resource" != */* ]] || ! kubectl -n confluent get "$resource" > /dev/null 2>&1
+  then
+      logerror "❌ give a custom resource of namespace confluent as kind/name, one of: $(cfk_cr_list | tr '\n' ' ')"
+      exit 1
+  fi
+  kind="${resource%%/*}"
+  name="${resource#*/}"
+  case "$kind" in
+      kafka|kraftcontroller)
+          # the only supported way to roll Kafka and KRaft: CFK rolls one pod at a time, with its health checks
+          # (docs.confluent.io/operator/current/co-roll-cluster.html)
+          trigger="playground-$(date +%s)"
+          log "🔁 $resource: spec.podTemplate.annotations.kafkacluster-manual-roll=$trigger"
+          cfk_patch_and_wait "$resource" "{\"spec\": {\"podTemplate\": {\"annotations\": {\"kafkacluster-manual-roll\": \"$trigger\"}}}}" merge "$timeout"
+          ;;
+      *)
+          generation_before=$(cfk_statefulset_generation "$name")
+          since=$(date +%s)
+          log "🔁 kubectl rollout restart statefulset/$name"
+          kubectl -n confluent rollout restart "statefulset/$name"
+          cfk_wait_rollout "$resource" "$generation_before" "$timeout" "$since"
+          ;;
+  esac
+
+}
+
+# :command.function
+playground_cfk_upgrade_command() {
+
+  # src/commands/cfk/upgrade.sh
+  to="${args[--to]}"
+  timeout="${args[--timeout]}"
+
+  log "⬆️ Upgrade of every custom resource to CP $to, one at a time, controllers first"
+  for cr in $(cfk_cr_list)
+  do
+      image=$(kubectl -n confluent get "$cr" -o jsonpath='{.spec.image.application}')
+      new_image="${image%:*}:${to}"
+      if [[ "$image" == "$new_image" ]]
+      then
+          log "ℹ️ $cr already runs $image"
+          continue
+      fi
+      log "⬆️ $cr: $image → $new_image"
+      if ! cfk_patch_and_wait "$cr" "{\"spec\": {\"image\": {\"application\": \"$new_image\"}}}" merge "$timeout"
+      then
+          logerror "❌ upgrade stopped at $cr, the next custom resources are not changed"
+          exit 1
+      fi
+  done
+  log "📦 Versions after the upgrade"
+  cfk_print_versions
+  if kubectl -n confluent get kraftcontroller > /dev/null 2>&1 && [[ -n "$(kubectl -n confluent get kraftcontroller -o name 2>/dev/null)" ]]
+  then
+      log "🏷️ Feature levels (kafka-features describe): metadata.version stays at the old version until 'kafka-features upgrade'"
+      kubectl -n confluent exec kafka-0 -c kafka -- kafka-features --bootstrap-server kafka:9071 describe 2>/dev/null | grep -E "metadata.version|kraft.version" | sed 's/^/   /' || logwarn "⚠️ kafka-features describe failed (secured listener?)"
+  fi
+
+}
+
+# :command.function
+playground_cfk_operator_upgrade_command() {
+
+  # src/commands/cfk/operator/upgrade.sh
+  to="${args[--to]}"
+  no_block_reconcile="${args[--no-block-reconcile]}"
+  skip_crds="${args[--skip-crds]}"
+  keep_init_images="${args[--keep-init-images]}"
+  timeout="${args[--timeout]}"
+
+  # The CFK upgrade procedure (docs.confluent.io/operator/current/co-upgrade-cfk.html): reconciliation blocked on every
+  # custom resource, CRDs, helm upgrade, init container images staged, then reconciliation enabled again one component at
+  # a time: each component rolls once, with the new operator and the new init container together
+  chart_version=$(get_cfk_helm_chart_version "$to") || exit 1
+  current_chart=$(helm -n confluent list --filter '^confluent-operator$' -o json 2>/dev/null | jq -r '.[0].chart // empty')
+  if [[ -z "$current_chart" ]]
+  then
+      logerror "❌ no helm release confluent-operator in namespace confluent"
+      exit 1
+  fi
+  log "☸️ CFK operator: $current_chart → confluent-for-kubernetes-$chart_version (CFK $to)"
+  if ! helm repo list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
+  then
+      helm repo add confluentinc https://packages.confluent.io/helm > /dev/null
+  fi
+  helm repo update confluentinc > /dev/null
+
+  day1_crs=$(cfk_cr_list)
+  # every custom resource of the namespace, day-1 and day-2 (KafkaTopic, Connector, ConfluentRolebinding...)
+  all_crs=$(kubectl api-resources --api-group=platform.confluent.io --namespaced -o name 2>/dev/null | while read -r kind
+  do
+      kubectl -n confluent get "$kind" -o name 2>/dev/null
+  done)
+
+  if [[ -z "$no_block_reconcile" ]]
+  then
+      log "⏸️ Step 1: block reconciliation on the $(echo "$all_crs" | sed '/^$/d' | wc -l | tr -d ' ') custom resources (platform.confluent.io/block-reconcile=true): the operator upgrade does not roll anything"
+      for cr in $all_crs
+      do
+          kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile=true --overwrite > /dev/null
+      done
+  else
+      logwarn "⚠️ reconciliation not blocked (--no-block-reconcile): the new operator reconciles every custom resource as soon as it starts, all components roll at the same time"
+  fi
+
+  if version_gt "$to" "3.3.99"
+  then
+      log "📜 Step 2: CFK $to manages its own CRDs (helm value manageCRDs, true by default): nothing to apply"
+  elif [[ -n "$skip_crds" ]]
+  then
+      logwarn "⚠️ CRDs not applied (--skip-crds): helm never upgrades the CRDs of a chart, the operator of CFK $to runs with the CRDs of the old version"
+  else
+      tmp_dir=$(mktemp -d)
+      trap 'rm -rf "$tmp_dir"' EXIT
+      helm pull confluentinc/confluent-for-kubernetes --version "$chart_version" --untar --untardir "$tmp_dir"
+      log "📜 Step 2: apply the CRDs of the new chart (helm never upgrades them)"
+      kubectl apply --server-side --force-conflicts -f "$tmp_dir/confluent-for-kubernetes/crds/" | sed 's/^/   /'
+  fi
+
+  declare -A generation_before
+  for cr in $day1_crs
+  do
+      generation_before[$cr]=$(cfk_statefulset_generation "${cr#*/}")
+  done
+  since=$(date +%s)
+  log "⬆️ Step 3: helm upgrade confluent-operator --version $chart_version"
+  # --reset-then-reuse-values: the defaults of the new chart (image.tag of the new operator) plus the values given at
+  # install. --reuse-values would keep the computed values of the old release, image.tag included: the new chart with the
+  # old operator image
+  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$chart_version" --namespace confluent --reset-then-reuse-values > /dev/null
+  kubectl -n confluent rollout status deployment/confluent-operator --timeout=300s
+  operator_image=$(kubectl -n confluent get deployment confluent-operator -o jsonpath='{.spec.template.spec.containers[0].image}')
+  if [[ "$operator_image" != *":$chart_version" ]]
+  then
+      logerror "❌ the operator runs $operator_image, not the image of chart $chart_version (an image.tag in the values of the release?)"
+      exit 1
+  fi
+  log "✅ CFK operator $operator_image"
+
+  function stage_init_images () {
+      # $1: 1 to wait for the roll of each custom resource
+      local cr init new_init
+      for cr in $day1_crs
+      do
+          init=$(kubectl -n confluent get "$cr" -o jsonpath='{.spec.image.init}')
+          new_init="${init%:*}:${to}"
+          if [[ -z "$init" ]] || [[ "$init" == "$new_init" ]]
+          then
+              continue
+          fi
+          log "🧷 $cr: init container $init → $new_init"
+          if [[ "$1" == "1" ]]
+          then
+              cfk_patch_and_wait "$cr" "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" merge "$timeout" || exit 1
+          else
+              kubectl -n confluent patch "$cr" --type merge -p "{\"spec\": {\"image\": {\"init\": \"$new_init\"}}}" > /dev/null
+          fi
+      done
+  }
+
+  rc=0
+  if [[ -z "$no_block_reconcile" ]]
+  then
+      if [[ -z "$keep_init_images" ]]
+      then
+          log "🧷 Step 4: stage the init container images (reconciliation still blocked: no roll yet)"
+          stage_init_images 0
+      fi
+      log "▶️ Step 5: enable reconciliation again, one component at a time: each one rolls once (new operator and new init container)"
+      for cr in $day1_crs
+      do
+          cr_since=$(date +%s)
+          cr_generation=$(cfk_statefulset_generation "${cr#*/}")
+          kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null
+          if ! cfk_wait_rollout "$cr" "$cr_generation" "$timeout" "$cr_since"
+          then
+              rc=1
+              break
+          fi
+      done
+      for cr in $all_crs
+      do
+          kubectl -n confluent annotate "$cr" platform.confluent.io/block-reconcile- > /dev/null 2>&1 || true
+      done
+  else
+      log "⏳ the new operator reconciles every component at once"
+      for cr in $day1_crs
+      do
+          cfk_wait_rollout "$cr" "${generation_before[$cr]}" "$timeout" "$since" || rc=1
+      done
+      if [[ $rc -eq 0 ]] && [[ -z "$keep_init_images" ]]
+      then
+          log "🧷 the init container images, changed after the operator upgrade: a second roll of every component"
+          stage_init_images 1
+      fi
+  fi
+  log "📦 Versions after the operator upgrade"
+  cfk_print_versions
+  exit $rc
+
+}
+
+# :command.function
 playground_consumer_group_list_command() {
 
   # src/commands/consumer-group/list.sh
@@ -100875,6 +101595,13 @@ parse_requirements() {
       action="ansible"
       shift
       playground_ansible_parse_requirements "$@"
+      shift $#
+      ;;
+
+    cfk)
+      action="cfk"
+      shift
+      playground_cfk_parse_requirements "$@"
       shift $#
       ;;
 
@@ -141858,6 +142585,724 @@ playground_ansible_upgrade_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_cfk_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    patch)
+      action="patch"
+      shift
+      playground_cfk_patch_parse_requirements "$@"
+      shift $#
+      ;;
+
+    roll)
+      action="roll"
+      shift
+      playground_cfk_roll_parse_requirements "$@"
+      shift $#
+      ;;
+
+    upgrade)
+      action="upgrade"
+      shift
+      playground_cfk_upgrade_parse_requirements "$@"
+      shift $#
+      ;;
+
+    operator)
+      action="operator"
+      shift
+      playground_cfk_operator_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_cfk_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cfk_patch_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_patch_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk patch"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--type requires an argument: --type TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout SECONDS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-wait)
+
+        # :flag.case_no_arg
+        args['--no-wait']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['resource']+x} ]]; then
+            args['resource']=$1
+            shift
+          # :argument.case
+          elif [[ -z ${args['patch']+x} ]]; then
+            args['patch']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['resource']+x} ]]; then
+          args['resource']=$1
+          shift
+        # :argument.case
+        elif [[ -z ${args['patch']+x} ]]; then
+          args['patch']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['resource']+x} ]]; then
+    printf "missing required argument: RESOURCE\nusage: playground cfk patch RESOURCE PATCH [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground cfk patch kafka/kafka '{\"spec\": {\"configOverrides\": {\"server\":\n  [\"log.retention.hours=72\"]}}}'\n" >&2
+    printf "  playground cfk patch connect/connect '{\"spec\": {\"replicas\": 2}}'\n" >&2
+    printf "  playground cfk patch kafka/kafka '[{\"op\": \"add\", \"path\":\n  \"/spec/configOverrides/server/-\", \"value\": \"num.io.threads=16\"}]' --type json\n" >&2
+
+    exit 1
+  fi
+
+  if [[ -z ${args['patch']+x} ]]; then
+    printf "missing required argument: PATCH\nusage: playground cfk patch RESOURCE PATCH [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground cfk patch kafka/kafka '{\"spec\": {\"configOverrides\": {\"server\":\n  [\"log.retention.hours=72\"]}}}'\n" >&2
+    printf "  playground cfk patch connect/connect '{\"spec\": {\"replicas\": 2}}'\n" >&2
+    printf "  playground cfk patch kafka/kafka '[{\"op\": \"add\", \"path\":\n  \"/spec/configOverrides/server/-\", \"value\": \"num.io.threads=16\"}]' --type json\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--type']:-} ]] || args['--type']="merge"
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="900"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout SECONDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--type']:-} ]] && [[ ! ${args['--type']:-} =~ ^(merge|json|strategic)$ ]]; then
+    printf "%s\n" "--type must be one of: merge, json, strategic" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_roll_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_roll_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk roll"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout SECONDS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['resource']+x} ]]; then
+            args['resource']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['resource']+x} ]]; then
+          args['resource']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['resource']+x} ]]; then
+    printf "missing required argument: RESOURCE\nusage: playground cfk roll RESOURCE [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground cfk roll kafka/kafka\n" >&2
+    printf "  playground cfk roll connect/connect\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="900"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout SECONDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_upgrade_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_upgrade_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk upgrade"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout SECONDS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--to']+x} ]]; then
+    printf "missing required flag: --to VERSION\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="1200"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout SECONDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_operator_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_operator_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    upgrade)
+      action="upgrade"
+      shift
+      playground_cfk_operator_upgrade_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_cfk_operator_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cfk_operator_upgrade_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_operator_upgrade_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk operator upgrade"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-block-reconcile)
+
+        # :flag.case_no_arg
+        args['--no-block-reconcile']=1
+        shift
+        ;;
+
+      # :flag.case
+      --skip-crds)
+
+        # :flag.case_no_arg
+        args['--skip-crds']=1
+        shift
+        ;;
+
+      # :flag.case
+      --keep-init-images)
+
+        # :flag.case_no_arg
+        args['--keep-init-images']=1
+        shift
+        ;;
+
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout SECONDS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--to']+x} ]]; then
+    printf "missing required flag: --to VERSION\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="1200"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout SECONDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_consumer_group_parse_requirements() {
   local key
 
@@ -158169,6 +159614,11 @@ playground_completion() {
         playground_ansible_completion "$completion_current" "$@"
         return
         ;;
+      cfk)
+        shift
+        playground_cfk_completion "$completion_current" "$@"
+        return
+        ;;
       consumer-group)
         shift
         playground_consumer_group_completion "$completion_current" "$@"
@@ -158253,7 +159703,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -178619,6 +180069,290 @@ playground_ansible_upgrade_completion() {
 }
 
 # :command.completion_function
+playground_cfk_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      patch)
+        shift
+        playground_cfk_patch_completion "$completion_current" "$@"
+        return
+        ;;
+      roll)
+        shift
+        playground_cfk_roll_completion "$completion_current" "$@"
+        return
+        ;;
+      upgrade)
+        shift
+        playground_cfk_upgrade_completion "$completion_current" "$@"
+        return
+        ;;
+      operator)
+        shift
+        playground_cfk_operator_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" patch roll upgrade operator
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_patch_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --type)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "merge"
+            "json"
+            "strategic"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--type"]=1
+
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      --no-wait)
+        completion_blocked_flags["--no-wait"]=1
+
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 2 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --type "$completion_current" --type
+    completion_flag_candidates --timeout "$completion_current" --timeout
+    completion_flag_candidates --no-wait "$completion_current" --no-wait
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_roll_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_upgrade_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_operator_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      upgrade)
+        shift
+        playground_cfk_operator_upgrade_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" upgrade
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_operator_upgrade_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --no-block-reconcile)
+        completion_blocked_flags["--no-block-reconcile"]=1
+
+        shift
+        ;;
+      --skip-crds)
+        completion_blocked_flags["--skip-crds"]=1
+
+        shift
+        ;;
+      --keep-init-images)
+        completion_blocked_flags["--keep-init-images"]=1
+
+        shift
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --no-block-reconcile "$completion_current" --no-block-reconcile
+    completion_flag_candidates --skip-crds "$completion_current" --skip-crds
+    completion_flag_candidates --keep-init-images "$completion_current" --keep-init-images
+    completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
 playground_consumer_group_completion() {
   local completion_current="$1"
   shift
@@ -187361,6 +189095,12 @@ run() {
     "ansible inventory delete") playground_ansible_inventory_delete_command ;;
     "ansible add-host") playground_ansible_add_host_command ;;
     "ansible upgrade") playground_ansible_upgrade_command ;;
+    "cfk") playground_cfk_command ;;
+    "cfk patch") playground_cfk_patch_command ;;
+    "cfk roll") playground_cfk_roll_command ;;
+    "cfk upgrade") playground_cfk_upgrade_command ;;
+    "cfk operator") playground_cfk_operator_command ;;
+    "cfk operator upgrade") playground_cfk_operator_upgrade_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;
