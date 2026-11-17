@@ -5969,7 +5969,7 @@ playground_remove_cp_docker_images_usage() {
 playground_docker_cleanup_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground docker-cleanup\n\n"
-    printf "  🧽 Free the disk of the container engine every week, automatically: old\n  Confluent Platform images, dangling images, old build cache\n  \n    enable     schedule it (default every Sunday at 10:00), then show what it\n  would remove\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs freed\n    run        what the job does, now (--dry-run to only show it)\n  \n  Every Confluent Platform version you run keeps a dozen images (several GB),\n  and the connect images patched or built locally leave dangling images and\n  build cache behind. A full disk of the Docker VM then makes examples fail\n  in confusing ways. Every week it runs:\n  \n    🧹 playground remove-cp-docker-images --older-than <days> --yes: the\n       versions not used for --older-than days (default 60). Never the\n       default TAG, the TAG of the current run, nor a version used by a\n       container, running or stopped. A version with no last use known\n       (podman records no pull date) is kept --older-than days after the\n       first time it was listed\n    🗑️ docker image prune: the dangling images (<none>), never one used by a\n       container\n    🧱 docker builder prune --max-used-space <GB>: the build cache above\n       --max-build-cache GB (default 10), least recently used first. The\n       layers it shares with images don't count: they go with the images\n  \n  None of them touches what a container or a build in progress uses, so it\n  also runs while examples run (other sessions included). Volumes are never\n  removed. Skipped when the container engine is not running. A macOS\n  notification tells how much was freed.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line.\n\n"
+    printf "  🧽 Free the disk of the container engine every week, automatically: old\n  Confluent Platform images, dangling images, old build cache\n  \n    enable     schedule it (default every Sunday at 10:00), then show what it\n  would remove\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs freed\n    run        what the job does, now (--dry-run to only show it)\n  \n  Every Confluent Platform version you run keeps a dozen images (several GB),\n  and the connect images patched or built locally leave dangling images and\n  build cache behind. A full disk of the Docker VM then makes examples fail\n  in confusing ways. Every week it runs:\n  \n    🧹 playground remove-cp-docker-images --older-than <days> --yes: the\n       versions not used for --older-than days (default 60). Never the\n       default TAG, the TAG of the current run, nor a version used by a\n       container, running or stopped. A version with no last use known\n       (podman records no pull date) is kept --older-than days after the\n       first time it was listed\n    🗑️ docker image prune: the dangling images (<none>), never one used by a\n       container\n    🧱 docker builder prune --max-used-space <GB>: the build cache above\n       --max-build-cache GB (default 10), least recently used first. The\n       layers it shares with images don't count: they go with the images.\n       Skipped with podman, which has no build cache to cap\n  \n  None of them touches what a container or a build in progress uses, so it\n  also runs while examples run (other sessions included). Volumes are never\n  removed. Skipped when the container engine is not running. A macOS\n  notification tells how much the disk really lost (docker system df).\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line.\n\n"
   else
     printf "playground docker-cleanup - 🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n\n"
   fi
@@ -59627,6 +59627,20 @@ playground_docker_cleanup_run_command() {
   docker_df_size () {
       docker system df --format '{{.Type}}\t{{.Size}}' 2> /dev/null | awk -F'\t' -v t="$1" '$1 == t {print $2}'
   }
+  # 12.3GB, 512MB, 0B → bytes, and back (decimal units, as docker and podman print them)
+  size_to_bytes () {
+      awk -v s="$1" 'BEGIN { n = s + 0; u = s; sub(/^[0-9.]+/, "", u)
+          if (u == "kB" || u == "KB") n *= 1e3; else if (u == "MB") n *= 1e6; else if (u == "GB") n *= 1e9; else if (u == "TB") n *= 1e12
+          printf "%.0f", n }'
+  }
+  bytes_to_size () {
+      awk -v b="$1" 'BEGIN { if (b >= 1e12) printf "%.2fTB", b / 1e12; else if (b >= 1e9) printf "%.2fGB", b / 1e9; else if (b >= 1e6) printf "%.0fMB", b / 1e6; else if (b >= 1e3) printf "%.0fkB", b / 1e3; else printf "%.0fB", b }'
+  }
+  podman=""
+  if container_engine_is_podman
+  then
+      podman=1
+  fi
   images_before=$(docker_df_size Images)
   cache_before=$(docker_df_size "Build Cache")
 
@@ -59644,36 +59658,47 @@ playground_docker_cleanup_run_command() {
       log "🔎 dry-run, would run: docker image prune --force   # $nb_dangling dangling image(s), the ones used by a container are kept"
   else
       log "🗑️ removing the dangling images ($nb_dangling, the ones used by a container are kept)"
-      # prints "Total reclaimed space: 8.3GB"
-      images_freed=$(docker image prune --force 2> /dev/null | awk -F': ' '/^Total reclaimed space/ {print $2}') || logwarn "⚠️ docker image prune failed"
+      # its "Total reclaimed space" is not used: podman adds up the full size of each image, shared layers included
+      docker image prune --force > /dev/null 2>&1 || logwarn "⚠️ docker image prune failed"
   fi
 
   # docker 28 renamed --keep-storage to --max-used-space
   cap_flag="--keep-storage"
-  if docker builder prune --help 2> /dev/null | grep -q -- "--max-used-space"
+  if [[ -z "$podman" ]] && docker builder prune --help 2> /dev/null | grep -q -- "--max-used-space"
   then
       cap_flag="--max-used-space"
   fi
-  if [[ -n "$dry_run" ]]
+  if [[ -n "$podman" ]]
+  then
+      # podman builds keep their layers as images (pruned above), there is no BuildKit cache to cap
+      log "🧱 podman: no build cache to prune, skipped"
+  elif [[ -n "$dry_run" ]]
   then
       log "🔎 dry-run, would run: docker builder prune --force $cap_flag ${max_build_cache}GB   # build cache now: ${cache_before:-?}"
   else
       log "🧱 removing the build cache above ${max_build_cache}GB, least recently used first"
-      # podman: no build cache of its own to prune, docker builder may not be there
-      # prints "Total:	10.67GB"
-      if output=$(docker builder prune --force "$cap_flag" "${max_build_cache}GB" 2> /dev/null)
-      then
-          cache_freed=$(awk '/^Total:/ {print $2}' <<< "$output")
-      else
-          logwarn "⚠️ docker builder prune failed (not supported by this engine?)"
-      fi
+      docker builder prune --force "$cap_flag" "${max_build_cache}GB" > /dev/null 2>&1 || logwarn "⚠️ docker builder prune failed"
   fi
 
   if [[ -z "$dry_run" ]]
   then
       images_after=$(docker_df_size Images)
       cache_after=$(docker_df_size "Build Cache")
-      summary="freed ${images_freed:-0B} of dangling images and ${cache_freed:-0B} of build cache (images ${images_before:-?} → ${images_after:-?}, build cache ${cache_before:-?} → ${cache_after:-?})"
+      # what the disk really lost, from docker system df: the old Confluent Platform versions included
+      freed="?"
+      if [[ -n "$images_before" && -n "$images_after" ]]
+      then
+          freed_bytes=$(( $(size_to_bytes "$images_before") + $(size_to_bytes "${cache_before:-0B}") - $(size_to_bytes "$images_after") - $(size_to_bytes "${cache_after:-0B}") ))
+          # images pulled by another session in the meantime
+          [ "$freed_bytes" -lt 0 ] && freed_bytes=0
+          freed=$(bytes_to_size "$freed_bytes")
+      fi
+      summary="freed $freed (images ${images_before:-?} → ${images_after:-?}"
+      if [[ -z "$podman" ]]
+      then
+          summary+=", build cache ${cache_before:-?} → ${cache_after:-?}"
+      fi
+      summary+=")"
       log "✅ $summary"
       # the layers of the build cache shared with images are freed only with those images, whatever --max-build-cache
       cache_shared=$(docker buildx du 2> /dev/null | awk '/^Shared:/ {print $2}')

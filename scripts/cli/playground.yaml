@@ -1923,12 +1923,13 @@ subcommands:
     one used by a\n     container\n  \U0001F9F1 docker builder prune --max-used-space
     <GB>: the build cache above\n     --max-build-cache GB (default 10), least recently
     used first. The\n     layers it shares with images don't count: they go with the
-    images\n\nNone of them touches what a container or a build in progress uses, so
-    it\nalso runs while examples run (other sessions included). Volumes are never\nremoved.
-    Skipped when the container engine is not running. A macOS\nnotification tells
-    how much was freed.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which
-    also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab
-    line."
+    images.\n     Skipped with podman, which has no build cache to cap\n\nNone of
+    them touches what a container or a build in progress uses, so it\nalso runs while
+    examples run (other sessions included). Volumes are never\nremoved. Skipped when
+    the container engine is not running. A macOS\nnotification tells how much the
+    disk really lost (docker system df).\n\nmacOS: a launchd agent (~/Library/LaunchAgents),
+    which also runs when the\nMac wakes up if it was asleep at that time. Linux: a
+    crontab line."
   usage: playground docker-cleanup COMMAND
   options: []
   subcommands:
