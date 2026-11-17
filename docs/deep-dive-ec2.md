@@ -17,6 +17,7 @@ free unless you opt in to create an instance (a few cents).
 | send your credentials to it, over ssh | `playground ec2 push-secrets` (`--dry-run`, `--profile`) |
 | copy reproduction models there / bring them back | `playground ec2 sync-repro-folder local-to-ec2` / `ec2-to-local` |
 | pause the billing of the compute | `playground ec2 stop`, later `playground ec2 start` |
+| stop what I forget, every evening | `playground ec2 auto-stop enable` (`--time 20:00`, `--idle-minutes 60`, then `status` / `disable`; `run --dry-run` to see what it would stop) |
 | stop paying for good | `playground ec2 sync-repro-folder ec2-to-local`, then `playground ec2 delete` |
 | check that nothing is still running | `playground status` (💸 reminder), `playground ec2 list` |
 | what it cost | `playground cloud-resources aws costs` / `costs-history` |
@@ -180,8 +181,27 @@ playground ec2 push-secrets                         # ✅ ~/.playground-secrets.
 playground status                                   # ends with the 💸 reminder for each instance of ec2.running_list
 playground ec2 list                                 # the truth, from AWS: anything not 🛑stopped bills compute
 playground ec2 stop                                 # volume still billed
+playground ec2 auto-stop enable                     # every day at 20:00, stops the idle ones still running
 playground ec2 sync-repro-folder ec2-to-local && playground ec2 delete --instance pg-<you>-<suffix>
 playground cloud-resources aws costs --start-date <day before> --end-date <day after>
+```
+
+**Every evening, automatically: `playground ec2 auto-stop enable`** (`--time 20:00` and `--idle-minutes 60` by default,
+`status`, `disable`). A launchd agent on macOS (it also runs when the Mac wakes up after that time), a crontab line on
+Linux, running `playground ec2 auto-stop run --idle-minutes 60`: every instance `pg-<you>-*` still running is stopped
+(`ec2 stop`, the disk is kept), unless its CloudWatch `CPUUtilization` (5 minute averages) reached 5% in the last
+`--idle-minutes` (a run or a benchmark left in `tmux` goes on), it was started less than `--idle-minutes` ago, or it has
+the tag `playground-keep-running=true`. With no CloudWatch datapoint, nothing proves it is idle: it is kept.
+`--idle-minutes 0` stops it whatever it is doing. A macOS notification tells which ones were stopped; the log is in
+`~/Library/Logs/kafka-docker-playground/ec2-auto-stop.log`. The `aws` CLI must work without a prompt at that time
+(`~/.aws/credentials`, not an SSO session to renew).
+
+```bash
+playground ec2 auto-stop run --dry-run
+# 🔎 dry-run: listing what would be stopped, nothing is stopped
+# 🔥 keeping pg-<you>-123456 (i-…): busy, CPU reached 38% in the last 60 minutes
+playground ec2 auto-stop run --dry-run --idle-minutes 0
+# 🔎 dry-run, would stop pg-<you>-123456 (i-…): --idle-minutes 0
 ```
 
 What `playground status` (and the end of `playground run`) prints while an instance is in the list:
@@ -285,7 +305,7 @@ The lab script runs step 4 only with `PLAYGROUND_LAB_EC2_CREATE=1`, and deletes 
 | the example needs 32 GB (CFK, several brokers, Oracle + connect) | `playground ec2 create --suffix <case>` (t3.2xlarge, 32 GiB), then `playground run -f …` in the VS Code terminal |
 | it needs more than 32 GB | `playground ec2 create --instance-type m4.4xlarge --suffix <case>` (64 GiB), `m4.10xlarge` for 160 GiB |
 | the example is marked arm64 "not working" (`❌💻 this example is not working with ARM64 !`) | an ec2 instance is amd64: `ec2 create`, run it there |
-| it must run overnight | run it in `tmux` on the instance (closing VS Code or your laptop then doesn't stop it), `ec2 stop` in the morning once the results are pulled back |
+| it must run overnight | run it in `tmux` on the instance (closing VS Code or your laptop then doesn't stop it), `ec2 stop` in the morning once the results are pulled back. With `ec2 auto-stop` enabled, a busy instance is kept; tag it `playground-keep-running=true` when the run has idle phases |
 | my IP changed (VPN, other network), ssh / VS Code times out | `playground ec2 open` (re-allows your new IP, rewrites `~/.ssh/config`) |
 | after `ec2 start`, `ssh` to the old address fails | the public DNS name changed: `ec2 open` or `ssh pg-<you>-<suffix>` |
 | I wrote the repro model on my laptop, I want to run it there | `playground ec2 sync-repro-folder local-to-ec2`, or `open --enable-sync-repro-folder` |
@@ -304,6 +324,7 @@ playground ec2 create [--instance-type t3.2xlarge] [--size 1000] [--suffix <case
 playground ec2 list                                       # name/state/dns/id, only pg-<you>-*, current region
 playground ec2 open [--instance <TAB>] [--enable-sync-repro-folder]
 playground ec2 stop|start [--instance <TAB>]
+playground ec2 auto-stop enable [--time 20:00] [--idle-minutes 60]   # status, disable, run --dry-run
 playground ec2 sync-repro-folder local-to-ec2|ec2-to-local [--instance <TAB>]
 playground ec2 push-secrets [--instance <TAB>] [--profile <p>] [--dry-run]
 playground ec2 delete [--instance pg-<you>-<suffix>]      # stack + key pair + pem file

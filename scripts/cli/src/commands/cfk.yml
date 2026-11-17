@@ -1,6 +1,6 @@
 name: cfk
 expose: always
-group: Run
+group: CFK
 help: |-
   ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)
 
@@ -23,7 +23,7 @@ help: |-
 commands:
 
 - name: patch
-  group: Run
+  group: CFK
   filters:
   - cfk_environment
   help: |-
@@ -66,7 +66,7 @@ commands:
     playground cfk patch kafka/kafka '[{"op": "add", "path": "/spec/configOverrides/server/-", "value": "num.io.threads=16"}]' --type json
 
 - name: roll
-  group: Run
+  group: CFK
   filters:
   - cfk_environment
   help: |-
@@ -95,7 +95,7 @@ commands:
   - playground cfk roll connect/connect
 
 - name: upgrade
-  group: Run
+  group: CFK
   filters:
   - cfk_environment
   help: |-
@@ -121,11 +121,11 @@ commands:
   - playground cfk upgrade --to 8.4.1
 
 - name: operator
-  group: Run
+  group: CFK
   help: ☸️ The CFK operator
   commands:
   - name: upgrade
-    group: Run
+    group: CFK
     filters:
     - cfk_environment
     help: |-
@@ -165,7 +165,7 @@ commands:
     - playground cfk operator upgrade --to 3.3.1 --no-block-reconcile
 
 - name: kraft-migration
-  group: Run
+  group: CFK
   help: |-
     🚚 ZooKeeper to KRaft migration with a KRaftMigrationJob
 
@@ -181,7 +181,7 @@ commands:
     🍪 Deep dive: https://kafka-docker-playground.io/#/day-2-operations
   commands:
   - name: start
-    group: Run
+    group: CFK
     filters:
     - cfk_environment
     help: |-
@@ -215,7 +215,7 @@ commands:
     - playground cfk kraft-migration start --controllers 1 --preflight
 
   - name: status
-    group: Run
+    group: CFK
     filters:
     - cfk_environment
     help: 🔎 Phase, sub-phase, the CRs, the locks and what to do next
@@ -228,7 +228,7 @@ commands:
     - playground cfk kraft-migration status
 
   - name: finalize
-    group: Run
+    group: CFK
     filters:
     - cfk_environment
     help: |-
@@ -251,7 +251,7 @@ commands:
     - playground cfk kraft-migration finalize
 
   - name: release-lock
-    group: Run
+    group: CFK
     filters:
     - cfk_environment
     help: |-

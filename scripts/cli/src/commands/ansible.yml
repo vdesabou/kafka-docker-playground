@@ -1,6 +1,6 @@
 name: ansible
 expose: always
-group: Run
+group: Ansible
 help: |-
   🅰️ cp-ansible commands (ansible and ansible-sasl-ssl environments)
 
@@ -20,7 +20,7 @@ help: |-
 commands:
 
 - name: playbook
-  group: Run
+  group: Ansible
   filters:
   - ansible_environment
   help: |-
@@ -65,7 +65,7 @@ commands:
   - playground ansible playbook -- -e deployment_strategy=rolling -e pause_rolling_deployment=true
 
 - name: inventory
-  group: Run
+  group: Ansible
   help: |-
     📋 Read and change the inventory of the ansible environment
 
@@ -76,7 +76,7 @@ commands:
   commands:
 
   - name: get
-    group: Run
+    group: Ansible
     filters:
     - ansible_environment
     help: 🔎 Display the inventory, or the value of a yq path
@@ -90,7 +90,7 @@ commands:
     - playground ansible inventory get .all.children.kafka_connect.vars
 
   - name: set
-    group: Run
+    group: Ansible
     filters:
     - ansible_environment
     help: |-
@@ -114,7 +114,7 @@ commands:
       playground ansible inventory set .all.vars.kafka_broker_custom_listeners '{"client": {"name": "CLIENT", "port": 9093}}'
 
   - name: delete
-    group: Run
+    group: Ansible
     filters:
     - ansible_environment
     help: 🗑️ Remove a yq path from the inventory, and print the change
@@ -126,7 +126,7 @@ commands:
     - playground ansible inventory delete .all.vars.sasl_protocol
 
 - name: add-host
-  group: Run
+  group: Ansible
   filters:
   - ansible_environment
   help: |-
@@ -150,7 +150,7 @@ commands:
   - playground ansible add-host ksqldb-server
 
 - name: upgrade
-  group: Run
+  group: Ansible
   filters:
   - ansible_environment
   help: |-

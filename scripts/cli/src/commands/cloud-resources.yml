@@ -20,7 +20,8 @@ help: |-
                                         azure, ccloud and salesforce
                                         (--resource, --dry-run first)
 
-  🌙 and it can run by itself every night, for Confluent Cloud:
+  🌙 and it can run by itself every night (Confluent Cloud, and AWS, GCP, Azure
+  with --resource):
 
     cloud-resources nightly-cleanup enable|disable|status
 commands:
@@ -478,9 +479,10 @@ commands:
   - long: --nightly
     private: true
     help: |-
-      🌙 what 'playground cloud-resources nightly-cleanup' runs: Confluent Cloud only, what is billed (connectors with their
+      🌙 what 'playground cloud-resources nightly-cleanup' runs: in Confluent Cloud, what is billed (connectors with their
       dlq/success/error topics, pg-<user>-sa-* environments) and the topics recorded on shared clusters; never the topics
-      of your pg-<user>-* clusters, nor service accounts and API keys (the secrets store may be locked at night)
+      of your pg-<user>-* clusters, nor service accounts and API keys (the secrets store may be locked at night). In AWS,
+      GCP and Azure, the same as without it, but a cloud whose credentials need a prompt is skipped (notification)
   examples:
   - playground cloud-resources cleanup --dry-run
   - playground cloud-resources cleanup --resource aws --dry-run
@@ -488,7 +490,7 @@ commands:
 
 - name: nightly-cleanup
   help: |-
-    🌙 Delete what your fully managed examples left running in Confluent Cloud, every night, automatically
+    🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically
 
       enable     schedule it (default 02:00), then show what tonight's run would delete
       disable    remove the schedule
@@ -508,6 +510,25 @@ commands:
     locked at night, so the keys in use can't be told apart. Run
     'playground cloud-resources cleanup --resource ccloud' yourself for those.
 
+    ☁️ 'enable --resource aws --resource gcp --resource azure' adds what
+    'playground cloud-resources cleanup' deletes in those clouds (Kinesis
+    streams, SQS queues, Redshift clusters, DynamoDB tables, Azure resource
+    groups, GCS buckets, BigQuery datasets, Spanner and Bigtable instances…,
+    named pg…<user>…). Nothing interactive at night: a cloud whose
+    credentials can't be read without a prompt is skipped, with a
+    notification, and the others still run:
+      aws      ~/.aws/credentials, or AWS_ACCESS_KEY_ID and
+               AWS_SECRET_ACCESS_KEY in the secrets store
+      azure    AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID (service
+               principal) in the secrets store, or a saved 'az login'
+               session; AZURE_SUBSCRIPTION_NAME for a confluent.io account
+      gcp      GCP_PROJECT and GCP_KEYFILE_CONTENT in the secrets store, and
+               Docker running
+    The secrets store is read at night unless it is 1Password without a
+    service account token (it would wait for Touch ID).
+    ⚠️ Like the connectors in Confluent Cloud, the resources of an example
+    still running at that time are deleted too: pick a time you don't use.
+
     macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the
     Mac wakes up if it was asleep at that time. Linux: a crontab line. The
     confluent CLI must stay logged in: 'confluent login --save'.
@@ -521,17 +542,34 @@ commands:
     help: |-
       🌙 Schedule the nightly cleanup, then show what tonight's run would delete
 
-      Run it again to change the time. The job uses this checkout of the
-      playground and the PATH of the shell you run it from.
+      Run it again to change the time or the clouds. The job uses this
+      checkout of the playground and the PATH of the shell you run it from.
     flags:
     - long: --time
       arg: time
       default: "02:00"
       help: |-
         🕑 Time of the run, HH:MM, local time
+    - long: --resource
+      arg: resource
+      repeatable: true
+      unique: true
+      default:
+        - ccloud
+      allowed:
+        - ccloud
+        - aws
+        - gcp
+        - azure
+      help: |-
+        ☁️ Cloud to clean up every night (default: ccloud only)
+
+        🎓 Tip: repeat it, --resource ccloud --resource aws. Salesforce is
+        not offered: nothing there is billed.
     examples:
     - playground cloud-resources nightly-cleanup enable
     - playground cloud-resources nightly-cleanup enable --time 23:30
+    - playground cloud-resources nightly-cleanup enable --resource ccloud --resource aws --resource azure
   - name: disable
     help: |-
       🛑 Remove the nightly cleanup schedule
