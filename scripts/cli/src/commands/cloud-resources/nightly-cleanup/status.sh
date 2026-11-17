@@ -1,33 +1,21 @@
 lines="${args[--lines]}"
-nightly_cleanup_files
-if [[ "$OSTYPE" == "darwin"* ]]
+if scheduled_job_info nightly-cleanup
 then
-    if [ -f "$nightly_cleanup_plist" ]
+    # the clouds are the values of the --resource arguments of the job
+    resources=$(scheduled_job_flag_values --resource)
+    if [ "$scheduled_job_loaded" == "1" ]
     then
-        hour=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$nightly_cleanup_plist" 2> /dev/null)
-        minute=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$nightly_cleanup_plist" 2> /dev/null)
-        if launchctl print "gui/$(id -u)/$NIGHTLY_CLEANUP_LABEL" > /dev/null 2>&1
-        then
-            log "🌙 nightly cleanup scheduled every day at $(printf '%02d:%02d' "$hour" "$minute") (launchd agent loaded)"
-        else
-            logwarn "⚠️ $nightly_cleanup_plist exists but is not loaded: playground cloud-resources nightly-cleanup enable"
-        fi
+        log "🌙 nightly cleanup of ${resources:-ccloud} scheduled every day at $scheduled_job_time ($(scheduled_job_where nightly-cleanup))"
     else
-        log "💤 the nightly cleanup is not scheduled: playground cloud-resources nightly-cleanup enable"
+        logwarn "⚠️ $scheduled_job_plist exists but is not loaded: playground cloud-resources nightly-cleanup enable"
     fi
 else
-    line=$(crontab -l 2> /dev/null | grep -F "$NIGHTLY_CLEANUP_MARKER")
-    if [ -n "$line" ]
-    then
-        log "🌙 nightly cleanup scheduled every day at $(printf '%02d:%02d' "$(echo "$line" | awk '{print $2}')" "$(echo "$line" | awk '{print $1}')") (crontab)"
-    else
-        log "💤 the nightly cleanup is not scheduled: playground cloud-resources nightly-cleanup enable"
-    fi
+    log "💤 the nightly cleanup is not scheduled: playground cloud-resources nightly-cleanup enable"
 fi
-if [ -f "$nightly_cleanup_log" ]
+if [ -f "$scheduled_job_log" ]
 then
-    log "📄 last $lines lines of $nightly_cleanup_log:"
-    tail -n "$lines" "$nightly_cleanup_log"
+    log "📄 last $lines lines of $scheduled_job_log:"
+    tail -n "$lines" "$scheduled_job_log"
 else
-    log "📄 no run yet ($nightly_cleanup_log)"
+    log "📄 no run yet ($scheduled_job_log)"
 fi

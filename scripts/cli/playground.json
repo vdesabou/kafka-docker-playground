@@ -659,7 +659,7 @@
     },
     {
       "name": "cloud-resources",
-      "description": "☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n\nExamples that talk to a real cloud create real resources, and an\ninterrupted run leaves them behind. These commands show what is still\nalive and what you are being billed for:\n\n  cloud-resources aws list            resources still up, scoped to you\n  cloud-resources aws costs           spend over a range of dates\n  cloud-resources aws costs-history   spend per month over the last year\n\nThe same three exist for azure and ccloud (Confluent Cloud).\n\n🧹 Only one command deletes anything:\n\n  cloud-resources cleanup             delete the leftovers in aws, gcp,\n                                      azure, ccloud and salesforce\n                                      (--resource, --dry-run first)\n\n🌙 and it can run by itself every night, for Confluent Cloud:\n\n  cloud-resources nightly-cleanup enable|disable|status",
+      "description": "☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n\nExamples that talk to a real cloud create real resources, and an\ninterrupted run leaves them behind. These commands show what is still\nalive and what you are being billed for:\n\n  cloud-resources aws list            resources still up, scoped to you\n  cloud-resources aws costs           spend over a range of dates\n  cloud-resources aws costs-history   spend per month over the last year\n\nThe same three exist for azure and ccloud (Confluent Cloud).\n\n🧹 Only one command deletes anything:\n\n  cloud-resources cleanup             delete the leftovers in aws, gcp,\n                                      azure, ccloud and salesforce\n                                      (--resource, --dry-run first)\n\n🌙 and it can run by itself every night (Confluent Cloud, and AWS, GCP, Azure\nwith --resource):\n\n  cloud-resources nightly-cleanup enable|disable|status",
       "usage": "playground cloud-resources COMMAND",
       "options": [],
       "subcommands": [
@@ -939,13 +939,13 @@
         },
         {
           "name": "nightly-cleanup",
-          "description": "🌙 Delete what your fully managed examples left running in Confluent Cloud, every night, automatically\n\n  enable     schedule it (default 02:00), then show what tonight's run would delete\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs did\n\nEvery night it runs 'playground cloud-resources cleanup --resource ccloud\n--force', limited to what costs money or clutters a shared cluster:\n\n  🤖 connectors named *_<user>, on any cluster of the organization, with\n     their dlq, success and error topics\n  🌐 environments pg-<user>-sa-* (the stacks the playground created when\n     no CLUSTER_NAME was set), with their clusters\n  📝 on shared clusters, the topics recorded as created by your own runs\n\nIt keeps your own clusters and their topics (playground ccloud setup),\nand never deletes service accounts or API keys: the secrets store may be\nlocked at night, so the keys in use can't be told apart. Run\n'playground cloud-resources cleanup --resource ccloud' yourself for those.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'.\n\n🏗️ Works best with your own clusters, set up once: 'playground ccloud\nsetup'. 'playground cloud-resources ccloud list' shows what is left.",
+          "description": "🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n\n  enable     schedule it (default 02:00), then show what tonight's run would delete\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs did\n\nEvery night it runs 'playground cloud-resources cleanup --resource ccloud\n--force', limited to what costs money or clutters a shared cluster:\n\n  🤖 connectors named *_<user>, on any cluster of the organization, with\n     their dlq, success and error topics\n  🌐 environments pg-<user>-sa-* (the stacks the playground created when\n     no CLUSTER_NAME was set), with their clusters\n  📝 on shared clusters, the topics recorded as created by your own runs\n\nIt keeps your own clusters and their topics (playground ccloud setup),\nand never deletes service accounts or API keys: the secrets store may be\nlocked at night, so the keys in use can't be told apart. Run\n'playground cloud-resources cleanup --resource ccloud' yourself for those.\n\n☁️ 'enable --resource aws --resource gcp --resource azure' adds what\n'playground cloud-resources cleanup' deletes in those clouds (Kinesis\nstreams, SQS queues, Redshift clusters, DynamoDB tables, Azure resource\ngroups, GCS buckets, BigQuery datasets, Spanner and Bigtable instances…,\nnamed pg…<user>…). Nothing interactive at night: a cloud whose\ncredentials can't be read without a prompt is skipped, with a\nnotification, and the others still run:\n  aws      ~/.aws/credentials, or AWS_ACCESS_KEY_ID and\n           AWS_SECRET_ACCESS_KEY in the secrets store\n  azure    AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID (service\n           principal) in the secrets store, or a saved 'az login'\n           session; AZURE_SUBSCRIPTION_NAME for a confluent.io account\n  gcp      GCP_PROJECT and GCP_KEYFILE_CONTENT in the secrets store, and\n           Docker running\nThe secrets store is read at night unless it is 1Password without a\nservice account token (it would wait for Touch ID).\n⚠️ Like the connectors in Confluent Cloud, the resources of an example\nstill running at that time are deleted too: pick a time you don't use.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'.\n\n🏗️ Works best with your own clusters, set up once: 'playground ccloud\nsetup'. 'playground cloud-resources ccloud list' shows what is left.",
           "usage": "playground cloud-resources nightly-cleanup COMMAND",
           "options": [],
           "subcommands": [
             {
               "name": "enable",
-              "description": "🌙 Schedule the nightly cleanup, then show what tonight's run would delete\n\nRun it again to change the time. The job uses this checkout of the\nplayground and the PATH of the shell you run it from.",
+              "description": "🌙 Schedule the nightly cleanup, then show what tonight's run would delete\n\nRun it again to change the time or the clouds. The job uses this\ncheckout of the playground and the PATH of the shell you run it from.",
               "usage": "playground cloud-resources nightly-cleanup enable [OPTIONS]",
               "options": [
                 {
@@ -954,6 +954,13 @@
                   ],
                   "argument": "TIME",
                   "description": "🕑 Time of the run, HH:MM, local time\n\nDefault value: 02:00"
+                },
+                {
+                  "names": [
+                    "--resource"
+                  ],
+                  "argument": "RESOURCE",
+                  "description": "☁️ Cloud to clean up every night (default: ccloud only)\n\n🎓 Tip: repeat it, --resource ccloud --resource aws. Salesforce is\nnot offered: nothing there is billed.\n\nRepeatable: ✓ Yes\nDefault value: [\"ccloud\"]\nAllowed values: ccloud, aws, gcp, azure"
                 }
               ]
             },
@@ -12781,7 +12788,7 @@
     },
     {
       "name": "ec2",
-      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n\nRun the playground on a remote machine instead of your laptop, which is\nwhat you want for an example that needs far more CPU or memory than you\nhave, or one that must run for hours.\n\n  create              provision the instance with Cloud Formation\n  open                open it in VS Code over SSH, as if it were local\n  push-secrets        send your credentials to it, over ssh\n  sync-repro-folder   keep reproduction-models in step, both directions\n  list / status / start / stop / delete\n\n💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground ec2 delete' when you are done;\n   'playground status' reminds you when one is still up.\n\n🔐 A pem file is created at the root of the repository when the instance\n   is created. Back it up, it is the only way in, and only your current\n   ip address is allowed to connect.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2",
+      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n\nRun the playground on a remote machine instead of your laptop, which is\nwhat you want for an example that needs far more CPU or memory than you\nhave, or one that must run for hours.\n\n  create              provision the instance with Cloud Formation\n  open                open it in VS Code over SSH, as if it were local\n  push-secrets        send your credentials to it, over ssh\n  sync-repro-folder   keep reproduction-models in step, both directions\n  list / status / start / stop / delete\n  auto-stop           stop the instances left running, every evening\n\n💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground ec2 delete' when you are done;\n   'playground status' reminds you when one is still up, and\n   'playground ec2 auto-stop enable' stops them every evening if idle.\n\n🔐 A pem file is created at the root of the repository when the instance\n   is created. Back it up, it is the only way in, and only your current\n   ip address is allowed to connect.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2",
       "usage": "playground ec2 COMMAND",
       "options": [],
       "subcommands": [
@@ -12868,6 +12875,76 @@
               ],
               "argument": "INSTANCE",
               "description": "🖥️ ec2 instance (need to use completion to get all required details)\n\n🎓 Tip: If not specified, the command will apply to all ec2 instances"
+            }
+          ]
+        },
+        {
+          "name": "auto-stop",
+          "description": "⏰ Stop your EC2 instances left running, every evening, automatically\n\n  enable     schedule it (default 20:00), then show what it would stop\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs did\n  run        what the job does, now (--dry-run to only show it)\n\nEvery day at --time, your playground instances (pg-<user>-*) still\nrunning are stopped, like 'playground ec2 stop': the disk is kept,\n'playground ec2 start' gets your work back. A macOS notification tells\nwhich ones.\n\nAn instance is kept when:\n  🔥 it was busy: its CPU (CloudWatch CPUUtilization, 5 minute averages)\n     reached 5% in the last --idle-minutes (default 60), so a long run\n     or benchmark started detached goes on. --idle-minutes 0 stops it\n     whatever it is doing\n  🕐 it was started less than --idle-minutes ago\n  🏷️ it has the tag playground-keep-running=true (aws ec2 create-tags\n     --resources <instance id> --tags Key=playground-keep-running,Value=true)\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line. The\naws CLI must work without a prompt: ~/.aws/credentials (no SSO login to\nrenew) and a region (AWS_REGION or ~/.aws/config).",
+          "usage": "playground ec2 auto-stop COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "enable",
+              "description": "⏰ Schedule the auto-stop, then show what tonight's run would stop\n\nRun it again to change the time or the idle time. The job uses this\ncheckout of the playground and the PATH of the shell you run it from.",
+              "usage": "playground ec2 auto-stop enable [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--time"
+                  ],
+                  "argument": "TIME",
+                  "description": "🕗 Time of the run, HH:MM, local time\n\nDefault value: 20:00"
+                },
+                {
+                  "names": [
+                    "--idle-minutes"
+                  ],
+                  "argument": "MINUTES",
+                  "description": "💤 Keep an instance whose CPU reached 5% in the last <minutes>, or started less than <minutes> ago (0: stop it whatever it is doing)\n\nDefault value: 60"
+                }
+              ]
+            },
+            {
+              "name": "disable",
+              "description": "🛑 Remove the auto-stop schedule",
+              "usage": "playground ec2 auto-stop disable",
+              "options": []
+            },
+            {
+              "name": "status",
+              "description": "🔎 Is the auto-stop scheduled, at what time, and what did its last runs do",
+              "usage": "playground ec2 auto-stop status [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--lines"
+                  ],
+                  "argument": "LINES",
+                  "description": "📄 Number of lines of the log to show\n\nDefault value: 40"
+                }
+              ]
+            },
+            {
+              "name": "run",
+              "description": "⏰ Stop now your idle EC2 instances still running, as the scheduled job does\n\nUse --dry-run to see what tonight's run would stop.",
+              "usage": "playground ec2 auto-stop run [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--idle-minutes"
+                  ],
+                  "argument": "MINUTES",
+                  "description": "💤 Keep an instance whose CPU reached 5% in the last <minutes>, or started less than <minutes> ago (0: stop it whatever it is doing)\n\nDefault value: 60"
+                },
+                {
+                  "names": [
+                    "--dry-run"
+                  ],
+                  "argument": "",
+                  "description": "🔎 Only show which instances would be stopped, and why the others are kept"
+                }
+              ]
             }
           ]
         },

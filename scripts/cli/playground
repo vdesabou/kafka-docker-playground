@@ -145,7 +145,7 @@ playground_usage() {
   printf "  %s   ☁️ What is still running in Azure, and what it costs\n" "$(green "cloud-resources azure")                     "
   printf "  %s   ☁️ What is still running in Confluent Cloud, and what it costs\n" "$(green "cloud-resources ccloud")                    "
   printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cloud-resources cleanup")                   "
-  printf "  %s   🌙 Delete what your fully managed examples left running in Confluent Cloud, every night, automatically\n" "$(green "cloud-resources nightly-cleanup")           "
+  printf "  %s   🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n" "$(green "cloud-resources nightly-cleanup")           "
   echo
   printf "%s\n" "$(bold "Repro commands:")"
   printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                     "
@@ -422,6 +422,7 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🛂 Allow your current ip to connect to ec2 instance via ssh\n" "$(green "ec2 allow-my-ip")                           "
   printf "  %s   🔘 List all EC2 instance\n" "$(green "ec2 list")                                  "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                  "
+  printf "  %s   ⏰ Stop your EC2 instances left running, every evening, automatically\n" "$(green "ec2 auto-stop")                             "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                 "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🗺️ Show a status\n" "$(green "ec2 status")                                "
   printf "  %s   ↔️ Synchronize reproduction-models folder between local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                     "
@@ -3919,7 +3920,7 @@ playground_ccloud_setup_usage() {
 playground_cloud_resources_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources\n\n"
-    printf "  ☁️ What the playground left behind in your cloud accounts, what it costs, and\n  cleaning it up\n  \n  Examples that talk to a real cloud create real resources, and an\n  interrupted run leaves them behind. These commands show what is still\n  alive and what you are being billed for:\n  \n    cloud-resources aws list            resources still up, scoped to you\n    cloud-resources aws costs           spend over a range of dates\n    cloud-resources aws costs-history   spend per month over the last year\n  \n  The same three exist for azure and ccloud (Confluent Cloud).\n  \n  🧹 Only one command deletes anything:\n  \n    cloud-resources cleanup             delete the leftovers in aws, gcp,\n                                        azure, ccloud and salesforce\n                                        (--resource, --dry-run first)\n  \n  🌙 and it can run by itself every night, for Confluent Cloud:\n  \n    cloud-resources nightly-cleanup enable|disable|status\n\n"
+    printf "  ☁️ What the playground left behind in your cloud accounts, what it costs, and\n  cleaning it up\n  \n  Examples that talk to a real cloud create real resources, and an\n  interrupted run leaves them behind. These commands show what is still\n  alive and what you are being billed for:\n  \n    cloud-resources aws list            resources still up, scoped to you\n    cloud-resources aws costs           spend over a range of dates\n    cloud-resources aws costs-history   spend per month over the last year\n  \n  The same three exist for azure and ccloud (Confluent Cloud).\n  \n  🧹 Only one command deletes anything:\n  \n    cloud-resources cleanup             delete the leftovers in aws, gcp,\n                                        azure, ccloud and salesforce\n                                        (--resource, --dry-run first)\n  \n  🌙 and it can run by itself every night (Confluent Cloud, and AWS, GCP, Azure\n  with --resource):\n  \n    cloud-resources nightly-cleanup enable|disable|status\n\n"
   else
     printf "playground cloud-resources - ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n\n"
   fi
@@ -3934,7 +3935,7 @@ playground_cloud_resources_usage() {
   printf "  %s   ☁️ What is still running in Azure, and what it costs\n" "$(green "azure")          "
   printf "  %s   ☁️ What is still running in Confluent Cloud, and what it costs\n" "$(green "ccloud")         "
   printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup")        "
-  printf "  %s   🌙 Delete what your fully managed examples left running in Confluent Cloud, every night, automatically\n" "$(green "nightly-cleanup")"
+  printf "  %s   🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n" "$(green "nightly-cleanup")"
   echo
 
   # :command.long_usage
@@ -4597,7 +4598,7 @@ playground_cloud_resources_cleanup_usage() {
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
       # :flag.usage
       printf "  %s\n" "$(magenta "--nightly")"
-      printf "    🌙 what 'playground cloud-resources nightly-cleanup' runs: Confluent Cloud\n    only, what is billed (connectors with their\n    dlq/success/error topics, pg-<user>-sa-* environments) and the topics\n    recorded on shared clusters; never the topics\n    of your pg-<user>-* clusters, nor service accounts and API keys (the secrets\n    store may be locked at night)\n"
+      printf "    🌙 what 'playground cloud-resources nightly-cleanup' runs: in Confluent\n    Cloud, what is billed (connectors with their\n    dlq/success/error topics, pg-<user>-sa-* environments) and the topics\n    recorded on shared clusters; never the topics\n    of your pg-<user>-* clusters, nor service accounts and API keys (the secrets\n    store may be locked at night). In AWS,\n    GCP and Azure, the same as without it, but a cloud whose credentials need a\n    prompt is skipped (notification)\n"
       echo
 
     fi
@@ -4649,9 +4650,9 @@ playground_cloud_resources_cleanup_usage() {
 playground_cloud_resources_nightly_cleanup_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources nightly-cleanup\n\n"
-    printf "  🌙 Delete what your fully managed examples left running in Confluent Cloud,\n  every night, automatically\n  \n    enable     schedule it (default 02:00), then show what tonight's run would\n  delete\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs did\n  \n  Every night it runs 'playground cloud-resources cleanup --resource ccloud\n  --force', limited to what costs money or clutters a shared cluster:\n  \n    🤖 connectors named *_<user>, on any cluster of the organization, with\n       their dlq, success and error topics\n    🌐 environments pg-<user>-sa-* (the stacks the playground created when\n       no CLUSTER_NAME was set), with their clusters\n    📝 on shared clusters, the topics recorded as created by your own runs\n  \n  It keeps your own clusters and their topics (playground ccloud setup),\n  and never deletes service accounts or API keys: the secrets store may be\n  locked at night, so the keys in use can't be told apart. Run\n  'playground cloud-resources cleanup --resource ccloud' yourself for those.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line. The\n  confluent CLI must stay logged in: 'confluent login --save'.\n  \n  🏗️ Works best with your own clusters, set up once: 'playground ccloud\n  setup'. 'playground cloud-resources ccloud list' shows what is left.\n\n"
+    printf "  🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP,\n  Azure with --resource), every night, automatically\n  \n    enable     schedule it (default 02:00), then show what tonight's run would\n  delete\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs did\n  \n  Every night it runs 'playground cloud-resources cleanup --resource ccloud\n  --force', limited to what costs money or clutters a shared cluster:\n  \n    🤖 connectors named *_<user>, on any cluster of the organization, with\n       their dlq, success and error topics\n    🌐 environments pg-<user>-sa-* (the stacks the playground created when\n       no CLUSTER_NAME was set), with their clusters\n    📝 on shared clusters, the topics recorded as created by your own runs\n  \n  It keeps your own clusters and their topics (playground ccloud setup),\n  and never deletes service accounts or API keys: the secrets store may be\n  locked at night, so the keys in use can't be told apart. Run\n  'playground cloud-resources cleanup --resource ccloud' yourself for those.\n  \n  ☁️ 'enable --resource aws --resource gcp --resource azure' adds what\n  'playground cloud-resources cleanup' deletes in those clouds (Kinesis\n  streams, SQS queues, Redshift clusters, DynamoDB tables, Azure resource\n  groups, GCS buckets, BigQuery datasets, Spanner and Bigtable instances…,\n  named pg…<user>…). Nothing interactive at night: a cloud whose\n  credentials can't be read without a prompt is skipped, with a\n  notification, and the others still run:\n    aws      ~/.aws/credentials, or AWS_ACCESS_KEY_ID and\n             AWS_SECRET_ACCESS_KEY in the secrets store\n    azure    AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID (service\n             principal) in the secrets store, or a saved 'az login'\n             session; AZURE_SUBSCRIPTION_NAME for a confluent.io account\n    gcp      GCP_PROJECT and GCP_KEYFILE_CONTENT in the secrets store, and\n             Docker running\n  The secrets store is read at night unless it is 1Password without a\n  service account token (it would wait for Touch ID).\n  ⚠️ Like the connectors in Confluent Cloud, the resources of an example\n  still running at that time are deleted too: pick a time you don't use.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line. The\n  confluent CLI must stay logged in: 'confluent login --save'.\n  \n  🏗️ Works best with your own clusters, set up once: 'playground ccloud\n  setup'. 'playground cloud-resources ccloud list' shows what is left.\n\n"
   else
-    printf "playground cloud-resources nightly-cleanup - 🌙 Delete what your fully managed examples left running in Confluent Cloud, every night, automatically\n\n"
+    printf "playground cloud-resources nightly-cleanup - 🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -4682,7 +4683,7 @@ playground_cloud_resources_nightly_cleanup_usage() {
 playground_cloud_resources_nightly_cleanup_enable_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources nightly-cleanup enable\n\n"
-    printf "  🌙 Schedule the nightly cleanup, then show what tonight's run would delete\n  \n  Run it again to change the time. The job uses this checkout of the\n  playground and the PATH of the shell you run it from.\n\n"
+    printf "  🌙 Schedule the nightly cleanup, then show what tonight's run would delete\n  \n  Run it again to change the time or the clouds. The job uses this\n  checkout of the playground and the PATH of the shell you run it from.\n\n"
   else
     printf "playground cloud-resources nightly-cleanup enable - 🌙 Schedule the nightly cleanup, then show what tonight's run would delete\n\n"
   fi
@@ -4704,6 +4705,13 @@ playground_cloud_resources_nightly_cleanup_enable_usage() {
     printf "    %s\n" "Default: 02:00"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--resource RESOURCE (repeatable)")"
+    printf "    ☁️ Cloud to clean up every night (default: ccloud only)\n    \n    🎓 Tip: repeat it, --resource ccloud --resource aws. Salesforce is\n    not offered: nothing there is billed.\n"
+    printf "    %s\n" "Allowed: ccloud, aws, gcp, azure"
+    printf "    %s\n" "Default: ccloud"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -4713,6 +4721,7 @@ playground_cloud_resources_nightly_cleanup_enable_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground cloud-resources nightly-cleanup enable\n"
     printf "  playground cloud-resources nightly-cleanup enable --time 23:30\n"
+    printf "  playground cloud-resources nightly-cleanup enable --resource ccloud --resource\n  aws --resource azure\n"
     echo
 
   fi
@@ -23486,7 +23495,7 @@ playground_connector_update_usage() {
 playground_ec2_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ec2\n\n"
-    printf "  ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run\n  kafka-docker-playground\n  \n  🪄 Open EC2 instances directly in Visual Studio code using Remote Development\n  (over SSH)\n  \n  Run the playground on a remote machine instead of your laptop, which is\n  what you want for an example that needs far more CPU or memory than you\n  have, or one that must run for hours.\n  \n    create              provision the instance with Cloud Formation\n    open                open it in VS Code over SSH, as if it were local\n    push-secrets        send your credentials to it, over ssh\n    sync-repro-folder   keep reproduction-models in step, both directions\n    list / status / start / stop / delete\n  \n  💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n     you pause, and 'playground ec2 delete' when you are done;\n     'playground status' reminds you when one is still up.\n  \n  🔐 A pem file is created at the root of the repository when the instance\n     is created. Back it up, it is the only way in, and only your current\n     ip address is allowed to connect.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2\n\n"
+    printf "  ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run\n  kafka-docker-playground\n  \n  🪄 Open EC2 instances directly in Visual Studio code using Remote Development\n  (over SSH)\n  \n  Run the playground on a remote machine instead of your laptop, which is\n  what you want for an example that needs far more CPU or memory than you\n  have, or one that must run for hours.\n  \n    create              provision the instance with Cloud Formation\n    open                open it in VS Code over SSH, as if it were local\n    push-secrets        send your credentials to it, over ssh\n    sync-repro-folder   keep reproduction-models in step, both directions\n    list / status / start / stop / delete\n    auto-stop           stop the instances left running, every evening\n  \n  💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n     you pause, and 'playground ec2 delete' when you are done;\n     'playground status' reminds you when one is still up, and\n     'playground ec2 auto-stop enable' stops them every evening if idle.\n  \n  🔐 A pem file is created at the root of the repository when the instance\n     is created. Back it up, it is the only way in, and only your current\n     ip address is allowed to connect.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2\n\n"
   else
     printf "playground ec2 - ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n"
   fi
@@ -23503,6 +23512,7 @@ playground_ec2_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🛂 Allow your current ip to connect to ec2 instance via ssh\n" "$(green "allow-my-ip")      "
   printf "  %s   🔘 List all EC2 instance\n" "$(green "list")             "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "stop")             "
+  printf "  %s   ⏰ Stop your EC2 instances left running, every evening, automatically\n" "$(green "auto-stop")        "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "start")            "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🗺️ Show a status\n" "$(green "status")           "
   printf "  %s   ↔️ Synchronize reproduction-models folder between local and ec2 instance\n" "$(green "sync-repro-folder")"
@@ -23722,6 +23732,190 @@ playground_ec2_stop_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ec2_auto_stop_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ec2 auto-stop\n\n"
+    printf "  ⏰ Stop your EC2 instances left running, every evening, automatically\n  \n    enable     schedule it (default 20:00), then show what it would stop\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs did\n    run        what the job does, now (--dry-run to only show it)\n  \n  Every day at --time, your playground instances (pg-<user>-*) still\n  running are stopped, like 'playground ec2 stop': the disk is kept,\n  'playground ec2 start' gets your work back. A macOS notification tells\n  which ones.\n  \n  An instance is kept when:\n    🔥 it was busy: its CPU (CloudWatch CPUUtilization, 5 minute averages)\n       reached 5%% in the last --idle-minutes (default 60), so a long run\n       or benchmark started detached goes on. --idle-minutes 0 stops it\n       whatever it is doing\n    🕐 it was started less than --idle-minutes ago\n    🏷️ it has the tag playground-keep-running=true (aws ec2 create-tags\n       --resources <instance id> --tags Key=playground-keep-running,Value=true)\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line. The\n  aws CLI must work without a prompt: ~/.aws/credentials (no SSO login to\n  renew) and a region (AWS_REGION or ~/.aws/config).\n\n"
+  else
+    printf "playground ec2 auto-stop - ⏰ Stop your EC2 instances left running, every evening, automatically\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ec2 auto-stop COMMAND\n"
+  printf "  playground ec2 auto-stop [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   ⏰ Schedule the auto-stop, then show what tonight's run would stop\n" "$(green "enable") "
+  printf "  %s   🛑 Remove the auto-stop schedule\n" "$(green "disable")"
+  printf "  %s   🔎 Is the auto-stop scheduled, at what time, and what did its last runs do\n" "$(green "status") "
+  printf "  %s   ⏰ Stop now your idle EC2 instances still running, as the scheduled job does\n" "$(green "run")    "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ec2_auto_stop_enable_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ec2 auto-stop enable\n\n"
+    printf "  ⏰ Schedule the auto-stop, then show what tonight's run would stop\n  \n  Run it again to change the time or the idle time. The job uses this\n  checkout of the playground and the PATH of the shell you run it from.\n\n"
+  else
+    printf "playground ec2 auto-stop enable - ⏰ Schedule the auto-stop, then show what tonight's run would stop\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ec2 auto-stop enable [OPTIONS]\n"
+  printf "  playground ec2 auto-stop enable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--time TIME")"
+    printf "    🕗 Time of the run, HH:MM, local time\n"
+    printf "    %s\n" "Default: 20:00"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--idle-minutes MINUTES")"
+    printf "    💤 Keep an instance whose CPU reached 5%% in the last <minutes>, or started\n    less than <minutes> ago (0: stop it whatever it is doing)\n"
+    printf "    %s\n" "Default: 60"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ec2 auto-stop enable\n"
+    printf "  playground ec2 auto-stop enable --time 19:00 --idle-minutes 120\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ec2_auto_stop_disable_usage() {
+  printf "playground ec2 auto-stop disable - 🛑 Remove the auto-stop schedule\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ec2 auto-stop disable\n"
+  printf "  playground ec2 auto-stop disable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ec2_auto_stop_status_usage() {
+  printf "playground ec2 auto-stop status - 🔎 Is the auto-stop scheduled, at what time, and what did its last runs do\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ec2 auto-stop status [OPTIONS]\n"
+  printf "  playground ec2 auto-stop status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--lines LINES")"
+    printf "    📄 Number of lines of the log to show\n"
+    printf "    %s\n" "Default: 40"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ec2_auto_stop_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ec2 auto-stop run\n\n"
+    printf "  ⏰ Stop now your idle EC2 instances still running, as the scheduled job does\n  \n  Use --dry-run to see what tonight's run would stop.\n\n"
+  else
+    printf "playground ec2 auto-stop run - ⏰ Stop now your idle EC2 instances still running, as the scheduled job does\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ec2 auto-stop run [OPTIONS]\n"
+  printf "  playground ec2 auto-stop run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--idle-minutes MINUTES")"
+    printf "    💤 Keep an instance whose CPU reached 5%% in the last <minutes>, or started\n    less than <minutes> ago (0: stop it whatever it is doing)\n"
+    printf "    %s\n" "Default: 60"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔎 Only show which instances would be stopped, and why the others are kept\n"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--scheduled")"
+      printf "    ⏰ run by the launchd agent / crontab line: macOS notification of what was\n    stopped\n"
+      echo
+
+    fi
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ec2 auto-stop run --dry-run\n"
+    printf "  playground ec2 auto-stop run --idle-minutes 0\n"
     echo
 
   fi
@@ -37024,37 +37218,195 @@ function ccloud_in_use_api_keys () {
   } | grep -v '^$' | sort -u
 }
 
-# 🌙 'playground cloud-resources nightly-cleanup': where the schedule and its log live (launchd agent on macOS, a crontab
-# line elsewhere)
-NIGHTLY_CLEANUP_LABEL="io.kafka-docker-playground.nightly-cleanup"
-NIGHTLY_CLEANUP_MARKER="# kafka-docker-playground nightly-cleanup"
-function nightly_cleanup_files () {
-  nightly_cleanup_plist="$HOME/Library/LaunchAgents/$NIGHTLY_CLEANUP_LABEL.plist"
+# ⏰ jobs the playground schedules on this machine, every day at a time ('playground cloud-resources nightly-cleanup',
+# 'playground ec2 auto-stop'): a launchd agent on macOS (also run when the Mac wakes up after that time), a crontab line
+# elsewhere. The job is a 'playground' command of this checkout, run with the PATH of the shell that scheduled it (the
+# agent gets no shell startup file). Each function takes the job name first (nightly-cleanup, ec2-auto-stop).
+
+# sets scheduled_job_label, scheduled_job_marker (crontab), scheduled_job_plist and scheduled_job_log for the job $1
+function scheduled_job_files () {
+  scheduled_job_label="io.kafka-docker-playground.$1"
+  scheduled_job_marker="# kafka-docker-playground $1"
+  scheduled_job_plist="$HOME/Library/LaunchAgents/$scheduled_job_label.plist"
   if [[ "$OSTYPE" == "darwin"* ]]
   then
-    nightly_cleanup_log="$HOME/Library/Logs/kafka-docker-playground/nightly-cleanup.log"
+    scheduled_job_log="$HOME/Library/Logs/kafka-docker-playground/$1.log"
   else
-    nightly_cleanup_log="${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/nightly-cleanup.log"
+    scheduled_job_log="${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/$1.log"
   fi
 }
 
-# macOS notification for the nightly cleanup (nothing elsewhere, nor when osascript is missing)
-function nightly_cleanup_notify () {
+# scheduled_job_install <job> <hour> <minute> <playground arguments…>: (re)schedules the job every day at hour:minute;
+# returns 1 (error logged) when it can't
+function scheduled_job_install () {
+  local job="$1" hour="$2" minute="$3"
+  shift 3
+  local playground_bin="$root_folder/scripts/cli/playground" arg line
+  scheduled_job_files "$job"
+  mkdir -p "$(dirname "$scheduled_job_log")"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    xml_escape () { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' <<< "$1"; }
+    mkdir -p "$(dirname "$scheduled_job_plist")"
+    {
+      echo '<?xml version="1.0" encoding="UTF-8"?>'
+      echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+      echo '<plist version="1.0">'
+      echo '<dict>'
+      echo "  <key>Label</key><string>$scheduled_job_label</string>"
+      echo '  <key>ProgramArguments</key>'
+      echo '  <array>'
+      echo "    <string>$(xml_escape "$playground_bin")</string>"
+      for arg in "$@"
+      do
+        echo "    <string>$(xml_escape "$arg")</string>"
+      done
+      echo '  </array>'
+      echo '  <key>EnvironmentVariables</key>'
+      echo '  <dict>'
+      echo "    <key>PATH</key><string>$(xml_escape "$PATH")</string>"
+      echo "    <key>HOME</key><string>$(xml_escape "$HOME")</string>"
+      echo "    <key>USER</key><string>$(xml_escape "$USER")</string>"
+      echo '  </dict>'
+      echo '  <key>StartCalendarInterval</key>'
+      echo "  <dict><key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
+      echo "  <key>StandardOutPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
+      echo "  <key>StandardErrorPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
+      echo '</dict>'
+      echo '</plist>'
+    } > "$scheduled_job_plist"
+    if ! plutil -lint "$scheduled_job_plist" > /dev/null
+    then
+      logerror "❌ invalid launchd agent $scheduled_job_plist"
+      return 1
+    fi
+    launchctl bootout "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 || true
+    if ! launchctl bootstrap "gui/$(id -u)" "$scheduled_job_plist"
+    then
+      logerror "❌ could not load the launchd agent $scheduled_job_plist"
+      return 1
+    fi
+  elif command -v crontab > /dev/null 2>&1
+  then
+    line="$minute $hour * * * PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' $* >> '$scheduled_job_log' 2>&1 $scheduled_job_marker"
+    { crontab -l 2> /dev/null | grep -vF "$scheduled_job_marker"; echo "$line"; } | crontab -
+  else
+    logerror "❌ neither launchd (macOS) nor crontab found: schedule this yourself: $playground_bin $*"
+    return 1
+  fi
+  return 0
+}
+
+# human description of where the job $1 is scheduled, for the log lines of 'enable' / 'status'
+function scheduled_job_where () {
+  scheduled_job_files "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    echo "launchd agent $scheduled_job_plist, also run when the Mac wakes up after that time"
+  else
+    echo "crontab, skipped when the machine is off"
+  fi
+}
+
+# removes the schedule of the job $1; returns 1 when it was not scheduled
+function scheduled_job_remove () {
+  local removed=1
+  scheduled_job_files "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    launchctl bootout "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 && removed=0
+    if [ -f "$scheduled_job_plist" ]
+    then
+      rm -f "$scheduled_job_plist"
+      removed=0
+    fi
+  elif command -v crontab > /dev/null 2>&1 && crontab -l 2> /dev/null | grep -qF "$scheduled_job_marker"
+  then
+    crontab -l 2> /dev/null | grep -vF "$scheduled_job_marker" | crontab -
+    removed=0
+  fi
+  return $removed
+}
+
+# true when the job $1 is scheduled on this machine (launchd agent or crontab line)
+function scheduled_job_enabled () {
+  scheduled_job_files "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    [ -f "$scheduled_job_plist" ]
+  else
+    crontab -l 2> /dev/null | grep -qF "$scheduled_job_marker"
+  fi
+}
+
+# scheduled_job_info <job>: when scheduled, sets scheduled_job_time (HH:MM), scheduled_job_args (the playground
+# arguments, one per line) and scheduled_job_loaded (macOS: the agent is loaded in launchd; always 1 with crontab), and
+# returns 0; returns 1 when the job is not scheduled
+function scheduled_job_info () {
+  local hour minute line
+  scheduled_job_time=""
+  scheduled_job_args=""
+  scheduled_job_loaded=0
+  scheduled_job_enabled "$1" || return 1
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    hour=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$scheduled_job_plist" 2> /dev/null)
+    minute=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$scheduled_job_plist" 2> /dev/null)
+    scheduled_job_args=$(plutil -extract ProgramArguments json -o - "$scheduled_job_plist" 2> /dev/null | jq -r '.[1:][]' 2> /dev/null)
+    launchctl print "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 && scheduled_job_loaded=1
+  else
+    line=$(crontab -l 2> /dev/null | grep -F "$scheduled_job_marker")
+    minute=$(echo "$line" | awk '{print $1}')
+    hour=$(echo "$line" | awk '{print $2}')
+    # PATH='…' HOME='…' USER='…' '<playground>' <args> >> '<log>' 2>&1 # marker
+    scheduled_job_args=$(echo "$line" | sed -e "s/^.*\/scripts\/cli\/playground' //" -e "s/ >> '.*$//" | tr ' ' '\n')
+    scheduled_job_loaded=1
+  fi
+  scheduled_job_time=$(printf '%02d:%02d' "$((10#${hour:-0}))" "$((10#${minute:-0}))")
+  return 0
+}
+
+# the values of the flag $1 in scheduled_job_args (set by scheduled_job_info), space separated
+function scheduled_job_flag_values () {
+  awk -v flag="$1" 'take { printf "%s%s", sep, $0; sep=" "; take=0; next } $0 == flag { take=1 }' <<< "$scheduled_job_args"
+}
+
+# parses the HH:MM time $1 into time_hour and time_minute; returns 1 (error logged) when it is not one
+function parse_schedule_time () {
+  if [[ ! "$1" =~ ^([01]?[0-9]|2[0-3]):([0-5][0-9])$ ]]
+  then
+    logerror "❌ --time $1 is not a time HH:MM (00:00 to 23:59)"
+    return 1
+  fi
+  time_hour=$((10#${BASH_REMATCH[1]}))
+  time_minute=$((10#${BASH_REMATCH[2]}))
+}
+
+# 🌙 'playground cloud-resources nightly-cleanup': where the schedule and its log live
+function nightly_cleanup_files () {
+  scheduled_job_files nightly-cleanup
+  nightly_cleanup_plist="$scheduled_job_plist"
+  nightly_cleanup_log="$scheduled_job_log"
+}
+
+# macOS notification of a scheduled job: scheduled_job_notify <title> <message> (nothing elsewhere, nor when osascript
+# is missing)
+function scheduled_job_notify () {
+  local title="$1" message="$2"
   if [[ "$OSTYPE" == "darwin"* ]] && command -v osascript > /dev/null 2>&1
   then
-    osascript -e "display notification \"${1//\"/\'}\" with title \"🧹 kafka-docker-playground nightly cleanup\"" > /dev/null 2>&1 || true
+    osascript -e "display notification \"${message//\"/\'}\" with title \"${title//\"/\'}\"" > /dev/null 2>&1 || true
   fi
+}
+
+# macOS notification for the nightly cleanup
+function nightly_cleanup_notify () {
+  scheduled_job_notify "🧹 kafka-docker-playground nightly cleanup" "$1"
 }
 
 # true when the nightly cleanup is scheduled on this machine (launchd agent or crontab line)
 function nightly_cleanup_enabled () {
-  nightly_cleanup_files
-  if [[ "$OSTYPE" == "darwin"* ]]
-  then
-    [ -f "$nightly_cleanup_plist" ]
-  else
-    crontab -l 2> /dev/null | grep -qF "$NIGHTLY_CLEANUP_MARKER"
-  fi
+  scheduled_job_enabled nightly-cleanup
 }
 
 # true when the Confluent Cloud tip $1 can be shown: never in CI, never after 'playground config set ccloud-hints.enabled
@@ -53073,6 +53425,85 @@ playground_cloud_resources_cleanup_command() {
       done
   }
 
+  # --nightly: read the given variables from the secrets store, unless reading it may wait for someone (1Password with no
+  # service account token asks for Touch ID): the job runs at night, nobody answers
+  function nightly_load_secrets () {
+      if [ "$(get_secret_backend)" == "op" ]
+      then
+          op_load_service_account_token
+          if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]
+          then
+              return 0
+          fi
+      fi
+      load_secrets_env_vars "$@" 2> /dev/null
+  }
+
+  # --nightly, AWS / GCP / Azure: true when the cloud $1 can be cleaned up without a prompt (no 'az login' in a browser,
+  # no Touch ID, no exit 1 that would stop the other clouds); otherwise says why, notifies and the cloud is skipped
+  function nightly_cloud_ready () {
+      local resource="$1" reason=""
+      case "$resource" in
+          aws)
+              nightly_load_secrets AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+              if ! command -v aws > /dev/null 2>&1
+              then
+                  reason="the aws CLI is not installed"
+              elif [ ! -f "$HOME/.aws/credentials" ] && { [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; }
+              then
+                  reason="no $HOME/.aws/credentials, and AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY not readable from the secrets store at night"
+              elif [ -z "$AWS_REGION" ] && [ -z "$(aws configure get region 2> /dev/null)" ]
+              then
+                  reason="no region: AWS_REGION, or region in $HOME/.aws/config"
+              fi
+          ;;
+          gcp)
+              nightly_load_secrets GCP_PROJECT GCP_KEYFILE_CONTENT
+              if [ -z "$GCP_KEYFILE_CONTENT" ] || [ -z "$GCP_PROJECT" ]
+              then
+                  reason="GCP_PROJECT / GCP_KEYFILE_CONTENT not readable from the secrets store at night"
+              elif ! docker info > /dev/null 2>&1
+              then
+                  reason="Docker is not running (the GCP cleanup runs gcloud in a container)"
+              fi
+          ;;
+          azure)
+              nightly_load_secrets AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME
+              if ! command -v az > /dev/null 2>&1
+              then
+                  reason="the az CLI is not installed"
+              elif [ -n "$AZ_CLIENT_ID" ] && [ -n "$AZ_CLIENT_SECRET" ] && [ -n "$AZ_TENANT_ID" ]
+              then
+                  # service principal: login_and_maybe_set_azure_subscription logs in without a browser, but exits on
+                  # a wrong subscription: checked in a subshell, so it can't stop the other clouds
+                  if ! ( login_and_maybe_set_azure_subscription > /dev/null 2>&1 )
+                  then
+                      reason="service principal login or subscription selection failed (AZ_CLIENT_ID, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME)"
+                  fi
+              elif ! az account show > /dev/null 2>&1
+              then
+                  reason="no service principal (AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID) and no saved az login session (it would open a browser)"
+              elif [ -z "$AZURE_SUBSCRIPTION_NAME" ] && [[ "$(az account show --query user.name -o tsv 2> /dev/null)" == *"confluent.io"* ]]
+              then
+                  reason="confluent.io account without AZURE_SUBSCRIPTION_NAME"
+              elif [ -n "$AZURE_SUBSCRIPTION_NAME" ] && ! az account set --subscription "$AZURE_SUBSCRIPTION_NAME" > /dev/null 2>&1
+              then
+                  reason="subscription $AZURE_SUBSCRIPTION_NAME not found"
+              fi
+          ;;
+      esac
+      if [ -n "$reason" ]
+      then
+          logwarn "🌙⏭️ skipping $resource: $reason"
+          if [[ -z "$dry_run" ]]
+          then
+              nightly_cleanup_notify "skipped $resource: $reason"
+          fi
+          return 1
+      fi
+      return 0
+  }
+
   function cleanup_aws () {
       if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
       then
@@ -53202,7 +53633,10 @@ playground_cloud_resources_cleanup_command() {
   }
 
   function cleanup_azure () {
-      login_and_maybe_set_azure_subscription
+      if [[ -z "$nightly" ]] || [ -n "$AZ_CLIENT_ID" ]
+      then
+          login_and_maybe_set_azure_subscription
+      fi
 
       log "Cleanup Azure Resource groups"
       for group in $(az group list --query '[].name' --output tsv)
@@ -53622,6 +54056,11 @@ EOF
 
   for resource in "${resources[@]}"
   do
+      if [[ -n "$nightly" ]] && [[ "$resource" =~ ^(aws|gcp|azure)$ ]]
+      then
+          log "🌙 nightly cleanup of $(date '+%Y-%m-%d %H:%M') for $user: $resource"
+          nightly_cloud_ready "$resource" || continue
+      fi
       case "${resource}" in
 
           "aws")
@@ -53655,82 +54094,31 @@ playground_cloud_resources_nightly_cleanup_enable_command() {
 
   # src/commands/cloud-resources/nightly-cleanup/enable.sh
   time="${args[--time]}"
+  # Convert the space delimited string to an array
+  eval "resources=(${args[--resource]})"
 
-  if [[ ! "$time" =~ ^([01]?[0-9]|2[0-3]):([0-5][0-9])$ ]]
-  then
-      logerror "❌ --time $time is not a time HH:MM (00:00 to 23:59)"
-      exit 1
-  fi
-  hour=$((10#${BASH_REMATCH[1]}))
-  minute=$((10#${BASH_REMATCH[2]}))
-
-  nightly_cleanup_files
-  mkdir -p "$(dirname "$nightly_cleanup_log")"
-  playground_bin="$root_folder/scripts/cli/playground"
-  job_args=(cloud-resources cleanup --resource ccloud --force --nightly)
+  parse_schedule_time "$time" || exit 1
 
   if ! command -v jq > /dev/null 2>&1
   then
       logwarn "⚠️ jq is not installed on this machine: the job would need Docker running at night, install jq (brew install jq)"
   fi
 
-  if [[ "$OSTYPE" == "darwin"* ]]
+  resource_args=()
+  for resource in "${resources[@]}"
+  do
+      resource_args+=(--resource "$resource")
+  done
+
+  scheduled_job_install nightly-cleanup "$time_hour" "$time_minute" cloud-resources cleanup "${resource_args[@]}" --force --nightly || exit 1
+  log "🌙 nightly cleanup of ${resources[*]} scheduled every day at $(printf '%02d:%02d' $time_hour $time_minute) ($(scheduled_job_where nightly-cleanup))"
+  log "📄 log: $scheduled_job_log"
+  if [[ " ${resources[*]} " == *" ccloud "* ]]
   then
-      # the agent gets no shell startup file: it runs with the PATH of this shell (bash 4+, confluent, jq)
-      xml_escape () { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' <<< "$1"; }
-      mkdir -p "$(dirname "$nightly_cleanup_plist")"
-      {
-          echo '<?xml version="1.0" encoding="UTF-8"?>'
-          echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
-          echo '<plist version="1.0">'
-          echo '<dict>'
-          echo "  <key>Label</key><string>$NIGHTLY_CLEANUP_LABEL</string>"
-          echo '  <key>ProgramArguments</key>'
-          echo '  <array>'
-          echo "    <string>$(xml_escape "$playground_bin")</string>"
-          for arg in "${job_args[@]}"
-          do
-              echo "    <string>$arg</string>"
-          done
-          echo '  </array>'
-          echo '  <key>EnvironmentVariables</key>'
-          echo '  <dict>'
-          echo "    <key>PATH</key><string>$(xml_escape "$PATH")</string>"
-          echo "    <key>HOME</key><string>$(xml_escape "$HOME")</string>"
-          echo "    <key>USER</key><string>$(xml_escape "$USER")</string>"
-          echo '  </dict>'
-          echo '  <key>StartCalendarInterval</key>'
-          echo "  <dict><key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
-          echo "  <key>StandardOutPath</key><string>$(xml_escape "$nightly_cleanup_log")</string>"
-          echo "  <key>StandardErrorPath</key><string>$(xml_escape "$nightly_cleanup_log")</string>"
-          echo '</dict>'
-          echo '</plist>'
-      } > "$nightly_cleanup_plist"
-      if ! plutil -lint "$nightly_cleanup_plist" > /dev/null
-      then
-          logerror "❌ invalid launchd agent $nightly_cleanup_plist"
-          exit 1
-      fi
-      launchctl bootout "gui/$(id -u)/$NIGHTLY_CLEANUP_LABEL" > /dev/null 2>&1 || true
-      if ! launchctl bootstrap "gui/$(id -u)" "$nightly_cleanup_plist"
-      then
-          logerror "❌ could not load the launchd agent $nightly_cleanup_plist"
-          exit 1
-      fi
-      log "🌙 nightly cleanup scheduled every day at $(printf '%02d:%02d' $hour $minute) (launchd agent $nightly_cleanup_plist, also run when the Mac wakes up after that time)"
-  elif command -v crontab > /dev/null 2>&1
-  then
-      line="$minute $hour * * * PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' ${job_args[*]} >> '$nightly_cleanup_log' 2>&1 $NIGHTLY_CLEANUP_MARKER"
-      { crontab -l 2> /dev/null | grep -vF "$NIGHTLY_CLEANUP_MARKER"; echo "$line"; } | crontab -
-      log "🌙 nightly cleanup scheduled every day at $(printf '%02d:%02d' $hour $minute) (crontab, skipped when the machine is off)"
-  else
-      logerror "❌ neither launchd (macOS) nor crontab found: schedule this yourself: $playground_bin ${job_args[*]}"
-      exit 1
+      log "🔑 the confluent CLI must stay logged in: confluent login --save"
   fi
-  log "📄 log: $nightly_cleanup_log"
-  log "🔑 the confluent CLI must stay logged in: confluent login --save"
-  log "🔎 what tonight's run would delete, as of now:"
-  playground cloud-resources cleanup --resource ccloud --nightly --dry-run
+  log "🔎 what tonight's run would delete, as of now (a cloud it would skip at night is skipped here too):"
+  playground cloud-resources cleanup "${resource_args[@]}" --nightly --dry-run
   log "👉 playground cloud-resources nightly-cleanup status   # after the first night"
 
 }
@@ -53739,24 +54127,9 @@ playground_cloud_resources_nightly_cleanup_enable_command() {
 playground_cloud_resources_nightly_cleanup_disable_command() {
 
   # src/commands/cloud-resources/nightly-cleanup/disable.sh
-  nightly_cleanup_files
-  removed=0
-  if [[ "$OSTYPE" == "darwin"* ]]
+  if scheduled_job_remove nightly-cleanup
   then
-      launchctl bootout "gui/$(id -u)/$NIGHTLY_CLEANUP_LABEL" > /dev/null 2>&1 && removed=1
-      if [ -f "$nightly_cleanup_plist" ]
-      then
-          rm -f "$nightly_cleanup_plist"
-          removed=1
-      fi
-  elif command -v crontab > /dev/null 2>&1 && crontab -l 2> /dev/null | grep -qF "$NIGHTLY_CLEANUP_MARKER"
-  then
-      crontab -l 2> /dev/null | grep -vF "$NIGHTLY_CLEANUP_MARKER" | crontab -
-      removed=1
-  fi
-  if [ $removed -eq 1 ]
-  then
-      log "🛑 nightly cleanup disabled (its log stays in $nightly_cleanup_log)"
+      log "🛑 nightly cleanup disabled (its log stays in $scheduled_job_log)"
   else
       log "🤷 the nightly cleanup was not scheduled"
   fi
@@ -53768,37 +54141,25 @@ playground_cloud_resources_nightly_cleanup_status_command() {
 
   # src/commands/cloud-resources/nightly-cleanup/status.sh
   lines="${args[--lines]}"
-  nightly_cleanup_files
-  if [[ "$OSTYPE" == "darwin"* ]]
+  if scheduled_job_info nightly-cleanup
   then
-      if [ -f "$nightly_cleanup_plist" ]
+      # the clouds are the values of the --resource arguments of the job
+      resources=$(scheduled_job_flag_values --resource)
+      if [ "$scheduled_job_loaded" == "1" ]
       then
-          hour=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$nightly_cleanup_plist" 2> /dev/null)
-          minute=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$nightly_cleanup_plist" 2> /dev/null)
-          if launchctl print "gui/$(id -u)/$NIGHTLY_CLEANUP_LABEL" > /dev/null 2>&1
-          then
-              log "🌙 nightly cleanup scheduled every day at $(printf '%02d:%02d' "$hour" "$minute") (launchd agent loaded)"
-          else
-              logwarn "⚠️ $nightly_cleanup_plist exists but is not loaded: playground cloud-resources nightly-cleanup enable"
-          fi
+          log "🌙 nightly cleanup of ${resources:-ccloud} scheduled every day at $scheduled_job_time ($(scheduled_job_where nightly-cleanup))"
       else
-          log "💤 the nightly cleanup is not scheduled: playground cloud-resources nightly-cleanup enable"
+          logwarn "⚠️ $scheduled_job_plist exists but is not loaded: playground cloud-resources nightly-cleanup enable"
       fi
   else
-      line=$(crontab -l 2> /dev/null | grep -F "$NIGHTLY_CLEANUP_MARKER")
-      if [ -n "$line" ]
-      then
-          log "🌙 nightly cleanup scheduled every day at $(printf '%02d:%02d' "$(echo "$line" | awk '{print $2}')" "$(echo "$line" | awk '{print $1}')") (crontab)"
-      else
-          log "💤 the nightly cleanup is not scheduled: playground cloud-resources nightly-cleanup enable"
-      fi
+      log "💤 the nightly cleanup is not scheduled: playground cloud-resources nightly-cleanup enable"
   fi
-  if [ -f "$nightly_cleanup_log" ]
+  if [ -f "$scheduled_job_log" ]
   then
-      log "📄 last $lines lines of $nightly_cleanup_log:"
-      tail -n "$lines" "$nightly_cleanup_log"
+      log "📄 last $lines lines of $scheduled_job_log:"
+      tail -n "$lines" "$scheduled_job_log"
   else
-      log "📄 no run yet ($nightly_cleanup_log)"
+      log "📄 no run yet ($scheduled_job_log)"
   fi
 
 }
@@ -100264,6 +100625,208 @@ playground_ec2_stop_command() {
 }
 
 # :command.function
+playground_ec2_auto_stop_enable_command() {
+
+  # src/commands/ec2/auto-stop/enable.sh
+  time="${args[--time]}"
+  idle_minutes="${args[--idle-minutes]}"
+
+  parse_schedule_time "$time" || exit 1
+  if [ "$idle_minutes" -lt 0 ]
+  then
+      logerror "❌ --idle-minutes $idle_minutes must be 0 or more"
+      exit 1
+  fi
+
+  scheduled_job_install ec2-auto-stop "$time_hour" "$time_minute" ec2 auto-stop run --idle-minutes "$idle_minutes" --scheduled || exit 1
+  log "⏰ ec2 auto-stop scheduled every day at $(printf '%02d:%02d' $time_hour $time_minute) ($(scheduled_job_where ec2-auto-stop))"
+  if [ "$idle_minutes" -eq 0 ]
+  then
+      log "💤 every instance still running is stopped, whatever it is doing (except the ones tagged playground-keep-running=true)"
+  else
+      log "💤 an instance whose CPU reached 5% in the last $idle_minutes minutes, or started less than $idle_minutes minutes ago, is kept"
+  fi
+  log "📄 log: $scheduled_job_log"
+  log "🔑 the aws CLI must work without a prompt at that time: ~/.aws/credentials (no SSO login to renew) and a region"
+  log "🔎 what tonight's run would stop, as of now:"
+  playground ec2 auto-stop run --idle-minutes "$idle_minutes" --dry-run
+  log "👉 playground ec2 auto-stop status   # after the first run"
+
+}
+
+# :command.function
+playground_ec2_auto_stop_disable_command() {
+
+  # src/commands/ec2/auto-stop/disable.sh
+  if scheduled_job_remove ec2-auto-stop
+  then
+      log "🛑 ec2 auto-stop disabled (its log stays in $scheduled_job_log)"
+  else
+      log "🤷 the ec2 auto-stop was not scheduled"
+  fi
+
+}
+
+# :command.function
+playground_ec2_auto_stop_status_command() {
+
+  # src/commands/ec2/auto-stop/status.sh
+  lines="${args[--lines]}"
+  if scheduled_job_info ec2-auto-stop
+  then
+      idle_minutes=$(scheduled_job_flag_values --idle-minutes)
+      if [ "$scheduled_job_loaded" == "1" ]
+      then
+          log "⏰ ec2 auto-stop scheduled every day at $scheduled_job_time, idle minutes ${idle_minutes:-60} ($(scheduled_job_where ec2-auto-stop))"
+      else
+          logwarn "⚠️ $scheduled_job_plist exists but is not loaded: playground ec2 auto-stop enable"
+      fi
+  else
+      log "💤 the ec2 auto-stop is not scheduled: playground ec2 auto-stop enable"
+  fi
+  if [ -f "$scheduled_job_log" ]
+  then
+      log "📄 last $lines lines of $scheduled_job_log:"
+      tail -n "$lines" "$scheduled_job_log"
+  else
+      log "📄 no run yet ($scheduled_job_log)"
+  fi
+
+}
+
+# :command.function
+playground_ec2_auto_stop_run_command() {
+
+  # src/commands/ec2/auto-stop/run.sh
+  idle_minutes="${args[--idle-minutes]}"
+  dry_run="${args[--dry-run]}"
+  scheduled="${args[--scheduled]}"
+
+  notify_title="⏰ kafka-docker-playground ec2 auto-stop"
+
+  if [ "$idle_minutes" -lt 0 ]
+  then
+      logerror "❌ --idle-minutes $idle_minutes must be 0 or more"
+      exit 1
+  fi
+
+  if [[ -n "$scheduled" ]]
+  then
+      log "⏰ ec2 auto-stop of $(date '+%Y-%m-%d %H:%M') for $(whoami), idle minutes $idle_minutes"
+  fi
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔎 dry-run: listing what would be stopped, nothing is stopped"
+  fi
+
+  # nobody answers at night: a missing or expired login is reported, not prompted for
+  if ! aws sts get-caller-identity > /dev/null 2>&1
+  then
+      logerror "❌ the aws CLI can't authenticate (~/.aws/credentials, expired SSO session?): no instance checked"
+      if [[ -n "$scheduled" ]]
+      then
+          scheduled_job_notify "$notify_title" "could not reach AWS (expired credentials?): no instance checked"
+      fi
+      exit 1
+  fi
+
+  # UTC timestamp of $1 seconds since the epoch, in the format of CloudWatch and of LaunchTime (compared as strings)
+  utc_time () {
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          date -u -r "$1" '+%Y-%m-%dT%H:%M:%S'
+      else
+          date -u -d "@$1" '+%Y-%m-%dT%H:%M:%S'
+      fi
+  }
+  now=$(date +%s)
+  window_start=$(utc_time $((now - idle_minutes * 60)))
+  window_end=$(utc_time "$now")
+
+  stopped=()
+  nb_running=0
+  for instance in $(ec2_instance_list)
+  do
+      name=$(echo "$instance" | cut -d "/" -f 1)
+      state=$(echo "$instance" | cut -d "/" -f 2)
+      id=$(echo "$instance" | cut -d "/" -f 4)
+      if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ] || [ -z "$id" ]
+      then
+          continue
+      fi
+      nb_running=$((nb_running + 1))
+
+      details=$(aws ec2 describe-instances --instance-ids "$id" --output json 2> /dev/null | jq -r '.Reservations[0].Instances[0] | [(.LaunchTime // ""), ((.Tags // []) | map(select(.Key == "playground-keep-running")) | .[0].Value // "")] | @tsv')
+      launch_time=$(cut -f 1 <<< "$details")
+      keep_tag=$(cut -f 2 <<< "$details" | tr '[:upper:]' '[:lower:]')
+
+      if [ "$keep_tag" == "true" ]
+      then
+          log "🏷️ keeping $name ($id): tag playground-keep-running=true"
+          continue
+      fi
+
+      if [ "$idle_minutes" -gt 0 ]
+      then
+          # LaunchTime is the last start, in UTC (2026-11-17T08:00:00+00:00)
+          if [ -n "$launch_time" ] && [[ "${launch_time:0:19}" > "$window_start" ]]
+          then
+              log "🕐 keeping $name ($id): started at $launch_time, less than $idle_minutes minutes ago"
+              continue
+          fi
+          max_cpu=$(aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUUtilization \
+              --dimensions "Name=InstanceId,Value=$id" --start-time "${window_start}Z" --end-time "${window_end}Z" \
+              --period 300 --statistics Average --output json 2> /dev/null | jq -r '[.Datapoints[].Average] | if length == 0 then "" else (max * 10 | round / 10 | tostring) end')
+          if [ -z "$max_cpu" ]
+          then
+              # no metrics, nothing proves it is idle: kept, rather than stopping a run in progress
+              log "❓ keeping $name ($id): no CloudWatch CPU metrics in the last $idle_minutes minutes"
+              continue
+          fi
+          if awk -v c="$max_cpu" 'BEGIN { exit !(c >= 5) }'
+          then
+              log "🔥 keeping $name ($id): busy, CPU reached ${max_cpu}% in the last $idle_minutes minutes"
+              continue
+          fi
+          reason="idle, CPU at most ${max_cpu}% in the last $idle_minutes minutes"
+      else
+          reason="--idle-minutes 0"
+      fi
+
+      if [[ -n "$dry_run" ]]
+      then
+          log "🔎 dry-run, would stop $name ($id): $reason"
+          continue
+      fi
+      log "🔴 stopping $name ($id): $reason"
+      if aws ec2 stop-instances --instance-ids "$id" > /dev/null 2>&1
+      then
+          remove_ec2_instance_from_running_list "$name"
+          stopped+=("$name")
+      else
+          logerror "❌ failed to stop $name ($id)"
+          if [[ -n "$scheduled" ]]
+          then
+              scheduled_job_notify "$notify_title" "failed to stop $name"
+          fi
+      fi
+  done
+
+  if [ $nb_running -eq 0 ]
+  then
+      log "💤 no running instance"
+  elif [[ -z "$dry_run" ]]
+  then
+      log "⏰ stopped ${#stopped[@]} of $nb_running running instance(s)"
+      if [ ${#stopped[@]} -gt 0 ] && [[ -n "$scheduled" ]]
+      then
+          scheduled_job_notify "$notify_title" "stopped ${stopped[*]} (playground ec2 start to get it back)"
+      fi
+  fi
+
+}
+
+# :command.function
 playground_ec2_start_command() {
 
   # src/commands/ec2/start.sh
@@ -111655,6 +112218,26 @@ playground_cloud_resources_nightly_cleanup_enable_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --resource)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--resource']+x} ]]; then
+            args['--resource']="$escaped"
+          elif [[ -z "${unique_lookup["--resource:${escaped}"]:-}" ]]; then
+            args['--resource']="${args['--resource']} $escaped"
+          fi
+          unique_lookup["--resource:${escaped}"]=1
+          shift
+          shift
+        else
+          printf "%s\n" "--resource requires an argument: --resource RESOURCE" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111686,6 +112269,17 @@ playground_cloud_resources_nightly_cleanup_enable_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--time']:-} ]] || args['--time']="02:00"
+  [[ -n ${args['--resource']:-} ]] || args['--resource']="ccloud"
+
+  # :command.whitelist_filter
+  input_array=''
+  eval "input_array=(${args[--resource]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(ccloud|aws|gcp|azure)$ ]]; then
+      printf "%s\n" "--resource must be one of: ccloud, aws, gcp, azure" >&2
+      exit 1
+    fi
+  done
 
 }
 
@@ -156988,6 +157582,13 @@ playground_ec2_parse_requirements() {
       shift $#
       ;;
 
+    auto-stop)
+      action="auto-stop"
+      shift
+      playground_ec2_auto_stop_parse_requirements "$@"
+      shift $#
+      ;;
+
     start)
       action="start"
       shift
@@ -157587,6 +158188,459 @@ playground_ec2_stop_parse_requirements() {
     validation_output="$(validate_not_empty "${args['--instance']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--instance, -i INSTANCE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ec2_auto_stop_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ec2_auto_stop_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    enable)
+      action="enable"
+      shift
+      playground_ec2_auto_stop_enable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    disable)
+      action="disable"
+      shift
+      playground_ec2_auto_stop_disable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_ec2_auto_stop_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    run)
+      action="run"
+      shift
+      playground_ec2_auto_stop_run_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_ec2_auto_stop_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ec2_auto_stop_enable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ec2_auto_stop_enable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ec2 auto-stop enable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --time)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--time']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--time requires an argument: --time TIME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --idle-minutes)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--idle-minutes']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--idle-minutes requires an argument: --idle-minutes MINUTES" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--time']:-} ]] || args['--time']="20:00"
+  [[ -n ${args['--idle-minutes']:-} ]] || args['--idle-minutes']="60"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--idle-minutes'] ]]; then
+    validation_output="$(validate_integer "${args['--idle-minutes']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--idle-minutes MINUTES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ec2_auto_stop_disable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ec2_auto_stop_disable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ec2 auto-stop disable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ec2_auto_stop_status_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ec2_auto_stop_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ec2 auto-stop status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --lines)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--lines']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--lines requires an argument: --lines LINES" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--lines']:-} ]] || args['--lines']="40"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--lines'] ]]; then
+    validation_output="$(validate_integer "${args['--lines']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--lines LINES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ec2_auto_stop_run_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ec2_auto_stop_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ec2 auto-stop run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --idle-minutes)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--idle-minutes']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--idle-minutes requires an argument: --idle-minutes MINUTES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --scheduled)
+
+        # :flag.case_no_arg
+        args['--scheduled']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--idle-minutes']:-} ]] || args['--idle-minutes']="60"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--idle-minutes'] ]]; then
+    validation_output="$(validate_integer "${args['--idle-minutes']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--idle-minutes MINUTES" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -164015,6 +165069,7 @@ playground_cloud_resources_nightly_cleanup_completion() {
 # :command.completion_function
 playground_cloud_resources_nightly_cleanup_enable_completion() {
   local completion_current="$1"
+  local -A completion_used_flag_values=()
   shift
 
   while [[ $# -gt 0 ]]; do
@@ -164033,6 +165088,28 @@ playground_cloud_resources_nightly_cleanup_enable_completion() {
         completion_blocked_flags["--time"]=1
 
         ;;
+      --resource)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ccloud"
+            "aws"
+            "gcp"
+            "azure"
+          )
+          local completion_value
+          for completion_value in "${completion_values[@]}"; do
+            if [[ -z "${completion_used_flag_values["--resource:$completion_value"]:-}" ]]; then
+              completion_candidates "$completion_current" "$completion_value"
+            fi
+          done
+
+          return
+        fi
+        completion_used_flag_values["--resource:$1"]=1
+        shift
+
+        ;;
       *)
         return
         ;;
@@ -164042,6 +165119,7 @@ playground_cloud_resources_nightly_cleanup_enable_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --time "$completion_current" --time
+    completion_flag_candidates --resource "$completion_current" --resource
   fi
 
 }
@@ -187708,6 +188786,11 @@ playground_ec2_completion() {
         playground_ec2_stop_completion "$completion_current" "$@"
         return
         ;;
+      auto-stop)
+        shift
+        playground_ec2_auto_stop_completion "$completion_current" "$@"
+        return
+        ;;
       start)
         shift
         playground_ec2_start_completion "$completion_current" "$@"
@@ -187732,7 +188815,7 @@ playground_ec2_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" create delete open list stop start sync-repro-folder push-secrets
+  completion_candidates "$completion_current" create delete open list stop auto-stop start sync-repro-folder push-secrets
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -188006,6 +189089,192 @@ playground_ec2_stop_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --instance "$completion_current" --instance -i
+  fi
+
+}
+
+# :command.completion_function
+playground_ec2_auto_stop_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      enable)
+        shift
+        playground_ec2_auto_stop_enable_completion "$completion_current" "$@"
+        return
+        ;;
+      disable)
+        shift
+        playground_ec2_auto_stop_disable_completion "$completion_current" "$@"
+        return
+        ;;
+      status)
+        shift
+        playground_ec2_auto_stop_status_completion "$completion_current" "$@"
+        return
+        ;;
+      run)
+        shift
+        playground_ec2_auto_stop_run_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" enable disable status run
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_ec2_auto_stop_enable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --time)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--time"]=1
+
+        ;;
+      --idle-minutes)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--idle-minutes"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --time "$completion_current" --time
+    completion_flag_candidates --idle-minutes "$completion_current" --idle-minutes
+  fi
+
+}
+
+# :command.completion_function
+playground_ec2_auto_stop_disable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_ec2_auto_stop_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --lines)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--lines"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --lines "$completion_current" --lines
+  fi
+
+}
+
+# :command.completion_function
+playground_ec2_auto_stop_run_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --idle-minutes)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--idle-minutes"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --idle-minutes "$completion_current" --idle-minutes
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
   fi
 
 }
@@ -189310,6 +190579,11 @@ run() {
     "ec2 allow-my-ip") playground_ec2_allow_my_ip_command ;;
     "ec2 list") playground_ec2_list_command ;;
     "ec2 stop") playground_ec2_stop_command ;;
+    "ec2 auto-stop") playground_ec2_auto_stop_command ;;
+    "ec2 auto-stop enable") playground_ec2_auto_stop_enable_command ;;
+    "ec2 auto-stop disable") playground_ec2_auto_stop_disable_command ;;
+    "ec2 auto-stop status") playground_ec2_auto_stop_status_command ;;
+    "ec2 auto-stop run") playground_ec2_auto_stop_run_command ;;
     "ec2 start") playground_ec2_start_command ;;
     "ec2 status") playground_ec2_status_command ;;
     "ec2 sync-repro-folder") playground_ec2_sync_repro_folder_command ;;
