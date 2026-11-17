@@ -5,6 +5,14 @@ Cloud), sinks and sources, converters and transforms, offsets and lag, the dead 
 customer configs to reproduce. 170+ self-managed and 100+ fully managed connector examples are listed in the
 [👾 Content](/content.md) page.
 
+> [!TIP]
+> **🐳 A log bundle, with nothing installed but Docker.** `playground analyze logs` is also a public image: run it on
+> the Connect worker logs or the support bundle attached to the case, from the folder that holds it, with no clone, no CLI and no environment.
+> `--network none`: the logs never leave the machine.
+> `docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f <bundle>.zip --sanitize`
+> (to try it first: `cd /tmp && docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs --sample connect_task_failure`).
+> More: [🐳 With nothing installed but Docker](/deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker).
+
 ## 🚀 5 commands to try
 
 ```bash
