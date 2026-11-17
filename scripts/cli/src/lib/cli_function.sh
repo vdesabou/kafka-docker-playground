@@ -12489,37 +12489,195 @@ function ccloud_in_use_api_keys () {
   } | grep -v '^$' | sort -u
 }
 
-# 🌙 'playground cloud-resources nightly-cleanup': where the schedule and its log live (launchd agent on macOS, a crontab
-# line elsewhere)
-NIGHTLY_CLEANUP_LABEL="io.kafka-docker-playground.nightly-cleanup"
-NIGHTLY_CLEANUP_MARKER="# kafka-docker-playground nightly-cleanup"
-function nightly_cleanup_files () {
-  nightly_cleanup_plist="$HOME/Library/LaunchAgents/$NIGHTLY_CLEANUP_LABEL.plist"
+# ⏰ jobs the playground schedules on this machine, every day at a time ('playground cloud-resources nightly-cleanup',
+# 'playground ec2 auto-stop'): a launchd agent on macOS (also run when the Mac wakes up after that time), a crontab line
+# elsewhere. The job is a 'playground' command of this checkout, run with the PATH of the shell that scheduled it (the
+# agent gets no shell startup file). Each function takes the job name first (nightly-cleanup, ec2-auto-stop).
+
+# sets scheduled_job_label, scheduled_job_marker (crontab), scheduled_job_plist and scheduled_job_log for the job $1
+function scheduled_job_files () {
+  scheduled_job_label="io.kafka-docker-playground.$1"
+  scheduled_job_marker="# kafka-docker-playground $1"
+  scheduled_job_plist="$HOME/Library/LaunchAgents/$scheduled_job_label.plist"
   if [[ "$OSTYPE" == "darwin"* ]]
   then
-    nightly_cleanup_log="$HOME/Library/Logs/kafka-docker-playground/nightly-cleanup.log"
+    scheduled_job_log="$HOME/Library/Logs/kafka-docker-playground/$1.log"
   else
-    nightly_cleanup_log="${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/nightly-cleanup.log"
+    scheduled_job_log="${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/$1.log"
   fi
 }
 
-# macOS notification for the nightly cleanup (nothing elsewhere, nor when osascript is missing)
-function nightly_cleanup_notify () {
+# scheduled_job_install <job> <hour> <minute> <playground arguments…>: (re)schedules the job every day at hour:minute;
+# returns 1 (error logged) when it can't
+function scheduled_job_install () {
+  local job="$1" hour="$2" minute="$3"
+  shift 3
+  local playground_bin="$root_folder/scripts/cli/playground" arg line
+  scheduled_job_files "$job"
+  mkdir -p "$(dirname "$scheduled_job_log")"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    xml_escape () { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' <<< "$1"; }
+    mkdir -p "$(dirname "$scheduled_job_plist")"
+    {
+      echo '<?xml version="1.0" encoding="UTF-8"?>'
+      echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+      echo '<plist version="1.0">'
+      echo '<dict>'
+      echo "  <key>Label</key><string>$scheduled_job_label</string>"
+      echo '  <key>ProgramArguments</key>'
+      echo '  <array>'
+      echo "    <string>$(xml_escape "$playground_bin")</string>"
+      for arg in "$@"
+      do
+        echo "    <string>$(xml_escape "$arg")</string>"
+      done
+      echo '  </array>'
+      echo '  <key>EnvironmentVariables</key>'
+      echo '  <dict>'
+      echo "    <key>PATH</key><string>$(xml_escape "$PATH")</string>"
+      echo "    <key>HOME</key><string>$(xml_escape "$HOME")</string>"
+      echo "    <key>USER</key><string>$(xml_escape "$USER")</string>"
+      echo '  </dict>'
+      echo '  <key>StartCalendarInterval</key>'
+      echo "  <dict><key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
+      echo "  <key>StandardOutPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
+      echo "  <key>StandardErrorPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
+      echo '</dict>'
+      echo '</plist>'
+    } > "$scheduled_job_plist"
+    if ! plutil -lint "$scheduled_job_plist" > /dev/null
+    then
+      logerror "❌ invalid launchd agent $scheduled_job_plist"
+      return 1
+    fi
+    launchctl bootout "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 || true
+    if ! launchctl bootstrap "gui/$(id -u)" "$scheduled_job_plist"
+    then
+      logerror "❌ could not load the launchd agent $scheduled_job_plist"
+      return 1
+    fi
+  elif command -v crontab > /dev/null 2>&1
+  then
+    line="$minute $hour * * * PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' $* >> '$scheduled_job_log' 2>&1 $scheduled_job_marker"
+    { crontab -l 2> /dev/null | grep -vF "$scheduled_job_marker"; echo "$line"; } | crontab -
+  else
+    logerror "❌ neither launchd (macOS) nor crontab found: schedule this yourself: $playground_bin $*"
+    return 1
+  fi
+  return 0
+}
+
+# human description of where the job $1 is scheduled, for the log lines of 'enable' / 'status'
+function scheduled_job_where () {
+  scheduled_job_files "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    echo "launchd agent $scheduled_job_plist, also run when the Mac wakes up after that time"
+  else
+    echo "crontab, skipped when the machine is off"
+  fi
+}
+
+# removes the schedule of the job $1; returns 1 when it was not scheduled
+function scheduled_job_remove () {
+  local removed=1
+  scheduled_job_files "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    launchctl bootout "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 && removed=0
+    if [ -f "$scheduled_job_plist" ]
+    then
+      rm -f "$scheduled_job_plist"
+      removed=0
+    fi
+  elif command -v crontab > /dev/null 2>&1 && crontab -l 2> /dev/null | grep -qF "$scheduled_job_marker"
+  then
+    crontab -l 2> /dev/null | grep -vF "$scheduled_job_marker" | crontab -
+    removed=0
+  fi
+  return $removed
+}
+
+# true when the job $1 is scheduled on this machine (launchd agent or crontab line)
+function scheduled_job_enabled () {
+  scheduled_job_files "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    [ -f "$scheduled_job_plist" ]
+  else
+    crontab -l 2> /dev/null | grep -qF "$scheduled_job_marker"
+  fi
+}
+
+# scheduled_job_info <job>: when scheduled, sets scheduled_job_time (HH:MM), scheduled_job_args (the playground
+# arguments, one per line) and scheduled_job_loaded (macOS: the agent is loaded in launchd; always 1 with crontab), and
+# returns 0; returns 1 when the job is not scheduled
+function scheduled_job_info () {
+  local hour minute line
+  scheduled_job_time=""
+  scheduled_job_args=""
+  scheduled_job_loaded=0
+  scheduled_job_enabled "$1" || return 1
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    hour=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$scheduled_job_plist" 2> /dev/null)
+    minute=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$scheduled_job_plist" 2> /dev/null)
+    scheduled_job_args=$(plutil -extract ProgramArguments json -o - "$scheduled_job_plist" 2> /dev/null | jq -r '.[1:][]' 2> /dev/null)
+    launchctl print "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 && scheduled_job_loaded=1
+  else
+    line=$(crontab -l 2> /dev/null | grep -F "$scheduled_job_marker")
+    minute=$(echo "$line" | awk '{print $1}')
+    hour=$(echo "$line" | awk '{print $2}')
+    # PATH='…' HOME='…' USER='…' '<playground>' <args> >> '<log>' 2>&1 # marker
+    scheduled_job_args=$(echo "$line" | sed -e "s/^.*\/scripts\/cli\/playground' //" -e "s/ >> '.*$//" | tr ' ' '\n')
+    scheduled_job_loaded=1
+  fi
+  scheduled_job_time=$(printf '%02d:%02d' "$((10#${hour:-0}))" "$((10#${minute:-0}))")
+  return 0
+}
+
+# the values of the flag $1 in scheduled_job_args (set by scheduled_job_info), space separated
+function scheduled_job_flag_values () {
+  awk -v flag="$1" 'take { printf "%s%s", sep, $0; sep=" "; take=0; next } $0 == flag { take=1 }' <<< "$scheduled_job_args"
+}
+
+# parses the HH:MM time $1 into time_hour and time_minute; returns 1 (error logged) when it is not one
+function parse_schedule_time () {
+  if [[ ! "$1" =~ ^([01]?[0-9]|2[0-3]):([0-5][0-9])$ ]]
+  then
+    logerror "❌ --time $1 is not a time HH:MM (00:00 to 23:59)"
+    return 1
+  fi
+  time_hour=$((10#${BASH_REMATCH[1]}))
+  time_minute=$((10#${BASH_REMATCH[2]}))
+}
+
+# 🌙 'playground cloud-resources nightly-cleanup': where the schedule and its log live
+function nightly_cleanup_files () {
+  scheduled_job_files nightly-cleanup
+  nightly_cleanup_plist="$scheduled_job_plist"
+  nightly_cleanup_log="$scheduled_job_log"
+}
+
+# macOS notification of a scheduled job: scheduled_job_notify <title> <message> (nothing elsewhere, nor when osascript
+# is missing)
+function scheduled_job_notify () {
+  local title="$1" message="$2"
   if [[ "$OSTYPE" == "darwin"* ]] && command -v osascript > /dev/null 2>&1
   then
-    osascript -e "display notification \"${1//\"/\'}\" with title \"🧹 kafka-docker-playground nightly cleanup\"" > /dev/null 2>&1 || true
+    osascript -e "display notification \"${message//\"/\'}\" with title \"${title//\"/\'}\"" > /dev/null 2>&1 || true
   fi
+}
+
+# macOS notification for the nightly cleanup
+function nightly_cleanup_notify () {
+  scheduled_job_notify "🧹 kafka-docker-playground nightly cleanup" "$1"
 }
 
 # true when the nightly cleanup is scheduled on this machine (launchd agent or crontab line)
 function nightly_cleanup_enabled () {
-  nightly_cleanup_files
-  if [[ "$OSTYPE" == "darwin"* ]]
-  then
-    [ -f "$nightly_cleanup_plist" ]
-  else
-    crontab -l 2> /dev/null | grep -qF "$NIGHTLY_CLEANUP_MARKER"
-  fi
+  scheduled_job_enabled nightly-cleanup
 }
 
 # true when the Confluent Cloud tip $1 can be shown: never in CI, never after 'playground config set ccloud-hints.enabled

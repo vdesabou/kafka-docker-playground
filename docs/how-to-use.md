@@ -181,7 +181,7 @@ The [playground ec2](/playground%20ec2) CLI command creates and manages AWS EC2 
 
 It is what you want for an example that needs far more CPU or memory than you have, one that must run for hours, or one that does not work on arm64.
 
-Main subcommands are `create`, `open`, `list`, `status`, `start`, `stop`, `delete`, `allow-my-ip`, `sync-repro-folder` and `push-secrets`: check [playground ec2](/playground%20ec2) for the full reference.
+Main subcommands are `create`, `open`, `list`, `status`, `start`, `stop`, `delete`, `allow-my-ip`, `sync-repro-folder` and `push-secrets`: check [playground ec2](/playground%20ec2) for the full reference. [playground ec2 auto-stop](/playground%20ec2%20auto-stop) `enable` stops, every day at `--time` (default `20:00`), your instances still running and idle (CPU under 5% for `--idle-minutes`, default 60; tag `playground-keep-running=true` to keep one).
 
 ## 🦭 Using Podman instead of Docker
 
@@ -409,7 +409,7 @@ playground cloud-resources nightly-cleanup enable     # delete what your example
 ```
 
 * [playground ccloud setup](/playground%20ccloud%20setup) creates an environment `pg-<user>` with one Basic cluster per cloud (`--cloud aws|gcp|azure`, and `--cloud databricks` for an AWS `us-east-2` one used by the Databricks example), with API keys owned by you, and stores all the variables of this section in your [secrets profile](/deep-dive-secrets.md). Every `playground run` of a fully managed example then uses the cluster of the right cloud: no cluster to wait for on each run, and no topic shared with colleagues. The AWS / Azure regions follow `AWS_REGION` / `AZURE_REGION`. Run it again any time: what exists is reused.
-* [playground cloud-resources nightly-cleanup](/playground%20cloud-resources%20nightly-cleanup) `enable` schedules, every night (`--time`, default `02:00`; a launchd agent on macOS, a crontab line on Linux), the deletion of your connectors `*_<user>` on any cluster of the organization with their dlq/success/error topics, of the `pg-<user>-sa-*` environments the playground creates when no cluster is set, and of the topics your runs created on shared clusters. It keeps your own clusters and their topics, and never deletes service accounts nor API keys. `status` shows what the last runs deleted, `disable` removes it.
+* [playground cloud-resources nightly-cleanup](/playground%20cloud-resources%20nightly-cleanup) `enable` schedules, every night (`--time`, default `02:00`; a launchd agent on macOS, a crontab line on Linux), the deletion of your connectors `*_<user>` on any cluster of the organization with their dlq/success/error topics, of the `pg-<user>-sa-*` environments the playground creates when no cluster is set, and of the topics your runs created on shared clusters. It keeps your own clusters and their topics, and never deletes service accounts nor API keys. `--resource aws --resource gcp --resource azure` adds the leftovers of the AWS, GCP and Azure examples (a cloud whose credentials would need a prompt at night is skipped, with a notification). `status` shows what the last runs deleted, `disable` removes it.
 
 > [!WARNING]
 > Variables exported in your shell (`export CLUSTER_NAME=…` in `~/.zshrc`) win over the secrets profile: remove them, `playground ccloud setup` warns about them.

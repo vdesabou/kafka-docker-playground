@@ -241,7 +241,10 @@ Gotchas:
   recorded on shared clusters. It keeps your `pg-<user>-*` clusters and their topics, and never deletes service
   accounts or API keys (the secrets store may be locked at night). A macOS notification tells what it deleted, or that
   the `confluent` CLI was logged out (`confluent login --save`); the log is in
-  `~/Library/Logs/kafka-docker-playground/nightly-cleanup.log`.
+  `~/Library/Logs/kafka-docker-playground/nightly-cleanup.log`. `--resource aws --resource gcp --resource azure`
+  (repeatable, default `ccloud`) adds the leftovers of the AWS / GCP / Azure examples, as `cloud-resources cleanup`
+  deletes them; a cloud whose credentials can't be read without a prompt (1Password without a service account token,
+  no saved `az login` session, Docker stopped for GCP) is skipped with a notification, the others still run.
 - **Tips when you don't use them yet**: the end of `playground run` of a Confluent Cloud example (success or failure)
   and `playground status` suggest `playground ccloud setup` when the run used a cluster created just for it, and
   `playground cloud-resources nightly-cleanup enable` when it is not scheduled, at most once a day each (kept in
@@ -340,7 +343,7 @@ playground stop                                                              # d
 ```bash
 # once: your own clusters (one per cloud, in your secrets profile), and the nightly deletion of what examples leave
 playground ccloud setup [--dry-run] [--cloud aws --cloud gcp --cloud azure --cloud databricks]
-playground cloud-resources nightly-cleanup enable [--time 02:00]   # status, disable
+playground cloud-resources nightly-cleanup enable [--time 02:00] [--resource aws]   # status, disable
 # cluster: reuse yours, or let the playground create one (AWS eu-west-2, basic)
 export ENVIRONMENT=… CLUSTER_NAME=… CLUSTER_CLOUD=… CLUSTER_REGION=… CLUSTER_CREDS="<key>:<secret>"
 playground cleanup-cloud-details
