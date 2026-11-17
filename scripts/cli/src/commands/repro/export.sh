@@ -639,9 +639,21 @@ done < "$tmp_dir/generated"
 
 # the bundle itself (not its path) goes to the clipboard: Cmd+V in Slack, Zendesk or a mail attaches it.
 # Always, unless --no-clipboard: the 'clipboard' config is about the run line and connector configs
+# NSPasteboard is used on purpose: 'set the clipboard to (POSIX file ...)' only puts a «class furl» on
+# the pasteboard, which Slack, Finder and Mail ignore (nothing is attached on Cmd+V). writeObjects with
+# an NSURL declares public.file-url *and* NSFilenamesPboardType, which is what those apps paste as a file.
 if [[ "$OSTYPE" == "darwin"* ]] && [[ ! -n "$no_clipboard" ]]
 then
-    if osascript -e "set the clipboard to (POSIX file \"$final_archive\")" > /dev/null 2>&1
+    if osascript - "$final_archive" > /dev/null 2>&1 <<'EOF'
+use framework "Foundation"
+use framework "AppKit"
+on run argv
+    set pb to current application's NSPasteboard's generalPasteboard()
+    pb's clearContents()
+    set ok to pb's writeObjects:{current application's |NSURL|'s fileURLWithPath:(item 1 of argv)}
+    if (ok as boolean) is false then error "could not write the file to the pasteboard" number 1
+end run
+EOF
     then
         log "📋 bundle copied to the clipboard as a file: paste it (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip)"
     else

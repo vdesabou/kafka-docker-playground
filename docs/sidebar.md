@@ -13,7 +13,6 @@
   - [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md)
   - [🛡️ Platform, security and Cloud infra](/area-platform-security.md)
 - [🍪 Deep dives](/deep-dives.md)
-- [🔁 Day-2 operations](/day-2-operations.md)
 - [🎓 How it works](/how-it-works.md)
 - [🧰 Reproduction toolkit](/reusables.md)
   - [🛠 Reproduction models](/toolkit-reproduction-models.md)

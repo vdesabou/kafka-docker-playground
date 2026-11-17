@@ -1,9 +1,18 @@
 # 🛡️ Platform, security and Cloud infra
 
-For cases about **Confluent for Kubernetes** (CRs, support bundles, upgrades, KRaft migration), **security**
+For cases about **Confluent for Kubernetes** and **cp-ansible** (CRs, inventories, support bundles, upgrades and
+day-2 changes, KRaft migration), **security**
 (SASL, SSL / mTLS, Kerberos, LDAP, RBAC, OAuth / OIDC, ACLs, secrets, audit logs), **certificates**, and the
 **client side of Confluent Cloud connectivity**. Every example runs under the customer's security setup with one flag:
 the CLI then talks to the secured cluster for you.
+
+> [!TIP]
+> **🔁 New: [Day-2 operations with cp-ansible and CFK](/day-2-operations.md).** Seven examples replay a change on a
+> running cluster, the way the cp-ansible and CFK procedures describe it, with a producer and a sink connector running
+> through it: CP rolling upgrades, a **CFK operator upgrade** (plain `helm upgrade`: every pod restarted twice; the
+> block-reconcile procedure: one roll per component), PLAINTEXT to SASL_SSL, RBAC, scale out, static to dynamic KRaft
+> quorum. Each one shows the classic mistake next to the right procedure, measured on the same cluster, prints every
+> `kubectl` / `helm` / `ansible-playbook` command it runs, and ends with a no-record-lost check.
 
 ## 🚀 5 commands to try
 
@@ -22,6 +31,22 @@ Every security example: `playground find-example --category security --limit 50`
 
 ## ❓ Your question, the answer
 
+### 🔁 Day-2 operations: upgrades and changes on a running cluster
+
+What the clients see during the change, the classic mistake next to the right procedure, every low-level command
+printed as it runs: [🔁 Day-2 operations](/day-2-operations.md).
+
+| Question | Command or example |
+| --- | --- |
+| "Our producers failed while cp-ansible upgraded the cluster" | [`other/cp-ansible-day2/rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/rolling-upgrade.sh): the default `deployment_strategy` (`parallel`) restarts every broker at once, `rolling` one at a time; on the customer's inventory: `playground ansible upgrade --to <version>` |
+| "We enabled SASL_SSL / RBAC with cp-ansible and some applications stopped" | [`enable-sasl-ssl.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/enable-sasl-ssl.sh) (the forgotten PLAINTEXT client), [`enable-rbac.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/enable-rbac.sh) (the application without a role binding) |
+| Add brokers or controllers with cp-ansible, static to dynamic KRaft quorum | [`scale-out-brokers.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/scale-out-brokers.sh), [`static-to-dynamic-quorum.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/static-to-dynamic-quorum.sh), `playground ansible add-host <host>` |
+| "We upgraded CP with CFK, what should the clients see?" | [`other/cfk-day2/cfk-rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-rolling-upgrade.sh), or `playground cfk upgrade --to <version>` on a running cfk environment |
+| "After the CFK upgrade every component restarted, some twice" | [`other/cfk-day2/cfk-operator-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-operator-upgrade.sh): `playground cfk operator upgrade --to <version> --no-block-reconcile` (what they did) against `playground cfk operator upgrade --to <version>` (the procedure) |
+| "We ran `helm upgrade`, the operator still runs the old version" | `--reuse-values` keeps the old `image.tag`: `helm -n confluent get values confluent-operator --all \| grep tag`; `playground cfk operator upgrade` uses `--reset-then-reuse-values` |
+| Change a CR and see what the operator does; restart the brokers the supported way | `playground cfk patch <kind>/<name> '<patch>'` (waits for the roll, prints each pod as it restarts and the events), `playground cfk roll kafka/kafka` (annotation `kafkacluster-manual-roll`) |
+| "Our configOverrides disappeared" | a JSON merge patch replaces the whole list: `playground cfk patch kafka/kafka '<patch>'` shows it, `--type json` with an `add` operation keeps the list |
+
 ### ☸️ Confluent for Kubernetes
 
 | Question | Command or example |
@@ -32,6 +57,7 @@ Every security example: `playground find-example --category security --limit 50`
 | The customer's `Connector` CR doesn't behave | `playground connector create-or-update` / `validate` / `diff` read CFK CRs directly |
 | Which operator code logs this error? | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |
 | What would a bundle of my repro look like? | `playground debug cfk generate-bundle`, then `analyze logs` on it |
+| Upgrade CP or the operator, change a CR, restart the brokers | `playground cfk upgrade\|operator upgrade\|patch\|roll`, with a workload: [🔁 Day-2 operations](/day-2-operations.md) |
 
 ### 🅰️ cp-ansible
 
@@ -40,6 +66,7 @@ Every security example: `playground find-example --category security --limit 50`
 | The playbook fails, renders a wrong properties file, or an upgrade breaks | `playground start-environment --environment ansible` (`--tag` for CP, `ANSIBLE_CP_VERSION` / `ANSIBLE_CORE_VERSION` for the customer's cp-ansible and ansible-core), or the customer's own `hosts.yml` with `--ansible-inventory <hosts.yml>` (connection, host names, vault values, certificates and mirrors adapted, each change printed), then edit `environment/ansible/inventory/hosts.yml` and run the playbook again: recipes in [environment/ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ansible) |
 | A connector, ksqlDB or Control Center on a cluster deployed by cp-ansible | any `connect/` example with `--environment ansible` (`--enable-ksqldb`, `--enable-control-center`, `--enable-multiple-brokers`… add hosts): the example's compose override becomes inventory variables, and the `playground` commands work on the hosts (logs from journald, `broker stop` through systemd) |
 | The same with security | `--environment ansible-sasl-ssl`: SASL/PLAIN and SSL on every listener, https REST APIs, certificates generated by cp-ansible |
+| Change a variable, upgrade, add hosts on the running cluster | `playground ansible inventory set <path> <value>` then `playground ansible playbook --rolling`, `playground ansible upgrade --to <version>`, `playground ansible add-host <host>`; with a workload: [🔁 Day-2 operations](/day-2-operations.md) |
 
 ### 🔐 Security
 
@@ -78,7 +105,9 @@ bootstrap and of every broker, TCP, TLS and SNI, authentication) of the
 ## 🍪 Deep dives
 
 - [🔐 Secured environments](/deep-dive-secured-environments.md): SASL, SSL, Kerberos, LDAP, RBAC, OAuth
-- [☸️ Confluent for Kubernetes](/deep-dive-cfk.md): the cfk environment, support bundles
+- [🔁 Day-2 operations](/day-2-operations.md): upgrades and changes on a running cluster, cp-ansible and CFK
+- [☸️ Confluent for Kubernetes](/deep-dive-cfk.md): the cfk environment, support bundles, `playground cfk`
+- [🅰️ cp-ansible](/deep-dive-ansible.md): the ansible environment, the customer's inventory, `playground ansible`
 - [🔑 Credentials and secrets](/deep-dive-secrets.md)
 - [🐌 A slow or broken network](/deep-dive-network-traffic.md), [🏚 Break one TCP connection](/deep-dive-tcp-proxy.md)
 - [🐞 Debugging the JVM](/deep-dive-java-debugging.md): SSL, Kerberos and class loading traces, testssl
