@@ -326,6 +326,7 @@ playground_usage() {
   printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "cfk roll")                                  "
   printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "cfk upgrade")                               "
   printf "  %s   ☸️ The CFK operator\n" "$(green "cfk operator")                              "
+  printf "  %s   🚚 ZooKeeper to KRaft migration with a KRaftMigrationJob\n" "$(green "cfk kraft-migration")                       "
   echo
   printf "%s\n" "$(bold "Flink commands:")"
   printf "  %s   🐿️ Flink commands\n" "$(green "flink")                                     "
@@ -17535,7 +17536,7 @@ playground_ansible_upgrade_usage() {
 playground_cfk_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cfk\n\n"
-    printf "  ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n  \n  The day-2 operations of a cluster deployed by CFK: change a custom\n  resource and watch the operator roll it, upgrade Confluent Platform,\n  upgrade the operator.\n  \n    patch      change a custom resource, wait for CFK to roll it\n    roll       restart the pods of a custom resource, the supported way\n    upgrade    move every custom resource to another Confluent Platform version\n    operator   upgrade the CFK operator (helm chart, CRDs, init containers)\n  \n  Each change waits for the operator: the statefulset changed or not, every\n  pod restarted on the new revision (printed as they roll), the custom\n  resource back to RUNNING, then the events of the custom resource and its\n  pods since the change.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
+    printf "  ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n  \n  The day-2 operations of a cluster deployed by CFK: change a custom\n  resource and watch the operator roll it, upgrade Confluent Platform,\n  upgrade the operator.\n  \n    patch      change a custom resource, wait for CFK to roll it\n    roll       restart the pods of a custom resource, the supported way\n    upgrade    move every custom resource to another Confluent Platform version\n    operator   upgrade the CFK operator (helm chart, CRDs, init containers)\n    kraft-migration   ZooKeeper to KRaft with a KRaftMigrationJob (start,\n  status, finalize, release-lock)\n  \n  Each change waits for the operator: the statefulset changed or not, every\n  pod restarted on the new revision (printed as they roll), the custom\n  resource back to RUNNING, then the events of the custom resource and its\n  pods since the change.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
   else
     printf "playground cfk - ☸️ Confluent for Kubernetes commands (cfk and cfk-rbac environments)\n\n"
   fi
@@ -17546,10 +17547,11 @@ playground_cfk_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "CFK commands:")"
-  printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "patch")   "
-  printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "roll")    "
-  printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "upgrade") "
-  printf "  %s   ☸️ The CFK operator\n" "$(green "operator")"
+  printf "  %s   🩹 Change a custom resource and wait for CFK to roll it\n" "$(green "patch")          "
+  printf "  %s   🔁 Restart the pods of a custom resource, the way CFK supports\n" "$(green "roll")           "
+  printf "  %s   ⬆️ Move every custom resource to another Confluent Platform version\n" "$(green "upgrade")        "
+  printf "  %s   ☸️ The CFK operator\n" "$(green "operator")       "
+  printf "  %s   🚚 ZooKeeper to KRaft migration with a KRaftMigrationJob\n" "$(green "kraft-migration")"
   echo
 
   # :command.long_usage
@@ -17804,6 +17806,220 @@ playground_cfk_operator_upgrade_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground cfk operator upgrade --to 3.4.0\n"
     printf "  playground cfk operator upgrade --to 3.3.1 --no-block-reconcile\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_kraft_migration_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk kraft-migration\n\n"
+    printf "  🚚 ZooKeeper to KRaft migration with a KRaftMigrationJob\n  \n  The steps of docs.confluent.io/operator/current/co-migrate-kraft.html,\n  like the kubectl confluent cluster kraft-migration plugin, with every\n  kubectl command printed:\n  \n    start          KRaftController on HOLD + KRaftMigrationJob, until DUAL-WRITE\n    status         phase, sub-phase, the CRs, the locks, what to do next\n    finalize       the finalize annotation (irreversible), wait for COMPLETE\n    release-lock   release the locks on the CRs, remove use-log4j1\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/day-2-operations\n\n"
+  else
+    printf "playground cfk kraft-migration - 🚚 ZooKeeper to KRaft migration with a KRaftMigrationJob\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk kraft-migration COMMAND\n"
+  printf "  playground cfk kraft-migration [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "CFK commands:")"
+  printf "  %s   🚚 Start the migration and wait for DUAL-WRITE\n" "$(green "start")       "
+  printf "  %s   🔎 Phase, sub-phase, the CRs, the locks and what to do next\n" "$(green "status")      "
+  printf "  %s   🏁 Finalize the migration (irreversible) and wait for COMPLETE\n" "$(green "finalize")    "
+  printf "  %s   🔓 Release the locks of the migration on the CRs\n" "$(green "release-lock")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_kraft_migration_start_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk kraft-migration start\n\n"
+    printf "  🚚 Start the migration and wait for DUAL-WRITE\n  \n  Creates the KRaftController CR with the images of the Kafka CR and the\n  annotations kraft-migration-hold-krc-creation (status HOLD, no pod yet)\n  and use-log4j1 (CP 7.x with CFK 3), then the KRaftMigrationJob CR, and\n  prints each phase and sub-phase as the operator goes through SETUP,\n  MIGRATE and DUAL-WRITE, with the time spent in each. From then on the\n  ZooKeeper, Kafka and KRaftController CRs are locked.\n\n"
+  else
+    printf "playground cfk kraft-migration start - 🚚 Start the migration and wait for DUAL-WRITE\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk kraft-migration start [OPTIONS]\n"
+  printf "  playground cfk kraft-migration start --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--controllers NUMBER")"
+    printf "    🗳️ Replicas of the KRaftController (an odd number)\n"
+    printf "    %s\n" "Default: 3"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--preflight")"
+    printf "    🔎 Enable the ZooKeeper metadata preflight check (annotation\n    kraft-migration-enable-preflight)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME")"
+    printf "    🏷️ Name of the KRaftMigrationJob\n"
+    printf "    %s\n" "Default: kraftmigrationjob"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout SECONDS")"
+    printf "    ⏱️ How long to wait for DUAL-WRITE\n"
+    printf "    %s\n" "Default: 3600"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk kraft-migration start\n"
+    printf "  playground cfk kraft-migration start --controllers 1 --preflight\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_kraft_migration_status_usage() {
+  printf "playground cfk kraft-migration status - 🔎 Phase, sub-phase, the CRs, the locks and what to do next\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk kraft-migration status [OPTIONS]\n"
+  printf "  playground cfk kraft-migration status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME")"
+    printf "    🏷️ Name of the KRaftMigrationJob\n"
+    printf "    %s\n" "Default: kraftmigrationjob"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk kraft-migration status\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_kraft_migration_finalize_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk kraft-migration finalize\n\n"
+    printf "  🏁 Finalize the migration (irreversible) and wait for COMPLETE\n  \n  Annotation kraft-migration-trigger-finalize-to-kraft=true on the\n  KRaftMigrationJob in DUAL-WRITE: the brokers lose their ZooKeeper\n  dependency, no rollback after it.\n\n"
+  else
+    printf "playground cfk kraft-migration finalize - 🏁 Finalize the migration (irreversible) and wait for COMPLETE\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk kraft-migration finalize [OPTIONS]\n"
+  printf "  playground cfk kraft-migration finalize --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME")"
+    printf "    🏷️ Name of the KRaftMigrationJob\n"
+    printf "    %s\n" "Default: kraftmigrationjob"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout SECONDS")"
+    printf "    ⏱️ How long to wait for COMPLETE\n"
+    printf "    %s\n" "Default: 3600"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk kraft-migration finalize\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cfk_kraft_migration_release_lock_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cfk kraft-migration release-lock\n\n"
+    printf "  🔓 Release the locks of the migration on the CRs\n  \n  Annotation kraft-migration-release-cr-lock=true on the KRaftMigrationJob,\n  then waits for the kraft-migration-cr-lock annotations to leave the\n  Kafka and KRaftController CRs: until then every change of these CRs is\n  rejected (GitOps reconciliations fail). --remove-log4j1 then removes\n  the use-log4j1 annotation of the KRaftController (one roll).\n\n"
+  else
+    printf "playground cfk kraft-migration release-lock - 🔓 Release the locks of the migration on the CRs\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cfk kraft-migration release-lock [OPTIONS]\n"
+  printf "  playground cfk kraft-migration release-lock --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME")"
+    printf "    🏷️ Name of the KRaftMigrationJob\n"
+    printf "    %s\n" "Default: kraftmigrationjob"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--remove-log4j1")"
+    printf "    🪵 Also remove the use-log4j1 annotation of the KRaftController (it rolls)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cfk kraft-migration release-lock --remove-log4j1\n"
     echo
 
   fi
@@ -47671,6 +47887,64 @@ function cfk_print_versions () {
         printf "   %-28s %-10s %s\n" "$cr" "$(kubectl -n confluent get "$cr" -o jsonpath='{.status.phase}')" "$(kubectl -n confluent get "$cr" -o jsonpath='{.spec.image.application} (init {.spec.image.init})')"
     done
     kubectl -n confluent get pods -o json | jq -r '.items[] | select(.metadata.labels["platform.confluent.io/type"] != null) | "   pod \(.metadata.name): \(.spec.containers[0].image)"' | sort
+}
+
+function cfk_kmj_wait () {
+    # $1 KRaftMigrationJob, $2 phase to reach (DUAL-WRITE, COMPLETE), $3 timeout in seconds: prints each phase and
+    # sub-phase of the job as the operator goes through them, with the time spent in the previous one
+    local job="$1" target="$2" timeout="$3"
+    local start now deadline state previous="" previous_at phase sub message
+    start=$(date +%s)
+    previous_at=$start
+    deadline=$(( start + timeout ))
+    log_command --polled kubectl -n confluent get kraftmigrationjob "$job" -o 'jsonpath={.status.phase} {.status.subPhase}'
+    while true
+    do
+        now=$(date +%s)
+        state=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.phase} {.status.subPhase}' 2> /dev/null)
+        phase="${state%% *}"
+        sub="${state#* }"
+        if [[ -n "$phase" ]] && [[ "$state" != "$previous" ]]
+        then
+            if [[ -n "$previous" ]]
+            then
+                log "🚚 $(printf '%-11s %-48s' "$phase" "$sub") (previous step: $(( now - previous_at )) s, total $(( now - start )) s)"
+            else
+                log "🚚 $(printf '%-11s %-48s' "$phase" "$sub")"
+            fi
+            previous="$state"
+            previous_at=$now
+        fi
+        if [[ "$phase" == "$target" ]]
+        then
+            log "✅ KRaftMigrationJob $job: $target after $(( now - start )) s"
+            return 0
+        fi
+        if [[ "$phase" == "FAILURE" ]] || [[ $now -gt $deadline ]]
+        then
+            message=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.message}' 2> /dev/null)
+            logerror "❌ KRaftMigrationJob $job: ${phase:-?} / ${sub:-?} after $(( now - start )) s${message:+: $message}"
+            log_command kubectl -n confluent logs deployment/confluent-operator --tail=200
+            kubectl -n confluent logs deployment/confluent-operator --tail=200 2> /dev/null | grep -iE "migration|error" | tail -10 | cut -c1-300
+            kubectl -n confluent get pods
+            return 1
+        fi
+        sleep 10
+    done
+}
+
+function cfk_kmj_locks () {
+    # the CRs that still carry the lock annotation of the migration
+    local cr lock locked=""
+    for cr in kafka/kafka kraftcontroller/kraftcontroller zookeeper/zookeeper
+    do
+        lock=$(kubectl -n confluent get "$cr" -o json 2> /dev/null | jq -r '[.metadata.annotations // {} | to_entries[] | select(.key | test("kraft-migration-cr-lock"))] | length')
+        if [[ "${lock:-0}" != "0" ]]
+        then
+            locked="${locked:+$locked }$cr"
+        fi
+    done
+    echo "$locked"
 }
 
 # src/lib/validations/validate_client_version.sh
@@ -85569,6 +85843,206 @@ playground_cfk_operator_upgrade_command() {
   log "📦 Versions after the operator upgrade"
   cfk_print_versions
   exit $rc
+
+}
+
+# :command.function
+playground_cfk_kraft_migration_start_command() {
+
+  # src/commands/cfk/kraft-migration/start.sh
+  controllers="${args[--controllers]}"
+  preflight="${args[--preflight]}"
+  job="${args[--name]}"
+  timeout="${args[--timeout]}"
+
+  if ! kubectl -n confluent get zookeeper zookeeper > /dev/null 2>&1
+  then
+      logerror "❌ no Zookeeper CR zookeeper in namespace confluent: the cluster already runs KRaft (start the cfk environment with a CP 7.x --tag, without --enable-kraft)"
+      exit 1
+  fi
+  if kubectl -n confluent get kraftmigrationjob "$job" > /dev/null 2>&1
+  then
+      logwarn "⚠️ KRaftMigrationJob $job already exists, waiting for DUAL-WRITE (playground cfk kraft-migration status for the details)"
+      cfk_kmj_wait "$job" "DUAL-WRITE" "$timeout"
+      exit $?
+  fi
+  application=$(kubectl -n confluent get kafka kafka -o jsonpath='{.spec.image.application}')
+  init=$(kubectl -n confluent get kafka kafka -o jsonpath='{.spec.image.init}')
+  cp_major=$(echo "${application##*:}" | cut -d '.' -f 1)
+
+  log "🗳️ Step 1: KRaftController CR, $controllers replicas, the images of the Kafka CR ($application), on HOLD until the migration job mutates it"
+  log_command kubectl -n confluent get kafka kafka -o yaml
+  log4j1_annotation=""
+  if [[ "$cp_major" =~ ^[0-9]+$ ]] && [[ "$cp_major" -lt 8 ]]
+  then
+      log4j1_annotation='    platform.confluent.io/use-log4j1: "true"'
+  fi
+  manifest=$(cat << EOM
+apiVersion: platform.confluent.io/v1beta1
+kind: KRaftController
+metadata:
+  name: kraftcontroller
+  namespace: confluent
+  annotations:
+    platform.confluent.io/kraft-migration-hold-krc-creation: "true"
+${log4j1_annotation}
+spec:
+  replicas: ${controllers}
+  dataVolumeCapacity: 10Gi
+  image:
+    application: ${application}
+    init: ${init}
+EOM
+  )
+  echo "$manifest" | sed '/^$/d; s/^/   /'
+  log_command kubectl apply -f kraftcontroller.yaml
+  echo "$manifest" | sed '/^$/d' | kubectl apply -f - | sed 's/^/   /'
+  for i in $(seq 1 30)
+  do
+      if [[ "$(kubectl -n confluent get kraftcontroller kraftcontroller -o jsonpath='{.status.phase}' 2> /dev/null)" == "HOLD" ]]
+      then
+          break
+      fi
+      sleep 2
+  done
+  log_command kubectl -n confluent get kraftcontroller kraftcontroller
+  kubectl -n confluent get kraftcontroller kraftcontroller | sed 's/^/   /'
+
+  log "🚚 Step 2: KRaftMigrationJob $job${preflight:+, with the ZooKeeper metadata preflight check}"
+  preflight_annotation=""
+  if [[ -n "$preflight" ]]
+  then
+      preflight_annotation=$'  annotations:\n    platform.confluent.io/kraft-migration-enable-preflight: "true"'
+  fi
+  manifest=$(cat << EOM
+apiVersion: platform.confluent.io/v1beta1
+kind: KRaftMigrationJob
+metadata:
+  name: ${job}
+  namespace: confluent
+${preflight_annotation}
+spec:
+  dependencies:
+    kafka:
+      name: kafka
+      namespace: confluent
+    zookeeper:
+      name: zookeeper
+      namespace: confluent
+    kRaftController:
+      name: kraftcontroller
+      namespace: confluent
+EOM
+  )
+  echo "$manifest" | sed '/^$/d; s/^/   /'
+  log_command kubectl apply -f kraftmigrationjob.yaml
+  echo "$manifest" | sed '/^$/d' | kubectl apply -f - | sed 's/^/   /'
+
+  log "⏳ Step 3: the operator goes through SETUP (Kafka rolls, the controllers start), MIGRATE (metadata copied from ZooKeeper, Kafka rolls again) to DUAL-WRITE, where it waits for you"
+  cfk_kmj_wait "$job" "DUAL-WRITE" "$timeout" || exit 1
+  log "🔒 locked CRs: $(cfk_kmj_locks)"
+  log "🎓 validate the cluster, then: playground cfk kraft-migration finalize (irreversible), or roll back to ZooKeeper ("Roll Back to ZooKeeper" in the CFK docs)"
+
+}
+
+# :command.function
+playground_cfk_kraft_migration_status_command() {
+
+  # src/commands/cfk/kraft-migration/status.sh
+  job="${args[--name]}"
+
+  if ! kubectl -n confluent get kraftmigrationjob "$job" > /dev/null 2>&1
+  then
+      logerror "❌ no KRaftMigrationJob $job in namespace confluent (playground cfk kraft-migration start)"
+      exit 1
+  fi
+  log_command kubectl -n confluent get kraftmigrationjob "$job" -o yaml
+  phase=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.phase}')
+  sub=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.subPhase}')
+  message=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.message}')
+  log "🚚 KRaftMigrationJob $job: $phase / $sub${message:+ ($message)}"
+  for cr in kafka/kafka kraftcontroller/kraftcontroller zookeeper/zookeeper
+  do
+      if kubectl -n confluent get "$cr" > /dev/null 2>&1
+      then
+          printf "   %-32s %-10s %s\n" "$cr" "$(kubectl -n confluent get "$cr" -o jsonpath='{.status.phase}')" "$(kubectl -n confluent get "$cr" -o jsonpath='ready {.status.readyReplicas}/{.status.replicas}')"
+      else
+          printf "   %-32s %s\n" "$cr" "(deleted)"
+      fi
+  done
+  locks=$(cfk_kmj_locks)
+  log "🔒 locked CRs: ${locks:-none}"
+  case "$phase" in
+      SETUP|MIGRATE) log "🎓 no action required: the operator is working (pods roll one at a time)" ;;
+      DUAL-WRITE) log "🎓 validate the cluster, then: playground cfk kraft-migration finalize (irreversible), or roll back to ZooKeeper" ;;
+      COMPLETE)
+          if [[ -n "$locks" ]]
+          then
+              log "🎓 release the locks, or every change of these CRs is rejected: playground cfk kraft-migration release-lock --remove-log4j1"
+          else
+              log "🎓 done: validate KRaft-only operation, then delete the Zookeeper CR (kubectl -n confluent delete zookeeper zookeeper)"
+          fi
+          ;;
+      FAILURE) log "🎓 status.message and the operator log: kubectl -n confluent logs deployment/confluent-operator | grep -i migration" ;;
+  esac
+
+}
+
+# :command.function
+playground_cfk_kraft_migration_finalize_command() {
+
+  # src/commands/cfk/kraft-migration/finalize.sh
+  job="${args[--name]}"
+  timeout="${args[--timeout]}"
+
+  phase=$(kubectl -n confluent get kraftmigrationjob "$job" -o jsonpath='{.status.phase}' 2> /dev/null)
+  if [[ "$phase" != "DUAL-WRITE" ]]
+  then
+      logerror "❌ KRaftMigrationJob $job is in phase ${phase:-?}: finalize only from DUAL-WRITE (playground cfk kraft-migration status)"
+      exit 1
+  fi
+  log "🏁 finalize: the brokers lose their ZooKeeper dependency, no rollback after this point"
+  run_logged kubectl -n confluent annotate kraftmigrationjob "$job" platform.confluent.io/kraft-migration-trigger-finalize-to-kraft=true | sed 's/^/   /'
+  cfk_kmj_wait "$job" "COMPLETE" "$timeout" || exit 1
+  log_command kubectl -n confluent get kafka kafka -o 'jsonpath={.spec.dependencies}'
+  log "   Kafka dependencies: $(kubectl -n confluent get kafka kafka -o jsonpath='{.spec.dependencies}')"
+  log "🔒 locked CRs: $(cfk_kmj_locks)"
+  log "🎓 next: playground cfk kraft-migration release-lock --remove-log4j1, then delete the Zookeeper CR"
+
+}
+
+# :command.function
+playground_cfk_kraft_migration_release_lock_command() {
+
+  # src/commands/cfk/kraft-migration/release-lock.sh
+  job="${args[--name]}"
+  remove_log4j1="${args[--remove-log4j1]}"
+
+  run_logged kubectl -n confluent annotate kraftmigrationjob "$job" platform.confluent.io/kraft-migration-release-cr-lock=true --overwrite | sed 's/^/   /'
+  log_command --polled kubectl -n confluent get kafka kafka -o yaml '|' grep kraft-migration-cr-lock
+  locks=""
+  for i in $(seq 1 60)
+  do
+      locks=$(cfk_kmj_locks)
+      if [[ -z "$locks" ]]
+      then
+          break
+      fi
+      sleep 5
+  done
+  if [[ -n "$locks" ]]
+  then
+      logerror "❌ still locked after 300 s: $locks"
+      exit 1
+  fi
+  log "🔓 locks released: the Kafka, KRaftController and Zookeeper CRs can be changed again"
+  if [[ -n "$remove_log4j1" ]] && [[ -n "$(kubectl -n confluent get kraftcontroller kraftcontroller -o jsonpath='{.metadata.annotations.platform\.confluent\.io/use-log4j1}' 2> /dev/null)" ]]
+  then
+      generation_before=$(cfk_statefulset_generation kraftcontroller)
+      since=$(date +%s)
+      run_logged kubectl -n confluent annotate kraftcontroller kraftcontroller platform.confluent.io/use-log4j1- | sed 's/^/   /'
+      cfk_wait_rollout kraftcontroller/kraftcontroller "$generation_before" 900 "$since"
+  fi
 
 }
 
@@ -144283,6 +144757,13 @@ playground_cfk_parse_requirements() {
       shift $#
       ;;
 
+    kraft-migration)
+      action="kraft-migration"
+      shift
+      playground_cfk_kraft_migration_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_cfk_usage >&2
@@ -144936,6 +145417,532 @@ playground_cfk_operator_upgrade_parse_requirements() {
       exit 1
     fi
   fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_kraft_migration_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_kraft_migration_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    start)
+      action="start"
+      shift
+      playground_cfk_kraft_migration_start_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_cfk_kraft_migration_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    finalize)
+      action="finalize"
+      shift
+      playground_cfk_kraft_migration_finalize_parse_requirements "$@"
+      shift $#
+      ;;
+
+    release-lock)
+      action="release-lock"
+      shift
+      playground_cfk_kraft_migration_release_lock_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_cfk_kraft_migration_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cfk_kraft_migration_start_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_kraft_migration_start_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk kraft-migration start"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --controllers)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--controllers']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--controllers requires an argument: --controllers NUMBER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --preflight)
+
+        # :flag.case_no_arg
+        args['--preflight']=1
+        shift
+        ;;
+
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout SECONDS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--controllers']:-} ]] || args['--controllers']="3"
+  [[ -n ${args['--name']:-} ]] || args['--name']="kraftmigrationjob"
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="3600"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--controllers'] ]]; then
+    validation_output="$(validate_integer "${args['--controllers']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--controllers NUMBER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout SECONDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_kraft_migration_status_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_kraft_migration_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk kraft-migration status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--name']:-} ]] || args['--name']="kraftmigrationjob"
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_kraft_migration_finalize_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_kraft_migration_finalize_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk kraft-migration finalize"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout SECONDS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--name']:-} ]] || args['--name']="kraftmigrationjob"
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="3600"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout SECONDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cfk_kraft_migration_release_lock_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cfk_kraft_migration_release_lock_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cfk kraft-migration release-lock"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --remove-log4j1)
+
+        # :flag.case_no_arg
+        args['--remove-log4j1']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--name']:-} ]] || args['--name']="kraftmigrationjob"
 
   # :command.user_filter
   filter_error=$(filter_cfk_environment)
@@ -182457,6 +183464,11 @@ playground_cfk_completion() {
         playground_cfk_operator_completion "$completion_current" "$@"
         return
         ;;
+      kraft-migration)
+        shift
+        playground_cfk_kraft_migration_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -182466,7 +183478,7 @@ playground_cfk_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" patch roll upgrade operator
+  completion_candidates "$completion_current" patch roll upgrade operator kraft-migration
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -182710,6 +183722,231 @@ playground_cfk_operator_upgrade_completion() {
     completion_flag_candidates --skip-crds "$completion_current" --skip-crds
     completion_flag_candidates --keep-init-images "$completion_current" --keep-init-images
     completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_kraft_migration_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      start)
+        shift
+        playground_cfk_kraft_migration_start_completion "$completion_current" "$@"
+        return
+        ;;
+      status)
+        shift
+        playground_cfk_kraft_migration_status_completion "$completion_current" "$@"
+        return
+        ;;
+      finalize)
+        shift
+        playground_cfk_kraft_migration_finalize_completion "$completion_current" "$@"
+        return
+        ;;
+      release-lock)
+        shift
+        playground_cfk_kraft_migration_release_lock_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" start status finalize release-lock
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_kraft_migration_start_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --controllers)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--controllers"]=1
+
+        ;;
+      --preflight)
+        completion_blocked_flags["--preflight"]=1
+
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --controllers "$completion_current" --controllers
+    completion_flag_candidates --preflight "$completion_current" --preflight
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_kraft_migration_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_kraft_migration_finalize_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
+playground_cfk_kraft_migration_release_lock_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --remove-log4j1)
+        completion_blocked_flags["--remove-log4j1"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --remove-log4j1 "$completion_current" --remove-log4j1
   fi
 
 }
@@ -191659,6 +192896,11 @@ run() {
     "cfk upgrade") playground_cfk_upgrade_command ;;
     "cfk operator") playground_cfk_operator_command ;;
     "cfk operator upgrade") playground_cfk_operator_upgrade_command ;;
+    "cfk kraft-migration") playground_cfk_kraft_migration_command ;;
+    "cfk kraft-migration start") playground_cfk_kraft_migration_start_command ;;
+    "cfk kraft-migration status") playground_cfk_kraft_migration_status_command ;;
+    "cfk kraft-migration finalize") playground_cfk_kraft_migration_finalize_command ;;
+    "cfk kraft-migration release-lock") playground_cfk_kraft_migration_release_lock_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;

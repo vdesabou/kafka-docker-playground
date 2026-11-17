@@ -7,9 +7,9 @@ day-2 changes, KRaft migration), **security**
 the CLI then talks to the secured cluster for you.
 
 > [!TIP]
-> **🔁 New: [Day-2 operations with cp-ansible and CFK](/day-2-operations.md).** Seven examples replay a change on a
+> **🔁 New: [Day-2 operations with cp-ansible and CFK](/day-2-operations.md).** Examples replay a change on a
 > running cluster, the way the cp-ansible and CFK procedures describe it, with a producer and a sink connector running
-> through it: CP rolling upgrades, a **CFK operator upgrade** (plain `helm upgrade`: every pod restarted twice; the
+> through it: CP rolling upgrades, a **CFK ZooKeeper to KRaft migration** (`KRaftMigrationJob`), a **CFK operator upgrade** (plain `helm upgrade`: every pod restarted twice; the
 > block-reconcile procedure: one roll per component), PLAINTEXT to SASL_SSL, RBAC, scale out, static to dynamic KRaft
 > quorum. Each one shows the classic mistake next to the right procedure, measured on the same cluster, prints every
 > `kubectl` / `helm` / `ansible-playbook` command it runs, and ends with a no-record-lost check.
@@ -53,6 +53,8 @@ printed as it runs: [🔁 Day-2 operations](/day-2-operations.md).
 | "After the CFK upgrade every component restarted, some twice" | [`other/cfk-day2/cfk-operator-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-operator-upgrade.sh): `playground cfk operator upgrade --to <version> --no-block-reconcile` (what they did) against `playground cfk operator upgrade --to <version>` (the procedure) |
 | "We ran `helm upgrade`, the operator still runs the old version" | `--reuse-values` keeps the old `image.tag`: `helm -n confluent get values confluent-operator --all \| grep tag`; `playground cfk operator upgrade` uses `--reset-then-reuse-values` |
 | Change a CR and see what the operator does; restart the brokers the supported way | `playground cfk patch <kind>/<name> '<patch>'` (waits for the roll, prints each pod as it restarts and the events), `playground cfk roll kafka/kafka` (annotation `kafkacluster-manual-roll`) |
+| "Our ZooKeeper to KRaft migration is stuck", "is it stuck or just slow?" | `playground cfk kraft-migration status`; a complete migration with a workload, each sub-phase and its duration: [`other/cfk-day2/cfk-kraft-migration.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-kraft-migration.sh) |
+| "After the KRaft migration Argo CD / Flux can't change the Kafka CR" | the locks of the migration were not released (`… is locked during KRaft migration`): `playground cfk kraft-migration release-lock` |
 | "Our configOverrides disappeared" | a JSON merge patch replaces the whole list: `playground cfk patch kafka/kafka '<patch>'` shows it, `--type json` with an `add` operation keeps the list |
 
 ### ☸️ Confluent for Kubernetes
@@ -65,7 +67,7 @@ printed as it runs: [🔁 Day-2 operations](/day-2-operations.md).
 | The customer's `Connector` CR doesn't behave | `playground connector create-or-update` / `validate` / `diff` read CFK CRs directly |
 | Which operator code logs this error? | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |
 | What would a bundle of my repro look like? | `playground debug cfk generate-bundle`, then `analyze logs` on it |
-| Upgrade CP or the operator, change a CR, restart the brokers | `playground cfk upgrade\|operator upgrade\|patch\|roll`, with a workload: [🔁 Day-2 operations](/day-2-operations.md) |
+| Upgrade CP or the operator, ZooKeeper to KRaft, change a CR, restart the brokers | `playground cfk upgrade\|operator upgrade\|kraft-migration\|patch\|roll`, with a workload: [🔁 Day-2 operations](/day-2-operations.md) |
 
 ### 🅰️ cp-ansible
 

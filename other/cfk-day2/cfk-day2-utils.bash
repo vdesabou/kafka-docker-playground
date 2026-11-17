@@ -22,14 +22,16 @@ function day2_require_cfk () {
     unset ENABLE_CONTROL_CENTER ENABLE_KSQLDB ENABLE_RESTPROXY ENABLE_CONNECT_NODES
 }
 
-# the cfk environment with 3 KRaft controllers and 3 brokers (a production-like quorum: one controller can roll without
-# stalling the brokers), Confluent Platform $1 (default: the version of the run). The image tags exported
+# the cfk environment with 3 KRaft controllers (3 ZooKeeper nodes with CP 7.x) and 3 brokers (a production-like quorum:
+# one controller can roll without stalling the brokers), Confluent Platform $1 (default: the version of the run). The image tags exported
 # by utils.sh for the version of the run (CP_KAFKA_TAG...) are only set when empty: unset them for another version
 function day2_start_cfk () {
     (
         if [ -n "$1" ]
         then
             unset CP_KAFKA_TAG CP_CONNECT_TAG CP_SCHEMA_REGISTRY_TAG CP_CONTROL_CENTER_TAG CP_KSQL_TAG CP_KSQL_CLI_TAG CP_REST_PROXY_TAG CP_ZOOKEEPER_TAG
+            # and the KRaft / ZooKeeper mode decided for the version of the run: CP 7.x starts in ZooKeeper mode
+            unset ENABLE_KRAFT ENABLE_ZOOKEEPER KRAFT_MODE_LOGGED
             export TAG="$1" TAG_BASE="$1"
         fi
         export ENABLE_KAFKA_NODES=1 ENABLE_CONTROLLER_NODES=1

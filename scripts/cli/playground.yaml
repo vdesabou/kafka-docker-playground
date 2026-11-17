@@ -9209,10 +9209,12 @@ subcommands:
     \     change a custom resource, wait for CFK to roll it\n  roll       restart
     the pods of a custom resource, the supported way\n  upgrade    move every custom
     resource to another Confluent Platform version\n  operator   upgrade the CFK operator
-    (helm chart, CRDs, init containers)\n\nEach change waits for the operator: the
-    statefulset changed or not, every\npod restarted on the new revision (printed
-    as they roll), the custom\nresource back to RUNNING, then the events of the custom
-    resource and its\npods since the change.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk"
+    (helm chart, CRDs, init containers)\n  kraft-migration   ZooKeeper to KRaft with
+    a KRaftMigrationJob (start, status, finalize, release-lock)\n\nEach change waits
+    for the operator: the statefulset changed or not, every\npod restarted on the
+    new revision (printed as they roll), the custom\nresource back to RUNNING, then
+    the events of the custom resource and its\npods since the change.\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk"
   usage: playground cfk COMMAND
   options: []
   subcommands:
@@ -9333,6 +9335,98 @@ subcommands:
           ⏱️ How long to wait for the roll of each custom resource
 
           Default value: 1200
+  - name: kraft-migration
+    description: "\U0001F69A ZooKeeper to KRaft migration with a KRaftMigrationJob\n\nThe
+      steps of docs.confluent.io/operator/current/co-migrate-kraft.html,\nlike the
+      kubectl confluent cluster kraft-migration plugin, with every\nkubectl command
+      printed:\n\n  start          KRaftController on HOLD + KRaftMigrationJob, until
+      DUAL-WRITE\n  status         phase, sub-phase, the CRs, the locks, what to do
+      next\n  finalize       the finalize annotation (irreversible), wait for COMPLETE\n
+      \ release-lock   release the locks on the CRs, remove use-log4j1\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/day-2-operations"
+    usage: playground cfk kraft-migration COMMAND
+    options: []
+    subcommands:
+    - name: start
+      description: "\U0001F69A Start the migration and wait for DUAL-WRITE\n\nCreates
+        the KRaftController CR with the images of the Kafka CR and the\nannotations
+        kraft-migration-hold-krc-creation (status HOLD, no pod yet)\nand use-log4j1
+        (CP 7.x with CFK 3), then the KRaftMigrationJob CR, and\nprints each phase
+        and sub-phase as the operator goes through SETUP,\nMIGRATE and DUAL-WRITE,
+        with the time spent in each. From then on the\nZooKeeper, Kafka and KRaftController
+        CRs are locked."
+      usage: playground cfk kraft-migration start [OPTIONS]
+      options:
+      - names:
+        - "--controllers"
+        argument: NUMBER
+        description: "\U0001F5F3️ Replicas of the KRaftController (an odd number)\n\nDefault
+          value: 3"
+      - names:
+        - "--preflight"
+        argument: ''
+        description: "\U0001F50E Enable the ZooKeeper metadata preflight check (annotation
+          kraft-migration-enable-preflight)"
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F3F7️ Name of the KRaftMigrationJob\n\nDefault value:
+          kraftmigrationjob"
+      - names:
+        - "--timeout"
+        argument: SECONDS
+        description: |-
+          ⏱️ How long to wait for DUAL-WRITE
+
+          Default value: 3600
+    - name: status
+      description: "\U0001F50E Phase, sub-phase, the CRs, the locks and what to do
+        next"
+      usage: playground cfk kraft-migration status [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F3F7️ Name of the KRaftMigrationJob\n\nDefault value:
+          kraftmigrationjob"
+    - name: finalize
+      description: "\U0001F3C1 Finalize the migration (irreversible) and wait for
+        COMPLETE\n\nAnnotation kraft-migration-trigger-finalize-to-kraft=true on the\nKRaftMigrationJob
+        in DUAL-WRITE: the brokers lose their ZooKeeper\ndependency, no rollback after
+        it."
+      usage: playground cfk kraft-migration finalize [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F3F7️ Name of the KRaftMigrationJob\n\nDefault value:
+          kraftmigrationjob"
+      - names:
+        - "--timeout"
+        argument: SECONDS
+        description: |-
+          ⏱️ How long to wait for COMPLETE
+
+          Default value: 3600
+    - name: release-lock
+      description: "\U0001F513 Release the locks of the migration on the CRs\n\nAnnotation
+        kraft-migration-release-cr-lock=true on the KRaftMigrationJob,\nthen waits
+        for the kraft-migration-cr-lock annotations to leave the\nKafka and KRaftController
+        CRs: until then every change of these CRs is\nrejected (GitOps reconciliations
+        fail). --remove-log4j1 then removes\nthe use-log4j1 annotation of the KRaftController
+        (one roll)."
+      usage: playground cfk kraft-migration release-lock [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F3F7️ Name of the KRaftMigrationJob\n\nDefault value:
+          kraftmigrationjob"
+      - names:
+        - "--remove-log4j1"
+        argument: ''
+        description: "\U0001FAB5 Also remove the use-log4j1 annotation of the KRaftController
+          (it rolls)"
 - name: consumer-group
   description: "\U0001F465 Consumer group commands\n\nInspect any consumer group (not
     only the ones of sink connectors): which\ngroups exist, their state and members,

@@ -168,6 +168,7 @@ before a command, `🔎 polled:` for what a wait loop checks), so that the same 
 | `playground cfk patch <kind>/<name> '<patch>'` | `kubectl patch` (merge by default, `--type json` to add to a list), then the roll: statefulset changed or not, each pod restarted on the new revision and Ready, the CR back to `RUNNING`, the events since the change |
 | `playground cfk roll <kind>/<name>` | restart the supported way: annotation `kafkacluster-manual-roll` for Kafka and KRaft, `kubectl rollout restart` for the others |
 | `playground cfk upgrade --to <cp version>` | the image of every CR, controllers first, one CR at a time |
+| `playground cfk kraft-migration start\|status\|finalize\|release-lock` | ZooKeeper → KRaft with the `KRaftMigrationJob` CR: KRaftController on HOLD, each phase and sub-phase printed with its duration, finalize, the locks released |
 | `playground cfk operator upgrade --to <cfk version>` | the CFK upgrade procedure: block reconcile, CRDs, `helm upgrade --reset-then-reuse-values`, init containers staged, reconcile enabled one component at a time (`--no-block-reconcile`: the classic mistake) |
 
 With a workload running through each change, the classic mistakes and the measured results:
@@ -567,6 +568,8 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | --- | --- |
 | "we upgraded the CR but the pods still run the old version" (support bundle) | `playground analyze logs -f <bundle>`: the 🔄 `Rollout Issues` finding says what each pod runs, how far the roll got, and why (`block-reconcile`, operator not applying, roll blocked) |
 | "here is a new bundle, what changed since the last one?" | `playground analyze logs -f <older bundle> -f <newer bundle>`: the 🔁 comparison gives the verdict, the changes of the CRs between the two, and the issues fixed / new / still there |
+| "the ZooKeeper to KRaft migration is stuck" (live cluster, or "is it stuck or just slow?") | `playground cfk kraft-migration status`; a complete migration to compare with, sub-phase by sub-phase: `other/cfk-day2/cfk-kraft-migration.sh` |
+| "after the KRaft migration we can't change the Kafka CR (GitOps fails)" | the locks of the migration were not released: `playground cfk kraft-migration release-lock` |
 | "the ZooKeeper to KRaft migration is stuck" (support bundle) | `playground analyze logs -f <bundle>`: the 🚚 `KRaft Migration` finding gives the sub-phase, since when, the last error and the next steps; `--sample cfk_kraft_migration` to see one |
 | "the connector works with Docker, not on our CFK cluster" | the same example with `--environment cfk`, then `connector create-or-update --dry-run` to compare the `Connector` CR with theirs |
 | "the customer deploys connectors with a `Connector` CR" | the example under `cfk`, `connector status` shows the CR state next to the Connect state; `kubectl -n confluent get connector <c> -o yaml` for the whole resource |

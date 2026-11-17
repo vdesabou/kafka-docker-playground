@@ -25,6 +25,7 @@ The workload (`cfk-day2-utils.bash`):
 | --- | --- | --- |
 | `cfk-rolling-upgrade.sh` | CP 8.3.2 → the default CP version (or `--tag`), `playground cfk upgrade` | the feature level is not finalized by CFK; a JSON merge patch of `configOverrides` replaces the whole list |
 | `cfk-operator-upgrade.sh` | CFK 3.3.0 → 3.3.1 with `helm upgrade` only, then 3.3.1 → 3.4.0 with the CFK upgrade procedure (`playground cfk operator upgrade`) | reconciliation not blocked: every component rolls as soon as the new operator starts, the controller and the brokers at the same time, then a second time for the init containers |
+| `cfk-kraft-migration.sh` | CP 7.9 in ZooKeeper mode → KRaft, with the `KRaftMigrationJob` CR (`playground cfk kraft-migration start\|finalize\|release-lock`): SETUP, MIGRATE, DUAL-WRITE, finalize, ZooKeeper deleted | a change of the Kafka CR during the migration is rejected (the CRs are locked), and it still is after COMPLETE until the locks are released: GitOps reconciliations fail |
 
 Each example starts its own cfk environment and takes 20 to 30 minutes. They need the cfk environment (k3d, kubectl,
 helm): with another `PLAYGROUND_ENVIRONMENT` they are skipped (exit 111).
@@ -34,10 +35,12 @@ helm): with another `PLAYGROUND_ENVIRONMENT` they are skipped (exit 111).
 ```bash
 playground run -f other/cfk-day2/cfk-rolling-upgrade.sh --environment cfk
 playground run -f other/cfk-day2/cfk-operator-upgrade.sh --environment cfk
+playground run -f other/cfk-day2/cfk-kraft-migration.sh --environment cfk
 ```
 
 `cfk-rolling-upgrade.sh` goes from 8.3.2 (`DAY2_OLD_VERSION`) to the CP version of the run: `--tag` for another
-target. `cfk-operator-upgrade.sh` uses `DAY2_OLD_CFK` (3.3.0), `DAY2_MID_CFK` (3.3.1) and `DAY2_NEW_CFK` (3.4.0).
+target. `cfk-operator-upgrade.sh` uses `DAY2_OLD_CFK` (3.3.0), `DAY2_MID_CFK` (3.3.1) and `DAY2_NEW_CFK` (3.4.0). `cfk-kraft-migration.sh` starts CP
+`DAY2_ZK_VERSION` (7.9.11) in ZooKeeper mode, whatever the CP version of the run.
 
 The same commands work by hand on any cfk environment:
 
@@ -134,3 +137,49 @@ Good to know: `helm upgrade --reuse-values` keeps the computed values of the old
 operator included: the new chart runs the **old** operator image, and nothing changes. `playground cfk operator
 upgrade` uses `--reset-then-reuse-values` (the defaults of the new chart, plus the values given at install) and checks
 the image of the operator after the upgrade.
+
+### `cfk-kraft-migration.sh`
+
+```text
+🗳️ Step 1: KRaftController CR, 3 replicas, the images of the Kafka CR (confluentinc/cp-server:7.9.11), on HOLD until the migration job mutates it
+   kraftcontroller   0                  HOLD     0s
+🔧 kubectl apply -f kraftmigrationjob.yaml
+🚚 SETUP       SubPhaseSetupAddMigrationAnnotation
+🚚 SETUP       SubPhaseSetupEnsureIBPUpgradeComplete            (previous step: 10 s, total 10 s)
+🚚 SETUP       SubPhaseSetupKRaftControllerHealthy              (previous step: 322 s, total 332 s)    <- a broker roll, then the controllers start
+🚚 MIGRATE     SubPhaseMigrateEnsureKafkaRollComplete           (previous step: 51 s, total 383 s)     <- metadata copied, a second broker roll
+🚚 DUAL-WRITE  SubPhaseMigrationDualWrite                       (previous step: 323 s, total 706 s)
+🔁 up to DUAL-WRITE: 6 pod stops, 7 send errors, longest time without an ack 0.2s
+🔎 topics in ZooKeeper (the one created in DUAL-WRITE is there: written by the KRaft controllers):
+   [__consumer_offsets, …, day2, day2-created-in-dual-write]
+🔧 kubectl -n confluent patch kafka kafka --type json -p '[…"num.io.threads=16"…]' --dry-run=server
+   ⛔ rejected: … ValidatingAdmissionPolicy 'cfk-kraft-migration-cr-lock-confluent' … denied request: This Kafka CR "kafka" is locked during KRaft migration. Only the CFK operator service account can modify it.
+🔧 kubectl -n confluent annotate kraftmigrationjob kraftmigrationjob platform.confluent.io/kraft-migration-trigger-finalize-to-kraft=true
+🚚 MoveToKRaftControllerOnly SubPhaseMoveToKRaftControllerEnsureKafkaRollIsComplete
+🚚 MoveToKRaftControllerOnly SubPhaseMoveToKRaftControllerEnsureKRaftControllerMigrationModeRemovalComplete (previous step: 323 s, total 323 s)
+🚚 COMPLETE    SubPhaseMoveToKRaftControllerComplete            (previous step: 313 s, total 636 s)
+   ⛔ rejected: … locked during KRaft migration …                                       <- COMPLETE, and the locks are still there
+🔧 kubectl -n confluent annotate kraftmigrationjob kraftmigrationjob platform.confluent.io/kraft-migration-release-cr-lock=true --overwrite
+   ✅ accepted: kafka.platform.confluent.io/kafka patched                               <- the same change (server dry run)
+🔧 kubectl -n confluent delete zookeeper zookeeper
+   controller.quorum.voters=9990@kraftcontroller-0…:9074,9991@kraftcontroller-1…:9074,9992@kraftcontroller-2…:9074
+   process.roles=broker
+🔎 acked by the producer: 30505, records in topic day2: 30506, lag of the sink connector: 0
+```
+
+The migration took 22 minutes with 3 brokers and 3 controllers: 3 broker rolls (SETUP, MIGRATE, finalize) and one
+controller roll, 18 send errors, never more than 0.5 s without an ack. While it runs, the ZooKeeper, Kafka and
+KRaftController CRs are locked by a ValidatingAdmissionPolicy (`cfk-kraft-migration-cr-lock-<namespace>`): every change
+is rejected, also after COMPLETE until the locks are released. A GitOps tool (Argo CD, Flux) that reconciles one of
+these CRs fails meanwhile, and keeps failing after the migration if nobody releases the locks. For an emergency change,
+the CFK docs give a bypass annotation (`platform.confluent.io/allow-request-during-kraft-migration=true`).
+
+Good to know:
+
+- don't re-apply an old copy of the KRaftController YAML during the migration: CFK removes
+  `kraft-migration-hold-krc-creation` from the live CR in SETUP, and an old copy that still has it puts the
+  controllers back on HOLD and stalls the migration (CFK docs, troubleshooting)
+- with CFK 3.3.0 and CP 7.9.11, removing `use-log4j1` from the KRaftController after the migration did not roll the
+  controllers (the CFK docs say it does)
+- the CFK kubectl plugin has the same steps (`kubectl confluent cluster kraft-migration list|status|finalize|release-lock`):
+  `playground cfk kraft-migration` needs only kubectl, and prints each command it runs
