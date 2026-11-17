@@ -9561,7 +9561,8 @@ subcommands:
     the persistent queries are RUNNING and have no lag\n  metrics    query states
     (running, ERROR, rebalancing) and messages per second, over JMX\n\n\U0001F393
     Tip: the REST API of ksqldb-server is published on http://localhost:8088.\nThe
-    records that fail a query are in the KSQL_PROCESSING_LOG stream."
+    records that fail a query are in the KSQL_PROCESSING_LOG stream.\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb"
   usage: playground ksqldb COMMAND
   options: []
   subcommands:
@@ -9577,7 +9578,8 @@ subcommands:
       the error).\n\n\U0001F393 Tip: a push query (EMIT CHANGES) never ends without
       a LIMIT: add\nLIMIT <n>, or --query-timeout. Otherwise the cli is stopped after\n--max-wait
       seconds. To wait for a CREATE ... AS SELECT to process its\ninput before querying
-      it, use 'playground ksqldb wait' instead of a sleep."
+      it, use 'playground ksqldb wait' instead of a sleep.\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-ksqldb"
     usage: playground ksqldb sql [OPTIONS]
     options:
     - names:
@@ -9657,21 +9659,19 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
   - name: wait
-    description: |-
-      ⏳ Wait until the persistent queries are RUNNING and have no lag
-
-      Waits until every query writing to --source (or every persistent
-      query) is RUNNING and has committed all the records of its input
-      topics, so that its result is complete: use it instead of a sleep
-      after a CREATE ... AS SELECT and the records it reads.
-
-      A query that has not committed any offset yet is done when its input
-      topics are empty, or when it is still without commit after 20 seconds
-      RUNNING: it has nothing to process from where it started (a CREATE
-      sent without SET 'auto.offset.reset' = 'earliest' reads from the end
-      of its topics), and a warning says so.
-
-      Exits with code 1 when a query is in ERROR, or after --max-wait seconds.
+    description: "⏳ Wait until the persistent queries are RUNNING and have no lag\n\nWaits
+      until every query writing to --source (or every persistent\nquery) is RUNNING
+      and has committed all the records of its input\ntopics, so that its result is
+      complete: use it instead of a sleep\nafter a CREATE ... AS SELECT and the records
+      it reads.\n\nA source table (CREATE SOURCE TABLE) is waited for too: its CST_
+      query\nmaterializes it for pull queries and has no sink, its lag is read from\nits
+      consumer group (_confluent-ksql-<service id>query_<query id>).\n\nA query that
+      has not committed any offset yet is done when its input\ntopics are empty, or
+      when it is still without commit after 20 seconds\nRUNNING: it has nothing to
+      process from where it started (a CREATE\nsent without SET 'auto.offset.reset'
+      = 'earliest' reads from the end\nof its topics), and a warning says so.\n\nExits
+      with code 1 when a query is in ERROR, or after --max-wait seconds.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb"
     usage: playground ksqldb wait [OPTIONS]
     options:
     - names:
@@ -9679,8 +9679,8 @@ subcommands:
       - "-s"
       argument: SOURCE
       description: "\U0001F9EE Only wait for the queries writing to this stream or
-        table (repeatable)\n\nℹ️ If not set, all persistent queries\n\nRepeatable:
-        ✓ Yes"
+        table (repeatable)\n\nℹ️ If not set, all persistent queries (and the source
+        tables)\n\nRepeatable: ✓ Yes"
     - names:
       - "--max-wait"
       - "-w"

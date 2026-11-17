@@ -57,7 +57,7 @@ Every client example: `playground find-example --category client --limit 50`; sc
 - [📨 Produce test data](/deep-dive-topic-produce.md): Avro, JSON Schema and Protobuf records, keys, headers, load
 - [📥 Read a topic](/deep-dive-topic-consume.md): deserializers, subjects, positioning, assertions
 - [🐿️ Flink SQL](/deep-dive-flink.md): run statements, list and cancel jobs, local and Confluent Cloud
-- [🧮 ksqlDB](/how-to-use?id=🚀-enabling-ksqldb): run statements, list, describe and wait for queries
+- [🧮 ksqlDB](/deep-dive-ksqldb.md): run statements, pull and push queries, wait for queries, an empty table, skipped records and the processing log, tombstones
 
 ## 🎬 Bite size sessions
 

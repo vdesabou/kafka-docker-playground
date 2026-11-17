@@ -34,6 +34,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `observability.sh` | [Observability](https://kafka-docker-playground.io/#/deep-dive-observability) (starts plaintext with `ENABLE_JMX_GRAFANA`, `ENABLE_CONTROL_CENTER` and `ENABLE_KSQLDB`: the metrics digests of the brokers, controller, workers, Schema Registry and ksqlDB, MBeans, Prometheus targets and names, Grafana, Pyroscope, Control Center's Prometheus) |
 | `connector-benchmark.sh` | [`connector benchmark`](https://kafka-docker-playground.io/#/deep-dive-connector-benchmark) |
 | `oracle-cdc.sh` | [Oracle CDC: LogMiner and XStream](https://kafka-docker-playground.io/#/deep-dive-oracle-cdc) (runs the Oracle XStream example itself, about 10 minutes; the LogMiner connector is not replayed) |
+| `ksqldb.sh` | [ksqlDB](https://kafka-docker-playground.io/#/deep-dive-ksqldb) (starts plaintext with `ENABLE_KSQLDB` and the processing log, `docker-compose.plaintext.ksqldb.yml`) |
 | `flink.sh` | [Flink SQL](https://kafka-docker-playground.io/#/deep-dive-flink) (starts plaintext with `ENABLE_FLINK` and the Kafka SQL connector jar) |
 | `tcp-proxy.sh` | [TCP proxy (Zazkia)](https://kafka-docker-playground.io/#/deep-dive-tcp-proxy) (runs the JDBC PostgreSQL source example itself) |
 | `java-debugging.sh` | [Debugging the JVM](https://kafka-docker-playground.io/#/deep-dive-java-debugging) (`testssl` and `generate-diagnostics` not replayed) |
