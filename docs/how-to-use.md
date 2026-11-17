@@ -557,7 +557,8 @@ playground docker-cleanup status           # when, and what the last runs freed
 ```
 
 Each run removes the Confluent Platform versions not used for `--older-than` days (never the default TAG, the TAG of the
-current run, nor a version used by a container), the dangling images, and the build cache above `--max-build-cache` GB
+current run, nor a version used by a container; a version whose last use is unknown, as with podman which records no pull
+date, is kept `--older-than` days after the first time it was listed), the dangling images, and the build cache above `--max-build-cache` GB
 (least recently used first; its layers shared with images don't count, they are freed with the images). None of them touches what a container or a build in progress uses, so it also runs while
 examples run; volumes are never removed. A launchd agent on macOS (also run when the Mac wakes up after that time), a
 crontab line on Linux; a macOS notification tells how much was freed.

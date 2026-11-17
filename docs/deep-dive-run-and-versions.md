@@ -184,8 +184,9 @@ Gotchas:
 - **`re-run` and the `history` picker are interactive** (fzf menu, editable prompt): they need a terminal. In a script
   or an agent, use `playground history --list` / `--json` / `--last` / `--run`.
 - Each line of `playground-run-history` ends with a comment that `eval` ignores:
-  `# date=2026-10-30T15:20:05 branch=master result=SUCCESS duration=192` (`result` and `duration`, in seconds, are added
-  when the run ends: `SUCCESS`, `FAILURE`, `SKIPPED` for exit 111, `INTERRUPTED` for ctrl-c; a run that was cut before
+  `# date=2026-10-30T15:20:05 branch=master tag=8.4.1 result=SUCCESS duration=192` (`tag` is the Confluent Platform
+  version of the run, `--tag` or the default one, read by `remove-cp-docker-images --older-than` as its last use;
+  `result` and `duration`, in seconds, are added when the run ends: `SUCCESS`, `FAILURE`, `SKIPPED` for exit 111, `INTERRUPTED` for ctrl-c; a run that was cut before
   the example started has none). Lines written by older versions have no comment: ▫️ in the picker, `null` in `--json`.
 - **`re-run` replays the flags, not the versions resolved by the last run**: without `--connector-tag`, it installs
   the latest connector of today again, not the one installed last time. Pin the version with a flag to replay exactly.
@@ -250,7 +251,7 @@ playground status
 
 ```bash
 tail -1 playground-run-history
-# playground run -f /…/connect/connect-filestream-sink/filestream-sink.sh --tag=8.2.0 # date=2026-10-23T12:59:36 branch=master result=SUCCESS duration=40
+# playground run -f /…/connect/connect-filestream-sink/filestream-sink.sh --tag=8.2.0 # date=2026-10-23T12:59:36 branch=master tag=8.2.0 result=SUCCESS duration=40
 #                                                                                       ^ absolute path, flags as --flag=value, then a comment eval ignores
 playground state get run.test_file
 # …/connect/connect-filestream-sink/filestream-sink.sh

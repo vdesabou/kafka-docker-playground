@@ -78,12 +78,15 @@ do
     image_ids+="$id "
 done <<< "$inventory"
 
-# last used: last run with --tag in playground-run-history, or last pull / tag of an image (LastTagTime, not set by podman)
+# last used: last run of the version in playground-run-history (tag=x.y.z of the trailing comment, written for every
+# run by playground run, else --tag x.y.z of the command), or last pull / tag of an image (LastTagTime, not set by podman)
 dates=""
 if [[ -f "$root_folder/playground-run-history" ]]
 then
-    dates+=$(awk 'match($0, /--tag[= ][0-9]+\.[0-9]+\.[0-9]+/) { t = substr($0, RSTART + 6, RLENGTH - 6)
-        if (match($0, /date=[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/)) print t, substr($0, RSTART + 5, 10) }' "$root_folder/playground-run-history")
+    dates+=$(awk '{ t = ""; i = index($0, " # date="); c = (i > 0) ? substr($0, i) : ""
+        if (match(c, / tag=[0-9]+\.[0-9]+\.[0-9]+/)) t = substr(c, RSTART + 5, RLENGTH - 5)
+        else if (match($0, /--tag[= ][0-9]+\.[0-9]+\.[0-9]+/)) t = substr($0, RSTART + 6, RLENGTH - 6)
+        if (t != "" && match(c, /date=[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/)) print t, substr(c, RSTART + 5, 10) }' "$root_folder/playground-run-history")
     dates+=$'\n'
 fi
 if [[ -n "$image_ids" ]]
@@ -101,6 +104,33 @@ do
         last_used[$v]="$d"
     fi
 done <<< "$dates"
+
+# first seen: the day this command first listed a version, kept in playground-cp-images-first-seen. A version with no
+# last use known (podman, an image never run with that TAG in this checkout) counts as used that day for --older-than,
+# instead of as never used: its pull date is unknown, it may be from last week
+declare -A first_seen
+first_seen_file="$root_folder/playground-cp-images-first-seen"
+if [[ -f "$first_seen_file" ]]
+then
+    while read -r v d
+    do
+        [[ -n "$v" && -n "$d" ]] && first_seen[$v]="$d"
+    done < "$first_seen_file"
+fi
+today=$(date -u +%F)
+for v in "${!nb_images[@]}"
+do
+    [[ -z "${first_seen[$v]}" ]] && first_seen[$v]="$today"
+done
+# only the versions installed: removed then pulled again, a version is seen again from that day
+if [[ ${#nb_images[@]} -gt 0 ]]
+then
+    for v in "${!nb_images[@]}"
+    do
+        echo "$v ${first_seen[$v]}"
+    done | sort -V > "$first_seen_file.tmp.$$" && mv -f "$first_seen_file.tmp.$$" "$first_seen_file"
+    rm -f "$first_seen_file.tmp.$$"
+fi
 
 all_versions=$(printf '%s\n' "${!nb_images[@]}" | sort -V)
 candidates=()
@@ -192,6 +222,10 @@ then
         then
             unset "selected[$v]"
             reason[$v]="⏭️ used since $cutoff"
+        elif [[ -z "${last_used[$v]}" && -n "${first_seen[$v]}" && ! "${first_seen[$v]}" < "$cutoff" ]]
+        then
+            unset "selected[$v]"
+            reason[$v]="⏭️ last use unknown, first seen on ${first_seen[$v]}"
         fi
     done
 fi

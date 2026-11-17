@@ -2011,7 +2011,10 @@ history_line=$(mask_creds_in_command "$history_line")
 show_previous_runs_of_example
 # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
 history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
-history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
+# Confluent Platform version of the run, --tag or not (TAG of the environment, else the default one): read by
+# 'playground remove-cp-docker-images --older-than' (docker-cleanup) as the last use of that version
+history_tag="${tag:-${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)}}"
+history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}${history_tag:+ tag=$history_tag}"
 file_lock "$root_folder/playground-run-history"
 echo "$history_entry" >> "$root_folder/playground-run-history"
 file_unlock "$root_folder/playground-run-history"

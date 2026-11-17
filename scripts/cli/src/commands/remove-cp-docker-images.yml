@@ -6,7 +6,13 @@ help: |-
   Each Confluent Platform version you have ever run keeps a dozen images on
   disk, so this is usually where the space went. The command first prints a
   table of the versions installed locally: number of images, size, last used
-  (last run with --tag, or last pull), and why a version is kept.
+  (last run of that version, with --tag or as the default TAG, or last pull),
+  and why a version is kept.
+
+  With --older-than, a version whose last use is unknown (podman records no
+  pull date, an image pulled outside the playground) counts as used on the day
+  this command first listed it (playground-cp-images-first-seen), not as never
+  used: it is removed only after --older-than days.
 
   Without a selection flag, you pick the versions to remove in a list
   (fzf, tab to select several), or are asked before every version
@@ -48,7 +54,7 @@ flags:
     arg: days
     validate: integer
     help: |-
-      📅 Only versions not used for this number of days (last run with --tag in playground-run-history, or last pull)
+      📅 Only versions not used for this number of days (last run in playground-run-history, or last pull; else the day the version was first listed)
   - long: --dry-run
     help: |-
       🔎 Print the plan and the docker rmi commands, remove nothing

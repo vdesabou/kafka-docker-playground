@@ -16,7 +16,9 @@ help: |-
     🧹 playground remove-cp-docker-images --older-than <days> --yes: the
        versions not used for --older-than days (default 60). Never the
        default TAG, the TAG of the current run, nor a version used by a
-       container, running or stopped
+       container, running or stopped. A version with no last use known
+       (podman records no pull date) is kept --older-than days after the
+       first time it was listed
     🗑️ docker image prune: the dangling images (<none>), never one used by a
        container
     🧱 docker builder prune --max-used-space <GB>: the build cache above
