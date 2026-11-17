@@ -543,6 +543,24 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 > [!TIP]
 > You can also change connector(s) version(s) while running an example using [playground update-version](/playground%20update-version)
 
+## 🧽 Keeping the disk of the container engine under control
+
+Every Confluent Platform version you run keeps a dozen images on disk (several GB), and the connect images patched or
+built locally leave dangling images and build cache behind. [playground remove-cp-docker-images](/playground%20remove-cp-docker-images)
+removes old versions on demand; [playground docker-cleanup](/playground%20docker-cleanup) does it every week by itself:
+
+```bash
+playground docker-cleanup run --dry-run    # what it would remove now
+playground docker-cleanup enable           # every Sunday at 10:00 (--day, --time, --older-than 60, --max-build-cache 10)
+playground docker-cleanup status           # when, and what the last runs freed
+```
+
+Each run removes the Confluent Platform versions not used for `--older-than` days (never the default TAG, the TAG of the
+current run, nor a version used by a container), the dangling images, and the build cache above `--max-build-cache` GB
+(least recently used first; its layers shared with images don't count, they are freed with the images). None of them touches what a container or a build in progress uses, so it also runs while
+examples run; volumes are never removed. A launchd agent on macOS (also run when the Mac wakes up after that time), a
+crontab line on Linux; a macOS notification tells how much was freed.
+
 ## 🐳 Overriding Confluent Platform Docker images and tags
 
 Community images can be selected with [playground run](/playground%20run) options (or in the menu):

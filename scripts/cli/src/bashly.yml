@@ -198,6 +198,8 @@ commands:
 
 - import: src/commands/remove-cp-docker-images.yml
 
+- import: src/commands/docker-cleanup.yml
+
 - import: src/commands/refresh-cp-docker-images.yml
 
 - import: src/commands/cleanup-cloud-details.yml
