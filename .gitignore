@@ -74,6 +74,7 @@ confluent-hub
 *.jfr
 playground-run-history
 playground-run-history.bak
+playground-cp-images-first-seen
 playground-repro-verdicts
 benchmark-history
 playground-ccloud-created-topics

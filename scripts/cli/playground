@@ -5902,7 +5902,7 @@ playground_remove_all_docker_images_usage() {
 playground_remove_cp_docker_images_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground remove-cp-docker-images\n\n"
-    printf "  🧹 Remove the Confluent Platform docker images of the versions you no longer\n  use (a table of the versions installed locally, then a selection)\n  \n  Each Confluent Platform version you have ever run keeps a dozen images on\n  disk, so this is usually where the space went. The command first prints a\n  table of the versions installed locally: number of images, size, last used\n  (last run with --tag, or last pull), and why a version is kept.\n  \n  Without a selection flag, you pick the versions to remove in a list\n  (fzf, tab to select several), or are asked before every version\n  (y remove, n skip it, a all remaining, q quit) when fzf is not installed.\n  With a selection flag (--version, --all, --keep-latest-patch, --older-than),\n  one confirmation is asked for the whole plan, none with --yes.\n  \n  Never proposed for removal: the default version used by the playground, the\n  version of the current run (--tag), and any version used by a container,\n  running or stopped (another session, for example). Only the tags x.y.z are\n  listed, the Control Center next-gen images (cp-enterprise-*) are left out.\n  \n  At the end, the space freed is reported (docker system df).\n  \n  🎓 Tip: 'playground remove-cp-docker-images --keep-latest-patch --dry-run'\n  shows what keeping only the last patch of each minor version would remove.\n  \n  🎓 Tip: 'playground docker-cleanup enable' runs it every week (--older-than),\n  with the dangling images and the build cache.\n\n"
+    printf "  🧹 Remove the Confluent Platform docker images of the versions you no longer\n  use (a table of the versions installed locally, then a selection)\n  \n  Each Confluent Platform version you have ever run keeps a dozen images on\n  disk, so this is usually where the space went. The command first prints a\n  table of the versions installed locally: number of images, size, last used\n  (last run of that version, with --tag or as the default TAG, or last pull),\n  and why a version is kept.\n  \n  With --older-than, a version whose last use is unknown (podman records no\n  pull date, an image pulled outside the playground) counts as used on the day\n  this command first listed it (playground-cp-images-first-seen), not as never\n  used: it is removed only after --older-than days.\n  \n  Without a selection flag, you pick the versions to remove in a list\n  (fzf, tab to select several), or are asked before every version\n  (y remove, n skip it, a all remaining, q quit) when fzf is not installed.\n  With a selection flag (--version, --all, --keep-latest-patch, --older-than),\n  one confirmation is asked for the whole plan, none with --yes.\n  \n  Never proposed for removal: the default version used by the playground, the\n  version of the current run (--tag), and any version used by a container,\n  running or stopped (another session, for example). Only the tags x.y.z are\n  listed, the Control Center next-gen images (cp-enterprise-*) are left out.\n  \n  At the end, the space freed is reported (docker system df).\n  \n  🎓 Tip: 'playground remove-cp-docker-images --keep-latest-patch --dry-run'\n  shows what keeping only the last patch of each minor version would remove.\n  \n  🎓 Tip: 'playground docker-cleanup enable' runs it every week (--older-than),\n  with the dangling images and the build cache.\n\n"
   else
     printf "playground remove-cp-docker-images - 🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n\n"
   fi
@@ -5935,7 +5935,7 @@ playground_remove_cp_docker_images_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--older-than DAYS")"
-    printf "    📅 Only versions not used for this number of days (last run with --tag in\n    playground-run-history, or last pull)\n"
+    printf "    📅 Only versions not used for this number of days (last run in\n    playground-run-history, or last pull; else the day the version was first\n    listed)\n"
     echo
 
     # :flag.usage
@@ -5969,7 +5969,7 @@ playground_remove_cp_docker_images_usage() {
 playground_docker_cleanup_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground docker-cleanup\n\n"
-    printf "  🧽 Free the disk of the container engine every week, automatically: old\n  Confluent Platform images, dangling images, old build cache\n  \n    enable     schedule it (default every Sunday at 10:00), then show what it\n  would remove\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs freed\n    run        what the job does, now (--dry-run to only show it)\n  \n  Every Confluent Platform version you run keeps a dozen images (several GB),\n  and the connect images patched or built locally leave dangling images and\n  build cache behind. A full disk of the Docker VM then makes examples fail\n  in confusing ways. Every week it runs:\n  \n    🧹 playground remove-cp-docker-images --older-than <days> --yes: the\n       versions not used for --older-than days (default 60). Never the\n       default TAG, the TAG of the current run, nor a version used by a\n       container, running or stopped\n    🗑️ docker image prune: the dangling images (<none>), never one used by a\n       container\n    🧱 docker builder prune --max-used-space <GB>: the build cache above\n       --max-build-cache GB (default 10), least recently used first. The\n       layers it shares with images don't count: they go with the images\n  \n  None of them touches what a container or a build in progress uses, so it\n  also runs while examples run (other sessions included). Volumes are never\n  removed. Skipped when the container engine is not running. A macOS\n  notification tells how much was freed.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line.\n\n"
+    printf "  🧽 Free the disk of the container engine every week, automatically: old\n  Confluent Platform images, dangling images, old build cache\n  \n    enable     schedule it (default every Sunday at 10:00), then show what it\n  would remove\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs freed\n    run        what the job does, now (--dry-run to only show it)\n  \n  Every Confluent Platform version you run keeps a dozen images (several GB),\n  and the connect images patched or built locally leave dangling images and\n  build cache behind. A full disk of the Docker VM then makes examples fail\n  in confusing ways. Every week it runs:\n  \n    🧹 playground remove-cp-docker-images --older-than <days> --yes: the\n       versions not used for --older-than days (default 60). Never the\n       default TAG, the TAG of the current run, nor a version used by a\n       container, running or stopped. A version with no last use known\n       (podman records no pull date) is kept --older-than days after the\n       first time it was listed\n    🗑️ docker image prune: the dangling images (<none>), never one used by a\n       container\n    🧱 docker builder prune --max-used-space <GB>: the build cache above\n       --max-build-cache GB (default 10), least recently used first. The\n       layers it shares with images don't count: they go with the images\n  \n  None of them touches what a container or a build in progress uses, so it\n  also runs while examples run (other sessions included). Volumes are never\n  removed. Skipped when the container engine is not running. A macOS\n  notification tells how much was freed.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line.\n\n"
   else
     printf "playground docker-cleanup - 🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n\n"
   fi
@@ -56726,7 +56726,10 @@ playground_run_command() {
   show_previous_runs_of_example
   # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
   history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
-  history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
+  # Confluent Platform version of the run, --tag or not (TAG of the environment, else the default one): read by
+  # 'playground remove-cp-docker-images --older-than' (docker-cleanup) as the last use of that version
+  history_tag="${tag:-${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)}}"
+  history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}${history_tag:+ tag=$history_tag}"
   file_lock "$root_folder/playground-run-history"
   echo "$history_entry" >> "$root_folder/playground-run-history"
   file_unlock "$root_folder/playground-run-history"
@@ -59205,12 +59208,15 @@ playground_remove_cp_docker_images_command() {
       image_ids+="$id "
   done <<< "$inventory"
 
-  # last used: last run with --tag in playground-run-history, or last pull / tag of an image (LastTagTime, not set by podman)
+  # last used: last run of the version in playground-run-history (tag=x.y.z of the trailing comment, written for every
+  # run by playground run, else --tag x.y.z of the command), or last pull / tag of an image (LastTagTime, not set by podman)
   dates=""
   if [[ -f "$root_folder/playground-run-history" ]]
   then
-      dates+=$(awk 'match($0, /--tag[= ][0-9]+\.[0-9]+\.[0-9]+/) { t = substr($0, RSTART + 6, RLENGTH - 6)
-          if (match($0, /date=[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/)) print t, substr($0, RSTART + 5, 10) }' "$root_folder/playground-run-history")
+      dates+=$(awk '{ t = ""; i = index($0, " # date="); c = (i > 0) ? substr($0, i) : ""
+          if (match(c, / tag=[0-9]+\.[0-9]+\.[0-9]+/)) t = substr(c, RSTART + 5, RLENGTH - 5)
+          else if (match($0, /--tag[= ][0-9]+\.[0-9]+\.[0-9]+/)) t = substr($0, RSTART + 6, RLENGTH - 6)
+          if (t != "" && match(c, /date=[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/)) print t, substr(c, RSTART + 5, 10) }' "$root_folder/playground-run-history")
       dates+=$'\n'
   fi
   if [[ -n "$image_ids" ]]
@@ -59228,6 +59234,33 @@ playground_remove_cp_docker_images_command() {
           last_used[$v]="$d"
       fi
   done <<< "$dates"
+
+  # first seen: the day this command first listed a version, kept in playground-cp-images-first-seen. A version with no
+  # last use known (podman, an image never run with that TAG in this checkout) counts as used that day for --older-than,
+  # instead of as never used: its pull date is unknown, it may be from last week
+  declare -A first_seen
+  first_seen_file="$root_folder/playground-cp-images-first-seen"
+  if [[ -f "$first_seen_file" ]]
+  then
+      while read -r v d
+      do
+          [[ -n "$v" && -n "$d" ]] && first_seen[$v]="$d"
+      done < "$first_seen_file"
+  fi
+  today=$(date -u +%F)
+  for v in "${!nb_images[@]}"
+  do
+      [[ -z "${first_seen[$v]}" ]] && first_seen[$v]="$today"
+  done
+  # only the versions installed: removed then pulled again, a version is seen again from that day
+  if [[ ${#nb_images[@]} -gt 0 ]]
+  then
+      for v in "${!nb_images[@]}"
+      do
+          echo "$v ${first_seen[$v]}"
+      done | sort -V > "$first_seen_file.tmp.$$" && mv -f "$first_seen_file.tmp.$$" "$first_seen_file"
+      rm -f "$first_seen_file.tmp.$$"
+  fi
 
   all_versions=$(printf '%s\n' "${!nb_images[@]}" | sort -V)
   candidates=()
@@ -59319,6 +59352,10 @@ playground_remove_cp_docker_images_command() {
           then
               unset "selected[$v]"
               reason[$v]="⏭️ used since $cutoff"
+          elif [[ -z "${last_used[$v]}" && -n "${first_seen[$v]}" && ! "${first_seen[$v]}" < "$cutoff" ]]
+          then
+              unset "selected[$v]"
+              reason[$v]="⏭️ last use unknown, first seen on ${first_seen[$v]}"
           fi
       done
   fi
