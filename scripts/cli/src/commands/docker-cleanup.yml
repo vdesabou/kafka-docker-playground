@@ -1,0 +1,106 @@
+name: docker-cleanup
+group: Run
+help: |-
+  🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache
+
+    enable     schedule it (default every Sunday at 10:00), then show what it would remove
+    disable    remove the schedule
+    status     is it scheduled, when, and what the last runs freed
+    run        what the job does, now (--dry-run to only show it)
+
+  Every Confluent Platform version you run keeps a dozen images (several GB),
+  and the connect images patched or built locally leave dangling images and
+  build cache behind. A full disk of the Docker VM then makes examples fail
+  in confusing ways. Every week it runs:
+
+    🧹 playground remove-cp-docker-images --older-than <days> --yes: the
+       versions not used for --older-than days (default 60). Never the
+       default TAG, the TAG of the current run, nor a version used by a
+       container, running or stopped
+    🗑️ docker image prune: the dangling images (<none>), never one used by a
+       container
+    🧱 docker builder prune --max-used-space <GB>: the build cache above
+       --max-build-cache GB (default 10), least recently used first. The
+       layers it shares with images don't count: they go with the images
+
+  None of them touches what a container or a build in progress uses, so it
+  also runs while examples run (other sessions included). Volumes are never
+  removed. Skipped when the container engine is not running. A macOS
+  notification tells how much was freed.
+
+  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the
+  Mac wakes up if it was asleep at that time. Linux: a crontab line.
+commands:
+- name: enable
+  help: |-
+    🧽 Schedule the weekly cleanup, then show what it would remove now
+
+    Run it again to change the day, the time or the limits. The job uses this
+    checkout of the playground and the PATH of the shell you run it from.
+  flags:
+  - long: --day
+    arg: day
+    default: sunday
+    allowed:
+      - sunday
+      - monday
+      - tuesday
+      - wednesday
+      - thursday
+      - friday
+      - saturday
+    help: |-
+      📅 Day of the week of the run
+  - long: --time
+    arg: time
+    default: "10:00"
+    help: |-
+      🕙 Time of the run, HH:MM, local time
+  - &older_than
+    long: --older-than
+    arg: days
+    default: "60"
+    validate: integer
+    help: |-
+      📆 Remove the Confluent Platform versions not used for this number of days
+  - &max_build_cache
+    long: --max-build-cache
+    arg: gb
+    default: "10"
+    validate: integer
+    help: |-
+      🧱 Build cache to keep, in GB: above it, the least recently used build cache is removed
+  examples:
+  - playground docker-cleanup enable
+  - playground docker-cleanup enable --day friday --time 18:00 --older-than 30 --max-build-cache 20
+- name: disable
+  help: |-
+    🛑 Remove the weekly cleanup schedule
+- name: status
+  help: |-
+    🔎 Is the weekly cleanup scheduled, when, and what did its last runs free
+  flags:
+  - long: --lines
+    arg: lines
+    default: "40"
+    validate: integer
+    help: |-
+      📄 Number of lines of the log to show
+- name: run
+  help: |-
+    🧽 Free the disk of the container engine now, as the weekly job does
+
+    Use --dry-run to see what would be removed.
+  flags:
+  - *older_than
+  - *max_build_cache
+  - long: --dry-run
+    help: |-
+      🔎 Only show what would be removed
+  - long: --scheduled
+    private: true
+    help: |-
+      ⏰ run by the launchd agent / crontab line: macOS notification of what was freed
+  examples:
+  - playground docker-cleanup run --dry-run
+  - playground docker-cleanup run --older-than 30

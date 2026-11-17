@@ -133,6 +133,7 @@ playground_usage() {
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                      "
   printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                  "
   printf "  %s   🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n" "$(green "remove-cp-docker-images")                   "
+  printf "  %s   🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n" "$(green "docker-cleanup")                            "
   printf "  %s   🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n" "$(green "refresh-cp-docker-images")                  "
   printf "  %s   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n" "$(green "cleanup-cloud-details")                     "
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                 "
@@ -5900,7 +5901,7 @@ playground_remove_all_docker_images_usage() {
 playground_remove_cp_docker_images_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground remove-cp-docker-images\n\n"
-    printf "  🧹 Remove the Confluent Platform docker images of the versions you no longer\n  use (a table of the versions installed locally, then a selection)\n  \n  Each Confluent Platform version you have ever run keeps a dozen images on\n  disk, so this is usually where the space went. The command first prints a\n  table of the versions installed locally: number of images, size, last used\n  (last run with --tag, or last pull), and why a version is kept.\n  \n  Without a selection flag, you pick the versions to remove in a list\n  (fzf, tab to select several), or are asked before every version\n  (y remove, n skip it, a all remaining, q quit) when fzf is not installed.\n  With a selection flag (--version, --all, --keep-latest-patch, --older-than),\n  one confirmation is asked for the whole plan, none with --yes.\n  \n  Never proposed for removal: the default version used by the playground, the\n  version of the current run (--tag), and any version used by a container,\n  running or stopped (another session, for example). Only the tags x.y.z are\n  listed, the Control Center next-gen images (cp-enterprise-*) are left out.\n  \n  At the end, the space freed is reported (docker system df).\n  \n  🎓 Tip: 'playground remove-cp-docker-images --keep-latest-patch --dry-run'\n  shows what keeping only the last patch of each minor version would remove.\n\n"
+    printf "  🧹 Remove the Confluent Platform docker images of the versions you no longer\n  use (a table of the versions installed locally, then a selection)\n  \n  Each Confluent Platform version you have ever run keeps a dozen images on\n  disk, so this is usually where the space went. The command first prints a\n  table of the versions installed locally: number of images, size, last used\n  (last run with --tag, or last pull), and why a version is kept.\n  \n  Without a selection flag, you pick the versions to remove in a list\n  (fzf, tab to select several), or are asked before every version\n  (y remove, n skip it, a all remaining, q quit) when fzf is not installed.\n  With a selection flag (--version, --all, --keep-latest-patch, --older-than),\n  one confirmation is asked for the whole plan, none with --yes.\n  \n  Never proposed for removal: the default version used by the playground, the\n  version of the current run (--tag), and any version used by a container,\n  running or stopped (another session, for example). Only the tags x.y.z are\n  listed, the Control Center next-gen images (cp-enterprise-*) are left out.\n  \n  At the end, the space freed is reported (docker system df).\n  \n  🎓 Tip: 'playground remove-cp-docker-images --keep-latest-patch --dry-run'\n  shows what keeping only the last patch of each minor version would remove.\n  \n  🎓 Tip: 'playground docker-cleanup enable' runs it every week (--older-than),\n  with the dangling images and the build cache.\n\n"
   else
     printf "playground remove-cp-docker-images - 🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n\n"
   fi
@@ -5958,6 +5959,209 @@ playground_remove_cp_docker_images_usage() {
     printf "  playground remove-cp-docker-images --older-than 90 --yes\n"
     printf "  playground remove-cp-docker-images --version 7.9 --version 8.0.0\n"
     printf "  playground remove-cp-docker-images --all\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_docker_cleanup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground docker-cleanup\n\n"
+    printf "  🧽 Free the disk of the container engine every week, automatically: old\n  Confluent Platform images, dangling images, old build cache\n  \n    enable     schedule it (default every Sunday at 10:00), then show what it\n  would remove\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs freed\n    run        what the job does, now (--dry-run to only show it)\n  \n  Every Confluent Platform version you run keeps a dozen images (several GB),\n  and the connect images patched or built locally leave dangling images and\n  build cache behind. A full disk of the Docker VM then makes examples fail\n  in confusing ways. Every week it runs:\n  \n    🧹 playground remove-cp-docker-images --older-than <days> --yes: the\n       versions not used for --older-than days (default 60). Never the\n       default TAG, the TAG of the current run, nor a version used by a\n       container, running or stopped\n    🗑️ docker image prune: the dangling images (<none>), never one used by a\n       container\n    🧱 docker builder prune --max-used-space <GB>: the build cache above\n       --max-build-cache GB (default 10), least recently used first. The\n       layers it shares with images don't count: they go with the images\n  \n  None of them touches what a container or a build in progress uses, so it\n  also runs while examples run (other sessions included). Volumes are never\n  removed. Skipped when the container engine is not running. A macOS\n  notification tells how much was freed.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line.\n\n"
+  else
+    printf "playground docker-cleanup - 🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground docker-cleanup COMMAND\n"
+  printf "  playground docker-cleanup [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🧽 Schedule the weekly cleanup, then show what it would remove now\n" "$(green "enable") "
+  printf "  %s   🛑 Remove the weekly cleanup schedule\n" "$(green "disable")"
+  printf "  %s   🔎 Is the weekly cleanup scheduled, when, and what did its last runs free\n" "$(green "status") "
+  printf "  %s   🧽 Free the disk of the container engine now, as the weekly job does\n" "$(green "run")    "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_docker_cleanup_enable_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground docker-cleanup enable\n\n"
+    printf "  🧽 Schedule the weekly cleanup, then show what it would remove now\n  \n  Run it again to change the day, the time or the limits. The job uses this\n  checkout of the playground and the PATH of the shell you run it from.\n\n"
+  else
+    printf "playground docker-cleanup enable - 🧽 Schedule the weekly cleanup, then show what it would remove now\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground docker-cleanup enable [OPTIONS]\n"
+  printf "  playground docker-cleanup enable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--day DAY")"
+    printf "    📅 Day of the week of the run\n"
+    printf "    %s\n" "Allowed: sunday, monday, tuesday, wednesday, thursday, friday, saturday"
+    printf "    %s\n" "Default: sunday"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--time TIME")"
+    printf "    🕙 Time of the run, HH:MM, local time\n"
+    printf "    %s\n" "Default: 10:00"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--older-than DAYS")"
+    printf "    📆 Remove the Confluent Platform versions not used for this number of days\n"
+    printf "    %s\n" "Default: 60"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-build-cache GB")"
+    printf "    🧱 Build cache to keep, in GB: above it, the least recently used build cache\n    is removed\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground docker-cleanup enable\n"
+    printf "  playground docker-cleanup enable --day friday --time 18:00 --older-than 30\n  --max-build-cache 20\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_docker_cleanup_disable_usage() {
+  printf "playground docker-cleanup disable - 🛑 Remove the weekly cleanup schedule\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground docker-cleanup disable\n"
+  printf "  playground docker-cleanup disable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_docker_cleanup_status_usage() {
+  printf "playground docker-cleanup status - 🔎 Is the weekly cleanup scheduled, when, and what did its last runs free\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground docker-cleanup status [OPTIONS]\n"
+  printf "  playground docker-cleanup status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--lines LINES")"
+    printf "    📄 Number of lines of the log to show\n"
+    printf "    %s\n" "Default: 40"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_docker_cleanup_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground docker-cleanup run\n\n"
+    printf "  🧽 Free the disk of the container engine now, as the weekly job does\n  \n  Use --dry-run to see what would be removed.\n\n"
+  else
+    printf "playground docker-cleanup run - 🧽 Free the disk of the container engine now, as the weekly job does\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground docker-cleanup run [OPTIONS]\n"
+  printf "  playground docker-cleanup run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--older-than DAYS")"
+    printf "    📆 Remove the Confluent Platform versions not used for this number of days\n"
+    printf "    %s\n" "Default: 60"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-build-cache GB")"
+    printf "    🧱 Build cache to keep, in GB: above it, the least recently used build cache\n    is removed\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔎 Only show what would be removed\n"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--scheduled")"
+      printf "    ⏰ run by the launchd agent / crontab line: macOS notification of what was\n    freed\n"
+      echo
+
+    fi
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground docker-cleanup run --dry-run\n"
+    printf "  playground docker-cleanup run --older-than 30\n"
     echo
 
   fi
@@ -37236,11 +37440,20 @@ function scheduled_job_files () {
   fi
 }
 
-# scheduled_job_install <job> <hour> <minute> <playground arguments…>: (re)schedules the job every day at hour:minute;
-# returns 1 (error logged) when it can't
+# scheduled_job_install <job> [weekday=<0-6>] <hour> <minute> <playground arguments…>: (re)schedules the job every day
+# at hour:minute, or once a week with weekday= (0 is Sunday, like launchd and cron); returns 1 (error logged) when it
+# can't
 function scheduled_job_install () {
-  local job="$1" hour="$2" minute="$3"
-  shift 3
+  local job="$1" weekday="" cron_weekday="*"
+  shift
+  if [[ "$1" =~ ^weekday=([0-6])$ ]]
+  then
+    weekday="${BASH_REMATCH[1]}"
+    cron_weekday="$weekday"
+    shift
+  fi
+  local hour="$1" minute="$2"
+  shift 2
   local playground_bin="$root_folder/scripts/cli/playground" arg line
   scheduled_job_files "$job"
   mkdir -p "$(dirname "$scheduled_job_log")"
@@ -37269,7 +37482,7 @@ function scheduled_job_install () {
       echo "    <key>USER</key><string>$(xml_escape "$USER")</string>"
       echo '  </dict>'
       echo '  <key>StartCalendarInterval</key>'
-      echo "  <dict><key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
+      echo "  <dict>${weekday:+<key>Weekday</key><integer>$weekday</integer>}<key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
       echo "  <key>StandardOutPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
       echo "  <key>StandardErrorPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
       echo '</dict>'
@@ -37288,7 +37501,7 @@ function scheduled_job_install () {
     fi
   elif command -v crontab > /dev/null 2>&1
   then
-    line="$minute $hour * * * PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' $* >> '$scheduled_job_log' 2>&1 $scheduled_job_marker"
+    line="$minute $hour * * $cron_weekday PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' $* >> '$scheduled_job_log' 2>&1 $scheduled_job_marker"
     { crontab -l 2> /dev/null | grep -vF "$scheduled_job_marker"; echo "$line"; } | crontab -
   else
     logerror "❌ neither launchd (macOS) nor crontab found: schedule this yourself: $playground_bin $*"
@@ -37339,12 +37552,15 @@ function scheduled_job_enabled () {
   fi
 }
 
-# scheduled_job_info <job>: when scheduled, sets scheduled_job_time (HH:MM), scheduled_job_args (the playground
+# scheduled_job_info <job>: when scheduled, sets scheduled_job_time (HH:MM), scheduled_job_day (Sunday… for a weekly
+# job, empty for a daily one), scheduled_job_args (the playground
 # arguments, one per line) and scheduled_job_loaded (macOS: the agent is loaded in launchd; always 1 with crontab), and
 # returns 0; returns 1 when the job is not scheduled
 function scheduled_job_info () {
-  local hour minute line
+  local hour minute weekday line
+  local days=(Sunday Monday Tuesday Wednesday Thursday Friday Saturday)
   scheduled_job_time=""
+  scheduled_job_day=""
   scheduled_job_args=""
   scheduled_job_loaded=0
   scheduled_job_enabled "$1" || return 1
@@ -37352,17 +37568,23 @@ function scheduled_job_info () {
   then
     hour=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$scheduled_job_plist" 2> /dev/null)
     minute=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$scheduled_job_plist" 2> /dev/null)
+    weekday=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Weekday" "$scheduled_job_plist" 2> /dev/null)
     scheduled_job_args=$(plutil -extract ProgramArguments json -o - "$scheduled_job_plist" 2> /dev/null | jq -r '.[1:][]' 2> /dev/null)
     launchctl print "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 && scheduled_job_loaded=1
   else
     line=$(crontab -l 2> /dev/null | grep -F "$scheduled_job_marker")
     minute=$(echo "$line" | awk '{print $1}')
     hour=$(echo "$line" | awk '{print $2}')
+    weekday=$(echo "$line" | awk '{print $5}')
     # PATH='…' HOME='…' USER='…' '<playground>' <args> >> '<log>' 2>&1 # marker
     scheduled_job_args=$(echo "$line" | sed -e "s/^.*\/scripts\/cli\/playground' //" -e "s/ >> '.*$//" | tr ' ' '\n')
     scheduled_job_loaded=1
   fi
   scheduled_job_time=$(printf '%02d:%02d' "$((10#${hour:-0}))" "$((10#${minute:-0}))")
+  if [[ "$weekday" =~ ^[0-6]$ ]]
+  then
+    scheduled_job_day="${days[$weekday]}"
+  fi
   return 0
 }
 
@@ -58964,6 +59186,178 @@ playground_remove_cp_docker_images_command() {
   if [[ "$dangling" -gt 0 ]]
   then
       log "🎓 $dangling dangling image(s) left on disk (not all from Confluent Platform): 'docker image prune' removes them"
+  fi
+
+}
+
+# :command.function
+playground_docker_cleanup_enable_command() {
+
+  # src/commands/docker-cleanup/enable.sh
+  day="${args[--day]}"
+  time="${args[--time]}"
+  older_than="${args[--older-than]}"
+  max_build_cache="${args[--max-build-cache]}"
+
+  parse_schedule_time "$time" || exit 1
+  if [ "$older_than" -lt 1 ]
+  then
+      logerror "❌ --older-than $older_than must be 1 or more"
+      exit 1
+  fi
+  days=(sunday monday tuesday wednesday thursday friday saturday)
+  for i in "${!days[@]}"
+  do
+      [ "${days[$i]}" == "$day" ] && weekday=$i
+  done
+
+  scheduled_job_install docker-cleanup "weekday=$weekday" "$time_hour" "$time_minute" docker-cleanup run --older-than "$older_than" --max-build-cache "$max_build_cache" --scheduled || exit 1
+  log "🧽 docker cleanup scheduled every $day at $(printf '%02d:%02d' $time_hour $time_minute), older than $older_than days, build cache up to ${max_build_cache}GB ($(scheduled_job_where docker-cleanup))"
+  log "📄 log: $scheduled_job_log"
+  log "🔎 what it would remove, as of now:"
+  playground docker-cleanup run --older-than "$older_than" --max-build-cache "$max_build_cache" --dry-run
+  log "👉 playground docker-cleanup status   # after the first run"
+
+}
+
+# :command.function
+playground_docker_cleanup_disable_command() {
+
+  # src/commands/docker-cleanup/disable.sh
+  if scheduled_job_remove docker-cleanup
+  then
+      log "🛑 docker cleanup disabled (its log stays in $scheduled_job_log)"
+  else
+      log "🤷 the docker cleanup was not scheduled"
+  fi
+
+}
+
+# :command.function
+playground_docker_cleanup_status_command() {
+
+  # src/commands/docker-cleanup/status.sh
+  lines="${args[--lines]}"
+  if scheduled_job_info docker-cleanup
+  then
+      older_than=$(scheduled_job_flag_values --older-than)
+      max_build_cache=$(scheduled_job_flag_values --max-build-cache)
+      if [ "$scheduled_job_loaded" == "1" ]
+      then
+          log "🧽 docker cleanup scheduled every ${scheduled_job_day:-day} at $scheduled_job_time, older than ${older_than:-60} days, build cache up to ${max_build_cache:-10}GB ($(scheduled_job_where docker-cleanup))"
+      else
+          logwarn "⚠️ $scheduled_job_plist exists but is not loaded: playground docker-cleanup enable"
+      fi
+  else
+      log "💤 the docker cleanup is not scheduled: playground docker-cleanup enable"
+  fi
+  if [ -f "$scheduled_job_log" ]
+  then
+      log "📄 last $lines lines of $scheduled_job_log:"
+      tail -n "$lines" "$scheduled_job_log"
+  else
+      log "📄 no run yet ($scheduled_job_log)"
+  fi
+
+}
+
+# :command.function
+playground_docker_cleanup_run_command() {
+
+  # src/commands/docker-cleanup/run.sh
+  older_than="${args[--older-than]}"
+  max_build_cache="${args[--max-build-cache]}"
+  dry_run="${args[--dry-run]}"
+  scheduled="${args[--scheduled]}"
+
+  if [ "$older_than" -lt 1 ]
+  then
+      logerror "❌ --older-than $older_than must be 1 or more"
+      exit 1
+  fi
+  if [ "$max_build_cache" -lt 0 ]
+  then
+      logerror "❌ --max-build-cache $max_build_cache must be 0 or more"
+      exit 1
+  fi
+
+  if [[ -n "$scheduled" ]]
+  then
+      log "🧽 docker cleanup of $(date '+%Y-%m-%d %H:%M'), older than $older_than days, build cache up to ${max_build_cache}GB"
+  fi
+  if ! docker info > /dev/null 2>&1
+  then
+      # nothing to free, and nobody to start it at that time: the next run will do it
+      log "💤 the container engine is not running: skipped"
+      exit 0
+  fi
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔎 dry-run: listing what would be removed, nothing is removed"
+  fi
+
+  # size of the line $1 of docker system df (Images, Build Cache), as docker prints it (12.3GB)
+  docker_df_size () {
+      docker system df --format '{{.Type}}\t{{.Size}}' 2> /dev/null | awk -F'\t' -v t="$1" '$1 == t {print $2}'
+  }
+  images_before=$(docker_df_size Images)
+  cache_before=$(docker_df_size "Build Cache")
+
+  log "🧹 Confluent Platform versions not used for $older_than days"
+  cp_args=(--older-than "$older_than" --yes)
+  if [[ -n "$dry_run" ]]
+  then
+      cp_args+=(--dry-run)
+  fi
+  playground remove-cp-docker-images "${cp_args[@]}" || logwarn "⚠️ playground remove-cp-docker-images failed, going on with the dangling images and the build cache"
+
+  nb_dangling=$(docker images --filter dangling=true --quiet 2> /dev/null | sort -u | wc -l | tr -d ' ')
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔎 dry-run, would run: docker image prune --force   # $nb_dangling dangling image(s), the ones used by a container are kept"
+  else
+      log "🗑️ removing the dangling images ($nb_dangling, the ones used by a container are kept)"
+      # prints "Total reclaimed space: 8.3GB"
+      images_freed=$(docker image prune --force 2> /dev/null | awk -F': ' '/^Total reclaimed space/ {print $2}') || logwarn "⚠️ docker image prune failed"
+  fi
+
+  # docker 28 renamed --keep-storage to --max-used-space
+  cap_flag="--keep-storage"
+  if docker builder prune --help 2> /dev/null | grep -q -- "--max-used-space"
+  then
+      cap_flag="--max-used-space"
+  fi
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔎 dry-run, would run: docker builder prune --force $cap_flag ${max_build_cache}GB   # build cache now: ${cache_before:-?}"
+  else
+      log "🧱 removing the build cache above ${max_build_cache}GB, least recently used first"
+      # podman: no build cache of its own to prune, docker builder may not be there
+      # prints "Total:	10.67GB"
+      if output=$(docker builder prune --force "$cap_flag" "${max_build_cache}GB" 2> /dev/null)
+      then
+          cache_freed=$(awk '/^Total:/ {print $2}' <<< "$output")
+      else
+          logwarn "⚠️ docker builder prune failed (not supported by this engine?)"
+      fi
+  fi
+
+  if [[ -z "$dry_run" ]]
+  then
+      images_after=$(docker_df_size Images)
+      cache_after=$(docker_df_size "Build Cache")
+      summary="freed ${images_freed:-0B} of dangling images and ${cache_freed:-0B} of build cache (images ${images_before:-?} → ${images_after:-?}, build cache ${cache_before:-?} → ${cache_after:-?})"
+      log "✅ $summary"
+      # the layers of the build cache shared with images are freed only with those images, whatever --max-build-cache
+      cache_shared=$(docker buildx du 2> /dev/null | awk '/^Shared:/ {print $2}')
+      if [ -n "$cache_shared" ]
+      then
+          log "🎓 $cache_shared of the build cache are layers shared with images: freed with the images only (playground remove-cp-docker-images)"
+      fi
+      if [[ -n "$scheduled" ]]
+      then
+          scheduled_job_notify "🧽 kafka-docker-playground docker cleanup" "$summary"
+      fi
   fi
 
 }
@@ -102162,6 +102556,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    docker-cleanup)
+      action="docker-cleanup"
+      shift
+      playground_docker_cleanup_parse_requirements "$@"
+      shift $#
+      ;;
+
     refresh-cp-docker-images)
       action="refresh-cp-docker-images"
       shift
@@ -114976,6 +115377,528 @@ playground_remove_cp_docker_images_parse_requirements() {
     validation_output="$(validate_integer "${args['--older-than']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--older-than DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_docker_cleanup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_docker_cleanup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    enable)
+      action="enable"
+      shift
+      playground_docker_cleanup_enable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    disable)
+      action="disable"
+      shift
+      playground_docker_cleanup_disable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_docker_cleanup_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    run)
+      action="run"
+      shift
+      playground_docker_cleanup_run_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_docker_cleanup_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_docker_cleanup_enable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_docker_cleanup_enable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="docker-cleanup enable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --day)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--day']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--day requires an argument: --day DAY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --time)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--time']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--time requires an argument: --time TIME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --older-than)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--older-than']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--older-than requires an argument: --older-than DAYS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-build-cache)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-build-cache']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-build-cache requires an argument: --max-build-cache GB" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--day']:-} ]] || args['--day']="sunday"
+  [[ -n ${args['--time']:-} ]] || args['--time']="10:00"
+  [[ -n ${args['--older-than']:-} ]] || args['--older-than']="60"
+  [[ -n ${args['--max-build-cache']:-} ]] || args['--max-build-cache']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--older-than'] ]]; then
+    validation_output="$(validate_integer "${args['--older-than']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--older-than DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-build-cache'] ]]; then
+    validation_output="$(validate_integer "${args['--max-build-cache']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-build-cache GB" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--day']:-} ]] && [[ ! ${args['--day']:-} =~ ^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$ ]]; then
+    printf "%s\n" "--day must be one of: sunday, monday, tuesday, wednesday, thursday, friday, saturday" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_docker_cleanup_disable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_docker_cleanup_disable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="docker-cleanup disable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_docker_cleanup_status_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_docker_cleanup_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="docker-cleanup status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --lines)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--lines']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--lines requires an argument: --lines LINES" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--lines']:-} ]] || args['--lines']="40"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--lines'] ]]; then
+    validation_output="$(validate_integer "${args['--lines']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--lines LINES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_docker_cleanup_run_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_docker_cleanup_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="docker-cleanup run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --older-than)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--older-than']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--older-than requires an argument: --older-than DAYS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-build-cache)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-build-cache']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-build-cache requires an argument: --max-build-cache GB" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --scheduled)
+
+        # :flag.case_no_arg
+        args['--scheduled']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--older-than']:-} ]] || args['--older-than']="60"
+  [[ -n ${args['--max-build-cache']:-} ]] || args['--max-build-cache']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--older-than'] ]]; then
+    validation_output="$(validate_integer "${args['--older-than']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--older-than DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-build-cache'] ]]; then
+    validation_output="$(validate_integer "${args['--max-build-cache']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-build-cache GB" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -160705,6 +161628,11 @@ playground_completion() {
         playground_remove_cp_docker_images_completion "$completion_current" "$@"
         return
         ;;
+      docker-cleanup)
+        shift
+        playground_docker_cleanup_completion "$completion_current" "$@"
+        return
+        ;;
       refresh-cp-docker-images)
         shift
         playground_refresh_cp_docker_images_completion "$completion_current" "$@"
@@ -160884,7 +161812,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -166526,6 +167454,235 @@ playground_remove_cp_docker_images_completion() {
     completion_flag_candidates --older-than "$completion_current" --older-than
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --yes "$completion_current" --yes -y
+  fi
+
+}
+
+# :command.completion_function
+playground_docker_cleanup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      enable)
+        shift
+        playground_docker_cleanup_enable_completion "$completion_current" "$@"
+        return
+        ;;
+      disable)
+        shift
+        playground_docker_cleanup_disable_completion "$completion_current" "$@"
+        return
+        ;;
+      status)
+        shift
+        playground_docker_cleanup_status_completion "$completion_current" "$@"
+        return
+        ;;
+      run)
+        shift
+        playground_docker_cleanup_run_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" enable disable status run
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_docker_cleanup_enable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --day)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "sunday"
+            "monday"
+            "tuesday"
+            "wednesday"
+            "thursday"
+            "friday"
+            "saturday"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--day"]=1
+
+        ;;
+      --time)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--time"]=1
+
+        ;;
+      --older-than)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--older-than"]=1
+
+        ;;
+      --max-build-cache)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-build-cache"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --day "$completion_current" --day
+    completion_flag_candidates --time "$completion_current" --time
+    completion_flag_candidates --older-than "$completion_current" --older-than
+    completion_flag_candidates --max-build-cache "$completion_current" --max-build-cache
+  fi
+
+}
+
+# :command.completion_function
+playground_docker_cleanup_disable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_docker_cleanup_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --lines)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--lines"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --lines "$completion_current" --lines
+  fi
+
+}
+
+# :command.completion_function
+playground_docker_cleanup_run_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --older-than)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--older-than"]=1
+
+        ;;
+      --max-build-cache)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-build-cache"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --older-than "$completion_current" --older-than
+    completion_flag_candidates --max-build-cache "$completion_current" --max-build-cache
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
   fi
 
 }
@@ -190301,6 +191458,11 @@ run() {
     "stop") playground_stop_command ;;
     "remove-all-docker-images") playground_remove_all_docker_images_command ;;
     "remove-cp-docker-images") playground_remove_cp_docker_images_command ;;
+    "docker-cleanup") playground_docker_cleanup_command ;;
+    "docker-cleanup enable") playground_docker_cleanup_enable_command ;;
+    "docker-cleanup disable") playground_docker_cleanup_disable_command ;;
+    "docker-cleanup status") playground_docker_cleanup_status_command ;;
+    "docker-cleanup run") playground_docker_cleanup_run_command ;;
     "refresh-cp-docker-images") playground_refresh_cp_docker_images_command ;;
     "cleanup-cloud-details") playground_cleanup_cloud_details_command ;;
     "open-docs") playground_open_docs_command ;;

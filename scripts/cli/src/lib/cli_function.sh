@@ -12507,11 +12507,20 @@ function scheduled_job_files () {
   fi
 }
 
-# scheduled_job_install <job> <hour> <minute> <playground arguments…>: (re)schedules the job every day at hour:minute;
-# returns 1 (error logged) when it can't
+# scheduled_job_install <job> [weekday=<0-6>] <hour> <minute> <playground arguments…>: (re)schedules the job every day
+# at hour:minute, or once a week with weekday= (0 is Sunday, like launchd and cron); returns 1 (error logged) when it
+# can't
 function scheduled_job_install () {
-  local job="$1" hour="$2" minute="$3"
-  shift 3
+  local job="$1" weekday="" cron_weekday="*"
+  shift
+  if [[ "$1" =~ ^weekday=([0-6])$ ]]
+  then
+    weekday="${BASH_REMATCH[1]}"
+    cron_weekday="$weekday"
+    shift
+  fi
+  local hour="$1" minute="$2"
+  shift 2
   local playground_bin="$root_folder/scripts/cli/playground" arg line
   scheduled_job_files "$job"
   mkdir -p "$(dirname "$scheduled_job_log")"
@@ -12540,7 +12549,7 @@ function scheduled_job_install () {
       echo "    <key>USER</key><string>$(xml_escape "$USER")</string>"
       echo '  </dict>'
       echo '  <key>StartCalendarInterval</key>'
-      echo "  <dict><key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
+      echo "  <dict>${weekday:+<key>Weekday</key><integer>$weekday</integer>}<key>Hour</key><integer>$hour</integer><key>Minute</key><integer>$minute</integer></dict>"
       echo "  <key>StandardOutPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
       echo "  <key>StandardErrorPath</key><string>$(xml_escape "$scheduled_job_log")</string>"
       echo '</dict>'
@@ -12559,7 +12568,7 @@ function scheduled_job_install () {
     fi
   elif command -v crontab > /dev/null 2>&1
   then
-    line="$minute $hour * * * PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' $* >> '$scheduled_job_log' 2>&1 $scheduled_job_marker"
+    line="$minute $hour * * $cron_weekday PATH='$PATH' HOME='$HOME' USER='$USER' '$playground_bin' $* >> '$scheduled_job_log' 2>&1 $scheduled_job_marker"
     { crontab -l 2> /dev/null | grep -vF "$scheduled_job_marker"; echo "$line"; } | crontab -
   else
     logerror "❌ neither launchd (macOS) nor crontab found: schedule this yourself: $playground_bin $*"
@@ -12610,12 +12619,15 @@ function scheduled_job_enabled () {
   fi
 }
 
-# scheduled_job_info <job>: when scheduled, sets scheduled_job_time (HH:MM), scheduled_job_args (the playground
+# scheduled_job_info <job>: when scheduled, sets scheduled_job_time (HH:MM), scheduled_job_day (Sunday… for a weekly
+# job, empty for a daily one), scheduled_job_args (the playground
 # arguments, one per line) and scheduled_job_loaded (macOS: the agent is loaded in launchd; always 1 with crontab), and
 # returns 0; returns 1 when the job is not scheduled
 function scheduled_job_info () {
-  local hour minute line
+  local hour minute weekday line
+  local days=(Sunday Monday Tuesday Wednesday Thursday Friday Saturday)
   scheduled_job_time=""
+  scheduled_job_day=""
   scheduled_job_args=""
   scheduled_job_loaded=0
   scheduled_job_enabled "$1" || return 1
@@ -12623,17 +12635,23 @@ function scheduled_job_info () {
   then
     hour=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$scheduled_job_plist" 2> /dev/null)
     minute=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$scheduled_job_plist" 2> /dev/null)
+    weekday=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Weekday" "$scheduled_job_plist" 2> /dev/null)
     scheduled_job_args=$(plutil -extract ProgramArguments json -o - "$scheduled_job_plist" 2> /dev/null | jq -r '.[1:][]' 2> /dev/null)
     launchctl print "gui/$(id -u)/$scheduled_job_label" > /dev/null 2>&1 && scheduled_job_loaded=1
   else
     line=$(crontab -l 2> /dev/null | grep -F "$scheduled_job_marker")
     minute=$(echo "$line" | awk '{print $1}')
     hour=$(echo "$line" | awk '{print $2}')
+    weekday=$(echo "$line" | awk '{print $5}')
     # PATH='…' HOME='…' USER='…' '<playground>' <args> >> '<log>' 2>&1 # marker
     scheduled_job_args=$(echo "$line" | sed -e "s/^.*\/scripts\/cli\/playground' //" -e "s/ >> '.*$//" | tr ' ' '\n')
     scheduled_job_loaded=1
   fi
   scheduled_job_time=$(printf '%02d:%02d' "$((10#${hour:-0}))" "$((10#${minute:-0}))")
+  if [[ "$weekday" =~ ^[0-6]$ ]]
+  then
+    scheduled_job_day="${days[$weekday]}"
+  fi
   return 0
 }
 

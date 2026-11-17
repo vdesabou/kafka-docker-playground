@@ -1576,7 +1576,7 @@
     },
     {
       "name": "remove-cp-docker-images",
-      "description": "🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n\nEach Confluent Platform version you have ever run keeps a dozen images on\ndisk, so this is usually where the space went. The command first prints a\ntable of the versions installed locally: number of images, size, last used\n(last run with --tag, or last pull), and why a version is kept.\n\nWithout a selection flag, you pick the versions to remove in a list\n(fzf, tab to select several), or are asked before every version\n(y remove, n skip it, a all remaining, q quit) when fzf is not installed.\nWith a selection flag (--version, --all, --keep-latest-patch, --older-than),\none confirmation is asked for the whole plan, none with --yes.\n\nNever proposed for removal: the default version used by the playground, the\nversion of the current run (--tag), and any version used by a container,\nrunning or stopped (another session, for example). Only the tags x.y.z are\nlisted, the Control Center next-gen images (cp-enterprise-*) are left out.\n\nAt the end, the space freed is reported (docker system df).\n\n🎓 Tip: 'playground remove-cp-docker-images --keep-latest-patch --dry-run'\nshows what keeping only the last patch of each minor version would remove.",
+      "description": "🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n\nEach Confluent Platform version you have ever run keeps a dozen images on\ndisk, so this is usually where the space went. The command first prints a\ntable of the versions installed locally: number of images, size, last used\n(last run with --tag, or last pull), and why a version is kept.\n\nWithout a selection flag, you pick the versions to remove in a list\n(fzf, tab to select several), or are asked before every version\n(y remove, n skip it, a all remaining, q quit) when fzf is not installed.\nWith a selection flag (--version, --all, --keep-latest-patch, --older-than),\none confirmation is asked for the whole plan, none with --yes.\n\nNever proposed for removal: the default version used by the playground, the\nversion of the current run (--tag), and any version used by a container,\nrunning or stopped (another session, for example). Only the tags x.y.z are\nlisted, the Control Center next-gen images (cp-enterprise-*) are left out.\n\nAt the end, the space freed is reported (docker system df).\n\n🎓 Tip: 'playground remove-cp-docker-images --keep-latest-patch --dry-run'\nshows what keeping only the last patch of each minor version would remove.\n\n🎓 Tip: 'playground docker-cleanup enable' runs it every week (--older-than),\nwith the dangling images and the build cache.",
       "usage": "playground remove-cp-docker-images [OPTIONS]",
       "options": [
         {
@@ -1621,6 +1621,97 @@
           ],
           "argument": "",
           "description": "✅ Do not ask for confirmation"
+        }
+      ]
+    },
+    {
+      "name": "docker-cleanup",
+      "description": "🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n\n  enable     schedule it (default every Sunday at 10:00), then show what it would remove\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs freed\n  run        what the job does, now (--dry-run to only show it)\n\nEvery Confluent Platform version you run keeps a dozen images (several GB),\nand the connect images patched or built locally leave dangling images and\nbuild cache behind. A full disk of the Docker VM then makes examples fail\nin confusing ways. Every week it runs:\n\n  🧹 playground remove-cp-docker-images --older-than <days> --yes: the\n     versions not used for --older-than days (default 60). Never the\n     default TAG, the TAG of the current run, nor a version used by a\n     container, running or stopped\n  🗑️ docker image prune: the dangling images (<none>), never one used by a\n     container\n  🧱 docker builder prune --max-used-space <GB>: the build cache above\n     --max-build-cache GB (default 10), least recently used first. The\n     layers it shares with images don't count: they go with the images\n\nNone of them touches what a container or a build in progress uses, so it\nalso runs while examples run (other sessions included). Volumes are never\nremoved. Skipped when the container engine is not running. A macOS\nnotification tells how much was freed.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line.",
+      "usage": "playground docker-cleanup COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "enable",
+          "description": "🧽 Schedule the weekly cleanup, then show what it would remove now\n\nRun it again to change the day, the time or the limits. The job uses this\ncheckout of the playground and the PATH of the shell you run it from.",
+          "usage": "playground docker-cleanup enable [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--day"
+              ],
+              "argument": "DAY",
+              "description": "📅 Day of the week of the run\n\nDefault value: sunday\nAllowed values: sunday, monday, tuesday, wednesday, thursday, friday, saturday"
+            },
+            {
+              "names": [
+                "--time"
+              ],
+              "argument": "TIME",
+              "description": "🕙 Time of the run, HH:MM, local time\n\nDefault value: 10:00"
+            },
+            {
+              "names": [
+                "--older-than"
+              ],
+              "argument": "DAYS",
+              "description": "📆 Remove the Confluent Platform versions not used for this number of days\n\nDefault value: 60"
+            },
+            {
+              "names": [
+                "--max-build-cache"
+              ],
+              "argument": "GB",
+              "description": "🧱 Build cache to keep, in GB: above it, the least recently used build cache is removed\n\nDefault value: 10"
+            }
+          ]
+        },
+        {
+          "name": "disable",
+          "description": "🛑 Remove the weekly cleanup schedule",
+          "usage": "playground docker-cleanup disable",
+          "options": []
+        },
+        {
+          "name": "status",
+          "description": "🔎 Is the weekly cleanup scheduled, when, and what did its last runs free",
+          "usage": "playground docker-cleanup status [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--lines"
+              ],
+              "argument": "LINES",
+              "description": "📄 Number of lines of the log to show\n\nDefault value: 40"
+            }
+          ]
+        },
+        {
+          "name": "run",
+          "description": "🧽 Free the disk of the container engine now, as the weekly job does\n\nUse --dry-run to see what would be removed.",
+          "usage": "playground docker-cleanup run [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--older-than"
+              ],
+              "argument": "DAYS",
+              "description": "📆 Remove the Confluent Platform versions not used for this number of days\n\nDefault value: 60"
+            },
+            {
+              "names": [
+                "--max-build-cache"
+              ],
+              "argument": "GB",
+              "description": "🧱 Build cache to keep, in GB: above it, the least recently used build cache is removed\n\nDefault value: 10"
+            },
+            {
+              "names": [
+                "--dry-run"
+              ],
+              "argument": "",
+              "description": "🔎 Only show what would be removed"
+            }
+          ]
         }
       ]
     },
