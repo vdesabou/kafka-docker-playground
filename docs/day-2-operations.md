@@ -17,13 +17,13 @@ cp-ansible and CFK procedures describe them, and shows at each step:
 
 | Platform | Example | Change | The classic mistake it shows |
 | --- | --- | --- | --- |
-| 🅰️ cp-ansible | [`rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-day2) | CP 8.3.2 → the default CP version, 3 brokers | the default `deployment_strategy` of cp-ansible (`parallel`) restarts every broker at once; the feature level is not finalized |
-| 🅰️ cp-ansible | `enable-sasl-ssl.sh` | PLAINTEXT → SASL_SSL without downtime, in 3 steps | a client left on PLAINTEXT: `Bootstrap broker … disconnected` in a loop, or `OutOfMemoryError` (KAFKA-4090) |
-| 🅰️ cp-ansible | `scale-out-brokers.sh` | 1 → 3 brokers | the new brokers hold nothing until the topics are reassigned; the internal topics keep one replica |
-| 🅰️ cp-ansible | `static-to-dynamic-quorum.sh` | static KRaft quorum → dynamic, then 2 controllers added | `kraft_dynamic_quorum_enabled` and the normal playbook on a static cluster: cp-ansible refuses it |
-| 🅰️ cp-ansible | `enable-rbac.sh` | SASL_SSL → RBAC (MDS, LDAP) | the INTERNAL listener becomes OAUTHBEARER only; an application without a role binding is denied at once |
-| ☸️ CFK | [`cfk-rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cfk-day2) | CP 8.3.2 → the default CP version, 3 controllers, 3 brokers | a JSON merge patch of `configOverrides` replaces the whole list; the feature level is not finalized; a change applied right after a roll that the brokers don't get |
-| ☸️ CFK | `cfk-operator-upgrade.sh` | CFK 3.3.0 → 3.3.1, then → 3.4.0 | `helm upgrade` without blocking reconciliation: every pod restarts twice, controllers and brokers at the same time |
+| 🅰️ cp-ansible | [`rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/rolling-upgrade.sh) | CP 8.3.2 → the default CP version, 3 brokers | the default `deployment_strategy` of cp-ansible (`parallel`) restarts every broker at once; the feature level is not finalized |
+| 🅰️ cp-ansible | [`enable-sasl-ssl.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/enable-sasl-ssl.sh) | PLAINTEXT → SASL_SSL without downtime, in 3 steps | a client left on PLAINTEXT: `Bootstrap broker … disconnected` in a loop, or `OutOfMemoryError` (KAFKA-4090) |
+| 🅰️ cp-ansible | [`scale-out-brokers.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/scale-out-brokers.sh) | 1 → 3 brokers | the new brokers hold nothing until the topics are reassigned; the internal topics keep one replica |
+| 🅰️ cp-ansible | [`static-to-dynamic-quorum.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/static-to-dynamic-quorum.sh) | static KRaft quorum → dynamic, then 2 controllers added | `kraft_dynamic_quorum_enabled` and the normal playbook on a static cluster: cp-ansible refuses it |
+| 🅰️ cp-ansible | [`enable-rbac.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/enable-rbac.sh) | SASL_SSL → RBAC (MDS, LDAP) | the INTERNAL listener becomes OAUTHBEARER only; an application without a role binding is denied at once |
+| ☸️ CFK | [`cfk-rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-rolling-upgrade.sh) | CP 8.3.2 → the default CP version, 3 controllers, 3 brokers | a JSON merge patch of `configOverrides` replaces the whole list; the feature level is not finalized; a change applied right after a roll that the brokers don't get |
+| ☸️ CFK | [`cfk-operator-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-operator-upgrade.sh) | CFK 3.3.0 → 3.3.1, then → 3.4.0 | `helm upgrade` without blocking reconciliation: every pod restarts twice, controllers and brokers at the same time |
 
 ```bash
 playground run -f other/cp-ansible-day2/rolling-upgrade.sh                       # 🅰️ each one starts its own environment
@@ -85,11 +85,11 @@ Recorded locally (Docker Desktop, arm64), CP 8.4.1, cp-ansible 8.4.0; all five a
 
 | Example | Key result |
 | --- | --- |
-| `rolling-upgrade.sh` | rolling upgrade: brokers restarted 42 s apart, 2 send errors, longest pause 0.1 s. The same broker change with the **default `parallel`** strategy: 3 brokers restarted in the same second, **259 send errors, 13 s without an ack**; with `--rolling`: 1 send error, 0.1 s. Feature level `CP-8.3-IV0B` until `kafka-features upgrade --feature confluent.metadata.version=141` |
-| `enable-sasl-ssl.sh` | listeners at each step (`CLIENT:SASL_SSL` added, connect moved to it, `INTERNAL:SASL_SSL`), 6 send errors over three rolling restarts for the migrated producer, the forgotten client: 0 acks once PLAINTEXT is closed, `Bootstrap broker broker:9092 … disconnected` |
-| `scale-out-brokers.sh` | 0 send errors while adding the brokers, `Replicas: 1` until `playground topic reassign`, 702 records acked with broker 1 down afterwards |
-| `static-to-dynamic-quorum.sh` | `❌ controller: Detected a running static KRaft cluster (kraft.version=0)…` for the mistake, `kraft.version` 1 after `StaticToDynamicQuorumMigration`, voters 9991 (Leader), 9992 and 9993 (Follower) |
-| `enable-rbac.sh` | the application without a role binding: `TopicAuthorizationException: Not authorized to access topics: [day2]` as soon as RBAC is on (771 send errors in CI); the producer and the sink keep working with their role bindings; 49003 acked = 49003 in the topic = 49003 written by the sink (CI) |
+| [`rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/rolling-upgrade.sh) | rolling upgrade: brokers restarted 42 s apart, 2 send errors, longest pause 0.1 s. The same broker change with the **default `parallel`** strategy: 3 brokers restarted in the same second, **259 send errors, 13 s without an ack**; with `--rolling`: 1 send error, 0.1 s. Feature level `CP-8.3-IV0B` until `kafka-features upgrade --feature confluent.metadata.version=141` |
+| [`enable-sasl-ssl.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/enable-sasl-ssl.sh) | listeners at each step (`CLIENT:SASL_SSL` added, connect moved to it, `INTERNAL:SASL_SSL`), 6 send errors over three rolling restarts for the migrated producer, the forgotten client: 0 acks once PLAINTEXT is closed, `Bootstrap broker broker:9092 … disconnected` |
+| [`scale-out-brokers.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/scale-out-brokers.sh) | 0 send errors while adding the brokers, `Replicas: 1` until `playground topic reassign`, 702 records acked with broker 1 down afterwards |
+| [`static-to-dynamic-quorum.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/static-to-dynamic-quorum.sh) | `❌ controller: Detected a running static KRaft cluster (kraft.version=0)…` for the mistake, `kraft.version` 1 after `StaticToDynamicQuorumMigration`, voters 9991 (Leader), 9992 and 9993 (Follower) |
+| [`enable-rbac.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cp-ansible-day2/enable-rbac.sh) | the application without a role binding: `TopicAuthorizationException: Not authorized to access topics: [day2]` as soon as RBAC is on (771 send errors in CI); the producer and the sink keep working with their role bindings; 49003 acked = 49003 in the topic = 49003 written by the sink (CI) |
 
 The details, with the outputs of each step: [`other/cp-ansible-day2`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-day2).
 
@@ -138,8 +138,8 @@ Recorded on an EC2 instance (x86_64, 8 vCPUs, k3d), CP 8.4.1, 3 KRaft controller
 
 | Example | Key result |
 | --- | --- |
-| `cfk-rolling-upgrade.sh` | the 3 controllers, then the 3 brokers, connect and schema registry rolled one at a time (≈100 s per broker): **3 send errors, longest pause 0.2 s**. Feature level `CP-8.3-IV0B` until `kafka-features upgrade`. The merge patch of `configOverrides`: 8 overrides → `["log.retention.hours=72"]`. 21346 acked = 21346 in the topic, sink lag 0 |
-| `cfk-operator-upgrade.sh` | without blocking reconciliation: **16 pod stops** (every pod twice: when the new operator starts, then for the init containers), and each controller restarted in the same second as a broker (`kraftcontroller-2` and `kafka-2` at 18:31:21). With the procedure: **8 pod stops**, one component at a time. 33285 acked = 33285 in the topic, every pod on `confluent-init-container:3.4.0` |
+| [`cfk-rolling-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-rolling-upgrade.sh) | the 3 controllers, then the 3 brokers, connect and schema registry rolled one at a time (≈100 s per broker): **3 send errors, longest pause 0.2 s**. Feature level `CP-8.3-IV0B` until `kafka-features upgrade`. The merge patch of `configOverrides`: 8 overrides → `["log.retention.hours=72"]`. 21346 acked = 21346 in the topic, sink lag 0 |
+| [`cfk-operator-upgrade.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/cfk-day2/cfk-operator-upgrade.sh) | without blocking reconciliation: **16 pod stops** (every pod twice: when the new operator starts, then for the init containers), and each controller restarted in the same second as a broker (`kraftcontroller-2` and `kafka-2` at 18:31:21). With the procedure: **8 pod stops**, one component at a time. 33285 acked = 33285 in the topic, every pod on `confluent-init-container:3.4.0` |
 
 The details: [`other/cfk-day2`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cfk-day2).
 
