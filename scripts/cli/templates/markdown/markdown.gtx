@@ -77,7 +77,10 @@ end
 # === Commands
 
 if commands.any?
-  grouped_commands.each do |group, commands|
+  # groups in alphabetical order (the ungrouped "Commands" first), not in declaration order
+  group_label = ->(g) { g.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }
+  sorted_groups = grouped_commands.sort_by { |g, _| [group_label.(g) == 'Commands' ? 0 : 1, group_label.(g).downcase] }
+  sorted_groups.each do |group, commands|
     # private commands have no page (see render.rb): don't link to them
     # bashly also lists the subcommands of an exposed command (expose: true) in its group, one level deep only:
     # keep the direct subcommands and list every public descendant of each, nested by depth
@@ -86,7 +89,7 @@ if commands.any?
     tree = ->(c) { [c] + c.commands.reject(&:private).flat_map { |s| tree.(s) } }
     commands = commands.flat_map { |c| tree.(c) }
     next if commands.empty?
-    > ## {{ group.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }}
+    > ## {{ group_label.(group) }}
     >
     commands.each do |subcommand|
       indent = "  " * (subcommand.full_name.split.size - depth - 1)
