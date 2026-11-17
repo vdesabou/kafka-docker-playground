@@ -473,7 +473,7 @@ playground cloud-resources cleanup --resource ccloud --dry-run # what would be d
 playground cloud-resources nightly-cleanup status              # is the nightly cleanup scheduled, and what did it delete
 ```
 
-Everything is matched on your username: the connectors `*_<user>` and the `pg-<user>-*` names. A colleague's connector, topic or key is never touched. The [🍪 deep dive on fully managed connectors](/deep-dive-fully-managed.md) has the details.
+Everything is matched on your username: the connectors `*_<user>` and the `pg-<user>-*` names. A colleague's connector, topic or key is never touched. The [🍪 deep dive on fully managed connectors](/deep-dive-fully-managed.md) has the details, and [🧹 Cleanup and scheduled jobs](/toolkit-cleanup.md) lists every cleanup command and scheduled job in one place.
 
 ### 👤 Fully managed connectors with a service account
 
@@ -547,7 +547,8 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 
 Every Confluent Platform version you run keeps a dozen images on disk (several GB), and the connect images patched or
 built locally leave dangling images and build cache behind. [playground remove-cp-docker-images](/playground%20remove-cp-docker-images)
-removes old versions on demand; [playground docker-cleanup](/playground%20docker-cleanup) does it every week by itself:
+removes old versions on demand; [playground docker-cleanup](/playground%20docker-cleanup) does it every week by itself (see also
+[🧹 Cleanup and scheduled jobs](/toolkit-cleanup.md)):
 
 ```bash
 playground docker-cleanup run --dry-run    # what it would remove now

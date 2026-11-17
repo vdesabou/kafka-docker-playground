@@ -17,7 +17,8 @@ playground cloud-resources nightly-cleanup enable     # every night: your connec
 playground cloud-resources ccloud list                # anytime: what is still running for you, org-wide
 ```
 
-See [Confluent Cloud examples](/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples) for the options.
+See [Confluent Cloud examples](/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples) for the options, and
+[🧹 Cleanup and scheduled jobs](/toolkit-cleanup.md) for every cleanup command and scheduled job.
 
 ## 👤 Fully managed connectors with a service account
 
