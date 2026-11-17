@@ -743,7 +743,9 @@ dumps of the logs, keys indented with a tab, or with spaces when the log was cop
 editor that converts tabs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a
 level and connector filter (connector taken from the
-`[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`)
+`[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`,
+or without the context the task or connector the runtime names, `Failed to start task connector-0` / `Failed to start connector 'connector'`:
+`CONNECTOR_RE` of `log_report.py`, `of_connectors()` of the digest for `--connector`)
 every connector name of the report (a `.fi-conn` chip: root causes, records, cards, 🔄 rows) that the Connector filter
 lists sets it on click, again goes back to all (`pgMarkConnChips()`, the chips of the connector picked are highlighted),
 a period filter (drag over the 📈 occurrences chart, `[from, to)` as its buckets), the Component chips (the component of

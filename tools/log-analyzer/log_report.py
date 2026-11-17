@@ -72,7 +72,10 @@ EXCEPTION_RE = re.compile(r"^(?:(?:Caused by:|--->|\[cause\]:)\s*)?((?:[a-zA-Z_$
                           r"(?:`\d+\[[^\]]*\])?)(?::\s*(.*))?$")
 # connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, with an optional scope
 # ([connector|task-0|offsets], Oracle CDC [connector|task-0|redoLog]), or the id of the task
-CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
+# the [connector|task-0] context of a line (MDC), its WorkerSinkTask{id=connector-0}, else (a log4j pattern without the
+# context) the task or the connector the runtime names: "Failed to start task orders-sink-0", "Failed to start connector 'x'"
+CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}"
+                          r"|Failed to start task (\S+)-\d+\b|Failed to start connector '?([^'\s:,]+)")
 
 
 TS_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -259,7 +262,7 @@ def finish_record(rec: dict) -> None:
     rec["text"] = "\n".join(lines)
     rec["message"] = lines[0] if lines else ""
     m = CONNECTOR_RE.search(rec["message"])
-    rec["connector"] = (m.group(1) or m.group(2)) if m else None
+    rec["connector"] = next((g for g in m.groups() if g), None) if m else None
     chain = [l.strip() for l in lines[1:] if l.startswith("    ") and not l.startswith("        ")]
     rec["chain"] = chain
     # deepest cause: last exception of the chain, else an exception named in the message

@@ -32436,7 +32436,11 @@ function summarize_log_errors() {
     # its WorkerSourceTask{id=connector-0}; with PG_LOG_DIGEST_WITH_WORKER, also a record without connector context
     function of_connectors(t,    n, i, names) {
         n = split(connectors, names, " ")
-        for (i = 1; i <= n; i++) if (index(t, "[" names[i] "|") || index(t, "Task{id=" names[i] "-")) return 1
+        # without the connector context (a log4j pattern without %X{connector.context}), the lines of the runtime still name
+        # the task or the connector: "Failed to start task orders-sink-0", "Failed to start connector \047orders-sink\047"
+        # (\047: the quote, the program is in single quotes)
+        for (i = 1; i <= n; i++) if (index(t, "[" names[i] "|") || index(t, "Task{id=" names[i] "-") || index(t, "task " names[i] "-") \
+                                     || index(t, "connector \047" names[i] "\047") || index(t, "connector " names[i] " ") || index(t, "connector " names[i] "\n")) return 1
         return with_worker != "" && t !~ /\[[^] |]+\|(task-[0-9]+|worker)/ && t !~ /Task\{id=/
     }
     # a "<Class>Config values:" header: the "<tab>key = value" lines that follow are its config

@@ -155,6 +155,13 @@ samples+=("$tmp/config-changes.log")
         'java.net.SocketTimeoutException: Read timed out' \
         '        at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:288)'
 } > "$tmp/spaces.log"
+# a worker that logs without the connector context (no %X{connector.context} in its log4j pattern): --connector keeps the
+# records where the runtime names the task or the connector, not the ones of another connector
+printf '%s\n' '[2026-11-07 15:00:00,000] ERROR Failed to start task db-source-0 (org.apache.kafka.connect.runtime.Worker)' \
+    'java.lang.IllegalAccessError: failed to access class a.B from class c.D' \
+    '[2026-11-07 15:00:01,000] ERROR Failed to start connector '"'"'db-source'"'"' (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2246)' \
+    '[2026-11-07 15:00:02,000] ERROR Failed to start task db-source-2-0 (org.apache.kafka.connect.runtime.Worker)' \
+    '[2026-11-07 15:00:03,000] ERROR Failed to start task other-sink-0 (org.apache.kafka.connect.runtime.Worker)' > "$tmp/nomdc.log"
 failed=0
 reference=""
 for awk_cmd in "$@"
@@ -364,6 +371,13 @@ do
     if [ "$got" != "at com.example.driver.PortLookup.open(PortLookup.java:289),at com.example.driver.PortLookup.socket(PortLookup.java:177),at com.example.driver.Session.connect(Session.java:3781),at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:288)," ]
     then
         echo "❌ $awk_cmd: frames of the deepest cause of spaces.log (the driver's, not the JDK's; the JDK's when alone): $got"
+        failed=1
+    fi
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_CONNECTORS=db-source summarize_log_errors 40 1 < "$2"' _ "$tmp/digest.sh" "$tmp/nomdc.log" > "$out.nomdc" 2>&1
+    got=$(grep -o 'Failed to start [a-z]* [^ ]*' "$out.nomdc" | sort -u | tr '\n' ',')
+    if [ "$got" != "Failed to start connector 'db-source',Failed to start task db-source-0,Failed to start task db-source-2-0," ]
+    then
+        echo "❌ $awk_cmd: --connector db-source without connector context (nomdc.log): $got"
         failed=1
     fi
     if grep -q 'sun\.misc\.Unsafe' "$out.records"

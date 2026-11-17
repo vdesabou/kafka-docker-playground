@@ -2755,6 +2755,48 @@ def test_archive_inputs_robustness():
     check("not harmless: a real error", not kc.harmless("ERROR WorkerSinkTask{id=x-0} Task threw an uncaught and unrecoverable exception"))
 
 
+def test_plugin_older_kafka_and_connector_without_mdc():
+    """a task the worker cannot create because the plugin uses a class Kafka 4 (Confluent Platform 8) hid: 🧱 known cause,
+    🩹 of the JDBC source (fixed in 10.7.14 / 10.8.2) with its verdict, and the record tied to its connector although the
+    worker logs without the connector context (Failed to start task <connector>-0)"""
+    def run(body, events=""):
+        text = ("@@PGFILE@@|connect.log|100|1|1|2026-11-07T14:00:00|2026-11-07T15:00:00\n"
+                f"@@PGREC@@|ERROR|1|10|10|2026-11-07T14:00:01|2026-11-07T14:00:01\n{body}\n@@PGTS@@|2026-11-07T14:00:01\n" + events)
+        with tempfile.TemporaryDirectory() as tmp:
+            return log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    body = ("[2026-11-07 14:00:01,000] ERROR Failed to start task db-source-0 (org.apache.kafka.connect.runtime.Worker)\n"
+            "    org.apache.kafka.connect.errors.ConnectException: Instantiation error\n"
+            "    Caused by: org.apache.kafka.common.KafkaException: Could not instantiate class io.confluent.connect.jdbc.source.JdbcSourceTask\n"
+            "    Caused by: java.lang.IllegalAccessError: failed to access class org.apache.kafka.common.utils.SystemTime from class "
+            "io.confluent.connect.jdbc.source.JdbcSourceTask (org.apache.kafka.common.utils.SystemTime is in unnamed module of loader 'app'; "
+            "io.confluent.connect.jdbc.source.JdbcSourceTask is in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @1a2b3c)\n"
+            "        at io.confluent.connect.jdbc.source.JdbcSourceTask.<init>(JdbcSourceTask.java:78)")
+    res = run(body, "@@PGEVT@@|plugin_version|1|2026-11-07T14:00:00|db-source|10.8.1 io.confluent.connect.jdbc.JdbcSourceConnector\n")
+    got = [h["title"] for h in res["known_causes"]]
+    check("🧱 older Kafka", "🧱 Plugin built for an older Apache Kafka than the worker" in got, got)
+    check("🧱 before 📦", "📦 Class loading error" not in got, got)
+    bug = next((b for b in res["fixed_bugs"] if b["ref"] == "PR-1481"), None)
+    check("🩹 PR-1481 affected on 10.8.1", bug and bug["connectors"][0]["verdict"] == "affected" and bug["connectors"][0]["upgrade_to"] == "10.8.2", res["fixed_bugs"])
+    res = run(body, "@@PGEVT@@|plugin_version|1|2026-11-07T14:00:00|db-source|10.9.10 io.confluent.connect.jdbc.JdbcSourceConnector\n")
+    bug = next((b for b in res["fixed_bugs"] if b["ref"] == "PR-1481"), None)
+    check("🩹 PR-1481 fixed on 10.9.10", bug and bug["connectors"][0]["verdict"] == "fixed", res["fixed_bugs"])
+    # without the connector context: the task named by the runtime
+    rec = {"lines": ["[2026-11-07 14:00:01,000] ERROR Failed to start task db-source-0 (org.apache.kafka.connect.runtime.Worker)"]}
+    log_report.finish_record(rec)
+    check("Failed to start task", rec["connector"] == "db-source", rec["connector"])
+    rec = {"lines": ["[2026-11-07 14:00:01,000] ERROR Failed to start connector 'db-source' (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2246)"]}
+    log_report.finish_record(rec)
+    check("Failed to start connector", rec["connector"] == "db-source", rec["connector"])
+    rec = {"lines": ["[2026-11-07 14:00:01,000] ERROR [db-source|task-0] Failed to start task db-source-0 (org.apache.kafka.connect.runtime.Worker)"]}
+    log_report.finish_record(rec)
+    check("the context first", rec["connector"] == "db-source", rec["connector"])
+    # a NoSuchMethodError on a Kafka class is 🧱 too, not only 📦
+    res = run("[2026-11-07 14:00:01,000] ERROR [x|task-0] boom (x.Y:1)\n"
+              "    java.lang.NoSuchMethodError: 'java.util.Set org.apache.kafka.common.utils.Utils.mkSet(java.lang.Object[])'")
+    got = [h["title"] for h in res["known_causes"]]
+    check("NoSuchMethodError mkSet: 🧱", "🧱 Plugin built for an older Apache Kafka than the worker" in got, got)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
