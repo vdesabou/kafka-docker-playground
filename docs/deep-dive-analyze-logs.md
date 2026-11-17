@@ -576,7 +576,9 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 
 > [!WARNING]
 > The connector of a record is the **connector context** of the Connect log line (`[orders-sink|task-0]`, the MDC
-> `%X{connector.context}` of the log4j pattern of the workers), or a `WorkerSinkTask{id=orders-sink-0}` in its text.
+> `%X{connector.context}` of the log4j pattern of the workers), or a `WorkerSinkTask{id=orders-sink-0}` in its text, or the
+> task or connector the runtime names (`Failed to start task orders-sink-0`, `Failed to start connector 'orders-sink'`): the
+> ones `--connector` still keeps, and counts for that connector, when the workers log without the context.
 > When the Connect logs have lines of tasks (`Instantiated task`, `Creating task`, `WorkerSinkTask{id=…}`, the
 > connector configs) but no context at all, the pattern was changed: the report says so (`⚠️ No connector context
 > (MDC) in the Connect logs of connect-0.log…`, under the verdict, in the summary, `.summary.connect_without_mdc` of

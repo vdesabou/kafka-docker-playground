@@ -189,6 +189,18 @@ KNOWN_CAUSES = [
      "pattern": r"Failed to find any class that implements Connector|Failed to find any class that implements Converter",
      "title": "🧩 Plugin not found",
      "advice": "the connector or converter class is not installed in the plugin.path of the worker (or has a typo)"},
+    # a plugin compiled against an older Apache Kafka than the worker: Kafka 4 (Confluent Platform 8) made internal classes
+    # package-private (org.apache.kafka.common.utils.SystemTime: "Use Time.SYSTEM"), moved others (AppInfoParser to
+    # ...utils.internals) and removed helpers (Utils.mkSet). Before class_loading: also a NoSuchMethodError / NoClassDefFoundError
+    {"name": "plugin_older_kafka", "severity": "high", "category": "Plugin Issues",
+     "pattern": r"IllegalAccessError: (?:failed to access|class|tried to access) .{0,80}org[./]apache[./]kafka[./]"
+                r"|NoSuchMethodError: .{0,40}org[./]apache[./]kafka[./](?:common|connect)[./]"
+                r"|NoClassDefFoundError: org/apache/kafka/common/utils/",
+     "title": "🧱 Plugin built for an older Apache Kafka than the worker",
+     "advice": "the plugin uses a Kafka class or method that the Kafka of the worker hides, moved or removed (Confluent Platform 8 "
+               "is Apache Kafka 4: SystemTime package-private, AppInfoParser moved, Utils.mkSet removed): upgrade the plugin "
+               "to a version released for that Confluent Platform version (🩹 below when the fixed version is known, playground "
+               "connector-plugin changelog --grep <class>), and check that it does not bundle its own kafka-clients jar"},
     {"name": "class_loading", "severity": "high", "category": "Plugin Issues",
      "pattern": r"ClassNotFoundException|NoClassDefFoundError|NoSuchMethodError|NoSuchFieldError",
      "title": "📦 Class loading error",

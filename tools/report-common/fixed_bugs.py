@@ -45,6 +45,17 @@ FIXED_BUGS = [
      "ref": "CC-46266 (PR-1707)",
      "advice": "the connection is broken after this error: fixed versions close it and retry (max.retries, "
                "retry.backoff.ms) instead of killing the task; until then, restart the task"},
+    {"title": "🩹 JDBC source task cannot be created on Confluent Platform 8: IllegalAccessError SystemTime",
+     "plugin": "confluentinc/kafka-connect-jdbc",
+     "classes": r"\.JdbcSourceConnector$|\.JdbcSourceTask$",
+     # confluentinc/kafka-connect-jdbc#1481: the JdbcSourceTask constructor did new SystemTime(), a class Apache Kafka 4
+     # (Confluent Platform 8) made package-private: the worker cannot instantiate the task
+     "pattern": r"IllegalAccessError: failed to access class org\.apache\.kafka\.common\.utils\.SystemTime from class "
+                r"io\.confluent\.connect\.jdbc\.source\.JdbcSourceTask",
+     "fixed_in": ["10.7.14", "10.8.2"],
+     "ref": "PR-1481",
+     "advice": "the plugin version is older than the Confluent Platform 8 worker it runs on: upgrade it on every worker "
+               "(and copy the JDBC driver jar next to the new version)"},
     {"title": "🩹 S3 sink NullPointerException when a transform renames the topic",
      "plugin": "confluentinc/kafka-connect-s3",
      "classes": r"\.S3SinkConnector$|\.S3SinkTask$",
