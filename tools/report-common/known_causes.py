@@ -547,6 +547,20 @@ KNOWN_CAUSES = [
      "advice": "the JDBC sink did not find the table (or a column of the record) and auto.create / auto.evolve is false: "
                "create the table or the column, or set auto.create=true / auto.evolve=true; check table.name.format, "
                "the case and quoting of the name (quote.sql.identifiers) and that the database user sees that schema"},
+    # the JDBC source found no table to read: DatabaseMetaData.getTables(catalog.pattern, schema.pattern, "%", table.types)
+    # returned none whose name is in table.whitelist / matches table.include.list, and its task is killed ("not assigned a
+    # table nor a query"). The name the driver returns can differ from the one configured: the SQL name of an IBM i view
+    # whose system name was given, a case, a schema written with "/" or a type that is not in table.types
+    {"name": "jdbc_source_no_tables", "severity": "high", "category": "Connect Issues",
+     "pattern": r"not assigned a table nor a query to execute|No tables were found so there's no work to be done"
+                r"|there are no matching tables to read data",
+     "title": "🗂️ JDBC source: no table matches the table filters",
+     "advice": "the JDBC source found no table to read: the driver lists the tables of schema.pattern / catalog.pattern of the "
+               "types of table.types (TABLE by default: VIEW for a view) that the database user can see, and table.whitelist "
+               "must equal a returned name exactly (the bare name or schema.table, with its case; table.include.list: a regex "
+               "on the fully qualified name). Check those names as the connector user in the database catalog. For one table "
+               "or view, query mode skips this lookup: query=SELECT * FROM <schema>.<table> (no WHERE: the connector appends "
+               "it in incrementing / timestamp mode), the topic is then topic.prefix itself"},
     # debug traces of a plugin logged at ERROR ("ERROR DEBUG_ADD_RECORD: …"): a modified or debug build, not failures
     {"name": "debug_traces_at_error", "severity": "low", "category": "Application Errors",
      "pattern": r"\bERROR\b[^\n]{0,200}?\sDEBUG_[A-Z0-9]{2,}\w*(?:\[\d+\])?:",
