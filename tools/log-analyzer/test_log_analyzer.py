@@ -2846,6 +2846,24 @@ def test_plugin_older_kafka_and_connector_without_mdc():
     check("NoSuchMethodError mkSet: 🧱", "🧱 Plugin built for an older Apache Kafka than the worker" in got, got)
 
 
+def test_jdbc_source_no_tables():
+    """a JDBC source whose table filters match no table: the task killed and the WARN of the connector have their own cause
+    (the names the driver returns, query mode), not only 🧨 for the first one and nothing for the WARN"""
+    def run(body, level):
+        text = ("@@PGFILE@@|connect.log|100|1|1|2026-11-07T14:00:00|2026-11-07T15:00:00\n"
+                f"@@PGREC@@|{level}|1|10|10|2026-11-07T14:00:01|2026-11-07T14:00:01\n{body}\n@@PGTS@@|2026-11-07T14:00:01\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    got = run("[2026-11-07 14:00:01,000] ERROR [db-source|task-0] WorkerSourceTask{id=db-source-0} Task threw an uncaught and unrecoverable exception. "
+              "Task is being killed and will not recover until manually restarted: (org.apache.kafka.connect.runtime.WorkerTask:234)\n"
+              "    org.apache.kafka.common.config.ConfigException: Task is being killed because it was not assigned a table nor a query to execute. "
+              "If run in table mode please make sure that the tables exist on the database.", "ERROR")
+    check("killed task: 🗂️ and 🧨", "🗂️ JDBC source: no table matches the table filters" in got and "🧨 A connector task was killed" in got, got)
+    got = run("[2026-11-07 14:00:01,000] WARN [db-source|worker] No tables were found so there's no work to be done. (io.confluent.connect.jdbc.JdbcSourceConnector:205)", "WARN")
+    check("WARN: 🗂️", got == ["🗂️ JDBC source: no table matches the table filters"], got)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
