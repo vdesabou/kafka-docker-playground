@@ -158,7 +158,8 @@ playground start-environment --environment ansible --docker-compose-override-fil
 # 🖥️ hosts: controller broker schema-registry connect
 # 🧩 translating the example's docker compose override docker-compose.plaintext.yml into inventory variables
 #    connect: plugin.path=/opt/confluent/confluent-{{ confluent_package_version }}/share/filestream-connectors (kafka_connect_custom_properties)   <- CONNECT_PLUGIN_PATH of the override, follows an upgrade
-# ▶️ Running the playbook (a few minutes): docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all
+# ▶️ Running the playbook (a few minutes)
+# 🔧 docker exec ansible-controller ansible-playbook -i /inventory/hosts.yml confluent.platform.all
 # PLAY RECAP *********************************************************************
 # broker                     : ok=127  changed=27   unreachable=0    failed=0    skipped=180  rescued=0    ignored=0
 # connect                    : ok=125  changed=24   unreachable=0    failed=0    skipped=238  rescued=0    ignored=0
