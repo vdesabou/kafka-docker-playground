@@ -1992,6 +1992,74 @@ subcommands:
       - "--dry-run"
       argument: ''
       description: "\U0001F50E Only show what would be removed"
+- name: forgotten-environment
+  description: "\U0001F514 Get a macOS notification every evening when a local environment
+    was left running with nobody using it. It never stops anything\n\n  enable     schedule
+    the check (default every day at 19:00), then run it once now\n  disable    remove
+    the schedule\n  status     is it scheduled, when, and what the last checks found\n
+    \ run        the check, now\n\nAn environment left running all night eats CPU,
+    RAM and battery. The check\nlooks at the containers running on the engine (every
+    session and worktree\nshares it) and notifies when both are true:\n\n  \U0001F433
+    the most recent container started more than --idle-hours ago\n     (default 3)\n
+    \ \U0001F4A4 no playground activity for --idle-hours in the checkout (or worktree)\n
+    \    that started them: no write to its playground.ini (playground run,\n     connector,
+    topic… commands) nor to its playground-run-history\n\nThe notification gives the
+    example, the checkout, how long it has been\nrunning and the memory it uses, and
+    suggests playground stop. It never stops\nanything by itself: another session,
+    a long benchmark or a repro waiting\nfor a customer can run on purpose. Nothing
+    happens when the container\nengine is not running or no container runs.\n\nmacOS:
+    a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes
+    up if it was asleep at that time. Linux: a crontab line (the\ncheck is logged,
+    no notification)."
+  usage: playground forgotten-environment COMMAND
+  options: []
+  subcommands:
+  - name: enable
+    description: "\U0001F514 Schedule the evening check of a forgotten local environment,
+      then run it once now\n\nRun it again to change the time or --idle-hours. The
+      job uses this checkout\nof the playground and the PATH of the shell you run
+      it from."
+    usage: playground forgotten-environment enable [OPTIONS]
+    options:
+    - names:
+      - "--time"
+      argument: TIME
+      description: "\U0001F556 Time of the check, HH:MM, local time\n\nDefault value:
+        19:00"
+    - names:
+      - "--idle-hours"
+      argument: HOURS
+      description: |-
+        ⏳ Notify only when no container started and no playground command ran for this number of hours
+
+        Default value: 3
+  - name: disable
+    description: "\U0001F6D1 Remove the schedule of the forgotten environment check"
+    usage: playground forgotten-environment disable
+    options: []
+  - name: status
+    description: "\U0001F50E Is the forgotten environment check scheduled, when, and
+      what did its last checks find"
+    usage: playground forgotten-environment status [OPTIONS]
+    options:
+    - names:
+      - "--lines"
+      argument: LINES
+      description: "\U0001F4C4 Number of lines of the log to show\n\nDefault value:
+        40"
+  - name: run
+    description: "\U0001F514 Check now whether a local environment runs with nobody
+      using it, as the scheduled job does\n\nPrints what runs, from which checkout,
+      since when, and the last playground\nactivity. Never stops anything."
+    usage: playground forgotten-environment run [OPTIONS]
+    options:
+    - names:
+      - "--idle-hours"
+      argument: HOURS
+      description: |-
+        ⏳ Notify only when no container started and no playground command ran for this number of hours
+
+        Default value: 3
 - name: refresh-cp-docker-images
   description: "\U0001F504 Refresh (pull from Docker) all Confluent Platform docker
     images related to a version installed locally\n\nUseful when a version tag has

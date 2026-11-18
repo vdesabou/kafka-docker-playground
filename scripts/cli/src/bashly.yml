@@ -200,6 +200,8 @@ commands:
 
 - import: src/commands/docker-cleanup.yml
 
+- import: src/commands/forgotten-environment.yml
+
 - import: src/commands/refresh-cp-docker-images.yml
 
 - import: src/commands/cleanup-cloud-details.yml
