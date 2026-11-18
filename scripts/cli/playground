@@ -148,6 +148,7 @@ playground_usage() {
   printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                  "
   printf "  %s   🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n" "$(green "remove-cp-docker-images")                   "
   printf "  %s   🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n" "$(green "docker-cleanup")                            "
+  printf "  %s   🔔 Get a macOS notification every evening when a local environment was left running with nobody using it. It never stops anything\n" "$(green "forgotten-environment")                     "
   printf "  %s   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n" "$(green "cleanup-cloud-details")                     "
   echo
   printf "%s\n" "$(bold "Repro commands:")"
@@ -6165,6 +6166,185 @@ playground_docker_cleanup_run_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground docker-cleanup run --dry-run\n"
     printf "  playground docker-cleanup run --older-than 30\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_forgotten_environment_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground forgotten-environment\n\n"
+    printf "  🔔 Get a macOS notification every evening when a local environment was left\n  running with nobody using it. It never stops anything\n  \n    enable     schedule the check (default every day at 19:00), then run it once\n  now\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last checks found\n    run        the check, now\n  \n  An environment left running all night eats CPU, RAM and battery. The check\n  looks at the containers running on the engine (every session and worktree\n  shares it) and notifies when both are true:\n  \n    🐳 the most recent container started more than --idle-hours ago\n       (default 3)\n    💤 no playground activity for --idle-hours in the checkout (or worktree)\n       that started them: no write to its playground.ini (playground run,\n       connector, topic… commands) nor to its playground-run-history\n  \n  The notification gives the example, the checkout, how long it has been\n  running and the memory it uses, and suggests playground stop. It never stops\n  anything by itself: another session, a long benchmark or a repro waiting\n  for a customer can run on purpose. Nothing happens when the container\n  engine is not running or no container runs.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line (the\n  check is logged, no notification).\n\n"
+  else
+    printf "playground forgotten-environment - 🔔 Get a macOS notification every evening when a local environment was left running with nobody using it. It never stops anything\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground forgotten-environment COMMAND\n"
+  printf "  playground forgotten-environment [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🔔 Schedule the evening check of a forgotten local environment, then run it once now\n" "$(green "enable") "
+  printf "  %s   🛑 Remove the schedule of the forgotten environment check\n" "$(green "disable")"
+  printf "  %s   🔎 Is the forgotten environment check scheduled, when, and what did its last checks find\n" "$(green "status") "
+  printf "  %s   🔔 Check now whether a local environment runs with nobody using it, as the scheduled job does\n" "$(green "run")    "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_forgotten_environment_enable_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground forgotten-environment enable\n\n"
+    printf "  🔔 Schedule the evening check of a forgotten local environment, then run it\n  once now\n  \n  Run it again to change the time or --idle-hours. The job uses this checkout\n  of the playground and the PATH of the shell you run it from.\n\n"
+  else
+    printf "playground forgotten-environment enable - 🔔 Schedule the evening check of a forgotten local environment, then run it once now\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground forgotten-environment enable [OPTIONS]\n"
+  printf "  playground forgotten-environment enable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--time TIME")"
+    printf "    🕖 Time of the check, HH:MM, local time\n"
+    printf "    %s\n" "Default: 19:00"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--idle-hours HOURS")"
+    printf "    ⏳ Notify only when no container started and no playground command ran for\n    this number of hours\n"
+    printf "    %s\n" "Default: 3"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground forgotten-environment enable\n"
+    printf "  playground forgotten-environment enable --time 21:30 --idle-hours 5\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_forgotten_environment_disable_usage() {
+  printf "playground forgotten-environment disable - 🛑 Remove the schedule of the forgotten environment check\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground forgotten-environment disable\n"
+  printf "  playground forgotten-environment disable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_forgotten_environment_status_usage() {
+  printf "playground forgotten-environment status - 🔎 Is the forgotten environment check scheduled, when, and what did its last checks find\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground forgotten-environment status [OPTIONS]\n"
+  printf "  playground forgotten-environment status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--lines LINES")"
+    printf "    📄 Number of lines of the log to show\n"
+    printf "    %s\n" "Default: 40"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_forgotten_environment_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground forgotten-environment run\n\n"
+    printf "  🔔 Check now whether a local environment runs with nobody using it, as the\n  scheduled job does\n  \n  Prints what runs, from which checkout, since when, and the last playground\n  activity. Never stops anything.\n\n"
+  else
+    printf "playground forgotten-environment run - 🔔 Check now whether a local environment runs with nobody using it, as the scheduled job does\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground forgotten-environment run [OPTIONS]\n"
+  printf "  playground forgotten-environment run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--idle-hours HOURS")"
+    printf "    ⏳ Notify only when no container started and no playground command ran for\n    this number of hours\n"
+    printf "    %s\n" "Default: 3"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--scheduled")"
+      printf "    ⏰ run by the launchd agent / crontab line: macOS notification when the\n    environment is forgotten\n"
+      echo
+
+    fi
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground forgotten-environment run\n"
+    printf "  playground forgotten-environment run --idle-hours 1\n"
     echo
 
   fi
@@ -59721,6 +59901,238 @@ playground_docker_cleanup_run_command() {
 }
 
 # :command.function
+playground_forgotten_environment_enable_command() {
+
+  # src/commands/forgotten-environment/enable.sh
+  time="${args[--time]}"
+  idle_hours="${args[--idle-hours]}"
+
+  parse_schedule_time "$time" || exit 1
+  if [ "$idle_hours" -lt 1 ]
+  then
+      logerror "❌ --idle-hours $idle_hours must be 1 or more"
+      exit 1
+  fi
+
+  scheduled_job_install forgotten-environment "$time_hour" "$time_minute" forgotten-environment run --idle-hours "$idle_hours" --scheduled || exit 1
+  log "🔔 forgotten environment check scheduled every day at $(printf '%02d:%02d' $time_hour $time_minute), idle for $idle_hours hours ($(scheduled_job_where forgotten-environment))"
+  log "📄 log: $scheduled_job_log"
+  log "🔎 what it finds, as of now:"
+  playground forgotten-environment run --idle-hours "$idle_hours"
+  log "👉 playground forgotten-environment status   # after the first check"
+
+}
+
+# :command.function
+playground_forgotten_environment_disable_command() {
+
+  # src/commands/forgotten-environment/disable.sh
+  if scheduled_job_remove forgotten-environment
+  then
+      log "🛑 forgotten environment check disabled (its log stays in $scheduled_job_log)"
+  else
+      log "🤷 the forgotten environment check was not scheduled"
+  fi
+
+}
+
+# :command.function
+playground_forgotten_environment_status_command() {
+
+  # src/commands/forgotten-environment/status.sh
+  lines="${args[--lines]}"
+  if scheduled_job_info forgotten-environment
+  then
+      idle_hours=$(scheduled_job_flag_values --idle-hours)
+      if [ "$scheduled_job_loaded" == "1" ]
+      then
+          log "🔔 forgotten environment check scheduled every day at $scheduled_job_time, idle for ${idle_hours:-3} hours ($(scheduled_job_where forgotten-environment))"
+      else
+          logwarn "⚠️ $scheduled_job_plist exists but is not loaded: playground forgotten-environment enable"
+      fi
+  else
+      log "💤 the forgotten environment check is not scheduled: playground forgotten-environment enable"
+  fi
+  if [ -f "$scheduled_job_log" ]
+  then
+      log "📄 last $lines lines of $scheduled_job_log:"
+      tail -n "$lines" "$scheduled_job_log"
+  else
+      log "📄 no check yet ($scheduled_job_log)"
+  fi
+
+}
+
+# :command.function
+playground_forgotten_environment_run_command() {
+
+  # src/commands/forgotten-environment/run.sh
+  idle_hours="${args[--idle-hours]}"
+  scheduled="${args[--scheduled]}"
+
+  if [ "$idle_hours" -lt 1 ]
+  then
+      logerror "❌ --idle-hours $idle_hours must be 1 or more"
+      exit 1
+  fi
+
+  if [[ -n "$scheduled" ]]
+  then
+      log "🔔 forgotten environment check of $(date '+%Y-%m-%d %H:%M'), idle for $idle_hours hours"
+  fi
+  if ! docker info > /dev/null 2>&1
+  then
+      log "💤 the container engine is not running: nothing to check"
+      exit 0
+  fi
+  ids=$(docker ps -q 2> /dev/null)
+  if [ -z "$ids" ]
+  then
+      log "😴 no container running: nothing forgotten"
+      exit 0
+  fi
+
+  # 3 h, 45 min, 2 days
+  human_duration () {
+      local s="$1"
+      if [ "$s" -lt 3600 ]
+      then
+          echo "$((s / 60)) min"
+      elif [ "$s" -lt 172800 ]
+      then
+          echo "$((s / 3600)) h"
+      else
+          echo "$((s / 86400)) days"
+      fi
+  }
+  # modification time of $1 in epoch seconds, empty when it does not exist (GNU stat first: BSD stat rejects -c, while
+  # GNU stat accepts -f with another meaning)
+  mtime () {
+      [ -e "$1" ] || return 0
+      stat -c %Y "$1" 2> /dev/null || stat -f %m "$1" 2> /dev/null
+  }
+  # value of the key $2 of the [run] section of the playground.ini $1
+  ini_run_value () {
+      awk -F' = ' -v key="$2" '/^\[/ { in_run = ($0 == "[run]") } in_run && $1 == key { print substr($0, length($1) + 4); exit }' "$1" 2> /dev/null
+  }
+  # the playground checkout (or worktree) holding the folder $1 (the working dir of a compose project), empty if none
+  checkout_of () {
+      local d="$1"
+      while [ -n "$d" ] && [ "$d" != "/" ] && [ "$d" != "." ]
+      do
+          if [ -f "$d/scripts/cli/playground" ] && [ -d "$d/environment" ]
+          then
+              (cd "$d" 2> /dev/null && pwd -P)
+              return 0
+          fi
+          d=$(dirname "$d")
+      done
+  }
+
+  now=$(date +%s)
+  # <start epoch> <name> <compose working dir>; StartedAt is UTC with docker (…Z), local time with an offset with podman
+  containers=$(docker inspect $ids 2> /dev/null | jq -r '
+      def epoch: capture("^(?<d>[0-9-]+T[0-9:]+)(\\.[0-9]+)?(?<z>Z|[+-][0-9]{2}:?[0-9]{2})$")
+          | (.d + "Z" | fromdateiso8601) - (if .z == "Z" then 0 else (.z | gsub(":"; "")) as $o
+              | (($o[1:3] | tonumber) * 3600 + ($o[3:5] | tonumber) * 60) * (if $o[0:1] == "-" then -1 else 1 end) end);
+      .[] | [ ((.State.StartedAt | epoch?) // 0), (.Name | ltrimstr("/")), (.Config.Labels["com.docker.compose.project.working_dir"] // "") ] | @tsv')
+  if [ -z "$containers" ]
+  then
+      logwarn "⚠️ could not inspect the running containers: nothing to check"
+      exit 0
+  fi
+  nb_containers=$(echo "$containers" | wc -l | tr -d ' ')
+
+  last_start=0
+  first_start=0
+  checkouts=()
+  while IFS=$'\t' read -r started name workdir
+  do
+      if [ "$started" -gt "$last_start" ]
+      then
+          last_start=$started
+      fi
+      if [ "$started" -gt 0 ] && { [ "$first_start" -eq 0 ] || [ "$started" -lt "$first_start" ]; }
+      then
+          first_start=$started
+      fi
+      checkout=""
+      if [ -n "$workdir" ]
+      then
+          checkout=$(checkout_of "$workdir")
+      fi
+      # containers of no compose project (CFK k3d nodes, kcat…): this checkout
+      checkout="${checkout:-$(cd "$root_folder" && pwd -P)}"
+      if [[ " ${checkouts[*]} " != *" $checkout "* ]]
+      then
+          checkouts+=("$checkout")
+      fi
+  done <<< "$containers"
+
+  if [ "$last_start" -eq 0 ]
+  then
+      logwarn "⚠️ could not read when the running containers started: nothing to check"
+      exit 0
+  fi
+
+  last_activity=$last_start
+  what=()
+  for checkout in "${checkouts[@]}"
+  do
+      activity=0
+      for f in "$checkout/playground.ini" "$checkout/playground-run-history"
+      do
+          m=$(mtime "$f")
+          if [[ "$m" =~ ^[0-9]+$ ]] && [ "$m" -gt "$activity" ]
+          then
+              activity=$m
+          fi
+      done
+      if [ "$activity" -gt "$last_activity" ]
+      then
+          last_activity=$activity
+      fi
+      test_file=$(ini_run_value "$checkout/playground.ini" test_file)
+      environment=$(ini_run_value "$checkout/playground.ini" environment)
+      example="${test_file:+$(basename "$(dirname "$test_file")")/$(basename "$test_file")}"
+      activity_text="never"
+      if [ "$activity" -gt 0 ]
+      then
+          activity_text="$(human_duration $((now - activity))) ago"
+      fi
+      log "📂 $checkout: ${example:-no example recorded} (${environment:-environment unknown}), last playground activity $activity_text"
+      what+=("$(basename "${test_file:-$checkout}")")
+  done
+
+  running_for=$(human_duration $((now - ${first_start:-$last_start})))
+  idle_for=$((now - last_activity))
+  log "🐳 $nb_containers container(s) running for $running_for, last one started $(human_duration $((now - last_start))) ago"
+
+  if [ "$idle_for" -lt $((idle_hours * 3600)) ]
+  then
+      log "🟢 in use: last container start or playground activity $(human_duration "$idle_for") ago (under $idle_hours h), no notification"
+      exit 0
+  fi
+
+  # memory used by the containers, from 1.2GiB / 7.6GiB (docker) or 1.2GB / 7.6GB (podman)
+  memory=$(docker stats --no-stream --format '{{.MemUsage}}' $ids 2> /dev/null | awk '
+      { v = $1; n = v + 0; u = v; sub(/^[0-9.]+/, "", u)
+        if (u == "KiB") n *= 1024; else if (u == "MiB") n *= 1048576; else if (u == "GiB") n *= 1073741824
+        else if (u == "kB" || u == "KB") n *= 1e3; else if (u == "MB") n *= 1e6; else if (u == "GB") n *= 1e9
+        total += n }
+      END { if (total >= 1e9) printf "%.1f GB", total / 1e9; else if (total > 0) printf "%.0f MB", total / 1e6 }')
+
+  summary="${what[*]}: $nb_containers container(s) up for $running_for${memory:+, $memory of RAM}, no playground activity for $(human_duration "$idle_for")"
+  logwarn "🔔 forgotten? $summary"
+  log "👉 playground stop   # from the checkout that started it (not done for you: it may run on purpose)"
+  if [[ -n "$scheduled" ]]
+  then
+      scheduled_job_notify "🔔 kafka-docker-playground environment still running" "$summary. playground stop?"
+  fi
+
+}
+
+# :command.function
 playground_refresh_cp_docker_images_command() {
 
   # src/commands/refresh-cp-docker-images.sh
@@ -103121,6 +103533,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    forgotten-environment)
+      action="forgotten-environment"
+      shift
+      playground_forgotten_environment_parse_requirements "$@"
+      shift $#
+      ;;
+
     refresh-cp-docker-images)
       action="refresh-cp-docker-images"
       shift
@@ -116457,6 +116876,451 @@ playground_docker_cleanup_run_parse_requirements() {
     validation_output="$(validate_integer "${args['--max-build-cache']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--max-build-cache GB" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_forgotten_environment_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_forgotten_environment_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    enable)
+      action="enable"
+      shift
+      playground_forgotten_environment_enable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    disable)
+      action="disable"
+      shift
+      playground_forgotten_environment_disable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_forgotten_environment_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    run)
+      action="run"
+      shift
+      playground_forgotten_environment_run_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_forgotten_environment_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_forgotten_environment_enable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_forgotten_environment_enable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="forgotten-environment enable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --time)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--time']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--time requires an argument: --time TIME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --idle-hours)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--idle-hours']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--idle-hours requires an argument: --idle-hours HOURS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--time']:-} ]] || args['--time']="19:00"
+  [[ -n ${args['--idle-hours']:-} ]] || args['--idle-hours']="3"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--idle-hours'] ]]; then
+    validation_output="$(validate_integer "${args['--idle-hours']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--idle-hours HOURS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_forgotten_environment_disable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_forgotten_environment_disable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="forgotten-environment disable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_forgotten_environment_status_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_forgotten_environment_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="forgotten-environment status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --lines)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--lines']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--lines requires an argument: --lines LINES" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--lines']:-} ]] || args['--lines']="40"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--lines'] ]]; then
+    validation_output="$(validate_integer "${args['--lines']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--lines LINES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_forgotten_environment_run_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_forgotten_environment_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="forgotten-environment run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --idle-hours)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--idle-hours']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--idle-hours requires an argument: --idle-hours HOURS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --scheduled)
+
+        # :flag.case_no_arg
+        args['--scheduled']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--idle-hours']:-} ]] || args['--idle-hours']="3"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--idle-hours'] ]]; then
+    validation_output="$(validate_integer "${args['--idle-hours']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--idle-hours HOURS" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -162724,6 +163588,11 @@ playground_completion() {
         playground_docker_cleanup_completion "$completion_current" "$@"
         return
         ;;
+      forgotten-environment)
+        shift
+        playground_forgotten_environment_completion "$completion_current" "$@"
+        return
+        ;;
       refresh-cp-docker-images)
         shift
         playground_refresh_cp_docker_images_completion "$completion_current" "$@"
@@ -162903,7 +163772,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -168774,6 +169643,186 @@ playground_docker_cleanup_run_completion() {
     completion_flag_candidates --older-than "$completion_current" --older-than
     completion_flag_candidates --max-build-cache "$completion_current" --max-build-cache
     completion_flag_candidates --dry-run "$completion_current" --dry-run
+  fi
+
+}
+
+# :command.completion_function
+playground_forgotten_environment_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      enable)
+        shift
+        playground_forgotten_environment_enable_completion "$completion_current" "$@"
+        return
+        ;;
+      disable)
+        shift
+        playground_forgotten_environment_disable_completion "$completion_current" "$@"
+        return
+        ;;
+      status)
+        shift
+        playground_forgotten_environment_status_completion "$completion_current" "$@"
+        return
+        ;;
+      run)
+        shift
+        playground_forgotten_environment_run_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" enable disable status run
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_forgotten_environment_enable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --time)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--time"]=1
+
+        ;;
+      --idle-hours)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--idle-hours"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --time "$completion_current" --time
+    completion_flag_candidates --idle-hours "$completion_current" --idle-hours
+  fi
+
+}
+
+# :command.completion_function
+playground_forgotten_environment_disable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_forgotten_environment_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --lines)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--lines"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --lines "$completion_current" --lines
+  fi
+
+}
+
+# :command.completion_function
+playground_forgotten_environment_run_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --idle-hours)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--idle-hours"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --idle-hours "$completion_current" --idle-hours
   fi
 
 }
@@ -192784,6 +193833,11 @@ run() {
     "docker-cleanup disable") playground_docker_cleanup_disable_command ;;
     "docker-cleanup status") playground_docker_cleanup_status_command ;;
     "docker-cleanup run") playground_docker_cleanup_run_command ;;
+    "forgotten-environment") playground_forgotten_environment_command ;;
+    "forgotten-environment enable") playground_forgotten_environment_enable_command ;;
+    "forgotten-environment disable") playground_forgotten_environment_disable_command ;;
+    "forgotten-environment status") playground_forgotten_environment_status_command ;;
+    "forgotten-environment run") playground_forgotten_environment_run_command ;;
     "refresh-cp-docker-images") playground_refresh_cp_docker_images_command ;;
     "cleanup-cloud-details") playground_cleanup_cloud_details_command ;;
     "open-docs") playground_open_docs_command ;;

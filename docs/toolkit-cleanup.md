@@ -6,15 +6,17 @@ them up on demand and the jobs the playground can schedule to do it by itself. P
 [🧰 Reproduction toolkit](/reusables.md).
 
 > [!TIP]
-> Turn on the three jobs once, then forget about them:
+> Turn on the four jobs once, then forget about them:
 >
 > ```bash
 > playground cloud-resources nightly-cleanup enable --resource ccloud --resource aws --resource gcp --resource azure
 > playground ec2 auto-stop enable
 > playground docker-cleanup enable
+> playground forgotten-environment enable
 > ```
 >
-> Each one first shows what it would remove now (a dry run), so you see the effect before the first scheduled run.
+> Each one first shows what it would remove (or, for the reminder, what it finds) now, so you see the effect before
+> the first scheduled run.
 
 ## 🗺️ At a glance
 
@@ -25,7 +27,7 @@ them up on demand and the jobs the playground can schedule to do it by itself. P
 | EC2 instances created with `playground ec2 create` | 💰 | `playground ec2 stop`, `playground ec2 delete` | `playground ec2 auto-stop enable` (every evening, 20:00, idle ones) |
 | GitHub Codespaces | 💰 | `playground codespace stop`, `playground codespace delete` | stops by itself after 30 minutes idle (GitHub) |
 | Old Confluent Platform images, dangling images, build cache | 💾 | `playground remove-cp-docker-images`, `playground remove-all-docker-images` | `playground docker-cleanup enable` (every Sunday, 10:00) |
-| Containers and volumes of the running example | 💾 | `playground stop`, `playground container kill-all` | the next `playground run` stops the previous example |
+| Containers and volumes of the running example | 🔋 | `playground stop`, `playground container kill-all` | the next `playground run` stops the previous example; `playground forgotten-environment enable` notifies (every evening, 19:00) when one runs with nobody using it, never stops it |
 
 To see what is still there:
 
@@ -45,6 +47,7 @@ docker system df                          # disk of the container engine: images
 | 🌙 Nightly cloud cleanup | `playground cloud-resources nightly-cleanup enable` (`--time`, `--resource`) | every day at 02:00 | `cloud-resources cleanup --force --nightly`: in Confluent Cloud what is billed or clutters a shared cluster; in AWS / GCP / Azure (with `--resource`) what `cleanup` deletes | `nightly-cleanup.log` |
 | ⏰ EC2 auto-stop | `playground ec2 auto-stop enable` (`--time`, `--idle-minutes`) | every day at 20:00 | stops your `pg-<user>-*` instances still running and idle (CPU under 5% for `--idle-minutes`, default 60) | `ec2-auto-stop.log` |
 | 🧽 Docker cleanup | `playground docker-cleanup enable` (`--day`, `--time`, `--older-than`, `--max-build-cache`) | every Sunday at 10:00 | old Confluent Platform versions (`--older-than 60` days), dangling images, build cache above `--max-build-cache` GB (10) | `docker-cleanup.log` |
+| 🔔 Forgotten environment | `playground forgotten-environment enable` (`--time`, `--idle-hours`) | every day at 19:00 | **notifies only**, never stops anything: containers running, none started and no playground activity (playground.ini, playground-run-history of the checkout that started them) for `--idle-hours` (3) | `forgotten-environment.log` |
 | 👀 Log bundle watch | `playground analyze watch --install-launch-agent` | at every login, always running | analyzes every new log bundle, dump or capture that lands in `~/Downloads` | `~/Library/Logs/playground-analyze-watch.log` |
 
 Every scheduled job has the same three subcommands, plus `run` for the ones that act on a schedule:
@@ -174,6 +177,18 @@ The layers of the build cache shared with images don't count towards `--max-buil
 | `playground stop` | tears down the containers and volumes of the environment and of the example (data is not kept) |
 | `playground container kill-all` | kills every container on the engine and prunes the volumes, other sessions' included |
 | `playground cleanup-cloud-details` | forgets the Confluent Cloud details the playground cached, when it uses an unexpected cluster |
+
+Forgot an environment running on a laptop? `playground forgotten-environment enable` checks every evening and sends a
+macOS notification when containers run with nobody using them. It never stops them: another session, a long benchmark
+or a repro can run on purpose.
+
+```bash
+playground forgotten-environment run
+# 📂 /Users/me/kafka-docker-playground: connect-aws-s3-sink/s3-sink.sh (plaintext), last playground activity 6 h ago
+# 🐳 11 container(s) running for 7 h, last one started 7 h ago
+# 🔔 forgotten? s3-sink.sh: 11 container(s) up for 7 h, 6.3 GB of RAM, no playground activity for 6 h
+# 👉 playground stop   # from the checkout that started it (not done for you: it may run on purpose)
+```
 
 > [!NOTE]
 > With `playground config container-kill-all-before-run true` (default `false`), every `playground run` first kills

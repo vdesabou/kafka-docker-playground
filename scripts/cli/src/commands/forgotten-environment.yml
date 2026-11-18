@@ -1,0 +1,80 @@
+name: forgotten-environment
+group: Cleanup
+help: |-
+  🔔 Get a macOS notification every evening when a local environment was left running with nobody using it. It never stops anything
+
+    enable     schedule the check (default every day at 19:00), then run it once now
+    disable    remove the schedule
+    status     is it scheduled, when, and what the last checks found
+    run        the check, now
+
+  An environment left running all night eats CPU, RAM and battery. The check
+  looks at the containers running on the engine (every session and worktree
+  shares it) and notifies when both are true:
+
+    🐳 the most recent container started more than --idle-hours ago
+       (default 3)
+    💤 no playground activity for --idle-hours in the checkout (or worktree)
+       that started them: no write to its playground.ini (playground run,
+       connector, topic… commands) nor to its playground-run-history
+
+  The notification gives the example, the checkout, how long it has been
+  running and the memory it uses, and suggests playground stop. It never stops
+  anything by itself: another session, a long benchmark or a repro waiting
+  for a customer can run on purpose. Nothing happens when the container
+  engine is not running or no container runs.
+
+  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the
+  Mac wakes up if it was asleep at that time. Linux: a crontab line (the
+  check is logged, no notification).
+commands:
+- name: enable
+  help: |-
+    🔔 Schedule the evening check of a forgotten local environment, then run it once now
+
+    Run it again to change the time or --idle-hours. The job uses this checkout
+    of the playground and the PATH of the shell you run it from.
+  flags:
+  - long: --time
+    arg: time
+    default: "19:00"
+    help: |-
+      🕖 Time of the check, HH:MM, local time
+  - &idle_hours
+    long: --idle-hours
+    arg: hours
+    default: "3"
+    validate: integer
+    help: |-
+      ⏳ Notify only when no container started and no playground command ran for this number of hours
+  examples:
+  - playground forgotten-environment enable
+  - playground forgotten-environment enable --time 21:30 --idle-hours 5
+- name: disable
+  help: |-
+    🛑 Remove the schedule of the forgotten environment check
+- name: status
+  help: |-
+    🔎 Is the forgotten environment check scheduled, when, and what did its last checks find
+  flags:
+  - long: --lines
+    arg: lines
+    default: "40"
+    validate: integer
+    help: |-
+      📄 Number of lines of the log to show
+- name: run
+  help: |-
+    🔔 Check now whether a local environment runs with nobody using it, as the scheduled job does
+
+    Prints what runs, from which checkout, since when, and the last playground
+    activity. Never stops anything.
+  flags:
+  - *idle_hours
+  - long: --scheduled
+    private: true
+    help: |-
+      ⏰ run by the launchd agent / crontab line: macOS notification when the environment is forgotten
+  examples:
+  - playground forgotten-environment run
+  - playground forgotten-environment run --idle-hours 1
