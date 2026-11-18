@@ -6,13 +6,14 @@ them up on demand and the jobs the playground can schedule to do it by itself. P
 [🧰 Reproduction toolkit](/reusables.md).
 
 > [!TIP]
-> Turn on the four jobs once, then forget about them:
+> Turn on the jobs once, then forget about them:
 >
 > ```bash
 > playground cloud-resources nightly-cleanup enable --resource ccloud --resource aws --resource gcp --resource azure
 > playground ec2 auto-stop enable
 > playground docker-cleanup enable
 > playground forgotten-environment enable
+> playground cloud-resources cost-reminder enable --resource ccloud --resource aws --resource azure
 > ```
 >
 > Each one first shows what it would remove (or, for the reminder, what it finds) now, so you see the effect before
@@ -36,6 +37,7 @@ playground status                         # the example, and a 💸 reminder for
 playground cloud-resources ccloud list    # what still runs for you in Confluent Cloud, org-wide (--json)
 playground cloud-resources aws list       # same for AWS (azure list for Azure)
 playground cloud-resources ccloud costs   # what it cost (aws costs, azure costs, costs-history)
+playground cloud-resources cost-reminder run   # your cost of the last 7 days in each cloud, and the connectors still running
 playground ec2 list                       # your instances: anything not 🛑stopped bills compute
 docker system df                          # disk of the container engine: images, build cache, volumes
 ```
@@ -48,6 +50,7 @@ docker system df                          # disk of the container engine: images
 | ⏰ EC2 auto-stop | `playground ec2 auto-stop enable` (`--time`, `--idle-minutes`) | every day at 20:00 | stops your `pg-<user>-*` instances still running and idle (CPU under 5% for `--idle-minutes`, default 60) | `ec2-auto-stop.log` |
 | 🧽 Docker cleanup | `playground docker-cleanup enable` (`--day`, `--time`, `--older-than`, `--max-build-cache`) | every Sunday at 10:00 | old Confluent Platform versions (`--older-than 60` days), dangling images, build cache above `--max-build-cache` GB (10) | `docker-cleanup.log` |
 | 🔔 Forgotten environment | `playground forgotten-environment enable` (`--time`, `--idle-hours`) | every day at 19:00 | **notifies only**, never stops anything: containers running, none started and no playground activity (playground.ini, playground-run-history of the checkout that started them) for `--idle-hours` (3) | `forgotten-environment.log` |
+| 💸 Cost reminder | `playground cloud-resources cost-reminder enable` (`--day`, `--time`, `--resource`, `--threshold`, `--days`) | every Monday at 09:00 | **read-only**: the cost of your resources over the last `--days` (7) in Confluent Cloud (by name: `*_<user>`, `pg-<user>-*`), AWS and Azure (tag `cflt_managed_id=<user>`), what still runs for you; notifies when the cost reaches `--threshold` USD (50), a connector is RUNNING, or a cloud could not be checked | `cost-reminder.log` |
 | 👀 Log bundle watch | `playground analyze watch --install-launch-agent` | at every login, always running | analyzes every new log bundle, dump or capture that lands in `~/Downloads` | `~/Library/Logs/playground-analyze-watch.log` |
 
 Every scheduled job has the same three subcommands, plus `run` for the ones that act on a schedule:
@@ -56,6 +59,7 @@ Every scheduled job has the same three subcommands, plus `run` for the ones that
 playground ec2 auto-stop status     # scheduled?, when, with which options, and the last lines of its log (--lines)
 playground ec2 auto-stop disable    # remove the schedule (the log is kept)
 playground ec2 auto-stop run --dry-run   # what the job would do now (also: playground docker-cleanup run --dry-run)
+playground cloud-resources cost-reminder run   # read-only jobs have no --dry-run (also: playground forgotten-environment run)
 ```
 
 For the nightly cloud cleanup, the dry run is `playground cloud-resources cleanup --resource ccloud --nightly --dry-run`.

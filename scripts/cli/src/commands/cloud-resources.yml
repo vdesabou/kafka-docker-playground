@@ -24,6 +24,10 @@ help: |-
   with --resource):
 
     cloud-resources nightly-cleanup enable|disable|status
+
+  💸 and a weekly reminder of what it cost and what still runs (read-only):
+
+    cloud-resources cost-reminder enable|disable|status|run
 commands:
 - name: aws
   help: |
@@ -583,3 +587,131 @@ commands:
       validate: integer
       help: |-
         📄 Number of lines of the log to show
+- name: cost-reminder
+  help: |-
+    💸 Every week, a notification when your cloud spend went above a threshold, or something billed is still running for you. Read-only, it never deletes anything
+
+      enable     schedule it (default every Monday at 09:00), then run it once now
+      disable    remove the schedule
+      status     is it scheduled, when, and what the last runs found
+      run        the check, now
+
+    The cleanups (nightly-cleanup) delete what the playground knows it
+    created. This reminder covers the rest: what they keep on purpose (your
+    own clusters of 'playground ccloud setup'), what was created by hand, or
+    a cloud you did not schedule for cleanup. For each --resource it gives:
+
+      ccloud   💰 the cost of the last --days days of your resources, by
+               name (connectors *_<user>, clusters and environments
+               pg-<user>-*), next to the total of the organization; and
+               what still runs for you: connectors (RUNNING ones), clusters,
+               environments (playground cloud-resources ccloud list)
+      aws      💰 the cost of the resources tagged cflt_managed_id=<user>
+               (Cost Explorer), and the number of resources still up
+               (playground cloud-resources aws list)
+      azure    💰 the same with Cost Management (cloud-resources azure)
+
+    A macOS notification only when your cost is at least --threshold (USD,
+    default 50), a connector still runs for you (RUNNING, billed per
+    task-hour), or a cloud could not be checked; otherwise the result is only
+    logged. Your own clusters alone never notify: they are there on purpose. Billing data lags (Confluent Cloud up to 72 hours,
+    AWS 24 to 48 hours): the last days of the period can be incomplete.
+
+    Nothing interactive: a cloud whose credentials can't be read without a
+    prompt is skipped and said so, as for the nightly cleanup (confluent
+    login --save, ~/.aws/credentials, an Azure service principal or a saved
+    az login session). The Confluent Cloud cost needs a role that can read
+    the billing of the organization.
+
+    macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the
+    Mac wakes up if it was asleep at that time. Linux: a crontab line (logged,
+    no notification).
+  commands:
+  - name: enable
+    help: |-
+      💸 Schedule the weekly cost reminder, then run it once now
+
+      Run it again to change the day, the time, the clouds or the threshold.
+      The job uses this checkout of the playground and the PATH of the shell
+      you run it from.
+    flags:
+    - long: --day
+      arg: day
+      default: monday
+      allowed:
+        - sunday
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+        - saturday
+      help: |-
+        📅 Day of the week of the run
+    - long: --time
+      arg: time
+      default: "09:00"
+      help: |-
+        🕘 Time of the run, HH:MM, local time
+    - &cost_reminder_resource
+      long: --resource
+      arg: resource
+      repeatable: true
+      unique: true
+      default:
+        - ccloud
+      allowed:
+        - ccloud
+        - aws
+        - azure
+      help: |-
+        ☁️ Cloud to check (default: ccloud only)
+
+        🎓 Tip: repeat it, --resource ccloud --resource aws --resource azure
+    - &cost_reminder_threshold
+      long: --threshold
+      arg: usd
+      default: "50"
+      validate: integer
+      help: |-
+        💵 Notify when your cost over --days is at least this many US dollars (0: notify every week)
+    - &cost_reminder_days
+      long: --days
+      arg: days
+      default: "7"
+      validate: integer
+      help: |-
+        📆 Number of days of the cost period, ending today
+    examples:
+    - playground cloud-resources cost-reminder enable
+    - playground cloud-resources cost-reminder enable --resource ccloud --resource aws --threshold 20
+    - playground cloud-resources cost-reminder enable --day friday --time 17:00 --days 14
+  - name: disable
+    help: |-
+      🛑 Remove the weekly cost reminder schedule
+  - name: status
+    help: |-
+      🔎 Is the weekly cost reminder scheduled, when, and what did its last runs find
+    flags:
+    - long: --lines
+      arg: lines
+      default: "40"
+      validate: integer
+      help: |-
+        📄 Number of lines of the log to show
+  - name: run
+    help: |-
+      💸 Check now what your clouds cost over the last --days days and what still runs for you, as the weekly job does
+
+      Read-only.
+    flags:
+    - *cost_reminder_resource
+    - *cost_reminder_threshold
+    - *cost_reminder_days
+    - long: --scheduled
+      private: true
+      help: |-
+        ⏰ run by the launchd agent / crontab line: macOS notification when above the threshold, a connector runs or a cloud was not checked
+    examples:
+    - playground cloud-resources cost-reminder run
+    - playground cloud-resources cost-reminder run --resource ccloud --resource aws --days 30
