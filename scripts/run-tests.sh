@@ -31,7 +31,8 @@ cd ${DIR}/..
 
 latest_tag=$(grep "default tag" ./scripts/utils.sh | cut -d "=" -f 2 | cut -d " " -f 1)
 
-# A hung example is killed after PLAYGROUND_TEST_TIMEOUT (default 60m, the slowest examples take about 45 min)
+# A hung example is killed after PLAYGROUND_TEST_TIMEOUT (default 60m, the slowest examples take about 45 min;
+# 120m for the scripts that deploy Confluent Platform with cp-ansible, see test_timeout)
 # instead of blocking its CI job until the 6 hours limit: the other examples of the job still run, and the EXIT
 # trap of 'playground run' deletes the fully managed connectors it created.
 # 'run -f <script>' must stay the words 2 to 4: retry reads the script name in the 4th one.
@@ -42,7 +43,33 @@ function playground_with_timeout() {
         return $?
     fi
     # --kill-after: time left to the EXIT trap of 'playground run' to delete the connectors
-    timeout --signal=TERM --kill-after=120s "${PLAYGROUND_TEST_TIMEOUT:-60m}" "${DIR}/cli/playground" "$@"
+    timeout --signal=TERM --kill-after=120s "${test_timeout:-${PLAYGROUND_TEST_TIMEOUT:-60m}}" "${DIR}/cli/playground" "$@"
+}
+
+# the timeout of a script: PLAYGROUND_TEST_TIMEOUT when set, else 120m for the scripts that start the ansible environment
+# (several cp-ansible playbooks: other/cp-ansible-day2/enable-rbac.sh takes 38 min on docker, about 80 min on podman),
+# else 60m
+function test_timeout_of() {
+    if [ -n "${PLAYGROUND_TEST_TIMEOUT:-}" ]
+    then
+        echo "$PLAYGROUND_TEST_TIMEOUT"
+    elif grep -q -- "--environment ansible" "$1" 2> /dev/null
+    then
+        echo "120m"
+    else
+        echo "60m"
+    fi
+}
+
+# seconds as "1h 2min 3sec" ("2min 3sec" under an hour)
+function duration_of() {
+    local s=$1
+    if [ "$s" -ge 3600 ]
+    then
+        echo "$((s / 3600))h $(((s / 60) % 60))min $((s % 60))sec"
+    else
+        echo "$((s / 60))min $((s % 60))sec"
+    fi
 }
 
 nb_test_failed=0
@@ -416,15 +443,16 @@ do
         file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
+        test_timeout=$(test_timeout_of "$PWD/$script")
         retry playground_with_timeout run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
         if [ $ret -eq 124 ] || [ $ret -eq 137 ]
         then
-            logerror "⏱️ $script in dir $dir was killed after ${PLAYGROUND_TEST_TIMEOUT:-60m} (PLAYGROUND_TEST_TIMEOUT): it hung"
+            logerror "⏱️ $script in dir $dir was killed after $test_timeout (PLAYGROUND_TEST_TIMEOUT): it hung or is too slow"
         fi
-        ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+        ELAPSED="took: $(duration_of $SECONDS)"
         let ELAPSED_TOTAL+=$SECONDS
-        CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
+        CUMULATED="cumulated time: $(duration_of $ELAPSED_TOTAL)"
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
