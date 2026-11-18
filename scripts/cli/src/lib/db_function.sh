@@ -263,13 +263,19 @@ function db_missing_table_regex () {
 }
 
 # runs the statements read on stdin with the client of the engine
-#   $1 mode: script (statements, output for humans) or scalar (one query, prints the bare value)
+#   $1 mode: script (statements, output for humans), scalar (one query, prints the bare value) or rows (one query,
+#      prints the bare values of every row, long values neither escaped nor truncated: db_dump_rows)
 #   $2 stop: "stop" to stop at the first failing statement, anything else to run them all
 #   $3 verbose
 # prints the output of the client (stdout and stderr) and returns its exit code
 function db_exec () {
-  local mode="$1" stop="$2" verbose="$3" input
+  local mode="$1" stop="$2" verbose="$3" input raw_rows=""
   input=$(cat)
+  if [[ "$mode" == "rows" ]]
+  then
+    mode="scalar"
+    raw_rows="1"
+  fi
   db_exec_env=()
   local client_cmd=() prolog="" epilog="" shown
 
@@ -329,6 +335,8 @@ WHENEVER SQLERROR CONTINUE"
       if [[ "$mode" == "scalar" ]]
       then
         client_cmd+=(--skip-column-names --batch)
+        # --batch escapes the backslashes of the json of db_dump_rows
+        [[ -n "$raw_rows" ]] && client_cmd+=(--raw)
       else
         client_cmd+=(--table)
       fi
@@ -347,7 +355,14 @@ WHENEVER SQLERROR CONTINUE"
       fi
       if [[ "$mode" == "scalar" ]]
       then
-        client_cmd+=(-h -1 -W)
+        if [[ -n "$raw_rows" ]]
+        then
+          # nvarchar(max) values (the json of db_dump_rows) are cut at 256 characters by default. -y 0 cannot be used
+          # with -h -1: the header line is printed, db_dump_rows only keeps the json lines
+          client_cmd+=(-y 0)
+        else
+          client_cmd+=(-h -1 -W)
+        fi
         input="SET NOCOUNT ON;
 ${input}"
       fi
@@ -458,4 +473,99 @@ function db_filter_output () {
   else
     cat
   fi
+}
+
+# rows of a table (documents of a collection) as json, one object per line, for 'playground connector reconcile'
+#   $1 table: name or schema.name. The exact case is tried first (the JDBC sinks quote the names they create), then
+#      the name as the database folds an unquoted one (Oracle: upper case, PostgreSQL: lower case)
+#   $2 verbose
+# prints the rows and returns 0, else prints the output of the client and returns 1, or 2 when the table does not exist
+function db_dump_rows () {
+  local table="$1" verbose="$2" schema="" name output rc query quoted attempt column columns
+  name="$table"
+  if [[ "$table" == *.* && "$db_engine" != "mongodb" ]]
+  then
+    schema="${table%.*}"
+    name="${table##*.}"
+  fi
+  local sq="'" dq='"' bt='`'
+  for attempt in exact folded
+  do
+    case "$db_engine" in
+      postgres|oracle)
+        if [[ "$attempt" == "exact" ]]
+        then
+          quoted="${dq}${name//$dq/$dq$dq}${dq}"
+          [[ -n "$schema" ]] && quoted="${dq}${schema//$dq/$dq$dq}${dq}.$quoted"
+        else
+          quoted="$table"
+        fi
+        if [[ "$db_engine" == "postgres" ]]
+        then
+          query="SELECT row_to_json(t)::text FROM $quoted t"
+        else
+          # JSON_OBJECT(*): Oracle 19c and later
+          query="SET LONG 100000000 LONGCHUNKSIZE 100000000 LINESIZE 32767
+SELECT JSON_OBJECT(* RETURNING CLOB) FROM $quoted"
+        fi
+      ;;
+      mysql|mariadb)
+        [[ "$attempt" == "folded" ]] && break
+        local schema_condition="DATABASE()"
+        [[ -n "$schema" ]] && schema_condition="${sq}${schema//$sq/$sq$sq}${sq}"
+        rc=0
+        output=$(printf '%s\n' "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = $schema_condition AND TABLE_NAME = ${sq}${name//$sq/$sq$sq}${sq} ORDER BY ORDINAL_POSITION" | db_exec rows stop "$verbose") || rc=$?
+        verbose=""
+        if [[ $rc -ne 0 ]] || printf '%s\n' "$output" | grep -q -E "$(db_error_regex)"
+        then
+          printf '%s\n' "$output"
+          return 1
+        fi
+        columns=""
+        while IFS= read -r column
+        do
+          column="${column%$'\r'}"
+          [[ -z "$column" ]] && continue
+          columns+="${columns:+, }${sq}${column//$sq/$sq$sq}${sq}, ${bt}${column//$bt/$bt$bt}${bt}"
+        done <<< "$output"
+        if [[ -z "$columns" ]]
+        then
+          echo "ERROR 1146: table $table does not exist"
+          return 2
+        fi
+        quoted="${bt}${name//$bt/$bt$bt}${bt}"
+        [[ -n "$schema" ]] && quoted="${bt}${schema//$bt/$bt$bt}${bt}.$quoted"
+        query="SELECT JSON_OBJECT($columns) FROM $quoted"
+      ;;
+      sqlserver)
+        [[ "$attempt" == "folded" ]] && break
+        quoted="[${name//]/]]}]"
+        [[ -n "$schema" ]] && quoted="[${schema//]/]]}].$quoted"
+        query="SELECT (SELECT t.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER, INCLUDE_NULL_VALUES) FROM $quoted AS t"
+      ;;
+      mongodb)
+        [[ "$attempt" == "folded" ]] && break
+        query="db.getCollection(${sq}${table//$sq/\\$sq}${sq}).find().forEach(function (d) { print(typeof EJSON !== 'undefined' ? EJSON.stringify(d, { relaxed: true }) : JSON.stringify(d)) })"
+      ;;
+      *)
+        echo "dumping the rows of a $db_engine table is not supported yet: export them as json lines and pass --rows-file"
+        return 1
+      ;;
+    esac
+    rc=0
+    output=$(printf '%s\n' "$query" | db_exec rows stop "$verbose") || rc=$?
+    verbose=""
+    if [[ $rc -eq 0 ]] && ! printf '%s\n' "$output" | grep -q -E "$(db_error_regex)"
+    then
+      printf '%s\n' "$output" | tr -d '\r' | sed 's/^[[:space:]]*//' | grep '^{' || true
+      return 0
+    fi
+    if ! printf '%s\n' "$output" | grep -q -E "$(db_missing_table_regex)"
+    then
+      printf '%s\n' "$output"
+      return 1
+    fi
+  done
+  printf '%s\n' "$output"
+  return 2
 }
