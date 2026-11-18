@@ -382,6 +382,7 @@ playground_usage() {
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "connector wait")                            "
   printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "connector validate")                        "
   printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "connector diff")                            "
+  printf "  %s   🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n" "$(green "connector reconcile")                       "
   printf "  %s   🔄 Convert a connector config from the format a customer sent to another one\n" "$(green "connector convert")                         "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "connector error-recommendations")           "
   printf "  %s   🅾️ Specific Oracle CDC Xstream commands\n" "$(green "connector oracle-cdc-xstream")              "
@@ -21190,7 +21191,7 @@ playground_connector_plugin_sourcecode_usage() {
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector\n\n"
-    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. Most commands\n  work whether the connector is self managed in the connect container or\n  fully managed in Confluent Cloud: the \"☁️ Fully managed\" line of the help\n  of each command says whether it does.\n  \n  🔍 Look at what is running\n    diagnose                status, errors, lag or offsets, next steps\n    status                  is it RUNNING, and if not, the stack trace\n    wait                    wait until it is RUNNING (or another state)\n    tasks                   state, worker, config, partitions of each task\n    history                 states, failures, restarts, config changes\n    metrics                 throughput, time and errors per task\n    show-lag                consumer lag of a sink (--once: a snapshot)\n    offsets get             where the connector is reading or writing\n    topics                  the topics a connector is using\n    show-config             the configuration actually applied\n    diff                    config vs a file, a connector or the defaults\n    logs                    connect logs, or the fully managed logs\n    error-recommendations   fixes for a failed fully managed connector\n    display-metrics-api     Telemetry API metrics (fully managed)\n    display-metrics-api-with-grafana\n                            the same, plotted in Grafana\n    display-leader-name     the leader of the connect workers\n    open-ccloud-connector-in-browser\n                            its page in the Confluent Cloud console\n    benchmark               records per second, vs the previous run\n    smt test                what a transform chain does to a record\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    validate                check a config with the plugin, create nothing\n    convert                 a customer config (CFK, terraform...) to another\n                            format\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n    offsets get-offsets-request-status\n                            did the last fully managed change apply\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    snippets                converter (or data format) and dlq config\n    plugins                 plugins installed (--all: transforms...)\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              the source on GitHub, grep it, diff versions\n    open-docs               open the Confluent documentation\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging / disable-remote-debugging\n                            attach a java debugger to the connector code\n    oracle-cdc-xstream      Oracle XStream queries and diagnostics report\n  \n  🚚 Move it to Confluent Cloud\n    translate               self managed config to fully managed config\n    connect-migration-utility\n                            discovery, then migrate with the offsets\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n  \n  🤖 For scripts and AI agents: status, wait, diagnose, validate, tasks,\n  topics, history, metrics, show-lag, offsets get, diff and smt test take\n  --json (only the JSON on stdout, the log lines on stderr), and status\n  and diagnose take --fail-on-error for an exit code.\n\n"
+    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. Most commands\n  work whether the connector is self managed in the connect container or\n  fully managed in Confluent Cloud: the \"☁️ Fully managed\" line of the help\n  of each command says whether it does.\n  \n  🔍 Look at what is running\n    diagnose                status, errors, lag or offsets, next steps\n    status                  is it RUNNING, and if not, the stack trace\n    wait                    wait until it is RUNNING (or another state)\n    tasks                   state, worker, config, partitions of each task\n    history                 states, failures, restarts, config changes\n    metrics                 throughput, time and errors per task\n    show-lag                consumer lag of a sink (--once: a snapshot)\n    offsets get             where the connector is reading or writing\n    topics                  the topics a connector is using\n    show-config             the configuration actually applied\n    diff                    config vs a file, a connector or the defaults\n    reconcile               did every record reach the table? lost,\n                            duplicated, different rows\n    logs                    connect logs, or the fully managed logs\n    error-recommendations   fixes for a failed fully managed connector\n    display-metrics-api     Telemetry API metrics (fully managed)\n    display-metrics-api-with-grafana\n                            the same, plotted in Grafana\n    display-leader-name     the leader of the connect workers\n    open-ccloud-connector-in-browser\n                            its page in the Confluent Cloud console\n    benchmark               records per second, vs the previous run\n    smt test                what a transform chain does to a record\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    validate                check a config with the plugin, create nothing\n    convert                 a customer config (CFK, terraform...) to another\n                            format\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n    offsets get-offsets-request-status\n                            did the last fully managed change apply\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    snippets                converter (or data format) and dlq config\n    plugins                 plugins installed (--all: transforms...)\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              the source on GitHub, grep it, diff versions\n    open-docs               open the Confluent documentation\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging / disable-remote-debugging\n                            attach a java debugger to the connector code\n    oracle-cdc-xstream      Oracle XStream queries and diagnostics report\n  \n  🚚 Move it to Confluent Cloud\n    translate               self managed config to fully managed config\n    connect-migration-utility\n                            discovery, then migrate with the offsets\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n  \n  🤖 For scripts and AI agents: status, wait, diagnose, validate, tasks,\n  topics, history, metrics, show-lag, offsets get, diff and smt test take\n  --json (only the JSON on stdout, the log lines on stderr), and status\n  and diagnose take --fail-on-error for an exit code.\n\n"
   else
     printf "playground connector - 🔗 Connector commands\n\n"
   fi
@@ -21205,6 +21206,7 @@ playground_connector_usage() {
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "wait")                            "
   printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "validate")                        "
   printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "diff")                            "
+  printf "  %s   🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n" "$(green "reconcile")                       "
   printf "  %s   🔄 Convert a connector config from the format a customer sent to another one\n" "$(green "convert")                         "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "error-recommendations")           "
   printf "  %s   🅾️ Specific Oracle CDC Xstream commands\n" "$(green "oracle-cdc-xstream")              "
@@ -21581,6 +21583,120 @@ playground_connector_diff_usage() {
 echo
 
 fi
+}
+
+# :command.usage
+playground_connector_reconcile_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector reconcile\n\n"
+    printf "  🧮 Compare the records of the topic with the rows of the table: lost,\n  duplicated, different?\n  \n  Answers \"the sink lost records\", \"the source missed rows\", \"we have\n  duplicates\" with one verdict instead of counting rows by hand. Reads\n  both sides of the connector, compares them record by record, and\n  lists what does not match:\n  \n    sink     for each key, the last record of the topic against the\n             row of the table (a tombstone or a delete event: the row\n             must be gone, when the connector deletes)\n    source   each row of the table against the last record of its key\n             in the topic (Debezium / CDC envelopes: the \"after\" state)\n  \n    ❌ lost           in the topic (sink) or the table (source), not on\n                     the other side\n    ❌ duplicated     a key twice in the table, or the same record twice\n                     in the topic of a source\n    ❌ different      fields whose values differ (converter, SMT, column\n                     type, truncation...)\n    ❌ not deleted    the last record is a tombstone, the row is still\n                     there\n    ⚠️ extra          only on the other side (rows written before, by\n                     another producer): reported, not a failure\n  \n  The topic, the table, the database container, the key and whether\n  deletes are applied come from the config of the connector, for the\n  JDBC sink and source (Confluent and Debezium), the Debezium sources,\n  the MongoDB sink and their fully managed versions:\n  \n    key              pk.mode / pk.fields (record_key, record_value,\n                     kafka: topic, partition, offset), primary.key.mode\n                     of the Debezium JDBC sink, incrementing.column.name,\n                     else the fields of the record key when it is a\n                     struct, else no key (the records and the rows are\n                     compared as multisets of values)\n    table            table.name.format (${topic} replaced), collection,\n                     table.whitelist / table.include.list\n    database         the host of connection.url / database.hostname\n                     when it is a running container, with the user and\n                     password of the connector\n  \n  Pass --topic, --table, --key-field and --container for anything else,\n  and --rows-file to compare with rows exported from any system (a\n  bucket, a warehouse, a customer dump), one json object per line.\n  \n  Values are compared by meaning, not by text: 1, 1.0 and \"1\"; true and\n  1; epoch milliseconds (or days) and a date or timestamp column;\n  json text and an object; CHAR padding; Avro unions; MongoDB extended\n  json. Column names are compared case-insensitively.\n  \n  Exits with 1 when records are lost, duplicated, different or not\n  deleted, so an example or a repro model can assert on it.\n  \n  Supported databases: the ones of 'playground db sql' except Db2\n  (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n  \n  ☁️ Fully managed: supported when the database runs in a local container,\n  else with --rows-file\n\n"
+  else
+    printf "playground connector reconcile - 🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector reconcile [OPTIONS]\n"
+  printf "  playground connector reconcile --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Topic to compare\n    \n    ℹ️ If not set, from the config of the connector (topics of a sink with one\n    topic, topic.prefix + table of a source)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--table TABLE")"
+    printf "    🛢️ Table (or collection) to compare, schema.table works too\n    \n    ℹ️ If not set, from the config of the connector (table.name.format,\n    collection, table.whitelist...)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key-field, -k KEY-FIELD (repeatable)")"
+    printf "    🔑 Column that identifies a row (repeat it for a composite key)\n    \n    ℹ️ If not set, from the config of the connector, else the fields of the\n    record key\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--ignore-field IGNORE-FIELD (repeatable)")"
+    printf "    🙈 Field or column never compared, e.g. a column filled by the database\n    (repeat it for several)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container CONTAINER")"
+    printf "    🐳 Container of the database\n    \n    ℹ️ If not set, the host of the connection url of the connector when it is a\n    running container, else the only running database container\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 Database user\n    \n    ℹ️ If not set, the user of the connector config (connection.user,\n    database.user), else the admin user of the container\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔑 Password of --user\n    \n    ℹ️ If not set, the password of the connector config, else the password of\n    the container environment\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--database, -d DATABASE")"
+    printf "    🗄️ Database (Oracle: service name)\n    \n    ℹ️ If not set, from the connection url of the connector, else the database\n    of the container environment\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--rows-file ROWS-FILE")"
+    printf "    📄 Rows to compare with, one json object per line, instead of reading a\n    database table\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--direction DIRECTION")"
+    printf "    🧭 sink: the topic is the truth, source: the table is the truth\n    \n    ℹ️ If not set, sink when the config has topics or topics.regex\n"
+    printf "    %s\n" "Allowed: sink, source"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-examples MAX-EXAMPLES")"
+    printf "    🔢 Number of keys listed in each category\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON on stdout, and nothing else (the log lines go to\n    stderr)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector reconcile\n"
+    printf "  playground connector reconcile --connector jdbc-postgresql-sink --key-field id\n"
+    printf "  playground connector reconcile --connector debezium-postgres-source --table\n  public.customers --json\n"
+    printf "  playground connector reconcile --connector s3-sink --rows-file\n  /tmp/objects.json --key-field id\n"
+    echo
+
+  fi
 }
 
 # :command.usage
@@ -38662,13 +38778,19 @@ function db_missing_table_regex () {
 }
 
 # runs the statements read on stdin with the client of the engine
-#   $1 mode: script (statements, output for humans) or scalar (one query, prints the bare value)
+#   $1 mode: script (statements, output for humans), scalar (one query, prints the bare value) or rows (one query,
+#      prints the bare values of every row, long values neither escaped nor truncated: db_dump_rows)
 #   $2 stop: "stop" to stop at the first failing statement, anything else to run them all
 #   $3 verbose
 # prints the output of the client (stdout and stderr) and returns its exit code
 function db_exec () {
-  local mode="$1" stop="$2" verbose="$3" input
+  local mode="$1" stop="$2" verbose="$3" input raw_rows=""
   input=$(cat)
+  if [[ "$mode" == "rows" ]]
+  then
+    mode="scalar"
+    raw_rows="1"
+  fi
   db_exec_env=()
   local client_cmd=() prolog="" epilog="" shown
 
@@ -38728,6 +38850,8 @@ WHENEVER SQLERROR CONTINUE"
       if [[ "$mode" == "scalar" ]]
       then
         client_cmd+=(--skip-column-names --batch)
+        # --batch escapes the backslashes of the json of db_dump_rows
+        [[ -n "$raw_rows" ]] && client_cmd+=(--raw)
       else
         client_cmd+=(--table)
       fi
@@ -38746,7 +38870,14 @@ WHENEVER SQLERROR CONTINUE"
       fi
       if [[ "$mode" == "scalar" ]]
       then
-        client_cmd+=(-h -1 -W)
+        if [[ -n "$raw_rows" ]]
+        then
+          # nvarchar(max) values (the json of db_dump_rows) are cut at 256 characters by default. -y 0 cannot be used
+          # with -h -1: the header line is printed, db_dump_rows only keeps the json lines
+          client_cmd+=(-y 0)
+        else
+          client_cmd+=(-h -1 -W)
+        fi
         input="SET NOCOUNT ON;
 ${input}"
       fi
@@ -38857,6 +38988,101 @@ function db_filter_output () {
   else
     cat
   fi
+}
+
+# rows of a table (documents of a collection) as json, one object per line, for 'playground connector reconcile'
+#   $1 table: name or schema.name. The exact case is tried first (the JDBC sinks quote the names they create), then
+#      the name as the database folds an unquoted one (Oracle: upper case, PostgreSQL: lower case)
+#   $2 verbose
+# prints the rows and returns 0, else prints the output of the client and returns 1, or 2 when the table does not exist
+function db_dump_rows () {
+  local table="$1" verbose="$2" schema="" name output rc query quoted attempt column columns
+  name="$table"
+  if [[ "$table" == *.* && "$db_engine" != "mongodb" ]]
+  then
+    schema="${table%.*}"
+    name="${table##*.}"
+  fi
+  local sq="'" dq='"' bt='`'
+  for attempt in exact folded
+  do
+    case "$db_engine" in
+      postgres|oracle)
+        if [[ "$attempt" == "exact" ]]
+        then
+          quoted="${dq}${name//$dq/$dq$dq}${dq}"
+          [[ -n "$schema" ]] && quoted="${dq}${schema//$dq/$dq$dq}${dq}.$quoted"
+        else
+          quoted="$table"
+        fi
+        if [[ "$db_engine" == "postgres" ]]
+        then
+          query="SELECT row_to_json(t)::text FROM $quoted t"
+        else
+          # JSON_OBJECT(*): Oracle 19c and later
+          query="SET LONG 100000000 LONGCHUNKSIZE 100000000 LINESIZE 32767
+SELECT JSON_OBJECT(* RETURNING CLOB) FROM $quoted"
+        fi
+      ;;
+      mysql|mariadb)
+        [[ "$attempt" == "folded" ]] && break
+        local schema_condition="DATABASE()"
+        [[ -n "$schema" ]] && schema_condition="${sq}${schema//$sq/$sq$sq}${sq}"
+        rc=0
+        output=$(printf '%s\n' "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = $schema_condition AND TABLE_NAME = ${sq}${name//$sq/$sq$sq}${sq} ORDER BY ORDINAL_POSITION" | db_exec rows stop "$verbose") || rc=$?
+        verbose=""
+        if [[ $rc -ne 0 ]] || printf '%s\n' "$output" | grep -q -E "$(db_error_regex)"
+        then
+          printf '%s\n' "$output"
+          return 1
+        fi
+        columns=""
+        while IFS= read -r column
+        do
+          column="${column%$'\r'}"
+          [[ -z "$column" ]] && continue
+          columns+="${columns:+, }${sq}${column//$sq/$sq$sq}${sq}, ${bt}${column//$bt/$bt$bt}${bt}"
+        done <<< "$output"
+        if [[ -z "$columns" ]]
+        then
+          echo "ERROR 1146: table $table does not exist"
+          return 2
+        fi
+        quoted="${bt}${name//$bt/$bt$bt}${bt}"
+        [[ -n "$schema" ]] && quoted="${bt}${schema//$bt/$bt$bt}${bt}.$quoted"
+        query="SELECT JSON_OBJECT($columns) FROM $quoted"
+      ;;
+      sqlserver)
+        [[ "$attempt" == "folded" ]] && break
+        quoted="[${name//]/]]}]"
+        [[ -n "$schema" ]] && quoted="[${schema//]/]]}].$quoted"
+        query="SELECT (SELECT t.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER, INCLUDE_NULL_VALUES) FROM $quoted AS t"
+      ;;
+      mongodb)
+        [[ "$attempt" == "folded" ]] && break
+        query="db.getCollection(${sq}${table//$sq/\\$sq}${sq}).find().forEach(function (d) { print(typeof EJSON !== 'undefined' ? EJSON.stringify(d, { relaxed: true }) : JSON.stringify(d)) })"
+      ;;
+      *)
+        echo "dumping the rows of a $db_engine table is not supported yet: export them as json lines and pass --rows-file"
+        return 1
+      ;;
+    esac
+    rc=0
+    output=$(printf '%s\n' "$query" | db_exec rows stop "$verbose") || rc=$?
+    verbose=""
+    if [[ $rc -eq 0 ]] && ! printf '%s\n' "$output" | grep -q -E "$(db_error_regex)"
+    then
+      printf '%s\n' "$output" | tr -d '\r' | sed 's/^[[:space:]]*//' | grep '^{' || true
+      return 0
+    fi
+    if ! printf '%s\n' "$output" | grep -q -E "$(db_missing_table_regex)"
+    then
+      printf '%s\n' "$output"
+      return 1
+    fi
+  done
+  printf '%s\n' "$output"
+  return 2
 }
 
 # src/lib/flink_ccloud_function.sh
@@ -93283,6 +93509,422 @@ playground_connector_diff_command() {
       log "📊 $differ key(s) differ, $same identical"
   fi
   write_diff_report
+
+}
+
+# :command.function
+playground_connector_reconcile_command() {
+
+  # src/commands/connector/reconcile.sh
+  connector="${args[--connector]}"
+  topic="${args[--topic]}"
+  table="${args[--table]}"
+  eval "key_fields=(${args[--key-field]:-})"
+  eval "ignore_fields=(${args[--ignore-field]:-})"
+  container="${args[--container]}"
+  user="${args[--user]}"
+  password="${args[--password]}"
+  database="${args[--database]}"
+  rows_file="${args[--rows-file]}"
+  direction="${args[--direction]}"
+  max_examples="${args[--max-examples]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$json" ]]
+  then
+      # stdout only gets the json document
+      exec 3>&1 1>&2
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required to compare the records and the rows"
+      exit 1
+  fi
+
+  connector_type=$(playground state get run.connector_type)
+
+  if [[ -z "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+      if [ $(echo "$connector" | wc -w) -gt 1 ]
+      then
+          logerror "❌ several connectors are running ($connector), use --connector"
+          exit 1
+      fi
+  fi
+
+  if ! get_connector_config_json "$connector"
+  then
+      logerror "❌ could not get the config of connector $connector"
+      exit 1
+  fi
+  config="$curl_output"
+
+  # value of the first config key set (empty values count as not set)
+  function cfg () {
+      local key value
+      for key in "$@"
+      do
+          value=$(jq -r --arg k "$key" '.[$k] // empty | tostring' <<< "$config")
+          if [[ -n "$value" ]]
+          then
+              echo "$value"
+              return 0
+          fi
+      done
+  }
+
+  # a value that is not usable as is: masked by the REST API or the fully managed API, or a config provider reference
+  function is_hidden () {
+      [[ -z "$1" || "$1" == *'${'* || "$1" == *"•"* || "$1" =~ ^\*+$ || "$1" == "[hidden]" ]]
+  }
+
+  # the literal value of a config key in the example script that was run, for a password masked by the REST API
+  function literal_in_test_file () {
+      local key="$1" test_file
+      test_file=$(playground state get run.test_file 2>/dev/null)
+      [[ -f "$test_file" ]] || return 0
+      grep -o -E "\"${key//./\\.}\"[[:space:]]*:[[:space:]]*\"[^\"\$]*\"" "$test_file" | head -1 | sed -E 's/.*:[[:space:]]*"([^"]*)"$/\1/'
+  }
+
+  # the topic name after the RegexRouter transforms of the connector (in their order): what a source writes to, what
+  # ${topic} of table.name.format is for a sink. RegexRouter only renames a topic that matches the whole regex
+  function apply_regex_routers () {
+      local name="$1" alias type regex replacement
+      local aliases
+      IFS=',' read -r -a aliases <<< "$(cfg transforms)"
+      for alias in "${aliases[@]}"
+      do
+          alias="${alias// /}"
+          type=$(cfg "transforms.$alias.type")
+          [[ "$type" != *RegexRouter* ]] && continue
+          regex=$(cfg "transforms.$alias.regex")
+          replacement=$(cfg "transforms.$alias.replacement")
+          name=$(python3 -I -c '
+  import re, sys
+  name, regex, replacement = sys.argv[1:4]
+  m = re.fullmatch(regex, name)
+  if m:
+      # java replacement syntax: $1, \$ for a literal $
+      out = re.sub(r"\\\$|\$(\d+)", lambda g: "$" if g.group(0) == "\\$" else (m.group(int(g.group(1))) or ""), replacement)
+      name = out
+  print(name)' "$name" "$regex" "$replacement" 2>/dev/null || echo "$name")
+      done
+      echo "$name"
+  }
+
+  connector_class=$(cfg connector.class)
+  class_lc="${connector_class,,}"
+
+  if [[ -z "$direction" ]]
+  then
+      if [[ -n "$(cfg topics topics.regex)" ]]
+      then
+          direction="sink"
+      else
+          direction="source"
+      fi
+  fi
+
+  key_source="auto"
+  key_origin="--key-field"
+  primitive_key_field=""
+  deletes="true"
+  allow_duplicates=""
+  default_ignore=()
+
+  # ---- the key, the table and whether deletes are applied, from the config ----------------------------------------
+  pk_mode=$(cfg pk.mode primary.key.mode)
+  pk_fields=$(cfg pk.fields primary.key.fields)
+  if [[ "$direction" == "sink" ]]
+  then
+      deletes=$(cfg delete.enabled)
+      deletes="${deletes:-false}"
+      if [[ -z "$topic" ]]
+      then
+          topic=$(cfg topics)
+          if [[ "$topic" == *,* ]]
+          then
+              logerror "❌ connector $connector reads several topics ($topic): pass --topic with one of them"
+              exit 1
+          fi
+          if [[ -z "$topic" ]]
+          then
+              logerror "❌ connector $connector uses topics.regex ($(cfg topics.regex)): pass --topic"
+              exit 1
+          fi
+      fi
+      case "${pk_mode,,}" in
+          record_key)
+              key_source="key"
+              if [[ ${#key_fields[@]} -eq 0 && -n "$pk_fields" ]]
+              then
+                  IFS=',' read -r -a key_fields <<< "$pk_fields"
+                  key_origin="pk.fields, pk.mode $pk_mode"
+                  # a key that is not a struct goes to the one column of pk.fields
+                  primitive_key_field="${key_fields[0]}"
+              fi
+          ;;
+          record_value)
+              key_source="value"
+              if [[ ${#key_fields[@]} -eq 0 && -n "$pk_fields" ]]
+              then
+                  IFS=',' read -r -a key_fields <<< "$pk_fields"
+                  key_origin="pk.fields, pk.mode $pk_mode"
+              fi
+          ;;
+          kafka)
+              if [[ ${#key_fields[@]} -eq 0 ]]
+              then
+                  key_source="coordinates"
+              fi
+          ;;
+          record_header)
+              logwarn "⚠️ pk.mode record_header: the key is in the headers, pass --key-field with the columns to compare on"
+          ;;
+      esac
+      if [[ -z "$table" ]]
+      then
+          if [[ "$class_lc" == *mongo* ]]
+          then
+              table=$(cfg collection)
+              table="${table:-$topic}"
+              [[ -z "$database" ]] && database=$(cfg database)
+              # a document id generated by the sink (BsonOidStrategy, the default) is in no record
+              if [[ "$(cfg document.id.strategy)" != *Provided* ]]
+              then
+                  default_ignore+=("_id")
+              fi
+              if [[ -n "$(cfg delete.on.null.values)" ]]
+              then
+                  deletes=$(cfg delete.on.null.values)
+              fi
+          else
+              table_format=$(cfg table.name.format)
+              table_format="${table_format:-\${topic\}}"
+              topic_for_table=$(apply_regex_routers "$topic")
+              # the Debezium JDBC sink (DefaultTableNamingStrategy) replaces the dots of the topic name
+              if [[ "$class_lc" == io.debezium.connector.jdbc.* ]]
+              then
+                  topic_for_table="${topic//./_}"
+              fi
+              table="${table_format//\$\{topic\}/$topic_for_table}"
+          fi
+      fi
+  else
+      # source
+      tables=$(cfg table.whitelist table.include.list collection.include.list)
+      if [[ -z "$table" ]]
+      then
+          if [[ "$tables" == *,* ]]
+          then
+              logerror "❌ connector $connector captures several tables ($tables): pass --table and --topic"
+              exit 1
+          fi
+          table="$tables"
+          if [[ -z "$table" ]]
+          then
+              logerror "❌ could not tell the table of connector $connector from its config: pass --table"
+              exit 1
+          fi
+      fi
+      if [[ "$(cfg mode)" == "bulk" ]]
+      then
+          # bulk mode re-sends the whole table at each poll
+          allow_duplicates="1"
+      fi
+      incrementing=$(cfg incrementing.column.name)
+      if [[ ${#key_fields[@]} -eq 0 && -n "$incrementing" ]]
+      then
+          key_fields=("$incrementing")
+          key_origin="incrementing.column.name"
+      fi
+      if [[ -z "$topic" ]]
+      then
+          prefix=$(cfg topic.prefix database.server.name)
+          if [[ "$class_lc" == io.confluent.connect.jdbc.* || "$class_lc" == *source && -n "$(cfg incrementing.column.name timestamp.column.name)" ]]
+          then
+              # JDBC source: <topic.prefix><table> (query mode: <topic.prefix>)
+              if [[ -n "$(cfg query)" ]]
+              then
+                  topic="$prefix"
+              else
+                  topic="${prefix}${table##*.}"
+              fi
+          elif [[ "$class_lc" == *sqlserver* ]]
+          then
+              # Debezium SQL Server: <prefix>.<database>.<schema>.<table>
+              db_name=$(cfg database.names database.dbname)
+              topic="${prefix}.${db_name%%,*}.${table}"
+          else
+              # Debezium: <prefix>.<schema or database>.<table>
+              topic="${prefix}.${table}"
+          fi
+          topic=$(apply_regex_routers "$topic")
+      fi
+      # a captured "schema.table" is the table to read
+  fi
+
+  for f in "${default_ignore[@]}"
+  do
+      ignore_fields+=("$f")
+  done
+
+  # ---- the database: the host of the connection url when it is a running container --------------------------------
+  if [[ -z "$rows_file" ]]
+  then
+      url=$(cfg connection.url connection.uri)
+      host=$(cfg database.hostname connection.host)
+      if [[ -z "$host" && -n "$url" ]]
+      then
+          # jdbc:postgresql://postgres:5432/db, jdbc:mysql://mysql:3306/db, jdbc:sqlserver://sqlserver:1433;databaseName=x,
+          # jdbc:oracle:thin:@oracle:1521/ORCLPDB1, jdbc:oracle:thin:@//oracle:1521/ORCLPDB1, mongodb://u:p@mongodb:27017
+          host=$(sed -E -e 's#^[a-z0-9:+]*(//|@//|@)##' -e 's#^[^@/]*@##' -e 's#[:/;?,].*$##' <<< "$url")
+      fi
+      if [[ -z "$container" && -n "$host" ]]
+      then
+          get_environment_used
+          if [[ "$environment" == cfk* ]]
+          then
+              host="${host%%.*}"
+          fi
+          if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$host" || { [[ "$environment" == cfk* ]] && kubectl -n confluent get pod "$host" > /dev/null 2>&1; }
+          then
+              container="$host"
+          fi
+      fi
+      if [[ -z "$database" && -n "$url" && "$class_lc" != *mongo* ]]
+      then
+          case "$url" in
+              *databaseName=*|*database=*) database=$(sed -E 's#.*[;?&](databaseName|database)=([^;&]*).*#\2#' <<< "$url") ;;
+              jdbc:oracle:*) database=$(sed -E 's#.*:[0-9]+[/:]([^?]*).*#\1#' <<< "$url") ;;
+              jdbc:*//*/*) database=$(sed -E 's#^jdbc:[a-z0-9]+://[^/]*/([^?;]*).*#\1#' <<< "$url") ;;
+          esac
+      fi
+      if [[ -z "$database" ]]
+      then
+          database=$(cfg database.dbname database.names)
+          database="${database%%,*}"
+      fi
+      # connect as the connector does: the table is in its schema (Oracle), and it can read it
+      if [[ -z "$user" ]]
+      then
+          config_user=$(cfg connection.user database.user)
+          if [[ -z "$config_user" && "$url" == *user=* ]]
+          then
+              config_user=$(sed -E 's#.*[?&;]user=([^&;]*).*#\1#' <<< "$url")
+          fi
+          config_password=$(cfg connection.password database.password)
+          if is_hidden "$config_password"
+          then
+              config_password=$(literal_in_test_file connection.password)
+              [[ -z "$config_password" ]] && config_password=$(literal_in_test_file database.password)
+          fi
+          if [[ -z "$config_password" && "$url" == *password=* ]]
+          then
+              config_password=$(sed -E 's#.*[?&;]password=([^&;]*).*#\1#' <<< "$url")
+          fi
+          if [[ -n "$config_user" && -z "$password" ]] && ! is_hidden "$config_password" && [[ "$class_lc" != *mongo* ]]
+          then
+              user="$config_user"
+              password="$config_password"
+          fi
+      fi
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-reconcile-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  # ---- the rows ---------------------------------------------------------------------------------------------------
+  if [[ -n "$rows_file" ]]
+  then
+      cp "$rows_file" "$tmp_dir/rows.json"
+      table_label=$(basename "$rows_file")
+      table_kind="file"
+  else
+      if [[ -z "$table" ]]
+      then
+          logerror "❌ could not tell the table of connector $connector from its config: pass --table"
+          exit 1
+      fi
+      db_resolve_container "$container" "" || exit 1
+      db_resolve_connection "$user" "$password" "$database"
+      # connected as the admin user (the password of the connector is masked): an Oracle table is in the schema of the
+      # user of the connector
+      if [[ "$db_engine" == "oracle" && "$table" != *.* && -n "$config_user" && "${db_user,,}" != "${config_user,,}" ]]
+      then
+          table="${config_user^^}.$table"
+      fi
+      table_kind="table"
+      [[ "$db_engine" == "mongodb" ]] && table_kind="collection"
+      log "🛢️ Reading $db_engine $table_kind $table ($db_container${db_user:+, user $db_user}${db_database:+, database $db_database})"
+      rc=0
+      db_dump_rows "$table" "$verbose" > "$tmp_dir/rows.json" || rc=$?
+      if [[ $rc -eq 2 ]]
+      then
+          logerror "❌ table $table does not exist in $db_container${db_database:+ (database $db_database)}: pass --table (schema.table works too), --database or --user"
+          tail -5 "$tmp_dir/rows.json"
+          exit 1
+      elif [[ $rc -ne 0 ]]
+      then
+          logerror "❌ could not read table $table in $db_container:"
+          tail -10 "$tmp_dir/rows.json"
+          exit 1
+      fi
+      table_label="$table"
+  fi
+
+  # ---- the records ------------------------------------------------------------------------------------------------
+  log "📥 Reading every record of topic $topic"
+  if ! playground topic consume --topic "$topic" --json --max-messages -1 > "$tmp_dir/records.json" 2> "$tmp_dir/consume.log"
+  then
+      logerror "❌ could not read topic $topic:"
+      grep -v '^\s*$' "$tmp_dir/consume.log" | tail -10
+      if [[ "$direction" == "source" ]]
+      then
+          logerror "   🎓 the topic name was computed from the config of the connector: pass --topic if it is another one"
+      fi
+      exit 1
+  fi
+
+  # ---- the comparison ---------------------------------------------------------------------------------------------
+  joined_keys=$(IFS=,; echo "${key_fields[*]}")
+  joined_ignore=$(IFS=,; echo "${ignore_fields[*]}")
+  reconcile_args=(
+      "--records=$tmp_dir/records.json" "--rows=$tmp_dir/rows.json" "--direction=$direction"
+      "--key-fields=$joined_keys" "--key-origin=$key_origin" "--key-source=$key_source"
+      "--primitive-key-field=$primitive_key_field" "--deletes=$deletes" "--ignore-fields=$joined_ignore"
+      "--topic=$topic" "--table=$table_label" "--table-kind=$table_kind" "--max-examples=$max_examples"
+  )
+  [[ -n "$allow_duplicates" ]] && reconcile_args+=(--allow-duplicates)
+  [[ -n "$json" ]] && reconcile_args+=(--json)
+
+  set +e
+  log "🧮 Comparing ($direction connector $connector${pk_mode:+, pk.mode $pk_mode}, deletes applied: $deletes)"
+  if [[ -n "$json" ]]
+  then
+      python3 -I "$root_folder/tools/connector-reconcile/reconcile.py" "${reconcile_args[@]}" >&3
+  else
+      python3 -I "$root_folder/tools/connector-reconcile/reconcile.py" "${reconcile_args[@]}"
+  fi
+  rc=$?
+  if [[ $rc -eq 2 ]]
+  then
+      logerror "❌ the comparison failed, see the error above"
+  fi
+  exit $rc
 
 }
 
@@ -154627,6 +155269,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    reconcile)
+      action="reconcile"
+      shift
+      playground_connector_reconcile_parse_requirements "$@"
+      shift $#
+      ;;
+
     convert)
       action="convert"
       shift
@@ -155542,6 +156191,305 @@ playground_connector_diff_parse_requirements() {
   fi
 
   # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_reconcile_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_reconcile_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector reconcile"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --table)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--table']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--table requires an argument: --table TABLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key-field | -k)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--key-field']+x} ]]; then
+            args['--key-field']="$escaped"
+          else
+            args['--key-field']="${args['--key-field']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--key-field requires an argument: --key-field, -k KEY-FIELD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --ignore-field)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--ignore-field']+x} ]]; then
+            args['--ignore-field']="$escaped"
+          else
+            args['--ignore-field']="${args['--ignore-field']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--ignore-field requires an argument: --ignore-field IGNORE-FIELD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --container)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --user | -u)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --database | -d)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--database']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--database requires an argument: --database, -d DATABASE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --rows-file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--rows-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--rows-file requires an argument: --rows-file ROWS-FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --direction)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--direction']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--direction requires an argument: --direction DIRECTION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-examples)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-examples']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-examples requires an argument: --max-examples MAX-EXAMPLES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-examples']:-} ]] || args['--max-examples']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--rows-file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--rows-file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--rows-file ROWS-FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-examples'] ]]; then
+    validation_output="$(validate_integer "${args['--max-examples']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-examples MAX-EXAMPLES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--direction']:-} ]] && [[ ! ${args['--direction']:-} =~ ^(sink|source)$ ]]; then
+    printf "%s\n" "--direction must be one of: sink, source" >&2
+    exit 1
+  fi
   if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
     printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
@@ -189937,6 +190885,11 @@ playground_connector_completion() {
         playground_connector_diff_completion "$completion_current" "$@"
         return
         ;;
+      reconcile)
+        shift
+        playground_connector_reconcile_completion "$completion_current" "$@"
+        return
+        ;;
       convert)
         shift
         playground_connector_convert_completion "$completion_current" "$@"
@@ -190131,7 +191084,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait validate diff convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate diff reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -190503,6 +191456,201 @@ playground_connector_diff_completion() {
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_reconcile_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --table)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--table"]=1
+
+        ;;
+      --key-field | -k)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --ignore-field)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --container)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --database | -d)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--database"]=1
+
+        ;;
+      --rows-file)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--rows-file"]=1
+
+        ;;
+      --direction)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "sink"
+            "source"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--direction"]=1
+
+        ;;
+      --max-examples)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-examples"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --table "$completion_current" --table
+    completion_flag_candidates --key-field "$completion_current" --key-field -k
+    completion_flag_candidates --ignore-field "$completion_current" --ignore-field
+    completion_flag_candidates --container "$completion_current" --container
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --database "$completion_current" --database -d
+    completion_flag_candidates --rows-file "$completion_current" --rows-file
+    completion_flag_candidates --direction "$completion_current" --direction
+    completion_flag_candidates --max-examples "$completion_current" --max-examples
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -195426,6 +196574,7 @@ run() {
     "connector wait") playground_connector_wait_command ;;
     "connector validate") playground_connector_validate_command ;;
     "connector diff") playground_connector_diff_command ;;
+    "connector reconcile") playground_connector_reconcile_command ;;
     "connector convert") playground_connector_convert_command ;;
     "connector error-recommendations") playground_connector_error_recommendations_command ;;
     "connector oracle-cdc-xstream") playground_connector_oracle_cdc_xstream_command ;;

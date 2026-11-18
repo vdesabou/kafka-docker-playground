@@ -30,7 +30,7 @@ The full catalog is `docs/which-command.md` (🥇 question → command, "Good to
 | Area | Commands |
 | --- | --- |
 | state of the run | `status`, `history`, `connector status`, `broker health`, `broker describe` |
-| a connector that fails / is slow | `connector diagnose`, `connector tasks`, `connector history`, `connector metrics`, `connector show-lag`, `connector offsets`, `topic dlq inspect\|replay`, `connector smt test`, `connector validate`, `connector diff` |
+| a connector that fails / is slow | `connector diagnose`, `connector tasks`, `connector history`, `connector metrics`, `connector show-lag`, `connector offsets`, `topic dlq inspect\|replay`, `connector smt test`, `connector validate`, `connector diff`, `connector reconcile` (topic vs table: lost, duplicated, different rows) |
 | logs and JVM | `container logs --errors`, `analyze logs` (customer bundles, CFK bundles), `analyze thread-dump\|gc-logs\|heap-dump\|flight-recorder\|jscissors`, `debug thread-dump\|heap-dump\|flight-recorder\|jscissors\|log-level` |
 | network | `debug tcp-dump`, `analyze tcp-dump`, `debug degrade-traffic\|block-traffic`, `tcp-proxy` |
 | connector versions | `connector-plugin info\|changelog\|config-diff\|config-key\|dependencies\|cve-scan\|sourcecode\|fm-versions`, `cp-changelog`, `repro bisect` |
