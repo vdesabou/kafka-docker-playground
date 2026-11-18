@@ -143,6 +143,7 @@ playground_usage() {
   printf "  %s   ☁️ What is still running in Confluent Cloud, and what it costs\n" "$(green "cloud-resources ccloud")                    "
   printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cloud-resources cleanup")                   "
   printf "  %s   🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n" "$(green "cloud-resources nightly-cleanup")           "
+  printf "  %s   💸 Every week, a notification when your cloud spend went above a threshold, or something billed is still running for you. Read-only, it never deletes anything\n" "$(green "cloud-resources cost-reminder")             "
   echo
   printf "%s\n" "$(bold "Cleanup commands:")"
   printf "  %s   🧨 Remove all docker images (including docker volumes)\n" "$(green "remove-all-docker-images")                  "
@@ -3925,7 +3926,7 @@ playground_ccloud_setup_usage() {
 playground_cloud_resources_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources\n\n"
-    printf "  ☁️ What the playground left behind in your cloud accounts, what it costs, and\n  cleaning it up\n  \n  Examples that talk to a real cloud create real resources, and an\n  interrupted run leaves them behind. These commands show what is still\n  alive and what you are being billed for:\n  \n    cloud-resources aws list            resources still up, scoped to you\n    cloud-resources aws costs           spend over a range of dates\n    cloud-resources aws costs-history   spend per month over the last year\n  \n  The same three exist for azure and ccloud (Confluent Cloud).\n  \n  🧹 Only one command deletes anything:\n  \n    cloud-resources cleanup             delete the leftovers in aws, gcp,\n                                        azure, ccloud and salesforce\n                                        (--resource, --dry-run first)\n  \n  🌙 and it can run by itself every night (Confluent Cloud, and AWS, GCP, Azure\n  with --resource):\n  \n    cloud-resources nightly-cleanup enable|disable|status\n\n"
+    printf "  ☁️ What the playground left behind in your cloud accounts, what it costs, and\n  cleaning it up\n  \n  Examples that talk to a real cloud create real resources, and an\n  interrupted run leaves them behind. These commands show what is still\n  alive and what you are being billed for:\n  \n    cloud-resources aws list            resources still up, scoped to you\n    cloud-resources aws costs           spend over a range of dates\n    cloud-resources aws costs-history   spend per month over the last year\n  \n  The same three exist for azure and ccloud (Confluent Cloud).\n  \n  🧹 Only one command deletes anything:\n  \n    cloud-resources cleanup             delete the leftovers in aws, gcp,\n                                        azure, ccloud and salesforce\n                                        (--resource, --dry-run first)\n  \n  🌙 and it can run by itself every night (Confluent Cloud, and AWS, GCP, Azure\n  with --resource):\n  \n    cloud-resources nightly-cleanup enable|disable|status\n  \n  💸 and a weekly reminder of what it cost and what still runs (read-only):\n  \n    cloud-resources cost-reminder enable|disable|status|run\n\n"
   else
     printf "playground cloud-resources - ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n\n"
   fi
@@ -3941,6 +3942,7 @@ playground_cloud_resources_usage() {
   printf "  %s   ☁️ What is still running in Confluent Cloud, and what it costs\n" "$(green "ccloud")         "
   printf "  %s   🧹 Cleanup cloud resources that were created by running examples from the playground\n" "$(green "cleanup")        "
   printf "  %s   🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n" "$(green "nightly-cleanup")"
+  printf "  %s   💸 Every week, a notification when your cloud spend went above a threshold, or something billed is still running for you. Read-only, it never deletes anything\n" "$(green "cost-reminder")  "
   echo
 
   # :command.long_usage
@@ -4778,6 +4780,219 @@ playground_cloud_resources_nightly_cleanup_status_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cloud_resources_cost_reminder_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cloud-resources cost-reminder\n\n"
+    printf "  💸 Every week, a notification when your cloud spend went above a threshold, or\n  something billed is still running for you. Read-only, it never deletes\n  anything\n  \n    enable     schedule it (default every Monday at 09:00), then run it once now\n    disable    remove the schedule\n    status     is it scheduled, when, and what the last runs found\n    run        the check, now\n  \n  The cleanups (nightly-cleanup) delete what the playground knows it\n  created. This reminder covers the rest: what they keep on purpose (your\n  own clusters of 'playground ccloud setup'), what was created by hand, or\n  a cloud you did not schedule for cleanup. For each --resource it gives:\n  \n    ccloud   💰 the cost of the last --days days of your resources, by\n             name (connectors *_<user>, clusters and environments\n             pg-<user>-*), next to the total of the organization; and\n             what still runs for you: connectors (RUNNING ones), clusters,\n             environments (playground cloud-resources ccloud list)\n    aws      💰 the cost of the resources tagged cflt_managed_id=<user>\n             (Cost Explorer), and the number of resources still up\n             (playground cloud-resources aws list)\n    azure    💰 the same with Cost Management (cloud-resources azure)\n  \n  A macOS notification only when your cost is at least --threshold (USD,\n  default 50), a connector still runs for you (RUNNING, billed per\n  task-hour), or a cloud could not be checked; otherwise the result is only\n  logged. Your own clusters alone never notify: they are there on purpose.\n  Billing data lags (Confluent Cloud up to 72 hours,\n  AWS 24 to 48 hours): the last days of the period can be incomplete.\n  \n  Nothing interactive: a cloud whose credentials can't be read without a\n  prompt is skipped and said so, as for the nightly cleanup (confluent\n  login --save, ~/.aws/credentials, an Azure service principal or a saved\n  az login session). The Confluent Cloud cost needs a role that can read\n  the billing of the organization.\n  \n  macOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\n  Mac wakes up if it was asleep at that time. Linux: a crontab line (logged,\n  no notification).\n\n"
+  else
+    printf "playground cloud-resources cost-reminder - 💸 Every week, a notification when your cloud spend went above a threshold, or something billed is still running for you. Read-only, it never deletes anything\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cloud-resources cost-reminder COMMAND\n"
+  printf "  playground cloud-resources cost-reminder [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   💸 Schedule the weekly cost reminder, then run it once now\n" "$(green "enable") "
+  printf "  %s   🛑 Remove the weekly cost reminder schedule\n" "$(green "disable")"
+  printf "  %s   🔎 Is the weekly cost reminder scheduled, when, and what did its last runs find\n" "$(green "status") "
+  printf "  %s   💸 Check now what your clouds cost over the last --days days and what still runs for you, as the weekly job does\n" "$(green "run")    "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cloud_resources_cost_reminder_enable_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cloud-resources cost-reminder enable\n\n"
+    printf "  💸 Schedule the weekly cost reminder, then run it once now\n  \n  Run it again to change the day, the time, the clouds or the threshold.\n  The job uses this checkout of the playground and the PATH of the shell\n  you run it from.\n\n"
+  else
+    printf "playground cloud-resources cost-reminder enable - 💸 Schedule the weekly cost reminder, then run it once now\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cloud-resources cost-reminder enable [OPTIONS]\n"
+  printf "  playground cloud-resources cost-reminder enable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--day DAY")"
+    printf "    📅 Day of the week of the run\n"
+    printf "    %s\n" "Allowed: sunday, monday, tuesday, wednesday, thursday, friday, saturday"
+    printf "    %s\n" "Default: monday"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--time TIME")"
+    printf "    🕘 Time of the run, HH:MM, local time\n"
+    printf "    %s\n" "Default: 09:00"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--resource RESOURCE (repeatable)")"
+    printf "    ☁️ Cloud to check (default: ccloud only)\n    \n    🎓 Tip: repeat it, --resource ccloud --resource aws --resource azure\n"
+    printf "    %s\n" "Allowed: ccloud, aws, azure"
+    printf "    %s\n" "Default: ccloud"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--threshold USD")"
+    printf "    💵 Notify when your cost over --days is at least this many US dollars (0:\n    notify every week)\n"
+    printf "    %s\n" "Default: 50"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--days DAYS")"
+    printf "    📆 Number of days of the cost period, ending today\n"
+    printf "    %s\n" "Default: 7"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cloud-resources cost-reminder enable\n"
+    printf "  playground cloud-resources cost-reminder enable --resource ccloud --resource\n  aws --threshold 20\n"
+    printf "  playground cloud-resources cost-reminder enable --day friday --time 17:00\n  --days 14\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cloud_resources_cost_reminder_disable_usage() {
+  printf "playground cloud-resources cost-reminder disable - 🛑 Remove the weekly cost reminder schedule\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cloud-resources cost-reminder disable\n"
+  printf "  playground cloud-resources cost-reminder disable --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cloud_resources_cost_reminder_status_usage() {
+  printf "playground cloud-resources cost-reminder status - 🔎 Is the weekly cost reminder scheduled, when, and what did its last runs find\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cloud-resources cost-reminder status [OPTIONS]\n"
+  printf "  playground cloud-resources cost-reminder status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--lines LINES")"
+    printf "    📄 Number of lines of the log to show\n"
+    printf "    %s\n" "Default: 40"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_cloud_resources_cost_reminder_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground cloud-resources cost-reminder run\n\n"
+    printf "  💸 Check now what your clouds cost over the last --days days and what still\n  runs for you, as the weekly job does\n  \n  Read-only.\n\n"
+  else
+    printf "playground cloud-resources cost-reminder run - 💸 Check now what your clouds cost over the last --days days and what still runs for you, as the weekly job does\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground cloud-resources cost-reminder run [OPTIONS]\n"
+  printf "  playground cloud-resources cost-reminder run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--resource RESOURCE (repeatable)")"
+    printf "    ☁️ Cloud to check (default: ccloud only)\n    \n    🎓 Tip: repeat it, --resource ccloud --resource aws --resource azure\n"
+    printf "    %s\n" "Allowed: ccloud, aws, azure"
+    printf "    %s\n" "Default: ccloud"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--threshold USD")"
+    printf "    💵 Notify when your cost over --days is at least this many US dollars (0:\n    notify every week)\n"
+    printf "    %s\n" "Default: 50"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--days DAYS")"
+    printf "    📆 Number of days of the cost period, ending today\n"
+    printf "    %s\n" "Default: 7"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--scheduled")"
+      printf "    ⏰ run by the launchd agent / crontab line: macOS notification when above the\n    threshold, a connector runs or a cloud was not checked\n"
+      echo
+
+    fi
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cloud-resources cost-reminder run\n"
+    printf "  playground cloud-resources cost-reminder run --resource ccloud --resource aws\n  --days 30\n"
     echo
 
   fi
@@ -38013,6 +38228,79 @@ function nightly_cleanup_files () {
   nightly_cleanup_log="$scheduled_job_log"
 }
 
+# ☁️ scheduled jobs reading a cloud with nobody to answer a prompt ('cloud-resources nightly-cleanup', 'cloud-resources
+# cost-reminder'): read the given variables from the secrets store, unless reading it may wait for someone (1Password
+# with no service account token asks for Touch ID)
+function unattended_load_secrets () {
+    if [ "$(get_secret_backend)" == "op" ]
+    then
+        op_load_service_account_token
+        if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]
+        then
+            return 0
+        fi
+    fi
+    load_secrets_env_vars "$@" 2> /dev/null
+}
+
+# unattended_cloud_check <aws|gcp|azure>: true when the cloud can be read without a prompt (no 'az login' in a browser,
+# no Touch ID, no exit 1 that would stop the other clouds), with its credentials loaded; otherwise sets
+# unattended_cloud_reason to why, and returns 1
+function unattended_cloud_check () {
+    local resource="$1" reason=""
+    case "$resource" in
+        aws)
+            unattended_load_secrets AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+            if ! command -v aws > /dev/null 2>&1
+            then
+                reason="the aws CLI is not installed"
+            elif [ ! -f "$HOME/.aws/credentials" ] && { [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; }
+            then
+                reason="no $HOME/.aws/credentials, and AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY not readable from the secrets store at night"
+            elif [ -z "$AWS_REGION" ] && [ -z "$(aws configure get region 2> /dev/null)" ]
+            then
+                reason="no region: AWS_REGION, or region in $HOME/.aws/config"
+            fi
+        ;;
+        gcp)
+            unattended_load_secrets GCP_PROJECT GCP_KEYFILE_CONTENT
+            if [ -z "$GCP_KEYFILE_CONTENT" ] || [ -z "$GCP_PROJECT" ]
+            then
+                reason="GCP_PROJECT / GCP_KEYFILE_CONTENT not readable from the secrets store at night"
+            elif ! docker info > /dev/null 2>&1
+            then
+                reason="Docker is not running (the GCP cleanup runs gcloud in a container)"
+            fi
+        ;;
+        azure)
+            unattended_load_secrets AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME
+            if ! command -v az > /dev/null 2>&1
+            then
+                reason="the az CLI is not installed"
+            elif [ -n "$AZ_CLIENT_ID" ] && [ -n "$AZ_CLIENT_SECRET" ] && [ -n "$AZ_TENANT_ID" ]
+            then
+                # service principal: login_and_maybe_set_azure_subscription logs in without a browser, but exits on
+                # a wrong subscription: checked in a subshell, so it can't stop the other clouds
+                if ! ( login_and_maybe_set_azure_subscription > /dev/null 2>&1 )
+                then
+                    reason="service principal login or subscription selection failed (AZ_CLIENT_ID, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME)"
+                fi
+            elif ! az account show > /dev/null 2>&1
+            then
+                reason="no service principal (AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID) and no saved az login session (it would open a browser)"
+            elif [ -z "$AZURE_SUBSCRIPTION_NAME" ] && [[ "$(az account show --query user.name -o tsv 2> /dev/null)" == *"confluent.io"* ]]
+            then
+                reason="confluent.io account without AZURE_SUBSCRIPTION_NAME"
+            elif [ -n "$AZURE_SUBSCRIPTION_NAME" ] && ! az account set --subscription "$AZURE_SUBSCRIPTION_NAME" > /dev/null 2>&1
+            then
+                reason="subscription $AZURE_SUBSCRIPTION_NAME not found"
+            fi
+        ;;
+    esac
+    unattended_cloud_reason="$reason"
+    [ -z "$reason" ]
+}
+
 # macOS notification of a scheduled job: scheduled_job_notify <title> <message> (nothing elsewhere, nor when osascript
 # is missing)
 function scheduled_job_notify () {
@@ -54123,79 +54411,16 @@ playground_cloud_resources_cleanup_command() {
       done
   }
 
-  # --nightly: read the given variables from the secrets store, unless reading it may wait for someone (1Password with no
-  # service account token asks for Touch ID): the job runs at night, nobody answers
-  function nightly_load_secrets () {
-      if [ "$(get_secret_backend)" == "op" ]
-      then
-          op_load_service_account_token
-          if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]
-          then
-              return 0
-          fi
-      fi
-      load_secrets_env_vars "$@" 2> /dev/null
-  }
-
-  # --nightly, AWS / GCP / Azure: true when the cloud $1 can be cleaned up without a prompt (no 'az login' in a browser,
-  # no Touch ID, no exit 1 that would stop the other clouds); otherwise says why, notifies and the cloud is skipped
+  # --nightly, AWS / GCP / Azure: true when the cloud $1 can be cleaned up without a prompt (unattended_cloud_check);
+  # otherwise says why, notifies and the cloud is skipped
   function nightly_cloud_ready () {
-      local resource="$1" reason=""
-      case "$resource" in
-          aws)
-              nightly_load_secrets AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
-              if ! command -v aws > /dev/null 2>&1
-              then
-                  reason="the aws CLI is not installed"
-              elif [ ! -f "$HOME/.aws/credentials" ] && { [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; }
-              then
-                  reason="no $HOME/.aws/credentials, and AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY not readable from the secrets store at night"
-              elif [ -z "$AWS_REGION" ] && [ -z "$(aws configure get region 2> /dev/null)" ]
-              then
-                  reason="no region: AWS_REGION, or region in $HOME/.aws/config"
-              fi
-          ;;
-          gcp)
-              nightly_load_secrets GCP_PROJECT GCP_KEYFILE_CONTENT
-              if [ -z "$GCP_KEYFILE_CONTENT" ] || [ -z "$GCP_PROJECT" ]
-              then
-                  reason="GCP_PROJECT / GCP_KEYFILE_CONTENT not readable from the secrets store at night"
-              elif ! docker info > /dev/null 2>&1
-              then
-                  reason="Docker is not running (the GCP cleanup runs gcloud in a container)"
-              fi
-          ;;
-          azure)
-              nightly_load_secrets AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME
-              if ! command -v az > /dev/null 2>&1
-              then
-                  reason="the az CLI is not installed"
-              elif [ -n "$AZ_CLIENT_ID" ] && [ -n "$AZ_CLIENT_SECRET" ] && [ -n "$AZ_TENANT_ID" ]
-              then
-                  # service principal: login_and_maybe_set_azure_subscription logs in without a browser, but exits on
-                  # a wrong subscription: checked in a subshell, so it can't stop the other clouds
-                  if ! ( login_and_maybe_set_azure_subscription > /dev/null 2>&1 )
-                  then
-                      reason="service principal login or subscription selection failed (AZ_CLIENT_ID, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME)"
-                  fi
-              elif ! az account show > /dev/null 2>&1
-              then
-                  reason="no service principal (AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID) and no saved az login session (it would open a browser)"
-              elif [ -z "$AZURE_SUBSCRIPTION_NAME" ] && [[ "$(az account show --query user.name -o tsv 2> /dev/null)" == *"confluent.io"* ]]
-              then
-                  reason="confluent.io account without AZURE_SUBSCRIPTION_NAME"
-              elif [ -n "$AZURE_SUBSCRIPTION_NAME" ] && ! az account set --subscription "$AZURE_SUBSCRIPTION_NAME" > /dev/null 2>&1
-              then
-                  reason="subscription $AZURE_SUBSCRIPTION_NAME not found"
-              fi
-          ;;
-      esac
-      if [ -n "$reason" ]
+      local resource="$1"
+      if ! unattended_cloud_check "$resource"
       then
-          logwarn "🌙⏭️ skipping $resource: $reason"
+          logwarn "🌙⏭️ skipping $resource: $unattended_cloud_reason"
           if [[ -z "$dry_run" ]]
           then
-              nightly_cleanup_notify "skipped $resource: $reason"
+              nightly_cleanup_notify "skipped $resource: $unattended_cloud_reason"
           fi
           return 1
       fi
@@ -54858,6 +55083,257 @@ playground_cloud_resources_nightly_cleanup_status_command() {
       tail -n "$lines" "$scheduled_job_log"
   else
       log "📄 no run yet ($scheduled_job_log)"
+  fi
+
+}
+
+# :command.function
+playground_cloud_resources_cost_reminder_enable_command() {
+
+  # src/commands/cloud-resources/cost-reminder/enable.sh
+  day="${args[--day]}"
+  time="${args[--time]}"
+  # Convert the space delimited string to an array
+  eval "resources=(${args[--resource]})"
+  threshold="${args[--threshold]}"
+  days="${args[--days]}"
+
+  parse_schedule_time "$time" || exit 1
+  if [ "$days" -lt 1 ] || [ "$days" -gt 31 ]
+  then
+      logerror "❌ --days $days must be between 1 and 31"
+      exit 1
+  fi
+  week=(sunday monday tuesday wednesday thursday friday saturday)
+  for i in "${!week[@]}"
+  do
+      [ "${week[$i]}" == "$day" ] && weekday=$i
+  done
+
+  resource_args=()
+  for resource in "${resources[@]}"
+  do
+      resource_args+=(--resource "$resource")
+  done
+
+  scheduled_job_install cost-reminder "weekday=$weekday" "$time_hour" "$time_minute" cloud-resources cost-reminder run "${resource_args[@]}" --threshold "$threshold" --days "$days" --scheduled || exit 1
+  log "💸 cost reminder of ${resources[*]} scheduled every $day at $(printf '%02d:%02d' $time_hour $time_minute), last $days days, threshold \$$threshold ($(scheduled_job_where cost-reminder))"
+  log "📄 log: $scheduled_job_log"
+  if [[ " ${resources[*]} " == *" ccloud "* ]]
+  then
+      log "🔑 the confluent CLI must stay logged in: confluent login --save"
+  fi
+  log "🔎 what it finds, as of now:"
+  playground cloud-resources cost-reminder run "${resource_args[@]}" --threshold "$threshold" --days "$days"
+  log "👉 playground cloud-resources cost-reminder status   # after the first run"
+
+}
+
+# :command.function
+playground_cloud_resources_cost_reminder_disable_command() {
+
+  # src/commands/cloud-resources/cost-reminder/disable.sh
+  if scheduled_job_remove cost-reminder
+  then
+      log "🛑 cost reminder disabled (its log stays in $scheduled_job_log)"
+  else
+      log "🤷 the cost reminder was not scheduled"
+  fi
+
+}
+
+# :command.function
+playground_cloud_resources_cost_reminder_status_command() {
+
+  # src/commands/cloud-resources/cost-reminder/status.sh
+  lines="${args[--lines]}"
+  if scheduled_job_info cost-reminder
+  then
+      resources=$(scheduled_job_flag_values --resource)
+      threshold=$(scheduled_job_flag_values --threshold)
+      days=$(scheduled_job_flag_values --days)
+      if [ "$scheduled_job_loaded" == "1" ]
+      then
+          log "💸 cost reminder of ${resources:-ccloud} scheduled every ${scheduled_job_day:-day} at $scheduled_job_time, last ${days:-7} days, threshold \$${threshold:-50} ($(scheduled_job_where cost-reminder))"
+      else
+          logwarn "⚠️ $scheduled_job_plist exists but is not loaded: playground cloud-resources cost-reminder enable"
+      fi
+  else
+      log "💤 the cost reminder is not scheduled: playground cloud-resources cost-reminder enable"
+  fi
+  if [ -f "$scheduled_job_log" ]
+  then
+      log "📄 last $lines lines of $scheduled_job_log:"
+      tail -n "$lines" "$scheduled_job_log"
+  else
+      log "📄 no run yet ($scheduled_job_log)"
+  fi
+
+}
+
+# :command.function
+playground_cloud_resources_cost_reminder_run_command() {
+
+  # src/commands/cloud-resources/cost-reminder/run.sh
+  # Convert the space delimited string to an array
+  eval "resources=(${args[--resource]})"
+  threshold="${args[--threshold]}"
+  days="${args[--days]}"
+  scheduled="${args[--scheduled]}"
+  user="${USER}"
+
+  if [ "$days" -lt 1 ] || [ "$days" -gt 31 ]
+  then
+      # the Confluent Cloud billing API takes one month at most
+      logerror "❌ --days $days must be between 1 and 31"
+      exit 1
+  fi
+  if [ "$threshold" -lt 0 ]
+  then
+      logerror "❌ --threshold $threshold must be 0 or more"
+      exit 1
+  fi
+
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      start_date=$(date -v-"${days}"d +%Y-%m-%d)
+  else
+      start_date=$(date -d "$days days ago" +%Y-%m-%d)
+  fi
+  end_date=$(date +%Y-%m-%d)
+
+  tmp_dir=$(mktemp -d -t pg-cost-reminder-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if [[ -n "$scheduled" ]]
+  then
+      log "💸 cost reminder of $(date '+%Y-%m-%d %H:%M') for $user: ${resources[*]}, $start_date → $end_date, threshold \$$threshold"
+  else
+      log "💸 cost of your resources from $start_date to $end_date (billing lags: the last days can be incomplete), and what still runs for you: ${resources[*]}"
+  fi
+
+  total="0"
+  parts=()        # one short text per cloud, for the notification
+  running=()      # what still runs and bills by the hour, for the notification
+  skipped=()
+
+  add_cost () {
+      total=$(awk -v a="$total" -v b="$1" 'BEGIN { printf "%.2f", a + b }')
+  }
+
+  for resource in "${resources[@]}"
+  do
+      case "$resource" in
+          ccloud)
+              if ! command -v confluent > /dev/null 2>&1
+              then
+                  logwarn "⏭️ skipping ccloud: the confluent CLI is not installed"
+                  skipped+=("ccloud")
+                  continue
+              fi
+              bill="$tmp_dir/ccloud-billing.json"
+              if ! confluent billing cost list --start-date "$start_date" --end-date "$end_date" --output json > "$bill" 2> "$tmp_dir/ccloud-billing.err" || ! jq -e 'type == "array"' "$bill" > /dev/null 2>&1
+              then
+                  logwarn "⏭️ ccloud cost not available: $(head -c 300 "$tmp_dir/ccloud-billing.err" | tr '\n' ' ')(logged out? run: confluent login --save; reading the billing needs a role on the organization)"
+                  skipped+=("ccloud cost")
+              else
+                  # your resources, by name: connectors <TYPE>_<user>, clusters and environments pg-<user>-*
+                  yours=$(jq -r --arg u "$user" '[.[] | select((.resource_name // "") | (endswith("_" + $u) or startswith("pg-" + $u))) | .amount | sub("[$,]"; ""; "g") | tonumber] | add // 0 | . * 100 | round / 100' "$bill")
+                  org=$(jq -r '[.[] | .amount | sub("[$,]"; ""; "g") | tonumber] | add // 0 | . * 100 | round / 100' "$bill")
+                  log "💰 ccloud: \$$yours for your resources (organization: \$$org)"
+                  jq -r --arg u "$user" '[.[] | select((.resource_name // "") | (endswith("_" + $u) or startswith("pg-" + $u))) | {n: .resource_name, p: .product, a: (.amount | sub("[$,]"; ""; "g") | tonumber)}]
+                      | group_by(.n) | map({n: .[0].n, p: .[0].p, a: (map(.a) | add)}) | sort_by(-.a) | .[] | select(.a >= 0.01)
+                      | "     \(.p | ascii_downcase)\t\(.n)\t$\(.a * 100 | round / 100)"' "$bill" | column -t -s $'\t'
+                  add_cost "$yours"
+                  parts+=("ccloud \$$yours")
+              fi
+              list="$tmp_dir/ccloud-list.json"
+              if playground --output-level ERROR cloud-resources ccloud list --json > "$list" 2> /dev/null && jq -e . "$list" > /dev/null 2>&1
+              then
+                  nb_connectors=$(jq '.connectors | length' "$list")
+                  nb_running=$(jq '[.connectors[] | select(.status == "RUNNING")] | length' "$list")
+                  clusters=$(jq -r '[.clusters[].name] | join(", ")' "$list")
+                  log "🤖 ccloud: $nb_connectors connector(s) named *_$user ($nb_running RUNNING), $(jq '.clusters | length' "$list") cluster(s) pg-$user-*${clusters:+ ($clusters)}, $(jq '.environments | length' "$list") environment(s) pg-$user*"
+                  jq -r '.connectors[] | "     \(.status)\t\(.name)\t\(.cluster_name // .cluster // "")"' "$list" | column -t -s $'\t'
+                  if [ "$nb_running" -gt 0 ]
+                  then
+                      running+=("$nb_running ccloud connector(s) RUNNING")
+                  fi
+              else
+                  logwarn "⏭️ ccloud: could not list what still runs (playground cloud-resources ccloud list)"
+                  skipped+=("ccloud list")
+              fi
+          ;;
+          aws|azure)
+              if ! unattended_cloud_check "$resource"
+              then
+                  logwarn "⏭️ skipping $resource: $unattended_cloud_reason"
+                  skipped+=("$resource")
+                  continue
+              fi
+              cost=$(playground --output-level ERROR cloud-resources "$resource" costs --start-date "$start_date" --end-date "$end_date" --display-only-total-cost 2> /dev/null | tail -1)
+              if [[ "$cost" =~ ^[0-9]+(\.[0-9]+)?$ ]]
+              then
+                  cost=$(printf '%.2f' "$cost")
+                  log "💰 $resource: \$$cost for the resources tagged cflt_managed_id=$user"
+                  add_cost "$cost"
+                  parts+=("$resource \$$cost")
+              else
+                  logwarn "⏭️ $resource cost not available (playground cloud-resources $resource costs)"
+                  skipped+=("$resource cost")
+              fi
+              playground cloud-resources "$resource" list --user "$user" > "$tmp_dir/$resource-list.txt" 2>&1
+              nb_left=$(grep -c "🔥" "$tmp_dir/$resource-list.txt" | tr -d ' ')
+              log "📋 $resource: $nb_left resource(s) still up for $user"
+              grep "🔥" "$tmp_dir/$resource-list.txt" | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/^.*🔥/     🔥/'
+          ;;
+      esac
+  done
+
+  notify=""
+  if [ ${#parts[@]} -gt 0 ] && awk -v t="$total" -v th="$threshold" 'BEGIN { exit !(t >= th) }'
+  then
+      notify="cost"
+  fi
+  if [ ${#running[@]} -gt 0 ]
+  then
+      notify="${notify:+$notify, }running"
+  fi
+  if [ ${#skipped[@]} -gt 0 ]
+  then
+      # a logged out CLI would otherwise keep the reminder silent every week
+      notify="${notify:+$notify, }skipped"
+  fi
+
+  summary="last $days days: \$$total"
+  if [ ${#parts[@]} -gt 0 ]
+  then
+      summary+=" ($(IFS=,; echo "${parts[*]}" | sed 's/,/, /g'))"
+  fi
+  if [ ${#running[@]} -gt 0 ]
+  then
+      summary+="; $(IFS=,; echo "${running[*]}" | sed 's/,/, /g')"
+  fi
+  if [ ${#skipped[@]} -gt 0 ]
+  then
+      summary+="; not checked: $(IFS=,; echo "${skipped[*]}" | sed 's/,/, /g')"
+  fi
+
+  if [[ -n "$notify" ]]
+  then
+      logwarn "💸 $summary"
+      log "👉 playground cloud-resources ccloud list, playground cloud-resources <cloud> costs, playground cloud-resources cleanup --resource <cloud> --dry-run"
+      if [[ -n "$scheduled" ]]
+      then
+          scheduled_job_notify "💸 kafka-docker-playground cloud costs" "$summary"
+      fi
+  else
+      log "🟢 $summary: under \$$threshold, no connector running, every cloud checked: no notification"
   fi
 
 }
@@ -111855,6 +112331,13 @@ playground_cloud_resources_parse_requirements() {
       shift $#
       ;;
 
+    cost-reminder)
+      action="cost-reminder"
+      shift
+      playground_cloud_resources_cost_reminder_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_cloud_resources_usage >&2
@@ -113826,6 +114309,580 @@ playground_cloud_resources_nightly_cleanup_status_parse_requirements() {
       exit 1
     fi
   fi
+
+}
+
+# :command.parse_requirements
+playground_cloud_resources_cost_reminder_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cloud_resources_cost_reminder_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    enable)
+      action="enable"
+      shift
+      playground_cloud_resources_cost_reminder_enable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    disable)
+      action="disable"
+      shift
+      playground_cloud_resources_cost_reminder_disable_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_cloud_resources_cost_reminder_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    run)
+      action="run"
+      shift
+      playground_cloud_resources_cost_reminder_run_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_cloud_resources_cost_reminder_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cloud_resources_cost_reminder_enable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cloud_resources_cost_reminder_enable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cloud-resources cost-reminder enable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --day)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--day']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--day requires an argument: --day DAY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --time)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--time']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--time requires an argument: --time TIME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --resource)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--resource']+x} ]]; then
+            args['--resource']="$escaped"
+          elif [[ -z "${unique_lookup["--resource:${escaped}"]:-}" ]]; then
+            args['--resource']="${args['--resource']} $escaped"
+          fi
+          unique_lookup["--resource:${escaped}"]=1
+          shift
+          shift
+        else
+          printf "%s\n" "--resource requires an argument: --resource RESOURCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --threshold)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--threshold']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--threshold requires an argument: --threshold USD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --days)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--days']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--days requires an argument: --days DAYS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--day']:-} ]] || args['--day']="monday"
+  [[ -n ${args['--time']:-} ]] || args['--time']="09:00"
+  [[ -n ${args['--resource']:-} ]] || args['--resource']="ccloud"
+  [[ -n ${args['--threshold']:-} ]] || args['--threshold']="50"
+  [[ -n ${args['--days']:-} ]] || args['--days']="7"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--threshold'] ]]; then
+    validation_output="$(validate_integer "${args['--threshold']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--threshold USD" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--days'] ]]; then
+    validation_output="$(validate_integer "${args['--days']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--days DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--day']:-} ]] && [[ ! ${args['--day']:-} =~ ^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$ ]]; then
+    printf "%s\n" "--day must be one of: sunday, monday, tuesday, wednesday, thursday, friday, saturday" >&2
+    exit 1
+  fi
+  input_array=''
+  eval "input_array=(${args[--resource]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(ccloud|aws|azure)$ ]]; then
+      printf "%s\n" "--resource must be one of: ccloud, aws, azure" >&2
+      exit 1
+    fi
+  done
+
+}
+
+# :command.parse_requirements
+playground_cloud_resources_cost_reminder_disable_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cloud_resources_cost_reminder_disable_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cloud-resources cost-reminder disable"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_cloud_resources_cost_reminder_status_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cloud_resources_cost_reminder_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cloud-resources cost-reminder status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --lines)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--lines']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--lines requires an argument: --lines LINES" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--lines']:-} ]] || args['--lines']="40"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--lines'] ]]; then
+    validation_output="$(validate_integer "${args['--lines']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--lines LINES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_cloud_resources_cost_reminder_run_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_cloud_resources_cost_reminder_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="cloud-resources cost-reminder run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --resource)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--resource']+x} ]]; then
+            args['--resource']="$escaped"
+          elif [[ -z "${unique_lookup["--resource:${escaped}"]:-}" ]]; then
+            args['--resource']="${args['--resource']} $escaped"
+          fi
+          unique_lookup["--resource:${escaped}"]=1
+          shift
+          shift
+        else
+          printf "%s\n" "--resource requires an argument: --resource RESOURCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --threshold)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--threshold']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--threshold requires an argument: --threshold USD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --days)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--days']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--days requires an argument: --days DAYS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --scheduled)
+
+        # :flag.case_no_arg
+        args['--scheduled']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--resource']:-} ]] || args['--resource']="ccloud"
+  [[ -n ${args['--threshold']:-} ]] || args['--threshold']="50"
+  [[ -n ${args['--days']:-} ]] || args['--days']="7"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--threshold'] ]]; then
+    validation_output="$(validate_integer "${args['--threshold']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--threshold USD" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--days'] ]]; then
+    validation_output="$(validate_integer "${args['--days']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--days DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  input_array=''
+  eval "input_array=(${args[--resource]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(ccloud|aws|azure)$ ]]; then
+      printf "%s\n" "--resource must be one of: ccloud, aws, azure" >&2
+      exit 1
+    fi
+  done
 
 }
 
@@ -167321,6 +168378,11 @@ playground_cloud_resources_completion() {
         playground_cloud_resources_nightly_cleanup_completion "$completion_current" "$@"
         return
         ;;
+      cost-reminder)
+        shift
+        playground_cloud_resources_cost_reminder_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -167330,7 +168392,7 @@ playground_cloud_resources_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" aws azure ccloud cleanup nightly-cleanup
+  completion_candidates "$completion_current" aws azure ccloud cleanup nightly-cleanup cost-reminder
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -168087,6 +169149,275 @@ playground_cloud_resources_nightly_cleanup_status_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --lines "$completion_current" --lines
+  fi
+
+}
+
+# :command.completion_function
+playground_cloud_resources_cost_reminder_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      enable)
+        shift
+        playground_cloud_resources_cost_reminder_enable_completion "$completion_current" "$@"
+        return
+        ;;
+      disable)
+        shift
+        playground_cloud_resources_cost_reminder_disable_completion "$completion_current" "$@"
+        return
+        ;;
+      status)
+        shift
+        playground_cloud_resources_cost_reminder_status_completion "$completion_current" "$@"
+        return
+        ;;
+      run)
+        shift
+        playground_cloud_resources_cost_reminder_run_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" enable disable status run
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_cloud_resources_cost_reminder_enable_completion() {
+  local completion_current="$1"
+  local -A completion_used_flag_values=()
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --day)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "sunday"
+            "monday"
+            "tuesday"
+            "wednesday"
+            "thursday"
+            "friday"
+            "saturday"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--day"]=1
+
+        ;;
+      --time)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--time"]=1
+
+        ;;
+      --resource)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ccloud"
+            "aws"
+            "azure"
+          )
+          local completion_value
+          for completion_value in "${completion_values[@]}"; do
+            if [[ -z "${completion_used_flag_values["--resource:$completion_value"]:-}" ]]; then
+              completion_candidates "$completion_current" "$completion_value"
+            fi
+          done
+
+          return
+        fi
+        completion_used_flag_values["--resource:$1"]=1
+        shift
+
+        ;;
+      --threshold)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--threshold"]=1
+
+        ;;
+      --days)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--days"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --day "$completion_current" --day
+    completion_flag_candidates --time "$completion_current" --time
+    completion_flag_candidates --resource "$completion_current" --resource
+    completion_flag_candidates --threshold "$completion_current" --threshold
+    completion_flag_candidates --days "$completion_current" --days
+  fi
+
+}
+
+# :command.completion_function
+playground_cloud_resources_cost_reminder_disable_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_cloud_resources_cost_reminder_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --lines)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--lines"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --lines "$completion_current" --lines
+  fi
+
+}
+
+# :command.completion_function
+playground_cloud_resources_cost_reminder_run_completion() {
+  local completion_current="$1"
+  local -A completion_used_flag_values=()
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --resource)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ccloud"
+            "aws"
+            "azure"
+          )
+          local completion_value
+          for completion_value in "${completion_values[@]}"; do
+            if [[ -z "${completion_used_flag_values["--resource:$completion_value"]:-}" ]]; then
+              completion_candidates "$completion_current" "$completion_value"
+            fi
+          done
+
+          return
+        fi
+        completion_used_flag_values["--resource:$1"]=1
+        shift
+
+        ;;
+      --threshold)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--threshold"]=1
+
+        ;;
+      --days)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--days"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --resource "$completion_current" --resource
+    completion_flag_candidates --threshold "$completion_current" --threshold
+    completion_flag_candidates --days "$completion_current" --days
   fi
 
 }
@@ -193809,6 +195140,11 @@ run() {
     "cloud-resources nightly-cleanup enable") playground_cloud_resources_nightly_cleanup_enable_command ;;
     "cloud-resources nightly-cleanup disable") playground_cloud_resources_nightly_cleanup_disable_command ;;
     "cloud-resources nightly-cleanup status") playground_cloud_resources_nightly_cleanup_status_command ;;
+    "cloud-resources cost-reminder") playground_cloud_resources_cost_reminder_command ;;
+    "cloud-resources cost-reminder enable") playground_cloud_resources_cost_reminder_enable_command ;;
+    "cloud-resources cost-reminder disable") playground_cloud_resources_cost_reminder_disable_command ;;
+    "cloud-resources cost-reminder status") playground_cloud_resources_cost_reminder_status_command ;;
+    "cloud-resources cost-reminder run") playground_cloud_resources_cost_reminder_run_command ;;
     "cleanup-cloud-resources") playground_cleanup_cloud_resources_command ;;
     "ccloud-costs") playground_ccloud_costs_command ;;
     "ccloud-costs-history") playground_ccloud_costs_history_command ;;
