@@ -213,6 +213,8 @@ commands:
 
 - import: src/commands/cp-changelog.yml
 
+- import: src/commands/ccloud-changelog.yml
+
 - import: src/commands/repro.yml
 
 - import: src/commands/get-docker-compose.yml

@@ -135,6 +135,7 @@ playground_usage() {
   printf "  %s   🧑‍🎓 Open Confluent documentation of currently running example\n" "$(green "open-docs")                                 "
   printf "  %s   📜 Open playground changelog (https://kafka-docker-playground.io/#/changelog)\n" "$(green "open-changelog")                            "
   printf "  %s   📜 Show what changed in Confluent Platform between two versions\n" "$(green "cp-changelog")                              "
+  printf "  %s   📰 Search the Confluent Cloud release notes by date, connector, category or text\n" "$(green "ccloud-changelog")                          "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -6759,6 +6760,88 @@ playground_cp_changelog_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground cp-changelog --from 8.3.0\n  playground cp-changelog --from 8.1.4 --to 8.3.2 --component schema-registry\n  --grep \"anyOf|allOf\"\n  playground cp-changelog --from 7.9.3 --security\n  playground cp-changelog --from 8.2.0 --component kafka --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ccloud_changelog_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-changelog\n\n"
+    printf "  📰 Search the Confluent Cloud release notes by date, connector, category or\n  text\n  \n  Reads the release notes feed of docs.confluent.io\n  (https://docs.confluent.io/cloud/current/release-notes.xml, the whole\n  history since 2019) and lists one line per change, grouped by day, newest\n  first, with the link to the release notes of the day.\n  \n  It answers \"the fully managed connector started behaving differently on\n  November 6: did Confluent ship something around that day?\" (--around) or\n  \"since when does the Azure Blob Storage Sink support this option?\"\n  (--connector) in one call, with a public page to quote to the customer.\n  \n  --connector matches the changes that link the Confluent Cloud page of the\n  connector, not a fuzzy name: give the connector class (AzureBlobSink,\n  resolved through the README of its ccloud/fm-* example), the example\n  folder (fm-azure-blob-storage-sink) or the page (cc-azure-blob-sink).\n  Anything else is searched in the text.\n  \n  Without a date, --connector or --grep, the last 30 days are shown. With\n  --connector or --grep, the whole history is searched.\n  \n  ⚠️ The release notes are dated, not versioned: to know which connector\n  version a cc-connect image ships, use 'playground connector-plugin\n  fm-versions'. Categories are derived from keywords and links. The feed is\n  cached for one day in /tmp/ccloud-changelog (--force-refresh).\n  \n  🎓 Tip: for Confluent Platform, use 'playground cp-changelog'\n\n"
+  else
+    printf "playground ccloud-changelog - 📰 Search the Confluent Cloud release notes by date, connector, category or text\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-changelog [OPTIONS]\n"
+  printf "  playground ccloud-changelog --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    📅 First day to show (included), YYYY-MM-DD\n"
+    printf "    %s\n" "Conflicts: --around"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--until UNTIL")"
+    printf "    📅 Last day to show (included), YYYY-MM-DD\n    \n    Default is today\n"
+    printf "    %s\n" "Conflicts: --around"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--around AROUND")"
+    printf "    🎯 Day of interest (the day a customer saw the problem), YYYY-MM-DD: show the\n    changes of the --days before and after it\n"
+    printf "    %s\n" "Conflicts: --since, --until"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--days DAYS")"
+    printf "    🔢 With --around: number of days before and after it (default 7)\n    \n    Alone (or with --until): the last N days\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (repeatable)")"
+    printf "    🔌 Only show the changes of this fully managed connector (can be repeated)\n    \n    A connector class (AzureBlobSink, confluentinc/AzureBlobSink), a ccloud/fm-*\n    example folder (fm-azure-blob-storage-sink),\n    a Confluent Cloud page (cc-azure-blob-sink or its URL), or else any text\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--category CATEGORY (repeatable)")"
+    printf "    🏷️ Only show the changes of this category (can be repeated)\n"
+    printf "    %s\n" "Allowed: connectors, flink, schema-registry, tableflow, ksqldb, networking, security, cli, terraform, cluster-linking, other"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep GREP")"
+    printf "    🔎 Only show the changes matching this regular expression (case insensitive)\n    \n    Example: --grep \"partitioner|BACKUP_FULL_RECORD\"\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force-refresh")"
+    printf "    ☢️ Force refresh.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ccloud-changelog\n  playground ccloud-changelog --around 2026-11-06 --category connectors\n  playground ccloud-changelog --connector AzureBlobSink\n  playground ccloud-changelog --connector fm-salesforce-cdc-source --since\n  2026-01-01\n  playground ccloud-changelog --category flink --days 90 --grep \"snapshot|query\"\n  playground ccloud-changelog --connector SnowflakeSink --json\n"
     echo
 
   fi
@@ -61183,6 +61266,87 @@ playground_cp_changelog_command() {
 }
 
 # :command.function
+playground_ccloud_changelog_command() {
+
+  # src/commands/ccloud-changelog.sh
+  since="${args[--since]}"
+  until="${args[--until]}"
+  around="${args[--around]}"
+  days="${args[--days]}"
+  grep="${args[--grep]}"
+  json="${args[--json]}"
+  force_refresh="${args[--force-refresh]}"
+  eval "connectors=(${args[--connector]})"
+  eval "categories=(${args[--category]})"
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required"
+      exit 1
+  fi
+
+  changelog_args=()
+  [[ -n "$since" ]] && changelog_args+=(--since "$since")
+  [[ -n "$until" ]] && changelog_args+=(--until "$until")
+  [[ -n "$around" ]] && changelog_args+=(--around "$around")
+  [[ -n "$days" ]] && changelog_args+=(--days "$days")
+  [[ -n "$grep" ]] && changelog_args+=(--grep "$grep")
+  [[ -n "$force_refresh" ]] && changelog_args+=(--force-refresh)
+  for connector in "${connectors[@]}"
+  do
+      changelog_args+=(--connector "$connector")
+  done
+  for category in "${categories[@]}"
+  do
+      changelog_args+=(--category "$category")
+  done
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  if ! python3 -I "$root_folder/tools/ccloud-changelog/ccloud_changelog.py" "${changelog_args[@]}" > $tmp_dir/changelog.json 2> $tmp_dir/stderr
+  then
+      logerror "$(cat $tmp_dir/stderr)"
+      exit 1
+  fi
+  while IFS= read -r line
+  do
+      [[ -n "$line" ]] && logwarn "$line"
+  done < $tmp_dir/stderr
+
+  if [[ -n "$json" ]]
+  then
+      cat $tmp_dir/changelog.json
+      exit 0
+  fi
+
+  nb_days=$(jq '.days | length' $tmp_dir/changelog.json)
+  nb_changes=$(jq '[.days[].changes | length] | add // 0' $tmp_dir/changelog.json)
+  range=$(jq -r '
+    if .since and .until then "from \(.since) to \(.until)"
+    elif .since then "since \(.since)"
+    elif .until then "up to \(.until)"
+    else "since \(.oldest)" end' $tmp_dir/changelog.json)
+  filters=$(jq -r '[
+    (if .connectors then "connector \(.connectors | join(" or "))" else empty end),
+    (if .categories then "category \(.categories | join(" or "))" else empty end),
+    (if .grep then "matching \"\(.grep)\"" else empty end)
+    ] | if length > 0 then ", " + join(", ") else "" end' $tmp_dir/changelog.json)
+  log "📰 Confluent Cloud release notes $range$filters: $nb_changes change(s) in $nb_days day(s)"
+
+  if [ "$nb_days" == "0" ]
+  then
+      log "🤷 no matching change (latest release notes: $(jq -r '.latest' $tmp_dir/changelog.json))"
+  else
+      jq -r '.days[] |
+        "📅 \(.date) - \(.changes | length) change(s) - 🌐 \(.link)",
+        (.changes[] | "   • [\(.categories | join(", "))] \(if .section then "\(.section) → " else "" end)\(.text)")' $tmp_dir/changelog.json
+  fi
+  log "🌐 all release notes: $(jq -r '.page' $tmp_dir/changelog.json)"
+
+}
+
+# :command.function
 playground_repro_export_command() {
 
   # src/commands/repro/export.sh
@@ -105063,6 +105227,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    ccloud-changelog)
+      action="ccloud-changelog"
+      shift
+      playground_ccloud_changelog_parse_requirements "$@"
+      shift $#
+      ;;
+
     repro)
       action="repro"
       shift
@@ -119863,6 +120034,275 @@ playground_cp_changelog_parse_requirements() {
   for i in "${input_array[@]}"; do
     if [[ ! $i =~ ^(kafka|schema-registry|ksqldb|rest-proxy|common)$ ]]; then
       printf "%s\n" "--component must be one of: kafka, schema-registry, ksqldb, rest-proxy, common" >&2
+      exit 1
+    fi
+  done
+
+}
+
+# :command.parse_requirements
+playground_ccloud_changelog_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_changelog_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-changelog"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --since)
+        # :flag.conflicts
+        if [[ -n "${args['--around']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--around" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --until)
+        # :flag.conflicts
+        if [[ -n "${args['--around']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--around" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--until']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--until requires an argument: --until UNTIL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --around)
+        # :flag.conflicts
+        for conflict in --since --until; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--around']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--around requires an argument: --around AROUND" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --days)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--days']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--days requires an argument: --days DAYS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--connector']+x} ]]; then
+            args['--connector']="$escaped"
+          else
+            args['--connector']="${args['--connector']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --category)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--category']+x} ]]; then
+            args['--category']="$escaped"
+          else
+            args['--category']="${args['--category']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--category requires an argument: --category CATEGORY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep GREP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force-refresh)
+
+        # :flag.case_no_arg
+        args['--force-refresh']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--since'] ]]; then
+    validation_output="$(validate_not_empty "${args['--since']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--since SINCE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--until'] ]]; then
+    validation_output="$(validate_not_empty "${args['--until']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--until UNTIL" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--around'] ]]; then
+    validation_output="$(validate_not_empty "${args['--around']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--around AROUND" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--days'] ]]; then
+    validation_output="$(validate_integer "${args['--days']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--days DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--connector'] ]]; then
+    values=''
+    eval "values=(${args['--connector']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_not_empty "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--connector, -c CONNECTOR" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :flag.validations
+  if [[ -v args['--grep'] ]]; then
+    validation_output="$(validate_not_empty "${args['--grep']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--grep GREP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  input_array=''
+  eval "input_array=(${args[--category]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(connectors|flink|schema-registry|tableflow|ksqldb|networking|security|cli|terraform|cluster-linking|other)$ ]]; then
+      printf "%s\n" "--category must be one of: connectors, flink, schema-registry, tableflow, ksqldb, networking, security, cli, terraform, cluster-linking, other" >&2
       exit 1
     fi
   done
@@ -166153,6 +166593,11 @@ playground_completion() {
         playground_cp_changelog_completion "$completion_current" "$@"
         return
         ;;
+      ccloud-changelog)
+        shift
+        playground_ccloud_changelog_completion "$completion_current" "$@"
+        return
+        ;;
       repro)
         shift
         playground_repro_completion "$completion_current" "$@"
@@ -166307,7 +166752,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -172854,6 +173299,134 @@ playground_cp_changelog_completion() {
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --grep "$completion_current" --grep
     completion_flag_candidates --security "$completion_current" --security
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --force-refresh "$completion_current" --force-refresh
+  fi
+
+}
+
+# :command.completion_function
+playground_ccloud_changelog_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --since)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--since"]=1
+        completion_blocked_flags["--around"]=1
+
+        ;;
+      --until)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--until"]=1
+        completion_blocked_flags["--around"]=1
+
+        ;;
+      --around)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--around"]=1
+        completion_blocked_flags["--since"]=1
+        completion_blocked_flags["--until"]=1
+
+        ;;
+      --days)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--days"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --category)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "connectors"
+            "flink"
+            "schema-registry"
+            "tableflow"
+            "ksqldb"
+            "networking"
+            "security"
+            "cli"
+            "terraform"
+            "cluster-linking"
+            "other"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --force-refresh)
+        completion_blocked_flags["--force-refresh"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --since "$completion_current" --since
+    completion_flag_candidates --until "$completion_current" --until
+    completion_flag_candidates --around "$completion_current" --around
+    completion_flag_candidates --days "$completion_current" --days
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --category "$completion_current" --category
+    completion_flag_candidates --grep "$completion_current" --grep
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
   fi
@@ -196932,6 +197505,7 @@ run() {
     "open-docs") playground_open_docs_command ;;
     "open-changelog") playground_open_changelog_command ;;
     "cp-changelog") playground_cp_changelog_command ;;
+    "ccloud-changelog") playground_ccloud_changelog_command ;;
     "repro") playground_repro_command ;;
     "repro export") playground_repro_export_command ;;
     "repro check") playground_repro_check_command ;;
