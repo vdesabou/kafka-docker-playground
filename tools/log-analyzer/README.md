@@ -50,7 +50,10 @@ the digest reads them: JSON (CloudWatch Logs Insights, CloudWatch events, Elasti
 JSON logs) and CSV with a header row (`.csv`, `.csv.gz`: Kibana / OpenSearch Dashboards Discover, Splunk, Datadog,
 Grafana). In a CSV, each row is an event; a cell holding a JSON object (the `log` column with the ECS / logback JSON
 line of the container) is parsed and its fields win over the columns, `-` is an empty cell, and the Kibana time
-`Oct 14, 2026 @ 19:13:28.977` becomes ISO 8601. Exit `2` when the file is not an export of log events: `analyze logs`
+`Oct 14, 2026 @ 19:13:28.977` becomes ISO 8601. The delimiter and quote character are guessed from the first 64 KB;
+when that guess finds no message column (a Splunk export whose first row is longer than 64 KB and full of single
+quotes, such as Schema Registry `Authorizing actions [Action(scope='…')]` lines, makes it pick `'`), the standard
+comma / double-quote dialect is tried. Exit `2` when the file is not an export of log events: `analyze logs`
 then reads it as it is.
 
 JSON lines are streamed (one event at a time, the order fixed afterwards from the offsets of the events), whatever
