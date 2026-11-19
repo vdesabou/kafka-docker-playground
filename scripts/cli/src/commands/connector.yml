@@ -403,7 +403,10 @@ commands:
     json. Column names are compared case-insensitively.
 
     Exits with 1 when records are lost, duplicated, different or not
-    deleted, so an example or a repro model can assert on it.
+    deleted, so an example or a repro model can assert on it, and with 2
+    when it could not compare (no connector, topic or table found, the
+    database or the topic could not be read): a failure of the setup, not
+    of the data.
 
     Supported databases: the ones of 'playground db sql' except Db2
     (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).

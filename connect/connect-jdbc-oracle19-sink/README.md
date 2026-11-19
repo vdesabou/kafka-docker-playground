@@ -36,6 +36,7 @@ The [Oracle JDBC thin driver SSL white paper](https://www.oracle.com/technetwork
 4. Creates the sink connector (`oracle-sink`, `oracle-sink-ssl`, `oracle-sink-mtls` or `oracle-sink-mtls-db-auth`) on topic `ORDERS` with `auto.create=true`, `auto.evolve=true` and `insert.mode=insert`.
 5. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `ORDERS` with `playground topic produce`.
 6. Runs `select * from ORDERS;` with `sqlplus` and checks that the `foo` row is present.
+7. `oracle19-sink.sh` only: compares the records of topic `ORDERS` with the rows of table `ORDERS` with `playground connector reconcile --connector oracle-sink`, which fails the example when a record is lost, duplicated or different.
 
 ## SSL setup details
 

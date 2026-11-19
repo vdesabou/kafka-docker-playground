@@ -31,6 +31,7 @@ playground run -f debezium-postgres-source.sh
 2. Creates table `CUSTOMERS`, inserts sample rows and adds one more row.
 3. Creates the `debezium-postgres-source` connector (`topic.prefix` `asgard`).
 4. Verifies that topic `asgard.public.customers-raw` contains the records with `playground topic consume`.
+5. Waits for the 21 records with `playground topic wait-for-records`, then compares each row of table `public.customers` with the `after` state of its last record in topic `asgard.public.customers-raw` with `playground connector reconcile --connector debezium-postgres-source --table public.customers`, which fails the example when a row is missing, duplicated or different.
 
 The incremental snapshot variants:
 

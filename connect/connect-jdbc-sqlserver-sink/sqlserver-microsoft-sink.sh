@@ -88,3 +88,6 @@ select * from orders;
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
+
+log "Comparing the records of topic orders with the rows of table orders: lost, duplicated or different records make the example fail"
+playground connector reconcile --connector sqlserver-sink

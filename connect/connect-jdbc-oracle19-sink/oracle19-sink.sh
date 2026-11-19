@@ -108,3 +108,5 @@ EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 
+log "Comparing the records of topic ORDERS with the rows of table ORDERS: lost, duplicated or different records make the example fail"
+playground connector reconcile --connector oracle-sink

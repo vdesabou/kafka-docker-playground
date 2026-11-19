@@ -27,6 +27,7 @@ playground run -f postgres-sink.sh
 3. Creates the `postgres-sink` connector on topic `orders` with `auto.create=true`.
 4. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `orders` with `playground topic produce`.
 5. Runs `SELECT * FROM ORDERS` and checks that the `foo` row is present: `postgres-sink.sh` waits for the 2 rows with `playground db wait-for-rows` and queries with `playground db sql`, the SSL / mTLS variants call `psql`.
+6. `postgres-sink.sh` only: compares the records of topic `orders` with the rows of table `orders` with `playground connector reconcile --connector postgres-sink`, which fails the example when a record is lost, duplicated or different.
 
 ## SSL setup details
 

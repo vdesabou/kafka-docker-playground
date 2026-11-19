@@ -27,3 +27,4 @@ playground run -f mysql-sink.sh
 3. Starts the environment and creates the sink connector (`mysql-sink`, `mysql-ssl-sink` or `mysql-mtls-sink`) on topic `orders` with `auto.create=true`.
 4. Produces 2 Avro records to topic `orders` with `playground topic produce`.
 5. Describes and selects the `orders` table and checks that the `foo` row is present: `mysql-sink.sh` waits for the 2 rows with `playground db wait-for-rows` and queries with `playground db sql`, the SSL / mTLS variants call the `mysql` client with their TLS options.
+6. `mysql-sink.sh` only: compares the records of topic `orders` with the rows of table `orders` with `playground connector reconcile --connector mysql-sink`, which fails the example when a record is lost, duplicated or different.

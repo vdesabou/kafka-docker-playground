@@ -24,6 +24,7 @@ With `mongo-sink.sh`, the mongo-express UI is available at [http://localhost:180
 3. Produces 2 Avro records to topic `orders` with `playground topic produce`.
 4. Creates the MongoDB sink connector `mongodb-sink` (database `inventory`, collection `customers`).
 5. Waits for the 2 documents with `playground db wait-for-rows`, then verifies with `playground db sql` (`mongosh`) that they are in collection `inventory.customers`.
+6. `mongo-sink.sh` only: compares the records of topic `orders` with the documents of collection `inventory.customers` with `playground connector reconcile --connector mongodb-sink`, which fails the example when a record is lost, duplicated or different.
 
 Example of document:
 
