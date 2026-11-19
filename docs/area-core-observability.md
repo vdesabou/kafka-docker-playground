@@ -45,6 +45,7 @@ Every broker and replication example: `playground find-example --category broker
 | Consumer groups: lag, members, offsets | `playground consumer-group describe\|reset-offsets` |
 | Java producer / consumer with the customer's configs | [other/basic-producer-consumer](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/basic-producer-consumer), `topic produce --producer-property …`, `topic consume --isolation-level\|--partition\|--offset\|--from-timestamp` |
 | Latency, packet loss, a broker unreachable | `playground debug degrade-traffic\|block-traffic`, `debug tcp-dump` + `analyze tcp-dump`, `tcp-proxy` |
+| Clock skew, a token / ticket / certificate expiry, time based partitioning | `playground debug clock -c <container> --offset +2h` (`--at`, `--reset`) |
 | A broker JVM is slow, leaks, pauses | `playground debug thread-dump\|heap-dump\|flight-recorder -c broker`, `analyze thread-dump\|gc-logs\|heap-dump\|flight-recorder` (also on the customer's files) |
 | Customer log bundle | `playground analyze logs -f <bundle>` · 👀 or [`playground analyze watch`](/deep-dive-analyze-logs?id=%f0%9f%91%80-every-download-analyzed-without-typing-anything): every file downloaded to `~/Downloads` analyzed automatically |
 | Replication between clusters | [multi-data-center/](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center) (Cluster Linking, Replicator, MirrorMaker 2), `mdc-*` environments |

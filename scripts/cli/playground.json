@@ -5459,7 +5459,7 @@
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, analyze it, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss or corruption with tc\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings, network\ncaptures): playground analyze",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, analyze it, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss or corruption with tc\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n⏰ It depends on the time\n  clock               shift the clock of a container (libfaketime)\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings, network\ncaptures): playground analyze",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -5771,6 +5771,44 @@
               ],
               "argument": "ACTION",
               "description": "🟢 start, stop or status\n\nRequired: ✓ Yes\nAllowed values: start, stop, status"
+            }
+          ]
+        },
+        {
+          "name": "clock",
+          "description": "⏰ Shift the clock of a container: token, ticket and certificate expiry, time based partitioning\n\nSome bugs only show up at a given time, or after a while: an OAuth\ntoken or a Kerberos ticket that expires, a certificate past its\nvalidity, the hourly rollover of TimeBasedPartitioner (S3, GCS,\nAzure, HDFS sinks), daylight saving time, clock skew between connect\nand the brokers. This moves the clock of one container (or several)\nforward or backward, the other containers keep the real time.\n\n  --offset +2h     shift by a duration (s, m, h, d, y); backward:\n                   --offset=-30m (with =, a value starting with - is\n                   read as an option otherwise)\n  --at <date>      jump to a date (\"2026-12-31 23:59:50\", UTC unless a\n                   Z or +02:00 offset is given), then the clock ticks\n  --reset          back to real time (the container is recreated with\n                   its original definition)\n  (no flag)        the time of the container, and its offset\n\nlibfaketime is preloaded in the container (LD_PRELOAD): the first call\nrecreates the container once, the next ones only rewrite the offset,\nread again every second by every process of the container (the JVM\nincluded), without a restart. The monotonic clock is not shifted, so\nsleeps and elapsed time measurements keep working.\n\nlibfaketime is built once per architecture (amd64, arm64), in a UBI8\ncontainer, and cached in /tmp/playground-faketime: it loads in the\nUBI8 (CP 7) and UBI9 (CP 8) images, not in musl (alpine) ones.\n\n❕ Recreating the container drops the changes of another 'container\nset-environment-variables', 'debug java-debug' or 'debug jscissors\n--restart' on it. A jump forward fires at once the timeouts based on\nwall clock time: expect reconnections, a rebalance or a token refresh.\n\n🧪 Docker only (not cfk).",
+          "usage": "playground debug clock [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c",
+                "--pod",
+                "-p"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\nDefault value: connect"
+            },
+            {
+              "names": [
+                "--offset"
+              ],
+              "argument": "OFFSET",
+              "description": "⏩ Shift of the clock: seconds, or a number with a unit s, m, h, d, y (e.g. +2h, +1d; backward: --offset=-30m)\n\nConflicts with: --at, --reset"
+            },
+            {
+              "names": [
+                "--at"
+              ],
+              "argument": "AT",
+              "description": "📅 Date to jump to, the clock ticks from there: \"YYYY-MM-DD HH:MM:SS\" (UTC), with an optional Z or +02:00 offset\n\nConflicts with: --offset, --reset"
+            },
+            {
+              "names": [
+                "--reset"
+              ],
+              "argument": "",
+              "description": "🧽 Back to real time (the container is recreated with its original definition)\n\nConflicts with: --offset, --at"
             }
           ]
         },

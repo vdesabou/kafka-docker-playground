@@ -550,6 +550,11 @@ commands:
       private: true
       help: |-
         Mount jscissors files for debugging
+    - long: --mount-faketime-files
+      required: false
+      private: true
+      help: |-
+        Mount the libfaketime files of 'playground debug clock'
 
   - name: wait-for-connect-rest-api-ready
     group: Container

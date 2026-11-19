@@ -9596,6 +9596,47 @@ function jscissors_agent_jar () {
 }
 JSCISSORS_BUILD_IMAGE="maven:3.9.11-eclipse-temurin-17"
 
+# libfaketime.so.1 for 'playground debug clock', built once per architecture (amd64, arm64) and cached in
+# /tmp/playground-faketime. Built on UBI8 (glibc 2.28) so that it loads in the UBI8 images (CP 7) and the UBI9 ones
+# (CP 8). On arm64, the glibc 2.28 headers declare gettimeofday(struct timeval *, struct timezone *) and libfaketime
+# the void * of the newer ones, which -Werror refuses: when the build fails, the signature is patched and built again
+# (on amd64 the unpatched source builds, and the patched one does not)
+function faketime_library () {
+  local arch="$1" dir="/tmp/playground-faketime" lib log
+  lib="$dir/libfaketime-$FAKETIME_VERSION-$arch.so.1"
+  if [ -s "$lib" ]
+  then
+    echo "$lib"
+    return 0
+  fi
+  mkdir -p "$dir"
+  log "📦 building libfaketime $FAKETIME_VERSION for linux/$arch ($FAKETIME_BUILD_IMAGE), first run only" >&2
+  log=$(mktemp -t faketime-build-XXXXXXXXXX)
+  if docker run --rm --platform "linux/$arch" -v "$dir:/out" "$FAKETIME_BUILD_IMAGE" bash -c "
+      set -e
+      dnf install -q -y gcc make > /dev/null
+      curl -fsSL https://github.com/wolfcw/libfaketime/archive/refs/tags/v$FAKETIME_VERSION.tar.gz | tar xz -C /tmp
+      cd /tmp/libfaketime-$FAKETIME_VERSION/src
+      if ! make libfaketime.so.1 > /dev/null 2>&1
+      then
+        sed -i 's/^int gettimeofday(struct timeval \*tv, void \*tz)\$/int gettimeofday(struct timeval *tv, struct timezone *tz)/' libfaketime.c
+        make libfaketime.so.1 > /dev/null
+      fi
+      cp libfaketime.so.1 /out/$(basename "$lib").tmp" > "$log" 2>&1 && [ -s "$lib.tmp" ]
+  then
+    mv "$lib.tmp" "$lib"
+    rm -f "$log"
+    echo "$lib"
+    return 0
+  fi
+  rm -f "$lib.tmp"
+  logerror "❌ failed to build libfaketime, see $log" >&2
+  tail -20 "$log" >&2
+  return 1
+}
+FAKETIME_VERSION="0.9.14"
+FAKETIME_BUILD_IMAGE="registry.access.redhat.com/ubi8/ubi:latest"
+
 # one sample of the JMX metrics of the tasks of a connector, printed as space separated values:
 #   1 records total (summed over the tasks)    2 batch avg ms        3 running ratio avg    4 cpu % of one core
 #   5 consumer lag max (sink)                  6 cpu % of the cpus available to the worker JVM
