@@ -1,8 +1,15 @@
 containers="${args[--container]}"
 restore_original_values="${args[--restore-original-values]}"
 mount_jscissors_files="${args[--mount-jscissors-files]}"
+mount_faketime_files="${args[--mount-faketime-files]}"
 
 get_environment_used
+
+if [[ -n "$mount_faketime_files" && "$environment" == cfk* ]]
+then
+    logerror "❌ playground debug clock is not supported with cfk yet"
+    exit 1
+fi
 
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
@@ -400,11 +407,21 @@ EOF
 EOF
         done
 
+        if [[ -n "$mount_jscissors_files" || -n "$mount_faketime_files" ]]
+        then
+            echo "    volumes:" >> $tmp_dir/docker-compose.override.java.env.yml
+        fi
         if [[ -n "$mount_jscissors_files" ]]
         then
             cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-    volumes:
       - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/
+EOF
+        fi
+        if [[ -n "$mount_faketime_files" ]]
+        then
+            # libfaketime.so.1 and faketime.rc of 'playground debug clock': the rc file is read again every second
+            cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-faketime/${container}/:/tmp/faketime/
 EOF
         fi
     done
