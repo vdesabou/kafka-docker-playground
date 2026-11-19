@@ -80,6 +80,8 @@ class Changes(html.parser.HTMLParser):
             text = re.sub(r"\s+([.,;:])(?=\s|$)", r"\1", text)
             text = re.sub(r";(\s*;)+", ";", text)
             text = re.sub(r":\s*[:;]\s*", ": ", text)
+            # "<p>… TimeBasedPartitioner fields.</p><ul>": no ".:" before the nested list
+            text = re.sub(r"([.!?]):\s", r"\1 ", text)
             text = re.sub(r"([.;:!?])\s*\.(\s|$)", r"\1\2", text).strip(" ;")
             if text:
                 self.changes.append({"section": self.section, "text": text, "links": list(dict.fromkeys(self.links))})
