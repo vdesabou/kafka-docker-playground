@@ -102,3 +102,6 @@ sleep 5
 log "Verifying topic postgres-customers"
 playground topic consume --topic postgres-customers --min-expected-messages 5 --timeout 60
 
+log "Comparing the records of topic postgres-customers with the rows of table customers: lost, duplicated or different records make the example fail"
+playground topic wait-for-records --topic postgres-customers --min-expected-messages 21
+playground connector reconcile --connector postgres-source

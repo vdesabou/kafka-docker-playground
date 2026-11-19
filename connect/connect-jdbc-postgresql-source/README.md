@@ -37,6 +37,7 @@ SQL_DATAGEN_DURATION=2 playground run -f postgres.sh --enable-sql-datagen
 3. Creates the `CUSTOMERS` table (`id` SERIAL, `update_ts` maintained by a `BEFORE UPDATE` trigger), inserts 20 rows, then one more.
 4. Creates the source connector (`postgres-source`, `postgres-source-ssl` or `postgres-source-mtls`) in `timestamp+incrementing` mode on `update_ts` / `id`, with `topic.prefix=postgres-`.
 5. Verifies that records land in topic `postgres-customers` with `playground topic consume`.
+6. `postgres.sh` only: waits for the 21 records with `playground topic wait-for-records`, then compares each row of table `customers` with its record in topic `postgres-customers` with `playground connector reconcile --connector postgres-source`, which fails the example when a row is missing, duplicated or different.
 
 `postgres-orders.sh` creates an `orders` table instead (3 rows), with the connector `postgres-orders-source` in `incrementing` mode on `id`, and verifies topic `postgres-orders`.
 

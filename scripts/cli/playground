@@ -21659,7 +21659,7 @@ fi
 playground_connector_reconcile_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector reconcile\n\n"
-    printf "  🧮 Compare the records of the topic with the rows of the table: lost,\n  duplicated, different?\n  \n  Answers \"the sink lost records\", \"the source missed rows\", \"we have\n  duplicates\" with one verdict instead of counting rows by hand. Reads\n  both sides of the connector, compares them record by record, and\n  lists what does not match:\n  \n    sink     for each key, the last record of the topic against the\n             row of the table (a tombstone or a delete event: the row\n             must be gone, when the connector deletes)\n    source   each row of the table against the last record of its key\n             in the topic (Debezium / CDC envelopes: the \"after\" state)\n  \n    ❌ lost           in the topic (sink) or the table (source), not on\n                     the other side\n    ❌ duplicated     a key twice in the table, or the same record twice\n                     in the topic of a source\n    ❌ different      fields whose values differ (converter, SMT, column\n                     type, truncation...)\n    ❌ not deleted    the last record is a tombstone, the row is still\n                     there\n    ⚠️ extra          only on the other side (rows written before, by\n                     another producer): reported, not a failure\n  \n  The topic, the table, the database container, the key and whether\n  deletes are applied come from the config of the connector, for the\n  JDBC sink and source (Confluent and Debezium), the Debezium sources,\n  the MongoDB sink and their fully managed versions:\n  \n    key              pk.mode / pk.fields (record_key, record_value,\n                     kafka: topic, partition, offset), primary.key.mode\n                     of the Debezium JDBC sink, incrementing.column.name,\n                     else the fields of the record key when it is a\n                     struct, else no key (the records and the rows are\n                     compared as multisets of values)\n    table            table.name.format (${topic} replaced), collection,\n                     table.whitelist / table.include.list\n    database         the host of connection.url / database.hostname\n                     when it is a running container, with the user and\n                     password of the connector\n  \n  Pass --topic, --table, --key-field and --container for anything else,\n  and --rows-file to compare with rows exported from any system (a\n  bucket, a warehouse, a customer dump), one json object per line.\n  \n  Values are compared by meaning, not by text: 1, 1.0 and \"1\"; true and\n  1; epoch milliseconds (or days) and a date or timestamp column;\n  json text and an object; CHAR padding; Avro unions; MongoDB extended\n  json. Column names are compared case-insensitively.\n  \n  Exits with 1 when records are lost, duplicated, different or not\n  deleted, so an example or a repro model can assert on it.\n  \n  Supported databases: the ones of 'playground db sql' except Db2\n  (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n  \n  ☁️ Fully managed: supported when the database runs in a local container,\n  else with --rows-file\n\n"
+    printf "  🧮 Compare the records of the topic with the rows of the table: lost,\n  duplicated, different?\n  \n  Answers \"the sink lost records\", \"the source missed rows\", \"we have\n  duplicates\" with one verdict instead of counting rows by hand. Reads\n  both sides of the connector, compares them record by record, and\n  lists what does not match:\n  \n    sink     for each key, the last record of the topic against the\n             row of the table (a tombstone or a delete event: the row\n             must be gone, when the connector deletes)\n    source   each row of the table against the last record of its key\n             in the topic (Debezium / CDC envelopes: the \"after\" state)\n  \n    ❌ lost           in the topic (sink) or the table (source), not on\n                     the other side\n    ❌ duplicated     a key twice in the table, or the same record twice\n                     in the topic of a source\n    ❌ different      fields whose values differ (converter, SMT, column\n                     type, truncation...)\n    ❌ not deleted    the last record is a tombstone, the row is still\n                     there\n    ⚠️ extra          only on the other side (rows written before, by\n                     another producer): reported, not a failure\n  \n  The topic, the table, the database container, the key and whether\n  deletes are applied come from the config of the connector, for the\n  JDBC sink and source (Confluent and Debezium), the Debezium sources,\n  the MongoDB sink and their fully managed versions:\n  \n    key              pk.mode / pk.fields (record_key, record_value,\n                     kafka: topic, partition, offset), primary.key.mode\n                     of the Debezium JDBC sink, incrementing.column.name,\n                     else the fields of the record key when it is a\n                     struct, else no key (the records and the rows are\n                     compared as multisets of values)\n    table            table.name.format (${topic} replaced), collection,\n                     table.whitelist / table.include.list\n    database         the host of connection.url / database.hostname\n                     when it is a running container, with the user and\n                     password of the connector\n  \n  Pass --topic, --table, --key-field and --container for anything else,\n  and --rows-file to compare with rows exported from any system (a\n  bucket, a warehouse, a customer dump), one json object per line.\n  \n  Values are compared by meaning, not by text: 1, 1.0 and \"1\"; true and\n  1; epoch milliseconds (or days) and a date or timestamp column;\n  json text and an object; CHAR padding; Avro unions; MongoDB extended\n  json. Column names are compared case-insensitively.\n  \n  Exits with 1 when records are lost, duplicated, different or not\n  deleted, so an example or a repro model can assert on it, and with 2\n  when it could not compare (no connector, topic or table found, the\n  database or the topic could not be read): a failure of the setup, not\n  of the data.\n  \n  Supported databases: the ones of 'playground db sql' except Db2\n  (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n  \n  ☁️ Fully managed: supported when the database runs in a local container,\n  else with --rows-file\n\n"
   else
     printf "playground connector reconcile - 🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n\n"
   fi
@@ -93910,7 +93910,7 @@ playground_connector_reconcile_command() {
   if ! command -v python3 > /dev/null 2>&1
   then
       logerror "❌ python3 is required to compare the records and the rows"
-      exit 1
+      exit 2
   fi
 
   connector_type=$(playground state get run.connector_type)
@@ -93921,19 +93921,19 @@ playground_connector_reconcile_command() {
       if [ "$connector" == "" ]
       then
           logerror "💤 No $connector_type connector is running !"
-          exit 1
+          exit 2
       fi
       if [ $(echo "$connector" | wc -w) -gt 1 ]
       then
           logerror "❌ several connectors are running ($connector), use --connector"
-          exit 1
+          exit 2
       fi
   fi
 
   if ! get_connector_config_json "$connector"
   then
       logerror "❌ could not get the config of connector $connector"
-      exit 1
+      exit 2
   fi
   config="$curl_output"
 
@@ -94023,12 +94023,12 @@ playground_connector_reconcile_command() {
           if [[ "$topic" == *,* ]]
           then
               logerror "❌ connector $connector reads several topics ($topic): pass --topic with one of them"
-              exit 1
+              exit 2
           fi
           if [[ -z "$topic" ]]
           then
               logerror "❌ connector $connector uses topics.regex ($(cfg topics.regex)): pass --topic"
-              exit 1
+              exit 2
           fi
       fi
       case "${pk_mode,,}" in
@@ -94096,13 +94096,13 @@ playground_connector_reconcile_command() {
           if [[ "$tables" == *,* ]]
           then
               logerror "❌ connector $connector captures several tables ($tables): pass --table and --topic"
-              exit 1
+              exit 2
           fi
           table="$tables"
           if [[ -z "$table" ]]
           then
               logerror "❌ could not tell the table of connector $connector from its config: pass --table"
-              exit 1
+              exit 2
           fi
       fi
       if [[ "$(cfg mode)" == "bulk" ]]
@@ -94227,9 +94227,9 @@ playground_connector_reconcile_command() {
       if [[ -z "$table" ]]
       then
           logerror "❌ could not tell the table of connector $connector from its config: pass --table"
-          exit 1
+          exit 2
       fi
-      db_resolve_container "$container" "" || exit 1
+      db_resolve_container "$container" "" || exit 2
       db_resolve_connection "$user" "$password" "$database"
       # connected as the admin user (the password of the connector is masked): an Oracle table is in the schema of the
       # user of the connector
@@ -94246,12 +94246,12 @@ playground_connector_reconcile_command() {
       then
           logerror "❌ table $table does not exist in $db_container${db_database:+ (database $db_database)}: pass --table (schema.table works too), --database or --user"
           tail -5 "$tmp_dir/rows.json"
-          exit 1
+          exit 2
       elif [[ $rc -ne 0 ]]
       then
           logerror "❌ could not read table $table in $db_container:"
           tail -10 "$tmp_dir/rows.json"
-          exit 1
+          exit 2
       fi
       table_label="$table"
   fi
@@ -94266,7 +94266,7 @@ playground_connector_reconcile_command() {
       then
           logerror "   🎓 the topic name was computed from the config of the connector: pass --topic if it is another one"
       fi
-      exit 1
+      exit 2
   fi
 
   # ---- the comparison ---------------------------------------------------------------------------------------------

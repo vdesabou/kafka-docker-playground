@@ -99,3 +99,6 @@ db.customers.find().pretty();
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
+
+log "Comparing the records of topic orders with the rows of collection inventory.customers: lost, duplicated or different records make the example fail"
+playground connector reconcile --connector mongodb-sink

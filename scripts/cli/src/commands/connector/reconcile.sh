@@ -22,7 +22,7 @@ fi
 if ! command -v python3 > /dev/null 2>&1
 then
     logerror "❌ python3 is required to compare the records and the rows"
-    exit 1
+    exit 2
 fi
 
 connector_type=$(playground state get run.connector_type)
@@ -33,19 +33,19 @@ then
     if [ "$connector" == "" ]
     then
         logerror "💤 No $connector_type connector is running !"
-        exit 1
+        exit 2
     fi
     if [ $(echo "$connector" | wc -w) -gt 1 ]
     then
         logerror "❌ several connectors are running ($connector), use --connector"
-        exit 1
+        exit 2
     fi
 fi
 
 if ! get_connector_config_json "$connector"
 then
     logerror "❌ could not get the config of connector $connector"
-    exit 1
+    exit 2
 fi
 config="$curl_output"
 
@@ -135,12 +135,12 @@ then
         if [[ "$topic" == *,* ]]
         then
             logerror "❌ connector $connector reads several topics ($topic): pass --topic with one of them"
-            exit 1
+            exit 2
         fi
         if [[ -z "$topic" ]]
         then
             logerror "❌ connector $connector uses topics.regex ($(cfg topics.regex)): pass --topic"
-            exit 1
+            exit 2
         fi
     fi
     case "${pk_mode,,}" in
@@ -208,13 +208,13 @@ else
         if [[ "$tables" == *,* ]]
         then
             logerror "❌ connector $connector captures several tables ($tables): pass --table and --topic"
-            exit 1
+            exit 2
         fi
         table="$tables"
         if [[ -z "$table" ]]
         then
             logerror "❌ could not tell the table of connector $connector from its config: pass --table"
-            exit 1
+            exit 2
         fi
     fi
     if [[ "$(cfg mode)" == "bulk" ]]
@@ -339,9 +339,9 @@ else
     if [[ -z "$table" ]]
     then
         logerror "❌ could not tell the table of connector $connector from its config: pass --table"
-        exit 1
+        exit 2
     fi
-    db_resolve_container "$container" "" || exit 1
+    db_resolve_container "$container" "" || exit 2
     db_resolve_connection "$user" "$password" "$database"
     # connected as the admin user (the password of the connector is masked): an Oracle table is in the schema of the
     # user of the connector
@@ -358,12 +358,12 @@ else
     then
         logerror "❌ table $table does not exist in $db_container${db_database:+ (database $db_database)}: pass --table (schema.table works too), --database or --user"
         tail -5 "$tmp_dir/rows.json"
-        exit 1
+        exit 2
     elif [[ $rc -ne 0 ]]
     then
         logerror "❌ could not read table $table in $db_container:"
         tail -10 "$tmp_dir/rows.json"
-        exit 1
+        exit 2
     fi
     table_label="$table"
 fi
@@ -378,7 +378,7 @@ then
     then
         logerror "   🎓 the topic name was computed from the config of the connector: pass --topic if it is another one"
     fi
-    exit 1
+    exit 2
 fi
 
 # ---- the comparison ---------------------------------------------------------------------------------------------

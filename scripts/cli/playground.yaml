@@ -11787,10 +11787,12 @@ subcommands:
       column;\njson text and an object; CHAR padding; Avro unions; MongoDB extended\njson.
       Column names are compared case-insensitively.\n\nExits with 1 when records are
       lost, duplicated, different or not\ndeleted, so an example or a repro model
-      can assert on it.\n\nSupported databases: the ones of 'playground db sql' except
-      Db2\n(PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n\n☁️
-      Fully managed: supported when the database runs in a local container,\nelse
-      with --rows-file"
+      can assert on it, and with 2\nwhen it could not compare (no connector, topic
+      or table found, the\ndatabase or the topic could not be read): a failure of
+      the setup, not\nof the data.\n\nSupported databases: the ones of 'playground
+      db sql' except Db2\n(PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and
+      later, MongoDB).\n\n☁️ Fully managed: supported when the database runs in a
+      local container,\nelse with --rows-file"
     usage: playground connector reconcile [OPTIONS]
     options:
     - names:

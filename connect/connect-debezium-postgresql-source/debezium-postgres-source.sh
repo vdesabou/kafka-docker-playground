@@ -123,3 +123,7 @@ sleep 5
 
 log "Verifying topic asgard.public.customers-raw"
 playground topic consume --topic asgard.public.customers-raw --min-expected-messages 5 --timeout 60
+
+log "Comparing the records of topic asgard.public.customers-raw with the rows of table customers: lost, duplicated or different records make the example fail"
+playground topic wait-for-records --topic asgard.public.customers-raw --min-expected-messages 21
+playground connector reconcile --connector debezium-postgres-source --table public.customers

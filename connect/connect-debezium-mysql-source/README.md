@@ -27,6 +27,7 @@ playground run -f debezium-mysql-source.sh
 2. Creates table `CUSTOMERS` in database `mydb` and inserts two rows.
 3. Creates the `debezium-mysql-source` connector with a `RegexRouter` SMT replacing dots with underscores in topic names.
 4. Verifies that topic `server1_mydb_CUSTOMERS` contains the 2 records with `playground topic consume`.
+5. Compares each row of table `mydb.CUSTOMERS` with the `after` state of its last record in topic `server1_mydb_CUSTOMERS` with `playground connector reconcile --connector debezium-mysql-source --table mydb.CUSTOMERS`, which fails the example when a row is missing, duplicated or different.
 
 `debezium-mysql-source-readonly-inc-snapshot.sh`:
 

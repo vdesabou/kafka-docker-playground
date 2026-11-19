@@ -29,6 +29,7 @@ playground run -f sqlserver-microsoft-sink.sh
 3. Creates the sink connector (`sqlserver-sink` or `sqlserver-sink-ssl`) on topic `orders` with user `sa` and `auto.create=true`.
 4. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `orders` with `playground topic produce`.
 5. Runs `select * from orders` and checks that the `foo` row is present: `sqlserver-microsoft-sink.sh` waits for the 2 rows with `playground db wait-for-rows` and queries with `playground db sql`, the other variants call `sqlcmd`.
+6. `sqlserver-microsoft-sink.sh` only: compares the records of topic `orders` with the rows of table `orders` with `playground connector reconcile --connector sqlserver-sink`, which fails the example when a record is lost, duplicated or different.
 
 ## SSL setup details
 
