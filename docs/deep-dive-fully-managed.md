@@ -331,6 +331,7 @@ playground stop                                                              # d
 | "we deploy with Terraform" | `create-or-update --terraform`: the same JSON becomes `connector.tf` (🏗️ session) |
 | "which version of the connector runs in Confluent Cloud?" | `connector-plugin sourcecode -c confluentinc/<Type> --only-show-url` (employees, see the [connector plugins deep dive](/deep-dive-connector-plugin.md)) |
 | "is the fix of connector version X in a cc-connect image yet? what changed in the last images?" | `connector-plugin fm-versions -c confluentinc/<Type> --find-first X` / `--last 50 --with-log` (employees) |
+| "it behaves differently since day X: did Confluent change something?" / "since when is this option available?" | `playground ccloud-changelog --around <date> --category connectors` / `--connector <Type> [--grep <option>]` (the public Confluent Cloud release notes, citable in the reply; dated, not versioned) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
 | "set up my own clusters in the shared org" | `playground ccloud setup --profile <org> --dry-run`, then without `--dry-run`, then `playground secrets profile <org>` |
 | "what did I leave running in the shared org?" | `playground cloud-resources ccloud list` (every environment and cluster: connectors `*_<user>` with status and age, `pg-<user>-*` resources, what `cleanup` deletes) |

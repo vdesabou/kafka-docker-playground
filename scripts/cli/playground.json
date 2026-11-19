@@ -1988,6 +1988,77 @@
       ]
     },
     {
+      "name": "ccloud-changelog",
+      "description": "📰 Search the Confluent Cloud release notes by date, connector, category or text\n\nReads the release notes feed of docs.confluent.io\n(https://docs.confluent.io/cloud/current/release-notes.xml, the whole\nhistory since 2019) and lists one line per change, grouped by day, newest\nfirst, with the link to the release notes of the day.\n\nIt answers \"the fully managed connector started behaving differently on\nNovember 6: did Confluent ship something around that day?\" (--around) or\n\"since when does the Azure Blob Storage Sink support this option?\"\n(--connector) in one call, with a public page to quote to the customer.\n\n--connector matches the changes that link the Confluent Cloud page of the\nconnector, not a fuzzy name: give the connector class (AzureBlobSink,\nresolved through the README of its ccloud/fm-* example), the example\nfolder (fm-azure-blob-storage-sink) or the page (cc-azure-blob-sink).\nAnything else is searched in the text.\n\nWithout a date, --connector or --grep, the last 30 days are shown. With\n--connector or --grep, the whole history is searched.\n\n⚠️ The release notes are dated, not versioned: to know which connector\nversion a cc-connect image ships, use 'playground connector-plugin\nfm-versions'. Categories are derived from keywords and links. The feed is\ncached for one day in /tmp/ccloud-changelog (--force-refresh).\n\n🎓 Tip: for Confluent Platform, use 'playground cp-changelog'",
+      "usage": "playground ccloud-changelog [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--since"
+          ],
+          "argument": "SINCE",
+          "description": "📅 First day to show (included), YYYY-MM-DD\n\nConflicts with: --around"
+        },
+        {
+          "names": [
+            "--until"
+          ],
+          "argument": "UNTIL",
+          "description": "📅 Last day to show (included), YYYY-MM-DD\n\nDefault is today\n\nConflicts with: --around"
+        },
+        {
+          "names": [
+            "--around"
+          ],
+          "argument": "AROUND",
+          "description": "🎯 Day of interest (the day a customer saw the problem), YYYY-MM-DD: show the changes of the --days before and after it\n\nConflicts with: --since, --until"
+        },
+        {
+          "names": [
+            "--days"
+          ],
+          "argument": "DAYS",
+          "description": "🔢 With --around: number of days before and after it (default 7)\n\nAlone (or with --until): the last N days"
+        },
+        {
+          "names": [
+            "--connector",
+            "-c"
+          ],
+          "argument": "CONNECTOR",
+          "description": "🔌 Only show the changes of this fully managed connector (can be repeated)\n\nA connector class (AzureBlobSink, confluentinc/AzureBlobSink), a ccloud/fm-* example folder (fm-azure-blob-storage-sink),\na Confluent Cloud page (cc-azure-blob-sink or its URL), or else any text\n\nRepeatable: ✓ Yes"
+        },
+        {
+          "names": [
+            "--category"
+          ],
+          "argument": "CATEGORY",
+          "description": "🏷️ Only show the changes of this category (can be repeated)\n\nRepeatable: ✓ Yes\nAllowed values: connectors, flink, schema-registry, tableflow, ksqldb, networking, security, cli, terraform, cluster-linking, other"
+        },
+        {
+          "names": [
+            "--grep"
+          ],
+          "argument": "GREP",
+          "description": "🔎 Only show the changes matching this regular expression (case insensitive)\n\nExample: --grep \"partitioner|BACKUP_FULL_RECORD\""
+        },
+        {
+          "names": [
+            "--json"
+          ],
+          "argument": "",
+          "description": "🤖 Print the result as JSON"
+        },
+        {
+          "names": [
+            "--force-refresh"
+          ],
+          "argument": "",
+          "description": "☢️ Force refresh."
+        }
+      ]
+    },
+    {
       "name": "repro",
       "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  list        find models by case, status, verdict, base example, author, date\n  diff        what a model changes compared with its base example\n  status      show or update what a model proves: expected, actual, jira, status\n  assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n  bisect      run a model on several versions: which one introduced or fixed it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
       "usage": "playground repro COMMAND",
