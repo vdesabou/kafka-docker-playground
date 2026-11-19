@@ -119,6 +119,29 @@ def test_splunk_time_reversed():
         check("splunk", rc == 0 and text.index("first") < text.index("second"), text)
 
 
+def test_splunk_csv_long_row_single_quotes():
+    # a Splunk export with sourcetype / source columns whose first row is longer than the sniffer sample and full of
+    # single quotes (Schema Registry "Authorizing actions" lines): the sniffer guesses ' as the quote character
+    action = ("Action(scope='Scope(path='[]', clusters='{kafka-cluster=abc, schema-registry-cluster=sr-1}')', "
+              "resourcePattern='Subject:LITERAL:orders-value', operation='ReadCompatibility', "
+              "resourceReferenceCount='1', logIfAllowed='true', logIfDenied='true')")
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "sr.csv")
+        with open(src, "w", newline="") as fh:
+            w = csv.writer(fh, quoting=csv.QUOTE_ALL)  # Splunk quotes every field of the rows, not the header
+            fh.write('"_time",host,sourcetype,source,"_raw"\r\n')
+            w.writerow(["2026-11-06T10:00:02.000+0000", "sr-1", "sr_logs", "/var/log/schema-registry.log",
+                        "[2026-11-06 10:00:02,000] INFO Authorizing actions [" + ", ".join([action] * 600)
+                        + "] (io.confluent.kafka.schemaregistry.security.authorizer.rbac.RbacAuthorizer)"])
+            w.writerow(["2026-11-06T10:00:01.000+0000", "sr-1", "sr_logs", "/var/log/schema-registry.log",
+                        '[2026-11-06 10:00:01,000] INFO 10.0.0.1 - user-1 [06/Nov/2026:10:00:01 +0000] '
+                        '"POST /subjects/orders-value/versions HTTP/1.1" 200 8 "-" "Java/17" 12 (io.confluent.rest-utils.requests)'])
+        events = jle.load_csv(src)
+        check("splunk csv with a long first row", events is not None and len(events) == 2
+              and any("POST /subjects/orders-value/versions" in e.get("_raw", "") for e in events),
+              events and [list(e) for e in events])
+
+
 def test_csv_json_value_cell_kept():
     with tempfile.TemporaryDirectory() as d:
         src = os.path.join(d, "k.csv")

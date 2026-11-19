@@ -89,12 +89,19 @@ def load_csv(path: str) -> Any:
     with opener(path, "rt", encoding="utf-8", errors="replace", newline="") as fh:
         text = fh.read().lstrip("\ufeff")
     try:
-        dialect = csv.Sniffer().sniff(text[:65536], delimiters=",;\t")
+        dialects = [csv.Sniffer().sniff(text[:65536], delimiters=",;\t"), csv.excel]
     except csv.Error:
-        dialect = csv.excel
-    reader = csv.DictReader(text.splitlines(keepends=True), dialect=dialect)
-    if not reader.fieldnames or not any(f in MESSAGE_KEYS or f in ("Message", "Line", "_source")
-                                        for f in reader.fieldnames):
+        dialects = [csv.excel]
+    # the sniffer can guess wrong: a first row longer than its sample, full of single quotes (a Splunk export of
+    # Schema Registry "Authorizing actions [Action(scope='…')]" lines), makes it pick ' as the quote character, and
+    # the "_raw" column of the header is then never found: retry with the standard dialect
+    reader = None
+    for dialect in dialects:
+        reader = csv.DictReader(text.splitlines(keepends=True), dialect=dialect)
+        if reader.fieldnames and any(f in MESSAGE_KEYS or f in ("Message", "Line", "_source")
+                                     for f in reader.fieldnames):
+            break
+    else:
         return None
     events = []
     for row in reader:
