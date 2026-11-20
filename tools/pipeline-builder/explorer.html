@@ -47,6 +47,8 @@
 .ci{width:10px;height:10px;border-radius:50%;flex:none}
 .ci.ok{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
 .ci.fail{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
+.armk{font-size:.85rem;flex:none;cursor:help}
+.enote{color:var(--muted);font-size:.8rem;margin-top:4px}
 .more{color:var(--muted);font-size:.8rem;text-align:center;padding:10px}
 /* detail */
 .hero{display:flex;gap:16px;align-items:center}
@@ -199,6 +201,7 @@ a.btn{text-decoration:none;display:inline-block}
       <div class="frow">
         <div class="toggles">
           <label class="switch" title="hide the examples that need cloud credentials (AWS, GCP, Azure, Confluent Cloud, SaaS accounts…)"><input type="checkbox" id="nocreds"><i></i>no credentials needed</label>
+          <label class="switch" id="arm-toggle" hidden title="only the examples that run natively on arm64 (Apple silicon), as the CI reports"><input type="checkbox" id="armonly"><i></i>🍏 native on arm64</label>
           <div class="cif" id="cif" hidden role="group" aria-label="CI status of the last nightly run"></div>
         </div>
         <span class="count" id="count"></span>
@@ -259,7 +262,7 @@ const RUN = DATA ? DATA.run : {environments: [], enable: [], default_tag: ""};
 const VERSIONS = DATA && DATA.versions ? DATA.versions : {cp: [], plugins: {}};
 const fetched = {};   // owner/name -> versions, or "loading" / "failed": a local page asks Confluent Hub when an example is picked
 let CI = null;   // dir -> {state, passed, total, url, version}
-const state = {tab: "run", q: "", area: "", cat: "", topics: [], nocreds: false, ci: "", sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
+const state = {tab: "run", q: "", area: "", cat: "", topics: [], nocreds: false, arm: false, ci: "", sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
 
 // ---------------------------------------------------------------- helpers
 function short(cls) { return (cls || "").split(".").pop(); }
@@ -289,7 +292,9 @@ for (const e of examples) e._hay = hay(e);
 function byPath(p) { return examples.find(e => e.path === p); }
 
 // the CI status of the folder of an example, from the last nightly run: ok, fail, or none (not in the CI matrix)
-function ciState(e) { return CI && CI[e.dir] ? CI[e.dir].state : "none"; }
+function ciState(e) { return CI && CI[e.dir] && CI[e.dir].state ? CI[e.dir].state : "none"; }
+const ARM = {native: ["🍏", "runs natively on arm64 (Apple silicon)", "ok"], emulation: ["🐢", "arm64: runs with x86 emulation (slower)", ""],
+             broken: ["⛔", "does not work on arm64 (Apple silicon)", "fail"]};
 const CI_CHOICES = [["", "All"], ["ok", "✅ passing"], ["fail", "🔥 failing"], ["none", "⚪ not in CI"]];
 
 function filtered(ignoreCat) {
@@ -300,6 +305,7 @@ function filtered(ignoreCat) {
     && state.topics.every(t => e.topics.includes(t))
     && (!state.nocreds || !needsCreds(e))
     && (ignoreCat === "ci" || !state.ci || !CI || ciState(e) === state.ci)
+    && (!state.arm || !CI || (CI[e.dir] && CI[e.dir].arm64 === "native"))
     && words.every(w => e._hay.includes(w)));
 }
 
@@ -310,6 +316,7 @@ function renderCI() {
   const count = {"": base.length, ok: 0, fail: 0, none: 0};
   for (const e of base) count[ciState(e)]++;
   $("cif").hidden = false;
+  $("arm-toggle").hidden = false;
   $("cif").innerHTML = `<span class="flabel" title="the result of the last nightly CI run of each example">🧪 CI</span>` + CI_CHOICES.map(c =>
     `<button type="button" class="cib${c[0] ? " " + c[0] : ""}" data-ci="${c[0]}" aria-pressed="${state.ci === c[0]}">${esc(c[1])}<small>${count[c[0]]}</small></button>`).join("");
 }
@@ -340,7 +347,9 @@ function renderList() {
   const shown = list.slice(0, 300);
   $("count").textContent = list.length + " example(s)";
   $("list").innerHTML = shown.map(e => {
-    const ci = CI && CI[e.dir] ? `<span class="ci ${CI[e.dir].state}" title="CI: ${esc(CI[e.dir].label)}"></span>` : "";
+    const c = CI && CI[e.dir];
+    const ci = (c && c.arm64 && c.arm64 !== "native" ? `<span class="armk" title="${esc(ARM[c.arm64][1])}">${ARM[c.arm64][0]}</span>` : "")
+      + (c && c.state ? `<span class="ci ${c.state}" title="CI: ${esc(c.label)}"></span>` : "");
     return `<div class="item${state.sel === e.path ? " selected" : ""}" data-path="${esc(e.path)}" role="option" aria-selected="${state.sel === e.path}">
       ${icon(e)}<div class="txt"><div class="t"><span class="name">${esc(title(e))}</span>${variant(e)}</div><div class="d">${esc(e.path)}</div></div>${ci}</div>`;
   }).join("") + (list.length > shown.length ? `<div class="more">… ${list.length - shown.length} more: refine the search</div>` : "")
@@ -567,13 +576,16 @@ function renderDetail() {
   const creds = [...(e.credentials || []).map(c => [CRED_LABEL[c] || "🔑 " + c, SETUP[c === "ccloud" ? "ccloud" : "other"]]),
                  ...(e.required_env || []).map(v => ["🔑 $" + v, SETUP.other])];
   if ((e.managed || e.category === "ccloud") && !(e.credentials || []).includes("ccloud")) creds.unshift([CRED_LABEL.ccloud, SETUP.ccloud]);
-  let html = `<div class="hero">${icon(e)}<div style="min-width:0"><h2>${esc(title(e))}${variant(e)}</h2><div class="path mono">${esc(e.path)}</div></div></div>
+  let html = `<div class="hero">${icon(e)}<div style="min-width:0"><h2>${esc(title(e))}${variant(e)}</h2><div class="path mono">${esc(e.path)}</div>${e.note ? `<div class="enote">${esc(e.note)}</div>` : ""}</div></div>
     <div class="tags">${e.area ? (a => `<a class="tagc" href="${DOCS + a[2]}" target="_blank" rel="noopener" title="the area page: questions, commands, deep dives">${esc(a[1])} ↗</a>`)(AREAS.find(x => x[0] === e.area)) : ""}<span class="tagc">${cat[2]} ${esc(cat[1])}</span>
       ${e.topics.map(t => `<span class="tagc">${esc((TOPICS.find(x => x[0] === t) || [t, t])[1])}</span>`).join("")}
       ${e.connector ? `<span class="tagc mono">${esc(short(e.connector.class))}</span>` : ""}
-      ${ci ? `<a class="tagc ${ci.state}" href="${esc(ci.url)}" target="_blank" rel="noopener" title="last nightly CI run">${ci.state === "ok" ? "✅" : "🔥"} CI ${esc(ci.label)}</a>`
+      ${ci && ci.state ? `<a class="tagc ${ci.state}" href="${esc(ci.url)}" target="_blank" rel="noopener" title="last nightly CI run">${ci.state === "ok" ? "✅" : "🔥"} CI ${esc(ci.label)}</a>`
         : CI ? `<span class="tagc" title="this example is not in the matrix of the nightly CI: it may need manual steps or an account the CI does not have">⚪ not tested in CI</span>` : ""}
-      ${ci && ci.version ? `<span class="tagc">🔢 ${esc(ci.version)}</span>` : ""}
+      ${ci && ci.cfk ? `<a class="tagc ${ci.cfk.state}" href="${esc(ci.cfk.url)}" target="_blank" rel="noopener" title="last nightly CI run with --environment cfk">☸️ CFK ${esc(ci.cfk.label)}</a>` : ""}
+      ${ci && ci.arm64 && ARM[ci.arm64] ? `<span class="tagc ${ARM[ci.arm64][2]}" title="${esc(ARM[ci.arm64][1])}">${ARM[ci.arm64][0]} arm64 ${ci.arm64 === "native" ? "native" : ci.arm64 === "emulation" ? "emulation" : "not working"}</span>` : ""}
+      ${ci && ci.version ? `<a class="tagc" href="${esc(ci.docs || e.docs_url || "#")}" target="_blank" rel="noopener" title="the connector version the CI ran, and its release date">🔢 v${esc(ci.version)}${ci.released ? " · " + esc(ci.released) : ""} ↗</a>` : ""}
+      ${ci && ci.owner ? `<span class="tagc" title="the vendor of the connector">🏢 ${esc(ci.owner)}</span>` : ""}
       ${creds.map(([label, [href, title]]) => `<a class="tagc" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(title)}">${esc(label)} ↗</a>`).join("")}
       ${!creds.length ? `<span class="tagc ok">🆓 no credentials needed</span>` : ""}</div>
     <div class="links"><a class="lbtn" href="${GITHUB + esc(e.dir)}" target="_blank" rel="noopener">📖 README ↗</a>
@@ -659,6 +671,7 @@ function saveHash() {
   if (state.topics.length) p.set("topics", state.topics.join(","));
   if (state.nocreds) p.set("nocreds", "1");
   if (state.ci) p.set("ci", state.ci);
+  if (state.arm) p.set("arm", "1");
   if (state.sel) p.set("ex", state.sel);
   if (state.sel && state.tab !== "run") p.set("tab", state.tab);
   if (state.env) p.set("env", state.env);
@@ -675,6 +688,7 @@ function loadHash() {
   state.nocreds = p.get("nocreds") === "1";
   state.tab = TABS.some(t => t[0] === p.get("tab")) ? p.get("tab") : "run";
   state.ci = ["ok", "fail", "none"].includes(p.get("ci")) ? p.get("ci") : "";
+  state.arm = p.get("arm") === "1"; $("armonly").checked = state.arm;
   state.sel = p.get("ex") && byPath(p.get("ex")) ? p.get("ex") : null;
   state.env = p.get("env") || ""; state.tag = p.get("tag") || ""; state.ctag = p.get("ctag") || "";
   state.enable = (p.get("enable") || "").split(",").filter(f => RUN.enable.some(x => x.flag === f));
@@ -689,13 +703,21 @@ function loadCI() {
     for (const line of text.split("\n")) {
       const m = line.match(/\/tree\/master\/([a-z0-9_.\/-]+)\)/i);
       if (!m) continue;
+      const dec = x => decodeURIComponent(x.replace(/%(?![0-9a-f]{2})/gi, "%25"));
       const ok = line.match(/badge\/(\d+)\/(\d+)-ok!-green\)\]\(([^)\s]+)\)/);
       const ko = line.match(/badge\/(\d+)\/(\d+)-fail!-red\)\]\(([^)\s]+)\)/);
-      const ver = line.match(/badge\/v-([^-)]+)-pink/);
-      if (!ok && !ko) continue;
-      const x = ok || ko;
-      ci[m[1]] = {state: ok ? "ok" : "fail", label: x[1] + "/" + x[2] + (ok ? " passed" : " failed"), url: x[3],
-                  version: ver ? decodeURIComponent(ver[1]).replace(/%20/g, " ") : ""};
+      const cfk = line.match(/badge\/(\d+)\/(\d+)-cfk_(ok|fail)!-\w+\)\]\(([^)\s]+)\)/);
+      const ver = line.match(/badge\/v-(.+?)-pink\)\]\(([^)\s]+)\)/);
+      const arm = line.match(/badge\/arm64-([^)-]+)-\w+\)/);
+      const owner = line.match(/badge\/-([^)]+?)-blue\)/);
+      if (!ok && !ko && !cfk && !ver && !arm && !owner) continue;
+      const e = {};
+      if (ok || ko) { const x = ok || ko; Object.assign(e, {state: ok ? "ok" : "fail", label: x[1] + "/" + x[2] + (ok ? " passed" : " failed"), url: x[3]}); }
+      if (cfk) e.cfk = {state: cfk[3], label: cfk[1] + "/" + cfk[2], url: cfk[4]};
+      if (ver) { const v = dec(ver[1]).match(/^(\S+)(?:\s+\((\d{4})_(\d{2})_(\d{2})\))?/); if (v) Object.assign(e, {version: v[1], released: v[2] ? v[2] + "-" + v[3] + "-" + v[4] : "", docs: ver[2]}); }
+      if (arm) { const a = dec(arm[1]); e.arm64 = /native/.test(a) ? "native" : /emulation/.test(a) ? "emulation" : /not/.test(a) ? "broken" : ""; }
+      if (owner) e.owner = dec(owner[1]);
+      ci[m[1]] = e;
     }
     if (Object.keys(ci).length) { CI = ci; render(); }
   }).catch(() => {});
@@ -720,6 +742,7 @@ $("cats").onclick = e => { const b = e.target.closest("[data-cat]"); if (!b) ret
 $("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b) return; const t = b.dataset.topic;
   state.topics = state.topics.includes(t) ? state.topics.filter(x => x !== t) : [...state.topics, t]; render(); };
 $("nocreds").onchange = e => { state.nocreds = e.target.checked; render(); };
+$("armonly").onchange = e => { state.arm = e.target.checked; render(); };
 $("cif").onclick = e => { const b = e.target.closest("[data-ci]"); if (!b) return; state.ci = state.ci === b.dataset.ci ? "" : b.dataset.ci; render(); };
 $("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; readmeOpen = false; renderList(); renderDetail(); saveHash(); };
 $("detail").addEventListener("input", e => {

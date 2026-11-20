@@ -144,7 +144,7 @@ On macOS, the [kdp Alfred workflow](/cli?id=%f0%9f%8e%a9-alfred-workflow-macos) 
 
 ## 🏁 Getting Started
 
-Check out the **[How to Use](/how-to-use.md)** section, then select an example in the **[Content](/content.md)** section and run it !
+Check out the **[How to Use](/how-to-use.md)** section, then select an example in the **[👾 Examples](/examples.md)** page (or the [📋 full list](/content.md)) and run it !
 
 ## 💡 Ideology
 

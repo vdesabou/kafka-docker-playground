@@ -2,7 +2,7 @@
 # 👾 Content
 
 > [!TIP]
-> **[🧭 Open the examples explorer](examples-explorer.html ':ignore')**: search and filter every example (connectors, fully managed, ksqlDB, Flink, secured environments, security, brokers, CFK, clients, no credentials needed, CI passing), then pick its environment, versions and options, and copy the `playground run` command. Locally: `playground find-example --browse`.
+> **[👾 Open the examples page](/examples.md)**: search and filter every example (connectors, fully managed, ksqlDB, Flink, secured environments, security, brokers, CFK, clients, no credentials needed, CI passing), then pick its environment, versions and options, and copy the `playground run` command. Locally: `playground find-example --browse`.
 
 The examples are grouped by area, the same way as [🗺️ Start from your area](/areas.md): each area page lists the questions you get, the command or example that answers each one, and the deep dives to read.
 
