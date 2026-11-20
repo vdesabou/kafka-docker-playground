@@ -142,6 +142,15 @@ Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CR
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 salesforce.instance
 
 Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS and the OAuth 2.0 Authorization Code grant, set this to your org's My Domain URL (for example https://MyDomainName.my.salesforce.com). Defaults to https://login.salesforce.com.
@@ -196,15 +205,6 @@ Client secret (consumer secret) for the Salesforce connected app
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 salesforce.jwt.keystore.file
-
-Keystore file that stores the private key for JWT authentication
-
-	 - Type: PASSWORD
-	 - Default: 
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 salesforce.object.type
 
 Select Salesforce Object type to process. 'STANDARD_OR_CUSTOM_OBJECT' for regular SObjects, 'BIG_OBJECT' for Big Objects (only supports insert operation).
@@ -213,6 +213,15 @@ Select Salesforce Object type to process. 'STANDARD_OR_CUSTOM_OBJECT' for regula
 	 - Default: STANDARD_OR_CUSTOM_OBJECT
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 salesforce.jwt.keystore.file
+
+Keystore file that stores the private key for JWT authentication
+
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.jwt.keystore.password
 
@@ -246,6 +255,36 @@ The version of Salesforce API to use.
 OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
 
 	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+Select the secret manager to use for retrieving sensitive data.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.managed.configs
+
+Select the configurations to fetch their values from the secret manager.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.provider.integration.id
+
+Select an existing provider integration that has access to your secret manager.
+
+	 - Type: STRING
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
