@@ -142,6 +142,24 @@ Specifies the amount of time, in milliseconds, to connect to the database instan
 	 - Importance: LOW
 	 - Required: false
 
+🔘 database.expire.time.minutes
+
+Specifies how long, in minutes, a database connection can be idle before TCP keepalive probes are sent. Use it to prevent a firewall, NAT device, or load balancer between the connector and the database from closing idle connections. It can also help detect a broken connection, for example because of a network outage or a crashed database host, so the failure surfaces as an error. Set the value lower than the shortest idle timeout of any such device on the network path. A value of 0 disables keepalive. The default is 3 minutes.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+🔘 database.recv.timeout.ms
+
+Specifies how long, in milliseconds, the connector waits for data from the database on a connection before treating the connection as failed. Use it to detect a database server process that has stopped responding, or a connection that has stopped receiving data because of a network problem. The timeout applies to every connection the connector opens to the database, including snapshot and catalog read queries, so set the value higher than the longest time the database can legitimately take to respond. A value of 0 disables the timeout. The default is 0.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
 🔘 downstream.database.hostname
 
 IP address or hostname of the downstream Oracle database server. When specified, enables downstream capture mode where the snapshot and metadata are read from the source database, and streaming occurs from the downstream database.
