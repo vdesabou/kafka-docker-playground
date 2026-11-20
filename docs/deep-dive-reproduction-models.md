@@ -632,9 +632,12 @@ head -15 reproduction-models/connect-connect-debezium-mysql-source/debezium-mysq
 ```
 
 No producer of the sink examples is left. After each sink connector, the model waits until it has consumed every
-record (`playground connector show-lag --connector postgres-sink --max-wait 300 --fail-on-timeout`), or checks the
-state of a storage sink, which only commits its offsets when it writes a file (`playground connector status
---connector s3-sink --fail-on-error`). A fully managed sink after a self-managed source is refused before any file is
+record (`playground connector show-lag --connector postgres-sink --max-wait 300 --fail-on-timeout`). A self-managed
+storage sink (S3, GCS, Azure Blob, HDFS) only commits its offsets when it writes a file, every `flush.size` records (3
+in the examples): it gets `"flush.size": "1"`, so that the few records of the base example land in files, and the same
+lag wait then fails the model when nothing is written (an HDFS sink keeps its offsets in its file names: its state is
+checked instead). A fully managed storage sink keeps its `flush.size` (1000 minimum) and gets a warning: no file
+appears before `time.interval` ends. A fully managed sink after a self-managed source is refused before any file is
 written. While it runs, `playground connector flow` shows the records go through.
 
 **Step 8: clean up**

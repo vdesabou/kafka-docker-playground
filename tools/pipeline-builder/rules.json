@@ -85,6 +85,30 @@
         { "source.class": "(debezium|Cdc|CDC)" }
       ],
       "message": "the sink applies deletes (delete.enabled=true): only a CDC source writes the tombstones it expects"
+    },
+    {
+      "id": "storage-sink-flush-size",
+      "severity": "fix",
+      "when": {
+        "sink.managed": "^false$",
+        "sink.class": "(S3SinkConnector|GcsSink|AzureBlob|DataLakeGen[12]|HdfsSinkConnector|Hdfs3SinkConnector)"
+      },
+      "unless": [
+        { "sink.config.flush.size": "^1$" }
+      ],
+      "message": "the sink writes a file every flush.size records (3 in the storage examples), and the base example may send fewer: flush.size=1 is set, so that every record lands in a file and the pipeline wait fails when nothing is written (one file per record: fine for the records of an example, not for a load such as --enable-sql-datagen)",
+      "add_to_sink": {
+        "flush.size": "1"
+      }
+    },
+    {
+      "id": "managed-storage-sink-flush-size",
+      "severity": "warn",
+      "when": {
+        "sink.managed": "^true$",
+        "sink.class": "(S3_SINK|GcsSink|AzureBlob|DataLakeGen[12])"
+      },
+      "message": "the fully managed sink writes a file every flush.size records (1000 minimum) or when time.interval ends (HOURLY): with the few records of the base example, no file appears before the hour ends, and the file checks of the sink example fail. Send at least flush.size records from the source, or check the files later"
     }
   ]
 }

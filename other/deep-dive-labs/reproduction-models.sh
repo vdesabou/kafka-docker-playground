@@ -36,7 +36,9 @@ lab_run grep -c "playground topic produce" "$pipeline_model"
 lab_expect_equals "$LAB_OUTPUT" "0" "producers of the sink examples left"
 lab_run grep -n "show-lag\|--fail-on-error" "$pipeline_model"
 lab_expect_contains "playground connector show-lag --connector postgres-sink --max-wait 300 --fail-on-timeout"
-lab_expect_contains "playground connector status --connector s3-sink --fail-on-error" "a storage sink commits on flush"
+lab_expect_contains "playground connector show-lag --connector s3-sink --max-wait 300 --fail-on-timeout" "a storage sink gets flush.size=1, then the same lag wait"
+lab_run grep -c '"flush.size": "1"' "$pipeline_model"
+lab_expect_equals "$LAB_OUTPUT" "1" "flush.size=1 set on the storage sink"
 lab_run bash -n "$pipeline_model"
 lab_expect_exit 0
 lab_run playground repro bootstrap -f "${root_dir}/connect/connect-aws-s3-sink/s3-sink.sh" -d "000000 deep dive lab ci pipeline error" \

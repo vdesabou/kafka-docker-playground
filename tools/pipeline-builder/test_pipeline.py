@@ -435,13 +435,36 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(pg["value.converter.schemas.enable"], "false")
         # the source and both sinks
         self.assertEqual(model.count('"value.converter":'), 3)
-        # same connector name twice: renamed; topics.regex replaced; storage sink: status, not show-lag
+        # same connector name twice: renamed; topics.regex replaced; storage sink: flush.size=1, then a lag wait that
+        # fails when nothing is written (the base may send fewer records than the flush.size of the example)
         s3 = heredoc_json(model, r"--connector pg-sink-2 << EOF")
-        self.assertEqual(s3, {"connector.class": "io.confluent.connect.s3.S3SinkConnector", "topics": "file-topic",
+        self.assertEqual(s3, {"connector.class": "io.confluent.connect.s3.S3SinkConnector", "topics": "file-topic", "flush.size": "1",
                               "value.converter": "org.apache.kafka.connect.json.JsonConverter", "value.converter.schemas.enable": "false"})
-        self.assertIn("playground connector status --connector pg-sink-2 --fail-on-error", model)
+        self.assertIn("playground connector show-lag --connector pg-sink-2 --max-wait 300 --fail-on-timeout", model)
+        self.assertNotIn("playground connector status --connector pg-sink-2", model)
+        self.assertIn("flush.size=1 is set", "\n".join(pipeline.messages))
         self.assertNotIn("kafka-console-producer", model)
         self.assertIn("the source writes values without a schema", "\n".join(pipeline.messages))
+
+    def test_storage_sink_flush_size(self):
+        # an example that already writes one file per record: no fix, and the same lag wait (the final flush.size decides)
+        self.repo.add("connect/connect-gcp-gcs-sink/gcs.sh", REGEX_SINK.replace(
+            "io.confluent.connect.s3.S3SinkConnector", "io.confluent.connect.gcs.GcsSinkConnector").replace(
+            '"topics.regex": "s3-.*"', '"topics.regex": "s3-.*",\n  "flush.size": "1"'))
+        model, _ = self.repo.build("connect/connect-filestream-source/file.sh", ["connect/connect-gcp-gcs-sink/gcs.sh"])
+        self.assertTrue(bash_ok(model)[0])
+        self.assertEqual(heredoc_json(model, r"--connector pg-sink << EOF")["flush.size"], "1")
+        self.assertNotIn("flush.size=1 is set", "\n".join(pipeline.messages))
+        self.assertIn("playground connector show-lag --connector pg-sink --max-wait 300 --fail-on-timeout", model)
+        self.assertNotIn("playground connector status --connector pg-sink", model)
+        # HDFS: flush.size=1, but its offsets live in the file names, so no lag wait
+        self.repo.add("connect/connect-hdfs3-sink/hdfs3.sh", REGEX_SINK.replace(
+            "io.confluent.connect.s3.S3SinkConnector", "io.confluent.connect.hdfs3.Hdfs3SinkConnector"))
+        model, _ = self.repo.build("connect/connect-filestream-source/file.sh", ["connect/connect-hdfs3-sink/hdfs3.sh"])
+        self.assertTrue(bash_ok(model)[0])
+        self.assertEqual(heredoc_json(model, r"--connector pg-sink << EOF")["flush.size"], "1")
+        self.assertIn("playground connector status --connector pg-sink --fail-on-error", model)
+        self.assertNotIn("show-lag --connector pg-sink", model)
 
     def test_fan_out_and_ksqldb_step(self):
         model, _ = self.repo.build("connect/connect-jdbc-postgresql-sink/pg.sh", ["connect/connect-aws-s3-sink/s3.sh"])
@@ -502,6 +525,10 @@ class BuildTest(unittest.TestCase):
         self.assertIn("playground connector delete --connector $connector_name\n", tail)
         self.assertIn("playground connector delete --connector $connector_name_1", tail)
         self.assertIn("playground connector status --connector $connector_name_1 --fail-on-error", model)
+        # fully managed storage sink: flush.size has a 1000 minimum, so a warning instead of a fix
+        self.assertNotIn("flush.size", cfg)
+        self.assertIn("1000 minimum", "\n".join(pipeline.messages))
+        self.assertIn("1000 minimum", model)
 
     def test_cleanup_functions_and_exit_traps(self):
         model, out = self.repo.build("ccloud/fm-aws-cloudwatch-logs-source/fm.sh", ["ccloud/fm-aws-redshift-sink/fm.sh"])

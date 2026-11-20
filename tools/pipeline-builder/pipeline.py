@@ -17,8 +17,9 @@ What it does, for each sink:
   * converters (self-managed) or input.data.format (fully managed) are the ones the base writes
   * the 'fix' rules of rules.json are applied (ExtractNewRecordState for a Debezium envelope...)
   * duplicated connector names are renamed, connector_name of fully managed sinks becomes connector_name_<n>
-  * after the sink connector: 'playground connector show-lag' waits until it has consumed every record; the checks
-    of the sink example follow, under set +e, since they were written for the records of its producer
+  * after the sink connector: 'playground connector show-lag' waits until it has consumed every record (a self-managed
+    S3 / GCS / Azure sink gets flush.size=1 from rules.json, so the lag only reaches 0 once every record is in a file);
+    the checks of the sink example follow, under set +e, since they were written for the records of its producer
   * version guards are commented out: --connector-tag would apply to every connector of the model
 """
 
@@ -45,6 +46,8 @@ FLINK_TAG = "2.2"
 FLINK_KAFKA_JAR = "https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.2/flink-sql-connector-kafka-5.0.0-2.2.jar"
 FLINK_AVRO_CONFLUENT_JAR = "https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-avro-confluent-registry/2.2.0/flink-sql-avro-confluent-registry-2.2.0.jar"
 STORAGE_SINK_RE = re.compile(r"(S3SinkConnector|S3_SINK|GcsSink|AzureBlob|DataLakeGen[12]|HdfsSinkConnector|Hdfs3SinkConnector)")
+# the HDFS sinks keep their offsets in the file names (the consumer lag is not a progress signal)
+HDFS_SINK_RE = re.compile(r"Hdfs3?SinkConnector")
 KV_LINE_RE = re.compile(r'^(\s*)"([^"]+)"\s*:\s*"((?:[^"\\]|\\.)*)"(\s*,?)\s*$')
 
 messages = []
@@ -624,7 +627,22 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
         checks = ["set +e # 🔗 pipeline: was set -e" if re.match(r"^\s*set -e\s*$", l) else l for l in checks]
         while checks and not checks[-1].strip():
             checks.pop()
-        if STORAGE_SINK_RE.search(sink["connector"]["class"]):
+        cls = sink["connector"]["class"]
+        # the flush.size of the final config of the sink (set by the rule, or already 1 in the example)
+        flush_one = not sink["managed"] and any(
+            KV_LINE_RE.match(l) and KV_LINE_RE.match(l).group(2) == "flush.size" and KV_LINE_RE.match(l).group(3) == "1"
+            for l in post[s_start + 1:s_end])
+        if flush_one and not HDFS_SINK_RE.search(cls):
+            # flush.size=1: each record is written to a file and its offset committed, so the lag reaches 0 only when
+            # the records of the base example are in files: a sink that writes nothing fails the model
+            wait = [
+                "",
+                "# 🔗 pipeline: %s has flush.size=1, so its consumer lag reaches 0 only when every record of %s is" % (name_ref, sink_topic),
+                "#    in a file: the model fails if nothing is written",
+                'log "🔗 pipeline: waiting until %s has written every record of %s"' % (name_ref, sink_topic),
+                "playground connector show-lag --connector %s --max-wait 300 --fail-on-timeout" % name_ref,
+            ]
+        elif STORAGE_SINK_RE.search(cls):
             # offsets are committed when a file is written (flush.size, rotate.interval.ms): the lag says nothing before
             wait = [
                 "",

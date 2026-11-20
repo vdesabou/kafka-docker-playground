@@ -127,7 +127,8 @@ For each sink, it automatically:
 * applies the compatibility rules: `ExtractNewRecordState` when a Debezium envelope goes into a JDBC, Elasticsearch, BigQuery… sink, warnings when a source without schema feeds a sink that needs one, when two examples define the same docker compose service or host port…
 * renames a connector name already used in the model, adds `--container <db>` to `playground db` when several databases run
 * adds the docker compose services of the sink (lists like `volumes` and `depends_on` are joined) and its plugin to `CONNECT_PLUGIN_PATH`
-* after its connector, waits until it has consumed every record (`playground connector show-lag`, or its state for a storage sink that commits on flush), then keeps the checks of the sink example under `set +e`: they were written for the records of its producer, adapt them
+* sets `flush.size=1` on a self-managed storage sink (S3, GCS, Azure Blob, HDFS), which writes a file only every `flush.size` records, and warns for a fully managed one (1000 minimum, a file per `time.interval`)
+* after its connector, waits until it has consumed every record (`playground connector show-lag`, which fails when a storage sink writes nothing; the state for HDFS), then keeps the checks of the sink example under `set +e`: they were written for the records of its producer, adapt them
 * comments out the version guards (`--connector-tag` would apply to every connector) and writes the chain in the header: `# 🔗 pipeline: <source> -> <sinks> (topic <t>)`, shown by `playground repro list` and as a diagram in the `repro export` report
 
 Other shapes:

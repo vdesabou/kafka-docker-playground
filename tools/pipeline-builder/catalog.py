@@ -487,7 +487,7 @@ def catalog(root):
             keep = re.compile(r"^(connector\.class|topics|topics\.regex|kafka\.topic|topic\.prefix|transforms.*|"
                               r"(key|value)\.converter.*|pk\.mode|pk\.fields|delete\.enabled|key\.ignore|format\.class|"
                               r"input\.data\.format|output\.data\.format|output\.key\.format|after\.state\.only|"
-                              r"insert\.mode|schema\.ignore|tasks\.max)$")
+                              r"insert\.mode|schema\.ignore|tasks\.max|flush\.size)$")
             facts["config"] = {k: v for k, v in facts["config"].items() if keep.match(k)}
             examples.append(facts)
     return {
