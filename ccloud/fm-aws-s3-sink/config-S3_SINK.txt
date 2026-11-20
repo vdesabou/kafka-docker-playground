@@ -297,7 +297,7 @@ How long to wait in milliseconds before attempting the first retry of a failed S
 Maximum number of retry attempts for failed requests. Zero means no retries. The actual number of attempts is determined by the S3 client based on multiple factors including, but not limited to: the value of this parameter, type of exception occurred, and throttling settings of the underlying S3 client.
 
 	 - Type: INT
-	 - Default: 10000
+	 - Default: 10
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -450,13 +450,13 @@ Scheduled rotation uses rotate.schedule.interval.ms to close the file and upload
 The connector’s rotation interval specifies the maximum timespan (in milliseconds) a file can remain open and ready for additional records. In other words, when using rotate.interval.ms, the timestamp for each file starts with the timestamp of the first record inserted in the file. The connector closes and uploads a file to the blob store when the next record's timestamp does not fit into the file's rotate.interval time span from the first record's timestamp. If the connector has no more records to process, the connector may keep the file open until the connector can process another record (which can be a long time).
 
 	 - Type: INT
-	 - Default: ${time.interval}
+	 - Default: ${time.interval}|${partition.duration.ms}
 	 - Importance: HIGH
 	 - Required: false
 
 🔘 path.format
 
-This configuration is used to set the format of the data directories when partitioning with TimeBasedPartitioner. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>, use the properties: topics.dir=json_logs/daily, path.format='dt'=YYYY-MM-dd/'hr'=HH, and time.interval=HOURLY.
+This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to a valid directory string. To organize files like this example, ``s3://<s3-bucket-name>/json_logs/daily/<Topic-Name>/dt=YYYY-MM-DD/hr=09/<files>``, use the properties: ``topics.dir=json_logs/daily``, ``path.format='dt'=YYYY-MM-dd/'hr'=HH``, and ``time.interval=HOURLY``. When ``time.interval=CUSTOM`` and ``partition.duration.ms`` is not a whole number of hours, which is a multiple of 3600000, include a minute pattern so that each partition gets its own directory. For 5 minute or 90 minute partitions, use ``path.format='dt'=YYYY-MM-dd/'hr'=HH/'min'=mm`` to write files like ``s3://<s3-bucket-name>/<Topic-Name>/dt=YYYY-MM-DD/hr=09/min=05/<files>``. When ``partition.duration.ms`` is not a whole number of minutes, which is a multiple of 60000, such as 90000 (90 seconds), also include a second pattern. For example, ``path.format='dt'=YYYY-MM-dd/'hr'=HH/'min'=mm/'sec'=ss`` to write files like ``s3://<s3-bucket-name>/<Topic-Name>/dt=YYYY-MM-DD/hr=09/min=04/sec=30/<files>.``
 
 	 - Type: STRING
 	 - Default: 'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH
@@ -537,7 +537,7 @@ When set to true, this property preserves Avro schema package information and En
 
 🔘 time.interval
 
-Partitioning interval of data, according to the time ingested to storage.
+Partitioning interval of data, according to the time ingested to storage. Use DAILY or HOURLY, or CUSTOM to set your own interval with partition.duration.ms. Short intervals create many small files, so choose the longest interval that meets your needs.
 
 	 - Type: STRING
 	 - Default: 
@@ -596,6 +596,15 @@ Enable or disable writing record keys to storage
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
+	 - Required: false
+
+🔘 partition.duration.ms
+
+The duration of each partition in milliseconds when time.interval is CUSTOM. The minimum is 60000 (1 minute), and the value must be a multiple of 30000 (up to 86400000, 24 hours). 
+
+	 - Type: LONG
+	 - Default: 
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 store.kafka.headers
