@@ -16,6 +16,7 @@
 [🍪 Deep dives](/deep-dives.md)
 [📊 Reports](/reports.md)
 [📈 Benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector)
+[🧭 Examples explorer](examples-explorer.html ':ignore')
 [🔗 Pipeline builder](pipeline-builder.html ':ignore')
 [🤖 Claude Code](/claude-code.md)
 [🎓 How it works](/how-it-works.md)

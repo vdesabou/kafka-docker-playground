@@ -1759,7 +1759,8 @@ subcommands:
     body. Every word of the query must match somewhere; matches in\nthe path and connector
     class rank higher than matches in the body.\n\nPrints the ready-to-paste 'playground
     run -f' command for each hit, best\nfirst. Use 'playground run' instead to browse
-    examples interactively.\nUse 'playground find-command' to find a command instead."
+    examples interactively, or\n--browse for the examples explorer page.\nUse 'playground
+    find-command' to find a command instead."
   usage: playground find-example [QUERY] [OPTIONS] [--] [MORE QUERY WORDS...]
   options:
   - names:
@@ -1785,13 +1786,35 @@ subcommands:
     description: "\U0001F522 Maximum number of hits (default 10)\n\nDefault value:
       10"
   - names:
+    - "--browse"
+    argument: ''
+    description: "\U0001F9ED Open the examples explorer instead: a page with every
+      example to search and filter (category, security, brokers, CFK, clients, no
+      credentials needed), and for the one you pick its README, Confluent docs and
+      deep dive, the options of 'playground run' (environment, CP and connector versions,
+      --enable-* flags) turning into the command to copy, the 'playground repro bootstrap'
+      command, and a link to the pipeline builder\n\nThe query, when given, prefills
+      the search. Also on the website: https://kafka-docker-playground.io/examples-explorer.html
+      (with the CI status of each example)\n\nConflicts with: --json"
+  - names:
+    - "--output-dir"
+    - "-o"
+    argument: OUTPUT_DIR
+    description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-<command>,
+      printed at the end)"
+  - names:
+    - "--no-open"
+    argument: ''
+    description: "\U0001F648 Do not open the HTML report in the browser (it is still
+      written, and its path printed)"
+  - names:
     - "--json"
     argument: ''
     description: "\U0001F4D7 Print the hits as a JSON array, best first, and nothing
       else\n\nEach hit has script (absolute path), path (relative to the repository),\ntitle
       (README), connector_classes, environment, score and run_command.\nNo hit prints
       [] and exits with code 1.\n\n\U0001F393 Tip: use it in scripts and from AI agents,
-      for example with\njq -r '.[0].script'"
+      for example with\njq -r '.[0].script'\n\nConflicts with: --browse"
 - name: find-command
   description: "\U0001F9ED Find the playground command that answers a question, without
     reading the docs\n\nDescribe what you want to know or the symptom, in your own

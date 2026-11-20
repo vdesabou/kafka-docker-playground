@@ -12,7 +12,8 @@ mkdir -p "$output_dir"
 report="$output_dir/pipeline-builder.html"
 
 log "🔗 Reading the connector examples of $root_folder"
-if ! python3 -I "$root_folder/tools/pipeline-builder/catalog.py" html --root "$root_folder" --output "$report" 2> "$output_dir/pipeline-builder.log"
+# with the examples explorer next to it: the two pages link to each other
+if ! python3 -I "$root_folder/tools/pipeline-builder/catalog.py" pages --root "$root_folder" --output-dir "$output_dir" 2> "$output_dir/pipeline-builder.log"
 then
   logerror "❌ could not build the pipeline builder page:"
   cat "$output_dir/pipeline-builder.log"

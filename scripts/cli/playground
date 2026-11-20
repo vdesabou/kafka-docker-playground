@@ -5625,7 +5625,7 @@ playground_history_usage() {
 playground_find_example_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground find-example\n\n"
-    printf "  🔎 Find examples matching a free-text query, without the interactive picker\n  \n  Searches every runnable example script (connect/, ccloud/, ksqldb/,\n  flink/, reproduction-models/, ...) by path, connector class, README title\n  and script body. Every word of the query must match somewhere; matches in\n  the path and connector class rank higher than matches in the body.\n  \n  Prints the ready-to-paste 'playground run -f' command for each hit, best\n  first. Use 'playground run' instead to browse examples interactively.\n  Use 'playground find-command' to find a command instead.\n\n"
+    printf "  🔎 Find examples matching a free-text query, without the interactive picker\n  \n  Searches every runnable example script (connect/, ccloud/, ksqldb/,\n  flink/, reproduction-models/, ...) by path, connector class, README title\n  and script body. Every word of the query must match somewhere; matches in\n  the path and connector class rank higher than matches in the body.\n  \n  Prints the ready-to-paste 'playground run -f' command for each hit, best\n  first. Use 'playground run' instead to browse examples interactively, or\n  --browse for the examples explorer page.\n  Use 'playground find-command' to find a command instead.\n\n"
   else
     printf "playground find-example - 🔎 Find examples matching a free-text query, without the interactive picker\n\n"
   fi
@@ -5654,8 +5654,25 @@ playground_find_example_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--browse")"
+    printf "    🧭 Open the examples explorer instead: a page with every example to search\n    and filter (category, security, brokers, CFK, clients, no credentials\n    needed), and for the one you pick its README, Confluent docs and deep dive,\n    the options of 'playground run' (environment, CP and connector versions,\n    --enable-* flags) turning into the command to copy, the 'playground repro\n    bootstrap' command, and a link to the pipeline builder\n    \n    The query, when given, prefills the search. Also on the website:\n    https://kafka-docker-playground.io/examples-explorer.html (with the CI\n    status of each example)\n"
+    printf "    %s\n" "Conflicts: --json"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: /tmp/playground-<command>,\n    printed at the end)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 Do not open the HTML report in the browser (it is still written, and its\n    path printed)\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    📗 Print the hits as a JSON array, best first, and nothing else\n    \n    Each hit has script (absolute path), path (relative to the repository),\n    title (README), connector_classes, environment, score and run_command.\n    No hit prints [] and exits with code 1.\n    \n    🎓 Tip: use it in scripts and from AI agents, for example with\n    jq -r '.[0].script'\n"
+    printf "    %s\n" "Conflicts: --browse"
     echo
 
     # :command.usage_fixed_flags
@@ -51682,8 +51699,9 @@ playground_update_docs_command() {
 
   mv ${root_folder}/scripts/cli/docs/* ${root_folder}/docs/
 
-  # the pipeline builder page of the website (playground repro pipeline-builder, with $PWD in the commands)
-  python3 -I ${root_folder}/tools/pipeline-builder/catalog.py html --root ${root_folder} --output ${root_folder}/docs/pipeline-builder.html --site
+  # the pipeline builder and the examples explorer pages of the website (playground repro pipeline-builder and playground
+  # find-example --browse, with $PWD in the commands); the explorer reads the CI status from content.md of the website
+  python3 -I ${root_folder}/tools/pipeline-builder/catalog.py pages --root ${root_folder} --output-dir ${root_folder}/docs --site
 
 }
 
@@ -59530,6 +59548,41 @@ playground_find_example_command() {
       query="${query:+$query }${other_args[*]}"
   fi
 
+  if [[ -n "${args[--browse]}" ]]
+  then
+      if ! command -v python3 > /dev/null 2>&1
+      then
+          logerror "❌ python3 is required to build the examples explorer page"
+          exit 1
+      fi
+      output_dir="${args[--output-dir]:-/tmp/playground-examples-explorer}"
+      mkdir -p "$output_dir"
+      log "🧭 Reading the examples of $root_folder"
+      # with the pipeline builder next to it: the two pages link to each other
+      if ! python3 -I "$root_folder/tools/pipeline-builder/catalog.py" pages --root "$root_folder" --output-dir "$output_dir" 2> "$output_dir/examples-explorer.log"
+      then
+          logerror "❌ could not build the examples explorer page:"
+          cat "$output_dir/examples-explorer.log"
+          exit 1
+      fi
+      report="$output_dir/examples-explorer.html"
+      log "🔎 search, filter, pick an example, then copy its 'playground run' (or 'repro bootstrap') command"
+      if [[ -z "$query" ]]
+      then
+          open_html_report "$report" "${args[--no-open]}"
+          exit 0
+      fi
+      # the query prefills the search: a file:// url with the selection after #
+      url="file://$report#q=$(python3 -I -c 'import sys, urllib.parse; print(urllib.parse.quote_plus(sys.argv[1]))' "$query")"
+      log "✅ HTML report saved: $report"
+      log "🔗 Open in browser: $url"
+      if [[ -z "${args[--no-open]}" ]] && [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+      then
+          open_url "$url" || true
+      fi
+      exit 0
+  fi
+
   if [[ -z "$query" ]] && [[ -z "$category" ]]
   then
       logerror "❌ give a query, or --category to list every example of a category"
@@ -64763,7 +64816,8 @@ playground_repro_pipeline_builder_command() {
   report="$output_dir/pipeline-builder.html"
 
   log "🔗 Reading the connector examples of $root_folder"
-  if ! python3 -I "$root_folder/tools/pipeline-builder/catalog.py" html --root "$root_folder" --output "$report" 2> "$output_dir/pipeline-builder.log"
+  # with the examples explorer next to it: the two pages link to each other
+  if ! python3 -I "$root_folder/tools/pipeline-builder/catalog.py" pages --root "$root_folder" --output-dir "$output_dir" 2> "$output_dir/pipeline-builder.log"
   then
     logerror "❌ could not build the pipeline builder page:"
     cat "$output_dir/pipeline-builder.log"
@@ -119040,7 +119094,47 @@ playground_find_example_parse_requirements() {
         ;;
 
       # :flag.case
+      --browse)
+        # :flag.conflicts
+        if [[ -n "${args['--json']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--json" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--browse']=1
+        shift
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
       --json)
+        # :flag.conflicts
+        if [[ -n "${args['--browse']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--browse" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--json']=1
@@ -174619,8 +174713,30 @@ playground_find_example_completion() {
         completion_blocked_flags["--limit"]=1
 
         ;;
+      --browse)
+        completion_blocked_flags["--browse"]=1
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       --json)
         completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--browse"]=1
 
         shift
         ;;
@@ -174639,6 +174755,9 @@ playground_find_example_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --category "$completion_current" --category
     completion_flag_candidates --limit "$completion_current" --limit
+    completion_flag_candidates --browse "$completion_current" --browse
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
     completion_flag_candidates --json "$completion_current" --json
   fi
 

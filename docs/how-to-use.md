@@ -296,6 +296,9 @@ playground switch-podman    # points docker and docker compose at the podman soc
 
 Check the list of examples in the **[Content](/content.md)** section and simply use [playground run](/playground%20run) CLI command!
 
+> [!TIP]
+> Not sure which one? The **[🧭 examples explorer](examples-explorer.html ':ignore')** searches and filters every example, shows its README, Confluent docs, credentials needed and CI status, and turns the environment, versions and `--enable-*` options you pick into the `playground run` command to copy (`playground find-example --browse` opens it locally).
+
 🎬 New here? The bite size session [Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) shows both ways and the options, in about 4 minutes.
 
 
