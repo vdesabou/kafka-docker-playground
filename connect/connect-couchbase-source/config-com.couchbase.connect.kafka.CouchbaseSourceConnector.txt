@@ -72,17 +72,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bucket
-
-Name of the Couchbase bucket to use.
-
-This property is required unless using the experimental AnalyticsSinkHandler.
-
-	 - Type: STRING
-	 - Default: 
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 couchbase.username
 
 Name of the Couchbase user to authenticate as.
@@ -92,13 +81,15 @@ Name of the Couchbase user to authenticate as.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bootstrap.timeout
+🔘 couchbase.bucket
 
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+Name of the Couchbase bucket to use.
+
+This property is required unless using the experimental AnalyticsSinkHandler.
 
 	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
+	 - Default: 
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 couchbase.seed.nodes
@@ -111,6 +102,15 @@ If a custom port is specified, it must be the KV port (which is normally 11210 f
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.network
 
@@ -262,19 +262,6 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 Requires Couchbase Server 7.0 or later.
 
 	 - Type: STRING
-	 - Default: 
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.collections
-
-If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-Requires Couchbase Server 7.0 or later.
-
-	 - Type: LIST
 	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
@@ -492,6 +479,19 @@ Comma-delimited list of Couchbase metadata headers to add to records. Recognized
 UNCOMMITTED; this feature may change in a patch release without notice.
 
 * Since: 4.2.5
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.collections
+
+If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+Requires Couchbase Server 7.0 or later.
 
 	 - Type: LIST
 	 - Default: 
