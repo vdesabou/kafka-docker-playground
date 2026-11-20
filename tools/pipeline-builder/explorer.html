@@ -21,6 +21,9 @@
 .fchip{border:1px solid var(--line);background:var(--card2);color:var(--fg);font:inherit;font-size:.78rem;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer;transition:.12s;white-space:nowrap}
 .fchip small{color:var(--muted);font-weight:500;margin-left:4px}
 .fchip:hover{border-color:var(--a1)}
+.flabel{align-self:center;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px;cursor:help}
+.tchip{border-style:dashed;background:transparent}
+.tchip[aria-pressed=true]{border-style:solid}
 .fchip[aria-pressed=true]{color:#fff;border-color:transparent;background:linear-gradient(120deg,var(--a1),var(--a2));box-shadow:0 4px 12px var(--glow)}
 .fchip[aria-pressed=true] small{color:rgba(255,255,255,.8)}
 .achip{border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:.8rem;font-weight:650;padding:7px 12px;border-radius:12px;cursor:pointer;transition:.12s;white-space:nowrap}
@@ -263,7 +266,14 @@ function renderFilters() {
   for (const e of base) counts[e.category] = (counts[e.category] || 0) + 1;
   $("cats").innerHTML = CATS.filter(c => !c[0] || counts[c[0]]).map(c =>
     `<button class="fchip" data-cat="${c[0]}" aria-pressed="${state.cat === c[0]}">${c[2]} ${esc(c[1])}<small>${c[0] ? counts[c[0]] : base.length}</small></button>`).join("");
-  $("topics").innerHTML = TOPICS.map(t => `<button class="fchip" data-topic="${t[0]}" aria-pressed="${state.topics.includes(t[0])}">${esc(t[1])}</button>`).join("");
+  // the topics: optional tags on top of the area and the category (several can be combined), with the number of the
+  // examples they would keep; a topic that keeps none is hidden, unless it is selected
+  const current = filtered(false);
+  const tcount = {};
+  for (const e of current) for (const t of e.topics) tcount[t] = (tcount[t] || 0) + 1;
+  const topics = TOPICS.filter(t => tcount[t[0]] || state.topics.includes(t[0]));
+  $("topics").innerHTML = topics.length ? `<span class="flabel" title="optional tags that narrow the list: security mechanisms, brokers and replication, CFK, clients (several can be combined)">🏷️ Topics</span>` +
+    topics.map(t => `<button class="fchip tchip" data-topic="${t[0]}" aria-pressed="${state.topics.includes(t[0])}" title="${state.topics.includes(t[0]) ? "remove this topic" : "only the examples about " + esc(t[1].replace(/^\S+\s/, "").toLowerCase())}">${esc(t[1])}<small>${tcount[t[0]] || 0}</small></button>`).join("") : "";
 }
 
 function renderList() {
