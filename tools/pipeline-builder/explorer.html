@@ -385,16 +385,21 @@ function renderDetail() {
   }
   const cat = CAT[e.category] || CAT[""];
   const ci = CI && CI[e.dir];
+  // each credential links to how to set it up: Confluent Cloud (confluent login, playground ccloud setup), the others
+  // stored with playground secrets (AWS, Azure, GCP, variables to export)
   const CRED_LABEL = {aws: "🔑 AWS credentials", azure: "🔑 Azure login", gcp: "🔑 GCP keyfile", ccloud: "☁️ Confluent Cloud"};
-  const creds = [...(e.credentials || []).map(c => CRED_LABEL[c] || "🔑 " + c), ...(e.required_env || []).map(v => "🔑 $" + v)];
-  if ((e.managed || e.category === "ccloud") && !(e.credentials || []).includes("ccloud")) creds.unshift(CRED_LABEL.ccloud);
+  const SETUP = {ccloud: [DOCS + "how-to-use?id=🌤️-confluent-cloud-examples", "how to set up the Confluent Cloud examples: confluent login, playground ccloud setup"],
+                 other: [DOCS + "how-to-use?id=🔐-storing-credentials-with-playground-secrets", "how to provide it: playground secrets, or an exported variable"]};
+  const creds = [...(e.credentials || []).map(c => [CRED_LABEL[c] || "🔑 " + c, SETUP[c === "ccloud" ? "ccloud" : "other"]]),
+                 ...(e.required_env || []).map(v => ["🔑 $" + v, SETUP.other])];
+  if ((e.managed || e.category === "ccloud") && !(e.credentials || []).includes("ccloud")) creds.unshift([CRED_LABEL.ccloud, SETUP.ccloud]);
   let html = `<div class="hero">${icon(e)}<div style="min-width:0"><h2>${esc(title(e))}${variant(e)}</h2><div class="path mono">${esc(e.path)}</div></div></div>
     <div class="tags">${e.area ? (a => `<a class="tagc" href="${DOCS + a[2]}" target="_blank" rel="noopener" title="the area page: questions, commands, deep dives">${esc(a[1])} ↗</a>`)(AREAS.find(x => x[0] === e.area)) : ""}<span class="tagc">${cat[2]} ${esc(cat[1])}</span>
       ${e.topics.map(t => `<span class="tagc">${esc((TOPICS.find(x => x[0] === t) || [t, t])[1])}</span>`).join("")}
       ${e.connector ? `<span class="tagc mono">${esc(short(e.connector.class))}</span>` : ""}
       ${ci ? `<a class="tagc ${ci.state}" href="${esc(ci.url)}" target="_blank" rel="noopener" title="last nightly CI run">${ci.state === "ok" ? "✅" : "🔥"} CI ${esc(ci.label)}</a>` : ""}
       ${ci && ci.version ? `<span class="tagc">🔢 ${esc(ci.version)}</span>` : ""}
-      ${creds.map(c => `<span class="tagc">${esc(c)}</span>`).join("")}
+      ${creds.map(([label, [href, title]]) => `<a class="tagc" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(title)}">${esc(label)} ↗</a>`).join("")}
       ${!creds.length ? `<span class="tagc ok">🆓 no credentials needed</span>` : ""}</div>
     <div class="links"><a class="lbtn" href="${GITHUB + esc(e.dir)}" target="_blank" rel="noopener">📖 README ↗</a>
       ${e.docs_url ? `<a class="lbtn" href="${esc(e.docs_url)}" target="_blank" rel="noopener">📘 Confluent docs ↗</a>` : ""}
