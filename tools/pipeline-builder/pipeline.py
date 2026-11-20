@@ -186,6 +186,32 @@ def replace_topic_token(text, old, new):
     return re.sub(pattern, lambda m: new, text, flags=re.I)
 
 
+DB_SQL_RE = re.compile(r"^\s*playground\s+db\s+sql\b.*<<")
+
+
+def quote_in_sql(lines, old, new, engine):
+    """in the 'playground db sql' heredocs, the new table name quoted when the database would fold its case (a JDBC sink
+    creates the table with the exact name of the topic): PostgreSQL folds to lower case, Oracle and Db2 to upper case."""
+    folded = new.lower() if engine == "postgres" else new.upper() if engine in ("oracle", "db2") else new
+    if folded == new or "$" in new:
+        return lines
+    pattern = r'(?<![A-Za-z0-9_."\-])' + re.escape(old) + r'(?![A-Za-z0-9_"\-]|\.[A-Za-z0-9_])'
+    out = []
+    i = 0
+    while i < len(lines):
+        out.append(lines[i])
+        m = DB_SQL_RE.search(lines[i]) and HEREDOC_RE.search(lines[i])
+        if m:
+            j = i + 1
+            while j < len(lines) and lines[j].strip() != m.group(1):
+                out.append(re.sub(pattern, lambda _: '"%s"' % new, lines[j], flags=re.I))
+                j += 1
+            i = j
+            continue
+        i += 1
+    return out
+
+
 def connector_names(lines):
     names = set()
     for l in lines:
@@ -580,8 +606,12 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
         if old_topics:
             head = post[:s_start]
             tail = post[s_start:]
+            engines = sink.get("database_engines", [])
             for t in old_topics:
                 if t != sink_topic:
+                    # SQL first: the table, quoted when needed, then every other occurrence
+                    if len(engines) == 1:
+                        tail = quote_in_sql(tail, t, sink_topic, engines[0])
                     tail = [replace_topic_token(l, t, sink_topic) for l in tail]
             post = head + tail
             s_start, s_end = heredoc_span(post)

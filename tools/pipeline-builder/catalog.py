@@ -109,7 +109,20 @@ def connector_kind(cls, dir_kind):
 DB_RE = re.compile(r"mongo(?!-express|ku)|mariadb|mysql|percona|postgres|postgis|timescale|mssql|sqlserver|azure-sql-edge|db2|oracle|db-prebuilt", re.I)
 
 
-def compose_databases(path):
+ENGINES = [("mongodb", r"mongo"), ("mysql", r"mariadb|mysql|percona"), ("postgres", r"postgres|postgis|timescale"),
+           ("sqlserver", r"mssql|sqlserver|azure-sql-edge"), ("db2", r"db2"), ("oracle", r"oracle|db-prebuilt")]
+
+
+def db_engine(*names):
+    """engine of a database container from its image or name, as db_engine_from_name of playground db."""
+    for n in names:
+        for engine, regex in ENGINES:
+            if n and re.search(regex, n, re.I):
+                return engine
+    return ""
+
+
+def compose_databases(path, with_engine=False):
     """container names of the database services of a docker compose override (name or image known by playground db)."""
     dbs = []
     if not path or not os.path.isfile(path):
@@ -121,7 +134,7 @@ def compose_databases(path):
         if service and service != "connect":
             name = info.get("container_name") or service
             if DB_RE.search(info.get("image", "")) or DB_RE.search(service):
-                dbs.append(name)
+                dbs.append((name, db_engine(info.get("image", ""), service)) if with_engine else name)
     for raw in read(path).splitlines():
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
@@ -279,6 +292,7 @@ def describe(path, root=None):
         compose_file = os.path.relpath(os.path.join(directory, m.group(1)), root)
     services, ports = compose_facts(os.path.join(root, compose_file) if compose_file else None)
     databases = compose_databases(os.path.join(root, compose_file) if compose_file else None)
+    database_engines = [e for _, e in compose_databases(os.path.join(root, compose_file) if compose_file else None, True)]
 
     cloud = None
     m = CCLOUD_RE.search(text)
@@ -317,6 +331,7 @@ def describe(path, root=None):
         "services": services,
         "ports": ports,
         "databases": databases,
+        "database_engines": database_engines,
         "credentials": sorted(set(CRED_RE.findall(text))),
         "required_env": sorted(set(REQUIRED_ENV_RE.findall(text))),
         "cloud": cloud,

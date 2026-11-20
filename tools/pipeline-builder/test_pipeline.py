@@ -113,6 +113,10 @@ cleanup
 set -e
 
 playground db wait-for-rows --table ORDERS --min-expected-rows 2
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+SELECT * FROM ORDERS;
+SELECT * FROM "orders";
+EOF
 grep "orders-backup" /tmp/x
 '''
 
@@ -406,6 +410,9 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(cfg["transforms.unwrap.type"], "io.debezium.transforms.ExtractNewRecordState")
         # the old topic in the checks, as a whole token only, any case
         self.assertIn("--table server1.mydb.CUSTOMERS", model)
+        # in the SQL of 'playground db sql', quoted: PostgreSQL would fold the name to lower case
+        self.assertIn('SELECT * FROM "server1.mydb.CUSTOMERS";', model)
+        self.assertNotIn('""', model[model.index("SELECT * FROM"):model.index("SELECT * FROM") + 200])
         self.assertIn('grep "orders-backup"', model)
         # guards commented out, credentials of the sink before the start, one show-lag, checks under set +e
         self.assertNotRegex(model, r"(?m)^if connect_cp_version_greater_than_8")
