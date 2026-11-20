@@ -1030,6 +1030,7 @@ function set_profiles() {
     export flink_connectors=""
   else
     log "🐿️ Starting services with Flink"
+    log "🌐 Flink UI (jobs, operators, back pressure, checkpoints, exceptions): http://localhost:18081, or playground flink ui"
     profile_flink="--profile flink"
     playground state set flags.ENABLE_FLINK 1
     source ${DIR}/../../scripts/flink_download_connectors.sh

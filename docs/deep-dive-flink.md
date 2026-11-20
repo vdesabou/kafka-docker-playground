@@ -14,7 +14,7 @@ Takes about 15 minutes to read and run.
 | the jobs of the cluster, with the cause of the FAILED ones | `playground flink list-jobs` (`--state RUNNING`) |
 | the jobs as data | `playground flink list-jobs --json` |
 | cancel a job | `playground flink cancel --job <id>`, `--all`, or no flag when only one job runs |
-| the Flink UI | [http://localhost:18081](http://localhost:18081) (same port as the REST API) |
+| the Flink UI | [http://localhost:18081](http://localhost:18081) (same port as the REST API), `playground flink ui [--job <id>]` opens it; Control Center does not show this cluster (it handles Flink through CMF only) |
 | a ready-made streaming + batch example | `playground run -f flink/flink-sql-kafka/flink-sql-kafka.sh` |
 | the same on Confluent Cloud Flink (compute pool, statements) | `playground run -f ccloud/flink-sql-kafka/flink-sql-kafka.sh`, then `playground flink … --environment ccloud` ([section 6](/deep-dive-flink?id=_6-confluent-cloud-flink-environment-ccloud)) |
 
@@ -442,6 +442,7 @@ playground flink sql [--file <file.sql> | << 'EOF' … EOF] [--max-wait 120]
 playground flink list-jobs [--state RUNNING|FAILED|…] [--json]
 playground flink cancel [--job <id> | --all]
 playground flink table-ddl --topic <t> [--table <name>] [--schema-topic <t>] [--sink]   # CREATE TABLE from the Avro schema in Schema Registry
+playground flink ui [--job <id>] [--no-open]                    # the Flink UI (jobs, operators, back pressure, checkpoints) in the browser
 playground flink sql|list-jobs|cancel --environment ccloud      # Confluent Cloud compute pool; cancel --delete
 ```
 

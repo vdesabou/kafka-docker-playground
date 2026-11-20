@@ -340,6 +340,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Flink commands:")"
   printf "  %s   🐿️ Flink commands\n" "$(green "flink")                                     "
   printf "  %s   🐿️ Run Flink SQL statements with the SQL client\n" "$(green "flink sql")                                 "
+  printf "  %s   🌐 Open the Flink UI of the local Flink cluster in the browser\n" "$(green "flink ui")                                  "
   printf "  %s   🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry\n" "$(green "flink table-ddl")                           "
   printf "  %s   📋 List the jobs of the Flink cluster\n" "$(green "flink list-jobs")                           "
   printf "  %s   🛑 Cancel a Flink job\n" "$(green "flink cancel")                              "
@@ -19108,7 +19109,7 @@ playground_consumer_group_delete_usage() {
 playground_flink_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground flink\n\n"
-    printf "  🐿️ Flink commands\n  \n  Run Flink SQL and manage the jobs of the Flink cluster started with\n  'playground run --enable-flink' (jobmanager REST API on port 18081), or\n  the statements of a Confluent Cloud Flink compute pool (--environment ccloud,\n  the default after a ccloud example).\n  \n    sql         run Flink SQL statements (stdin or --file) with the SQL client\n    table-ddl   CREATE TABLE of a topic, columns from its Avro schema in Schema\n  Registry\n    list-jobs   jobs of the cluster with their state, start time and duration\n    cancel      cancel a job, or all running jobs\n  \n  🎓 Tip: the Flink UI is served on the same port as the REST API:\n  http://localhost:18081. See the flink/flink-sql-kafka example, and\n  ccloud/flink-sql-kafka for Confluent Cloud.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink\n\n"
+    printf "  🐿️ Flink commands\n  \n  Run Flink SQL and manage the jobs of the Flink cluster started with\n  'playground run --enable-flink' (jobmanager REST API on port 18081), or\n  the statements of a Confluent Cloud Flink compute pool (--environment ccloud,\n  the default after a ccloud example).\n  \n    sql         run Flink SQL statements (stdin or --file) with the SQL client\n    table-ddl   CREATE TABLE of a topic, columns from its Avro schema in Schema\n  Registry\n    ui          open the Flink UI (jobs, operators, checkpoints) in the browser\n    list-jobs   jobs of the cluster with their state, start time and duration\n    cancel      cancel a job, or all running jobs\n  \n  🎓 Tip: the Flink UI is served on the same port as the REST API:\n  http://localhost:18081 ('playground flink ui' opens it). See the\n  flink/flink-sql-kafka example, and\n  ccloud/flink-sql-kafka for Confluent Cloud.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink\n\n"
   else
     printf "playground flink - 🐿️ Flink commands\n\n"
   fi
@@ -19120,6 +19121,7 @@ playground_flink_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "Flink commands:")"
   printf "  %s   🐿️ Run Flink SQL statements with the SQL client\n" "$(green "sql")      "
+  printf "  %s   🌐 Open the Flink UI of the local Flink cluster in the browser\n" "$(green "ui")       "
   printf "  %s   🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry\n" "$(green "table-ddl")"
   printf "  %s   📋 List the jobs of the Flink cluster\n" "$(green "list-jobs")"
   printf "  %s   🛑 Cancel a Flink job\n" "$(green "cancel")   "
@@ -19216,6 +19218,51 @@ printf "  playground flink sql --environment ccloud << 'EOF'\nSELECT COUNT(*) AS
 echo
 
 fi
+}
+
+# :command.usage
+playground_flink_ui_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground flink ui\n\n"
+    printf "  🌐 Open the Flink UI of the local Flink cluster in the browser\n  \n  The web UI of the jobmanager, on the same port as its REST API\n  (http://localhost:18081): running and finished jobs, the job graph, records in\n  and out per operator, back pressure, checkpoints, exceptions, and the logs and\n  metrics of the taskmanagers. --job opens the page of one job.\n  \n  ℹ️ Control Center does not show this cluster: it handles Flink through\n  Confluent Manager for Apache Flink (CMF) only, and the playground runs open\n  source Flink.\n  \n  ☁️ Confluent Cloud: not supported, the statements are in the Confluent Cloud\n  console.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink\n\n"
+  else
+    printf "playground flink ui - 🌐 Open the Flink UI of the local Flink cluster in the browser\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground flink ui [OPTIONS]\n"
+  printf "  playground flink ui --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--job, -j JOB")"
+    printf "    🆔 Id of the job whose page to open (see playground flink list-jobs)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 Do not open the HTML report in the browser (it is still written, and its\n    path printed)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground flink ui\n"
+    printf "  playground flink ui --job 6241bc76b798a992d369055943d70621\n"
+    printf "  playground flink ui --no-open\n"
+    echo
+
+  fi
 }
 
 # :command.usage
@@ -42617,6 +42664,7 @@ function set_profiles() {
     export flink_connectors=""
   else
     log "🐿️ Starting services with Flink"
+    log "🌐 Flink UI (jobs, operators, back pressure, checkpoints, exceptions): http://localhost:18081, or playground flink ui"
     profile_flink="--profile flink"
     playground state set flags.ENABLE_FLINK 1
     source ${DIR}/../../scripts/flink_download_connectors.sh
@@ -58354,6 +58402,7 @@ playground_run_command() {
       if [ $is_ccloud_managed == 0 ] && [ "$(playground state get flags.ENABLE_FLINK 2> /dev/null)" == "1" ]
       then
         log "   🐿️ Flink jobs:                       playground flink list-jobs"
+        log "   🌐 Flink UI:                         http://localhost:18081 (playground flink ui opens it)"
       fi
       log "   🔁 run it again:                     playground re-run"
     fi
@@ -89331,6 +89380,7 @@ playground_flink_sql_command() {
   for job_id in $(echo "$output" | grep -o -E "Job ID: [0-9a-f]+" | awk '{print $3}')
   do
       log "🚀 Job $job_id submitted, follow it with: playground flink list-jobs"
+      log "🌐 in the Flink UI: ${flink_rest_url}/#/job/running/${job_id}/overview"
   done
 
   if echo "$output" | grep -q "\[ERROR\]"
@@ -89355,6 +89405,52 @@ playground_flink_sql_command() {
   then
       logerror "❌ the SQL client exited with code $rc"
       exit 1
+  fi
+
+}
+
+# :command.function
+playground_flink_ui_command() {
+
+  # src/commands/flink/ui.sh
+  job="${args[--job]}"
+  no_open="${args[--no-open]}"
+
+  get_flink_environment
+  if [[ "$flink_environment" == "ccloud" ]]
+  then
+      logerror "❌ the Flink statements of Confluent Cloud are in the Confluent Cloud console (Environments > Flink), there is no Flink UI"
+      exit 1
+  fi
+
+  if ! get_flink_rest_url
+  then
+      logerror "❌ the Flink cluster is not running: start an example with --enable-flink (or ENABLE_FLINK=true), see flink/flink-sql-kafka"
+      exit 1
+  fi
+
+  url="$flink_rest_url"
+  if [[ -n "$job" ]]
+  then
+      job_state=$(curl -s -f "${flink_rest_url}/jobs/${job}" | jq -r '.state // empty' 2> /dev/null)
+      if [[ -z "$job_state" ]]
+      then
+          logerror "❌ no job $job in the Flink cluster, see playground flink list-jobs"
+          exit 1
+      fi
+      # the UI has one page per job: running/<id> while it runs, completed/<id> once it is FINISHED, CANCELED or FAILED
+      case "$job_state" in
+          FINISHED|CANCELED|FAILED) url="${flink_rest_url}/#/job/completed/${job}/overview" ;;
+          *) url="${flink_rest_url}/#/job/running/${job}/overview" ;;
+      esac
+      log "🌐 Flink UI, job $job ($job_state): $url"
+  else
+      log "🌐 Flink UI: $url"
+  fi
+
+  if [[ -z "$no_open" ]] && [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+      open_url "$url" || true
   fi
 
 }
@@ -89436,6 +89532,7 @@ playground_flink_list_jobs_command() {
   fi
 
   log "📋 Jobs of the Flink cluster (Flink $(echo "$overview" | jq -r '."flink-version"'), $flink_rest_url)"
+  log "🌐 Flink UI: $flink_rest_url (playground flink ui [--job <id>] opens it)"
   if [ "$(echo "$jobs" | jq 'length')" == "0" ]
   then
       if [[ -n "$state" ]]
@@ -152292,6 +152389,13 @@ playground_flink_parse_requirements() {
       shift $#
       ;;
 
+    ui)
+      action="ui"
+      shift
+      playground_flink_ui_parse_requirements "$@"
+      shift $#
+      ;;
+
     table-ddl)
       action="table-ddl"
       shift
@@ -152503,6 +152607,87 @@ playground_flink_sql_parse_requirements() {
     printf "%s\n" "--environment must be one of: local, ccloud" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_flink_ui_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_flink_ui_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="flink ui"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --job | -j)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--job']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--job requires an argument: --job, -j JOB" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -191519,6 +191704,11 @@ playground_flink_completion() {
         playground_flink_sql_completion "$completion_current" "$@"
         return
         ;;
+      ui)
+        shift
+        playground_flink_ui_completion "$completion_current" "$@"
+        return
+        ;;
       table-ddl)
         shift
         playground_flink_table_ddl_completion "$completion_current" "$@"
@@ -191543,7 +191733,7 @@ playground_flink_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" sql table-ddl list-jobs cancel
+  completion_candidates "$completion_current" sql ui table-ddl list-jobs cancel
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -191617,6 +191807,49 @@ playground_flink_sql_completion() {
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --max-wait "$completion_current" --max-wait -w
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_flink_ui_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --job | -j)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-flink-job-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--job"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --job "$completion_current" --job -j
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
@@ -200443,6 +200676,7 @@ run() {
     "consumer-group delete") playground_consumer_group_delete_command ;;
     "flink") playground_flink_command ;;
     "flink sql") playground_flink_sql_command ;;
+    "flink ui") playground_flink_ui_command ;;
     "flink table-ddl") playground_flink_table_ddl_command ;;
     "flink list-jobs") playground_flink_list_jobs_command ;;
     "flink cancel") playground_flink_cancel_command ;;

@@ -56,6 +56,7 @@ echo "$output" | sed 's/\x1b\[[0-9;]*m//g' \
 for job_id in $(echo "$output" | grep -o -E "Job ID: [0-9a-f]+" | awk '{print $3}')
 do
     log "🚀 Job $job_id submitted, follow it with: playground flink list-jobs"
+    log "🌐 in the Flink UI: ${flink_rest_url}/#/job/running/${job_id}/overview"
 done
 
 if echo "$output" | grep -q "\[ERROR\]"

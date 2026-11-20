@@ -21,6 +21,7 @@ then
 fi
 
 log "📋 Jobs of the Flink cluster (Flink $(echo "$overview" | jq -r '."flink-version"'), $flink_rest_url)"
+log "🌐 Flink UI: $flink_rest_url (playground flink ui [--job <id>] opens it)"
 if [ "$(echo "$jobs" | jq 'length')" == "0" ]
 then
     if [[ -n "$state" ]]

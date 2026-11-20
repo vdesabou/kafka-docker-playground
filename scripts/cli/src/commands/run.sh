@@ -2175,6 +2175,7 @@ function cleanup {
     if [ $is_ccloud_managed == 0 ] && [ "$(playground state get flags.ENABLE_FLINK 2> /dev/null)" == "1" ]
     then
       log "   🐿️ Flink jobs:                       playground flink list-jobs"
+      log "   🌐 Flink UI:                         http://localhost:18081 (playground flink ui opens it)"
     fi
     log "   🔁 run it again:                     playground re-run"
   fi

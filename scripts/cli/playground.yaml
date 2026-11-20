@@ -10123,11 +10123,13 @@ subcommands:
     API on port 18081), or\nthe statements of a Confluent Cloud Flink compute pool
     (--environment ccloud,\nthe default after a ccloud example).\n\n  sql         run
     Flink SQL statements (stdin or --file) with the SQL client\n  table-ddl   CREATE
-    TABLE of a topic, columns from its Avro schema in Schema Registry\n  list-jobs
-    \  jobs of the cluster with their state, start time and duration\n  cancel      cancel
+    TABLE of a topic, columns from its Avro schema in Schema Registry\n  ui          open
+    the Flink UI (jobs, operators, checkpoints) in the browser\n  list-jobs   jobs
+    of the cluster with their state, start time and duration\n  cancel      cancel
     a job, or all running jobs\n\n\U0001F393 Tip: the Flink UI is served on the same
-    port as the REST API:\nhttp://localhost:18081. See the flink/flink-sql-kafka example,
-    and\nccloud/flink-sql-kafka for Confluent Cloud.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink"
+    port as the REST API:\nhttp://localhost:18081 ('playground flink ui' opens it).
+    See the flink/flink-sql-kafka example, and\nccloud/flink-sql-kafka for Confluent
+    Cloud.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink"
   usage: playground flink COMMAND
   options: []
   subcommands:
@@ -10181,6 +10183,29 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+  - name: ui
+    description: "\U0001F310 Open the Flink UI of the local Flink cluster in the browser\n\nThe
+      web UI of the jobmanager, on the same port as its REST API (http://localhost:18081):
+      running and finished jobs, the job graph, records in and out per operator, back
+      pressure, checkpoints, exceptions, and the logs and metrics of the taskmanagers.
+      --job opens the page of one job.\n\nℹ️ Control Center does not show this cluster:
+      it handles Flink through Confluent Manager for Apache Flink (CMF) only, and
+      the playground runs open source Flink.\n\n☁️ Confluent Cloud: not supported,
+      the statements are in the Confluent Cloud console.\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-flink"
+    usage: playground flink ui [OPTIONS]
+    options:
+    - names:
+      - "--job"
+      - "-j"
+      argument: JOB
+      description: "\U0001F194 Id of the job whose page to open (see playground flink
+        list-jobs)"
+    - names:
+      - "--no-open"
+      argument: ''
+      description: "\U0001F648 Do not open the HTML report in the browser (it is still
+        written, and its path printed)"
   - name: table-ddl
     description: "\U0001F9F1 Print the Flink SQL CREATE TABLE of a Kafka topic, its
       columns read from the Avro value schema in Schema Registry\n\nFlink cannot read
