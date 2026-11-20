@@ -196,6 +196,11 @@ commands:
       as empty, so it can be used before a sink connector has created it
       (auto.create=true).
 
+      A JDBC sink creates the table with the exact name of its topic, quoted:
+      on PostgreSQL (which folds an unquoted name to lower case), Oracle and
+      Db2 (upper case), a --table with the other case (server1_mydb_CUSTOMERS)
+      is also looked up quoted, "server1_mydb_CUSTOMERS".
+
       --query replaces the count with any query that returns one number.
       For MongoDB, --table is the collection and --where a filter document
       ({"status": "done"}).

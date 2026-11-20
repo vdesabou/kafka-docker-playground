@@ -40,6 +40,29 @@ else
     count_query="SELECT COUNT(*) FROM $table${where:+ WHERE $where}"
 fi
 
+# PostgreSQL folds an unquoted name to lower case, Oracle and Db2 to upper case, but a JDBC sink creates the table
+# with the exact name of its topic, quoted (server1_mydb_CUSTOMERS): while the table is missing, the exact name is
+# tried too
+exact_count_query=""
+if [[ -z "$query" ]] && [[ "$table" != *[\"\`\[]* ]]
+then
+    table_name="${table##*.}"
+    table_prefix=""
+    if [[ "$table" == *.* ]]
+    then
+        table_prefix="${table%.*}."
+    fi
+    folded=""
+    case "$db_engine" in
+        postgres) folded="${table_name,,}" ;;
+        oracle|db2) folded="${table_name^^}" ;;
+    esac
+    if [[ -n "$folded" ]] && [[ "$folded" != "$table_name" ]]
+    then
+        exact_count_query="SELECT COUNT(*) FROM ${table_prefix}\"${table_name}\"${where:+ WHERE $where}"
+    fi
+fi
+
 unit="${unit- rows}"
 if [[ -n "$query" ]]
 then
@@ -57,6 +80,22 @@ do
     output=$(printf '%s\n' "$count_query" | db_exec scalar stop "$verbose") || rc=$?
     verbose=""
     count=$(printf '%s\n' "$output" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^[0-9]+$' | tail -1)
+
+    if [[ -z "$count" ]] && [[ -n "$exact_count_query" ]] && printf '%s\n' "$output" | grep -q -E "$missing_table_regex"
+    then
+        exact_rc=0
+        exact_output=$(printf '%s\n' "$exact_count_query" | db_exec scalar stop "") || exact_rc=$?
+        exact_count=$(printf '%s\n' "$exact_output" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^[0-9]+$' | tail -1)
+        if [ $exact_rc -eq 0 ] && [[ -n "$exact_count" ]]
+        then
+            log "🔤 table $table found with its exact case, quoted: ${exact_count_query#SELECT COUNT(*) FROM }"
+            count_query="$exact_count_query"
+            exact_count_query=""
+            output="$exact_output"
+            count="$exact_count"
+            rc=0
+        fi
+    fi
 
     if [[ -z "$count" ]] && [[ -z "$query" ]] && printf '%s\n' "$output" | grep -q -E "$missing_table_regex"
     then
