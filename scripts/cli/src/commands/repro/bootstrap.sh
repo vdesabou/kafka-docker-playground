@@ -178,7 +178,8 @@ then
   MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
   MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
   MENU_PIPELINE_STEP="$(menu_label "🧪" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
-  readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the ksqlDB step"
+  MENU_PIPELINE_STEP_FLINK="$(menu_label "🐿️" "Add a Flink step between the source and the sinks" "--pipeline-step flink")"
+  readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the processing step"
 
   readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
   readonly MENU_GO_BACK="🔙 Go back"
@@ -228,7 +229,7 @@ then
       then
         if [ -z "$pipeline_step" ]
         then
-          options+=("$MENU_PIPELINE_STEP")
+          options+=("$MENU_PIPELINE_STEP" "$MENU_PIPELINE_STEP_FLINK")
         else
           options+=("$MENU_PIPELINE_NO_STEP")
         fi
@@ -313,10 +314,15 @@ then
       pipeline_step="ksqldb"
       array_flag_list+=("--pipeline-step=ksqldb")
     fi
+    if [[ $res == *"$MENU_PIPELINE_STEP_FLINK"* ]]
+    then
+      pipeline_step="flink"
+      array_flag_list+=("--pipeline-step=flink")
+    fi
     if [[ $res == *"$MENU_PIPELINE_NO_STEP"* ]]
     then
+      array_flag_list=("${array_flag_list[@]/"--pipeline-step=$pipeline_step"}")
       pipeline_step=""
-      array_flag_list=("${array_flag_list[@]/"--pipeline-step=ksqldb"}")
     fi
 
     if [[ $res == *"$MENU_PIPELINE"* ]]

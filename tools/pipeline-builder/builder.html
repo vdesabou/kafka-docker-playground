@@ -89,7 +89,9 @@ a{color:var(--accent)}
       <div class="row"><label for="topic">🗳 topic</label><div><select id="topic"></select>
         <input type="text" id="topic-custom" placeholder="another topic (--pipeline-topic)" style="margin-top:6px"></div></div>
       <div class="row" id="step-row"><label for="step">🧪 processing step</label>
-        <label><input type="checkbox" id="step"> ksqlDB stream between the source and the sinks (<code>--pipeline-step ksqldb</code>)</label></div>
+        <select id="step"><option value="">none: the sinks read the topic of the source</option>
+          <option value="ksqldb">ksqlDB: a stream copies the topic (--pipeline-step ksqldb)</option>
+          <option value="flink">Flink: a job copies the topic, tables from the Avro schema (--pipeline-step flink)</option></select></div>
       <div class="row"><label>💱 format</label><div id="format" class="muted"></div></div>
       <div class="row"><label>🔐 credentials</label><div id="creds" class="chips"></div></div>
     </section>
@@ -113,7 +115,7 @@ const CATALOG = /*__PIPELINE_CATALOG__*/null;
 const ROOT = /*__PIPELINE_ROOT__*/"";
 const GITHUB = "https://github.com/vdesabou/kafka-docker-playground/tree/master/";
 
-const state = {managed: false, fanout: false, base: null, sinks: [], topic: "", custom: "", step: false};
+const state = {managed: false, fanout: false, base: null, sinks: [], topic: "", custom: "", step: ""};
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let examples = [], rules = [];
@@ -207,7 +209,7 @@ function renderPipeline() {
     state.topic = candidates[0] || "";
   }
   const topic = state.custom || state.topic;
-  const step = state.step && !state.managed && !state.fanout;
+  const step = !state.managed && !state.fanout ? state.step : "";
   $("step-row").style.display = state.managed || state.fanout ? "none" : "";
 
   // flow
@@ -215,7 +217,7 @@ function renderPipeline() {
      ${ex.path ? `<span><a href="${GITHUB + esc(ex.dir)}" target="_blank" rel="noopener">README</a></span>` : ""}</div>`;
   let html = base ? node(base) : `<div class="node empty">pick a ${state.fanout ? "sink" : "source"} example</div>`;
   html += `<div class="arrow">➜</div><div class="node topic"><b>${esc(topic || "?")}</b><span>topic</span></div>`;
-  if (step) html += `<div class="arrow">➜</div><div class="node step"><b>ksqlDB</b><span>CREATE STREAM … AS SELECT *</span></div><div class="arrow">➜</div><div class="node topic"><b>${esc((topic || "?") + "_ksqldb")}</b><span>topic</span></div>`;
+  if (step) html += `<div class="arrow">➜</div><div class="node step"><b>${step === "flink" ? "Flink" : "ksqlDB"}</b><span>${step === "flink" ? "INSERT INTO … SELECT *" : "CREATE STREAM … AS SELECT *"}</span></div><div class="arrow">➜</div><div class="node topic"><b>${esc((topic || "?") + "_" + step)}</b><span>topic</span></div>`;
   html += `<div class="arrow">➜</div><div class="sinks">${sinks.length ? sinks.map(node).join("") : `<div class="node empty">pick sink examples</div>`}</div>`;
   $("flow").innerHTML = html;
 
@@ -242,8 +244,13 @@ function renderPipeline() {
     f.push(...found);
     if (candidates.length > 1 && !state.custom) f.push({severity: "info", sink: "", message: `the base uses several topics (${candidates.join(", ")}): the sinks read ${topic}`});
     if (!topic) f.push({severity: "warn", sink: "", message: "the topic of the base could not be found: type it (--pipeline-topic)"});
-    if (step && !/(Avro|Protobuf|JsonSchema)/i.test(base.value_converter_effective))
+    if (step === "ksqldb" && !/(Avro|Protobuf|JsonSchema)/i.test(base.value_converter_effective))
       f.push({severity: "warn", sink: "", message: "the ksqlDB step needs values with a schema (Avro, Protobuf or JSON Schema): bootstrap refuses it"});
+    if (step === "flink") {
+      if (!/avro/i.test(base.value_converter_effective))
+        f.push({severity: "warn", sink: "", message: "the Flink step needs Avro values (the columns of the tables come from the Avro schema): bootstrap refuses it"});
+      f.push({severity: "info", sink: "", message: "Flink step: plaintext environment only, and the records of " + (topic || "?") + "_flink have no key (value only)"});
+    }
     const names = {};
     for (const s of sinks) { const n = s.connector.name; if (n && !n.startsWith("$")) names[n] = (names[n] || 0) + 1; }
     if (base.connector && names[base.connector.name]) names[base.connector.name]++;
@@ -264,7 +271,7 @@ function renderPipeline() {
     cmd = `playground repro bootstrap -f ${q(base.path)} \\\n  -d "${desc.replace(/"/g, '\\"')}" \\\n`;
     cmd += sinks.map(s => `  --pipeline ${q(s.path)} \\\n`).join("");
     if (state.custom) cmd += `  --pipeline-topic "${state.custom.replace(/"/g, '\\"')}" \\\n`;
-    if (step) cmd += `  --pipeline-step ksqldb \\\n`;
+    if (step) cmd += `  --pipeline-step ${step} \\\n`;
     cmd += `  --no-run`;
   }
   $("cmd").textContent = cmd || "# pick a base example and at least one sink";
@@ -280,7 +287,7 @@ function saveHash() {
   if (state.base) p.set("base", state.base);
   if (state.sinks.length) p.set("sinks", state.sinks.join(","));
   if (state.custom) p.set("topic", state.custom);
-  if (state.step) p.set("step", "ksqldb");
+  if (state.step) p.set("step", state.step);
   const d = $("desc").value.trim();
   if (d) p.set("desc", d);
   history.replaceState(null, "", "#" + p.toString());
@@ -292,11 +299,11 @@ function loadHash() {
   state.base = p.get("base") && byPath(p.get("base")) ? p.get("base") : null;
   state.sinks = (p.get("sinks") || "").split(",").filter(x => x && byPath(x));
   state.custom = p.get("topic") || "";
-  state.step = p.get("step") === "ksqldb";
+  state.step = ["ksqldb", "flink"].includes(p.get("step")) ? p.get("step") : "";
   if (p.get("desc")) $("desc").value = p.get("desc");
   $("fanout").checked = state.fanout;
   $("topic-custom").value = state.custom;
-  $("step").checked = state.step;
+  $("step").value = state.step;
   $("tab-sm").setAttribute("aria-pressed", String(!state.managed)); $("tab-fm").setAttribute("aria-pressed", String(state.managed));
 }
 
@@ -325,7 +332,7 @@ function init(data) {
   };
   $("topic").onchange = e => { state.topic = e.target.value; renderPipeline(); saveHash(); };
   $("topic-custom").oninput = e => { state.custom = e.target.value.trim(); renderPipeline(); saveHash(); };
-  $("step").onchange = e => { state.step = e.target.checked; renderPipeline(); saveHash(); };
+  $("step").onchange = e => { state.step = e.target.value; renderPipeline(); saveHash(); };
   $("desc").oninput = () => { renderPipeline(); saveHash(); };
   $("copy").onclick = () => {
     const text = $("cmd").textContent;

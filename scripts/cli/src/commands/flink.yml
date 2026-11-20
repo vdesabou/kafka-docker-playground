@@ -12,6 +12,7 @@ help: |-
   the default after a ccloud example).
 
     sql         run Flink SQL statements (stdin or --file) with the SQL client
+    table-ddl   CREATE TABLE of a topic, columns from its Avro schema in Schema Registry
     list-jobs   jobs of the cluster with their state, start time and duration
     cancel      cancel a job, or all running jobs
 
@@ -130,6 +131,74 @@ commands:
         [INFO] SQL update statement has been successfully submitted to the cluster:
         Job ID: 972185f42739cba34766e6dea6d80a50
         13:20:49 ℹ️ 🚀 Job 972185f42739cba34766e6dea6d80a50 submitted, follow it with: playground flink list-jobs
+
+  - name: table-ddl
+    group: Flink
+    help: |-
+      🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry
+
+      Flink cannot read the columns of a table from Schema Registry: this command writes them for you, from the latest version of the subject <topic>-value (or of --schema-topic), with the Avro types mapped to Flink SQL types (records become ROW, arrays ARRAY, maps MAP, unions with null a nullable column, logical types DATE, TIME, TIMESTAMP and DECIMAL). The table reads (or, with --sink, writes) the values with the avro-confluent format; the key of the records is not read.
+
+      Paste the result in 'playground flink sql', or use it in a script, as 'playground repro bootstrap --pipeline-step flink' does.
+
+      ⚠️ Avro values only (open source Flink has no Protobuf or JSON Schema Schema Registry format); local Flink cluster only.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
+    flags:
+    - long: --topic
+      short: -t
+      required: true
+      arg: topic
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Topic of the table
+    - long: --table
+      required: false
+      arg: table
+      help: |-
+        🧱 Name of the table (default: the topic, with every character other than a letter, a digit or _ replaced by _)
+    - long: --schema-topic
+      required: false
+      arg: topic
+      help: |-
+        📜 Topic whose value schema gives the columns (default: --topic). For a table written by an INSERT INTO a new topic, use the topic it copies.
+    - long: --sink
+      required: false
+      help: |-
+        ✍️ A table written by an INSERT INTO: no consumer group nor startup mode in its options
+    - long: --field
+      required: false
+      arg: field
+      help: |-
+        🧩 The columns of this record field of the value instead of the whole value, for example after for a Debezium envelope
+    - long: --select-from
+      required: false
+      arg: table
+      help: |-
+        🔎 Print the SELECT of the columns of --field from this table (SELECT `after`.`id` AS `id`, … FROM <table> WHERE `after` IS NOT NULL) instead of the CREATE TABLE
+    examples:
+    - playground flink table-ddl --topic orders
+    - playground flink table-ddl --topic orders_copy --schema-topic orders --table orders_copy --sink
+    - playground flink table-ddl --topic cdc_flat --schema-topic server1_mydb_CUSTOMERS --field after --table cdc_flat --sink
+    - playground flink table-ddl --topic server1_mydb_CUSTOMERS --field after --select-from cdc_source
+    x_example_outputs:
+    - command: playground flink table-ddl --topic orders
+      output: |-
+        CREATE TABLE `orders` (
+          `id` INT,
+          `product` STRING,
+          `quantity` INT
+        ) WITH (
+          'connector' = 'kafka',
+          'topic' = 'orders',
+          'properties.bootstrap.servers' = 'broker:9092',
+          'properties.group.id' = 'flink-orders',
+          'scan.startup.mode' = 'earliest-offset',
+          'value.format' = 'avro-confluent',
+          'value.avro-confluent.url' = 'http://schema-registry:8081'
+        );
 
   - name: list-jobs
     group: Flink

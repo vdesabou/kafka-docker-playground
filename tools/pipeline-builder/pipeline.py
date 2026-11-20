@@ -40,6 +40,10 @@ SM_ANCHOR_RE = re.compile(r"^\s*playground\s+start-environment\b")
 FM_ANCHOR_RE = re.compile(r"^\s*bootstrap_ccloud_environment\b")
 PG_ENV_RE = re.compile(r"^\s*PLAYGROUND_ENVIRONMENT=")
 TEARDOWN_RE = re.compile(r'^\s*log\s+"Do you want to delete')
+# the Flink step: the versions of the flink/flink-sql-kafka example (the kafka sql connector is released for one Flink minor)
+FLINK_TAG = "2.2"
+FLINK_KAFKA_JAR = "https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.2/flink-sql-connector-kafka-5.0.0-2.2.jar"
+FLINK_AVRO_CONFLUENT_JAR = "https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-avro-confluent-registry/2.2.0/flink-sql-avro-confluent-registry-2.2.0.jar"
 STORAGE_SINK_RE = re.compile(r"(S3SinkConnector|S3_SINK|GcsSink|AzureBlob|DataLakeGen[12]|HdfsSinkConnector|Hdfs3SinkConnector)")
 KV_LINE_RE = re.compile(r'^(\s*)"([^"]+)"\s*:\s*"((?:[^"\\]|\\.)*)"(\s*,?)\s*$')
 
@@ -316,6 +320,14 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
         fail("could not find the 'playground connector create-or-update' heredoc of %s" % base["path"])
     if step and base["managed"]:
         fail("--pipeline-step %s is only supported with self-managed (connect/) examples" % step)
+    if step and base["kind"] != "source":
+        fail("--pipeline-step %s needs a source example as base" % step)
+    if step == "ksqldb" and not ksqldb_format(base["value_converter_effective"], base["data_format"]):
+        fail("--pipeline-step ksqldb needs values with a schema (Avro, Protobuf or JSON Schema) to declare the stream "
+             "without columns, and %s writes %s" % (base["path"], base["value_converter_effective"] or "?"))
+    if step == "flink" and "avro" not in base["value_converter_effective"].lower():
+        fail("--pipeline-step flink needs Avro values (open source Flink reads Schema Registry with avro-confluent only, "
+             "the columns come from the Avro schema), and %s writes %s" % (base["path"], base["value_converter_effective"] or "?"))
 
     # the topic the sinks read
     if not topic:
@@ -367,9 +379,6 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
     sink_topic = topic
     if step == "ksqldb":
         value_format = ksqldb_format(base["value_converter_effective"], base["data_format"])
-        if not value_format:
-            fail("--pipeline-step ksqldb needs values with a schema (Avro, Protobuf or JSON Schema) to declare the stream "
-                 "without columns, and %s writes %s" % (base["path"], base["value_converter_effective"] or "?"))
         key_format = ksqldb_format(base["key_converter_effective"], "") or "KAFKA"
         sink_topic = topic + "_ksqldb"
         env_line = find(model, PG_ENV_RE)
@@ -394,6 +403,60 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
         info("🧪 ksqlDB step: %s -> PIPELINE_STEP -> %s (KEY_FORMAT %s, VALUE_FORMAT %s)" % (topic, sink_topic, key_format, value_format))
         if base["envelope"] == "debezium":
             warn("the ksqlDB step keeps the Debezium envelope, the sinks unwrap it: to flatten it in ksqlDB instead, use SELECT AFTER->* and remove ExtractNewRecordState from the sinks")
+
+    if step == "flink":
+        sink_topic = topic + "_flink"
+        debezium = base["envelope"] == "debezium"
+        env_line = find(model, PG_ENV_RE)
+        if env_line < 0:
+            env_line = find(model, anchor_re)
+        model[env_line:env_line] = [
+            "# 🔗 pipeline: Flink step between the source and the sinks (same versions as flink/flink-sql-kafka)",
+            'if [ "${PLAYGROUND_ENVIRONMENT:-plaintext}" != "plaintext" ]',
+            "then",
+            '    logwarn "the Flink step of the pipeline is only available in the plaintext environment"',
+            "    exit 111",
+            "fi",
+            "export ENABLE_FLINK=true",
+            'if [ "$FLINK_TAG" == "latest" ]',
+            "then",
+            '    export FLINK_TAG="%s"' % FLINK_TAG,
+            "fi",
+            "# the kafka sql connector and the avro-confluent format, in /opt/flink/lib of the flink containers",
+            'export FLINK_URL="%s %s"' % (FLINK_KAFKA_JAR, FLINK_AVRO_CONFLUENT_JAR),
+            "",
+        ]
+        model += [
+            "",
+            "#################################################################################################",
+            "# 🔗 pipeline: Flink step, from topic %s to topic %s" % (topic, sink_topic),
+            "#################################################################################################",
+            'log "🔗 pipeline: Flink step, from topic %s to topic %s"' % (topic, sink_topic),
+            "# the columns of the tables come from the Avro value schema of %s (playground flink table-ddl)" % topic,
+            "source_table=$(playground flink table-ddl --topic %s --table pipeline_source)" % topic,
+        ] + ([
+            "# the Debezium envelope is flattened by the job: the columns of 'after', the deletes (no 'after') are left out",
+            "step_table=$(playground flink table-ddl --topic %s --schema-topic %s --field after --table pipeline_step --sink)" % (sink_topic, topic),
+            "step_select=$(playground flink table-ddl --topic %s --field after --select-from pipeline_source)" % topic,
+        ] if debezium else [
+            "step_table=$(playground flink table-ddl --topic %s --schema-topic %s --table pipeline_step --sink)" % (sink_topic, topic),
+            'step_select="SELECT * FROM pipeline_source"',
+        ]) + [
+            "playground flink sql << EOF",
+            "$source_table",
+            "",
+            "$step_table",
+            "",
+            "INSERT INTO pipeline_step $step_select;",
+            "EOF",
+            "",
+            "playground topic consume --topic %s --min-expected-messages 1 --timeout 120" % sink_topic,
+        ]
+        info("🐿️ Flink step: %s -> INSERT INTO pipeline_step -> %s (columns from the Avro schema, value only: the records of %s have no key)"
+             % (topic, sink_topic, sink_topic))
+        if debezium:
+            info("🧩 the Flink job flattens the Debezium envelope (the columns of after, deletes left out): no ExtractNewRecordState in the sinks")
+            findings = catalog.check(dict(base, envelope=None), sinks)
 
     for n, sink in enumerate(sinks, start=1):
         with open(os.path.join(root, sink["path"]), encoding="utf-8") as f:
@@ -570,7 +633,7 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
     model = chain_exit_traps(model)
 
     # header
-    chain = base["path"] + (" -> ksqldb" if step else "") + " -> " + ", ".join(s["path"] for s in sinks)
+    chain = base["path"] + (" -> " + step if step else "") + " -> " + ", ".join(s["path"] for s in sinks)
     header = ["# 🔗 pipeline: %s (topic %s)" % (chain, topic)]
     for f in findings:
         level = {"fix": "🩹", "warn": "⚠️", "info": "ℹ️"}[f["severity"]]
@@ -595,7 +658,7 @@ def main():
     p.add_argument("--base", required=True)
     p.add_argument("--sink", action="append", required=True)
     p.add_argument("--topic")
-    p.add_argument("--step", choices=["ksqldb"])
+    p.add_argument("--step", choices=["ksqldb", "flink"])
     p.add_argument("--root")
     a = p.parse_args()
     if not a.model and not a.validate:

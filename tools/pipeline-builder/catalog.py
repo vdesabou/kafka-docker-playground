@@ -423,7 +423,7 @@ def mermaid(source, sinks, topic, step=None):
     return "\n".join(out)
 
 
-PIPELINE_HEADER_RE = re.compile(r"^# 🔗 pipeline: (\S+)( -> ksqldb)? -> (.+?) \(topic (.+)\)\s*$")
+PIPELINE_HEADER_RE = re.compile(r"^# 🔗 pipeline: (\S+)(?: -> (ksqldb|flink))? -> (.+?) \(topic (.+)\)\s*$")
 
 
 def from_model(model, root):
@@ -433,7 +433,7 @@ def from_model(model, root):
         if m:
             sinks = [s.strip() for s in m.group(3).split(",") if s.strip()]
             return (describe(os.path.join(root, m.group(1)), root), [describe(os.path.join(root, s), root) for s in sinks],
-                    m.group(4), "ksqldb" if m.group(2) else None)
+                    m.group(4), m.group(2))
     return None
 
 

@@ -2304,7 +2304,7 @@
                 "--pipeline-step"
               ],
               "argument": "STEP",
-              "description": "🧪 Processing step between the source and the sinks of --pipeline (self-managed only)\n\nksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro, Protobuf or JSON Schema).\n\nAllowed values: ksqldb"
+              "description": "🧪 Processing step between the source and the sinks of --pipeline (self-managed only)\n\nksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro, Protobuf or JSON Schema).\n\nflink: a Flink cluster is started (plaintext environment), and a job copies the topic of the source to <topic>_flink, the topic the sinks read: INSERT INTO pipeline_step SELECT * FROM pipeline_source, the two tables written at run time from the Avro value schema of the source (playground flink table-ddl). The values must be Avro; the records of <topic>_flink have no key.\n\nAllowed values: ksqldb, flink"
             },
             {
               "names": [
@@ -9780,7 +9780,7 @@
     },
     {
       "name": "flink",
-      "description": "🐿️ Flink commands\n\nRun Flink SQL and manage the jobs of the Flink cluster started with\n'playground run --enable-flink' (jobmanager REST API on port 18081), or\nthe statements of a Confluent Cloud Flink compute pool (--environment ccloud,\nthe default after a ccloud example).\n\n  sql         run Flink SQL statements (stdin or --file) with the SQL client\n  list-jobs   jobs of the cluster with their state, start time and duration\n  cancel      cancel a job, or all running jobs\n\n🎓 Tip: the Flink UI is served on the same port as the REST API:\nhttp://localhost:18081. See the flink/flink-sql-kafka example, and\nccloud/flink-sql-kafka for Confluent Cloud.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
+      "description": "🐿️ Flink commands\n\nRun Flink SQL and manage the jobs of the Flink cluster started with\n'playground run --enable-flink' (jobmanager REST API on port 18081), or\nthe statements of a Confluent Cloud Flink compute pool (--environment ccloud,\nthe default after a ccloud example).\n\n  sql         run Flink SQL statements (stdin or --file) with the SQL client\n  table-ddl   CREATE TABLE of a topic, columns from its Avro schema in Schema Registry\n  list-jobs   jobs of the cluster with their state, start time and duration\n  cancel      cancel a job, or all running jobs\n\n🎓 Tip: the Flink UI is served on the same port as the REST API:\nhttp://localhost:18081. See the flink/flink-sql-kafka example, and\nccloud/flink-sql-kafka for Confluent Cloud.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
       "usage": "playground flink COMMAND",
       "options": [],
       "subcommands": [
@@ -9819,6 +9819,56 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            }
+          ]
+        },
+        {
+          "name": "table-ddl",
+          "description": "🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry\n\nFlink cannot read the columns of a table from Schema Registry: this command writes them for you, from the latest version of the subject <topic>-value (or of --schema-topic), with the Avro types mapped to Flink SQL types (records become ROW, arrays ARRAY, maps MAP, unions with null a nullable column, logical types DATE, TIME, TIMESTAMP and DECIMAL). The table reads (or, with --sink, writes) the values with the avro-confluent format; the key of the records is not read.\n\nPaste the result in 'playground flink sql', or use it in a script, as 'playground repro bootstrap --pipeline-step flink' does.\n\n⚠️ Avro values only (open source Flink has no Protobuf or JSON Schema Schema Registry format); local Flink cluster only.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
+          "usage": "playground flink table-ddl [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic of the table\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--table"
+              ],
+              "argument": "TABLE",
+              "description": "🧱 Name of the table (default: the topic, with every character other than a letter, a digit or _ replaced by _)"
+            },
+            {
+              "names": [
+                "--schema-topic"
+              ],
+              "argument": "TOPIC",
+              "description": "📜 Topic whose value schema gives the columns (default: --topic). For a table written by an INSERT INTO a new topic, use the topic it copies."
+            },
+            {
+              "names": [
+                "--sink"
+              ],
+              "argument": "",
+              "description": "✍️ A table written by an INSERT INTO: no consumer group nor startup mode in its options"
+            },
+            {
+              "names": [
+                "--field"
+              ],
+              "argument": "FIELD",
+              "description": "🧩 The columns of this record field of the value instead of the whole value, for example after for a Debezium envelope"
+            },
+            {
+              "names": [
+                "--select-from"
+              ],
+              "argument": "TABLE",
+              "description": "🔎 Print the SELECT of the columns of --field from this table (SELECT `after`.`id` AS `id`, … FROM <table> WHERE `after` IS NOT NULL) instead of the CREATE TABLE"
             }
           ]
         },

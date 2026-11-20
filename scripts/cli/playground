@@ -340,6 +340,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Flink commands:")"
   printf "  %s   🐿️ Flink commands\n" "$(green "flink")                                     "
   printf "  %s   🐿️ Run Flink SQL statements with the SQL client\n" "$(green "flink sql")                                 "
+  printf "  %s   🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry\n" "$(green "flink table-ddl")                           "
   printf "  %s   📋 List the jobs of the Flink cluster\n" "$(green "flink list-jobs")                           "
   printf "  %s   🛑 Cancel a Flink job\n" "$(green "flink cancel")                              "
   echo
@@ -7233,8 +7234,8 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline-step STEP")"
-    printf "    🧪 Processing step between the source and the sinks of --pipeline\n    (self-managed only)\n    \n    ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes\n    <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro,\n    Protobuf or JSON Schema).\n"
-    printf "    %s\n" "Allowed: ksqldb"
+    printf "    🧪 Processing step between the source and the sinks of --pipeline\n    (self-managed only)\n    \n    ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes\n    <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro,\n    Protobuf or JSON Schema).\n    \n    flink: a Flink cluster is started (plaintext environment), and a job copies\n    the topic of the source to <topic>_flink, the topic the sinks read: INSERT\n    INTO pipeline_step SELECT * FROM pipeline_source, the two tables written at\n    run time from the Avro value schema of the source (playground flink\n    table-ddl). The values must be Avro; the records of <topic>_flink have no\n    key.\n"
+    printf "    %s\n" "Allowed: ksqldb, flink"
     echo
 
     # :flag.usage
@@ -7255,6 +7256,7 @@ playground_repro_bootstrap_usage() {
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-http-sink/http_no_auth.sh\" -d \"123456 dlq not working\"\n  --expected \"bad records go to the DLQ\" --actual \"the task fails with Unknown\n  magic byte\" --jira CC-1234 --no-run\n"
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh\" -d\n  \"123456 cdc to postgres and s3\" --pipeline\n  \"\$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh\" --pipeline\n  \"\$PWD/connect/connect-aws-s3-sink/s3-sink.sh\" --no-run\n"
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh\" -d\n  \"123456 cdc through ksqldb\" --pipeline\n  \"\$PWD/connect/connect-elasticsearch-sink/elasticsearch-sink.sh\"\n  --pipeline-step ksqldb --no-run\n"
+    printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh\" -d\n  \"123456 cdc through flink\" --pipeline\n  \"\$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh\" --pipeline-step\n  flink --no-run\n"
     printf "  playground repro bootstrap -f\n  \"\$PWD/ccloud/fm-datagen-source/fully-managed-datagen-source.sh\" -d \"123456\n  datagen to s3\" --pipeline\n  \"\$PWD/ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh\" --no-run\n"
     echo
 
@@ -19106,7 +19108,7 @@ playground_consumer_group_delete_usage() {
 playground_flink_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground flink\n\n"
-    printf "  🐿️ Flink commands\n  \n  Run Flink SQL and manage the jobs of the Flink cluster started with\n  'playground run --enable-flink' (jobmanager REST API on port 18081), or\n  the statements of a Confluent Cloud Flink compute pool (--environment ccloud,\n  the default after a ccloud example).\n  \n    sql         run Flink SQL statements (stdin or --file) with the SQL client\n    list-jobs   jobs of the cluster with their state, start time and duration\n    cancel      cancel a job, or all running jobs\n  \n  🎓 Tip: the Flink UI is served on the same port as the REST API:\n  http://localhost:18081. See the flink/flink-sql-kafka example, and\n  ccloud/flink-sql-kafka for Confluent Cloud.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink\n\n"
+    printf "  🐿️ Flink commands\n  \n  Run Flink SQL and manage the jobs of the Flink cluster started with\n  'playground run --enable-flink' (jobmanager REST API on port 18081), or\n  the statements of a Confluent Cloud Flink compute pool (--environment ccloud,\n  the default after a ccloud example).\n  \n    sql         run Flink SQL statements (stdin or --file) with the SQL client\n    table-ddl   CREATE TABLE of a topic, columns from its Avro schema in Schema\n  Registry\n    list-jobs   jobs of the cluster with their state, start time and duration\n    cancel      cancel a job, or all running jobs\n  \n  🎓 Tip: the Flink UI is served on the same port as the REST API:\n  http://localhost:18081. See the flink/flink-sql-kafka example, and\n  ccloud/flink-sql-kafka for Confluent Cloud.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink\n\n"
   else
     printf "playground flink - 🐿️ Flink commands\n\n"
   fi
@@ -19118,6 +19120,7 @@ playground_flink_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "Flink commands:")"
   printf "  %s   🐿️ Run Flink SQL statements with the SQL client\n" "$(green "sql")      "
+  printf "  %s   🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry\n" "$(green "table-ddl")"
   printf "  %s   📋 List the jobs of the Flink cluster\n" "$(green "list-jobs")"
   printf "  %s   🛑 Cancel a Flink job\n" "$(green "cancel")   "
   echo
@@ -19213,6 +19216,72 @@ printf "  playground flink sql --environment ccloud << 'EOF'\nSELECT COUNT(*) AS
 echo
 
 fi
+}
+
+# :command.usage
+playground_flink_table_ddl_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground flink table-ddl\n\n"
+    printf "  🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the\n  Avro value schema in Schema Registry\n  \n  Flink cannot read the columns of a table from Schema Registry: this command\n  writes them for you, from the latest version of the subject <topic>-value (or\n  of --schema-topic), with the Avro types mapped to Flink SQL types (records\n  become ROW, arrays ARRAY, maps MAP, unions with null a nullable column,\n  logical types DATE, TIME, TIMESTAMP and DECIMAL). The table reads (or, with\n  --sink, writes) the values with the avro-confluent format; the key of the\n  records is not read.\n  \n  Paste the result in 'playground flink sql', or use it in a script, as\n  'playground repro bootstrap --pipeline-step flink' does.\n  \n  ⚠️ Avro values only (open source Flink has no Protobuf or JSON Schema Schema\n  Registry format); local Flink cluster only.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink\n\n"
+  else
+    printf "playground flink table-ddl - 🧱 Print the Flink SQL CREATE TABLE of a Kafka topic, its columns read from the Avro value schema in Schema Registry\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground flink table-ddl [OPTIONS]\n"
+  printf "  playground flink table-ddl --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic of the table\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--table TABLE")"
+    printf "    🧱 Name of the table (default: the topic, with every character other than a\n    letter, a digit or _ replaced by _)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema-topic TOPIC")"
+    printf "    📜 Topic whose value schema gives the columns (default: --topic). For a table\n    written by an INSERT INTO a new topic, use the topic it copies.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sink")"
+    printf "    ✍️ A table written by an INSERT INTO: no consumer group nor startup mode in\n    its options\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--field FIELD")"
+    printf "    🧩 The columns of this record field of the value instead of the whole value,\n    for example after for a Debezium envelope\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--select-from TABLE")"
+    printf "    🔎 Print the SELECT of the columns of --field from this table (SELECT\n    \`after\`.\`id\` AS \`id\`, … FROM <table> WHERE \`after\` IS NOT NULL) instead of\n    the CREATE TABLE\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground flink table-ddl --topic orders\n"
+    printf "  playground flink table-ddl --topic orders_copy --schema-topic orders --table\n  orders_copy --sink\n"
+    printf "  playground flink table-ddl --topic cdc_flat --schema-topic\n  server1_mydb_CUSTOMERS --field after --table cdc_flat --sink\n"
+    printf "  playground flink table-ddl --topic server1_mydb_CUSTOMERS --field after\n  --select-from cdc_source\n"
+    echo
+
+  fi
 }
 
 # :command.usage
@@ -63225,7 +63294,8 @@ playground_repro_bootstrap_command() {
     MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
     MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
     MENU_PIPELINE_STEP="$(menu_label "🧪" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
-    readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the ksqlDB step"
+    MENU_PIPELINE_STEP_FLINK="$(menu_label "🐿️" "Add a Flink step between the source and the sinks" "--pipeline-step flink")"
+    readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the processing step"
 
     readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
     readonly MENU_GO_BACK="🔙 Go back"
@@ -63275,7 +63345,7 @@ playground_repro_bootstrap_command() {
         then
           if [ -z "$pipeline_step" ]
           then
-            options+=("$MENU_PIPELINE_STEP")
+            options+=("$MENU_PIPELINE_STEP" "$MENU_PIPELINE_STEP_FLINK")
           else
             options+=("$MENU_PIPELINE_NO_STEP")
           fi
@@ -63360,10 +63430,15 @@ playground_repro_bootstrap_command() {
         pipeline_step="ksqldb"
         array_flag_list+=("--pipeline-step=ksqldb")
       fi
+      if [[ $res == *"$MENU_PIPELINE_STEP_FLINK"* ]]
+      then
+        pipeline_step="flink"
+        array_flag_list+=("--pipeline-step=flink")
+      fi
       if [[ $res == *"$MENU_PIPELINE_NO_STEP"* ]]
       then
+        array_flag_list=("${array_flag_list[@]/"--pipeline-step=$pipeline_step"}")
         pipeline_step=""
-        array_flag_list=("${array_flag_list[@]/"--pipeline-step=ksqldb"}")
       fi
 
       if [[ $res == *"$MENU_PIPELINE"* ]]
@@ -89281,6 +89356,56 @@ playground_flink_sql_command() {
       logerror "❌ the SQL client exited with code $rc"
       exit 1
   fi
+
+}
+
+# :command.function
+playground_flink_table_ddl_command() {
+
+  # src/commands/flink/table-ddl.sh
+  topic="${args[--topic]}"
+  table="${args[--table]}"
+  schema_topic="${args[--schema-topic]}"
+  sink="${args[--sink]}"
+  field="${args[--field]}"
+  select_from="${args[--select-from]}"
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required to write the table"
+      exit 1
+  fi
+
+  schema_topic="${schema_topic:-$topic}"
+  if [[ -z "$table" ]]
+  then
+      table=$(echo "$topic" | sed -E 's/[^A-Za-z0-9_]/_/g')
+  fi
+
+  get_sr_url_and_security
+  subject="${schema_topic}-value"
+  schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/latest")
+  if ! echo "$schema" | jq -e '.schema' > /dev/null 2>&1
+  then
+      logerror "❌ no value schema for topic $schema_topic in Schema Registry (subject $subject): $(echo "$schema" | jq -r '.message // .' 2>/dev/null | head -1)"
+      logerror "   the topic needs Avro values written with the Schema Registry (io.confluent.connect.avro.AvroConverter, or playground topic produce with an Avro schema)"
+      exit 1
+  fi
+
+  sink_args=()
+  if [[ -n "$sink" ]]
+  then
+      sink_args+=(--sink)
+  fi
+  if [[ -n "$field" ]]
+  then
+      sink_args+=(--field "$field")
+  fi
+  if [[ -n "$select_from" ]]
+  then
+      sink_args+=(--select-from "$select_from")
+  fi
+  echo "$schema" | python3 -I "$root_folder/tools/pipeline-builder/flink_ddl.py" --table "$table" --topic "$topic" "${sink_args[@]}"
 
 }
 
@@ -122629,8 +122754,8 @@ playground_repro_bootstrap_parse_requirements() {
     printf "%s\n" "--producer must be one of: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key" >&2
     exit 1
   fi
-  if [[ ${args['--pipeline-step']:-} ]] && [[ ! ${args['--pipeline-step']:-} =~ ^(ksqldb)$ ]]; then
-    printf "%s\n" "--pipeline-step must be one of: ksqldb" >&2
+  if [[ ${args['--pipeline-step']:-} ]] && [[ ! ${args['--pipeline-step']:-} =~ ^(ksqldb|flink)$ ]]; then
+    printf "%s\n" "--pipeline-step must be one of: ksqldb, flink" >&2
     exit 1
   fi
 
@@ -152128,6 +152253,13 @@ playground_flink_parse_requirements() {
       shift $#
       ;;
 
+    table-ddl)
+      action="table-ddl"
+      shift
+      playground_flink_table_ddl_parse_requirements "$@"
+      shift $#
+      ;;
+
     list-jobs)
       action="list-jobs"
       shift
@@ -152330,6 +152462,149 @@ playground_flink_sql_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--environment']:-} ]] && [[ ! ${args['--environment']:-} =~ ^(local|ccloud)$ ]]; then
     printf "%s\n" "--environment must be one of: local, ccloud" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_flink_table_ddl_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_flink_table_ddl_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="flink table-ddl"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --table)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--table']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--table requires an argument: --table TABLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --schema-topic)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--schema-topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--schema-topic requires an argument: --schema-topic TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --sink)
+
+        # :flag.case_no_arg
+        args['--sink']=1
+        shift
+        ;;
+
+      # :flag.case
+      --field)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--field']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--field requires an argument: --field FIELD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --select-from)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--select-from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--select-from requires an argument: --select-from TABLE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1
   fi
 
@@ -175825,6 +176100,7 @@ playground_repro_bootstrap_completion() {
         if [[ $# -eq 0 ]]; then
           local -a completion_values=(
             "ksqldb"
+            "flink"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
@@ -191204,6 +191480,11 @@ playground_flink_completion() {
         playground_flink_sql_completion "$completion_current" "$@"
         return
         ;;
+      table-ddl)
+        shift
+        playground_flink_table_ddl_completion "$completion_current" "$@"
+        return
+        ;;
       list-jobs)
         shift
         playground_flink_list_jobs_completion "$completion_current" "$@"
@@ -191223,7 +191504,7 @@ playground_flink_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" sql list-jobs cancel
+  completion_candidates "$completion_current" sql table-ddl list-jobs cancel
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -191297,6 +191578,93 @@ playground_flink_sql_completion() {
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --max-wait "$completion_current" --max-wait -w
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_flink_table_ddl_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --table)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--table"]=1
+
+        ;;
+      --schema-topic)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--schema-topic"]=1
+
+        ;;
+      --sink)
+        completion_blocked_flags["--sink"]=1
+
+        shift
+        ;;
+      --field)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--field"]=1
+
+        ;;
+      --select-from)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--select-from"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --table "$completion_current" --table
+    completion_flag_candidates --schema-topic "$completion_current" --schema-topic
+    completion_flag_candidates --sink "$completion_current" --sink
+    completion_flag_candidates --field "$completion_current" --field
+    completion_flag_candidates --select-from "$completion_current" --select-from
   fi
 
 }
@@ -200036,6 +200404,7 @@ run() {
     "consumer-group delete") playground_consumer_group_delete_command ;;
     "flink") playground_flink_command ;;
     "flink sql") playground_flink_sql_command ;;
+    "flink table-ddl") playground_flink_table_ddl_command ;;
     "flink list-jobs") playground_flink_list_jobs_command ;;
     "flink cancel") playground_flink_cancel_command ;;
     "ksqldb") playground_ksqldb_command ;;

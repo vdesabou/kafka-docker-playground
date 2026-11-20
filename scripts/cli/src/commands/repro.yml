@@ -503,10 +503,13 @@ commands:
     arg: step
     allowed:
       - ksqldb
+      - flink
     help: |-
       🧪 Processing step between the source and the sinks of --pipeline (self-managed only)
 
       ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro, Protobuf or JSON Schema).
+
+      flink: a Flink cluster is started (plaintext environment), and a job copies the topic of the source to <topic>_flink, the topic the sinks read: INSERT INTO pipeline_step SELECT * FROM pipeline_source, the two tables written at run time from the Avro value schema of the source (playground flink table-ddl). The values must be Avro; the records of <topic>_flink have no key.
 
   - long: --no-run
     required: false
@@ -525,6 +528,7 @@ commands:
   - playground repro bootstrap -f "\$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --expected "bad records go to the DLQ" --actual "the task fails with Unknown magic byte" --jira CC-1234 --no-run
   - playground repro bootstrap -f "\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "123456 cdc to postgres and s3" --pipeline "\$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" --pipeline "\$PWD/connect/connect-aws-s3-sink/s3-sink.sh" --no-run
   - playground repro bootstrap -f "\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "123456 cdc through ksqldb" --pipeline "\$PWD/connect/connect-elasticsearch-sink/elasticsearch-sink.sh" --pipeline-step ksqldb --no-run
+  - playground repro bootstrap -f "\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "123456 cdc through flink" --pipeline "\$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" --pipeline-step flink --no-run
   - playground repro bootstrap -f "\$PWD/ccloud/fm-datagen-source/fully-managed-datagen-source.sh" -d "123456 datagen to s3" --pipeline "\$PWD/ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh" --no-run
 
 - name: pipeline-builder
