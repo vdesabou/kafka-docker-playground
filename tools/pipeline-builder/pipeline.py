@@ -27,6 +27,8 @@ import os
 import re
 import sys
 
+# no __pycache__ in the checkout of the user
+sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import catalog  # noqa: E402
 
@@ -203,11 +205,85 @@ def pin_database(lines, container):
     return out
 
 
+FUNC_START_RE = re.compile(r"^(?:function\s+(\w+)\s*(?:\(\))?|(\w+)\s*\(\))\s*\{?\s*$")
+EXIT_TRAP_RE = re.compile(r"^(\s*)trap\s+(?:'([^']*)'|\"([^\"]*)\"|(\S+))\s+EXIT\s*$")
+
+
+HEREDOC_START_RE = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?")
+
+
+def skip_heredoc(lines, i):
+    """index of the last line of the heredoc started on line i (i when there is none): its body is not bash."""
+    m = HEREDOC_START_RE.search(lines[i].replace("<<<", ""))
+    if not m:
+        return i
+    j = i + 1
+    while j < len(lines) and lines[j].strip() != m.group(1):
+        j += 1
+    return min(j, len(lines) - 1)
+
+
+def functions(lines):
+    """{name: (first line, last line)} of the functions defined at the top level (body closed by '}' at column 0)."""
+    found = {}
+    i = 0
+    while i < len(lines):
+        end = skip_heredoc(lines, i)
+        if end != i:
+            i = end + 1
+            continue
+        m = FUNC_START_RE.match(lines[i])
+        # a definition opens its body on the same line or the next one ('print()' in a quoted python string does not)
+        if m and "{" not in lines[i] and not (i + 1 < len(lines) and lines[i + 1].strip().startswith("{")):
+            m = None
+        if m:
+            j = i + 1
+            while j < len(lines) and not re.match(r"^\}\s*$", lines[j]):
+                j = skip_heredoc(lines, j) + 1
+            found[m.group(1) or m.group(2)] = (i, j)
+            i = j + 1
+            continue
+        i += 1
+    return found
+
+
 def split_teardown(lines):
-    i = find(lines, TEARDOWN_RE)
-    if i < 0:
+    """the 'Do you want to delete ... check_if_continue ... connector delete' end of a fully managed example: the last
+    one at the top level (the same question inside a cleanup function stays where it is)."""
+    inside = set()
+    for start, end in functions(lines).values():
+        inside.update(range(start, end + 1))
+    candidates = [i for i, l in enumerate(lines) if TEARDOWN_RE.search(l) and i not in inside and not l.startswith((" ", "\t"))]
+    if not candidates:
         return lines, []
+    i = candidates[-1]
     return lines[:i], lines[i:]
+
+
+def chain_exit_traps(lines):
+    """each top-level 'trap X EXIT' replaces the previous one: in a model made of several examples, it runs X and
+    then what was trapped before, so that every cleanup runs."""
+    out = []
+    handlers = []
+    i = 0
+    while i < len(lines):
+        l = lines[i]
+        end = skip_heredoc(lines, i)
+        if end != i:
+            out.extend(lines[i:end + 1])
+            i = end + 1
+            continue
+        m = EXIT_TRAP_RE.match(l)
+        if m and not l.startswith((" ", "\t")):
+            cmd = [c.strip() for c in (m.group(2) or m.group(3) or m.group(4)).split(";") if c.strip()]
+            previous = [h for h in handlers if h not in cmd]
+            if previous:
+                out.append("# 🔗 pipeline: the EXIT traps set before are kept, %s runs first" % " ".join(cmd))
+                l = "trap '%s' EXIT" % "; ".join(cmd + previous)
+            handlers = cmd + previous
+        out.append(l)
+        i += 1
+    return out
 
 
 def ksqldb_format(converter, data_format):
@@ -286,6 +362,7 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
     b_start, b_end = heredoc_span(model, find(model, anchor_re) + 1)
     base_converter_lines = raw_converter_lines(model, b_start, b_end) if b_start >= 0 else []
     used_names = connector_names(model)
+    defined_functions = set(functions(model))
 
     sink_topic = topic
     if step == "ksqldb":
@@ -321,11 +398,17 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
     for n, sink in enumerate(sinks, start=1):
         with open(os.path.join(root, sink["path"]), encoding="utf-8") as f:
             sl = f.read().split("\n")
+        info("➕ sink %d: %s (connector %s)" % (n, sink["path"], sink["connector"]["name"] or "?"))
+        # functions the model already defines (cleanup_cloud_resources...): renamed in the whole sink script
+        for fname in sorted(set(functions(sl)) & defined_functions):
+            new_name = "%s_%d" % (fname, n)
+            sl = [re.sub(r"\b%s\b" % re.escape(fname), new_name, l) for l in sl]
+            info("   🔤 function %s renamed %s (the model defines it too)" % (fname, new_name))
+        defined_functions |= set(functions(sl))
         u = find(sl, UTILS_RE)
         a = find(sl, FM_ANCHOR_RE if sink["managed"] else SM_ANCHOR_RE)
         if u < 0 or a < 0:
             fail("could not find the start of the environment in %s" % sink["path"])
-        info("➕ sink %d: %s (connector %s)" % (n, sink["path"], sink["connector"]["name"] or "?"))
 
         # 1. what the sink needs before the environment starts
         pre = [l for l in sl[u + 1:a] if not PG_ENV_RE.search(l)]
@@ -483,6 +566,8 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
     if teardown:
         deletes = [l for l in teardown if l.strip() and not TEARDOWN_RE.search(l) and not re.match(r"^\s*check_if_continue\b", l)]
         model += ["", 'log "Do you want to delete the fully managed connectors of the pipeline ?"', "check_if_continue"] + deletes
+
+    model = chain_exit_traps(model)
 
     # header
     chain = base["path"] + (" -> ksqldb" if step else "") + " -> " + ", ".join(s["path"] for s in sinks)

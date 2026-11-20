@@ -171,6 +171,67 @@ check_if_continue
 playground connector delete --connector $connector_name
 '''
 
+FM_TRAP_SOURCE = HEAD + '''
+bootstrap_ccloud_environment
+
+TOPIC="logs.stream"
+connector_name="CloudWatchLogsSource_$USER"
+
+function cleanup_cloud_resources {
+    set +e
+    log "Do you want to delete the log group (connector will be deleted first)?"
+    check_if_continue
+    playground connector delete --connector $connector_name
+}
+trap cleanup_cloud_resources EXIT
+
+playground connector create-or-update --connector $connector_name << EOF
+{
+    "connector.class": "CloudWatchLogsSource",
+    "output.data.format": "AVRO"
+}
+EOF
+
+playground topic consume --topic $TOPIC --min-expected-messages 10 --timeout 60
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
+'''
+
+FM_TRAP_SINK = HEAD + '''
+bootstrap_ccloud_environment "aws" "$AWS_REGION"
+
+CLUSTER_NAME=pgredshift
+
+function cleanup_cloud_resources {
+  set +e
+  log "Delete AWS Redshift cluster $CLUSTER_NAME"
+  check_if_continue
+  aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME
+}
+trap cleanup_cloud_resources EXIT
+
+playground topic produce -t redshiftorders --nb-messages 3 << 'EOF'
+{"type": "record", "name": "r", "fields": [{"name": "id", "type": "int"}]}
+EOF
+
+connector_name="RedshiftSink_$USER"
+playground connector create-or-update --connector $connector_name << EOF
+{
+  "connector.class": "RedshiftSink",
+  "topics": "redshiftorders"
+}
+EOF
+wait_for_ccloud_connector_up $connector_name 180
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
+'''
+
 COMPOSE_MYSQL = '''---
 services:
   mysql:
@@ -216,6 +277,8 @@ class Repo:
         self.add("connect/connect-aws-s3-sink/s3.sh", REGEX_SINK, "---\nservices:\n  connect:\n    environment:\n      CONNECT_PLUGIN_PATH: /y\n")
         self.add("ccloud/fm-datagen-source/fm.sh", FM_SOURCE)
         self.add("ccloud/fm-aws-s3-sink/fm.sh", FM_SINK)
+        self.add("ccloud/fm-aws-cloudwatch-logs-source/fm.sh", FM_TRAP_SOURCE)
+        self.add("ccloud/fm-aws-redshift-sink/fm.sh", FM_TRAP_SINK)
 
     def add(self, rel, text, compose=None):
         path = os.path.join(self.root, rel)
@@ -396,6 +459,23 @@ class BuildTest(unittest.TestCase):
         self.assertIn("playground connector delete --connector $connector_name_1", tail)
         self.assertIn("playground connector status --connector $connector_name_1 --fail-on-error", model)
 
+    def test_cleanup_functions_and_exit_traps(self):
+        model, out = self.repo.build("ccloud/fm-aws-cloudwatch-logs-source/fm.sh", ["ccloud/fm-aws-redshift-sink/fm.sh"])
+        self.assertTrue(bash_ok(model)[0])
+        # the question inside the cleanup function is not the end of the script: the source connector stays in place
+        self.assertLess(model.index("--connector $connector_name << EOF"), model.index("# 🔗 pipeline: sink 1"))
+        self.assertLess(model.index("trap cleanup_cloud_resources EXIT"), model.index("--connector $connector_name << EOF"))
+        # the cleanup of the sink is renamed, and both run on exit
+        self.assertIn("function cleanup_cloud_resources_1 {", model)
+        self.assertEqual(model.count("function cleanup_cloud_resources {"), 1)
+        self.assertIn("trap 'cleanup_cloud_resources_1; cleanup_cloud_resources' EXIT", model)
+        self.assertIn("function cleanup_cloud_resources renamed cleanup_cloud_resources_1", out)
+        # one question at the end (the ones in the cleanup functions stay), both connectors deleted
+        tail = model[model.index('log "Do you want to delete the fully managed connectors of the pipeline ?"'):]
+        self.assertIn("playground connector delete --connector $connector_name\n", tail)
+        self.assertIn("playground connector delete --connector $connector_name_1", tail)
+        self.assertEqual(model.count("check_if_continue"), 3)
+
     def test_errors(self):
         for base, sinks, kw, message in [
             ("connect/connect-debezium-mysql-source/dbz.sh", ["ccloud/fm-aws-s3-sink/fm.sh"], {}, "all self-managed"),
@@ -455,14 +535,27 @@ class RepoTest(unittest.TestCase):
             for i in range(60):
                 managed = i % 3 == 0
                 base = rng.choice([e for e in ex if e["kind"] == "source" and e["managed"] == managed and e["topics_out"]])
-                sink = rng.choice([e for e in ex if e["kind"] == "sink" and e["managed"] == managed])
+                sinks = rng.sample([e for e in ex if e["kind"] == "sink" and e["managed"] == managed], 2)
                 model = os.path.join(tmp, "m%d.sh" % i)
                 shutil.copy(os.path.join(ROOT, base["path"]), model)
                 pipeline.messages.clear()
                 with redirect_stdout(io.StringIO()):
-                    pipeline.build(model, os.path.join(ROOT, base["path"]), [os.path.join(ROOT, sink["path"])], root=ROOT)
-                ok, err = bash_ok(read(model))
-                self.assertTrue(ok, "%s -> %s: %s" % (base["path"], sink["path"], err))
+                    pipeline.build(model, os.path.join(ROOT, base["path"]), [os.path.join(ROOT, s["path"]) for s in sinks], root=ROOT)
+                text = read(model)
+                where = "%s -> %s" % (base["path"], ", ".join(s["path"] for s in sinks))
+                ok, err = bash_ok(text)
+                self.assertTrue(ok, "%s: %s" % (where, err))
+                # valid bash is not enough: the base connector before the sinks, no sink inside a function (a cleanup
+                # function of the base asks 'Do you want to delete'), no function defined twice
+                lines = text.split("\n")
+                first_sink = next(k for k, l in enumerate(lines) if l.startswith("# 🔗 pipeline: sink 1"))
+                creates = [k for k, l in enumerate(lines) if catalog.CREATE_RE.search(l)]
+                self.assertLess(creates[0], first_sink, where)
+                for name, (a, b) in pipeline.functions(lines).items():
+                    self.assertFalse(any("🔗 pipeline: sink" in l for l in lines[a:b + 1]), "%s: sink inside function %s" % (where, name))
+                names = [m.group(1) or m.group(2) for m in (pipeline.FUNC_START_RE.match(l) for l in lines) if m]
+                defined = [n for n in names if n in pipeline.functions(lines)]
+                self.assertEqual(len(defined), len(set(defined)), "%s: function defined twice" % where)
                 built += 1
             self.assertEqual(built, 60)
         finally:
