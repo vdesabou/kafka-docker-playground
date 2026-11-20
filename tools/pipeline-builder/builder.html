@@ -80,7 +80,7 @@ main{padding:26px 0 40px}
 html[data-theme="dark"] .variant{color:#c4b5fd}
 .node .variant{margin-top:3px;max-width:100%}
 .tick{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;transition:.12s}
-.item.selected .tick{background:linear-gradient(135deg,var(--a1),var(--a3));border-color:transparent}
+.item.selected .tick{border:0;background:linear-gradient(135deg,var(--a1),var(--a3));background-origin:border-box}
 .item.selected .tick::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:translateY(-1px) rotate(45deg)}
 .count{color:var(--muted);font-size:.78rem;margin-top:8px}
 .empty{color:var(--muted);font-size:.85rem;padding:18px;text-align:center}
