@@ -510,7 +510,7 @@ Connection Details
 ==========================
 🔘 batch.size
 
-The number of records to process as a batch when writing to Elasticsearch using the bulk API.
+The number of records to process as a batch when writing to Elasticsearch using the bulk API. Must be between ``1`` and ``10000``.
 
 	 - Type: INT
 	 - Default: 50

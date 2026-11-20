@@ -268,18 +268,63 @@ Optional comma-separated list of TLS cipher suites to enable. Leave empty to use
 ==========================
 Table mapping
 ==========================
-🔘 mapping.map
+🔘 mappingMode
 
-JSON object mapping each ``<topic>.<keyspace>.<table>`` to its field-to-column mapping, e.g. ``{"orders.ecom.orders":"id=value.id, amount=value.amount"}``. Use ``key.*`` to reference record-key fields (primary-key columns) and ``value.*`` for record-value fields. Each entry materializes to the engine key ``topic.<topic>.<keyspace>.<table>.mapping``. A single topic may map to multiple tables (fan-out) by adding multiple entries.
+How records are written to tables. EXPLICIT (default): you map each topic to its tables, and fields to columns, in the topic-to-table field mapping. IMPLICIT: each topic is written to the table of the same name in Keyspace name, and each key and value field to the column of the same name. The table must already exist unless Auto create table is enabled. Names are lower-cased (Orders → orders, userId → userid), so topic names may only use letters, digits and underscores. IMPLICIT needs Avro, Protobuf or JSON Schema data.
+
+	 - Type: STRING
+	 - Default: EXPLICIT
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 keyspace
+
+Keyspace for the tables in IMPLICIT mode (required there). In EXPLICIT mode, the keyspace is set in each mapping entry instead. Lower-cased unless wrapped in double quotes, e.g. "MyKeyspace".
 
 	 - Type: STRING
 	 - Default: 
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
+
+🔘 mapping.map
+
+JSON object that maps each <topic>.<keyspace>.<table> to its field-to-column mapping. Example: {"orders.ecom.orders": "id=value.id, amount=value.amount"}. Use key.* for record-key fields (primary-key columns) and value.* for record-value fields. Each entry materializes to the engine key topic.<topic>.<keyspace>.<table>.mapping. A single topic can map to multiple tables (fan-out) by adding multiple entries. Required when mapping mode is EXPLICIT; must be empty when it is IMPLICIT.
+
+	 - Type: STRING
+	 - Default: {}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 createKeyspace
+
+Create the keyspace if it doesn't exist. On Astra, the token in the password field needs the Database Administrator role. On Cassandra/DSE, the keyspace is created with a replication factor of 3.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 createTable
+
+Create the table if it doesn't exist, with a column for each record field. The record key's fields become the primary key, so both the key and the value need Avro, Protobuf or JSON Schema format. In EXPLICIT mode, map at least one key field for each table.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 evolveTable
+
+Add a column to the table when records start carrying a new field, so schema changes don't need manual table updates. Columns are only ever added; existing columns are never dropped or changed. Needs Avro, Protobuf or JSON Schema data.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 topic.override.map
 
-Optional JSON object of per-table and per-topic overrides. Per-table keys are ``<topic>.<keyspace>.<table>.<setting>`` where ``<setting>`` is one of ``consistencyLevel``, ``ttl``, ``ttlTimeUnit``, ``timestampTimeUnit``, ``nullToUnset``, ``deletesEnabled`` or ``query``. A ``query`` override must be a single ``INSERT`` or ``UPDATE`` statement targeting the same keyspace and table as its key. Per-topic codec keys are ``<topic>.codec.<setting>`` where ``<setting>`` is one of ``locale``, ``timeZone``, ``timestamp``, ``date``, ``time`` or ``unit``. Example: ``{"orders.ecom.orders.consistencyLevel":"LOCAL_QUORUM", "orders.ecom.orders.ttl":"3600", "orders.codec.timeZone":"UTC"}``. Each entry materializes to the engine key ``topic.<entry-key>``.
+Optional JSON object of per-table and per-topic overrides. Per-table keys are ``<topic>.<keyspace>.<table>.<setting>`` where ``<setting>`` is one of ``consistencyLevel``, ``ttl``, ``ttlTimeUnit``, ``timestampTimeUnit``, ``nullToUnset``, ``deletesEnabled`` or ``query``. A ``query`` override must be a single ``INSERT`` or ``UPDATE`` statement targeting the same keyspace and table as its key. Per-topic codec keys are ``<topic>.codec.<setting>`` where ``<setting>`` is one of ``locale``, ``timeZone``, ``timestamp``, ``date``, ``time`` or ``unit``. Example: ``{"orders.ecom.orders.consistencyLevel":"LOCAL_QUORUM", "orders.ecom.orders.ttl":"3600", "orders.codec.timeZone":"UTC"}``. Each entry materializes to the engine key ``topic.<entry-key>``. Not supported when ``mappingMode`` is ``IMPLICIT``.
 
 	 - Type: STRING
 	 - Default: {}

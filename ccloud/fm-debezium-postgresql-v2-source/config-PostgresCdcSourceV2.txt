@@ -581,6 +581,15 @@ To uphold the principle of least privilege, grant the connector user write permi
 	 - Importance: LOW
 	 - Required: false
 
+🔘 scaled.snapshot.enabled
+
+When enabled, the initial snapshot is split across up to ``tasks.max`` (Tasks) tasks to snapshot tables in parallel. Requires ``tasks.max`` greater than 1, which you set on the sizing step; with a single task the connector rejects this setting. Streaming always runs on a single task after the snapshot completes.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Schema Config
 ==========================
@@ -634,12 +643,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
-Maximum number of tasks for the connector.
+Maximum number of tasks for the connector. Leave this at 1 unless multi-task initial snapshots are enabled for this connector; otherwise values above 1 are rejected. Any extra tasks are used only during the initial snapshot. Once the snapshot completes, the connector streams changes on a single task.
 
 	 - Type: INT
 	 - Default: 
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
 ==========================
 Additional Configs

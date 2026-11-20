@@ -63,6 +63,7 @@
     "publication.name": "dbz_publication",
     "publish.via.partition.root": "false",
     "read.only": "false",
+    "scaled.snapshot.enabled": "false",
     "schema.context.name": "default",
     "schema.exclude.list": "",
     "schema.include.list": "",
