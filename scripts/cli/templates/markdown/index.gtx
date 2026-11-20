@@ -97,9 +97,10 @@ if commands.any?
     # private commands have no page (see render.rb): don't link to them
     # bashly also lists the subcommands of an exposed command (expose: true) in its group, one level deep only:
     # keep the direct subcommands and list every public descendant of each, nested by depth
+    # commands are listed in alphabetical order at each level, not in declaration order
     depth = full_name.split.size
-    commands = commands.reject(&:private).select { |c| c.full_name.split.size == depth + 1 }
-    tree = ->(c) { [c] + c.commands.reject(&:private).flat_map { |s| tree.(s) } }
+    commands = commands.reject(&:private).select { |c| c.full_name.split.size == depth + 1 }.sort_by { |c| c.name.downcase }
+    tree = ->(c) { [c] + c.commands.reject(&:private).sort_by { |s| s.name.downcase }.flat_map { |s| tree.(s) } }
     commands = commands.flat_map { |c| tree.(c) }
     next if commands.empty?
     > ### {{ group_label.(group) }}
