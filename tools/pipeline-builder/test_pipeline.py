@@ -697,7 +697,10 @@ class RepoTest(unittest.TestCase):
             page = read(out)
             self.assertNotIn("/*__PIPELINE_CATALOG__*/", page)
             self.assertIn('const ROOT = "";', page)
-            script = page[page.index("<script>") + 8:page.rindex("</script>")]
+            # the script that holds the catalog (the theme script comes first, in the head)
+            start = page.index("<script>", page.index("</style>"))
+            script = page[start + 8:page.rindex("</script>")]
+            self.assertIn("const CATALOG = {", script)
             self.assertNotIn("</script", script)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)

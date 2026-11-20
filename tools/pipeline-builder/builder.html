@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🔗 Pipeline builder · kafka-docker-playground</title>
+<script>
+(function () {
+  var root = document.documentElement, saved = null;
+  try { saved = localStorage.getItem("pg-report-theme"); } catch (e) {}
+  root.dataset.theme = saved === "dark" || saved === "light" ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+})();
+</script>
 <style>
 :root{
   --bg:#f4f6fb;--bg2:#e9edf7;--card:#ffffff;--card2:#f8faff;--fg:#0f172a;--muted:#5b6478;--line:#e3e8f2;
@@ -12,11 +19,11 @@
   --warn-bg:#fff7e6;--fix-bg:#f3edff;--info-bg:#e9f6fd;--ok-bg:#e8f8f1;
   --term:#0b1020;--term-fg:#e2e8f0;--shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
 }
-@media (prefers-color-scheme:dark){:root{
+html[data-theme="dark"]{
   --bg:#0a0e1a;--bg2:#0f1526;--card:#121a2e;--card2:#162038;--fg:#e6ebf5;--muted:#8f9bb5;--line:#22304d;
   --glow:rgba(124,58,237,.28);--warn-bg:#2a1f0b;--fix-bg:#221539;--info-bg:#0b2233;--ok-bg:#0b2a20;
   --term:#060912;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.35);
-}}
+}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--fg);line-height:1.45;
@@ -33,6 +40,9 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;gap:2
 h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
 .tag{opacity:.9;font-size:.92rem;margin-top:2px}
 .tag code{background:rgba(255,255,255,.18);padding:1px 6px;border-radius:6px;font-size:.82rem}
+.tools{display:flex;align-items:center;gap:10px}
+.theme{border:0;cursor:pointer;width:40px;height:40px;border-radius:50%;font-size:18px;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);transition:.2s}
+.theme:hover{background:rgba(255,255,255,.28)}
 .seg{display:inline-flex;background:rgba(255,255,255,.16);border-radius:999px;padding:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 .seg button{border:0;background:transparent;color:#fff;font:inherit;font-weight:600;font-size:.9rem;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.2s;white-space:nowrap}
 .seg button[aria-pressed=true]{background:#fff;color:var(--a1);box-shadow:0 4px 14px rgba(0,0,0,.18)}
@@ -67,7 +77,7 @@ main{padding:26px 0 40px}
 .variant{display:inline-block;flex:0 1 auto;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis;padding:1px 8px;border-radius:999px;font-family:'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace;
   font-size:.72rem;font-weight:700;vertical-align:1px;color:var(--a1);background:var(--glow);border:1px solid rgba(124,58,237,.35);white-space:nowrap}
 .variant.default{color:var(--muted);background:transparent;border-color:var(--line);font-weight:600}
-@media (prefers-color-scheme:dark){.variant{color:#c4b5fd}}
+html[data-theme="dark"] .variant{color:#c4b5fd}
 .node .variant{margin-top:3px;max-width:100%}
 .tick{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;transition:.12s}
 .item.selected .tick{background:linear-gradient(135deg,var(--a1),var(--a3));border-color:transparent}
@@ -169,9 +179,12 @@ footer a{color:var(--a1);text-decoration:none}
         <div class="tag">Chain a source and sink examples of kafka-docker-playground into one reproduction model, then copy the <code>playground repro bootstrap</code> command</div>
       </div>
     </div>
-    <div class="seg" role="group" aria-label="connectors">
-      <button id="tab-sm" aria-pressed="true">🐳 Self-managed</button>
-      <button id="tab-fm" aria-pressed="false">☁️ Fully managed</button>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="connectors">
+        <button id="tab-sm" aria-pressed="true">🐳 Self-managed</button>
+        <button id="tab-fm" aria-pressed="false">☁️ Fully managed</button>
+      </div>
+      <button class="theme" id="theme" aria-label="switch between the light and the dark theme (remembered)"></button>
     </div>
   </div>
 </header>
@@ -489,6 +502,20 @@ function setManaged(m) {
   $("tab-sm").setAttribute("aria-pressed", String(!m)); $("tab-fm").setAttribute("aria-pressed", String(m));
   render();
 }
+
+// light / dark: the choice is remembered, and shared with the HTML reports of playground (same key)
+function themeButton() {
+  const dark = document.documentElement.dataset.theme === "dark";
+  $("theme").textContent = dark ? "☀️" : "🌙";
+  $("theme").title = dark ? "light theme" : "dark theme";
+}
+$("theme").onclick = () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("pg-report-theme", root.dataset.theme); } catch (e) {}
+  themeButton();
+};
+themeButton();
 
 function init(data) {
   examples = data.examples; rules = data.rules;
