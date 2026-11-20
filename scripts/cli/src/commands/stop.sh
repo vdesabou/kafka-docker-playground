@@ -59,6 +59,21 @@ then
     docker rm -f $debug_dns_proxies > /dev/null 2>&1 || true
 fi
 
+# the background producers of 'playground topic produce --background' started from this folder
+for info in /tmp/playground-topic-produce/*.info
+do
+    [ -f "$info" ] || continue
+    [ "$(sed -n 's/^root_folder=//p' "$info" | head -1)" == "$root_folder" ] || continue
+    background_id=$(basename "$info" .info)
+    background_pid=$(cat "/tmp/playground-topic-produce/$background_id.pid" 2> /dev/null)
+    if [[ -n "$background_pid" ]] && kill -0 "$background_pid" 2> /dev/null
+    then
+        log "🌙 stopping background producer $background_id (pid $background_pid)"
+        kill_tree "$background_pid"
+    fi
+    rm -f /tmp/playground-topic-produce/$background_id.{info,pid,progress,stop,rc}
+done
+
 echo "$docker_command" > $tmp_dir/tmp
 
 sed -e "s|up -d|down -v --remove-orphans|g" \
