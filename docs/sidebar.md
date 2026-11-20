@@ -7,6 +7,7 @@
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)
 - [🧭 Which command do I need?](/which-command.md)
+- [🧭 Examples explorer](examples-explorer.html ':ignore')
 - [🔗 Pipeline builder](pipeline-builder.html ':ignore')
 - [🗺️ Start from your area](/areas.md)
   - [🔗 Connect](/area-connect.md)

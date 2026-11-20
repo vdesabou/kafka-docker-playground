@@ -706,5 +706,65 @@ class RepoTest(unittest.TestCase):
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+class ExplorerTest(unittest.TestCase):
+    def test_topics(self):
+        self.assertEqual(catalog.topics_of("environment/sasl-ssl/start.sh", "SASL SSL", "sasl-ssl", ""), ["security"])
+        self.assertIn("broker", catalog.topics_of("multi-data-center/replicator/x.sh", "", "plaintext", ""))
+        self.assertEqual(catalog.topics_of("connect/connect-aws-s3-sink/s3-sink-ssl.sh", "S3", "plaintext", ""), [],
+                         "a keyword in the path of a connector example is about the external system")
+        self.assertIn("client", catalog.topics_of("other/client-dotnet/start.sh", "", "plaintext", ""))
+        self.assertEqual(catalog.category_of("ccloud/fm-aws-s3-sink/x.sh", "sink"), "fully-managed")
+        self.assertEqual(catalog.category_of("connect/connect-aws-s3-sink/x.sh", "sink"), "sink")
+        self.assertEqual(catalog.category_of("connect/connect-testing-smt/drop.sh", None), "smt")
+
+    def test_examples_and_run_options_of_the_repository(self):
+        ex = catalog.explore(ROOT)
+        self.assertGreater(len(ex), 600)
+        cats = set(e["category"] for e in ex)
+        for c in ("source", "sink", "fully-managed", "ksqldb", "environment", "other"):
+            self.assertIn(c, cats)
+        s3 = next(e for e in ex if e["path"] == "connect/connect-aws-s3-sink/s3-sink.sh")
+        self.assertEqual((s3["display"], s3["icon"], s3["credentials"], s3["honors_environment"], s3["connector_example"], s3["pipeline"]),
+                         ("Amazon S3 Sink", "s3.png", ["aws"], True, True, True))
+        self.assertTrue(s3["docs_url"].startswith("https://docs.confluent.io/"))
+        # a check of a value the script computed is not a variable to provide
+        amq = next(e for e in ex if e["path"] == "connect/connect-active-mq-source/active-mq-source.sh")
+        self.assertNotIn("QUEUE_SIZE", amq["required_env"])
+        self.assertEqual(amq["credentials"], [])
+        azure = next(e for e in ex if e["dir"] == "connect/connect-azure-blob-storage-source")
+        self.assertIn("azure", azure["credentials"])
+        self.assertIn("gcp", next(e for e in ex if e["path"] == "connect/connect-gcp-gcs-sink/gcs-sink.sh")["credentials"])
+        self.assertIn("ccloud", next(e for e in ex if e["path"] == "ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh")["credentials"])
+        self.assertEqual(catalog.required_env('if [ -z "$SF_USER" ]\nthen\n  logerror "SF_USER is not set. Export it"\nfi'), ["SF_USER"])
+        # --enable-sql-datagen: only for the examples whose load script inserts rows (one-row transactions)
+        self.assertFalse(s3["sql_datagen"])
+        dbz = next(e for e in ex if e["path"] == "connect/connect-debezium-mysql-source/debezium-mysql-source.sh")
+        self.assertTrue(dbz["sql_datagen"])
+        self.assertFalse(next(e for e in ex if e["dir"] == "connect/connect-aws-kinesis-source")["sql_datagen"],
+                         "a load script that sends messages, not rows")
+        run = catalog.run_options(ROOT)
+        self.assertIn("plaintext", [x["name"] for x in run["environments"]])
+        self.assertIn("sasl-ssl", [x["name"] for x in run["environments"]])
+        self.assertIn("--enable-control-center", [x["flag"] for x in run["enable"]])
+        self.assertRegex(run["default_tag"], r"^\d+\.\d+\.\d+$")
+
+    def test_pages(self):
+        tmp = tempfile.mkdtemp(prefix="explorer-page-")
+        try:
+            catalog.pages(ROOT, tmp, site=True)
+            for name, data in (("examples-explorer.html", "const DATA = {"), ("pipeline-builder.html", "const CATALOG = {")):
+                page = read(os.path.join(tmp, name))
+                self.assertNotIn("/*__", page)
+                self.assertIn('const ROOT = "";', page)
+                start = page.index("<script>", page.index("</style>"))
+                script = page[start + 8:page.rindex("</script>")]
+                self.assertIn(data, script)
+                self.assertNotIn("</script", script)
+            self.assertIn('href="pipeline-builder.html"', read(os.path.join(tmp, "examples-explorer.html")))
+            self.assertIn('href="examples-explorer.html"', read(os.path.join(tmp, "pipeline-builder.html")))
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

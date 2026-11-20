@@ -15,5 +15,6 @@ cat ${root_folder}/scripts/cli/docs/index.md >> ${root_folder}/docs/cli.md
 
 mv ${root_folder}/scripts/cli/docs/* ${root_folder}/docs/
 
-# the pipeline builder page of the website (playground repro pipeline-builder, with $PWD in the commands)
-python3 -I ${root_folder}/tools/pipeline-builder/catalog.py html --root ${root_folder} --output ${root_folder}/docs/pipeline-builder.html --site
+# the pipeline builder and the examples explorer pages of the website (playground repro pipeline-builder and playground
+# find-example --browse, with $PWD in the commands); the explorer reads the CI status from content.md of the website
+python3 -I ${root_folder}/tools/pipeline-builder/catalog.py pages --root ${root_folder} --output-dir ${root_folder}/docs --site

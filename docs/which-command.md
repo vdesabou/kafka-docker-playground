@@ -30,7 +30,7 @@ sight.
 
 | Question | Command | Instead of |
 | --- | --- | --- |
-| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`) |
+| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`; `--browse` opens the examples explorer page: filters, README / docs links, and the `playground run` command with the environment, versions and options you pick) |
 | "which examples are about security / brokers / CFK / clients?" | `playground find-example --category security` (or `broker`, `cfk`, `client`; add words to narrow: `find-example oauth --category security`) | browsing `other/` and `environment/` by name | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
 | "reproduce a cp-ansible case: the playbook fails, a variable renders a wrong properties file, an upgrade breaks, a connector on a cluster cp-ansible deployed" | `playground run -f <connect/ example> --environment ansible --ansible-inventory <their hosts.yml>` (`--environment ansible-sasl-ssl` for SASL/PLAIN + SSL, `ANSIBLE_CP_VERSION` / `ANSIBLE_CORE_VERSION`), then `playground ansible inventory set <path> <value>` and `playground ansible playbook --rolling` | a VM per case, a molecule scenario of cp-ansible |
 | "upgrade a cluster deployed by cp-ansible, what do the clients see?" | `playground ansible upgrade --to <version>` (rolling: archive, collection, playbook), then `kafka-features upgrade` for the feature level; with a workload running through it: `other/cp-ansible-day2/rolling-upgrade.sh` | an upgrade on a test VM, `ansible-playbook` by hand |

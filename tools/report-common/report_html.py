@@ -2,7 +2,7 @@
 """
 Look shared by the HTML reports of the playground commands (same as analyze thread-dump / gc-logs / tcp-dump):
 header, verdict banner, tiles, findings with severity badges, tables, SVG charts, charts over time that zoom
-(zoom_chart(), time_chart(), drawn by zoom_chart.js), light / dark theme with a "Toggle theme" button. Self-contained:
+(zoom_chart(), time_chart(), drawn by zoom_chart.js), light / dark theme with a ☀️ / 🌙 button. Self-contained:
 no external resource.
 
 Imported, after adding this folder to sys.path, by:
@@ -15,7 +15,7 @@ Imported, after adding this folder to sys.path, by:
     and THEME_SCRIPT (playground analyze cfk-bundle mounts this folder in its container, in /tmp/report-common)
   - log_viewer.py: the pages of the files of the analyze logs and CFK reports, linked from their locations
 The benchmark, flight recorder and SMT test reports have their own layout (charts drawn by a script, filters) and their
-own "Toggle theme" button, with the same light / dark palette (slate) as these.
+own ☀️ / 🌙 theme button, with the same light / dark palette (slate) as these.
 
 One header for all of them: the 🐳 kafka-docker-playground badge, the title on a gradient, the verdict as a status pill
 that tints the gradient (red, amber, green: TINTS maps the verdict classes of each report). page() builds it
@@ -160,12 +160,16 @@ svg text:not([fill]){fill:#cbd5e1}
 
 # in the top margin of the page, above the header (whose right side holds the health score of some reports)
 THEME_TOGGLE_CSS = """
-.theme-toggle{position:absolute;top:2px;right:12px;font:inherit;font-size:.72rem;line-height:1.4;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:1px 9px;cursor:pointer}
+.theme-toggle{position:absolute;top:4px;right:12px;width:32px;height:32px;padding:0;display:grid;place-items:center;font-size:16px;line-height:1;background:#fff;border:1px solid #cbd5e1;border-radius:50%;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,.12);transition:transform .15s}
+.theme-toggle:hover{transform:scale(1.08)}
+/* inside the banner of the report, in its top right corner (above the status pill) */
+.header:has(.theme-toggle){position:relative}
+.header .theme-toggle{top:12px;right:14px;z-index:2;color:#fff;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);box-shadow:none;backdrop-filter:blur(4px)}
 """ + dark("""
 .theme-toggle{color:#cbd5e1;background:#1e293b;border-color:#334155}
 """)
 
-# dark theme when the system is dark, until the "Toggle theme" button (top right of the page) switches it
+# dark theme when the system is dark, until the ☀️ / 🌙 button (top right of the page) switches it
 THEME_SCRIPT = """<script>
 (function () {
   const root = document.documentElement;
@@ -178,13 +182,21 @@ THEME_SCRIPT = """<script>
     const button = document.createElement("button");
     button.type = "button";
     button.className = "theme-toggle";
-    button.textContent = "Toggle theme";
     button.setAttribute("aria-label", "switch between the light and the dark theme (remembered)");
+    // ☀️ in the dark theme (switch to light), 🌙 in the light theme, as in the pipeline builder and the examples explorer
+    const icon = function () {
+      const dark = root.dataset.theme === "dark";
+      button.textContent = dark ? "☀️" : "🌙";
+      button.title = dark ? "light theme" : "dark theme";
+    };
+    icon();
     button.addEventListener("click", function () {
       root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
       try { localStorage.setItem("pg-report-theme", root.dataset.theme); } catch (e) {}
+      icon();
     });
-    document.body.appendChild(button);
+    // in the banner when the report has one, else at the top right of the page
+    (document.querySelector(".header") || document.body).appendChild(button);
   });
 })();
 </script>"""
@@ -335,7 +347,7 @@ PROGRESS_SCRIPT = """<script>
 
 def style(extra: str = "") -> str:
     """<style> element: the shared look, then the rules of one report (they win over the shared ones), then the dark theme
-    (a report adds its own dark rules to extra with dark()); followed by the scripts of the "Toggle theme" button and of
+    (a report adds its own dark rules to extra with dark()); followed by the scripts of the ☀️ / 🌙 theme button and of
     the zoomable charts"""
     return f"<style>{BASE_CSS}{LOG_CSS}{ZOOM_CSS}{POLISH_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}{ZOOM_SCRIPT}{PROGRESS_SCRIPT}"
 

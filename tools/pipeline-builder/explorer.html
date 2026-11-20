@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🧭 Examples explorer · kafka-docker-playground</title>
+<script>
+(function () {
+  var root = document.documentElement, saved = null;
+  try { saved = localStorage.getItem("pg-report-theme"); } catch (e) {}
+  root.dataset.theme = saved === "dark" || saved === "light" ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+})();
+</script>
+<style>
+/*__UI_CSS__*/
+/* the explorer */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px;align-items:start}
+@media (max-width:1050px){.layout{grid-template-columns:minmax(0,1fr)}}
+.sticky{position:sticky;top:16px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.fchip{border:1px solid var(--line);background:var(--card2);color:var(--fg);font:inherit;font-size:.78rem;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer;transition:.12s;white-space:nowrap}
+.fchip small{color:var(--muted);font-weight:500;margin-left:4px}
+.fchip:hover{border-color:var(--a1)}
+.fchip[aria-pressed=true]{color:#fff;border-color:transparent;background:linear-gradient(120deg,var(--a1),var(--a2));box-shadow:0 4px 12px var(--glow)}
+.fchip[aria-pressed=true] small{color:rgba(255,255,255,.8)}
+.achip{border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:.8rem;font-weight:650;padding:7px 12px;border-radius:12px;cursor:pointer;transition:.12s;white-space:nowrap}
+.achip small{color:var(--muted);font-weight:500;margin-left:4px}
+.achip:hover{border-color:var(--a1)}
+.achip[aria-pressed=true]{color:#fff;border-color:transparent;background:linear-gradient(120deg,var(--a2),var(--a3));box-shadow:0 4px 12px var(--glow)}
+.achip[aria-pressed=true] small{color:rgba(255,255,255,.85)}
+#areas{padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
+.toggles{display:flex;gap:16px;flex-wrap:wrap}
+#list{max-height:none;height:calc(100vh - 360px);min-height:420px}
+.ci{width:10px;height:10px;border-radius:50%;flex:none}
+.ci.ok{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.ci.fail{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
+.more{color:var(--muted);font-size:.8rem;text-align:center;padding:10px}
+/* detail */
+.hero{display:flex;gap:16px;align-items:center}
+.hero .ico{width:56px;height:56px;border-radius:14px}
+.hero .ico img{max-width:40px;max-height:40px}
+.hero .ico.fallback{font-size:28px}
+.hero h2{margin:0;font-size:1.3rem;letter-spacing:-.02em;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.hero .variant{font-size:.8rem}
+.path{color:var(--muted);font-size:.8rem;margin-top:3px;word-break:break-all}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tagc{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:.76rem;font-weight:600;background:var(--card2);border:1px solid var(--line);text-decoration:none;color:var(--fg)}
+.tagc.ok{background:var(--ok-bg);border-color:transparent;color:var(--ok)}
+.tagc.fail{background:#fde8e8;border-color:transparent;color:#dc2626}
+html[data-theme="dark"] .tagc.fail{background:#3a1212;color:#fca5a5}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;font-size:.82rem;font-weight:600;text-decoration:none;color:var(--fg);background:var(--card2);border:1px solid var(--line);transition:.12s}
+.lbtn:hover{border-color:var(--a1);transform:translateY(-1px)}
+.sec{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.sec h3{margin:0 0 10px;font-size:.95rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0}
+.opt label{display:block;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.opt select,.opt input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;font-size:.84rem;outline:none}
+.opt select{appearance:none;-webkit-appearance:none;padding-right:28px;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.opt select:focus,.opt input:focus{border-color:var(--a1)}
+.opt .off{font-size:.78rem;color:var(--muted)}
+/* the --enable-* options: toggle cards, grouped */
+.fgroup{margin-top:14px}
+.fgroup-t{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 7px 2px}
+.flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:8px}
+.flag{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;cursor:pointer;font:inherit;color:var(--fg);
+  background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;transition:.15s}
+.flag:hover{border-color:var(--a1);transform:translateY(-1px)}
+.flag .fi{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:var(--card);border:1px solid var(--line)}
+.flag .ft{min-width:0}
+.flag .ft b{display:block;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flag .ft small{display:block;color:var(--muted);font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flag .sw{width:32px;height:18px;border-radius:999px;background:var(--line);position:relative;transition:.2s;flex:none}
+.flag .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.2s}
+.flag[aria-pressed=true]{background:linear-gradient(var(--card2),var(--card2)) padding-box,linear-gradient(120deg,var(--a1),var(--a3)) border-box;border:1px solid transparent;box-shadow:0 4px 14px var(--glow)}
+.flag[aria-pressed=true] .fi{background:linear-gradient(135deg,var(--a1),var(--a2));border-color:transparent}
+.flag[aria-pressed=true] .sw{background:linear-gradient(120deg,var(--a1),var(--a2))}
+.flag[aria-pressed=true] .sw::after{left:16px}
+/* dropdowns: environment, CP and connector versions */
+.dd{position:relative}
+.dd-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+  color:var(--fg);font:inherit;font-size:.86rem;font-weight:600;cursor:pointer;text-align:left;transition:.15s}
+.dd-btn:hover{border-color:var(--a1)}
+.dd.open .dd-btn{border-color:var(--a1);box-shadow:0 0 0 4px var(--glow)}
+.dd-btn .v{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dd-btn .h{color:var(--muted);font-weight:500;font-size:.74rem;white-space:nowrap}
+.dd-btn .chev{width:8px;height:8px;flex:none;border:solid var(--muted);border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:.2s}
+.dd.open .dd-btn .chev{transform:translateY(2px) rotate(-135deg);border-color:var(--a1)}
+.dd-panel{position:absolute;z-index:30;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:360px;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(124,58,237,.08);padding:6px;
+  animation:ddin .14s ease-out}
+@keyframes ddin{from{opacity:0;transform:translateY(-4px)}}
+.opt:last-child .dd-panel{left:auto;right:0}
+.dd-search{width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid var(--line);border-radius:9px;background:var(--card2);color:var(--fg);font:inherit;font-size:.82rem;outline:none}
+.dd-search:focus{border-color:var(--a1)}
+.dd-list{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.dd-group{font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:8px 10px 3px}
+.dd-item{display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:.84rem}
+.dd-item:hover,.dd-item.kb{background:var(--card2)}
+.dd-item .l{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dd-item .d{display:block;color:var(--muted);font-size:.72rem;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dd-item .r{color:var(--muted);font-size:.72rem;white-space:nowrap;font-family:'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace}
+.dd-item .ck{width:5px;height:9px;border:solid transparent;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg);justify-self:center}
+.dd-item.sel{background:linear-gradient(120deg,rgba(79,70,229,.14),rgba(6,182,212,.10))}
+.dd-item.sel .l{color:var(--a1)}
+html[data-theme="dark"] .dd-item.sel .l{color:#c4b5fd}
+.dd-item.sel .ck{border-color:var(--a1)}
+.badge{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.62rem;font-weight:700;vertical-align:1px;background:var(--glow);color:var(--a1)}
+html[data-theme="dark"] .badge{color:#c4b5fd}
+.dd-empty{color:var(--muted);font-size:.8rem;padding:10px;text-align:center}
+.term+.term{margin-top:10px}
+.cmdrow{display:flex;justify-content:flex-end;margin-top:8px}
+.empty-detail{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-detail .big{font-size:44px}
+.empty-detail h2{color:var(--fg);margin:10px 0 6px;font-size:1.15rem}
+.btn.ghost{background:var(--card2);color:var(--fg);box-shadow:none;border:1px solid var(--line)}
+a.btn{text-decoration:none;display:inline-block}
+</style>
+<!--__BANNER__-->
+</head>
+<body>
+<div class="wrap"><header>
+  <div class="hrow">
+    <div class="brand">
+      <!--__KDP_BRAND__-->
+      <h1>🧭 Examples explorer</h1>
+      <div class="tag">Every example of kafka-docker-playground: find one, pick its options, copy the <code>playground run</code> command</div>
+    </div>
+    <div class="tools">
+      <a class="seg" href="pipeline-builder.html" style="text-decoration:none"><span style="color:#fff;font-weight:600;font-size:.9rem;padding:8px 16px">🔗 Pipeline builder</span></a>
+      <button class="theme" id="theme" aria-label="switch between the light and the dark theme (remembered)"></button>
+    </div>
+  </div>
+</header></div>
+
+<main class="wrap">
+  <div class="layout">
+    <section class="card">
+      <div class="search"><input type="search" id="q" placeholder="oracle cdc ssl, fully managed s3, kerberos, ksqldb join…" autocomplete="off"></div>
+      <div class="filters" id="areas"></div>
+      <div class="filters" id="cats"></div>
+      <div class="filters" id="topics"></div>
+      <div class="frow">
+        <div class="toggles">
+          <label class="switch" title="hide the examples that need cloud credentials (AWS, GCP, Azure, Confluent Cloud, SaaS accounts…)"><input type="checkbox" id="nocreds"><i></i>no credentials needed</label>
+          <label class="switch" id="ci-toggle" style="display:none" title="only the examples whose last nightly CI run passed"><input type="checkbox" id="cionly"><i></i>CI passing</label>
+        </div>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="list" id="list" role="listbox"></div>
+    </section>
+
+    <section class="card sticky" id="detail"></section>
+  </div>
+</main>
+<footer>The selection is kept in the URL: share the link with a colleague · <a href="https://kafka-docker-playground.io/#/how-to-use" target="_blank" rel="noopener">how to use</a> · <a href="https://kafka-docker-playground.io/#/content" target="_blank" rel="noopener">list of examples</a></footer>
+<div class="toast" id="toast">✅ Command copied</div>
+
+<script>
+// filled in by tools/pipeline-builder/catalog.py explorer_html: the examples and the options of 'playground run', the
+// root folder of the checkout ('' on the website: commands use $PWD) and where the icons are
+const DATA = /*__EXPLORER_DATA__*/null;
+const ROOT = /*__PIPELINE_ROOT__*/"";
+const ICONS = /*__PIPELINE_ICONS__*/"https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/images/icons/";
+const GITHUB = "https://github.com/vdesabou/kafka-docker-playground/tree/master/";
+const DOCS = "https://kafka-docker-playground.io/#/";
+
+const CATS = [
+  ["", "All", "✨"], ["source", "Source connectors", "📥"], ["sink", "Sink connectors", "📤"], ["smt", "SMTs", "🔧"], ["fully-managed", "Fully managed", "☁️"],
+  ["ksqldb", "ksqlDB", "🚀"], ["flink", "Flink", "🐿️"], ["environment", "Secured environments", "🔐"], ["multi-data-center", "Multi data center", "🌍"],
+  ["schema-registry", "Schema Registry", "📜"], ["rest-proxy", "REST Proxy", "🛰️"], ["ccloud", "Confluent Cloud", "⛅"], ["custom-connector", "Custom connectors", "🧩"],
+  ["connect", "Other Connect", "🔌"], ["other", "Other", "🧰"], ["operator", "Operator", "☸️"], ["academy", "Academy", "🎓"],
+];
+// key, name (as on kafka-docker-playground.io/#/areas), area page, short label of the chip
+const AREAS = [["connect", "🔗 Connect", "area-connect", "🔗 Connect"],
+  ["core", "🖥️ Brokers, clients and observability", "area-core-observability", "🖥️ Brokers & clients"],
+  ["streams", "🌊 Streams, schemas and non-Java clients", "area-streams-schema-registry", "🌊 Streams & schemas"],
+  ["platform", "🛡️ Platform, security and Cloud infra", "area-platform-security", "🛡️ Security & Cloud infra"]];
+// the --enable-* options of 'playground run': icon, name, what it adds, group (others: their help, in Components)
+const FLAG_INFO = {
+  "--enable-control-center": ["💠", "Control Center", "the web UI, on localhost:9021", "Components"],
+  "--enable-ksqldb": ["🚀", "ksqlDB", "ksqlDB server, playground ksqldb sql", "Components"],
+  "--enable-flink": ["🐿️", "Flink", "jobmanager, taskmanager, SQL client", "Components"],
+  "--enable-rest-proxy": ["🛰️", "REST Proxy", "Kafka over HTTP", "Components"],
+  "--enable-conduktor": ["🐺", "Conduktor", "the Conduktor Platform UI", "Components"],
+  "--enable-kcat": ["🐈", "kcat", "a kcat container", "Components"],
+  "--enable-jmx-grafana": ["📊", "Grafana", "Prometheus, Grafana and Pyroscope", "Observability"],
+  "--enable-multiple-brokers": ["🖥️", "3 brokers", "instead of one", "Topology"],
+  "--enable-multiple-connect-workers": ["🔌", "3 Connect workers", "a distributed Connect cluster", "Topology"],
+  "--enable-multiple-controllers": ["🎛️", "3 controllers", "a KRaft quorum of three", "Topology"],
+  "--enable-sql-datagen": ["🌪️", "SQL Datagen", "rows injected after the run", "Load"]};
+const FLAG_GROUPS = [["Components", "🧩 Components"], ["Observability", "📈 Observability"], ["Topology", "🏗️ Topology"], ["Load", "🌪️ Load"]];
+const TOPICS = [["security", "🛡️ Security"], ["broker", "🖥️ Brokers"], ["cfk", "☸️ CFK"], ["client", "💻 Clients"]];
+const CAT = Object.fromEntries(CATS.map(c => [c[0], c]));
+const DEEP = {source: "deep-dive-connector-troubleshooting", sink: "deep-dive-connector-troubleshooting", connect: "deep-dive-connector-troubleshooting", smt: "deep-dive-connector-smt-test",
+  "fully-managed": "deep-dive-fully-managed", "custom-connector": "deep-dive-fully-managed", ksqldb: "deep-dive-ksqldb", flink: "deep-dive-flink",
+  environment: "deep-dive-secured-environments", "multi-data-center": "deep-dive-replication", "schema-registry": "deep-dive-schema"};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const examples = DATA ? DATA.examples : [];
+const RUN = DATA ? DATA.run : {environments: [], enable: [], default_tag: ""};
+const VERSIONS = DATA && DATA.versions ? DATA.versions : {cp: [], plugins: {}};
+const fetched = {};   // owner/name -> versions, or "loading" / "failed": a local page asks Confluent Hub when an example is picked
+let CI = null;   // dir -> {state, passed, total, url, version}
+const state = {q: "", area: "", cat: "", topics: [], nocreds: false, cionly: false, sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
+
+// ---------------------------------------------------------------- helpers
+function short(cls) { return (cls || "").split(".").pop(); }
+function title(e) { return e.display || e.title || e.dir.split("/").pop(); }
+function icon(e, big) {
+  const fb = (CAT[e.category] || CAT[""])[2];
+  return e.icon ? `<span class="ico"><img src="${esc(ICONS + e.icon)}" alt="" loading="lazy" onerror="this.parentNode.className='ico fallback';this.replaceWith('${fb}')"></span>`
+                : `<span class="ico fallback">${fb}</span>`;
+}
+// the examples of one folder share their display name: the chip says what each one adds (mysql-mtls.sh → mtls)
+(function variants() {
+  const groups = {};
+  for (const e of examples) (groups[e.dir] = groups[e.dir] || []).push(e);
+  for (const list of Object.values(groups)) {
+    if (list.length < 2) continue;
+    const names = list.map(e => e.name);
+    // the common prefix of the names, cut after a separator (cdc-oracle19-), or the base name itself (mysql)
+    let lcp = names.reduce((a, b) => { let i = 0; while (i < a.length && a[i] === b[i]) i++; return a.slice(0, i); });
+    if (!names.includes(lcp)) lcp = lcp.slice(0, Math.max(...["-", "_", "."].map(c => lcp.lastIndexOf(c))) + 1);
+    for (const e of list) e._variant = e.name.slice(lcp.length).replace(/^[-_.]+/, "") || "default";
+  }
+})();
+function variant(e) { return e._variant ? `<span class="variant${e._variant === "default" ? " default" : ""}">${esc(e._variant)}</span>` : ""; }
+function needsCreds(e) { return (e.credentials || []).length > 0 || (e.required_env || []).length > 0 || e.managed || e.category === "ccloud" || e.category === "custom-connector"; }
+function hay(e) { return (e.path + " " + e.title + " " + e.display + " " + e.classes.join(" ") + " " + e.category + " " + e.topics.join(" ")).toLowerCase(); }
+for (const e of examples) e._hay = hay(e);
+function byPath(p) { return examples.find(e => e.path === p); }
+
+function filtered(ignoreCat) {
+  const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+  return examples.filter(e =>
+    (ignoreCat === "area" || !state.area || e.area === state.area)
+    && (ignoreCat === true || !state.cat || e.category === state.cat)
+    && state.topics.every(t => e.topics.includes(t))
+    && (!state.nocreds || !needsCreds(e))
+    && (!state.cionly || (CI && CI[e.dir] && CI[e.dir].state === "ok"))
+    && words.every(w => e._hay.includes(w)));
+}
+
+// ---------------------------------------------------------------- list
+function renderFilters() {
+  const forAreas = filtered("area").filter(e => !state.cat || e.category === state.cat);
+  const acount = {};
+  for (const e of forAreas) acount[e.area] = (acount[e.area] || 0) + 1;
+  $("areas").innerHTML = AREAS.map(a => `<button class="achip" data-area="${a[0]}" aria-pressed="${state.area === a[0]}" title="${esc(a[1])}: the examples of the area, as in kafka-docker-playground.io/#/areas">${esc(a[3])}<small>${acount[a[0]] || 0}</small></button>`).join("");
+  const base = filtered(true);
+  const counts = {};
+  for (const e of base) counts[e.category] = (counts[e.category] || 0) + 1;
+  $("cats").innerHTML = CATS.filter(c => !c[0] || counts[c[0]]).map(c =>
+    `<button class="fchip" data-cat="${c[0]}" aria-pressed="${state.cat === c[0]}">${c[2]} ${esc(c[1])}<small>${c[0] ? counts[c[0]] : base.length}</small></button>`).join("");
+  $("topics").innerHTML = TOPICS.map(t => `<button class="fchip" data-topic="${t[0]}" aria-pressed="${state.topics.includes(t[0])}">${esc(t[1])}</button>`).join("");
+}
+
+function renderList() {
+  const list = filtered(false);
+  const shown = list.slice(0, 300);
+  $("count").textContent = list.length + " example(s)";
+  $("list").innerHTML = shown.map(e => {
+    const ci = CI && CI[e.dir] ? `<span class="ci ${CI[e.dir].state}" title="CI: ${esc(CI[e.dir].label)}"></span>` : "";
+    return `<div class="item${state.sel === e.path ? " selected" : ""}" data-path="${esc(e.path)}" role="option" aria-selected="${state.sel === e.path}">
+      ${icon(e)}<div class="txt"><div class="t"><span class="name">${esc(title(e))}</span>${variant(e)}</div><div class="d">${esc(e.path)}</div></div>${ci}</div>`;
+  }).join("") + (list.length > shown.length ? `<div class="more">… ${list.length - shown.length} more: refine the search</div>` : "")
+    || `<div class="empty">no example matches: try fewer words</div>`;
+}
+
+// ---------------------------------------------------------------- detail
+function q(p) { return `"${ROOT ? ROOT.replace(/\/$/, "") + "/" : "$PWD/"}${p}"`; }
+function highlight(cmd) {
+  return esc(cmd)
+    .replace(/^(playground (?:run|repro bootstrap))/, '<span class="k">$1</span>')
+    .replace(/(\s)(-f|-d|--[a-z-]+)(?=\s|$)/g, '$1<span class="f">$2</span>')
+    .replace(/(&quot;[^&]*?&quot;)/g, '<span class="s">$1</span>');
+}
+function join(parts) {
+  return parts.length > 2 ? parts[0] + " \\\n  " + parts.slice(1).join(" \\\n  ") : parts.join(" ");
+}
+
+// ---------------------------------------------------------------- dropdowns
+// dd(key, value, items, {search, placeholder}): items are {value, label, desc, right, badge, group}; the choice goes to
+// state[key]. One panel open at a time (openDD), kept open across the renders of the detail
+let openDD = null;
+function dd(key, value, items, opts = {}) {
+  const cur = items.find(i => i.value === value) || items[0];
+  let html = `<div class="dd${openDD === key ? " open" : ""}" data-dd="${key}">
+    <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="${openDD === key}"><span class="v">${esc(cur ? cur.label : "")}${cur && cur.badge ? `<span class="badge">${esc(cur.badge)}</span>` : ""}</span>${cur && cur.right ? `<span class="h">${esc(cur.right)}</span>` : ""}<span class="chev"></span></button>`;
+  if (openDD === key) {
+    html += `<div class="dd-panel">${opts.search ? `<input class="dd-search" placeholder="${esc(opts.placeholder || "search…")}" autocomplete="off">` : ""}<div class="dd-list" role="listbox">`;
+    let group = null;
+    for (const i of items) {
+      if (i.group && i.group !== group) { group = i.group; html += `<div class="dd-group">${esc(group)}</div>`; }
+      html += `<div class="dd-item${i.value === value ? " sel" : ""}" role="option" data-value="${esc(i.value)}" data-text="${esc((i.label + " " + (i.desc || "") + " " + (i.right || "")).toLowerCase())}">
+        <span class="ck"></span><span class="l">${esc(i.label)}${i.badge ? `<span class="badge">${esc(i.badge)}</span>` : ""}${i.desc ? `<span class="d">${esc(i.desc)}</span>` : ""}</span><span class="r">${esc(i.right || "")}</span></div>`;
+    }
+    html += `<div class="dd-empty" hidden>no match</div></div></div>`;
+  }
+  return html + `</div>`;
+}
+
+const ENV_INFO = {
+  plaintext: ["Default", "no security"], "sasl-plain": ["SASL", "SASL/PLAIN"], "sasl-scram": ["SASL", "SASL/SCRAM"],
+  "sasl-ssl": ["SASL", "SASL/PLAIN over SSL"], "sasl-oauthbearer": ["SASL", "OAuth (OIDC with Keycloak)"],
+  "2way-ssl": ["SSL / mTLS", "mutual TLS"], kerberos: ["Kerberos", "SASL/GSSAPI"], ssl_kerberos: ["Kerberos", "Kerberos over SSL"],
+  "ldap-sasl-plain": ["LDAP", "SASL/PLAIN users in LDAP"], "ldap-authorizer-sasl-plain": ["LDAP", "LDAP authorizer, ACLs on groups"],
+  "rbac-sasl-plain": ["RBAC", "RBAC with MDS and LDAP"], "rbac-oauth": ["RBAC", "RBAC with MDS and Keycloak"],
+  cfk: ["Kubernetes", "Confluent for Kubernetes"], "cfk-rbac": ["Kubernetes", "CFK with RBAC"],
+  ansible: ["Ansible", "cp-ansible playbook"], "ansible-sasl-ssl": ["Ansible", "cp-ansible, SASL/PLAIN and SSL"]};
+const ENV_GROUPS = ["Default", "SASL", "SSL / mTLS", "Kerberos", "LDAP", "RBAC", "Kubernetes", "Ansible", "Other"];
+function envDropdown() {
+  const items = RUN.environments.filter(x => x.name !== "ccloud").map(x => {
+    const info = ENV_INFO[x.name] || ["Other", x.note];
+    return {value: x.name, label: x.name, desc: info[1], group: info[0], badge: x.name === "plaintext" ? "default" : ""};
+  }).sort((a, b) => ENV_GROUPS.indexOf(a.group) - ENV_GROUPS.indexOf(b.group));
+  return dd("env", state.env || "plaintext", items);
+}
+
+// the versions of the dropdowns: CP from the page, the plugin from the page (website) or from Confluent Hub (local page)
+function cpSelect() {
+  const list = VERSIONS.cp.filter(v => v !== RUN.default_tag).slice(0, 80);
+  if (!list.length) return `<input id="o-tag" value="${esc(state.tag)}" placeholder="${esc(RUN.default_tag)} (default)">`;
+  const minor = v => v.split(".").slice(0, 2).join(".");
+  const items = [{value: "", label: RUN.default_tag, badge: "default", group: "Default"},
+    ...list.map(v => ({value: v, label: v, group: "CP " + minor(v)}))];
+  if (state.tag && !items.some(i => i.value === state.tag)) items.splice(1, 0, {value: state.tag, label: state.tag, group: "Default"});
+  return dd("tag", state.tag, items, {search: true, placeholder: "8.3, 7.9.1…"});
+}
+function pluginVersions(e) {
+  const plugin = (e.plugins || [])[0];
+  if (!plugin) return {plugin: null, list: null};
+  if (VERSIONS.plugins[plugin]) return {plugin, list: VERSIONS.plugins[plugin]};
+  if (Array.isArray(fetched[plugin])) return {plugin, list: fetched[plugin]};
+  if (!fetched[plugin]) {
+    fetched[plugin] = "loading";
+    fetch(`https://api.hub.confluent.io/api/plugins/${plugin}/versions`).then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => { fetched[plugin] = d.filter(x => x.version).reverse().map(x => ({v: x.version, date: x.release_date || ""})); })
+      .catch(() => { fetched[plugin] = "failed"; })
+      .then(() => { if (state.sel === e.path) renderDetail(); });
+  }
+  return {plugin, list: fetched[plugin]};
+}
+function connectorSelect(e) {
+  const {plugin, list} = pluginVersions(e);
+  if (!Array.isArray(list)) {
+    if (list === "loading") return `<div class="dd"><button type="button" class="dd-btn" disabled><span class="v">loading the versions…</span><span class="chev"></span></button></div>`;
+    return `<input id="o-ctag" value="${esc(state.ctag)}" placeholder="latest (default)">`;
+  }
+  const items = [{value: "", label: "latest", badge: "default", right: list[0] ? list[0].v : "", desc: plugin}];
+  if (state.ctag && !list.some(x => x.v === state.ctag)) items.push({value: state.ctag, label: state.ctag});
+  list.slice(0, 200).forEach((x, n) => items.push({value: x.v, label: x.v, right: x.date, badge: n === 0 ? "latest" : ""}));
+  return dd("ctag", state.ctag, items, {search: true, placeholder: "search a version…"});
+}
+
+function renderDetail() {
+  const e = state.sel ? byPath(state.sel) : null;
+  if (!e) {
+    $("detail").innerHTML = `<div class="empty-detail"><div class="big">🧭</div><h2>Pick an example</h2>
+      <div>Search by connector, database, cloud, security mechanism…<br>then choose its options and copy the <code>playground run</code> command.</div>
+      <div class="links" style="justify-content:center;margin-top:20px"><a class="lbtn" href="pipeline-builder.html">🔗 Chain a source and sinks</a>
+      <a class="lbtn" href="${DOCS}how-to-use" target="_blank" rel="noopener">🚀 Install the playground</a></div></div>`;
+    return;
+  }
+  const cat = CAT[e.category] || CAT[""];
+  const ci = CI && CI[e.dir];
+  const CRED_LABEL = {aws: "🔑 AWS credentials", azure: "🔑 Azure login", gcp: "🔑 GCP keyfile", ccloud: "☁️ Confluent Cloud"};
+  const creds = [...(e.credentials || []).map(c => CRED_LABEL[c] || "🔑 " + c), ...(e.required_env || []).map(v => "🔑 $" + v)];
+  if ((e.managed || e.category === "ccloud") && !(e.credentials || []).includes("ccloud")) creds.unshift(CRED_LABEL.ccloud);
+  let html = `<div class="hero">${icon(e)}<div style="min-width:0"><h2>${esc(title(e))}${variant(e)}</h2><div class="path mono">${esc(e.path)}</div></div></div>
+    <div class="tags">${e.area ? (a => `<a class="tagc" href="${DOCS + a[2]}" target="_blank" rel="noopener" title="the area page: questions, commands, deep dives">${esc(a[1])} ↗</a>`)(AREAS.find(x => x[0] === e.area)) : ""}<span class="tagc">${cat[2]} ${esc(cat[1])}</span>
+      ${e.topics.map(t => `<span class="tagc">${esc((TOPICS.find(x => x[0] === t) || [t, t])[1])}</span>`).join("")}
+      ${e.connector ? `<span class="tagc mono">${esc(short(e.connector.class))}</span>` : ""}
+      ${ci ? `<a class="tagc ${ci.state}" href="${esc(ci.url)}" target="_blank" rel="noopener" title="last nightly CI run">${ci.state === "ok" ? "✅" : "🔥"} CI ${esc(ci.label)}</a>` : ""}
+      ${ci && ci.version ? `<span class="tagc">🔢 ${esc(ci.version)}</span>` : ""}
+      ${creds.map(c => `<span class="tagc">${esc(c)}</span>`).join("")}
+      ${!creds.length ? `<span class="tagc ok">🆓 no credentials needed</span>` : ""}</div>
+    <div class="links"><a class="lbtn" href="${GITHUB + esc(e.dir)}" target="_blank" rel="noopener">📖 README ↗</a>
+      ${e.docs_url ? `<a class="lbtn" href="${esc(e.docs_url)}" target="_blank" rel="noopener">📘 Confluent docs ↗</a>` : ""}
+      ${DEEP[e.category] ? `<a class="lbtn" href="${DOCS + DEEP[e.category]}" target="_blank" rel="noopener">🍪 Deep dive ↗</a>` : ""}
+      <a class="lbtn" href="${GITHUB.replace("/tree/", "/blob/") + esc(e.path)}" target="_blank" rel="noopener">📜 Script ↗</a></div>`;
+
+  // run builder
+  const sm = !e.managed && e.category !== "ccloud" && e.category !== "custom-connector";
+  const envOk = e.connector_example && e.honors_environment;
+  html += `<div class="sec"><h3>▶️ Run it</h3><div class="opts">
+    <div class="opt"><label for="o-env">🔐 Environment</label>${envOk
+      ? envDropdown()
+      : `<div class="off">${e.connector_example ? "set by the example" : e.managed ? "Confluent Cloud" : "set by the example (" + esc(e.environment || "its own") + ")"}</div>`}</div>
+    <div class="opt"><label for="o-tag">🎯 CP version</label>${sm ? cpSelect() : `<div class="off">Confluent Cloud</div>`}</div>
+    <div class="opt"><label for="o-ctag">🔌 Connector version</label>${e.connector_example ? connectorSelect(e) : `<div class="off">no connector plugin</div>`}</div>
+  </div>`;
+  // the options that apply: --enable-sql-datagen needs a load script inserting rows (the JDBC, Debezium, Oracle CDC and
+  // XStream sources, fully managed too), the others start local components (self-managed only)
+  const applies = f => f.flag === "--enable-sql-datagen" ? e.sql_datagen : sm;
+  const flags = RUN.enable.filter(applies);
+  if (flags.length) {
+    const byGroup = {};
+    for (const f of flags) {
+      const info = FLAG_INFO[f.flag] || ["⚙️", f.help.replace(/^[^\p{L}]+/u, "").replace(/^Enable /, "").replace(/\s*\(.*$/, ""), f.flag, "Components"];
+      (byGroup[info[3]] = byGroup[info[3]] || []).push([f, info]);
+    }
+    html += FLAG_GROUPS.filter(g => byGroup[g[0]]).map(g => `<div class="fgroup"><div class="fgroup-t">${g[1]}</div><div class="flags">${byGroup[g[0]].map(([f, info]) =>
+      `<button type="button" class="flag" data-flag="${esc(f.flag)}" aria-pressed="${state.enable.includes(f.flag)}" title="${esc(f.flag)}: ${esc(f.help)}">
+        <span class="fi">${info[0]}</span><span class="ft"><b>${esc(info[1])}</b><small>${esc(info[2])}</small></span><span class="sw"></span></button>`).join("")}</div></div>`).join("");
+  }
+  const parts = [`playground run -f ${q(e.path)}`];
+  if (envOk && state.env && state.env !== "plaintext") parts.push(`--environment ${state.env}`);
+  if (sm && state.tag) parts.push(`--tag ${state.tag}`);
+  if (e.connector_example && state.ctag) parts.push(`--connector-tag ${state.ctag}`);
+  for (const f of RUN.enable) if (applies(f) && state.enable.includes(f.flag)) parts.push(f.flag);
+  const run = join(parts);
+  html += `<div class="term" style="margin-top:12px"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>run</span></div><pre>${highlight(run)}</pre></div>
+    <div class="cmdrow"><button class="btn" data-copy="${esc(run)}">📋 Copy</button></div></div>`;
+
+  // reproduction model
+  const repro = join([`playground repro bootstrap -f ${q(e.path)}`, `-d "${state.desc.replace(/"/g, '\\"')}"`, "--no-run"]);
+  html += `<div class="sec"><h3>🧪 Turn it into a reproduction model</h3>
+    <div class="desc"><label for="o-desc">💡 Description</label><input type="text" id="o-desc" value="${esc(state.desc)}" placeholder="case number + a few words"></div>
+    <div class="term"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>repro</span></div><pre>${highlight(repro)}</pre></div>
+    <div class="cmdrow"><button class="btn" data-copy="${esc(repro)}">📋 Copy</button></div></div>`;
+
+  if (e.pipeline) {
+    const p = new URLSearchParams();
+    if (e.managed) p.set("managed", "1");
+    if (e.kind === "source") p.set("base", e.path); else p.set("sinks", e.path);
+    html += `<div class="sec"><h3>🔗 Chain it ${e.kind === "source" ? "with sinks" : "after a source"}</h3>
+      <div class="cmdrow" style="justify-content:flex-start;margin-top:0"><a class="btn" href="pipeline-builder.html#${p.toString()}">Open in the pipeline builder →</a></div></div>`;
+  }
+  $("detail").innerHTML = html;
+}
+
+// ---------------------------------------------------------------- state in the URL
+function saveHash() {
+  const p = new URLSearchParams();
+  if (state.q) p.set("q", state.q);
+  if (state.area) p.set("area", state.area);
+  if (state.cat) p.set("cat", state.cat);
+  if (state.topics.length) p.set("topics", state.topics.join(","));
+  if (state.nocreds) p.set("nocreds", "1");
+  if (state.sel) p.set("ex", state.sel);
+  if (state.env) p.set("env", state.env);
+  if (state.tag) p.set("tag", state.tag);
+  if (state.ctag) p.set("ctag", state.ctag);
+  if (state.enable.length) p.set("enable", state.enable.join(","));
+  history.replaceState(null, "", "#" + p.toString());
+}
+function loadHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  state.area = AREAS.some(a => a[0] === p.get("area")) ? p.get("area") : "";
+  state.q = p.get("q") || ""; state.cat = CAT[p.get("cat")] ? p.get("cat") : "";
+  state.topics = (p.get("topics") || "").split(",").filter(t => TOPICS.some(x => x[0] === t));
+  state.nocreds = p.get("nocreds") === "1";
+  state.sel = p.get("ex") && byPath(p.get("ex")) ? p.get("ex") : null;
+  state.env = p.get("env") || ""; state.tag = p.get("tag") || ""; state.ctag = p.get("ctag") || "";
+  state.enable = (p.get("enable") || "").split(",").filter(f => RUN.enable.some(x => x.flag === f));
+  $("q").value = state.q; $("nocreds").checked = state.nocreds;
+}
+function render() { renderFilters(); renderList(); renderDetail(); saveHash(); }
+
+// ---------------------------------------------------------------- CI status, read from the published list of examples
+function loadCI() {
+  fetch("content.md").then(r => r.ok ? r.text() : Promise.reject()).then(text => {
+    const ci = {};
+    for (const line of text.split("\n")) {
+      const m = line.match(/\/tree\/master\/([a-z0-9_.\/-]+)\)/i);
+      if (!m) continue;
+      const ok = line.match(/badge\/(\d+)\/(\d+)-ok!-green\)\]\(([^)\s]+)\)/);
+      const ko = line.match(/badge\/(\d+)\/(\d+)-fail!-red\)\]\(([^)\s]+)\)/);
+      const ver = line.match(/badge\/v-([^-)]+)-pink/);
+      if (!ok && !ko) continue;
+      const x = ok || ko;
+      ci[m[1]] = {state: ok ? "ok" : "fail", label: x[1] + "/" + x[2] + (ok ? " passed" : " failed"), url: x[3],
+                  version: ver ? decodeURIComponent(ver[1]).replace(/%20/g, " ") : ""};
+    }
+    if (Object.keys(ci).length) { CI = ci; $("ci-toggle").style.display = ""; render(); }
+  }).catch(() => {});
+}
+
+// ---------------------------------------------------------------- events
+function themeButton() {
+  const dark = document.documentElement.dataset.theme === "dark";
+  $("theme").textContent = dark ? "☀️" : "🌙";
+  $("theme").title = dark ? "light theme" : "dark theme";
+}
+$("theme").onclick = () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("pg-report-theme", root.dataset.theme); } catch (e) {}
+  themeButton();
+};
+themeButton();
+$("q").oninput = e => { state.q = e.target.value; renderFilters(); renderList(); saveHash(); };
+$("areas").onclick = e => { const b = e.target.closest("[data-area]"); if (!b) return; state.area = state.area === b.dataset.area ? "" : b.dataset.area; render(); };
+$("cats").onclick = e => { const b = e.target.closest("[data-cat]"); if (!b) return; state.cat = b.dataset.cat; render(); };
+$("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b) return; const t = b.dataset.topic;
+  state.topics = state.topics.includes(t) ? state.topics.filter(x => x !== t) : [...state.topics, t]; render(); };
+$("nocreds").onchange = e => { state.nocreds = e.target.checked; render(); };
+$("cionly").onchange = e => { state.cionly = e.target.checked; render(); };
+$("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; renderList(); renderDetail(); saveHash(); };
+$("detail").addEventListener("input", e => {
+  if (e.target.id === "o-tag" && e.target.tagName === "INPUT") state.tag = e.target.value.trim();
+  else if (e.target.id === "o-ctag" && e.target.tagName === "INPUT") state.ctag = e.target.value.trim();
+  else if (e.target.id === "o-desc") state.desc = e.target.value;
+  else return;
+  const pos = e.target.selectionStart, id = e.target.id;
+  renderDetail(); saveHash();
+  const el = $(id); el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {}
+});
+$("detail").addEventListener("change", e => {
+  if (e.target.id === "o-env") state.env = e.target.value;
+  else if (e.target.id === "o-tag" && e.target.tagName === "SELECT") state.tag = e.target.value;
+  else if (e.target.id === "o-ctag" && e.target.tagName === "SELECT") state.ctag = e.target.value;
+  else return;
+  renderDetail(); saveHash();
+});
+$("detail").addEventListener("click", e => {
+  const btn = e.target.closest(".dd-btn");
+  if (btn && !btn.disabled) {
+    const key = btn.closest(".dd").dataset.dd;
+    openDD = openDD === key ? null : key;
+    renderDetail();
+    const search = document.querySelector(".dd.open .dd-search");
+    if (search) search.focus();
+    const sel = document.querySelector(".dd.open .dd-item.sel");
+    if (sel) sel.scrollIntoView({block: "nearest"});
+    return;
+  }
+  const item = e.target.closest(".dd-item");
+  if (item) { state[item.closest(".dd").dataset.dd] = item.dataset.value; openDD = null; renderDetail(); saveHash(); return; }
+  if (e.target.closest(".dd-panel")) return;
+  const f = e.target.closest("[data-flag]");
+  if (f) { const v = f.dataset.flag; state.enable = state.enable.includes(v) ? state.enable.filter(x => x !== v) : [...state.enable, v]; renderDetail(); saveHash(); return; }
+  const c = e.target.closest("[data-copy]");
+  if (c) navigator.clipboard.writeText(c.dataset.copy).then(() => { $("toast").classList.add("on"); setTimeout(() => $("toast").classList.remove("on"), 1600); });
+});
+
+// a dropdown: closed by a click outside or Esc, filtered as you type, Enter picks the first match
+document.addEventListener("click", e => { if (openDD && !e.target.closest(".dd")) { openDD = null; renderDetail(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && openDD) { openDD = null; renderDetail(); } });
+$("detail").addEventListener("input", e => {
+  if (!e.target.classList.contains("dd-search")) return;
+  const q = e.target.value.toLowerCase().trim();
+  const panel = e.target.closest(".dd-panel");
+  let shown = 0;
+  for (const it of panel.querySelectorAll(".dd-item")) {
+    const ok = !q || it.dataset.text.includes(q);
+    it.hidden = !ok; it.classList.remove("kb");
+    if (ok && shown++ === 0 && q) it.classList.add("kb");
+  }
+  for (const g of panel.querySelectorAll(".dd-group")) g.hidden = !!q;
+  panel.querySelector(".dd-empty").hidden = shown > 0;
+});
+$("detail").addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !e.target.classList.contains("dd-search")) return;
+  const first = e.target.closest(".dd-panel").querySelector(".dd-item.kb") || e.target.closest(".dd-panel").querySelector(".dd-item:not([hidden])");
+  if (first) first.click();
+});
+
+loadHash();
+render();
+loadCI();
+</script>
+</body>
+</html>

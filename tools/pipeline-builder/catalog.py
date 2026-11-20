@@ -9,6 +9,8 @@ same topics, converters and compatibility warnings.
   catalog.py catalog --root <repo> [--output <file>]    facts of every connect/ and ccloud/fm-* source and sink example
   catalog.py mermaid --source <a.sh> --sink <b.sh>... [--topic t] [--step ksqldb]   flow diagram (Mermaid)
   catalog.py html --root <repo> --output <file.html> [--site]   the pipeline builder page, catalog inside
+  catalog.py pages --root <repo> --output-dir <dir> [--site]   the pipeline builder and the examples explorer pages
+  catalog.py explore --root <repo>                     the data of the examples explorer (JSON)
 
 Standard library only. The example scripts are read as text, never executed.
 """
@@ -43,6 +45,36 @@ CCLOUD_RE = re.compile(r"^\s*bootstrap_ccloud_environment\b(.*)$", re.M)
 START_RE = re.compile(r"playground\s+start-environment\b.*--docker-compose-override-file\s+\"?\$\{PWD\}/([^\"\s]+)\"?")
 ENV_RE = re.compile(r'PLAYGROUND_ENVIRONMENT:-"?([A-Za-z0-9_-]+)')
 GUARD_RE = re.compile(r"connect_cp_version_greater_than_8.*version_gt\s+\$CONNECTOR_TAG\s+\"([0-9.]+)\"")
+
+
+def credentials(text):
+    """the accounts an example needs: handle_<x>_credentials (aws), an Azure login, a GCP keyfile, a Confluent Cloud cluster."""
+    found = set(CRED_RE.findall(text))
+    if re.search(r"login_and_maybe_set_azure_subscription|\baz login\b", text):
+        found.add("azure")
+    if re.search(r"GCP_KEYFILE|keyfile\.json", text):
+        found.add("gcp")
+    if re.search(r"^\s*bootstrap_ccloud_environment\b", text, re.M) or re.search(r"start-environment\b.*--environment\s+ccloud\b", text):
+        found.add("ccloud")
+    if re.search(r"\.aws/credentials|\$\{?AWS_ACCESS_KEY_ID", text):
+        found.add("aws")
+    return sorted(found)
+
+
+def required_env(text):
+    """the variables the user must provide: 'if [ -z "$VAR" ]' followed by the 'VAR is not set. Export it…' error, not a
+    check of a value the script computed (if [ -z "$QUEUE_SIZE" ] … Failed to retrieve queue size)."""
+    lines = text.splitlines()
+    found = set()
+    for i, line in enumerate(lines):
+        for var in REQUIRED_ENV_RE.findall(line):
+            if any("is not set" in l for l in lines[i:i + 4]):
+                found.add(var)
+    # VAR=${VAR:-$1}: a value to export, or to pass as argument (the Databricks token...)
+    for var in re.findall(r"^\s*(\w+)=\$\{(\w+):-\$\d\}", text, re.M):
+        if var[0] == var[1]:
+            found.add(var[0])
+    return sorted(found)
 
 
 def read(path):
@@ -332,8 +364,8 @@ def describe(path, root=None):
         "ports": ports,
         "databases": databases,
         "database_engines": database_engines,
-        "credentials": sorted(set(CRED_RE.findall(text))),
-        "required_env": sorted(set(REQUIRED_ENV_RE.findall(text))),
+        "credentials": credentials(text),
+        "required_env": required_env(text),
         "cloud": cloud,
         "environment": env.group(1) if env else ("ccloud" if cloud else ""),
         "producer": bool(PRODUCE_RE.search(text)),
@@ -524,10 +556,295 @@ def catalog(root):
     }
 
 
+# ---------------------------------------------------------------- examples explorer
+
+EXPLORER_FOLDERS = ["connect", "ccloud", "ksqldb", "flink", "schema-registry", "rest-proxy", "multi-data-center",
+                    "other", "operator", "academy", "environment"]
+HONORS_ENV_RE = re.compile(r'PLAYGROUND_ENVIRONMENT=\$\{PLAYGROUND_ENVIRONMENT:-')
+DOCS_URL_RE = re.compile(r"Quickly test[^\n]*?\((https?://[^)\s]+)\)")
+
+
+def topics_of(rel, title, env, body):
+    """the topics of 'playground find-example --category security|broker|cfk|client' (find_examples in cli_function.sh)."""
+    path = (rel + "\n" + title).lower()
+    body = body.lower()
+    conn = re.match(r"^(connect/|academy/|ccloud/fm-)", rel) is not None
+    topics = []
+    if ((not conn and re.search(r"(rbac|ldap|kerberos|sasl|ssl|mtls|oauth|oidc|audit|secret|security|authentication|csfle|certificate|redactor)", path))
+            or (not conn and re.search(r"(^|[^a-z])(acls?|tls|krb5?)([^a-z]|$)", path))
+            or re.match(r"^(sasl|2way-ssl|kerberos|ssl_kerberos|ldap|rbac|cfk-rbac)", env)
+            or "playground rbac " in body or (not conn and "playground tools cert " in body)):
+        topics.append("security")
+    if (re.search(r"(cluster-linking|mirrormaker|replicator|offsets-migrator)", path) or rel.startswith("multi-data-center/")
+            or (not conn and not rel.startswith("ksqldb/") and re.search(
+                r"(broker|topic-policy|transaction|kraft|zookeeper|tiered-storage|quota|reassign|leader-election|rebalancer|log-compaction)", path))
+            or "playground broker " in body):
+        topics.append("broker")
+    if re.search(r"(cfk|kubernetes|k8s|(^|[^a-z])operator)", path) or env.startswith("cfk"):
+        topics.append("cfk")
+    if re.search(r"(client|producer|consumer|kafkajs|dotnet|librdkafka|kcat|golang|python)", path):
+        topics.append("client")
+    return topics
+
+
+AREAS_BY_HEADING = [("🔗 Connect", "connect"), ("🖥️ Brokers, clients and observability", "core"),
+                    ("🌊 Streams, schemas and non-Java clients", "streams"), ("🛡️ Platform, security and Cloud infra", "platform")]
+AREA_OF_CATEGORY = {"source": "connect", "sink": "connect", "smt": "connect", "connect": "connect", "fully-managed": "connect",
+                    "custom-connector": "connect", "ksqldb": "streams", "flink": "streams", "schema-registry": "streams",
+                    "rest-proxy": "streams", "multi-data-center": "core", "environment": "platform"}
+
+
+def content_areas(root):
+    """{example folder: area} from the '## <area>' sections of the examples page (docs/content-template.md), the areas
+    of https://kafka-docker-playground.io/#/areas."""
+    areas = {}
+    path = os.path.join(root, "docs", "content-template.md")
+    if not os.path.isfile(path):
+        return areas
+    current = None
+    for line in read(path).splitlines():
+        if line.startswith("## "):
+            current = next((key for heading, key in AREAS_BY_HEADING if line[3:].strip() == heading), None)
+            continue
+        m = re.search(r"\s:([a-z0-9/_.\-]+):\s*$", line)
+        if m and current and m.group(1) not in areas:
+            areas[m.group(1)] = current
+    return areas
+
+
+def compose_plugins(path):
+    """owner/name of the plugins of CONNECT_PLUGIN_PATH (/usr/share/confluent-hub-components/<owner>-<name>)."""
+    plugins = []
+    if not path or not os.path.isfile(path):
+        return plugins
+    for m in re.finditer(r"confluent-hub-components/([a-z0-9._]+)-([a-z0-9._-]+)", read(path), re.I):
+        owner, name = m.group(1), m.group(2)
+        if owner in ("java", "filestream") or name == "hub-components":
+            continue
+        if owner + "/" + name not in plugins:
+            plugins.append(owner + "/" + name)
+    return plugins
+
+
+def http_json(url, timeout=15):
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "kafka-docker-playground-docs"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def cp_versions(root, fetch=True):
+    """the Confluent Platform versions, newest first: the cache of 'playground generate-tag-list', else Docker Hub."""
+    found = set()
+    cache = os.path.join(root, "scripts", "cli", "tag-list.txt")
+    if os.path.isfile(cache):
+        for line in read(cache).splitlines():
+            v = line.split(" ")[0]
+            if re.match(r"^\d+\.\d+\.\d+$", v):
+                found.add(v)
+    if not found and fetch:
+        for major in ("8.", "7."):
+            url = "https://hub.docker.com/v2/repositories/confluentinc/cp-server-connect/tags?page_size=100&name=" + major
+            for _ in range(10):
+                try:
+                    page = http_json(url)
+                except Exception:
+                    break
+                for t in page.get("results", []):
+                    if re.match(r"^\d+\.\d+\.\d+$", t.get("name", "")):
+                        found.add(t["name"])
+                url = page.get("next")
+                if not url:
+                    break
+    return sorted(found, key=lambda v: [int(x) for x in v.split(".")], reverse=True)
+
+
+def plugin_versions(plugins):
+    """{owner/name: [{"v", "date"}…] newest first} from Confluent Hub, for the website (its browser calls are refused)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def one(plugin):
+        try:
+            data = http_json("https://api.hub.confluent.io/api/plugins/%s/versions" % plugin)
+            return plugin, [{"v": x["version"], "date": x.get("release_date") or ""} for x in reversed(data) if x.get("version")]
+        except Exception:
+            return plugin, None
+    out = {}
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        for plugin, versions in pool.map(one, sorted(set(plugins))):
+            if versions:
+                out[plugin] = versions
+    return out
+
+
+def sql_datagen_load(directory):
+    """the load script of the example inserts rows in one-row transactions (what --enable-sql-datagen runs)."""
+    load = os.path.join(directory, "benchmark-load.bash")
+    if not os.path.isfile(load):
+        return False
+    text = read(load)
+    return "benchmark_sql_load" in text or "small-txn" in text
+
+
+def category_of(rel, kind):
+    top = rel.split("/")[0]
+    d = rel.split("/")[1] if "/" in rel else ""
+    if top == "connect":
+        if kind in ("source", "sink"):
+            return kind
+        # neither a source nor a sink example: the SMT examples (connect-testing-smt), else another Connect example
+        return "smt" if "smt" in d else "connect"
+    if top == "ccloud":
+        if d.startswith("fm-"):
+            return "fully-managed"
+        if d.startswith("custom-connector"):
+            return "custom-connector"
+        return "ccloud"
+    return top
+
+
+def explore(root):
+    """every runnable example, for the examples explorer page."""
+    icons = content_icons(root)
+    areas = content_areas(root)
+    class_icons = {}
+    try:
+        with open(os.path.join(root, "tools", "report-common", "connector_icons.json"), encoding="utf-8") as f:
+            class_icons = json.load(f).get("classes", {})
+    except (OSError, ValueError):
+        pass
+    out = []
+    for top in EXPLORER_FOLDERS:
+        base = os.path.join(root, top)
+        if not os.path.isdir(base):
+            continue
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and d not in ("deep-dive-labs", "node_modules", "target"))
+            if dirpath[len(root):].count(os.sep) > 5:
+                continue
+            for f in sorted(filenames):
+                if not f.endswith(".sh") or f == "stop.sh":
+                    continue
+                path = os.path.join(dirpath, f)
+                try:
+                    text = read(path)
+                except OSError:
+                    continue
+                if "scripts/utils.sh" not in text:
+                    continue
+                try:
+                    facts = describe(path, root)
+                except Exception as e:  # one odd example must not break the page
+                    print("⚠️ %s: %s" % (path, e), file=sys.stderr)
+                    continue
+                rel = facts["path"]
+                readme = os.path.join(os.path.dirname(path), "README.md")
+                docs_url = ""
+                if os.path.isfile(readme):
+                    m = DOCS_URL_RE.search(read(readme))
+                    if m:
+                        docs_url = m.group(1).split("#")[0]
+                icon, display = icons.get(facts["dir"], ("", ""))
+                cls = facts["connector"]["class"] if facts["connector"] else ""
+                if not icon and cls:
+                    icon = class_icons.get(cls.split(".")[-1], "")
+                env = facts["environment"]
+                category = category_of(rel, facts["kind"])
+                topics = topics_of(rel, facts["title"], env, text)
+                area = areas.get(facts["dir"]) or AREA_OF_CATEGORY.get(category) or \
+                    ("platform" if "security" in topics or "cfk" in topics else "core" if "broker" in topics or "client" in topics else "")
+                out.append({
+                    "path": rel, "dir": facts["dir"], "name": facts["name"],
+                    "display": display, "title": facts["title"], "icon": icon,
+                    "category": category, "area": area, "kind": facts["kind"], "managed": facts["managed"],
+                    "plugins": compose_plugins(os.path.join(root, facts["compose_file"])) if facts["compose_file"] else [],
+                    "connector": facts["connector"], "classes": sorted(set(c["class"] for c in facts["connectors"] if c["class"])),
+                    "credentials": facts["credentials"], "required_env": facts["required_env"],
+                    "honors_environment": bool(HONORS_ENV_RE.search(text)), "environment": env,
+                    "connector_example": rel.startswith("connect/") and bool(facts["connectors"]),
+                    "pipeline": facts["kind"] in ("source", "sink") and bool(facts["connector"]) and (rel.startswith("connect/") or rel.startswith("ccloud/fm-")),
+                    "docs_url": docs_url,
+                    # --enable-sql-datagen injects rows with the load script next to the example, in transactions of one
+                    # row (--shape small-txn): the database sources (JDBC, Debezium, Oracle CDC, XStream)
+                    "sql_datagen": sql_datagen_load(os.path.dirname(path)),
+                    "topics": topics,
+                })
+    return out
+
+
+def run_options(root):
+    """the flags of 'playground run' the explorer offers, from the generated CLI description (scripts/cli/playground.json)."""
+    opts = {"environments": [], "enable": [], "default_tag": ""}
+    try:
+        with open(os.path.join(root, "scripts", "cli", "playground.json"), encoding="utf-8") as f:
+            cli = json.load(f)
+        run = next(c for c in cli["subcommands"] if c.get("name") == "run")
+    except (OSError, ValueError, StopIteration, KeyError):
+        return opts
+    for o in run.get("options", []):
+        name = o["names"][0]
+        desc = o.get("description", "")
+        first = desc.split("\n")[0].strip()
+        if name == "--environment":
+            for line in desc.splitlines():
+                m = re.match(r"^- ([a-z0-9_-]+)(?: \((.*)\))?\s*$", line.strip())
+                if m:
+                    opts["environments"].append({"name": m.group(1), "note": m.group(2) or ""})
+        elif name.startswith("--enable-") and not o.get("argument") and name not in ("--enable-legacy-control-center", "--enable-kraft"):
+            opts["enable"].append({"flag": name, "help": first, "ccloud": "not supported with ccloud" not in desc})
+    m = re.search(r"TAG=([0-9.]+) # default tag", read(os.path.join(root, "scripts", "utils.sh")))
+    if m:
+        opts["default_tag"] = m.group(1)
+    return opts
+
+
+def report_banner(page):
+    """the banner of the HTML reports of playground: their gradient (report_html.banner_css) and their 🐳 badge (kdp_brand),
+    so that the two pages look like the reports; the fallback of ui.css without tools/report-common."""
+    try:
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, os.path.join(HERE, "..", "report-common"))
+        import report_html
+        css, badge = report_html.banner_css("header"), "<div>%s</div>" % report_html.kdp_brand()
+    except Exception:
+        css, badge = "", ""
+    return page.replace("<!--__BANNER__-->", css, 1).replace("<!--__KDP_BRAND__-->", badge, 1)
+
+
+def explorer_html(root, output, site=False):
+    """the examples explorer page, with every example and the run options inside."""
+    page = read(os.path.join(HERE, "explorer.html"))
+    page = report_banner(page.replace("/*__UI_CSS__*/", read(os.path.join(HERE, "ui.css")), 1))
+    examples = explore(root)
+    # the versions offered in the dropdowns: the website collects those of the plugins (Confluent Hub refuses its browser
+    # calls), a local page asks Confluent Hub when an example is picked (it allows pages opened from a file)
+    versions = {"cp": cp_versions(root), "plugins": {}}
+    if site:
+        versions["plugins"] = plugin_versions([p for e in examples for p in e["plugins"][:1]])
+    data = {"generated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "examples": examples, "run": run_options(root), "versions": versions}
+    page = page.replace("/*__EXPLORER_DATA__*/null", json.dumps(data, separators=(",", ":")).replace("</", "<\\/"), 1)
+    page = page.replace('/*__PIPELINE_ROOT__*/""', json.dumps("" if site else root), 1)
+    icons = "https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/images/icons/"
+    if not site and os.path.isdir(os.path.join(root, "images", "icons")):
+        icons = "file://" + os.path.join(root, "images", "icons") + "/"
+    page = re.sub(r'/\*__PIPELINE_ICONS__\*/"[^"]*"', lambda _: json.dumps(icons), page, count=1)
+    with open(output, "w", encoding="utf-8") as f:
+        f.write(page)
+
+
+def pages(root, output_dir, site=False):
+    """both pages side by side (they link to each other)."""
+    os.makedirs(output_dir, exist_ok=True)
+    html(root, os.path.join(output_dir, "pipeline-builder.html"), site)
+    explorer_html(root, os.path.join(output_dir, "examples-explorer.html"), site)
+
+
 def html(root, output, site=False):
     """the pipeline builder page, with the catalog inside (site: the root folder is left out, the command uses $PWD)."""
     with open(os.path.join(HERE, "builder.html"), encoding="utf-8") as f:
         page = f.read()
+    page = report_banner(page.replace("/*__UI_CSS__*/", read(os.path.join(HERE, "ui.css")), 1))
     data = json.dumps(catalog(root), separators=(",", ":")).replace("</", "<\\/")
     page = page.replace("/*__PIPELINE_CATALOG__*/null", data, 1)
     page = page.replace('/*__PIPELINE_ROOT__*/""', json.dumps("" if site else root), 1)
@@ -561,6 +878,12 @@ def main():
     p.add_argument("--root", required=True)
     p.add_argument("--output", required=True)
     p.add_argument("--site", action="store_true", help="for the website: commands use $PWD instead of the root folder")
+    p = sub.add_parser("pages")
+    p.add_argument("--root", required=True)
+    p.add_argument("--output-dir", required=True)
+    p.add_argument("--site", action="store_true", help="for the website: commands use $PWD instead of the root folder")
+    p = sub.add_parser("explore")
+    p.add_argument("--root", required=True)
     p = sub.add_parser("catalog")
     p.add_argument("--root", required=True)
     p.add_argument("--output")
@@ -589,6 +912,12 @@ def main():
         html(root, os.path.abspath(args.output), args.site)
         print("🔗 pipeline builder: %s" % args.output, file=sys.stderr)
         return
+    elif args.command == "pages":
+        pages(root, os.path.abspath(args.output_dir), args.site)
+        print("📄 %s/pipeline-builder.html, %s/examples-explorer.html" % (args.output_dir, args.output_dir), file=sys.stderr)
+        return
+    elif args.command == "explore":
+        json.dump({"examples": explore(root), "run": run_options(root)}, sys.stdout, indent=2)
     elif args.command == "catalog":
         data = catalog(root)
         if args.output:
