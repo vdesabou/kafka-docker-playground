@@ -21,6 +21,15 @@
 .fchip{border:1px solid var(--line);background:var(--card2);color:var(--fg);font:inherit;font-size:.78rem;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer;transition:.12s;white-space:nowrap}
 .fchip small{color:var(--muted);font-weight:500;margin-left:4px}
 .fchip:hover{border-color:var(--a1)}
+.cif{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.cib{border:1px solid var(--line);background:var(--card2);color:var(--fg);font:inherit;font-size:.74rem;font-weight:600;padding:4px 9px;border-radius:999px;cursor:pointer;transition:.12s;white-space:nowrap}
+.cib small{color:var(--muted);font-weight:500;margin-left:4px}
+.cib:hover{border-color:var(--a1)}
+.cib[aria-pressed=true]{color:#fff;border-color:transparent;background:linear-gradient(120deg,var(--a1),var(--a2))}
+.cib.ok[aria-pressed=true]{background:linear-gradient(120deg,#059669,#10b981)}
+.cib.fail[aria-pressed=true]{background:linear-gradient(120deg,#dc2626,#f97316)}
+.cib.none[aria-pressed=true]{background:linear-gradient(120deg,#64748b,#94a3b8)}
+.cib[aria-pressed=true] small{color:rgba(255,255,255,.85)}
 .flabel{align-self:center;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px;cursor:help}
 .tchip{border-style:dashed;background:transparent}
 .tchip[aria-pressed=true]{border-style:solid}
@@ -155,7 +164,7 @@ a.btn{text-decoration:none;display:inline-block}
       <div class="frow">
         <div class="toggles">
           <label class="switch" title="hide the examples that need cloud credentials (AWS, GCP, Azure, Confluent Cloud, SaaS accounts…)"><input type="checkbox" id="nocreds"><i></i>no credentials needed</label>
-          <label class="switch" id="ci-toggle" style="display:none" title="only the examples whose last nightly CI run passed"><input type="checkbox" id="cionly"><i></i>CI passing</label>
+          <div class="cif" id="cif" hidden role="group" aria-label="CI status of the last nightly run"></div>
         </div>
         <span class="count" id="count"></span>
       </div>
@@ -215,7 +224,7 @@ const RUN = DATA ? DATA.run : {environments: [], enable: [], default_tag: ""};
 const VERSIONS = DATA && DATA.versions ? DATA.versions : {cp: [], plugins: {}};
 const fetched = {};   // owner/name -> versions, or "loading" / "failed": a local page asks Confluent Hub when an example is picked
 let CI = null;   // dir -> {state, passed, total, url, version}
-const state = {q: "", area: "", cat: "", topics: [], nocreds: false, cionly: false, sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
+const state = {q: "", area: "", cat: "", topics: [], nocreds: false, ci: "", sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
 
 // ---------------------------------------------------------------- helpers
 function short(cls) { return (cls || "").split(".").pop(); }
@@ -244,6 +253,10 @@ function hay(e) { return (e.path + " " + e.title + " " + e.display + " " + e.cla
 for (const e of examples) e._hay = hay(e);
 function byPath(p) { return examples.find(e => e.path === p); }
 
+// the CI status of the folder of an example, from the last nightly run: ok, fail, or none (not in the CI matrix)
+function ciState(e) { return CI && CI[e.dir] ? CI[e.dir].state : "none"; }
+const CI_CHOICES = [["", "All"], ["ok", "✅ passing"], ["fail", "🔥 failing"], ["none", "⚪ not in CI"]];
+
 function filtered(ignoreCat) {
   const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
   return examples.filter(e =>
@@ -251,12 +264,23 @@ function filtered(ignoreCat) {
     && (ignoreCat === true || !state.cat || e.category === state.cat)
     && state.topics.every(t => e.topics.includes(t))
     && (!state.nocreds || !needsCreds(e))
-    && (!state.cionly || (CI && CI[e.dir] && CI[e.dir].state === "ok"))
+    && (ignoreCat === "ci" || !state.ci || !CI || ciState(e) === state.ci)
     && words.every(w => e._hay.includes(w)));
 }
 
 // ---------------------------------------------------------------- list
+function renderCI() {
+  if (!CI) return;
+  const base = filtered("ci");
+  const count = {"": base.length, ok: 0, fail: 0, none: 0};
+  for (const e of base) count[ciState(e)]++;
+  $("cif").hidden = false;
+  $("cif").innerHTML = `<span class="flabel" title="the result of the last nightly CI run of each example">🧪 CI</span>` + CI_CHOICES.map(c =>
+    `<button type="button" class="cib${c[0] ? " " + c[0] : ""}" data-ci="${c[0]}" aria-pressed="${state.ci === c[0]}">${esc(c[1])}<small>${count[c[0]]}</small></button>`).join("");
+}
+
 function renderFilters() {
+  renderCI();
   const forAreas = filtered("area").filter(e => !state.cat || e.category === state.cat);
   const acount = {};
   for (const e of forAreas) acount[e.area] = (acount[e.area] || 0) + 1;
@@ -407,7 +431,8 @@ function renderDetail() {
     <div class="tags">${e.area ? (a => `<a class="tagc" href="${DOCS + a[2]}" target="_blank" rel="noopener" title="the area page: questions, commands, deep dives">${esc(a[1])} ↗</a>`)(AREAS.find(x => x[0] === e.area)) : ""}<span class="tagc">${cat[2]} ${esc(cat[1])}</span>
       ${e.topics.map(t => `<span class="tagc">${esc((TOPICS.find(x => x[0] === t) || [t, t])[1])}</span>`).join("")}
       ${e.connector ? `<span class="tagc mono">${esc(short(e.connector.class))}</span>` : ""}
-      ${ci ? `<a class="tagc ${ci.state}" href="${esc(ci.url)}" target="_blank" rel="noopener" title="last nightly CI run">${ci.state === "ok" ? "✅" : "🔥"} CI ${esc(ci.label)}</a>` : ""}
+      ${ci ? `<a class="tagc ${ci.state}" href="${esc(ci.url)}" target="_blank" rel="noopener" title="last nightly CI run">${ci.state === "ok" ? "✅" : "🔥"} CI ${esc(ci.label)}</a>`
+        : CI ? `<span class="tagc" title="this example is not in the matrix of the nightly CI: it may need manual steps or an account the CI does not have">⚪ not tested in CI</span>` : ""}
       ${ci && ci.version ? `<span class="tagc">🔢 ${esc(ci.version)}</span>` : ""}
       ${creds.map(([label, [href, title]]) => `<a class="tagc" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(title)}">${esc(label)} ↗</a>`).join("")}
       ${!creds.length ? `<span class="tagc ok">🆓 no credentials needed</span>` : ""}</div>
@@ -474,6 +499,7 @@ function saveHash() {
   if (state.cat) p.set("cat", state.cat);
   if (state.topics.length) p.set("topics", state.topics.join(","));
   if (state.nocreds) p.set("nocreds", "1");
+  if (state.ci) p.set("ci", state.ci);
   if (state.sel) p.set("ex", state.sel);
   if (state.env) p.set("env", state.env);
   if (state.tag) p.set("tag", state.tag);
@@ -487,6 +513,7 @@ function loadHash() {
   state.q = p.get("q") || ""; state.cat = CAT[p.get("cat")] ? p.get("cat") : "";
   state.topics = (p.get("topics") || "").split(",").filter(t => TOPICS.some(x => x[0] === t));
   state.nocreds = p.get("nocreds") === "1";
+  state.ci = ["ok", "fail", "none"].includes(p.get("ci")) ? p.get("ci") : "";
   state.sel = p.get("ex") && byPath(p.get("ex")) ? p.get("ex") : null;
   state.env = p.get("env") || ""; state.tag = p.get("tag") || ""; state.ctag = p.get("ctag") || "";
   state.enable = (p.get("enable") || "").split(",").filter(f => RUN.enable.some(x => x.flag === f));
@@ -509,7 +536,7 @@ function loadCI() {
       ci[m[1]] = {state: ok ? "ok" : "fail", label: x[1] + "/" + x[2] + (ok ? " passed" : " failed"), url: x[3],
                   version: ver ? decodeURIComponent(ver[1]).replace(/%20/g, " ") : ""};
     }
-    if (Object.keys(ci).length) { CI = ci; $("ci-toggle").style.display = ""; render(); }
+    if (Object.keys(ci).length) { CI = ci; render(); }
   }).catch(() => {});
 }
 
@@ -532,7 +559,7 @@ $("cats").onclick = e => { const b = e.target.closest("[data-cat]"); if (!b) ret
 $("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b) return; const t = b.dataset.topic;
   state.topics = state.topics.includes(t) ? state.topics.filter(x => x !== t) : [...state.topics, t]; render(); };
 $("nocreds").onchange = e => { state.nocreds = e.target.checked; render(); };
-$("cionly").onchange = e => { state.cionly = e.target.checked; render(); };
+$("cif").onclick = e => { const b = e.target.closest("[data-ci]"); if (!b) return; state.ci = state.ci === b.dataset.ci ? "" : b.dataset.ci; render(); };
 $("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; renderList(); renderDetail(); saveHash(); };
 $("detail").addEventListener("input", e => {
   if (e.target.id === "o-tag" && e.target.tagName === "INPUT") state.tag = e.target.value.trim();
