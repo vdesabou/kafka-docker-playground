@@ -486,18 +486,26 @@ def from_model(model, root):
 
 # ---------------------------------------------------------------- catalog
 
-CONTENT_LINE_RE = re.compile(r"images/icons/([^\"\s)]+)[^\[]*\[([^\]]+)\].*\s:([a-z0-9/_.\-]+):\s*$")
+CONTENT_LINE_RE = re.compile(r"images/icons/([^\"\s)]+)[^\[]*\[([^\]]+)\](?:\([^)]*\))?(.*)\s:([a-z0-9/_.\-]+):\s*$")
 
 
 def content_icons(root):
     """{example folder: (icon file, display name)} from the examples page (docs/content-template.md)."""
+    return {d: (icon, name) for d, (icon, name, _) in content_entries(root).items()}
+
+
+def content_entries(root):
+    """{example folder: (icon file, display name, note)} from the examples page (docs/content-template.md); the note is
+    the text after the link: (also with 🌐 proxy), (also with 🔑 SSL and mTLS)…"""
     found = {}
     path = os.path.join(root, "docs", "content-template.md")
     if os.path.isfile(path):
         for line in read(path).splitlines():
             m = CONTENT_LINE_RE.search(line)
-            if m and m.group(3) not in found:
-                found[m.group(3)] = (m.group(1), m.group(2).strip())
+            if m and m.group(4) not in found:
+                note = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", m.group(3)).strip().strip(":").strip()
+                note = re.sub(r"^\((.*)\)$", r"\1", note)
+                found[m.group(4)] = (m.group(1), m.group(2).strip(), note)
     return found
 
 def catalog(root):
@@ -734,7 +742,8 @@ def category_of(rel, kind):
 
 def explore(root):
     """every runnable example, for the examples explorer page."""
-    icons = content_icons(root)
+    entries = content_entries(root)
+    icons = {d: (i, n) for d, (i, n, _) in entries.items()}
     areas = content_areas(root)
     class_icons = {}
     try:
@@ -785,6 +794,7 @@ def explore(root):
                 out.append({
                     "path": rel, "dir": facts["dir"], "name": facts["name"],
                     "display": display, "title": facts["title"], "icon": icon,
+                    "note": entries.get(facts["dir"], ("", "", ""))[2],
                     "category": category, "area": area, "kind": facts["kind"], "managed": facts["managed"],
                     "plugins": compose_plugins(os.path.join(root, facts["compose_file"])) if facts["compose_file"] else [],
                     "connector": facts["connector"], "classes": sorted(set(c["class"] for c in facts["connectors"] if c["class"])),
