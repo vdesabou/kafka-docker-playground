@@ -44,6 +44,8 @@
 .frow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
 .toggles{display:flex;gap:16px;flex-wrap:wrap}
 #list{max-height:none;height:calc(100vh - 360px);min-height:420px}
+html.embedded #list{height:760px}
+html.embedded body{min-height:0}
 .ci{width:10px;height:10px;border-radius:50%;flex:none}
 .ci.ok{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
 .ci.fail{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
@@ -256,6 +258,15 @@ const DEEP = {source: "deep-dive-connector-troubleshooting", sink: "deep-dive-co
   environment: "deep-dive-secured-environments", "multi-data-center": "deep-dive-replication", "schema-registry": "deep-dive-schema"};
 
 const $ = id => document.getElementById(id);
+// embedded in the Examples page of the docs: the frame takes the height of the page (sent to the docs page), so the
+// list gets a fixed height instead of one based on the window (that would grow the frame in a loop)
+const EMBEDDED = window.parent !== window;
+if (EMBEDDED) {
+  document.documentElement.classList.add("embedded");
+  const sendHeight = () => parent.postMessage({type: "kdp-explorer-height", height: Math.ceil(document.documentElement.scrollHeight)}, "*");
+  if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.body);
+  window.addEventListener("load", sendHeight);
+}
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const examples = DATA ? DATA.examples : [];
 const RUN = DATA ? DATA.run : {environments: [], enable: [], default_tag: ""};
@@ -679,6 +690,8 @@ function saveHash() {
   if (state.ctag) p.set("ctag", state.ctag);
   if (state.enable.length) p.set("enable", state.enable.join(","));
   history.replaceState(null, "", "#" + p.toString());
+  // in the Examples page of the docs (an iframe): the docs page writes the selection in its own URL, to share it
+  if (EMBEDDED) parent.postMessage({type: "kdp-explorer-state", hash: p.toString()}, "*");
 }
 function loadHash() {
   const p = new URLSearchParams(location.hash.slice(1));

@@ -143,6 +143,40 @@
         tabHeadings: true       // default
       },
       plugins: [
+        // the Examples page (examples.md) embeds the examples explorer in an iframe: the selection of the explorer is
+        // written in the URL of the page (#/examples?ex=…&tab=…, without reloading it), a link with a selection opens
+        // the explorer on it, and the frame takes the height of the explorer (only the page scrolls)
+        function (hook, vm) {
+          window.addEventListener('message', function (event) {
+            if (event.origin !== window.location.origin || !event.data || typeof event.data !== 'object') {
+              return;
+            }
+            var frame = document.querySelector('.explorer-frame');
+            if (!frame || event.source !== frame.contentWindow) {
+              return;
+            }
+            if (event.data.type === 'kdp-explorer-height' && event.data.height > 0) {
+              frame.style.height = event.data.height + 'px';
+            }
+            if (event.data.type === 'kdp-explorer-state' && typeof event.data.hash === 'string' && vm.route.path === '/examples') {
+              history.replaceState(null, '', '#/examples' + (event.data.hash ? '?' + event.data.hash : ''));
+            }
+          });
+          hook.doneEach(function () {
+            var frame = document.querySelector('.explorer-frame');
+            if (!frame || vm.route.path !== '/examples') {
+              return;
+            }
+            var params = new URLSearchParams();
+            Object.keys(vm.route.query || {}).forEach(function (key) {
+              if (key !== 'id') {
+                params.set(key, vm.route.query[key]);
+              }
+            });
+            var hash = params.toString();
+            frame.src = 'examples-explorer.html' + (hash ? '#' + hash : '');
+          });
+        },
         // "Edit on github" link to the source of the page in docs/ of https://github.com/vdesabou/kafka-docker-playground,
         // except on generated pages (CLI reference, content, introduction, changelog), which have no source file there
         function (hook, vm) {
