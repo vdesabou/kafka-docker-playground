@@ -12,14 +12,17 @@ help: |-
     thread-dump         what every thread is doing right now
     flight-recorder     record the JVM from start to stop, then analyze it
 
-  💾 It eats memory
+  💾 It eats memory, or runs short of resources
     heap-dump           take a .hprof, optionally as a histogram
+    resources           limit cpus and memory on the fly, fill the disk
 
   🌐 It is a network or TLS problem
     tcp-dump            capture traffic, analyze it, open it in Wireshark
     testssl             probe a TLS endpoint, locally or in the cloud
     block-traffic       cut a route with iptables, to simulate an outage
     degrade-traffic     add latency, packet loss or corruption with tc
+    dns                 fake the DNS answers of a hostname: NXDOMAIN,
+                        a wrong ip, a slow resolver
     java-debug          turn on the JVM SSL, Kerberos or class loading traces
 
   ⏰ It depends on the time
@@ -484,6 +487,211 @@ commands:
   - command: playground debug clock --container connect --at "2026-12-31 23:59:50"
     output: |-
       08:55:52 ℹ️ 🕰️ connect: 2026-12-31 23:59:52 UTC (real 2026-11-19 07:55:52 UTC, offset +3686640)
+
+- name: dns
+  filters:
+  - not_cfk_environment
+  help: |-
+    🔤 Break the name resolution of a hostname inside a container: NXDOMAIN, a wrong ip, a slow resolver
+
+    'debug block-traffic' works on ip addresses: it cannot reproduce a
+    broker ip that changed while a client kept the old one
+    (networkaddress.cache.ttl, client.dns.lookup), an UnknownHostException
+    storm, or a resolver so slow that the lookups time out. This fakes the
+    DNS answers for one hostname, seen from one container (or several),
+    the other names resolve as usual.
+
+      --nxdomain            the name does not exist (UnknownHostException)
+      --servfail            the resolver fails (temporary failure in name
+                            resolution)
+      --resolve-to <ip>     the name resolves to this ip (an A record)
+      --delay <duration>    the real answer, after a delay (500ms, 3s); from
+                            10s on, the lookups of glibc fail (timeout:5,
+                            attempts:2)
+      --reset               back to the real DNS (with --host: only this
+                            hostname)
+      (no flag)             the faults applied, and how --host resolves now
+
+    A small DNS proxy runs in a sidecar container (python:3-alpine) in the
+    network namespace of the container, and /etc/resolv.conf of the
+    container points to it: no restart, nothing installed in the
+    container. The other names are forwarded to the original nameservers.
+
+    ❕ A JVM caches the lookups (networkaddress.cache.ttl, 30 seconds by
+    default, 10 seconds for a failure: networkaddress.cache.negative.ttl),
+    and a Kafka client only resolves a broker name when it opens a
+    connection: an established connection keeps working. A restart of
+    the container gives it back its original /etc/resolv.conf: the faults
+    are gone (the next call of the command cleans up the proxy).
+
+    🧪 Docker only (not cfk).
+  flags:
+    - import: src/flags/container.yml
+    - long: --host
+      arg: host
+      required: false
+      completions:
+        dynamic:
+        - playground get-container-list
+      help: |-
+        🏷️ Hostname whose resolution is faked (e.g. broker, schema-registry, a database or a cloud endpoint)
+    - long: --nxdomain
+      required: false
+      conflicts: [--servfail, --resolve-to, --delay, --reset]
+      help: |-
+        🕳️ The hostname does not exist (NXDOMAIN: UnknownHostException)
+    - long: --servfail
+      required: false
+      conflicts: [--nxdomain, --resolve-to, --delay, --reset]
+      help: |-
+        💥 The resolver fails (SERVFAIL: temporary failure in name resolution)
+    - long: --resolve-to
+      arg: ip
+      required: false
+      conflicts: [--nxdomain, --servfail, --delay, --reset]
+      help: |-
+        🔀 The hostname resolves to this ip address
+    - long: --delay
+      arg: delay
+      required: false
+      conflicts: [--nxdomain, --servfail, --resolve-to, --reset]
+      help: |-
+        🐢 The real answer is sent after this delay: seconds, or a number with a unit ms or s (e.g. 500ms, 3s, 12s)
+    - long: --reset
+      required: false
+      conflicts: [--nxdomain, --servfail, --resolve-to, --delay]
+      help: |-
+        🧽 Back to the real DNS: every fault of the container, or only the one of --host
+  examples:
+  - playground debug dns --container connect --host broker --nxdomain
+  - playground debug dns --container connect --host schema-registry --resolve-to 10.1.2.3
+  - playground debug dns -c connect -c ksqldb-server --host broker --delay 12s
+  - playground debug dns --container connect --host broker
+  - playground debug dns --container connect --host broker --reset
+  - playground debug dns --container connect --reset
+  x_example_outputs:
+  - command: playground debug dns --container connect --host broker --nxdomain
+    output: |-
+      11:25:44 ℹ️ 🚀 starting the DNS proxy of connect (playground-debug-dns-connect)
+      11:25:45 ℹ️ 🔤 from connect, broker does not exist (NXDOMAIN)
+      11:25:45 ℹ️ 🔎 from connect, broker does not resolve (after 42 ms)
+      11:25:45 ❗ 🗃️ a JVM caches its lookups: networkaddress.cache.ttl (30s by default) for a success, networkaddress.cache.negative.ttl (10s) for a failure
+      11:25:45 ℹ️ 🧽 back to the real DNS: playground debug dns --container connect --reset
+  - command: playground debug dns --container connect --host schema-registry --resolve-to 10.1.2.3
+    output: |-
+      11:25:46 ℹ️ 🔤 from connect, schema-registry resolves to 10.1.2.3
+      11:25:46 ℹ️ 🔎 from connect, schema-registry resolves to 10.1.2.3 (in 42 ms)
+      11:25:46 ❗ 🔁 a Kafka client resolves schema-registry when it opens a connection: an established connection keeps the old ip (to force a reconnection: playground debug block-traffic --destination schema-registry --action start, then stop)
+  - command: playground debug dns --container connect --host broker
+    output: |-
+      11:25:47 ℹ️ 🔤 DNS faults on connect:
+         broker does not exist (NXDOMAIN)
+         schema-registry resolves to 10.1.2.3
+      11:25:47 ℹ️ 📊 2 queries answered with a fault so far (docker logs playground-debug-dns-connect)
+      11:25:48 ℹ️ 🔎 from connect, broker does not resolve (after 40 ms)
+  - command: playground debug dns --container connect --host broker --delay 12s
+    output: |-
+      11:25:48 ℹ️ 🔤 from connect, broker answers after 12s
+      11:25:58 ℹ️ 🔎 from connect, broker does not resolve (after 10061 ms)
+      11:25:58 ❗ ⏱️ a delay of 10s or more is longer than the glibc resolver waits (options timeout:5 attempts:2): every lookup fails after 10s (UnknownHostException), before the answer comes
+
+- name: resources
+  filters:
+  - not_cfk_environment
+  help: |-
+    🏋️ Limit the cpus and memory of a running container, or fill its disk: OOM, GC pressure, disk full
+
+    Some issues only happen when a component runs short of resources: an
+    OOM kill (exit 137), a JVM spending its time in garbage collection, a
+    starved connect worker missing its heartbeats, a broker that stops
+    with 'KafkaStorageException' when its log dir is full. This changes
+    the limits of a running container right away (docker update), without
+    a restart, and fills its disk to a percentage.
+
+      --cpus 0.5           at most half a cpu
+      --memory 1g          at most 1g of memory, no swap: above, the kernel
+                           kills the process (OOMKilled, exit 137)
+      --fill-disk 95%      fills the filesystem of --path to 95%
+      --reset              back to the original limits, the fill file
+                           removed
+      (no flag)            the limits, the usage, the JVM max heap, OOM
+                           kills and the disk of --path
+
+    --path defaults to log.dirs for a broker or a controller, /tmp
+    otherwise. The fill file is a single file (.playground-fill-disk) in
+    that folder: --reset removes it, the data stays.
+
+    ❕ On Docker Desktop, a data folder (an anonymous volume) and /tmp are
+    on the disk of Docker itself, shared by every container and image:
+    --fill-disk refuses to fill it. Give the folder a filesystem of its
+    own in the docker-compose override of the example, then fill it:
+
+      broker:
+        tmpfs:
+          - /var/lib/kafka/data:size=2g,uid=1000,gid=1000
+
+    A tmpfs is memory: its content counts in the memory of the container.
+
+    ❕ The JVM sizes its heap when it starts (-Xmx): a memory limit
+    below -Xmx plus the off-heap memory gets the container OOM killed
+    rather than an OutOfMemoryError. A recreate ('container recreate',
+    'debug clock', a new run) drops the limits.
+
+    🧪 Docker only (not cfk).
+  flags:
+    - import: src/flags/container.yml
+    - long: --cpus
+      arg: cpus
+      required: false
+      conflicts: [--reset]
+      help: |-
+        ⚙️ Number of cpus the container can use, e.g. 0.5, 2
+    - long: --memory
+      arg: memory
+      required: false
+      conflicts: [--reset]
+      help: |-
+        🧠 Memory limit, without swap, e.g. 512m, 1g (b, k, m, g)
+    - long: --fill-disk
+      arg: percent
+      required: false
+      conflicts: [--reset]
+      help: |-
+        💾 Fill the filesystem of --path up to this percentage, e.g. 95%, 100%
+    - long: --path
+      arg: path
+      required: false
+      help: |-
+        📁 Folder whose filesystem --fill-disk fills (default: log.dirs for a broker or a controller, /tmp otherwise)
+    - long: --reset
+      required: false
+      conflicts: [--cpus, --memory, --fill-disk]
+      help: |-
+        🧽 Back to the original cpu and memory limits, and remove the fill file
+  examples:
+  - playground debug resources --container connect --memory 1g
+  - playground debug resources --container connect --cpus 0.5 --memory 2g
+  - playground debug resources --container broker --fill-disk 95%
+  - playground debug resources --container connect --fill-disk 100% --path /tmp
+  - playground debug resources --container connect
+  - playground debug resources --container connect --container broker --reset
+  x_example_outputs:
+  - command: playground debug resources --container connect --memory 1g
+    output: |-
+      11:26:00 ℹ️ 🏋️ limiting connect: 1g memory (no swap)
+      11:26:00 ❗ 💀 the JVM of connect can grow its heap to -Xmx2G, more than the 1g limit: expect an OOM kill (exit 137, OOMKilled) before any OutOfMemoryError
+      11:26:00 ℹ️ 🏋️ connect: cpus no limit (18 on the docker host), memory 1.0GiB
+      11:26:02 ℹ️ 📊 usage now: 2.46% cpu, 971.1MiB / 1GiB memory (94.83%)
+      11:26:02 ℹ️ ☕ JVM max heap (-Xmx): 2G
+      11:26:02 ℹ️ 💾 disk of /tmp: 15% used, 266.6GiB of 1.7TiB, 1.4TiB free
+      11:26:02 ℹ️ 🧽 back to the original limits: playground debug resources --container connect --reset
+  - command: playground debug resources --container connect --fill-disk 95%
+    output: |-
+      11:26:07 🔥 ❌ /tmp of connect is on the disk of docker itself (1.8TiB), shared by every container and image: filling it to 95% would fill all of them
+      11:26:07 🔥    🎓 give /tmp a filesystem of its own in the docker-compose override of the example, then run this command again:
+        connect:
+          tmpfs:
+            - /tmp:size=2g,uid=1000,gid=1000
 
 - name: java-debug
   help: |-

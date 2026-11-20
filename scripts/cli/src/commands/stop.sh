@@ -50,6 +50,15 @@ then
     maybe_cleanup_ccloud_run_resources
 fi
 
+# the DNS proxies of 'playground debug dns' share the network namespace of a container of the example: not part of
+# the docker compose project, removed first
+debug_dns_proxies=$(docker ps -aq --filter label=playground.debug-dns.container 2> /dev/null)
+if [ -n "$debug_dns_proxies" ]
+then
+    log "🔤 removing the DNS proxies of playground debug dns"
+    docker rm -f $debug_dns_proxies > /dev/null 2>&1 || true
+fi
+
 echo "$docker_command" > $tmp_dir/tmp
 
 sed -e "s|up -d|down -v --remove-orphans|g" \

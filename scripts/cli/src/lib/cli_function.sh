@@ -177,6 +177,8 @@ function resolve_container_name_for_environment() {
 # target container or pod: nothing has to be installed in the target, whatever its image
 #
 PLAYGROUND_NETSHOOT_IMAGE="nicolaka/netshoot"
+# the sidecar of 'playground debug dns' (tools/debug-dns/dns_proxy.py: python standard library only)
+PLAYGROUND_DNS_PROXY_IMAGE="python:3-alpine"
 
 # run a command in an ephemeral netshoot container of a cfk pod (same network namespace),
 # as root with the sysadmin profile (NET_ADMIN). Prints the output when $3 is true.

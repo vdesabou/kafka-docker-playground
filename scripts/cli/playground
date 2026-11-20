@@ -269,6 +269,8 @@ playground_usage() {
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
   printf "  %s   🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n" "$(green "debug degrade-traffic")                     "
   printf "  %s   ⏰ Shift the clock of a container: token, ticket and certificate expiry, time based partitioning\n" "$(green "debug clock")                               "
+  printf "  %s   🔤 Break the name resolution of a hostname inside a container: NXDOMAIN, a wrong ip, a slow resolver\n" "$(green "debug dns")                                 "
+  printf "  %s   🏋️ Limit the cpus and memory of a running container, or fill its disk: OOM, GC pressure, disk full\n" "$(green "debug resources")                           "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
   printf "  %s   ✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree\n" "$(green "debug jscissors")                           "
   printf "  %s   🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n" "$(green "debug flight-recorder")                     "
@@ -12005,7 +12007,7 @@ playground_analyze_tcp_dump_usage() {
 playground_debug_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug\n\n"
-    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM from start to stop, then analyze it\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, analyze it, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    degrade-traffic     add latency, packet loss or corruption with tc\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  ⏰ It depends on the time\n    clock               shift the clock of a container (libfaketime)\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings, network\n  captures): playground analyze\n\n"
+    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM from start to stop, then analyze it\n  \n  💾 It eats memory, or runs short of resources\n    heap-dump           take a .hprof, optionally as a histogram\n    resources           limit cpus and memory on the fly, fill the disk\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, analyze it, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    degrade-traffic     add latency, packet loss or corruption with tc\n    dns                 fake the DNS answers of a hostname: NXDOMAIN,\n                        a wrong ip, a slow resolver\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  ⏰ It depends on the time\n    clock               shift the clock of a container (libfaketime)\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings, network\n  captures): playground analyze\n\n"
   else
     printf "playground debug - 🐞 Debug commands\n\n"
   fi
@@ -12030,6 +12032,8 @@ playground_debug_usage() {
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
   printf "  %s   🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n" "$(green "degrade-traffic")         "
   printf "  %s   ⏰ Shift the clock of a container: token, ticket and certificate expiry, time based partitioning\n" "$(green "clock")                   "
+  printf "  %s   🔤 Break the name resolution of a hostname inside a container: NXDOMAIN, a wrong ip, a slow resolver\n" "$(green "dns")                     "
+  printf "  %s   🏋️ Limit the cpus and memory of a running container, or fill its disk: OOM, GC pressure, disk full\n" "$(green "resources")               "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")              "
   printf "  %s   ✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree\n" "$(green "jscissors")               "
   printf "  %s   🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n" "$(green "flight-recorder")         "
@@ -12979,6 +12983,158 @@ playground_debug_clock_usage() {
     printf "  playground debug clock --container connect --container broker --offset=-10m\n"
     printf "  playground debug clock --container connect\n"
     printf "  playground debug clock --container connect --reset\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_dns_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug dns\n\n"
+    printf "  🔤 Break the name resolution of a hostname inside a container: NXDOMAIN, a\n  wrong ip, a slow resolver\n  \n  'debug block-traffic' works on ip addresses: it cannot reproduce a\n  broker ip that changed while a client kept the old one\n  (networkaddress.cache.ttl, client.dns.lookup), an UnknownHostException\n  storm, or a resolver so slow that the lookups time out. This fakes the\n  DNS answers for one hostname, seen from one container (or several),\n  the other names resolve as usual.\n  \n    --nxdomain            the name does not exist (UnknownHostException)\n    --servfail            the resolver fails (temporary failure in name\n                          resolution)\n    --resolve-to <ip>     the name resolves to this ip (an A record)\n    --delay <duration>    the real answer, after a delay (500ms, 3s); from\n                          10s on, the lookups of glibc fail (timeout:5,\n                          attempts:2)\n    --reset               back to the real DNS (with --host: only this\n                          hostname)\n    (no flag)             the faults applied, and how --host resolves now\n  \n  A small DNS proxy runs in a sidecar container (python:3-alpine) in the\n  network namespace of the container, and /etc/resolv.conf of the\n  container points to it: no restart, nothing installed in the\n  container. The other names are forwarded to the original nameservers.\n  \n  ❕ A JVM caches the lookups (networkaddress.cache.ttl, 30 seconds by\n  default, 10 seconds for a failure: networkaddress.cache.negative.ttl),\n  and a Kafka client only resolves a broker name when it opens a\n  connection: an established connection keeps working. A restart of\n  the container gives it back its original /etc/resolv.conf: the faults\n  are gone (the next call of the command cleans up the proxy).\n  \n  🧪 Docker only (not cfk).\n\n"
+  else
+    printf "playground debug dns - 🔤 Break the name resolution of a hostname inside a container: NXDOMAIN, a wrong ip, a slow resolver\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug dns [OPTIONS]\n"
+  printf "  playground debug dns --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c, --pod, -p CONTAINER (repeatable)")"
+    printf "    🐳 container name (or pod name when cfk environment is used)\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
+    printf "    %s\n" "Default: connect"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--host HOST")"
+    printf "    🏷️ Hostname whose resolution is faked (e.g. broker, schema-registry, a\n    database or a cloud endpoint)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--nxdomain")"
+    printf "    🕳️ The hostname does not exist (NXDOMAIN: UnknownHostException)\n"
+    printf "    %s\n" "Conflicts: --servfail, --resolve-to, --delay, --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--servfail")"
+    printf "    💥 The resolver fails (SERVFAIL: temporary failure in name resolution)\n"
+    printf "    %s\n" "Conflicts: --nxdomain, --resolve-to, --delay, --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--resolve-to IP")"
+    printf "    🔀 The hostname resolves to this ip address\n"
+    printf "    %s\n" "Conflicts: --nxdomain, --servfail, --delay, --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--delay DELAY")"
+    printf "    🐢 The real answer is sent after this delay: seconds, or a number with a unit\n    ms or s (e.g. 500ms, 3s, 12s)\n"
+    printf "    %s\n" "Conflicts: --nxdomain, --servfail, --resolve-to, --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reset")"
+    printf "    🧽 Back to the real DNS: every fault of the container, or only the one of\n    --host\n"
+    printf "    %s\n" "Conflicts: --nxdomain, --servfail, --resolve-to, --delay"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug dns --container connect --host broker --nxdomain\n"
+    printf "  playground debug dns --container connect --host schema-registry --resolve-to\n  10.1.2.3\n"
+    printf "  playground debug dns -c connect -c ksqldb-server --host broker --delay 12s\n"
+    printf "  playground debug dns --container connect --host broker\n"
+    printf "  playground debug dns --container connect --host broker --reset\n"
+    printf "  playground debug dns --container connect --reset\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_resources_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug resources\n\n"
+    printf "  🏋️ Limit the cpus and memory of a running container, or fill its disk: OOM, GC\n  pressure, disk full\n  \n  Some issues only happen when a component runs short of resources: an\n  OOM kill (exit 137), a JVM spending its time in garbage collection, a\n  starved connect worker missing its heartbeats, a broker that stops\n  with 'KafkaStorageException' when its log dir is full. This changes\n  the limits of a running container right away (docker update), without\n  a restart, and fills its disk to a percentage.\n  \n    --cpus 0.5           at most half a cpu\n    --memory 1g          at most 1g of memory, no swap: above, the kernel\n                         kills the process (OOMKilled, exit 137)\n    --fill-disk 95%%      fills the filesystem of --path to 95%%\n    --reset              back to the original limits, the fill file\n                         removed\n    (no flag)            the limits, the usage, the JVM max heap, OOM\n                         kills and the disk of --path\n  \n  --path defaults to log.dirs for a broker or a controller, /tmp\n  otherwise. The fill file is a single file (.playground-fill-disk) in\n  that folder: --reset removes it, the data stays.\n  \n  ❕ On Docker Desktop, a data folder (an anonymous volume) and /tmp are\n  on the disk of Docker itself, shared by every container and image:\n  --fill-disk refuses to fill it. Give the folder a filesystem of its\n  own in the docker-compose override of the example, then fill it:\n  \n    broker:\n      tmpfs:\n        - /var/lib/kafka/data:size=2g,uid=1000,gid=1000\n  \n  A tmpfs is memory: its content counts in the memory of the container.\n  \n  ❕ The JVM sizes its heap when it starts (-Xmx): a memory limit\n  below -Xmx plus the off-heap memory gets the container OOM killed\n  rather than an OutOfMemoryError. A recreate ('container recreate',\n  'debug clock', a new run) drops the limits.\n  \n  🧪 Docker only (not cfk).\n\n"
+  else
+    printf "playground debug resources - 🏋️ Limit the cpus and memory of a running container, or fill its disk: OOM, GC pressure, disk full\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug resources [OPTIONS]\n"
+  printf "  playground debug resources --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c, --pod, -p CONTAINER (repeatable)")"
+    printf "    🐳 container name (or pod name when cfk environment is used)\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
+    printf "    %s\n" "Default: connect"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cpus CPUS")"
+    printf "    ⚙️ Number of cpus the container can use, e.g. 0.5, 2\n"
+    printf "    %s\n" "Conflicts: --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--memory MEMORY")"
+    printf "    🧠 Memory limit, without swap, e.g. 512m, 1g (b, k, m, g)\n"
+    printf "    %s\n" "Conflicts: --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--fill-disk PERCENT")"
+    printf "    💾 Fill the filesystem of --path up to this percentage, e.g. 95%%, 100%%\n"
+    printf "    %s\n" "Conflicts: --reset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--path PATH")"
+    printf "    📁 Folder whose filesystem --fill-disk fills (default: log.dirs for a broker\n    or a controller, /tmp otherwise)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reset")"
+    printf "    🧽 Back to the original cpu and memory limits, and remove the fill file\n"
+    printf "    %s\n" "Conflicts: --cpus, --memory, --fill-disk"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug resources --container connect --memory 1g\n"
+    printf "  playground debug resources --container connect --cpus 0.5 --memory 2g\n"
+    printf "  playground debug resources --container broker --fill-disk 95%%\n"
+    printf "  playground debug resources --container connect --fill-disk 100%% --path /tmp\n"
+    printf "  playground debug resources --container connect\n"
+    printf "  playground debug resources --container connect --container broker --reset\n"
     echo
 
   fi
@@ -25962,6 +26118,8 @@ function resolve_container_name_for_environment() {
 # target container or pod: nothing has to be installed in the target, whatever its image
 #
 PLAYGROUND_NETSHOOT_IMAGE="nicolaka/netshoot"
+# the sidecar of 'playground debug dns' (tools/debug-dns/dns_proxy.py: python standard library only)
+PLAYGROUND_DNS_PROXY_IMAGE="python:3-alpine"
 
 # run a command in an ephemeral netshoot container of a cfk pod (same network namespace),
 # as root with the sysadmin profile (NET_ADMIN). Prints the output when $3 is true.
@@ -60164,6 +60322,15 @@ playground_stop_command() {
       maybe_cleanup_ccloud_run_resources
   fi
 
+  # the DNS proxies of 'playground debug dns' share the network namespace of a container of the example: not part of
+  # the docker compose project, removed first
+  debug_dns_proxies=$(docker ps -aq --filter label=playground.debug-dns.container 2> /dev/null)
+  if [ -n "$debug_dns_proxies" ]
+  then
+      log "🔤 removing the DNS proxies of playground debug dns"
+      docker rm -f $debug_dns_proxies > /dev/null 2>&1 || true
+  fi
+
   echo "$docker_command" > $tmp_dir/tmp
 
   sed -e "s|up -d|down -v --remove-orphans|g" \
@@ -77506,6 +77673,705 @@ playground_debug_clock_command() {
       fi
   fi
   log "🧽 back to real time: playground debug clock $(printf -- '--container %s ' "${containers[@]}")--reset"
+
+}
+
+# :command.function
+playground_debug_dns_command() {
+
+  # src/commands/debug/dns.sh
+  eval "containers=(${args[--container]})"
+  host="${args[--host]}"
+  nxdomain="${args[--nxdomain]}"
+  servfail="${args[--servfail]}"
+  resolve_to="${args[--resolve-to]}"
+  delay="${args[--delay]}"
+  reset="${args[--reset]}"
+
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+      logerror "❌ playground debug dns is not supported with cfk yet"
+      exit 1
+  fi
+
+  # the proxy listens on this address of the loopback of the container (the sidecar shares its network namespace)
+  proxy_address="127.0.0.53"
+  proxy_script="$root_folder/tools/debug-dns/dns_proxy.py"
+  # copy of the original /etc/resolv.conf, in the container: it survives a restart of the container, like the edited file
+  backup_file="/tmp/playground-debug-dns-resolv.conf"
+
+  # ---- the fault requested -----------------------------------------------------------------------------------------
+  mode=""
+  value=""
+  description=""
+  if [[ -n "$nxdomain" ]]
+  then
+      mode="nxdomain"
+      description="does not exist (NXDOMAIN)"
+  elif [[ -n "$servfail" ]]
+  then
+      mode="servfail"
+      description="fails to resolve (SERVFAIL)"
+  elif [[ -n "$resolve_to" ]]
+  then
+      if [[ ! "$resolve_to" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]
+      then
+          logerror "❌ --resolve-to $resolve_to is not an ipv4 address"
+          exit 1
+      fi
+      mode="resolve-to"
+      value="$resolve_to"
+      description="resolves to $resolve_to"
+  elif [[ -n "$delay" ]]
+  then
+      if [[ ! "$delay" =~ ^[0-9]+(\.[0-9]+)?(ms|s)?$ ]]
+      then
+          logerror "❌ --delay $delay is not valid: seconds, or a number with a unit ms or s, e.g. 500ms, 3s"
+          exit 1
+      fi
+      mode="delay"
+      if [[ "$delay" == *ms ]]
+      then
+          value=$(awk -v d="${delay%ms}" 'BEGIN { printf "%g", d / 1000 }')
+      else
+          value="${delay%s}"
+      fi
+      description="answers after $delay"
+  fi
+
+  if [[ -n "$mode" && -z "$host" ]]
+  then
+      logerror "❌ --host is required with --nxdomain, --servfail, --resolve-to and --delay"
+      exit 1
+  fi
+  if [[ -n "$host" ]]
+  then
+      host=$(echo "$host" | tr '[:upper:]' '[:lower:]')
+      host="${host%.}"
+      if [[ ! "$host" =~ ^[a-z0-9_]([a-z0-9_.-]*[a-z0-9_])?$ ]]
+      then
+          logerror "❌ --host $host is not a hostname"
+          exit 1
+      fi
+  fi
+
+  # ---- helpers -----------------------------------------------------------------------------------------------------
+  function sidecar_name () {
+      echo "playground-debug-dns-$1"
+  }
+
+  # the sidecar runs, in the network namespace of the current run of the container: a restart of the container gives
+  # it a new namespace, the sidecar keeps the old one and answers nobody
+  function sidecar_alive () {
+      local c="$1" sidecar started label
+      sidecar=$(sidecar_name "$c")
+      [[ "$(docker inspect -f '{{.State.Running}}' "$sidecar" 2> /dev/null)" == "true" ]] || return 1
+      started=$(docker inspect -f '{{.State.StartedAt}}' "$c" 2> /dev/null)
+      label=$(docker inspect -f '{{index .Config.Labels "playground.debug-dns.started-at"}}' "$sidecar" 2> /dev/null)
+      [[ "$started" == "$label" ]]
+  }
+
+  # /etc/resolv.conf of the container points to the proxy
+  function resolv_conf_redirected () {
+      docker exec "$1" cat /etc/resolv.conf 2> /dev/null | grep -q "^nameserver $proxy_address"
+  }
+
+  function current_rules () {
+      docker exec "$(sidecar_name "$1")" cat /rules 2> /dev/null
+  }
+
+  function write_rules () {
+      # a new file, then mv: the proxy sees a new mtime, and never reads a half written file
+      docker exec -i "$(sidecar_name "$1")" sh -c 'cat > /rules.tmp && mv /rules.tmp /rules'
+  }
+
+  # how the host resolves now, from the container (getent: the resolver of the libc, like a JVM), and how long it took
+  function show_resolution () {
+      local c="$1" start end output ms
+      [[ -z "$host" ]] && return
+      start=$EPOCHREALTIME
+      output=$(docker exec "$c" timeout 25 getent ahostsv4 "$host" 2> /dev/null | awk '{ print $1 }' | sort -u | paste -sd ' ' -)
+      end=$EPOCHREALTIME
+      ms=$(awk -v s="$start" -v e="$end" 'BEGIN { printf "%d", (e - s) * 1000 }')
+      if [[ -n "$output" ]]
+      then
+          log "🔎 from $c, $host resolves to $output (in $ms ms)"
+      else
+          log "🔎 from $c, $host does not resolve (after $ms ms)"
+      fi
+  }
+
+  function setup_proxy () {
+      local c="$1" sidecar started original upstream image
+      sidecar=$(sidecar_name "$c")
+      docker rm -f "$sidecar" > /dev/null 2>&1 || true
+
+      if docker exec "$c" test -f "$backup_file" 2> /dev/null
+      then
+          # a previous setup (the container was restarted since): the original file is the backup
+          original=$(docker exec "$c" cat "$backup_file")
+      else
+          original=$(docker exec "$c" cat /etc/resolv.conf)
+          if ! printf '%s\n' "$original" | docker exec -i -u 0 "$c" sh -c "cat > $backup_file"
+          then
+              logerror "❌ could not save /etc/resolv.conf of $c"
+              exit 1
+          fi
+      fi
+      upstream=$(printf '%s\n' "$original" | awk -v p="$proxy_address" '$1 == "nameserver" && $2 != p { print $2 }' | paste -sd ',' -)
+      if [[ -z "$upstream" ]]
+      then
+          logerror "❌ no nameserver in /etc/resolv.conf of $c"
+          exit 1
+      fi
+
+      image="$PLAYGROUND_DNS_PROXY_IMAGE"
+      if ! docker image inspect "$image" > /dev/null 2>&1
+      then
+          log "📥 pulling $image (DNS proxy image, only the first time)"
+          docker pull "$image" > /dev/null
+      fi
+      started=$(docker inspect -f '{{.State.StartedAt}}' "$c")
+      if ! docker create --name "$sidecar" --network "container:$c" \
+          --label "playground.debug-dns.container=$c" \
+          --label "playground.debug-dns.started-at=$started" \
+          -e "UPSTREAM=$upstream" -e "LISTEN=$proxy_address" -e "RULES_FILE=/rules" \
+          "$image" python3 -u /dns_proxy.py > /dev/null
+      then
+          logerror "❌ could not create the DNS proxy container $sidecar"
+          exit 1
+      fi
+      docker cp "$proxy_script" "$sidecar:/dns_proxy.py" > /dev/null
+      docker start "$sidecar" > /dev/null
+      for _ in $(seq 1 20)
+      do
+          docker logs "$sidecar" 2>&1 | grep -q "listening on" && break
+          sleep 0.5
+      done
+      if ! docker logs "$sidecar" 2>&1 | grep -q "listening on"
+      then
+          logerror "❌ the DNS proxy did not start in $sidecar"
+          docker logs "$sidecar" 2>&1 | tail -20
+          docker rm -f "$sidecar" > /dev/null 2>&1 || true
+          exit 1
+      fi
+
+      # written in place (a bind mount: mv would fail), the search and options lines kept
+      if ! { echo "# playground debug dns: the original file is $backup_file"; echo "nameserver $proxy_address"; printf '%s\n' "$original" | grep -E '^(search|domain|options)'; } | docker exec -i -u 0 "$c" sh -c 'cat > /etc/resolv.conf'
+      then
+          logerror "❌ could not point /etc/resolv.conf of $c to the DNS proxy"
+          docker rm -f "$sidecar" > /dev/null 2>&1 || true
+          exit 1
+      fi
+  }
+
+  function reset_container () {
+      local c="$1"
+      if docker exec "$c" test -f "$backup_file" 2> /dev/null
+      then
+          docker exec "$c" cat "$backup_file" | docker exec -i -u 0 "$c" sh -c 'cat > /etc/resolv.conf'
+          docker exec -u 0 "$c" rm -f "$backup_file"
+      fi
+      docker rm -f "$(sidecar_name "$c")" > /dev/null 2>&1 || true
+      log "🟢 $c uses the real DNS again"
+  }
+
+  function show_status () {
+      local c="$1" rules intercepted
+      if ! resolv_conf_redirected "$c"
+      then
+          if docker inspect "$(sidecar_name "$c")" > /dev/null 2>&1
+          then
+              # the container was restarted: docker wrote its original resolv.conf again, the proxy is a leftover
+              docker rm -f "$(sidecar_name "$c")" > /dev/null 2>&1 || true
+              docker exec -u 0 "$c" rm -f "$backup_file" 2> /dev/null || true
+              log "🧹 $c was restarted since the faults were set (they are gone): DNS proxy removed"
+          fi
+          log "✅ no DNS fault on $c"
+          show_resolution "$c"
+          return
+      fi
+      if ! sidecar_alive "$c"
+      then
+          logerror "❌ /etc/resolv.conf of $c points to the DNS proxy, but the proxy is not running ($c was restarted?): no name resolves from $c"
+          logerror "   🎓 set it up again with the same command plus a fault, or: playground debug dns --container $c --reset"
+          return
+      fi
+      rules=$(current_rules "$c")
+      if [[ -z "$rules" ]]
+      then
+          log "✅ no DNS fault on $c (the proxy forwards every query)"
+      else
+          log "🔤 DNS faults on $c:"
+          echo "$rules" | awk '{
+              if ($2 == "nxdomain") d = "does not exist (NXDOMAIN)"
+              else if ($2 == "servfail") d = "fails to resolve (SERVFAIL)"
+              else if ($2 == "resolve-to") d = "resolves to " $3
+              else if ($2 == "delay") d = "answers after " $3 "s"
+              else d = $2
+              printf "   %s %s\n", $1, d }'
+          intercepted=$(docker logs "$(sidecar_name "$c")" 2>&1 | grep -c " (type " || true)
+          log "📊 $intercepted queries answered with a fault so far (docker logs $(sidecar_name "$c"))"
+      fi
+      show_resolution "$c"
+  }
+
+  for c in "${containers[@]}"
+  do
+      if ! docker ps --format '{{.Names}}' | grep -qx "$c"
+      then
+          logerror "❌ container $c is not running"
+          exit 1
+      fi
+  done
+
+  # ---- status ------------------------------------------------------------------------------------------------------
+  if [[ -z "$mode" && -z "$reset" ]]
+  then
+      for c in "${containers[@]}"
+      do
+          show_status "$c"
+      done
+      exit 0
+  fi
+
+  # ---- reset -------------------------------------------------------------------------------------------------------
+  if [[ -n "$reset" ]]
+  then
+      for c in "${containers[@]}"
+      do
+          if [[ -n "$host" ]] && sidecar_alive "$c"
+          then
+              rules=$(current_rules "$c" | awk -v h="$host" '$1 != h')
+              if [[ -n "$rules" ]]
+              then
+                  echo "$rules" | write_rules "$c"
+                  log "🟢 $host resolves normally again from $c (other faults kept)"
+                  show_status "$c"
+                  continue
+              fi
+          fi
+          reset_container "$c"
+          show_resolution "$c"
+      done
+      exit 0
+  fi
+
+  # ---- apply -------------------------------------------------------------------------------------------------------
+  for c in "${containers[@]}"
+  do
+      if ! sidecar_alive "$c" || ! resolv_conf_redirected "$c"
+      then
+          log "🚀 starting the DNS proxy of $c ($(sidecar_name "$c"))"
+          setup_proxy "$c"
+          rules=""
+      else
+          rules=$(current_rules "$c")
+      fi
+      {
+          echo "$rules" | awk -v h="$host" 'NF > 0 && $1 != h'
+          echo "$host $mode $value"
+      } | write_rules "$c"
+      log "🔤 from $c, $host $description"
+      show_resolution "$c"
+  done
+
+  case "$mode" in
+      delay)
+          # glibc sends the query again after 5s, and still accepts a late answer to the first one: a lookup only
+          # fails when no answer comes in timeout x attempts
+          if awk -v v="$value" 'BEGIN { exit !(v >= 10) }'
+          then
+              logwarn "⏱️ a delay of 10s or more is longer than the glibc resolver waits (options timeout:5 attempts:2): every lookup fails after 10s (UnknownHostException), before the answer comes"
+          elif awk -v v="$value" 'BEGIN { exit !(v >= 5) }'
+          then
+              logwarn "⏱️ glibc sends the query again after 5s (options timeout:5 attempts:2) and still takes the late answer: the lookups succeed, in $delay"
+          fi
+          ;;
+      resolve-to)
+          logwarn "🔁 a Kafka client resolves $host when it opens a connection: an established connection keeps the old ip (to force a reconnection: playground debug block-traffic --destination $host --action start, then stop)"
+          ;;
+  esac
+  logwarn "🗃️ a JVM caches its lookups: networkaddress.cache.ttl (30s by default) for a success, networkaddress.cache.negative.ttl (10s) for a failure"
+  log "🧽 back to the real DNS: playground debug dns $(printf -- '--container %s ' "${containers[@]}")--reset"
+
+}
+
+# :command.function
+playground_debug_resources_command() {
+
+  # src/commands/debug/resources.sh
+  eval "containers=(${args[--container]})"
+  cpus="${args[--cpus]}"
+  memory="${args[--memory]}"
+  fill_disk="${args[--fill-disk]}"
+  path="${args[--path]}"
+  reset="${args[--reset]}"
+
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+      logerror "❌ playground debug resources is not supported with cfk yet"
+      exit 1
+  fi
+
+  # the limits of each container before the first change, and the fill file: one file per container, on the host (a
+  # full disk in the container could not store it)
+  state_dir="/tmp/playground-debug-resources"
+  fill_name=".playground-fill-disk"
+
+  if [[ -n "$cpus" ]] && [[ ! "$cpus" =~ ^[0-9]+(\.[0-9]+)?$ ]]
+  then
+      logerror "❌ --cpus $cpus is not valid, example: --cpus 0.5"
+      exit 1
+  fi
+  if [[ -n "$memory" ]]
+  then
+      if [[ ! "$memory" =~ ^[0-9]+[bkmgBKMG]?$ ]]
+      then
+          logerror "❌ --memory $memory is not valid, example: --memory 512m, --memory 1g"
+          exit 1
+      fi
+      memory_bytes=$(awk -v m="$memory" 'BEGIN {
+          u = tolower(substr(m, length(m))); n = m
+          if (u ~ /[bkmg]/) { n = substr(m, 1, length(m) - 1) } else { u = "b" }
+          f = (u == "k") ? 1024 : (u == "m") ? 1048576 : (u == "g") ? 1073741824 : 1
+          printf "%.0f", n * f }')
+      # the minimum of docker
+      if [ "$memory_bytes" -lt 6291456 ]
+      then
+          logerror "❌ --memory $memory is below the minimum of docker (6m)"
+          exit 1
+      fi
+  fi
+  if [[ -n "$fill_disk" ]]
+  then
+      fill_disk="${fill_disk%\%}"
+      if [[ ! "$fill_disk" =~ ^[0-9]+$ ]] || [ "$fill_disk" -lt 1 ] || [ "$fill_disk" -gt 100 ]
+      then
+          logerror "❌ --fill-disk ${args[--fill-disk]} is not valid: a percentage from 1% to 100%, e.g. 95%"
+          exit 1
+      fi
+  fi
+  if [[ -n "$path" && -z "$fill_disk" && -n "$reset" ]]
+  then
+      logwarn "🤷 --path is not used with --reset: the fill file recorded is removed"
+  fi
+
+  # ---- helpers -----------------------------------------------------------------------------------------------------
+  function human_bytes () {
+      awk -v b="$1" 'BEGIN {
+          split("B KiB MiB GiB TiB", u, " "); i = 1
+          while (b >= 1024 && i < 5) { b /= 1024; i++ }
+          printf (i == 1 ? "%d%s" : "%.1f%s"), b, u[i] }'
+  }
+
+  # the cpus and memory of the docker VM (the host on linux), seen from the container: /proc is not virtualised
+  # (recorded in the state at the first change: a container restarting after an OOM kill cannot run docker exec)
+  function host_cpus () {
+      local v
+      v=$(state_get "$1" vm_cpus)
+      [[ -n "$v" ]] && { echo "$v"; return; }
+      docker exec "$1" sh -c 'grep -c ^processor /proc/cpuinfo' 2> /dev/null
+  }
+  function host_memory_bytes () {
+      local v
+      v=$(state_get "$1" vm_memory)
+      [[ -n "$v" ]] && { echo "$v"; return; }
+      # parsed on the host: there is no awk in some images (cp-server)
+      docker exec "$1" cat /proc/meminfo 2> /dev/null | awk '/^MemTotal:/ { printf "%.0f", $2 * 1024 }'
+  }
+
+  function container_running () {
+      [[ "$(docker inspect -f '{{.State.Status}}' "$1" 2> /dev/null)" == "running" ]]
+  }
+
+  function state_get () {
+      local c="$1" key="$2"
+      [[ -f "$state_dir/$c" ]] || return 0
+      awk -F '=' -v k="$key" '$1 == k { sub(/^[^=]*=/, ""); print; exit }' "$state_dir/$c"
+  }
+  function state_set () {
+      local c="$1" key="$2" value="$3" file="$state_dir/$1"
+      mkdir -p "$state_dir"
+      touch "$file"
+      { grep -v "^$key=" "$file" || true; echo "$key=$value"; } > "$file.tmp"
+      mv "$file.tmp" "$file"
+  }
+
+  # the state is for this container, not a previous one with the same name (a recreate drops the limits)
+  function check_state_container () {
+      local c="$1" id
+      id=$(docker inspect -f '{{.Id}}' "$c")
+      if [[ -f "$state_dir/$c" && "$(state_get "$c" id)" != "$id" ]]
+      then
+          rm -f "$state_dir/$c"
+      fi
+      if [[ ! -f "$state_dir/$c" ]]
+      then
+          state_set "$c" id "$id"
+          state_set "$c" vm_cpus "$(host_cpus "$c")"
+          state_set "$c" vm_memory "$(host_memory_bytes "$c")"
+          state_set "$c" original "$(docker inspect -f '{{.HostConfig.Memory}} {{.HostConfig.MemorySwap}} {{.HostConfig.NanoCpus}} {{.HostConfig.CpuQuota}} {{.HostConfig.CpuPeriod}}' "$c")"
+      fi
+  }
+
+  # folder filled by default: the first log dir of a broker or a controller, /tmp otherwise
+  function default_path () {
+      local c="$1" dirs
+      if [[ "$c" == broker* || "$c" == controller* ]]
+      then
+          dirs=$(docker exec "$c" sh -c 'grep -E "^log\.dirs=" /etc/kafka/kafka.properties 2> /dev/null' | head -1 | cut -d '=' -f 2 | cut -d ',' -f 1)
+          echo "${dirs:-/var/lib/kafka/data}"
+      else
+          echo "/tmp"
+      fi
+  }
+
+  # size, used and available kilobytes of the filesystem of a folder of the container
+  function disk_usage () {
+      docker exec "$1" df -Pk "$2" 2> /dev/null | awk 'NR == 2 { print $2, $3, $4 }'
+  }
+
+  function java_max_heap () {
+      docker exec "$1" sh -c 'for p in /proc/[0-9]*; do tr "\0" "\n" < $p/cmdline 2> /dev/null | grep -m1 "^-Xmx"; done' 2> /dev/null | tail -1 | sed 's/^-Xmx//'
+  }
+
+  function show_status () {
+      local c="$1" memory_limit nano quota period vm_memory vm_cpus cpu_text memory_text stats oom restarts created heap disk_path size used avail fill_file fill_size pct state exit_code
+      read -r memory_limit nano quota period <<< "$(docker inspect -f '{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}} {{.HostConfig.CpuQuota}} {{.HostConfig.CpuPeriod}}' "$c")"
+      vm_memory=$(host_memory_bytes "$c")
+      vm_cpus=$(host_cpus "$c")
+      if [ "$memory_limit" -eq 0 ] || [ "$memory_limit" -ge "${vm_memory:-0}" ]
+      then
+          memory_text="no limit ($(human_bytes "$vm_memory") on the docker host)"
+      else
+          memory_text="$(human_bytes "$memory_limit")"
+      fi
+      if [ "$nano" -gt 0 ]
+      then
+          cpu_text=$(awk -v n="$nano" 'BEGIN { printf "%g", n / 1e9 }')
+      elif [ "$quota" -gt 0 ]
+      then
+          cpu_text=$(awk -v q="$quota" -v p="${period:-100000}" 'BEGIN { if (p == 0) p = 100000; printf "%g", q / p }')
+      fi
+      if [[ -z "$cpu_text" ]] || awk -v c="$cpu_text" -v v="$vm_cpus" 'BEGIN { exit !(c >= v) }'
+      then
+          cpu_text="no limit ($vm_cpus on the docker host)"
+      fi
+      log "🏋️ $c: cpus $cpu_text, memory $memory_text"
+      read -r state exit_code <<< "$(docker inspect -f '{{.State.Status}} {{.State.ExitCode}}' "$c")"
+      if [[ "$state" != "running" ]]
+      then
+          logwarn "🔁 $c is $state (exit code $exit_code)"
+      fi
+      stats=$(docker stats --no-stream --format '{{.CPUPerc}} cpu, {{.MemUsage}} memory ({{.MemPerc}})' "$c" 2> /dev/null)
+      [[ -n "$stats" ]] && log "📊 usage now: $stats"
+      container_running "$c" && heap=$(java_max_heap "$c")
+      [[ -n "$heap" ]] && log "☕ JVM max heap (-Xmx): $heap"
+      # the OOMKilled flag is cleared when the restart policy starts the container again: the oom events of docker stay
+      read -r created restarts <<< "$(docker inspect -f '{{.Created}} {{.RestartCount}}' "$c")"
+      oom=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --filter event=oom --format '{{.Action}}' 2> /dev/null | grep -c oom || true)
+      if [ "${oom:-0}" -gt 0 ]
+      then
+          logwarn "💀 $c: $oom OOM kill(s) since it was created (the kernel killed a process above the memory limit), $restarts restart(s)"
+      fi
+      container_running "$c" || return 0
+      fill_file=$(state_get "$c" fill_file)
+      disk_path="${path:-$(dirname "${fill_file:-$(default_path "$c")/x}")}"
+      read -r size used avail <<< "$(disk_usage "$c" "$disk_path")"
+      if [[ -n "$size" ]]
+      then
+          pct=$(awk -v u="$used" -v a="$avail" 'BEGIN { if (u + a > 0) printf "%d", u * 100 / (u + a) + 0.5; else print 0 }')
+          log "💾 disk of $disk_path: $pct% used, $(human_bytes $((used * 1024))) of $(human_bytes $(((used + avail) * 1024))), $(human_bytes $((avail * 1024))) free"
+      fi
+      if [[ -n "$fill_file" ]] && docker exec "$c" test -f "$fill_file" 2> /dev/null
+      then
+          fill_size=$(docker exec "$c" sh -c "du -k '$fill_file' | cut -f 1")
+          log "🧱 fill file: $fill_file ($(human_bytes $((fill_size * 1024))))"
+      fi
+  }
+
+  function remove_fill_file () {
+      local c="$1" fill_file
+      fill_file=$(state_get "$c" fill_file)
+      if [[ -n "$fill_file" ]]
+      then
+          if container_running "$c"
+          then
+              docker exec -u 0 "$c" rm -f "$fill_file" 2> /dev/null || true
+          fi
+          state_set "$c" fill_file ""
+          log "🧹 $fill_file removed from $c"
+      fi
+  }
+
+  for c in "${containers[@]}"
+  do
+      # restarting: the restart policy starts it again after an OOM kill, its limits can still be read and changed
+      status=$(docker inspect -f '{{.State.Status}}' "$c" 2> /dev/null)
+      if [[ "$status" != "running" && "$status" != "restarting" ]]
+      then
+          logerror "❌ container $c is not running${status:+ ($status)}"
+          exit 1
+      fi
+  done
+
+  # ---- status ------------------------------------------------------------------------------------------------------
+  if [[ -z "$cpus" && -z "$memory" && -z "$fill_disk" && -z "$reset" ]]
+  then
+      for c in "${containers[@]}"
+      do
+          show_status "$c"
+      done
+      exit 0
+  fi
+
+  # ---- reset -------------------------------------------------------------------------------------------------------
+  if [[ -n "$reset" ]]
+  then
+      for c in "${containers[@]}"
+      do
+          id=$(docker inspect -f '{{.Id}}' "$c")
+          if [[ ! -f "$state_dir/$c" || "$(state_get "$c" id)" != "$id" ]]
+          then
+              rm -f "$state_dir/$c"
+              log "💫 nothing changed on $c by playground debug resources"
+              continue
+          fi
+          remove_fill_file "$c"
+          read -r o_memory o_swap o_nano o_quota o_period <<< "$(state_get "$c" original)"
+          # docker update cannot remove a limit (0 means unchanged): no limit is the memory, or the cpus, of the host
+          if [ "${o_memory:-0}" -gt 0 ]
+          then
+              memory_args=(--memory "$o_memory" --memory-swap "$o_swap")
+              [ "${o_swap:-0}" -eq 0 ] && memory_args=(--memory "$o_memory" --memory-swap "$((o_memory * 2))")
+          else
+              vm_memory=$(host_memory_bytes "$c")
+              memory_args=(--memory "$vm_memory" --memory-swap "$((vm_memory * 2))")
+          fi
+          if [ "${o_nano:-0}" -gt 0 ]
+          then
+              cpu_args=(--cpus "$(awk -v n="$o_nano" 'BEGIN { printf "%g", n / 1e9 }')")
+          elif [ "${o_quota:-0}" -gt 0 ]
+          then
+              cpu_args=(--cpu-quota "$o_quota" --cpu-period "$o_period")
+          else
+              cpu_args=(--cpus "$(host_cpus "$c")")
+          fi
+          if ! docker update "${memory_args[@]}" "${cpu_args[@]}" "$c" > /dev/null
+          then
+              logerror "❌ could not restore the limits of $c"
+              exit 1
+          fi
+          rm -f "$state_dir/$c"
+          log "🟢 $c is back to its original limits"
+          show_status "$c"
+      done
+      exit 0
+  fi
+
+  # ---- apply -------------------------------------------------------------------------------------------------------
+  for c in "${containers[@]}"
+  do
+      check_state_container "$c"
+      update_args=()
+      if [[ -n "$cpus" ]]
+      then
+          vm_cpus=$(host_cpus "$c")
+          if awk -v c="$cpus" -v v="$vm_cpus" 'BEGIN { exit !(c < 0.01 || c > v) }'
+          then
+              logerror "❌ --cpus $cpus: from 0.01 to $vm_cpus (the cpus of the docker host)"
+              exit 1
+          fi
+          update_args+=(--cpus "$cpus")
+      fi
+      if [[ -n "$memory" ]]
+      then
+          # no swap: above the limit, the kernel kills the process instead of swapping
+          update_args+=(--memory "$memory_bytes" --memory-swap "$memory_bytes")
+      fi
+      if [[ ${#update_args[@]} -gt 0 ]]
+      then
+          log "🏋️ limiting $c:${cpus:+ $cpus cpus}${cpus:+${memory:+,}}${memory:+ $memory memory (no swap)}"
+          if ! docker update "${update_args[@]}" "$c" > /dev/null
+          then
+              logerror "❌ docker update failed on $c"
+              exit 1
+          fi
+          if [[ -n "$memory" ]]
+          then
+              heap=$(java_max_heap "$c")
+              if [[ -n "$heap" ]]
+              then
+                  heap_bytes=$(awk -v m="$heap" 'BEGIN {
+                      u = tolower(substr(m, length(m))); n = m
+                      if (u ~ /[kmg]/) { n = substr(m, 1, length(m) - 1) } else { u = "b" }
+                      f = (u == "k") ? 1024 : (u == "m") ? 1048576 : (u == "g") ? 1073741824 : 1
+                      printf "%.0f", n * f }')
+                  if [ "$heap_bytes" -ge "$memory_bytes" ]
+                  then
+                      logwarn "💀 the JVM of $c can grow its heap to -Xmx$heap, more than the $memory limit: expect an OOM kill (exit 137, OOMKilled) before any OutOfMemoryError"
+                  else
+                      logwarn "☕ -Xmx$heap: the heap fits in $memory, the off-heap memory (metaspace, threads, direct buffers, the page cache counted by the kernel) must fit in the rest"
+                  fi
+              fi
+          fi
+      fi
+
+      if [[ -n "$fill_disk" ]]
+      then
+          if ! container_running "$c"
+          then
+              logerror "❌ $c is not running: its disk cannot be filled"
+              exit 1
+          fi
+          disk_path="${path:-$(default_path "$c")}"
+          if ! docker exec "$c" test -d "$disk_path"
+          then
+              logerror "❌ $disk_path is not a folder of $c"
+              exit 1
+          fi
+          remove_fill_file "$c" > /dev/null
+          read -r size used avail <<< "$(disk_usage "$c" "$disk_path")"
+          read -r root_size _ <<< "$(disk_usage "$c" /)"
+          if [[ -z "$size" ]]
+          then
+              logerror "❌ could not read the disk usage of $disk_path in $c"
+              exit 1
+          fi
+          # the same size as the root filesystem of the container (overlay): the disk of docker, shared by every
+          # container and image (an anonymous volume, or a folder of the image)
+          if [[ "$size" == "$root_size" ]]
+          then
+              logerror "❌ $disk_path of $c is on the disk of docker itself ($(human_bytes $((size * 1024)))), shared by every container and image: filling it to $fill_disk% would fill all of them"
+              logerror "   🎓 give $disk_path a filesystem of its own in the docker-compose override of the example, then run this command again:"
+              echo "  $c:"
+              echo "    tmpfs:"
+              echo "      - $disk_path:size=2g,uid=1000,gid=1000"
+              exit 1
+          fi
+          need_kb=$(awk -v u="$used" -v a="$avail" -v p="$fill_disk" 'BEGIN { printf "%d", (u + a) * p / 100 - u }')
+          fill_file="${disk_path%/}/$fill_name"
+          if [ "$need_kb" -le 0 ]
+          then
+              logwarn "💾 $disk_path of $c is already above $fill_disk%: nothing written"
+          else
+              log "🧱 writing $(human_bytes $((need_kb * 1024))) in $fill_file, to fill $disk_path of $c to $fill_disk%"
+              state_set "$c" fill_file "$fill_file"
+              # fallocate is instant, dd for the images without it (or a filesystem without fallocate support); at 100%
+              # dd stops on 'No space left on device', which is the goal
+              docker exec -u 0 "$c" sh -c "fallocate -l ${need_kb}K '$fill_file' 2> /dev/null || dd if=/dev/zero of='$fill_file' bs=1024 count=$need_kb 2> /dev/null; sync" || true
+          fi
+          if [[ "$c" == broker* || "$c" == controller* ]]
+          then
+              logwarn "💥 when its log dir is full, the broker gets 'No space left on device', marks the log dir offline (KafkaStorageException for the clients of its partitions) and stops if it was its only log dir"
+          fi
+      fi
+      show_status "$c"
+  done
+  log "🧽 back to the original limits: playground debug resources $(printf -- '--container %s ' "${containers[@]}")--reset"
 
 }
 
@@ -133340,6 +134206,20 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    dns)
+      action="dns"
+      shift
+      playground_debug_dns_parse_requirements "$@"
+      shift $#
+      ;;
+
+    resources)
+      action="resources"
+      shift
+      playground_debug_resources_parse_requirements "$@"
+      shift $#
+      ;;
+
     java-debug)
       action="java-debug"
       shift
@@ -135689,6 +136569,369 @@ playground_debug_clock_parse_requirements() {
       --reset)
         # :flag.conflicts
         for conflict in --offset --at; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--reset']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.user_filter
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_dns_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_dns_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug dns"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c | --pod | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c, --pod, -p CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --host)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--host']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--host requires an argument: --host HOST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --nxdomain)
+        # :flag.conflicts
+        for conflict in --servfail --resolve-to --delay --reset; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--nxdomain']=1
+        shift
+        ;;
+
+      # :flag.case
+      --servfail)
+        # :flag.conflicts
+        for conflict in --nxdomain --resolve-to --delay --reset; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--servfail']=1
+        shift
+        ;;
+
+      # :flag.case
+      --resolve-to)
+        # :flag.conflicts
+        for conflict in --nxdomain --servfail --delay --reset; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--resolve-to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--resolve-to requires an argument: --resolve-to IP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --delay)
+        # :flag.conflicts
+        for conflict in --nxdomain --servfail --resolve-to --reset; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--delay']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--delay requires an argument: --delay DELAY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reset)
+        # :flag.conflicts
+        for conflict in --nxdomain --servfail --resolve-to --delay; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--reset']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.user_filter
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_resources_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_resources_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug resources"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c | --pod | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c, --pod, -p CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cpus)
+        # :flag.conflicts
+        if [[ -n "${args['--reset']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--reset" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cpus']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cpus requires an argument: --cpus CPUS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --memory)
+        # :flag.conflicts
+        if [[ -n "${args['--reset']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--reset" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--memory']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--memory requires an argument: --memory MEMORY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --fill-disk)
+        # :flag.conflicts
+        if [[ -n "${args['--reset']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--reset" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--fill-disk']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--fill-disk requires an argument: --fill-disk PERCENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --path)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--path']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--path requires an argument: --path PATH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reset)
+        # :flag.conflicts
+        for conflict in --cpus --memory --fill-disk; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -180197,6 +181440,16 @@ playground_debug_completion() {
         playground_debug_clock_completion "$completion_current" "$@"
         return
         ;;
+      dns)
+        shift
+        playground_debug_dns_completion "$completion_current" "$@"
+        return
+        ;;
+      resources)
+        shift
+        playground_debug_resources_completion "$completion_current" "$@"
+        return
+        ;;
       java-debug)
         shift
         playground_debug_java_debug_completion "$completion_current" "$@"
@@ -180231,7 +181484,7 @@ playground_debug_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump tcp-dump block-traffic degrade-traffic clock java-debug jscissors flight-recorder log-level cfk
+  completion_candidates "$completion_current" enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump tcp-dump block-traffic degrade-traffic clock dns resources java-debug jscissors flight-recorder log-level cfk
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -181503,6 +182756,208 @@ playground_debug_clock_completion() {
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --offset "$completion_current" --offset
     completion_flag_candidates --at "$completion_current" --at
+    completion_flag_candidates --reset "$completion_current" --reset
+  fi
+
+}
+
+# :command.completion_function
+playground_debug_dns_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c | --pod | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --host)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--host"]=1
+
+        ;;
+      --nxdomain)
+        completion_blocked_flags["--nxdomain"]=1
+        completion_blocked_flags["--servfail"]=1
+        completion_blocked_flags["--resolve-to"]=1
+        completion_blocked_flags["--delay"]=1
+        completion_blocked_flags["--reset"]=1
+
+        shift
+        ;;
+      --servfail)
+        completion_blocked_flags["--servfail"]=1
+        completion_blocked_flags["--nxdomain"]=1
+        completion_blocked_flags["--resolve-to"]=1
+        completion_blocked_flags["--delay"]=1
+        completion_blocked_flags["--reset"]=1
+
+        shift
+        ;;
+      --resolve-to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--resolve-to"]=1
+        completion_blocked_flags["--nxdomain"]=1
+        completion_blocked_flags["--servfail"]=1
+        completion_blocked_flags["--delay"]=1
+        completion_blocked_flags["--reset"]=1
+
+        ;;
+      --delay)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--delay"]=1
+        completion_blocked_flags["--nxdomain"]=1
+        completion_blocked_flags["--servfail"]=1
+        completion_blocked_flags["--resolve-to"]=1
+        completion_blocked_flags["--reset"]=1
+
+        ;;
+      --reset)
+        completion_blocked_flags["--reset"]=1
+        completion_blocked_flags["--nxdomain"]=1
+        completion_blocked_flags["--servfail"]=1
+        completion_blocked_flags["--resolve-to"]=1
+        completion_blocked_flags["--delay"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c --pod -p
+    completion_flag_candidates --host "$completion_current" --host
+    completion_flag_candidates --nxdomain "$completion_current" --nxdomain
+    completion_flag_candidates --servfail "$completion_current" --servfail
+    completion_flag_candidates --resolve-to "$completion_current" --resolve-to
+    completion_flag_candidates --delay "$completion_current" --delay
+    completion_flag_candidates --reset "$completion_current" --reset
+  fi
+
+}
+
+# :command.completion_function
+playground_debug_resources_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c | --pod | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --cpus)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cpus"]=1
+        completion_blocked_flags["--reset"]=1
+
+        ;;
+      --memory)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--memory"]=1
+        completion_blocked_flags["--reset"]=1
+
+        ;;
+      --fill-disk)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--fill-disk"]=1
+        completion_blocked_flags["--reset"]=1
+
+        ;;
+      --path)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--path"]=1
+
+        ;;
+      --reset)
+        completion_blocked_flags["--reset"]=1
+        completion_blocked_flags["--cpus"]=1
+        completion_blocked_flags["--memory"]=1
+        completion_blocked_flags["--fill-disk"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c --pod -p
+    completion_flag_candidates --cpus "$completion_current" --cpus
+    completion_flag_candidates --memory "$completion_current" --memory
+    completion_flag_candidates --fill-disk "$completion_current" --fill-disk
+    completion_flag_candidates --path "$completion_current" --path
     completion_flag_candidates --reset "$completion_current" --reset
   fi
 
@@ -197606,6 +199061,8 @@ run() {
     "debug block-traffic") playground_debug_block_traffic_command ;;
     "debug degrade-traffic") playground_debug_degrade_traffic_command ;;
     "debug clock") playground_debug_clock_command ;;
+    "debug dns") playground_debug_dns_command ;;
+    "debug resources") playground_debug_resources_command ;;
     "debug java-debug") playground_debug_java_debug_command ;;
     "debug jscissors") playground_debug_jscissors_command ;;
     "debug flight-recorder") playground_debug_flight_recorder_command ;;
