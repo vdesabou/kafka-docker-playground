@@ -135,7 +135,7 @@ Authentication method
 ==========================
 🔘 rediskafka.cluster.service.name
 
-Specify the Redis service you are using. Choose `AWS ElastiCache` for Amazon ElastiCache, `AWS MemoryDB` for Amazon MemoryDB, or `Others` for any other Redis service (self-hosted, Redis Cloud, etc.). Note: IAM roles authentication is only supported for AWS ElastiCache and AWS MemoryDB services. For other services, use password authentication.
+Specify the Redis service you are using. Choose `AWS ElastiCache` for Amazon ElastiCache, `AWS MemoryDB` for Amazon MemoryDB, or `Others` for any other Redis service (self-hosted, Redis Cloud, Azure Managed Redis, etc.). Note: IAM roles authentication is only supported for AWS ElastiCache and AWS MemoryDB, and Microsoft Entra ID application authentication is only supported for Azure Managed Redis (`Others`). For any other Redis service, use password authentication.
 
 	 - Type: STRING
 	 - Default: Others
@@ -144,7 +144,7 @@ Specify the Redis service you are using. Choose `AWS ElastiCache` for Amazon Ela
 
 🔘 authentication.method
 
-Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
+Select how you want to authenticate to Redis: Password, AWS IAM Roles (AWS ElastiCache and AWS MemoryDB), or Microsoft Entra ID application (Azure Managed Redis).
 
 	 - Type: STRING
 	 - Default: Password
@@ -222,7 +222,7 @@ The database index to write to.
 
 🔘 redis.username
 
-The username of the Redis user connecting to the Redis database server.
+The username of the Redis user connecting to the Redis database server. For Microsoft Entra ID authentication, set this to the Object ID (OID) of the Azure service principal.
 
 	 - Type: STRING
 	 - Default: 
@@ -249,7 +249,7 @@ The password of the Redis user connecting to the Redis database server.
 
 🔘 provider.integration.id
 
-Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+Select an existing provider integration that has access to your Redis instance: an AWS IAM role for IAM Roles, or a Microsoft Entra ID application for Microsoft Entra ID authentication.
 
 	 - Type: STRING
 	 - Default: 
