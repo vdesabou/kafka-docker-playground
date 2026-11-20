@@ -354,7 +354,7 @@ Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 author
 
 🔘 oauth2.client.scope
 
-The scope used when fetching OAuth2 token. If empty, this parameter is not set in the authorization request
+The scope parameter sent to the service when fetching OAuth2 token. The default value is ``any``. To avoid passing ``any`` to the endpoint, set this property to an empty string when using the API or CLI. When using the Confluent Cloud Console, enter a single space (``" "``) instead of leaving the field empty.
 
 	 - Type: STRING
 	 - Default: any
