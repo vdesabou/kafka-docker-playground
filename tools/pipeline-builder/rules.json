@@ -1,0 +1,90 @@
+{
+  "_comment": "Compatibility rules of a pipeline (source example -> sink example), read by tools/pipeline-builder/catalog.py (playground repro bootstrap --pipeline) and by the pipeline builder page. 'when': every field matches its regex (search). 'unless': a list of condition sets, any match cancels the rule. Fields: source.<fact>, sink.<fact>, source.config.<key>, sink.config.<key>, <side>.class; a missing field is ''. severity: fix (bootstrap applies add_to_sink to the sink config), warn, info.",
+  "rules": [
+    {
+      "id": "debezium-envelope-into-flat-sink",
+      "severity": "fix",
+      "when": {
+        "source.envelope": "^debezium$",
+        "source.managed": "^false$",
+        "sink.class": "(JdbcSinkConnector|ElasticsearchSinkConnector|BigQuery|Snowflake|Cassandra|Redis|DynamoDb|Solr|Kudu|Splunk)"
+      },
+      "unless": [
+        { "sink.config.transforms": "." }
+      ],
+      "message": "the source writes the Debezium envelope (before, after, op...): ExtractNewRecordState is added to the sink, so that it gets the row",
+      "add_to_sink": {
+        "transforms": "unwrap",
+        "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+        "transforms.unwrap.drop.tombstones": "false"
+      }
+    },
+    {
+      "id": "debezium-envelope-into-managed-sink",
+      "severity": "warn",
+      "when": {
+        "source.envelope": "^debezium$",
+        "source.managed": "^true$"
+      },
+      "message": "the fully managed CDC source writes the envelope (after.state.only=false): set after.state.only=true in the source, or the sink gets before/after/op fields"
+    },
+    {
+      "id": "schemaless-into-schema-sink",
+      "severity": "warn",
+      "when": {
+        "source.value_converter_effective": "(StringConverter|ByteArrayConverter|JsonConverter)",
+        "sink.class": "(JdbcSinkConnector|BigQuery|HdfsSinkConnector|Hdfs3SinkConnector|KuduSink|Cassandra)"
+      },
+      "unless": [
+        { "source.value_converter_effective": "JsonConverter", "source.value_schemas_enable": "^true$" }
+      ],
+      "message": "the source writes values without a schema (String, ByteArray or JSON with schemas.enable=false), and the sink needs one: use an Avro, Protobuf or JSON Schema converter in the source"
+    },
+    {
+      "id": "schemaless-into-avro-parquet-files",
+      "severity": "warn",
+      "when": {
+        "source.value_converter_effective": "(StringConverter|ByteArrayConverter|JsonConverter)",
+        "sink.config.format.class": "(AvroFormat|ParquetFormat)"
+      },
+      "unless": [
+        { "source.value_converter_effective": "JsonConverter", "source.value_schemas_enable": "^true$" }
+      ],
+      "message": "the sink writes Avro or Parquet files, which need a schema, and the source writes values without one: use an Avro, Protobuf or JSON Schema converter in the source, or a JSON format.class in the sink"
+    },
+    {
+      "id": "managed-schemaless-into-schema-sink",
+      "severity": "warn",
+      "when": {
+        "source.managed": "^true$",
+        "source.data_format": "^(JSON|STRING|BYTES)$",
+        "sink.class": "(PostgresSink|MySqlSink|SqlServerSink|OracleDatabaseSink|BigQuery|Snowflake)"
+      },
+      "message": "the source writes values without a schema (output.data.format JSON, STRING or BYTES), and the sink needs one: use AVRO, PROTOBUF or JSON_SR in the source"
+    },
+    {
+      "id": "sink-needs-record-key",
+      "severity": "info",
+      "when": {
+        "sink.config.pk.mode": "^record_key$"
+      },
+      "unless": [
+        { "source.envelope": "^debezium$" },
+        { "source.class": "(debezium|Cdc|CDC|Mongo|JdbcSource|Oracle)" }
+      ],
+      "message": "the sink uses the record key (pk.mode=record_key): check that the source writes a non null key"
+    },
+    {
+      "id": "sink-deletes-need-key",
+      "severity": "info",
+      "when": {
+        "sink.config.delete.enabled": "^true$"
+      },
+      "unless": [
+        { "source.envelope": "^debezium$" },
+        { "source.class": "(debezium|Cdc|CDC)" }
+      ],
+      "message": "the sink applies deletes (delete.enabled=true): only a CDC source writes the tombstones it expects"
+    }
+  ]
+}

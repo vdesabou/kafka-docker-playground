@@ -15,6 +15,8 @@ on:
       - 'scripts/cli/src/flags/**'
       - 'scripts/cli/docs-template/**'
       - 'scripts/publish-docs.sh'
+      # the pipeline builder page (docs/pipeline-builder.html, written by playground update-docs)
+      - 'tools/pipeline-builder/**'
       # the generator of content.md, badges.md and introduction.md (playground update-readme; their templates are in docs/)
       - 'scripts/cli/src/commands/update-readme.sh'
 

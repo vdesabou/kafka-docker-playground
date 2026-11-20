@@ -58,6 +58,28 @@ function repro_write_report () {
     echo ""
     echo "${actual:-_not written in the header of the model (\`# 💥 actual:\`)_}"
     echo ""
+    # a pipeline (repro bootstrap --pipeline): the chain, the notes of bootstrap and the flow as a Mermaid diagram
+    local pipeline pipeline_diagram
+    pipeline=$(head -40 "$script" | grep -m1 '^# 🔗 pipeline: ' | sed 's/^# 🔗 pipeline: //')
+    if [ -n "$pipeline" ]
+    then
+        echo "## 🔗 Pipeline"
+        echo ""
+        echo "\`$pipeline\`"
+        echo ""
+        head -40 "$script" | grep '^# 🔗 pipeline note: ' | sed 's/^# 🔗 pipeline note: /- /'
+        echo ""
+        pipeline_diagram=$(python3 -I "$root_folder/tools/pipeline-builder/catalog.py" mermaid --model "$script" --root "$root_folder" 2> /dev/null)
+        if [ -n "$pipeline_diagram" ]
+        then
+            echo '```mermaid'
+            echo "$pipeline_diagram"
+            echo '```'
+            echo ""
+        fi
+        echo "🗺️ While it runs: \`playground connector flow\` shows the records, the lag and the DLQ of each connector."
+        echo ""
+    fi
     # the output of the runs, pasted in the model as a '# 📋 run output' comment block after 'exit 0'
     local run_output run_output_title
     run_output=$(repro_run_output "$script")

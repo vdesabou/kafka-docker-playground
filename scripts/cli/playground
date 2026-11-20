@@ -159,6 +159,7 @@ playground_usage() {
   printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "repro check")                               "
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
+  printf "  %s   🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command\n" "$(green "repro pipeline-builder")                    "
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "repro status")                              "
   printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "repro diff")                                "
   printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "repro list")                                "
@@ -401,6 +402,7 @@ playground_usage() {
   printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
   printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "connector tasks")                           "
   printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "connector topics")                          "
+  printf "  %s   🗺️ Show the flow of the running connectors: source → topic → sinks, with the records, the lag and the DLQ\n" "$(green "connector flow")                            "
   printf "  %s   🛑 Stop connector (only available since CP 7.5)\n" "$(green "connector stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
@@ -6853,7 +6855,7 @@ playground_ccloud_changelog_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    list        find models by case, status, verdict, base example, author, date\n    diff        what a model changes compared with its base example\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    pipeline-builder   pick a source and sinks in a page, copy the bootstrap\n  --pipeline command\n    list        find models by case, status, verdict, base example, author, date\n    diff        what a model changes compared with its base example\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -6864,15 +6866,16 @@ playground_repro_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "export")   "
-  printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "check")    "
-  printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")   "
-  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
-  printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")   "
-  printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "diff")     "
-  printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "list")     "
-  printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "assert")   "
-  printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "bisect")   "
+  printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "export")          "
+  printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "check")           "
+  printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")          "
+  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")       "
+  printf "  %s   🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command\n" "$(green "pipeline-builder")"
+  printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")          "
+  printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "diff")            "
+  printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "list")            "
+  printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "assert")          "
+  printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "bisect")          "
   echo
 
   # :command.long_usage
@@ -7219,8 +7222,19 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE (repeatable)")"
-    printf "    🔖 Sink example file to use for creating a pipeline. multiple --pipeline\n    flags can be used to create a pipeline with multiple sinks.\n    \n    ❕ It must be absolute full path.\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔗 Sink example to chain after the example of --file, in one model. Repeat it\n    for several sinks.\n    \n    --file is a source example (source -> sinks), or a sink example (fan-out:\n    its producer feeds the other sinks too). All self-managed (connect/) or all\n    fully managed (ccloud/fm-*).\n    \n    For each sink: its producers are removed, it reads the topic of the base\n    example (the old topic name is replaced in its checks too), its converters\n    (or input.data.format) are the ones of the base, a duplicated connector name\n    is renamed, the docker compose services are added (lists such as volumes are\n    joined), and the compatibility rules apply (ExtractNewRecordState for a\n    Debezium envelope, warnings for a schemaless source into a sink that needs a\n    schema...). After the sink connector, the model waits until it has consumed\n    every record (playground connector show-lag); the checks of the sink example\n    follow under set +e. The chain is written in the header (# 🔗 pipeline:).\n    \n    ❕ It must be absolute full path.\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion, or pick the examples\n    in the pipeline builder page (playground repro pipeline-builder)\n"
     printf "    %s\n" "Conflicts: --producer"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--pipeline-topic TOPIC")"
+    printf "    🗳 Topic the sinks of --pipeline read\n    \n    Default: the topic the source example checks (playground topic consume\n    --topic ...), else its kafka.topic. Needed when the source writes several\n    topics or builds the name at run time.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--pipeline-step STEP")"
+    printf "    🧪 Processing step between the source and the sinks of --pipeline\n    (self-managed only)\n    \n    ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes\n    <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro,\n    Protobuf or JSON Schema).\n"
+    printf "    %s\n" "Allowed: ksqldb"
     echo
 
     # :flag.usage
@@ -7239,6 +7253,53 @@ playground_repro_bootstrap_usage() {
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-http-sink/http_no_auth.sh\" -d \"123456 dlq not working\"\n  --no-run\n"
     printf "  playground repro bootstrap --config ~/Downloads/customer-connector.yaml -d\n  \"123456 dlq not working\" --no-run\n"
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-http-sink/http_no_auth.sh\" -d \"123456 dlq not working\"\n  --expected \"bad records go to the DLQ\" --actual \"the task fails with Unknown\n  magic byte\" --jira CC-1234 --no-run\n"
+    printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh\" -d\n  \"123456 cdc to postgres and s3\" --pipeline\n  \"\$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh\" --pipeline\n  \"\$PWD/connect/connect-aws-s3-sink/s3-sink.sh\" --no-run\n"
+    printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh\" -d\n  \"123456 cdc through ksqldb\" --pipeline\n  \"\$PWD/connect/connect-elasticsearch-sink/elasticsearch-sink.sh\"\n  --pipeline-step ksqldb --no-run\n"
+    printf "  playground repro bootstrap -f\n  \"\$PWD/ccloud/fm-datagen-source/fully-managed-datagen-source.sh\" -d \"123456\n  datagen to s3\" --pipeline\n  \"\$PWD/ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh\" --no-run\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_pipeline_builder_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro pipeline-builder\n\n"
+    printf "  🔗 Open the pipeline builder: pick a source and sink examples, see the flow,\n  copy the bootstrap command\n  \n  A self-contained HTML page with every connector example of connect/ and\n  ccloud/fm-*: pick the source (or a sink for a fan-out) and the sinks, and it\n  shows the flow (source → topic → optional ksqlDB step → sinks), the topic the\n  sinks will read, the converters, the credentials needed, and the same\n  compatibility checks as 'repro bootstrap --pipeline' (Debezium envelope into a\n  flat sink, a schemaless source into a sink that needs a schema, the same\n  docker compose service or host port in two examples...). Then copy the\n  ready-to-paste 'playground repro bootstrap ... --pipeline ... --no-run'\n  command. The selection is kept in the URL, to share it.\n  \n  It only writes a command: nothing runs from the page.\n  \n  🌐 Also on the website:\n  https://kafka-docker-playground.io/pipeline-builder.html (commands with \$PWD)\n\n"
+  else
+    printf "playground repro pipeline-builder - 🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro pipeline-builder [OPTIONS]\n"
+  printf "  playground repro pipeline-builder --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: /tmp/playground-<command>,\n    printed at the end)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 Do not open the HTML report in the browser (it is still written, and its\n    path printed)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro pipeline-builder\n"
+    printf "  playground repro pipeline-builder --output-dir /tmp/pipeline --no-open\n"
     echo
 
   fi
@@ -21553,6 +21614,7 @@ playground_connector_usage() {
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
   printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "tasks")                           "
   printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "topics")                          "
+  printf "  %s   🗺️ Show the flow of the running connectors: source → topic → sinks, with the records, the lag and the DLQ\n" "$(green "flow")                            "
   printf "  %s   🛑 Stop connector (only available since CP 7.5)\n" "$(green "stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
@@ -23103,6 +23165,56 @@ playground_connector_topics_usage() {
     printf "  playground connector topics\n"
     printf "  playground connector topics --connector s3-sink --json\n"
     printf "  playground connector topics --connector s3-sink --reset\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_flow_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector flow\n\n"
+    printf "  🗺️ Show the flow of the running connectors: source → topic → sinks, with the\n  records, the lag and the DLQ\n  \n  Where are the records stuck? One tree per source connector: its state and\n  tasks, the topics it writes with their number of records, then each sink\n  reading them, with its state, its consumer lag and its dead letter queue.\n  Topics read by a sink with no source connector (a producer) are listed too.\n  \n  The topics of a source are the active topics tracked by the worker (KIP-558,\n  self-managed), else its kafka.topic / topic config. A storage sink (S3, GCS,\n  Azure Blob, HDFS) commits its offsets when it writes a file, so its lag stays\n  above 0 until then.\n  \n  🎓 Tip: a reproduction model created with 'playground repro bootstrap\n  --pipeline' prints this command at the end.\n  \n  ☁️ Fully managed: supported (the topics of a source come from its config)\n\n"
+  else
+    printf "playground connector flow - 🗺️ Show the flow of the running connectors: source → topic → sinks, with the records, the lag and the DLQ\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector flow [OPTIONS]\n"
+  printf "  playground connector flow --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the flow as JSON on stdout (connectors with the topics they write\n    and read, topics with their records), the log lines go to stderr\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--fail-on-error")"
+    printf "    ❌ Exit 1 when a connector or one of its tasks is FAILED, or the connector is\n    not found (by default the command exits 0, it only displays)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector flow\n"
+    printf "  playground connector flow --json\n"
+    printf "  playground connector flow --fail-on-error\n"
     echo
 
   fi
@@ -38855,6 +38967,21 @@ function display_ccloud_hints () {
   return 0
 }
 
+# messages of tools/pipeline-builder/pipeline.py: one per line, 'I ' info, 'W ' warning, 'E ' error
+function print_pipeline_messages () {
+  local line
+  while IFS= read -r line
+  do
+    case "$line" in
+      "I "*) log "${line:2}" ;;
+      "W "*) logwarn "${line:2}" ;;
+      "E "*) logerror "❌ ${line:2}" ;;
+      "") ;;
+      *) echo "$line" ;;
+    esac
+  done <<< "$1"
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -51437,6 +51564,10 @@ playground_update_docs_command() {
   } > ${root_folder}/docs/cli-pages.js
 
   mv ${root_folder}/scripts/cli/docs/* ${root_folder}/docs/
+
+  # the pipeline builder page of the website (playground repro pipeline-builder, with $PWD in the commands)
+  python3 -I ${root_folder}/tools/pipeline-builder/catalog.py html --root ${root_folder} --output ${root_folder}/docs/pipeline-builder.html --site
+
 }
 
 # :command.function
@@ -61615,6 +61746,28 @@ playground_repro_export_command() {
       echo ""
       echo "${actual:-_not written in the header of the model (\`# 💥 actual:\`)_}"
       echo ""
+      # a pipeline (repro bootstrap --pipeline): the chain, the notes of bootstrap and the flow as a Mermaid diagram
+      local pipeline pipeline_diagram
+      pipeline=$(head -40 "$script" | grep -m1 '^# 🔗 pipeline: ' | sed 's/^# 🔗 pipeline: //')
+      if [ -n "$pipeline" ]
+      then
+          echo "## 🔗 Pipeline"
+          echo ""
+          echo "\`$pipeline\`"
+          echo ""
+          head -40 "$script" | grep '^# 🔗 pipeline note: ' | sed 's/^# 🔗 pipeline note: /- /'
+          echo ""
+          pipeline_diagram=$(python3 -I "$root_folder/tools/pipeline-builder/catalog.py" mermaid --model "$script" --root "$root_folder" 2> /dev/null)
+          if [ -n "$pipeline_diagram" ]
+          then
+              echo '```mermaid'
+              echo "$pipeline_diagram"
+              echo '```'
+              echo ""
+          fi
+          echo "🗺️ While it runs: \`playground connector flow\` shows the records, the lag and the DLQ of each connector."
+          echo ""
+      fi
       # the output of the runs, pasted in the model as a '# 📋 run output' comment block after 'exit 0'
       local run_output run_output_title
       run_output=$(repro_run_output "$script")
@@ -62901,6 +63054,8 @@ playground_repro_bootstrap_command() {
   add_custom_smt="${args[--custom-smt]}"
 
   eval "pipeline_array=(${args[--pipeline]})"
+  pipeline_topic="${args[--pipeline-topic]}"
+  pipeline_step="${args[--pipeline-step]}"
 
   eval "connector_plugin_array=(${args[--connector-plugin]})"
 
@@ -63069,6 +63224,8 @@ playground_repro_bootstrap_command() {
 
     MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
     MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
+    MENU_PIPELINE_STEP="$(menu_label "🧪" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
+    readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the ksqlDB step"
 
     readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
     readonly MENU_GO_BACK="🔙 Go back"
@@ -63110,12 +63267,22 @@ playground_repro_bootstrap_command() {
 
       # an entry is only added when it applies to this example
       options=("$MENU_LETS_GO")
+      # a source example (source -> sinks) or a sink example (fan-out), self-managed or fully managed
+      if [ $connector_example == 1 ] || [[ "$test_file" =~ /ccloud/fm-[^/]*-(source|sink)/ ]]
+      then
+        options+=("$MENU_PIPELINE")
+        if ((length > 0)) && [[ "$test_file" != */ccloud/* ]] && [[ "$test_file" == *source* ]]
+        then
+          if [ -z "$pipeline_step" ]
+          then
+            options+=("$MENU_PIPELINE_STEP")
+          else
+            options+=("$MENU_PIPELINE_NO_STEP")
+          fi
+        fi
+      fi
       if [ $connector_example == 1 ]
       then
-        if [[ $test_file != *"sink"* ]]
-        then
-          options+=("$MENU_PIPELINE")
-        fi
         if [ -z "$CUSTOM_SMT" ]
         then
           options+=("$MENU_ENABLE_CUSTOM_SMT")
@@ -63188,15 +63355,37 @@ playground_repro_bootstrap_command() {
         set -e
       fi
 
+      if [[ $res == *"$MENU_PIPELINE_STEP"* ]]
+      then
+        pipeline_step="ksqldb"
+        array_flag_list+=("--pipeline-step=ksqldb")
+      fi
+      if [[ $res == *"$MENU_PIPELINE_NO_STEP"* ]]
+      then
+        pipeline_step=""
+        array_flag_list=("${array_flag_list[@]/"--pipeline-step=ksqldb"}")
+      fi
+
       if [[ $res == *"$MENU_PIPELINE"* ]]
       then
-        sink_file=$(playground get-examples-list-with-fzf --without-repro --sink-only )
+        if [[ "$test_file" == */ccloud/* ]]
+        then
+          sink_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
+        else
+          sink_file=$(playground get-examples-list-with-fzf --without-repro --sink-only )
+        fi
         if [[ $sink_file == *"@"* ]]
         then
           sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
         fi
-        array_flag_list+=("--pipeline=$sink_file")
-        pipeline_array+=("$sink_file")
+        if [[ "$sink_file" != *-sink/* ]]
+        then
+          logwarn "🔗 $sink_file is not a sink example, not added to the pipeline"
+        elif [ -n "$sink_file" ]
+        then
+          array_flag_list+=("--pipeline=$sink_file")
+          pipeline_array+=("$sink_file")
+        fi
       fi
     done # end while loop stop
   fi
@@ -63280,18 +63469,39 @@ playground_repro_bootstrap_command() {
   dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
   final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
-  length=${#pipeline_array[@]}
-  if ((length > 0))
+  pipeline_length=${#pipeline_array[@]}
+  if ((pipeline_length == 0)) && { [ -n "$pipeline_topic" ] || [ -n "$pipeline_step" ]; }
   then
-    if [[ "$base1" != *source ]]
+    logerror "❌ --pipeline-topic and --pipeline-step need --pipeline"
+    exit 1
+  fi
+  if ((pipeline_length > 0))
+  then
+    if ! command -v python3 > /dev/null 2>&1
     then
-      logerror "example <$base1> must be source connector example when building a pipeline !"
+      logerror "❌ python3 is required to build a pipeline"
       exit 1
     fi
-
-    if [[ "$dir2" != connect* ]]
+    # the sinks, without the fzf "<emoji>@" prefix
+    pipeline_sink_args=()
+    for sink_file in "${pipeline_array[@]}"
+    do
+      if [ -n "$sink_file" ]
+      then
+        pipeline_sink_args+=(--sink "${sink_file#*@}")
+      fi
+    done
+    pipeline_extra_args=()
+    [ -n "$pipeline_topic" ] && pipeline_extra_args+=(--topic "$pipeline_topic")
+    [ -n "$pipeline_step" ] && pipeline_extra_args+=(--step "$pipeline_step")
+    # source or sink example, all self-managed or all fully managed, the topic can be found: checked before any file is written
+    set +e
+    pipeline_output=$(python3 -I "$root_folder/tools/pipeline-builder/pipeline.py" --validate --base "$test_file" "${pipeline_sink_args[@]}" "${pipeline_extra_args[@]}" --root "$root_folder")
+    pipeline_rc=$?
+    set -e
+    print_pipeline_messages "$pipeline_output"
+    if [ $pipeline_rc -ne 0 ]
     then
-      logerror "example <$dir2> is not from connect folder, only connect in connect folder are supported"
       exit 1
     fi
   fi
@@ -64198,255 +64408,66 @@ EOF
     fi
 
   fi
-  remove_connect_cp_version_greater_than_8_blocks () {
-    awk '
-      /^[[:space:]]*if connect_cp_version_greater_than_8/ {skip=1; next}
-      skip && /^[[:space:]]*fi([[:space:]]*#.*)?$/ {skip=0; next}
-      !skip {print}
-    ' "$1" > $tmp_dir/tmp_file2
-    mv $tmp_dir/tmp_file2 "$1"
-  }
-
-  length=${#pipeline_array[@]}
-  if ((length > 0))
+  if ((pipeline_length > 0))
   then
-    remove_connect_cp_version_greater_than_8_blocks "$repro_test_file"
-  fi
+    for sink_file in "${pipeline_array[@]}"
+    do
+      sink_file="${sink_file#*@}"
+      if [ -z "$sink_file" ] || [[ "$test_file" == */ccloud/* ]]
+      then
+        continue
+      fi
+      # docker compose: the services of the sink example are added. When both define the same key, the value of the
+      # base wins; lists (volumes, depends_on, ports...) are joined
+      if [ -z "$docker_compose_test_file" ] || [ ! -f "$docker_compose_test_file" ]
+      then
+        logwarn "📁 the model has no docker compose override: add the services of $sink_file by hand"
+        continue
+      fi
+      docker_compose_sink_file=$(grep "start-environment" "$sink_file" | awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+      docker_compose_sink_file="$(dirname "$sink_file")/${docker_compose_sink_file}"
+      if [ ! -f "$docker_compose_sink_file" ]
+      then
+        logwarn "📁 could not find the docker compose override of $sink_file: add its services by hand"
+        continue
+      fi
+      base_plugin_path=$(yq '.services.connect.environment.CONNECT_PLUGIN_PATH // ""' "$docker_compose_test_file")
+      sink_plugin_path=$(yq '.services.connect.environment.CONNECT_PLUGIN_PATH // ""' "$docker_compose_sink_file")
+      if [ -z "$sink_plugin_path" ]
+      then
+        logwarn "🔌 no CONNECT_PLUGIN_PATH in $docker_compose_sink_file: add the plugin of the sink by hand"
+      fi
+      set +e
+      yq eval-all '. as $item ireduce ({}; . *+ $item) | (.. | select(tag == "!!seq")) |= unique' "$docker_compose_sink_file" "$docker_compose_test_file" > $tmp_dir/merged.yml 2> $tmp_dir/merged.err
+      merge_rc=$?
+      set -e
+      if [ $merge_rc -ne 0 ]
+      then
+        logwarn "📁 could not join the lists of $(basename "$docker_compose_sink_file") ($(head -1 $tmp_dir/merged.err)): the lists of the base are kept"
+        yq ". *= load(\"$docker_compose_test_file\")" "$docker_compose_sink_file" > $tmp_dir/merged.yml
+      fi
+      cp $tmp_dir/merged.yml "$docker_compose_test_file"
+      new_plugin_path=$(echo "$base_plugin_path,$sink_plugin_path" | tr ',' '\n' | sed 's/[[:space:]]//g' | awk 'NF && !seen[$0]++' | paste -sd, -)
+      if [ -n "$new_plugin_path" ]
+      then
+        NEW_PLUGIN_PATH="$new_plugin_path" yq -i '.services.connect.environment.CONNECT_PLUGIN_PATH = strenv(NEW_PLUGIN_PATH)' "$docker_compose_test_file"
+      fi
+      log "🐳 services of $(basename "$docker_compose_sink_file") added to $(basename "$docker_compose_test_file")"
+    done
 
-  for sink_file in "${pipeline_array[@]}"; do
-    if [[ -n "$sink_file" ]]
+    set +e
+    pipeline_output=$(python3 -I "$root_folder/tools/pipeline-builder/pipeline.py" --model "$repro_test_file" --base "$test_file" "${pipeline_sink_args[@]}" "${pipeline_extra_args[@]}" --root "$root_folder")
+    pipeline_rc=$?
+    set -e
+    print_pipeline_messages "$pipeline_output"
+    if [ $pipeline_rc -ne 0 ]
     then
-      if [[ $sink_file == *"@"* ]]
-      then
-        sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
-      fi
-      test_sink_file_directory="$(dirname "${sink_file}")"
-      # docker-compose part
-      # determining the docker-compose file from from test_file
-      docker_compose_sink_file=$(grep "start-environment" "$sink_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-      docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
-      cp $docker_compose_test_file /tmp/1.yml
-      cp $docker_compose_sink_file /tmp/2.yml
-      yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
-
-      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
-      sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
-      if [ "$sink_connector_paths" == "" ]
-      then
-        logerror "cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
-        exit 1
-      else
-        tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
-        new_connector_paths=$(echo "$tmp_new_connector_paths" | sed 's/ //g')
-        cp $docker_compose_test_file /tmp/1.yml
-
-        yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" /tmp/1.yml
-        cp /tmp/1.yml $docker_compose_test_file
-      fi
-
-      # sh part
-
-      line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-      line_final_environment=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-      line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1)
-
-      line_sink_environment=$(grep -n 'playground start-environment' $sink_file | cut -d ":" -f 1 | tail -n1)
-
-      # get converter info
-      source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
-      if [ "$source_key_converter" == "" ]
-      then
-        log "💱 Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
-      else
-        if [ "$source_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-        then
-          # check schemas.enable
-          source_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
-          if [ "$source_key_json_converter_schemas_enable" == "" ]
-          then
-            log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=true"
-          else
-            log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
-          fi
-        else
-          log "💱 Source connector is using key.converter $source_key_converter"
-        fi
-      fi
-
-      source_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
-      if [ "$source_value_converter" == "" ]
-      then
-        log "💱 Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
-      else
-        if [ "$source_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-        then
-          # check schemas.enable
-          source_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
-          if [ "$source_value_json_converter_schemas_enable" == "" ]
-          then
-            log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=true"
-          else
-            log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
-          fi
-        else
-          log "💱 Source connector is using value.converter $source_value_converter"
-        fi
-      fi
-
-      sink_key_converter=$(grep "\"key.converter\"" $sink_file | cut -d '"' -f 4)
-      if [ "$sink_key_converter" == "" ]
-      then
-        log "💱 Sink connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
-      else
-        if [ "$sink_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-        then
-          # check schemas.enable
-          sink_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
-          if [ "$sink_key_json_converter_schemas_enable" == "" ]
-          then
-            log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=true"
-          else
-            log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=$sink_key_json_converter_schemas_enable"
-          fi
-        else
-          log "💱 Sink connector is using key.converter $sink_key_converter"
-        fi
-      fi
-
-      sink_value_converter=$(grep "\"value.converter\"" $sink_file | cut -d '"' -f 4)
-      if [ "$sink_value_converter" == "" ]
-      then
-        log "💱 Sink connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
-      else
-        if [ "$sink_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-        then
-          # check schemas.enable
-          sink_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
-          if [ "$sink_value_json_converter_schemas_enable" == "" ]
-          then
-            log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=true"
-          else
-            log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=$sink_value_json_converter_schemas_enable"
-          fi
-        else
-          log "💱 Sink connector is using value.converter $sink_value_converter"
-        fi
-      fi
-
-      sed -n "$(($line_sink_source+1)),$(($line_sink_environment-1))p" $sink_file > $tmp_dir/pre_sink
-      cp $repro_test_file $tmp_dir/tmp_file
-
-      { head -n $(($line_final_environment-1)) $tmp_dir/tmp_file; cat $tmp_dir/pre_sink; tail -n +$line_final_environment $tmp_dir/tmp_file; } > $repro_test_file
-      remove_connect_cp_version_greater_than_8_blocks "$repro_test_file"
-
-      sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
-
-      # deal with converters
-      set +e
-      if [ "$source_value_converter" == "" ] && [ "$sink_value_converter" == "" ]
-      then
-        # do nothing
-        :
-      else
-        grep "\"value.converter" $repro_test_file > $tmp_dir/source_value_converter
-        if [ "$sink_value_converter" == "" ]
-        then
-          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-        else
-          # remove existing value.converter
-          grep -vwE "\"value.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
-          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-
-          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-        fi
-        log "🔮 Changing Sink connector value.converter to use same as source:"
-        cat $tmp_dir/source_value_converter
-      fi
-      if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
-      then
-        # do nothing
-        :
-      else
-        grep "\"key.converter" $repro_test_file > $tmp_dir/source_key_converter
-        if [ "$sink_key_converter" == "" ]
-        then
-          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-        else
-          # remove existing key.converter
-          grep -vwE "\"key.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
-          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-
-          line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-
-          { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-          cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-        fi
-        log "🔮 Changing Sink connector key.converter to use same as source:"
-        cat $tmp_dir/source_key_converter
-      fi
-      set -e
-      # need to remove cli which produces and change topic
-      # remove the producer of the sink example (and the log line before it): the sink reads what the source produces
-      producer_regex="kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer|playground topic produce"
-      line_kafka_cli_producer=$(grep -En "$producer_regex" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-      set +e
-      if [ -z "$line_kafka_cli_producer" ]
-      then
-        logwarn "Could not find the producer of the sink example, keeping it as is"
-        cat $tmp_dir/tmp_file >> $repro_test_file
-      else
-        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
-        if sed -n "${line_kafka_cli_producer}p" $tmp_dir/tmp_file | grep -q "EOF"
-        then
-          # heredoc (avro schema...): it ends at the first EOF line after the producer
-          tmp=$(tail -n +$(($line_kafka_cli_producer + 1)) $tmp_dir/tmp_file | grep -n "^EOF" | cut -d ":" -f 1 | head -n1)
-          if [ "$tmp" == "" ]
-          then
-            logwarn "Could not determine EOF for the producer of the sink example, keeping it as is"
-            line_kafka_cli_producer_end=""
-          else
-            line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp + 1))
-          fi
-        fi
-
-        if [ -n "$line_kafka_cli_producer_end" ]
-        then
-          # head -n 0 (or negative) is an error on macOS
-          { if [ $line_kafka_cli_producer -gt 2 ]; then head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; fi; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
-          cat $tmp_dir/tmp_file2 >> $repro_test_file
-        else
-          cat $tmp_dir/tmp_file >> $repro_test_file
-        fi
-      fi
-      set -e
-
-      awk -F'--topic ' '{print $2}' $repro_test_file > $tmp_dir/tmp
-      sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
-      original_topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
-
-      if [ "$original_topic_name" != "" ]
-      then
-        cp $repro_test_file $tmp_dir/tmp_file
-        line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-
-        # replace the topic of the sink example (adding a second "topics" key would leave the original one in the config)
-        sed "${line}s|\"topics\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"topics\": \"$original_topic_name\"|" $tmp_dir/tmp_file > $repro_test_file
-      else
-
-        logwarn "Could not find original topic name! "
-        logwarn "You would need to change topics config for sink by yourself."
-      fi
+      logerror "❌ the pipeline could not be built, removing $repro_test_file"
+      rm -f "$repro_test_file"
+      exit 1
     fi
-  done
+    log "🗺️ see the flow while it runs: playground connector flow"
+  fi
 
   cat $repro_test_file > $tmp_dir/tmp_file
   echo "" >> $tmp_dir/tmp_file
@@ -64597,6 +64618,35 @@ EOF
   else
     playground run -f $repro_dir/$repro_test_filename --force-interactive-repro $flag_list
   fi
+
+}
+
+# :command.function
+playground_repro_pipeline_builder_command() {
+
+  # src/commands/repro/pipeline-builder.sh
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+    logerror "❌ python3 is required to build the pipeline builder page"
+    exit 1
+  fi
+
+  output_dir="${output_dir:-/tmp/playground-pipeline-builder}"
+  mkdir -p "$output_dir"
+  report="$output_dir/pipeline-builder.html"
+
+  log "🔗 Reading the connector examples of $root_folder"
+  if ! python3 -I "$root_folder/tools/pipeline-builder/catalog.py" html --root "$root_folder" --output "$report" 2> "$output_dir/pipeline-builder.log"
+  then
+    logerror "❌ could not build the pipeline builder page:"
+    cat "$output_dir/pipeline-builder.log"
+    exit 1
+  fi
+  log "🧭 pick a source (or a sink for a fan-out) and the sinks, then copy the 'playground repro bootstrap --pipeline' command"
+  open_html_report "$report" "$no_open"
 
 }
 
@@ -64884,7 +64934,7 @@ playground_repro_list_command() {
   fi
   xargs -0 awk '
       function field(line, key) { sub("^# [^ ]+ " key ": ?", "", line); gsub("\t", " ", line); return line }
-      FNR == 1 { if (file != "") print_model(); file = FILENAME; date = author = description = expected = actual = jira = status = "" }
+      FNR == 1 { if (file != "") print_model(); file = FILENAME; date = author = description = expected = actual = jira = status = pipeline = "" }
       FNR > 30 { nextfile }
       /^# [^ ]+ date: / && date == "" { date = field($0, "date") }
       /^# [^ ]+ author: / && author == "" { author = field($0, "author") }
@@ -64893,7 +64943,8 @@ playground_repro_list_command() {
       /^# [^ ]+ actual:/ && actual == "" { actual = field($0, "actual") }
       /^# [^ ]+ jira:/ && jira == "" { jira = field($0, "jira") }
       /^# [^ ]+ status:/ && status == "" { status = field($0, "status") }
-      function print_model() { printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", file, date, author, description, expected, actual, jira, status }
+      /^# [^ ]+ pipeline: / && pipeline == "" { pipeline = field($0, "pipeline") }
+      function print_model() { printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", file, date, author, description, expected, actual, jira, status, pipeline }
       END { if (file != "") print_model() }' < "$tmp_dir/files" > "$tmp_dir/headers.tsv"
 
   # 2. what is not in the headers: the base example (the symlinks of each folder), the date the model was committed (models
@@ -64956,6 +65007,7 @@ playground_repro_list_command() {
               actual: (.[5] // ""),
               jira: (.[6] // ""),
               status: (.[7] // ""),
+              pipeline: (.[8] // ""),
               base_example: ($bases[$path | split("/")[0]] // ""),
               committed: (($uncommitted | index($path)) == null),
               last_verdict: ($verdicts[.[0]] // null)
@@ -64974,7 +65026,7 @@ playground_repro_list_command() {
           and ($verdict == "" or ($verdict == "none" and .last_verdict == null) or (.last_verdict != null and (.last_verdict.verdict | gsub(" "; "-")) == $verdict))
           and ($base == "" or (.base_example | contains($base)))
           and ($since == "" or (.created != "" and .created >= $since))
-          and ($grep == "" or ([.description, .expected, .actual, .path, .jira] | join(" ") | test($grep; "i")))
+          and ($grep == "" or ([.description, .expected, .actual, .path, .jira, .pipeline] | join(" ") | test($grep; "i")))
           and ($uncommitted == "" or (.committed | not))))
       | sort_by(.created, .path) | reverse')
 
@@ -65007,8 +65059,9 @@ playground_repro_list_command() {
           (if .status == "" then "-" else .status end),
           (if .last_verdict == null then "-" elif .last_verdict.verdict == "reproduced" then "🐞 \(.last_verdict.date)" else "✅ \(.last_verdict.date)" end),
           (.description + (if .committed then "" else " ✏️" end)),
-          .path] | @tsv' \
-      | while IFS=$'\t' read -r created case status verdict description path
+          .path,
+          (if .pipeline == "" then "-" else .pipeline end)] | @tsv' \
+      | while IFS=$'\t' read -r created case status verdict description path pipeline
       do
           verdict_width=16
           if [ "$verdict" != "-" ]
@@ -65017,6 +65070,10 @@ playground_repro_list_command() {
           fi
           printf "   %-10s  %-6s  %-16.16s  %-${verdict_width}s  %.70s\n" "$created" "$case" "$status" "$verdict" "$description"
           printf '   %-10s  ↳ %s\n' "" "$path"
+          if [ "$pipeline" != "-" ]
+          then
+              printf '   %-10s  🔗 %.150s\n' "" "$pipeline"
+          fi
       done
   log "💡 details: playground repro status -f $repro_root/<path> | run: playground run -f $repro_root/<path>"
 
@@ -97958,6 +98015,112 @@ playground_connector_topics_command() {
 }
 
 # :command.function
+playground_connector_flow_command() {
+
+  # src/commands/connector/flow.sh
+  verbose="${args[--verbose]}"
+  json="${args[--json]}"
+  fail_on_error="${args[--fail-on-error]}"
+
+  # --json: only the JSON goes to stdout (fd 3)
+  if [[ -n "$json" ]]
+  then
+      exec 3>&1 1>&2
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required to show the flow"
+      exit 1
+  fi
+
+  connector_type=$(playground state get run.connector_type)
+  environment_used=$(playground state get run.environment)
+
+  connectors=$(playground get-connector-list)
+  if [ -z "$connectors" ]
+  then
+      log "💤 No $connector_type connector is running !"
+      exit 1
+  fi
+  items=($connectors)
+  log "🗺️ flow of the ${#items[@]} $connector_type connectors"
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  set +e
+  # state of every connector
+  statuses=$(PG_SKIP_ERROR_RECOMMENDATIONS=1 PG_SKIP_DIAGNOSE_HINT=1 playground connector status --json 2> /dev/null)
+  echo "$statuses" | jq -e 'type == "array"' > /dev/null 2>&1 || statuses='[]'
+  # lag of the sinks (one call, every connector: sources come back with an error, left out below)
+  lags=$(playground connector show-lag --json 2> /dev/null)
+  echo "$lags" | jq -e 'type == "array"' > /dev/null 2>&1 || lags='[]'
+  # topics written / read, tracked by the worker (self-managed, KIP-558)
+  active='{}'
+  if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ] && [[ "$environment_used" != cfk* ]]
+  then
+      active=$(playground connector topics --json 2> /dev/null)
+      echo "$active" | jq -e 'type == "object"' > /dev/null 2>&1 || active='{}'
+  fi
+
+  echo '[]' > $tmp_dir/connectors.json
+  for c in "${items[@]}"
+  do
+      config='{}'
+      if get_connector_config_json "$c" > /dev/null 2>&1
+      then
+          config="$curl_output"
+      fi
+      jq --arg name "$c" --argjson config "$config" --argjson statuses "$statuses" --argjson lags "$lags" --argjson active "$active" '
+          . + [{name: $name, config: $config,
+                status: ($statuses | map(select(.name == $name)) | first // null),
+                lag: ($lags | map(select(.connector == $name)) | first // null),
+                active_topics: ($active[$name] // [])}]' $tmp_dir/connectors.json > $tmp_dir/c.json && mv $tmp_dir/c.json $tmp_dir/connectors.json
+  done
+  jq -n --arg type "$connector_type" --slurpfile c $tmp_dir/connectors.json '{type: $type, connectors: $c[0], counts: {}}' > $tmp_dir/data.json
+
+  # records of each topic
+  echo '{}' > $tmp_dir/counts.json
+  while IFS= read -r topic
+  do
+      [ -z "$topic" ] && continue
+      n=$(playground --output-level WARN topic get-number-records --topic "$topic" 2> /dev/null | tail -1 | tr -d '[:space:]')
+      if [[ "$n" =~ ^[0-9]+$ ]]
+      then
+          jq --arg t "$topic" --argjson n "$n" '. + {($t): $n}' $tmp_dir/counts.json > $tmp_dir/n.json && mv $tmp_dir/n.json $tmp_dir/counts.json
+      fi
+  done < <(python3 -I "$root_folder/tools/pipeline-builder/flow.py" topics < $tmp_dir/data.json)
+  jq --slurpfile n $tmp_dir/counts.json '.counts = $n[0]' $tmp_dir/data.json > $tmp_dir/d.json && mv $tmp_dir/d.json $tmp_dir/data.json
+
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 data used:"
+      jq . $tmp_dir/data.json
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      python3 -I "$root_folder/tools/pipeline-builder/flow.py" render --json < $tmp_dir/data.json >&3
+      rc=$?
+  else
+      python3 -I "$root_folder/tools/pipeline-builder/flow.py" render < $tmp_dir/data.json
+      rc=$?
+  fi
+  set -e
+
+  if [ $rc -ne 0 ]
+  then
+      logwarn "🛑 a connector or one of its tasks is not RUNNING: playground connector status, playground connector diagnose"
+      if [[ -n "$fail_on_error" ]]
+      then
+          exit 1
+      fi
+  fi
+
+}
+
+# :command.function
 playground_connector_stop_command() {
 
   # src/commands/connector/stop.sh
@@ -121535,6 +121698,13 @@ playground_repro_parse_requirements() {
       shift $#
       ;;
 
+    pipeline-builder)
+      action="pipeline-builder"
+      shift
+      playground_repro_pipeline_builder_parse_requirements "$@"
+      shift $#
+      ;;
+
     status)
       action="status"
       shift
@@ -122346,6 +122516,34 @@ playground_repro_bootstrap_parse_requirements() {
         ;;
 
       # :flag.case
+      --pipeline-topic)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--pipeline-topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--pipeline-topic requires an argument: --pipeline-topic TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --pipeline-step)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--pipeline-step']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--pipeline-step requires an argument: --pipeline-step STEP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --no-run)
 
         # :flag.case_no_arg
@@ -122431,6 +122629,91 @@ playground_repro_bootstrap_parse_requirements() {
     printf "%s\n" "--producer must be one of: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key" >&2
     exit 1
   fi
+  if [[ ${args['--pipeline-step']:-} ]] && [[ ! ${args['--pipeline-step']:-} =~ ^(ksqldb)$ ]]; then
+    printf "%s\n" "--pipeline-step must be one of: ksqldb" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_repro_pipeline_builder_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_pipeline_builder_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="repro pipeline-builder"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -157930,6 +158213,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    flow)
+      action="flow"
+      shift
+      playground_connector_flow_parse_requirements "$@"
+      shift $#
+      ;;
+
     stop)
       action="stop"
       shift
@@ -161403,6 +161693,89 @@ playground_connector_topics_parse_requirements() {
     printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_connector_flow_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_flow_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector flow"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --fail-on-error)
+
+        # :flag.case_no_arg
+        args['--fail-on-error']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -175046,6 +175419,11 @@ playground_repro_completion() {
         playground_repro_bootstrap_completion "$completion_current" "$@"
         return
         ;;
+      pipeline-builder)
+        shift
+        playground_repro_pipeline_builder_completion "$completion_current" "$@"
+        return
+        ;;
       status)
         shift
         playground_repro_status_completion "$completion_current" "$@"
@@ -175080,7 +175458,7 @@ playground_repro_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" export check import bootstrap status diff list assert bisect
+  completion_candidates "$completion_current" export check import bootstrap pipeline-builder status diff list assert bisect
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -175432,6 +175810,30 @@ playground_repro_bootstrap_completion() {
         completion_blocked_flags["--producer"]=1
 
         ;;
+      --pipeline-topic)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--pipeline-topic"]=1
+
+        ;;
+      --pipeline-step)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ksqldb"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--pipeline-step"]=1
+
+        ;;
       --no-run)
         completion_blocked_flags["--no-run"]=1
 
@@ -175455,7 +175857,49 @@ playground_repro_bootstrap_completion() {
     completion_flag_candidates --custom-smt "$completion_current" --custom-smt
     completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin
     completion_flag_candidates --pipeline "$completion_current" --pipeline
+    completion_flag_candidates --pipeline-topic "$completion_current" --pipeline-topic
+    completion_flag_candidates --pipeline-step "$completion_current" --pipeline-step
     completion_flag_candidates --no-run "$completion_current" --no-run
+  fi
+
+}
+
+# :command.completion_function
+playground_repro_pipeline_builder_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
@@ -193971,6 +194415,11 @@ playground_connector_completion() {
         playground_connector_topics_completion "$completion_current" "$@"
         return
         ;;
+      flow)
+        shift
+        playground_connector_flow_completion "$completion_current" "$@"
+        return
+        ;;
       stop)
         shift
         playground_connector_stop_completion "$completion_current" "$@"
@@ -194095,7 +194544,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait validate diff reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate diff reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics flow stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -195846,6 +196295,47 @@ playground_connector_topics_completion() {
     completion_flag_candidates --reset "$completion_current" --reset
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_flow_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --fail-on-error)
+        completion_blocked_flags["--fail-on-error"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --fail-on-error "$completion_current" --fail-on-error
   fi
 
 }
@@ -199344,6 +199834,7 @@ run() {
     "repro check") playground_repro_check_command ;;
     "repro import") playground_repro_import_command ;;
     "repro bootstrap") playground_repro_bootstrap_command ;;
+    "repro pipeline-builder") playground_repro_pipeline_builder_command ;;
     "repro status") playground_repro_status_command ;;
     "repro diff") playground_repro_diff_command ;;
     "repro list") playground_repro_list_command ;;
@@ -199611,6 +200102,7 @@ run() {
     "connector restart") playground_connector_restart_command ;;
     "connector tasks") playground_connector_tasks_command ;;
     "connector topics") playground_connector_topics_command ;;
+    "connector flow") playground_connector_flow_command ;;
     "connector stop") playground_connector_stop_command ;;
     "connector resume") playground_connector_resume_command ;;
     "connector delete") playground_connector_delete_command ;;

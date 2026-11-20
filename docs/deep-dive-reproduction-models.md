@@ -77,7 +77,9 @@ playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh"
 
 # extras
 playground repro bootstrap -f "…/jdbc-mysql-sink.sh" -d "123456 smt drops field" --custom-smt --no-run    # a no-op SMT to edit, built and wired in
-playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc to s3" --pipeline "…/s3-sink.sh" --no-run
+playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc to s3" --pipeline "…/s3-sink.sh" --no-run       # source -> sinks, see below
+playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc via ksqldb" --pipeline "…/elasticsearch-sink.sh" --pipeline-step ksqldb --no-run
+playground repro pipeline-builder                                                    # pick the source and sinks in a page, copy the command
 playground repro bootstrap -f "…/http_no_auth.sh" -d "123456 two plugins" --connector-plugin confluentinc/kafka-connect-jdbc --no-run
 playground repro bootstrap -f "…/http_no_auth.sh" -d "123456 dlq not working" --no-run \
   --expected "records with a bad schema go to the DLQ" --actual "the task fails with Unknown magic byte" --jira CC-1234
@@ -614,7 +616,27 @@ sed -n '/^# 📄/,/^EOF/p' reproduction-models/connect-connect-filestream-sink/f
 
 The license and the schema registry password of the customer are not in the model: `repro check` finds nothing.
 
-**Step 7: clean up**
+**Step 7: a pipeline, source → sinks**
+
+```bash
+playground repro bootstrap -f "$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "000000 deep dive lab pipeline" \
+  --pipeline "$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" --pipeline "$PWD/connect/connect-aws-s3-sink/s3-sink.sh" --no-run
+# 🔗 the sinks read topic server1_mydb_CUSTOMERS
+# 🗄️ several databases (mysql, postgres): --container is added to the 'playground db' calls
+# ➕ sink 1: connect/connect-jdbc-postgresql-sink/postgres-sink.sh (connector postgres-sink)
+#    🗑️ 2 producer(s) of the sink example removed
+#    🩹 the source writes the Debezium envelope (before, after, op...): ExtractNewRecordState is added to the sink, so that it gets the row
+head -15 reproduction-models/connect-connect-debezium-mysql-source/debezium-mysql-source-repro-000000-deep-dive-lab-pipeline.sh
+# # 🔗 pipeline: connect/connect-debezium-mysql-source/debezium-mysql-source.sh -> connect/connect-jdbc-postgresql-sink/postgres-sink.sh, connect/connect-aws-s3-sink/s3-sink.sh (topic server1_mydb_CUSTOMERS)
+```
+
+No producer of the sink examples is left. After each sink connector, the model waits until it has consumed every
+record (`playground connector show-lag --connector postgres-sink --max-wait 300 --fail-on-timeout`), or checks the
+state of a storage sink, which only commits its offsets when it writes a file (`playground connector status
+--connector s3-sink --fail-on-error`). A fully managed sink after a self-managed source is refused before any file is
+written. While it runs, `playground connector flow` shows the records go through.
+
+**Step 8: clean up**
 
 ```bash
 d=reproduction-models/connect-connect-filestream-sink
@@ -624,6 +646,8 @@ rm -f "$d/filestream-sink-repro-000000-deep-dive-lab.sh" "$d/filestream-sink-rep
       "$d/filestream-sink-repro-000000-deep-dive-lab-config.sh" \
       "$d/docker-compose.plaintext.repro-000000-deep-dive-lab-config.yml"
 rm -rf /tmp/deep-dive-repro
+p=reproduction-models/connect-connect-debezium-mysql-source
+rm -f "$p/debezium-mysql-source-repro-000000-deep-dive-lab-pipeline.sh" "$p/docker-compose.plaintext.repro-000000-deep-dive-lab-pipeline.yml"
 grep -vF "000000-deep-dive-lab" playground-repro-verdicts > /tmp/verdicts && mv /tmp/verdicts playground-repro-verdicts   # the lab verdicts
 git -C reproduction-models status --short connect-connect-filestream-sink   # same as before the lab
 ```
@@ -659,7 +683,9 @@ hosts) and never customer data.
 
 ```bash
 playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symptom>" --no-run] \
-  [--config <customer file> [--config-connector <name>]] [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>"]
+  [--config <customer file> [--config-connector <name>]] [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>" … [--pipeline-topic <t>] [--pipeline-step ksqldb]]
+playground repro pipeline-builder [--output-dir <dir>] [--no-open]
+playground connector flow [--json] [--fail-on-error]
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
 playground repro assert --reproduced-if-log "<pattern>" [--container connect] | --reproduced-if-connector-state FAILED [--connector <c>] \
   | --reproduced-if-records-less-than|more-than <n> --topic <t> | --reproduced-if-command "<cmd>"   [--message "…"] [--json]

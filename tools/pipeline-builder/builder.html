@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔗 Pipeline builder - kafka-docker-playground</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--fg:#1e293b;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent-soft:#dbeafe;--ok:#15803d;--warn:#b45309;--warn-soft:#fef3c7;--fix:#7c3aed;--fix-soft:#ede9fe;--info-soft:#e0f2fe;--code:#f8fafc}
+@media (prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--fg:#e2e8f0;--muted:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-soft:#1e3a5f;--ok:#4ade80;--warn:#fbbf24;--warn-soft:#422006;--fix:#c4b5fd;--fix-soft:#2e1065;--info-soft:#0c4a6e;--code:#0f172a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.45}
+header{padding:16px 24px;border-bottom:1px solid var(--line);background:var(--card);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header h1{margin:0;font-size:1.25rem}
+header .sub{color:var(--muted);font-size:.85rem}
+main{padding:16px 24px;max-width:1500px;margin:0 auto}
+.tabs{display:flex;gap:6px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:.85rem}
+.tab[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h2{margin:0 0 8px;font-size:1rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 small{color:var(--muted);font-weight:normal;font-size:.8rem}
+input[type=search],input[type=text],select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit;font-size:.88rem}
+.list{max-height:330px;overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:6px}
+.item{display:flex;gap:8px;align-items:flex-start;padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem}
+.item:last-child{border-bottom:0}
+.item:hover{background:var(--accent-soft)}
+.item.selected{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.item .t{font-weight:600;word-break:break-all}
+.item .d{color:var(--muted);font-size:.78rem;word-break:break-all}
+.item input{margin-top:3px}
+.count{color:var(--muted);font-size:.78rem;margin-top:4px}
+.flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:10px 4px;min-height:120px}
+.node{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 12px;min-width:150px;max-width:260px;font-size:.82rem}
+.node b{display:block;word-break:break-all}
+.node span{color:var(--muted);font-size:.75rem;word-break:break-all;display:block}
+.node.topic{border-radius:999px;text-align:center;background:var(--accent-soft);border-color:var(--accent)}
+.node.step{border-style:dashed;border-color:var(--fix)}
+.node.empty{color:var(--muted);border-style:dashed}
+.arrow{color:var(--muted);padding:0 8px;font-size:1.2rem;flex:none}
+.sinks{display:flex;flex-direction:column;gap:6px}
+.findings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.findings li{padding:8px 10px;border-radius:6px;font-size:.84rem}
+.sev-fix{background:var(--fix-soft)}.sev-warn{background:var(--warn-soft)}.sev-info{background:var(--info-soft)}.sev-ok{background:var(--info-soft)}
+.findings li b{font-weight:600}
+.row{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:.86rem}
+.row label{color:var(--muted)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:10px;white-space:pre-wrap;word-break:break-all;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;margin:0}
+code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;background:var(--code);padding:1px 5px;border-radius:4px}
+button.copy{border:0;background:var(--accent);color:#fff;padding:7px 14px;border-radius:6px;cursor:pointer;font:inherit;font-size:.85rem}
+.muted{color:var(--muted);font-size:.82rem}
+a{color:var(--accent)}
+.full{grid-column:1/-1}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:.78rem}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔗 Pipeline builder</h1>
+    <div class="sub">Chain a source example and sink examples of kafka-docker-playground into one reproduction model, then copy the <code>playground repro bootstrap</code> command.</div>
+  </div>
+  <div class="tabs" role="group" aria-label="connectors">
+    <button class="tab" id="tab-sm" aria-pressed="true">🐳 Self-managed</button>
+    <button class="tab" id="tab-fm" aria-pressed="false">☁️ Fully managed</button>
+  </div>
+</header>
+<main>
+  <div class="grid">
+    <section class="card">
+      <h2><span id="base-title">1️⃣ Source example</span>
+        <label class="muted"><input type="checkbox" id="fanout"> fan-out: start from a sink</label></h2>
+      <input type="search" id="base-filter" placeholder="filter: debezium mysql, datagen, s3…" autocomplete="off">
+      <div class="list" id="base-list" role="listbox"></div>
+      <div class="count" id="base-count"></div>
+    </section>
+    <section class="card">
+      <h2><span>2️⃣ Sink examples</span><small>select one or more</small></h2>
+      <input type="search" id="sink-filter" placeholder="filter: jdbc postgres, elasticsearch, s3…" autocomplete="off">
+      <div class="list" id="sink-list"></div>
+      <div class="count" id="sink-count"></div>
+    </section>
+
+    <section class="card full">
+      <h2><span>3️⃣ Flow</span><small id="generated"></small></h2>
+      <div class="flow" id="flow"></div>
+      <div class="row"><label for="topic">🗳 topic</label><div><select id="topic"></select>
+        <input type="text" id="topic-custom" placeholder="another topic (--pipeline-topic)" style="margin-top:6px"></div></div>
+      <div class="row" id="step-row"><label for="step">🧪 processing step</label>
+        <label><input type="checkbox" id="step"> ksqlDB stream between the source and the sinks (<code>--pipeline-step ksqldb</code>)</label></div>
+      <div class="row"><label>💱 format</label><div id="format" class="muted"></div></div>
+      <div class="row"><label>🔐 credentials</label><div id="creds" class="chips"></div></div>
+    </section>
+
+    <section class="card">
+      <h2><span>4️⃣ Checks</span><small>same rules as the CLI</small></h2>
+      <ul class="findings" id="findings"></ul>
+    </section>
+    <section class="card">
+      <h2><span>5️⃣ Command</span><button class="copy" id="copy">📋 copy</button></h2>
+      <div class="row"><label for="desc">💡 description</label><input type="text" id="desc" value="123456 my pipeline" placeholder="case number + a few words"></div>
+      <pre id="cmd"></pre>
+      <p class="muted" id="cmd-note"></p>
+    </section>
+  </div>
+</main>
+<script>
+// filled in by tools/pipeline-builder/catalog.py html: the catalog of the examples, and the root folder of the
+// checkout ('' on the website: the command uses $PWD, run it from the root of your clone)
+const CATALOG = /*__PIPELINE_CATALOG__*/null;
+const ROOT = /*__PIPELINE_ROOT__*/"";
+const GITHUB = "https://github.com/vdesabou/kafka-docker-playground/tree/master/";
+
+const state = {managed: false, fanout: false, base: null, sinks: [], topic: "", custom: "", step: false};
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let examples = [], rules = [];
+
+function short(cls) { return (cls || "").split(".").pop(); }
+function label(ex) { return ex.dir.split("/").pop() + " / " + ex.name; }
+function matchesFilter(ex, words) {
+  const hay = (ex.path + " " + ex.title + " " + (ex.connector ? ex.connector.class : "")).toLowerCase();
+  return words.every(w => hay.includes(w));
+}
+
+// ---------------------------------------------------------------- rules (same semantics as catalog.py)
+function field(facts, path) {
+  const i = path.indexOf("."); const side = path.slice(0, i); const rest = path.slice(i + 1);
+  const obj = facts[side] || {};
+  let v;
+  if (rest.startsWith("config.")) v = (obj.config || {})[rest.slice(7)];
+  else if (rest === "class") v = (obj.connector || {}).class;
+  else v = obj[rest];
+  if (v === undefined || v === null) return "";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  return String(v);
+}
+function matches(cond, facts) { return Object.entries(cond).every(([p, re]) => new RegExp(re).test(field(facts, p))); }
+function check(base, sinks) {
+  const out = [];
+  for (const sink of sinks) {
+    const facts = {source: base, sink};
+    for (const r of rules) {
+      if (!matches(r.when || {}, facts)) continue;
+      let unless = r.unless || []; if (!Array.isArray(unless)) unless = [unless];
+      if (unless.some(u => matches(u, facts))) continue;
+      out.push({rule: r.id, severity: r.severity, sink: sink.path, message: r.message, add: r.add_to_sink || {}});
+    }
+  }
+  if (!base.managed) {
+    const owners = {};
+    for (const ex of [base, ...sinks]) {
+      for (const s of ex.services || []) if (s !== "connect") (owners["service " + s] = owners["service " + s] || []).push(ex.path);
+      for (const p of ex.ports || []) (owners["port " + p.host_port] = owners["port " + p.host_port] || []).push(ex.path + " (" + p.service + ")");
+    }
+    for (const [k, paths] of Object.entries(owners)) {
+      const uniq = [...new Set(paths)];
+      if (uniq.length > 1) {
+        const [what, name] = k.split(" ");
+        out.push({rule: "compose-" + what + "-conflict", severity: "warn", sink: "",
+          message: what === "service" ? `service '${name}' is defined by several examples: ${uniq.join(", ")}. The definition of the source wins when they differ`
+                                      : `host port ${name} is published by several examples: ${uniq.join(", ")}`});
+      }
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- rendering
+function renderLists() {
+  const baseKind = state.fanout ? "sink" : "source";
+  $("base-title").textContent = state.fanout ? "1️⃣ Sink example (its producer feeds every sink)" : "1️⃣ Source example";
+  const bw = $("base-filter").value.toLowerCase().split(/\s+/).filter(Boolean);
+  const sw = $("sink-filter").value.toLowerCase().split(/\s+/).filter(Boolean);
+  // the selected examples first, so that they stay in sight
+  const first = (sel) => (a, b) => (sel(b) ? 1 : 0) - (sel(a) ? 1 : 0);
+  const bases = examples.filter(e => e.kind === baseKind && e.managed === state.managed && e.connector && (e.path === state.base || matchesFilter(e, bw)))
+    .sort(first(e => e.path === state.base));
+  const sinks = examples.filter(e => e.kind === "sink" && e.managed === state.managed && e.connector && (state.sinks.includes(e.path) || matchesFilter(e, sw)))
+    .sort(first(e => state.sinks.includes(e.path)));
+  $("base-list").innerHTML = bases.slice(0, 400).map(e =>
+    `<div class="item${state.base === e.path ? " selected" : ""}" data-path="${esc(e.path)}" role="option">
+      <div><div class="t">${esc(label(e))}</div><div class="d">${esc(short(e.connector.class))}${e.title ? " · " + esc(e.title) : ""}</div></div></div>`).join("")
+    || `<div class="item muted">no example matches</div>`;
+  $("base-count").textContent = bases.length + " example(s)";
+  $("sink-list").innerHTML = sinks.slice(0, 400).map(e =>
+    `<label class="item${state.sinks.includes(e.path) ? " selected" : ""}" data-path="${esc(e.path)}">
+      <input type="checkbox" ${state.sinks.includes(e.path) ? "checked" : ""}>
+      <div><div class="t">${esc(label(e))}</div><div class="d">${esc(short(e.connector.class))}${e.title ? " · " + esc(e.title) : ""}</div></div></label>`).join("")
+    || `<div class="item muted">no example matches</div>`;
+  $("sink-count").textContent = sinks.length + " example(s), " + state.sinks.length + " selected";
+}
+
+function byPath(p) { return examples.find(e => e.path === p); }
+
+function renderPipeline() {
+  const base = state.base ? byPath(state.base) : null;
+  const sinks = state.sinks.map(byPath).filter(Boolean);
+  // topics
+  const candidates = base ? (state.fanout ? base.topics_in : base.topics_out) : [];
+  const sel = $("topic");
+  if (sel.dataset.base !== String(state.base)) {
+    sel.innerHTML = candidates.map(t => `<option>${esc(t)}</option>`).join("") || `<option value="">(not found: type it below)</option>`;
+    sel.dataset.base = String(state.base);
+    state.topic = candidates[0] || "";
+  }
+  const topic = state.custom || state.topic;
+  const step = state.step && !state.managed && !state.fanout;
+  $("step-row").style.display = state.managed || state.fanout ? "none" : "";
+
+  // flow
+  const node = (ex) => `<div class="node"><b>${esc(ex.dir.split("/").pop())}</b><span>${esc(ex.name)}.sh · ${esc(short(ex.connector.class))}</span>
+     ${ex.path ? `<span><a href="${GITHUB + esc(ex.dir)}" target="_blank" rel="noopener">README</a></span>` : ""}</div>`;
+  let html = base ? node(base) : `<div class="node empty">pick a ${state.fanout ? "sink" : "source"} example</div>`;
+  html += `<div class="arrow">➜</div><div class="node topic"><b>${esc(topic || "?")}</b><span>topic</span></div>`;
+  if (step) html += `<div class="arrow">➜</div><div class="node step"><b>ksqlDB</b><span>CREATE STREAM … AS SELECT *</span></div><div class="arrow">➜</div><div class="node topic"><b>${esc((topic || "?") + "_ksqldb")}</b><span>topic</span></div>`;
+  html += `<div class="arrow">➜</div><div class="sinks">${sinks.length ? sinks.map(node).join("") : `<div class="node empty">pick sink examples</div>`}</div>`;
+  $("flow").innerHTML = html;
+
+  // format
+  if (base) {
+    $("format").innerHTML = base.managed
+      ? (base.data_format ? `${state.fanout ? "input" : "output"}.data.format <code>${esc(base.data_format)}</code>: the sinks get the same input.data.format` : "the base sets no data format")
+      : `key <code>${esc(short(base.key_converter_effective))}</code>, value <code>${esc(short(base.value_converter_effective))}</code>${base.value_converter ? "" : " (worker default)"}: the sinks use the same converters`;
+  } else $("format").textContent = "";
+
+  // credentials
+  const creds = new Set();
+  for (const ex of [base, ...sinks].filter(Boolean)) {
+    (ex.credentials || []).forEach(c => creds.add("handle_" + c + "_credentials"));
+    (ex.required_env || []).forEach(v => creds.add("$" + v));
+  }
+  $("creds").innerHTML = creds.size ? [...creds].sort().map(c => `<span class="chip">${esc(c)}</span>`).join("") : `<span class="muted">none</span>`;
+
+  // findings
+  const f = [];
+  if (base && sinks.length) {
+    let found = check(base, sinks);
+    if (state.fanout) found = found.filter(x => x.rule.startsWith("compose-"));
+    f.push(...found);
+    if (candidates.length > 1 && !state.custom) f.push({severity: "info", sink: "", message: `the base uses several topics (${candidates.join(", ")}): the sinks read ${topic}`});
+    if (!topic) f.push({severity: "warn", sink: "", message: "the topic of the base could not be found: type it (--pipeline-topic)"});
+    if (step && !/(Avro|Protobuf|JsonSchema)/i.test(base.value_converter_effective))
+      f.push({severity: "warn", sink: "", message: "the ksqlDB step needs values with a schema (Avro, Protobuf or JSON Schema): bootstrap refuses it"});
+    const names = {};
+    for (const s of sinks) { const n = s.connector.name; if (n && !n.startsWith("$")) names[n] = (names[n] || 0) + 1; }
+    if (base.connector && names[base.connector.name]) names[base.connector.name]++;
+    for (const [n, c] of Object.entries(names)) if (c > 1) f.push({severity: "info", sink: "", message: `connector ${n} is used several times: bootstrap renames the others ${n}-<n>`});
+    for (const s of sinks) if (s.connector.class.match(/(S3SinkConnector|S3_SINK|GcsSink|AzureBlob|DataLakeGen[12]|HdfsSinkConnector|Hdfs3SinkConnector)/))
+      f.push({severity: "info", sink: s.path, message: "commits its offsets when it writes a file (flush.size): the model checks its state instead of waiting for a lag of 0"});
+  }
+  const icon = {fix: "🩹", warn: "⚠️", info: "ℹ️", ok: "✅"};
+  $("findings").innerHTML = (f.length ? f : [{severity: "ok", sink: "", message: base && sinks.length ? "no problem found" : "pick a base example and at least one sink"}])
+    .map(x => `<li class="sev-${x.severity}">${icon[x.severity]} ${x.sink ? `<b>${esc(x.sink.split("/").slice(-2, -1)[0])}</b>: ` : ""}${esc(x.message)}${x.add && Object.keys(x.add).length ? `<br><span class="muted">bootstrap adds ${Object.entries(x.add).map(([k, v]) => `<code>${esc(k)}=${esc(v)}</code>`).join(" ")}</span>` : ""}</li>`).join("");
+
+  // command
+  const prefix = ROOT ? ROOT.replace(/\/$/, "") + "/" : "$PWD/";
+  const q = p => `"${prefix}${p}"`;
+  const desc = $("desc").value.trim() || "my pipeline";
+  let cmd = "";
+  if (base && sinks.length) {
+    cmd = `playground repro bootstrap -f ${q(base.path)} \\\n  -d "${desc.replace(/"/g, '\\"')}" \\\n`;
+    cmd += sinks.map(s => `  --pipeline ${q(s.path)} \\\n`).join("");
+    if (state.custom) cmd += `  --pipeline-topic "${state.custom.replace(/"/g, '\\"')}" \\\n`;
+    if (step) cmd += `  --pipeline-step ksqldb \\\n`;
+    cmd += `  --no-run`;
+  }
+  $("cmd").textContent = cmd || "# pick a base example and at least one sink";
+  $("cmd-note").innerHTML = cmd ? (ROOT ? "" : "Run it from the root of your kafka-docker-playground clone. ") +
+    "Then <code>playground run -f &lt;generated model&gt;</code>, and <code>playground connector flow</code> to see the records go through." : "";
+}
+
+// the selection is kept in the URL (#base=…&sinks=…): a link to share, or to come back to
+function saveHash() {
+  const p = new URLSearchParams();
+  if (state.managed) p.set("managed", "1");
+  if (state.fanout) p.set("fanout", "1");
+  if (state.base) p.set("base", state.base);
+  if (state.sinks.length) p.set("sinks", state.sinks.join(","));
+  if (state.custom) p.set("topic", state.custom);
+  if (state.step) p.set("step", "ksqldb");
+  const d = $("desc").value.trim();
+  if (d) p.set("desc", d);
+  history.replaceState(null, "", "#" + p.toString());
+}
+function loadHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  state.managed = p.get("managed") === "1";
+  state.fanout = p.get("fanout") === "1";
+  state.base = p.get("base") && byPath(p.get("base")) ? p.get("base") : null;
+  state.sinks = (p.get("sinks") || "").split(",").filter(x => x && byPath(x));
+  state.custom = p.get("topic") || "";
+  state.step = p.get("step") === "ksqldb";
+  if (p.get("desc")) $("desc").value = p.get("desc");
+  $("fanout").checked = state.fanout;
+  $("topic-custom").value = state.custom;
+  $("step").checked = state.step;
+  $("tab-sm").setAttribute("aria-pressed", String(!state.managed)); $("tab-fm").setAttribute("aria-pressed", String(state.managed));
+}
+
+function render() { renderLists(); renderPipeline(); saveHash(); }
+
+function setManaged(m) {
+  state.managed = m; state.base = null; state.sinks = [];
+  $("tab-sm").setAttribute("aria-pressed", String(!m)); $("tab-fm").setAttribute("aria-pressed", String(m));
+  render();
+}
+
+function init(data) {
+  examples = data.examples; rules = data.rules;
+  $("generated").textContent = `${examples.length} examples · catalog of ${data.generated}`;
+  $("tab-sm").onclick = () => setManaged(false);
+  $("tab-fm").onclick = () => setManaged(true);
+  $("fanout").onchange = e => { state.fanout = e.target.checked; state.base = null; render(); };
+  $("base-filter").oninput = renderLists;
+  $("sink-filter").oninput = renderLists;
+  $("base-list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.base = it.dataset.path; state.custom = ""; $("topic-custom").value = ""; render(); };
+  $("sink-list").onchange = e => {
+    const it = e.target.closest(".item[data-path]"); if (!it) return;
+    const p = it.dataset.path;
+    state.sinks = e.target.checked ? [...state.sinks, p] : state.sinks.filter(x => x !== p);
+    render();
+  };
+  $("topic").onchange = e => { state.topic = e.target.value; renderPipeline(); saveHash(); };
+  $("topic-custom").oninput = e => { state.custom = e.target.value.trim(); renderPipeline(); saveHash(); };
+  $("step").onchange = e => { state.step = e.target.checked; renderPipeline(); saveHash(); };
+  $("desc").oninput = () => { renderPipeline(); saveHash(); };
+  $("copy").onclick = () => {
+    const text = $("cmd").textContent;
+    if (text.startsWith("#")) return;
+    navigator.clipboard.writeText(text).then(() => { $("copy").textContent = "✅ copied"; setTimeout(() => $("copy").textContent = "📋 copy", 1500); });
+  };
+  loadHash();
+  render();
+}
+
+if (CATALOG) init(CATALOG);
+else fetch("pipeline-builder-catalog.json").then(r => r.json()).then(init)
+  .catch(e => { document.querySelector("main").innerHTML = `<div class="card">❌ could not load the catalog of the examples: ${esc(e)}</div>`; });
+</script>
+</body>
+</html>
