@@ -112,6 +112,10 @@ html[data-theme="dark"] .dd-item.sel .l{color:#c4b5fd}
 .dd-item.sel .ck{border-color:var(--a1)}
 .badge{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.62rem;font-weight:700;vertical-align:1px;background:var(--glow);color:var(--a1)}
 html[data-theme="dark"] .badge{color:#c4b5fd}
+.other-in{display:flex;gap:6px}
+.other-in input{flex:1;min-width:0}
+.mini{flex:none;border:1px solid var(--line);background:var(--card2);color:var(--muted);font:inherit;font-size:.72rem;font-weight:600;padding:0 8px;border-radius:8px;cursor:pointer}
+.mini:hover{border-color:var(--a1);color:var(--fg)}
 .dd-empty{color:var(--muted);font-size:.8rem;padding:10px;text-align:center}
 .term+.term{margin-top:10px}
 .cmdrow{display:flex;justify-content:flex-end;margin-top:8px}
@@ -325,13 +329,21 @@ function envDropdown() {
 }
 
 // the versions of the dropdowns: CP from the page, the plugin from the page (website) or from Confluent Hub (local page)
+// "✏️ other version…": a text field instead of the list (a version the list does not have), "↩ list" goes back
+const OTHER = "__other__";
+const other = {tag: false, ctag: false};
+function otherInput(key, placeholder) {
+  return `<div class="other-in"><input id="o-${key}" value="${esc(state[key])}" placeholder="${esc(placeholder)}" autocomplete="off"><button type="button" class="mini" data-back="${key}" title="back to the list">↩ list</button></div>`;
+}
 function cpSelect() {
-  const list = VERSIONS.cp.filter(v => v !== RUN.default_tag).slice(0, 80);
+  const list = VERSIONS.cp.filter(v => v !== RUN.default_tag);
   if (!list.length) return `<input id="o-tag" value="${esc(state.tag)}" placeholder="${esc(RUN.default_tag)} (default)">`;
+  if (other.tag) return otherInput("tag", "a CP version, e.g. 7.9.1");
   const minor = v => v.split(".").slice(0, 2).join(".");
   const items = [{value: "", label: RUN.default_tag, badge: "default", group: "Default"},
     ...list.map(v => ({value: v, label: v, group: "CP " + minor(v)}))];
   if (state.tag && !items.some(i => i.value === state.tag)) items.splice(1, 0, {value: state.tag, label: state.tag, group: "Default"});
+  items.push({value: OTHER, label: "✏️ other version…", desc: "type a version the list does not have", group: "Other"});
   return dd("tag", state.tag, items, {search: true, placeholder: "8.3, 7.9.1…"});
 }
 function pluginVersions(e) {
@@ -354,9 +366,11 @@ function connectorSelect(e) {
     if (list === "loading") return `<div class="dd"><button type="button" class="dd-btn" disabled><span class="v">loading the versions…</span><span class="chev"></span></button></div>`;
     return `<input id="o-ctag" value="${esc(state.ctag)}" placeholder="latest (default)">`;
   }
+  if (other.ctag) return otherInput("ctag", "a version, e.g. 10.5.0");
   const items = [{value: "", label: "latest", badge: "default", right: list[0] ? list[0].v : "", desc: plugin}];
   if (state.ctag && !list.some(x => x.v === state.ctag)) items.push({value: state.ctag, label: state.ctag});
-  list.slice(0, 200).forEach((x, n) => items.push({value: x.v, label: x.v, right: x.date, badge: n === 0 ? "latest" : ""}));
+  list.forEach((x, n) => items.push({value: x.v, label: x.v, right: x.date, badge: n === 0 ? "latest" : ""}));
+  items.push({value: OTHER, label: "✏️ other version…", desc: "type a version the list does not have"});
   return dd("ctag", state.ctag, items, {search: true, placeholder: "search a version…"});
 }
 
@@ -504,7 +518,7 @@ $("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b)
   state.topics = state.topics.includes(t) ? state.topics.filter(x => x !== t) : [...state.topics, t]; render(); };
 $("nocreds").onchange = e => { state.nocreds = e.target.checked; render(); };
 $("cionly").onchange = e => { state.cionly = e.target.checked; render(); };
-$("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; renderList(); renderDetail(); saveHash(); };
+$("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; renderList(); renderDetail(); saveHash(); };
 $("detail").addEventListener("input", e => {
   if (e.target.id === "o-tag" && e.target.tagName === "INPUT") state.tag = e.target.value.trim();
   else if (e.target.id === "o-ctag" && e.target.tagName === "INPUT") state.ctag = e.target.value.trim();
@@ -534,7 +548,18 @@ $("detail").addEventListener("click", e => {
     return;
   }
   const item = e.target.closest(".dd-item");
-  if (item) { state[item.closest(".dd").dataset.dd] = item.dataset.value; openDD = null; renderDetail(); saveHash(); return; }
+  if (item) {
+    const key = item.closest(".dd").dataset.dd;
+    openDD = null;
+    if (item.dataset.value === OTHER) {
+      other[key] = true; renderDetail();
+      const el = $("o-" + key); if (el) el.focus();
+      return;
+    }
+    state[key] = item.dataset.value; renderDetail(); saveHash(); return;
+  }
+  const back = e.target.closest("[data-back]");
+  if (back) { other[back.dataset.back] = false; renderDetail(); return; }
   if (e.target.closest(".dd-panel")) return;
   const f = e.target.closest("[data-flag]");
   if (f) { const v = f.dataset.flag; state.enable = state.enable.includes(v) ? state.enable.filter(x => x !== v) : [...state.enable, v]; renderDetail(); saveHash(); return; }

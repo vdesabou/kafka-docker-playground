@@ -633,8 +633,42 @@ def http_json(url, timeout=15):
         return json.loads(r.read().decode("utf-8"))
 
 
+DOCKER_HUB_TAGS = "https://hub.docker.com/v2/repositories/confluentinc/cp-server-connect/tags"
+# Docker Hub refuses anonymous requests beyond the first 1000 tags of a query: a filter matching more is split into
+# narrower ones (as 'playground generate-tag-list' does)
+DOCKER_HUB_MAX_TAGS = 1000
+
+
+def docker_hub_tags(name, depth=0):
+    """the names of the tags of cp-server-connect containing <name>, every page, split when the query matches too many."""
+    from concurrent.futures import ThreadPoolExecutor
+    try:
+        first = http_json("%s?page_size=100&page=1&name=%s" % (DOCKER_HUB_TAGS, name))
+    except Exception:
+        return []
+    count = first.get("count") or 0
+    if count > DOCKER_HUB_MAX_TAGS and depth < 3:
+        out = []
+        for d in "0123456789":
+            out += docker_hub_tags(name + d, depth + 1)
+        return out
+    names = [t.get("name", "") for t in first.get("results", [])]
+    pages = range(2, min((count + 99) // 100, DOCKER_HUB_MAX_TAGS // 100) + 1)
+
+    def page(n):
+        try:
+            return [t.get("name", "") for t in http_json("%s?page_size=100&page=%d&name=%s" % (DOCKER_HUB_TAGS, n, name)).get("results", [])]
+        except Exception:
+            return []
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for chunk in pool.map(page, pages):
+            names += chunk
+    return names
+
+
 def cp_versions(root, fetch=True):
-    """the Confluent Platform versions, newest first: the cache of 'playground generate-tag-list', else Docker Hub."""
+    """the Confluent Platform versions, newest first: the cache of 'playground generate-tag-list', else Docker Hub (one
+    query per major version from 5, until a major without a version of its own)."""
     found = set()
     cache = os.path.join(root, "scripts", "cli", "tag-list.txt")
     if os.path.isfile(cache):
@@ -643,19 +677,14 @@ def cp_versions(root, fetch=True):
             if re.match(r"^\d+\.\d+\.\d+$", v):
                 found.add(v)
     if not found and fetch:
-        for major in ("8.", "7."):
-            url = "https://hub.docker.com/v2/repositories/confluentinc/cp-server-connect/tags?page_size=100&name=" + major
-            for _ in range(10):
-                try:
-                    page = http_json(url)
-                except Exception:
-                    break
-                for t in page.get("results", []):
-                    if re.match(r"^\d+\.\d+\.\d+$", t.get("name", "")):
-                        found.add(t["name"])
-                url = page.get("next")
-                if not url:
-                    break
+        major = 5
+        while major < 20:
+            # the filter is a substring: 7.5.0 matches "5." too, only X.Y.Z of this major count
+            versions = set(n for n in docker_hub_tags("%d." % major) if re.match(r"^%d\.\d+\.\d+$" % major, n))
+            if not versions:
+                break
+            found |= versions
+            major += 1
     return sorted(found, key=lambda v: [int(x) for x in v.split(".")], reverse=True)
 
 

@@ -748,6 +748,31 @@ class ExplorerTest(unittest.TestCase):
         self.assertIn("--enable-control-center", [x["flag"] for x in run["enable"]])
         self.assertRegex(run["default_tag"], r"^\d+\.\d+\.\d+$")
 
+    def test_cp_versions_from_docker_hub(self):
+        # a fake Docker Hub: "7." matches 1200 tags (more than an anonymous query can page), split into "7.0" … "7.9"
+        tags = {"8.": ["8.0.0", "8.0.0-1-ubi9", "8.1.0.amd64", "7.8.1"], "7.": ["7.%d.%d" % (m, p) for m in range(10) for p in range(3)],
+                "6.": ["6.2.1"], "5.": ["5.3.0", "7.5.0"], "9.": ["7.9.0"]}
+
+        def fake(url):
+            name = url.split("name=")[1]
+            page = int(url.split("page=")[1].split("&")[0])
+            if name == "7.":
+                return {"count": 1200, "results": []}
+            matches = sorted(set(t for k, v in tags.items() for t in v if name in t))
+            return {"count": len(matches), "results": [{"name": t} for t in matches[(page - 1) * 100:page * 100]]}
+        real = catalog.http_json
+        catalog.http_json = fake
+        try:
+            versions = catalog.cp_versions("/nonexistent")
+        finally:
+            catalog.http_json = real
+        self.assertEqual(versions[0], "8.0.0", "newest first, the variants (8.1.0.amd64) left out")
+        self.assertIn("7.9.2", versions, "the split queries found the 7.x versions")
+        self.assertIn("6.2.1", versions)
+        self.assertIn("5.3.0", versions)
+        self.assertNotIn("8.0.0-1-ubi9", versions)
+        self.assertFalse([v for v in versions if v.startswith("9.")], "no 9.x: the query stops at the first major without a version of its own")
+
     def test_pages(self):
         tmp = tempfile.mkdtemp(prefix="explorer-page-")
         try:
