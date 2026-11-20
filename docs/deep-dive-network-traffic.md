@@ -1,7 +1,7 @@
-# 🍪 Deep dive: `playground debug block-traffic` and `playground debug degrade-traffic`
+# 🍪 Deep dive: `playground debug block-traffic`, `playground debug degrade-traffic` and `playground debug dns`
 
-The two commands that break the network on purpose, so you can reproduce timeouts, outages and slow links without
-changing the example or restarting anything. Takes about 15 minutes to read and run.
+The commands that break the network on purpose, so you can reproduce timeouts, outages, slow links and names that
+no longer resolve, without changing the example or restarting anything. Takes about 15 minutes to read and run.
 
 > [!TIP]
 > In a hurry? Watch the short video session [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose)
@@ -21,8 +21,11 @@ changing the example or restarting anything. Takes about 15 minutes to read and 
 
 Both commands default to `--container connect`, and `-c` can be repeated to hit several containers at once.
 
+They work on IP addresses. To break the **name resolution** of one hostname instead (`UnknownHostException`, a broker
+IP that changed, a slow resolver), see [4. `debug dns`](/deep-dive-network-traffic?id=_4-debug-dns-break-the-name-resolution-of-one-hostname).
+
 For a client that can't reach Confluent Cloud (PrivateLink, peering, private DNS: none of it can run locally), see
-[6. Confluent Cloud connectivity: a client-side checklist](/deep-dive-network-traffic?id=_6-confluent-cloud-connectivity-a-client-side-checklist).
+[7. Confluent Cloud connectivity: a client-side checklist](/deep-dive-network-traffic?id=_7-confluent-cloud-connectivity-a-client-side-checklist).
 
 ---
 
@@ -144,7 +147,76 @@ What each effect does to Kafka clients and connectors:
 
 ---
 
-## 4. Hands-on lab (≈10 min)
+## 4. `debug dns`: break the name resolution of one hostname
+
+`block-traffic` cuts an IP. Some customer symptoms are about the **name**: an `UnknownHostException` storm, a broker
+that got a new IP after a pod restart while a client kept the old one, a resolver so slow that the lookups time out.
+`debug dns` fakes the DNS answers of one hostname, seen from one container (or several), and every other name
+resolves as usual.
+
+```bash
+# the name does not exist (NXDOMAIN): UnknownHostException
+playground debug dns --container connect --host httpserver --nxdomain
+# the resolver fails (SERVFAIL): "Temporary failure in name resolution"
+playground debug dns --container connect --host httpserver --servfail
+# the name resolves to another ip (an A record)
+playground debug dns --container connect --host schema-registry --resolve-to 10.1.2.3
+# the real answer, late
+playground debug dns --container connect --host broker --delay 3s
+# what is faked, and how --host resolves now (getent, like a JVM: the resolver of the libc)
+playground debug dns --container connect --host broker
+# back to the real DNS: one hostname, or everything
+playground debug dns --container connect --host broker --reset
+playground debug dns --container connect --reset
+```
+
+How it works:
+
+- A small DNS proxy (`tools/debug-dns/dns_proxy.py`, standard library only) runs in a sidecar container
+  `playground-debug-dns-<container>` (`python:3-alpine`), joined to the network namespace of the container
+  (`--network container:<c>`), and listens on `127.0.0.53:53` (UDP and TCP).
+- `/etc/resolv.conf` of the container is rewritten to `nameserver 127.0.0.53` (in place: it is a bind mount), the
+  original is kept in `/tmp/playground-debug-dns-resolv.conf` of the container. Nothing is installed in the
+  container, nothing restarts.
+- The proxy answers the hostname (and the hostname plus a search domain) with the fault, and forwards every other
+  query to the original nameservers (`127.0.0.11`, the embedded DNS of docker).
+- Several hostnames can be faked at once on a container: each call adds or replaces the rule of its `--host`.
+- `playground stop` removes the proxies left behind (a fault not reset before the end of the example).
+
+Gotchas:
+
+| Gotcha | What it means for the repro |
+| --- | --- |
+| A JVM caches its lookups: `networkaddress.cache.ttl` (30s by default) and `networkaddress.cache.negative.ttl` (10s) | a fault shows up to 30 seconds later in a running JVM, and stays up to 10 seconds after `--reset` |
+| A Kafka client resolves a broker name when it **opens** a connection | an established connection keeps working: `--resolve-to` or `--nxdomain` on `broker` only bite at the next reconnection (force one with `block-traffic … --action start`, then `stop`) |
+| An HTTP client reuses its connections (keep-alive) | same thing: the fault shows up with the next new connection |
+| glibc waits 5s, sends the query again, and **still accepts a late answer** to the first one (`options timeout:5 attempts:2`) | `--delay 6s`: the lookups succeed in 6s. `--delay 12s`: every lookup fails after 10s |
+| `client.dns.lookup=use_all_dns_ips` (default since Kafka 2.6) | a client tries every IP of a name: `--resolve-to` gives only one |
+| A restart of the container gives it back its original `/etc/resolv.conf` | the faults are gone, the next call of the command removes the leftover proxy |
+| Docker only | not with cfk yet (the command exits with an error) |
+
+Outputs, on a container whose `httpserver` is faked:
+
+```bash
+playground debug dns --container connect --host httpserver --nxdomain
+# 🚀 starting the DNS proxy of connect (playground-debug-dns-connect)
+# 🔤 from connect, httpserver does not exist (NXDOMAIN)
+# 🔎 from connect, httpserver does not resolve (after 38 ms)
+# ❗ 🗃️ a JVM caches its lookups: networkaddress.cache.ttl (30s by default) for a success, networkaddress.cache.negative.ttl (10s) for a failure
+# 🧽 back to the real DNS: playground debug dns --container connect --reset
+
+playground debug dns --container connect --host httpserver --delay 12s
+# 🔎 from connect, httpserver does not resolve (after 10061 ms)
+# ❗ ⏱️ a delay of 10s or more is longer than the glibc resolver waits (options timeout:5 attempts:2): every lookup fails after 10s (UnknownHostException), before the answer comes
+```
+
+The [DNS faults example](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/dns-faults) runs it
+end to end: the task of an HTTP sink fails at once on `UnknownHostException` (it does not retry it), and only
+delivers the records after a `connector restart`, once the DNS is back.
+
+---
+
+## 5. Hands-on lab (≈10 min)
 
 Any running example works. Here's one with just plaintext:
 
@@ -195,13 +267,32 @@ playground container logs -c connect --errors --since 1m      # does it recover 
 The question this lab answers is usually the one in the support case: **does the component recover on its
 own once the network comes back, or does it need a restart?**
 
+**Step 5: a name that no longer resolves**
+
+```bash
+playground debug dns -c connect --host broker
+# ✅ no DNS fault on connect
+# 🔎 from connect, broker resolves to 192.168.112.5 (in 42 ms)
+playground debug dns -c connect --host broker --nxdomain
+# 🔎 from connect, broker does not resolve (after 42 ms)
+playground connector status                                  # still RUNNING: connections are already open
+playground debug dns -c connect --host schema-registry --resolve-to 10.1.2.3
+playground debug dns -c connect
+# 🔤 DNS faults on connect:
+#    broker does not exist (NXDOMAIN)
+#    schema-registry resolves to 10.1.2.3
+playground debug dns -c connect --host broker --reset         # only broker: schema-registry stays faked
+playground debug dns -c connect --reset
+# 🟢 connect uses the real DNS again
+```
+
 ```bash
 playground stop
 ```
 
 ---
 
-## 5. Recipes for support repros
+## 6. Recipes for support repros
 
 | Customer symptom | Command |
 | --- | --- |
@@ -212,6 +303,9 @@ playground stop
 | "schema registry unreachable → `SerializationException`" | `block-traffic -c connect --destination schema-registry --action start` |
 | "slow link to Confluent Cloud" (IPs change, so no destination) | `degrade-traffic -c connect --latency 80ms --action start` |
 | "controller / quorum lost" | `block-traffic -c broker --destination controller --action start` |
+| "`UnknownHostException` / `DNS resolution failed for <host>`" | `debug dns -c connect --host <host> --nxdomain` (or `--servfail`), wait more than 30s (JVM cache), then `--reset` and check whether it recovers |
+| "the broker got a new IP, the client still uses the old one" | `debug dns -c connect --host broker --resolve-to <old ip>`, then force a reconnection (`block-traffic … start` / `stop`) |
+| "lookups are slow / time out in a customer network" | `debug dns -c connect --host <host> --delay 3s` (slow), `--delay 12s` (every lookup fails after 10s) |
 
 In a repro model, wrap the degraded part between `start` and `stop`, and wait with
 `playground connector wait --connector <c> --state FAILED --max-wait 120` (or `RUNNING` after `stop`) instead
@@ -227,7 +321,7 @@ playground connector wait --connector jdbc-sink --state RUNNING --max-wait 120
 
 ---
 
-## 6. Confluent Cloud connectivity: a client-side checklist
+## 7. Confluent Cloud connectivity: a client-side checklist
 
 PrivateLink, VPC peering, Transit Gateway and private DNS zones can't be recreated on a laptop. Most "the client
 can't reach Confluent Cloud" cases can still be narrowed down from the client side, in five checks, always in this
@@ -288,21 +382,26 @@ playground analyze tcp-dump --sample kafka_and_network_errors --output-dir /tmp/
 
 ---
 
-## 7. Cheat sheet
+## 8. Cheat sheet
 
 ```bash
 playground debug block-traffic   -c <c> [-c <c2>] --destination <ip|container|host> [--port N] --action start|stop
 playground debug degrade-traffic -c <c> [-c <c2>] [--destination <d> [--port N]] \
   [--latency 100ms [--jitter 20ms]] [--loss 1%] [--corruption 1%] [--duplicate 1%] [--rate 1mbit] \
   --action start|stop|status
+playground debug dns -c <c> [-c <c2>] [--host <hostname>] [--nxdomain | --servfail | --resolve-to <ip> | --delay 3s | --reset]
 ```
 
 - Egress only: one-way latency adds once to the round trip.
 - `block-traffic stop` = same flags as `start`. `degrade-traffic stop` = everything removed.
 - `degrade-traffic start` replaces the previous degradation. Combine effects in one call.
 - A container restart wipes both.
+- `debug dns`: by name, not by IP. A JVM caches the lookups (30s), clients resolve when they connect. `--reset` without
+  `--host` removes everything.
 - Sources: [`debug/block-traffic.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/debug/block-traffic.sh),
   [`debug/degrade-traffic.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/debug/degrade-traffic.sh),
+  [`debug/dns.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/debug/dns.sh)
+  and its proxy [`tools/debug-dns/dns_proxy.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/debug-dns/dns_proxy.py),
   helpers `run_in_network_namespace` / `resolve_traffic_destination_ips` in
   [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh).
 
@@ -317,4 +416,4 @@ playground debug degrade-traffic -c <c> [-c <c2>] [--destination <d> [--port N]]
   (delay, break, close, cut one direction) instead of the whole container's network
 - 🦈 [playground analyze tcp-dump](/playground%20analyze%20tcp-dump) and [playground tools cert inspect](/playground%20tools%20cert%20inspect), the two commands of the Confluent Cloud checklist
 - 🧠 CLI reference: [playground debug degrade-traffic](/playground%20debug%20degrade-traffic),
-  [playground debug block-traffic](/playground%20debug%20block-traffic), [playground connector wait](/playground%20connector%20wait)
+  [playground debug block-traffic](/playground%20debug%20block-traffic), [playground debug dns](/playground%20debug%20dns), [playground connector wait](/playground%20connector%20wait)

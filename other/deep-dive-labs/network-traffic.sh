@@ -79,7 +79,44 @@ lab_expect_exit 0
 lab_run playground connector wait --connector filestream-sink --max-wait 120
 lab_expect_exit 0
 
-log "Step 5: the findings of analyze tcp-dump, on the capture shipped with the playground (section 6, Confluent Cloud checklist)"
+log "Step 5: a name that no longer resolves (section 4)"
+lab_run playground debug dns -c connect --host broker
+lab_expect_exit 0
+lab_expect_contains "✅ no DNS fault on connect"
+lab_expect_contains "🔎 from connect, broker resolves to"
+lab_run playground debug dns -c connect --host broker --nxdomain
+lab_expect_exit 0
+lab_expect_contains "🚀 starting the DNS proxy of connect (playground-debug-dns-connect)"
+lab_expect_contains "🔤 from connect, broker does not exist (NXDOMAIN)"
+lab_expect_contains "🔎 from connect, broker does not resolve"
+lab_expect_contains "🗃️ a JVM caches its lookups: networkaddress.cache.ttl (30s by default)"
+# the connections of the worker are already open: the connector keeps running
+lab_run playground connector wait --connector filestream-sink --max-wait 60
+lab_expect_exit 0
+lab_run playground debug dns -c connect --host schema-registry --resolve-to 10.1.2.3
+lab_expect_exit 0
+lab_expect_contains "🔎 from connect, schema-registry resolves to 10.1.2.3"
+lab_run playground debug dns -c connect
+lab_expect_exit 0
+lab_expect_contains "🔤 DNS faults on connect:"
+lab_expect_contains "broker does not exist (NXDOMAIN)"
+lab_expect_contains "schema-registry resolves to 10.1.2.3"
+lab_run playground debug dns -c connect --host broker --delay 12s
+lab_expect_exit 0
+lab_expect_contains "every lookup fails after 10s"
+lab_run playground debug dns -c connect --host broker --reset
+lab_expect_exit 0
+lab_expect_contains "🟢 broker resolves normally again from connect (other faults kept)"
+lab_expect_contains "🔎 from connect, broker resolves to"
+lab_run playground debug dns -c connect --reset
+lab_expect_exit 0
+lab_expect_contains "🟢 connect uses the real DNS again"
+lab_run playground debug dns -c connect --host schema-registry
+lab_expect_exit 0
+lab_expect_contains "✅ no DNS fault on connect"
+lab_expect_not_contains "10.1.2.3"
+
+log "Step 6: the findings of analyze tcp-dump, on the capture shipped with the playground (section 7, Confluent Cloud checklist)"
 lab_run playground analyze tcp-dump --sample kafka_and_network_errors --output-dir /tmp/lab-network-traffic-tcp-dump
 lab_expect_exit 0
 lab_expect_contains "🟠 HIGH: 1 connection attempt(s) to sample-firewalled:8080 got no answer (SYN without SYN/ACK)"

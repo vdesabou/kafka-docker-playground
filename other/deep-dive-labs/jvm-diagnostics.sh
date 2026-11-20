@@ -112,6 +112,22 @@ lab_expect_contains "FileStreamSinkTask.put(java.util.Collection)"
 kill "$producer" > /dev/null 2>&1 || true
 producer=""
 
+log "Step: limits on the fly (section 7)"
+lab_run playground debug resources -c connect --cpus 1 --memory 3g
+lab_expect_exit 0
+lab_expect_contains "🏋️ limiting connect: 1 cpus, 3g memory (no swap)"
+lab_expect_contains "the heap fits in 3g"
+lab_expect_contains "🏋️ connect: cpus 1, memory 3.0GiB"
+lab_expect_contains "☕ JVM max heap (-Xmx):"
+lab_run playground debug resources -c connect --fill-disk 95%
+lab_expect_exit 1
+lab_expect_contains "is on the disk of docker itself"
+lab_expect_contains "filling it to 95% would fill all of them"
+lab_run playground debug resources -c connect --reset
+lab_expect_exit 0
+lab_expect_contains "🟢 connect is back to its original limits"
+lab_expect_contains "memory no limit"
+
 # heap dumps are slow (and debug heap-dump restarts connect to install a JDK): not replayed
 
 log "✅ all the outputs of the page are as expected"

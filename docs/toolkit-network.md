@@ -1,6 +1,6 @@
 # 🌐 Network
 
-Break the network on purpose: block traffic, add latency or packet loss, cut TCP connections, or put an HTTPS proxy in the way. Part of the [🧰 Reproduction toolkit](/reusables.md).
+Break the network on purpose: block traffic, add latency or packet loss, break the name resolution, cut TCP connections, or put an HTTPS proxy in the way. Part of the [🧰 Reproduction toolkit](/reusables.md).
 
 > [!TIP]
 > The [🍪 deep dive on network traffic](/deep-dive-network-traffic.md) explains how to capture and read what goes over the wire.
@@ -67,6 +67,38 @@ After `start`, `stop` and `status`, the command measures the effect from the con
 
 > [!TIP]
 > A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/monitoring-sink-latency/start.sh).
+
+## 🔤 Break the name resolution
+
+To reproduce a hostname that no longer resolves (`UnknownHostException`), a broker IP that changed while a client kept the old one, or a slow resolver, without restarting anything.
+
+Just use [CLI](/playground%20debug%20dns) `playground debug dns`. A small DNS proxy runs in a sidecar container in the network namespace of the container, and its `/etc/resolv.conf` points to it: the hostname gets the fault, every other name resolves as usual.
+
+```bash
+# the name does not exist (NXDOMAIN), or the resolver fails (SERVFAIL)
+playground debug dns --container connect --host httpserver --nxdomain
+playground debug dns --container connect --host httpserver --servfail
+
+# the name resolves to another ip
+playground debug dns --container connect --host schema-registry --resolve-to 10.1.2.3
+
+# the real answer, late (from 10s on, every lookup fails: glibc timeout:5, attempts:2)
+playground debug dns -c connect -c ksqldb-server --host broker --delay 3s
+
+# what is faked, and how the name resolves now
+playground debug dns --container connect --host broker
+
+# back to the real DNS (one hostname with --host)
+playground debug dns --container connect --reset
+```
+
+> [!NOTE]
+> * A JVM caches the lookups (`networkaddress.cache.ttl`, 30 seconds by default, 10 seconds for a failure), and a Kafka client only resolves a broker name when it opens a connection: an established connection keeps working.
+> * A restart of the container gives it back its original `/etc/resolv.conf`: the faults are gone.
+> * Docker only (not cfk).
+
+> [!TIP]
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/dns-faults/dns-faults.sh).
 
 ## 🏚 Simulate TCP connections problems
 

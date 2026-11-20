@@ -367,6 +367,28 @@ Example:
       KAFKA_HEAP_OPTS: " -Xms2G -Xmx4G"
 ```
 
+### 🏋️ Short of resources: cpu and memory limits, disk full
+
+To reproduce an OOM kill (exit 137), GC pressure, a starved connect worker, or a broker whose log dir is full, change the limits of a running container (`docker update`, no restart) or fill its disk.
+
+Just use [CLI](/playground%20debug%20resources) `playground debug resources`.
+
+```bash
+playground debug resources --container connect --memory 1g           # no swap: above, the kernel kills the process
+playground debug resources --container connect --cpus 0.5
+playground debug resources --container broker --fill-disk 95%        # the filesystem of log.dirs (--path for another folder)
+playground debug resources --container connect                       # limits, usage, -Xmx, OOM kills, disk
+playground debug resources --container connect --container broker --reset
+```
+
+> [!NOTE]
+> * The JVM sizes its heap when it starts: a limit below `-Xmx` plus the off-heap memory gets the container OOM killed rather than an `OutOfMemoryError`.
+> * On Docker Desktop, a data folder and `/tmp` are on the disk of Docker itself, shared by every container: `--fill-disk` refuses to fill it. Give the folder a tmpfs of its own in the docker-compose override (`tmpfs: [/var/lib/kafka/data:size=1g,uid=1000,gid=1000]`).
+> * A recreate of the container drops the limits. Docker only (not cfk).
+
+> [!TIP]
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/resource-faults/resource-faults.sh).
+
 ### 🎯 Thread Dump
 
 A [Java thread dump](https://www.baeldung.com/java-thread-dump) shows what every thread of the JVM is doing at that moment, with its stack trace and the locks it holds or waits for. Take one when a connector or task looks stuck (no progress, no error in the logs), when a rebalance or shutdown never completes, or when a container uses a lot of CPU. Take several a few seconds apart: a thread that stays on the same stack is the one to look at.

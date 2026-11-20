@@ -5530,7 +5530,7 @@
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, analyze it, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss or corruption with tc\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n⏰ It depends on the time\n  clock               shift the clock of a container (libfaketime)\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings, network\ncaptures): playground analyze",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory, or runs short of resources\n  heap-dump           take a .hprof, optionally as a histogram\n  resources           limit cpus and memory on the fly, fill the disk\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, analyze it, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss or corruption with tc\n  dns                 fake the DNS answers of a hostname: NXDOMAIN,\n                      a wrong ip, a slow resolver\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n⏰ It depends on the time\n  clock               shift the clock of a container (libfaketime)\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings, network\ncaptures): playground analyze",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -5880,6 +5880,117 @@
               ],
               "argument": "",
               "description": "🧽 Back to real time (the container is recreated with its original definition)\n\nConflicts with: --offset, --at"
+            }
+          ]
+        },
+        {
+          "name": "dns",
+          "description": "🔤 Break the name resolution of a hostname inside a container: NXDOMAIN, a wrong ip, a slow resolver\n\n'debug block-traffic' works on ip addresses: it cannot reproduce a\nbroker ip that changed while a client kept the old one\n(networkaddress.cache.ttl, client.dns.lookup), an UnknownHostException\nstorm, or a resolver so slow that the lookups time out. This fakes the\nDNS answers for one hostname, seen from one container (or several),\nthe other names resolve as usual.\n\n  --nxdomain            the name does not exist (UnknownHostException)\n  --servfail            the resolver fails (temporary failure in name\n                        resolution)\n  --resolve-to <ip>     the name resolves to this ip (an A record)\n  --delay <duration>    the real answer, after a delay (500ms, 3s); from\n                        10s on, the lookups of glibc fail (timeout:5,\n                        attempts:2)\n  --reset               back to the real DNS (with --host: only this\n                        hostname)\n  (no flag)             the faults applied, and how --host resolves now\n\nA small DNS proxy runs in a sidecar container (python:3-alpine) in the\nnetwork namespace of the container, and /etc/resolv.conf of the\ncontainer points to it: no restart, nothing installed in the\ncontainer. The other names are forwarded to the original nameservers.\n\n❕ A JVM caches the lookups (networkaddress.cache.ttl, 30 seconds by\ndefault, 10 seconds for a failure: networkaddress.cache.negative.ttl),\nand a Kafka client only resolves a broker name when it opens a\nconnection: an established connection keeps working. A restart of\nthe container gives it back its original /etc/resolv.conf: the faults\nare gone (the next call of the command cleans up the proxy).\n\n🧪 Docker only (not cfk).",
+          "usage": "playground debug dns [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c",
+                "--pod",
+                "-p"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\nDefault value: connect"
+            },
+            {
+              "names": [
+                "--host"
+              ],
+              "argument": "HOST",
+              "description": "🏷️ Hostname whose resolution is faked (e.g. broker, schema-registry, a database or a cloud endpoint)"
+            },
+            {
+              "names": [
+                "--nxdomain"
+              ],
+              "argument": "",
+              "description": "🕳️ The hostname does not exist (NXDOMAIN: UnknownHostException)\n\nConflicts with: --servfail, --resolve-to, --delay, --reset"
+            },
+            {
+              "names": [
+                "--servfail"
+              ],
+              "argument": "",
+              "description": "💥 The resolver fails (SERVFAIL: temporary failure in name resolution)\n\nConflicts with: --nxdomain, --resolve-to, --delay, --reset"
+            },
+            {
+              "names": [
+                "--resolve-to"
+              ],
+              "argument": "IP",
+              "description": "🔀 The hostname resolves to this ip address\n\nConflicts with: --nxdomain, --servfail, --delay, --reset"
+            },
+            {
+              "names": [
+                "--delay"
+              ],
+              "argument": "DELAY",
+              "description": "🐢 The real answer is sent after this delay: seconds, or a number with a unit ms or s (e.g. 500ms, 3s, 12s)\n\nConflicts with: --nxdomain, --servfail, --resolve-to, --reset"
+            },
+            {
+              "names": [
+                "--reset"
+              ],
+              "argument": "",
+              "description": "🧽 Back to the real DNS: every fault of the container, or only the one of --host\n\nConflicts with: --nxdomain, --servfail, --resolve-to, --delay"
+            }
+          ]
+        },
+        {
+          "name": "resources",
+          "description": "🏋️ Limit the cpus and memory of a running container, or fill its disk: OOM, GC pressure, disk full\n\nSome issues only happen when a component runs short of resources: an\nOOM kill (exit 137), a JVM spending its time in garbage collection, a\nstarved connect worker missing its heartbeats, a broker that stops\nwith 'KafkaStorageException' when its log dir is full. This changes\nthe limits of a running container right away (docker update), without\na restart, and fills its disk to a percentage.\n\n  --cpus 0.5           at most half a cpu\n  --memory 1g          at most 1g of memory, no swap: above, the kernel\n                       kills the process (OOMKilled, exit 137)\n  --fill-disk 95%      fills the filesystem of --path to 95%\n  --reset              back to the original limits, the fill file\n                       removed\n  (no flag)            the limits, the usage, the JVM max heap, OOM\n                       kills and the disk of --path\n\n--path defaults to log.dirs for a broker or a controller, /tmp\notherwise. The fill file is a single file (.playground-fill-disk) in\nthat folder: --reset removes it, the data stays.\n\n❕ On Docker Desktop, a data folder (an anonymous volume) and /tmp are\non the disk of Docker itself, shared by every container and image:\n--fill-disk refuses to fill it. Give the folder a filesystem of its\nown in the docker-compose override of the example, then fill it:\n\n  broker:\n    tmpfs:\n      - /var/lib/kafka/data:size=2g,uid=1000,gid=1000\n\nA tmpfs is memory: its content counts in the memory of the container.\n\n❕ The JVM sizes its heap when it starts (-Xmx): a memory limit\nbelow -Xmx plus the off-heap memory gets the container OOM killed\nrather than an OutOfMemoryError. A recreate ('container recreate',\n'debug clock', a new run) drops the limits.\n\n🧪 Docker only (not cfk).",
+          "usage": "playground debug resources [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c",
+                "--pod",
+                "-p"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\nDefault value: connect"
+            },
+            {
+              "names": [
+                "--cpus"
+              ],
+              "argument": "CPUS",
+              "description": "⚙️ Number of cpus the container can use, e.g. 0.5, 2\n\nConflicts with: --reset"
+            },
+            {
+              "names": [
+                "--memory"
+              ],
+              "argument": "MEMORY",
+              "description": "🧠 Memory limit, without swap, e.g. 512m, 1g (b, k, m, g)\n\nConflicts with: --reset"
+            },
+            {
+              "names": [
+                "--fill-disk"
+              ],
+              "argument": "PERCENT",
+              "description": "💾 Fill the filesystem of --path up to this percentage, e.g. 95%, 100%\n\nConflicts with: --reset"
+            },
+            {
+              "names": [
+                "--path"
+              ],
+              "argument": "PATH",
+              "description": "📁 Folder whose filesystem --fill-disk fills (default: log.dirs for a broker or a controller, /tmp otherwise)"
+            },
+            {
+              "names": [
+                "--reset"
+              ],
+              "argument": "",
+              "description": "🧽 Back to the original cpu and memory limits, and remove the fill file\n\nConflicts with: --cpus, --memory, --fill-disk"
             }
           ]
         },

@@ -1,0 +1,8 @@
+---
+services:
+
+  broker:
+    # a log dir of its own, small enough to be filled by 'playground debug resources --fill-disk': on Docker Desktop
+    # the data volume is on the disk of docker itself, shared by every container
+    tmpfs:
+      - /var/lib/kafka/data:size=1g,uid=1000,gid=1000

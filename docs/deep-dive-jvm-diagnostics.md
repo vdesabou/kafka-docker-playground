@@ -27,6 +27,7 @@ Takes about 15 minutes to read and run.
 | `OutOfMemoryError`, what fills the heap | `playground debug heap-dump -c connect` | `playground analyze heap-dump -f <.hprof>` (Eclipse MAT, slow) |
 | what really goes over the wire: refused or reset connections, TLS alerts, Kafka errors | `playground debug tcp-dump -c connect --port 9092 --duration 30` (`--action start` … `--action stop` for an open-ended window) | analyzed at the end (`playground analyze tcp-dump -f <.pcap>` for a customer's capture), then Wireshark |
 | what does this method receive, return, throw? which calls are slow? (no debugger, no restart) | `playground debug jscissors -c connect --class <class> [--method <m>] --action start` … `--action stop` (or `--duration 60s`) | analyzed on `stop` (`playground analyze jscissors -f <trace folder>`) |
+| reproduce it: short of memory (OOM kill, GC pressure), of cpu (a starved worker), of disk (a full log dir) | `playground debug resources -c connect --memory 1g` / `--cpus 0.5` / `-c broker --fill-disk 95%` (no restart) | `playground debug resources -c connect` (limits, usage, `-Xmx`, OOM kills, disk) |
 | step through the code | `playground debug enable-remote-debugging -c connect` (see the 🐞 session) | your IDE |
 
 ---
@@ -329,7 +330,49 @@ Gotchas:
 
 ---
 
-## 7. Hands-on lab (≈15 min)
+## 7. Short of resources on purpose: `debug resources`
+
+The analyzers above explain a JVM that runs short of memory or cpu. To **reproduce** it, `debug resources` changes the
+limits of a running container with `docker update`, right away and without a restart, and fills its disk:
+
+```bash
+playground debug resources -c connect --memory 1g              # no swap: above 1g, the kernel kills the process
+playground debug resources -c connect --cpus 0.5               # half a cpu: slow tasks, missed heartbeats
+playground debug resources -c broker --fill-disk 95%           # the filesystem of log.dirs, to 95%
+playground debug resources -c connect                          # limits, usage, -Xmx, OOM kills, disk of --path
+playground debug resources -c connect -c broker --reset        # original limits, fill file removed
+```
+
+```bash
+playground debug resources -c connect --memory 1g
+# 🏋️ limiting connect: 1g memory (no swap)
+# ❗ 💀 the JVM of connect can grow its heap to -Xmx2G, more than the 1g limit: expect an OOM kill (exit 137, OOMKilled) before any OutOfMemoryError
+# 🏋️ connect: cpus no limit (18 on the docker host), memory 1.0GiB
+# 📊 usage now: 2.46% cpu, 971.1MiB / 1GiB memory (94.83%)           <- connect already uses ~1g: close to the OOM kill
+# ☕ JVM max heap (-Xmx): 2G
+# 💾 disk of /tmp: 15% used, 266.6GiB of 1.7TiB, 1.4TiB free
+# 🧽 back to the original limits: playground debug resources --container connect --reset
+```
+
+What to know:
+
+| Gotcha | What it means for the repro |
+| --- | --- |
+| The JVM sizes its heap when it starts (`-Xmx`, 2G for connect in the playground) | a limit below `-Xmx` plus the off-heap memory (metaspace, threads, direct buffers) ends with an **OOM kill** (exit 137), not an `OutOfMemoryError`. For an `OutOfMemoryError`, lower `-Xmx` instead: `container set-environment-variables --env "KAFKA_HEAP_OPTS: -Xmx512m"` |
+| The `OOMKilled` flag of `docker inspect` is cleared when the restart policy starts the container again | `debug resources -c <c>` counts the `oom` events of docker since the container was created, and shows the restarts |
+| `docker update` cannot remove a limit (0 means "unchanged") | `--reset` restores the limits recorded before the first change; "no limit" becomes the cpus and memory of the docker host |
+| A recreate (`container recreate`, `debug clock`, a new run) drops the limits | apply them again after it |
+| On Docker Desktop, a data folder (an anonymous volume) and `/tmp` are on the disk of docker itself, shared by every container and image | `--fill-disk` refuses: give the folder a filesystem of its own in the docker-compose override, e.g. `tmpfs: [/var/lib/kafka/data:size=1g,uid=1000,gid=1000]`, then fill it |
+| A tmpfs is memory | the fill file counts in the memory of the container |
+| A broker whose only log dir is full | `No space left on device`, the log dir goes offline (`KafkaStorageException` for the clients of its partitions) and the broker stops |
+| Docker only | not with cfk yet (the command exits with an error) |
+
+The [resource faults example](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/resource-faults)
+runs both end to end: a connect worker OOM killed by a 300m limit, then a broker with a full log dir.
+
+---
+
+## 8. Hands-on lab (≈15 min)
 
 ```bash
 playground run -f connect/connect-filestream-sink/filestream-sink.sh
@@ -429,6 +472,19 @@ playground debug jscissors -c connect --action stop --output-dir /tmp/jvm-lab/js
 kill %1
 ```
 
+**Step: limits on the fly**
+
+```bash
+playground debug resources -c connect --cpus 1 --memory 3g
+# 🏋️ limiting connect: 1 cpus, 3g memory (no swap)
+# ❗ ☕ -Xmx2G: the heap fits in 3g, the off-heap memory (metaspace, threads, direct buffers, the page cache counted by the kernel) must fit in the rest
+# 🏋️ connect: cpus 1, memory 3.0GiB
+playground debug resources -c connect --fill-disk 95%
+# 🔥 ❌ /tmp of connect is on the disk of docker itself (1.8TiB), shared by every container and image: filling it to 95% would fill all of them
+playground debug resources -c connect --reset
+# 🟢 connect is back to its original limits
+```
+
 **Optional (slow): a heap histogram, a heap dump, MAT** (not run for this page: the outputs below are described from the
 code)
 
@@ -447,7 +503,7 @@ playground stop
 
 ---
 
-## 8. Recipes for support repros
+## 9. Recipes for support repros
 
 | Customer symptom | Command |
 | --- | --- |
@@ -465,6 +521,9 @@ playground stop
 | "this method is slow sometimes, from where is it called?" (JDK 25+) | `analyze flight-recorder -c connect --duration 60s --trace-method <Class::method>`: every call, the slowest ones with their caller stack |
 | "which batches fail, and what is in them?" | `debug jscissors --class <class> --only-failed`: only the calls that throw, with their arguments |
 | "the task hangs in the connector code" | `debug jscissors --class <class>`: the calls still running at `stop`, and how long they had been running |
+| "the worker is OOM killed / exit code 137" | `debug resources -c connect --memory <their limit>`, then `debug resources -c connect` for the OOM kills; `analyze gc-logs -c connect` for the heap before the kill |
+| "a starved worker misses its heartbeats, the group rebalances" | `debug resources -c connect --cpus 0.2`, then `container logs -c connect --errors` |
+| "the broker stopped: `KafkaStorageException`, disk full" | a tmpfs log dir in the override, then `debug resources -c broker --fill-disk 100%` (see the resource faults example) |
 | "a lock between two tasks" | `analyze thread-dump`: the locks section names the owner and the waiters; `debug thread-dump --jstack` on CFK adds `java.util.concurrent` owners |
 
 In a repro model, collect into `/tmp` and print the digest, so the run log shows the finding:
@@ -476,7 +535,7 @@ playground analyze gc-logs -c connect --output-dir /tmp/repro-gc
 
 ---
 
-## 9. Cheat sheet
+## 10. Cheat sheet
 
 ```bash
 playground analyze thread-dump    [-c <c> [--count 3] [--interval 5] | -f <dump>… | --sample deadlock_jdk21|deadlock_jdk8|healthy_connect] [--json] [--top 10] [--output-dir <d>]
@@ -489,6 +548,7 @@ playground debug flight-recorder  [-c <c>]… --action start|stop|status [--sett
 playground analyze tcp-dump      [-c <c>… [--duration 30] [--port <p>] [--filter <bpf>] | -f <.pcap>… | --sample kafka_and_network_errors|http_errors] [--hosts <file>] [--kafka-port <p>]… [--http-port <p>]… [--json] [--output-dir <d>]
 playground debug jscissors        [-c <c>]… --class <class|regex>… [--method <m|regex>]… [--operation VALUES|RETURN_VALUE|STACK|THREADS|HEAP|…]… [--config-file <rules>] [--only-failed] [--slower-than 500ms] [--action start|stop|status] [--duration 60s] [--restart] [--max-calls N] [--output-dir <d>] [--no-analyze]
 playground analyze jscissors      -f <trace folder> | --sample filestream_sink_bad_json [--json] [--top 15] [--output-dir <d>]
+playground debug resources        [-c <c>]… [--cpus 0.5] [--memory 1g] [--fill-disk 95% [--path <folder>]] | --reset
 playground debug tcp-dump         [-c <c>]… [--port <p>] [--filter <bpf>] [--duration 30] [--snaplen <n>] [--action start|stop|status] [--output-dir <d>] [--no-analyze] [--no-open]
 ```
 

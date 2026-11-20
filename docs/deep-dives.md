@@ -127,7 +127,7 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🧵 JVM diagnostics: which collector, which analyzer
 
 - 📖 [Read the deep dive](/deep-dive-jvm-diagnostics.md)
-- 🧠 Commands: `debug thread-dump`, `heap-dump`, `flight-recorder`, `jscissors`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump`, `jscissors`
+- 🧠 Commands: `debug thread-dump`, `heap-dump`, `flight-recorder`, `jscissors`, `resources`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump`, `jscissors`
 - 🎬 Bite size session: [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps), [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs), [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go), [✂️ jscissors](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do)
 
 ### 🐞 Debugging the JVM: remote debugger, SSL / Kerberos / class loading traces, testssl, diagnostics bundle
@@ -180,7 +180,7 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🐌 A slow or broken network, on purpose
 
 - 📖 [Read the deep dive](/deep-dive-network-traffic.md)
-- 🧠 Commands: `debug block-traffic`, `debug degrade-traffic`
+- 🧠 Commands: `debug block-traffic`, `debug degrade-traffic`, `debug dns`
 - 🎬 Bite size session: [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose)
 
 ### 🏚 Break one TCP connection on purpose: the Zazkia proxy

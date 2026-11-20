@@ -105,7 +105,7 @@ printed as it runs: [🔁 Day-2 operations](/day-2-operations.md).
 The playground can't recreate PrivateLink, peering or private DNS. It covers the **client side** of a connectivity
 case, against a real Confluent Cloud cluster with any `ccloud/` example. Start with the five checks (DNS of the
 bootstrap and of every broker, TCP, TLS and SNI, authentication) of the
-[client-side checklist](/deep-dive-network-traffic?id=_6-confluent-cloud-connectivity-a-client-side-checklist):
+[client-side checklist](/deep-dive-network-traffic?id=_7-confluent-cloud-connectivity-a-client-side-checklist):
 
 | Question | Command or example |
 | --- | --- |
