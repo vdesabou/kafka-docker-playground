@@ -128,6 +128,16 @@ html[data-theme="dark"] .badge{color:#c4b5fd}
 .other-in input{flex:1;min-width:0}
 .mini{flex:none;border:1px solid var(--line);background:var(--card2);color:var(--muted);font:inherit;font-size:.72rem;font-weight:600;padding:0 8px;border-radius:8px;cursor:pointer}
 .mini:hover{border-color:var(--a1);color:var(--fg)}
+/* the tabs of the detail */
+.tabs2{display:flex;gap:4px;margin-top:18px;padding:4px;background:var(--card2);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+.tab2{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.82rem;font-weight:650;padding:8px 10px;border-radius:9px;cursor:pointer;white-space:nowrap;transition:.15s}
+.tab2:hover{color:var(--fg)}
+.tab2[aria-selected=true]{color:#fff;background:linear-gradient(120deg,var(--a1),var(--a2));box-shadow:0 4px 12px var(--glow)}
+.pane>.sec:first-child{border-top:0;margin-top:14px;padding-top:0}
+.pane:not([data-pane="readme"])>.sec>h3{display:none}
+.pane[data-pane="readme"]>.sec>h3{justify-content:flex-end;margin-bottom:6px}
+.pane[data-pane="readme"]>.sec>h3>.hlink{order:2}
+.pane[data-pane="readme"] .readme{max-height:min(62vh,640px)}
 /* README preview */
 .hlink{font-size:.76rem;font-weight:600;color:var(--a1);text-decoration:none}
 .readme-msg{color:var(--muted);font-size:.84rem}
@@ -249,7 +259,7 @@ const RUN = DATA ? DATA.run : {environments: [], enable: [], default_tag: ""};
 const VERSIONS = DATA && DATA.versions ? DATA.versions : {cp: [], plugins: {}};
 const fetched = {};   // owner/name -> versions, or "loading" / "failed": a local page asks Confluent Hub when an example is picked
 let CI = null;   // dir -> {state, passed, total, url, version}
-const state = {q: "", area: "", cat: "", topics: [], nocreds: false, ci: "", sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
+const state = {tab: "run", q: "", area: "", cat: "", topics: [], nocreds: false, ci: "", sel: null, env: "", tag: "", ctag: "", enable: [], desc: "123456 my issue"};
 
 // ---------------------------------------------------------------- helpers
 function short(cls) { return (cls || "").split(".").pop(); }
@@ -389,6 +399,7 @@ function envDropdown() {
 
 // the versions of the dropdowns: CP from the page, the plugin from the page (website) or from Confluent Hub (local page)
 // "✏️ other version…": a text field instead of the list (a version the list does not have), "↩ list" goes back
+const TABS = [["run", "▶️ Run it"], ["repro", "🧪 Reproduction model"], ["readme", "📖 README"], ["chain", "🔗 Chain it"]];
 const OTHER = "__other__";
 const other = {tag: false, ctag: false};
 function otherInput(key, placeholder) {
@@ -570,10 +581,14 @@ function renderDetail() {
       ${DEEP[e.category] ? `<a class="lbtn" href="${DOCS + DEEP[e.category]}" target="_blank" rel="noopener">🍪 Deep dive ↗</a>` : ""}
       <a class="lbtn" href="${GITHUB.replace("/tree/", "/blob/") + esc(e.path)}" target="_blank" rel="noopener">📜 Script ↗</a></div>`;
 
+  // the sections below are tabs (Run it first): each one is drawn, the others hidden, so the README keeps its scroll
+  const head = html.length, pane = {};
   // the README of the folder, fetched from GitHub when the example is picked (cached), as a preview that unfolds
+  pane.readme = html.length;
   html += `<div class="sec"><h3>📖 README <a class="hlink" href="${GITHUB + esc(e.dir)}#readme" target="_blank" rel="noopener">open on GitHub ↗</a></h3>${readmeBlock(e)}</div>`;
 
   // run builder
+  pane.run = html.length;
   const sm = !e.managed && e.category !== "ccloud" && e.category !== "custom-connector";
   const envOk = e.connector_example && e.honors_environment;
   html += `<div class="sec"><h3>▶️ Run it</h3><div class="opts">
@@ -586,6 +601,15 @@ function renderDetail() {
   // the options that apply: --enable-sql-datagen needs a load script inserting rows (the JDBC, Debezium, Oracle CDC and
   // XStream sources, fully managed too), the others start local components (self-managed only)
   const applies = f => f.flag === "--enable-sql-datagen" ? e.sql_datagen : sm;
+  // the command right under the dropdowns, the option cards below it (it changes as they are toggled)
+  const parts = [`playground run -f ${q(e.path)}`];
+  if (envOk && state.env && state.env !== "plaintext") parts.push(`--environment ${state.env}`);
+  if (sm && state.tag) parts.push(`--tag ${state.tag}`);
+  if (e.connector_example && state.ctag) parts.push(`--connector-tag ${state.ctag}`);
+  for (const f of RUN.enable) if (applies(f) && state.enable.includes(f.flag)) parts.push(f.flag);
+  const run = join(parts);
+  html += `<div class="term" style="margin-top:12px"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>run</span></div><pre>${highlight(run)}</pre></div>
+    <div class="cmdrow"><button class="btn" data-copy="${esc(run)}">📋 Copy</button></div>`;
   const flags = RUN.enable.filter(applies);
   if (flags.length) {
     const byGroup = {};
@@ -597,22 +621,18 @@ function renderDetail() {
       `<button type="button" class="flag" data-flag="${esc(f.flag)}" aria-pressed="${state.enable.includes(f.flag)}" title="${esc(f.flag)}: ${esc(f.help)}">
         <span class="fi">${info[0]}</span><span class="ft"><b>${esc(info[1])}</b><small>${esc(info[2])}</small></span><span class="sw"></span></button>`).join("")}</div></div>`).join("");
   }
-  const parts = [`playground run -f ${q(e.path)}`];
-  if (envOk && state.env && state.env !== "plaintext") parts.push(`--environment ${state.env}`);
-  if (sm && state.tag) parts.push(`--tag ${state.tag}`);
-  if (e.connector_example && state.ctag) parts.push(`--connector-tag ${state.ctag}`);
-  for (const f of RUN.enable) if (applies(f) && state.enable.includes(f.flag)) parts.push(f.flag);
-  const run = join(parts);
-  html += `<div class="term" style="margin-top:12px"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>run</span></div><pre>${highlight(run)}</pre></div>
-    <div class="cmdrow"><button class="btn" data-copy="${esc(run)}">📋 Copy</button></div></div>`;
+  html += `</div>`;
+
 
   // reproduction model
+  pane.repro = html.length;
   const repro = join([`playground repro bootstrap -f ${q(e.path)}`, `-d "${state.desc.replace(/"/g, '\\"')}"`, "--no-run"]);
   html += `<div class="sec"><h3>🧪 Turn it into a reproduction model</h3>
     <div class="desc"><label for="o-desc">💡 Description</label><input type="text" id="o-desc" value="${esc(state.desc)}" placeholder="case number + a few words"></div>
     <div class="term"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>repro</span></div><pre>${highlight(repro)}</pre></div>
     <div class="cmdrow"><button class="btn" data-copy="${esc(repro)}">📋 Copy</button></div></div>`;
 
+  pane.chain = html.length;
   if (e.pipeline) {
     const p = new URLSearchParams();
     if (e.managed) p.set("managed", "1");
@@ -620,6 +640,13 @@ function renderDetail() {
     html += `<div class="sec"><h3>🔗 Chain it ${e.kind === "source" ? "with sinks" : "after a source"}</h3>
       <div class="cmdrow" style="justify-content:flex-start;margin-top:0"><a class="btn" href="pipeline-builder.html#${p.toString()}">Open in the pipeline builder →</a></div></div>`;
   }
+  const end = html.length;
+  const cut = {readme: [pane.readme, pane.run], run: [pane.run, pane.repro], repro: [pane.repro, pane.chain], chain: [pane.chain, end]};
+  const tabs = TABS.filter(t => cut[t[0]][1] > cut[t[0]][0]);
+  const active = tabs.some(t => t[0] === state.tab) ? state.tab : "run";
+  html = html.slice(0, head) + `<div class="tabs2" role="tablist">${tabs.map(t =>
+      `<button type="button" class="tab2" role="tab" data-tab="${t[0]}" aria-selected="${active === t[0]}">${t[1]}</button>`).join("")}</div>` +
+    tabs.map(t => `<div class="pane" data-pane="${t[0]}"${active === t[0] ? "" : " hidden"}>${html.slice(cut[t[0]][0], cut[t[0]][1])}</div>`).join("");
   $("detail").innerHTML = html;
 }
 
@@ -633,6 +660,7 @@ function saveHash() {
   if (state.nocreds) p.set("nocreds", "1");
   if (state.ci) p.set("ci", state.ci);
   if (state.sel) p.set("ex", state.sel);
+  if (state.sel && state.tab !== "run") p.set("tab", state.tab);
   if (state.env) p.set("env", state.env);
   if (state.tag) p.set("tag", state.tag);
   if (state.ctag) p.set("ctag", state.ctag);
@@ -645,6 +673,7 @@ function loadHash() {
   state.q = p.get("q") || ""; state.cat = CAT[p.get("cat")] ? p.get("cat") : "";
   state.topics = (p.get("topics") || "").split(",").filter(t => TOPICS.some(x => x[0] === t));
   state.nocreds = p.get("nocreds") === "1";
+  state.tab = TABS.some(t => t[0] === p.get("tab")) ? p.get("tab") : "run";
   state.ci = ["ok", "fail", "none"].includes(p.get("ci")) ? p.get("ci") : "";
   state.sel = p.get("ex") && byPath(p.get("ex")) ? p.get("ex") : null;
   state.env = p.get("env") || ""; state.tag = p.get("tag") || ""; state.ctag = p.get("ctag") || "";
@@ -734,6 +763,14 @@ $("detail").addEventListener("click", e => {
       return;
     }
     state[key] = item.dataset.value; renderDetail(); saveHash(); return;
+  }
+  const tab = e.target.closest("[data-tab]");
+  if (tab) {
+    state.tab = tab.dataset.tab;
+    for (const b of document.querySelectorAll("#detail [data-tab]")) b.setAttribute("aria-selected", String(b === tab));
+    for (const p of document.querySelectorAll("#detail [data-pane]")) p.hidden = p.dataset.pane !== state.tab;
+    saveHash();
+    return;
   }
   if (e.target.closest("[data-readme]")) { readmeOpen = !readmeOpen; renderDetail(); return; }
   const back = e.target.closest("[data-back]");
