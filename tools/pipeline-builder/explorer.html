@@ -128,6 +128,29 @@ html[data-theme="dark"] .badge{color:#c4b5fd}
 .other-in input{flex:1;min-width:0}
 .mini{flex:none;border:1px solid var(--line);background:var(--card2);color:var(--muted);font:inherit;font-size:.72rem;font-weight:600;padding:0 8px;border-radius:8px;cursor:pointer}
 .mini:hover{border-color:var(--a1);color:var(--fg)}
+/* README preview */
+.hlink{font-size:.76rem;font-weight:600;color:var(--a1);text-decoration:none}
+.readme-msg{color:var(--muted);font-size:.84rem}
+.readme{position:relative;max-height:280px;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--card2);padding:4px 16px}
+.readme:not(.open)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(transparent,var(--card2));pointer-events:none}
+.readme.open{max-height:none}
+.more-btn{margin-top:8px;padding:5px 12px}
+.md{font-size:.86rem;line-height:1.55;overflow-wrap:anywhere}
+.md h3,.md h4,.md h5,.md h6{margin:16px 0 6px;letter-spacing:-.01em}
+.md h3{font-size:1.1rem}.md h4{font-size:.98rem}.md h5,.md h6{font-size:.9rem}
+.md p{margin:8px 0}
+.md ul,.md ol{margin:6px 0;padding-left:22px}
+.md li{margin:3px 0}
+.md a{color:var(--a1)}
+.md img{max-width:100%;border-radius:8px;border:1px solid var(--line)}
+.md blockquote{margin:10px 0;padding:8px 12px;border-left:3px solid var(--a1);background:var(--card);border-radius:0 8px 8px 0;color:var(--muted)}
+.md .mdcode{background:var(--term);color:var(--term-fg);padding:10px 12px;border-radius:10px;overflow:auto;font-size:.78rem;white-space:pre}
+.md .mdtable{overflow:auto;margin:10px 0}
+.md table{border-collapse:collapse;font-size:.8rem;min-width:100%}
+.md th,.md td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+.md th{background:var(--card)}
+.md .mdtable td,.md .mdtable th{overflow-wrap:normal}
+.md .mdtable code{white-space:nowrap}
 .dd-empty{color:var(--muted);font-size:.8rem;padding:10px;text-align:center}
 .term+.term{margin-top:10px}
 .cmdrow{display:flex;justify-content:flex-end;margin-top:8px}
@@ -408,6 +431,107 @@ function connectorSelect(e) {
   return dd("ctag", state.ctag, items, {search: true, placeholder: "search a version…"});
 }
 
+// ---------------------------------------------------------------- README preview
+const RAW = "https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/";
+const readmes = {};          // dir -> markdown, or "loading" / "failed"
+let readmeOpen = false;      // the whole README shown, or the preview
+function readmeBlock(e) {
+  const r = readmes[e.dir];
+  if (r === undefined) {
+    readmes[e.dir] = "loading";
+    fetch(RAW + e.dir + "/README.md").then(x => x.ok ? x.text() : Promise.reject())
+      .then(t => { readmes[e.dir] = t; }).catch(() => { readmes[e.dir] = "failed"; })
+      .then(() => { if (state.sel && byPath(state.sel).dir === e.dir) renderDetail(); });
+    return `<div class="readme-msg">loading the README…</div>`;
+  }
+  if (r === "loading") return `<div class="readme-msg">loading the README…</div>`;
+  if (r === "failed") return `<div class="readme-msg">the README could not be loaded (offline?): <a href="${GITHUB + esc(e.dir)}" target="_blank" rel="noopener">read it on GitHub ↗</a></div>`;
+  return `<div class="readme${readmeOpen ? " open" : ""}"><div class="md">${md(r, e.dir)}</div></div>
+    <button type="button" class="mini more-btn" data-readme="1">${readmeOpen ? "▲ Show less" : "▼ Show the whole README"}</button>`;
+}
+
+// a small Markdown renderer for the READMEs: everything is escaped first (no HTML from the file), then headings,
+// paragraphs, lists, tables, code blocks, quotes, images, links, inline code, bold and italic
+function mdUrl(url, dir, image) {
+  url = url.trim().split(/\s+/)[0];
+  if (/^https?:\/\//i.test(url)) return url;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return "";          // javascript:, data:…
+  if (url.startsWith("#")) return GITHUB + dir + url;
+  const parts = (dir + "/" + url.replace(/^\.\//, "")).split("/");
+  const out = [];
+  for (const p of parts) { if (p === "..") out.pop(); else if (p && p !== ".") out.push(p); }
+  return (image ? RAW : GITHUB.replace("/tree/", "/blob/")) + out.join("/");
+}
+function mdInline(text, dir) {
+  const codes = [];
+  let t = esc(text).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return "\u0000" + (codes.length - 1) + "\u0000"; });
+  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, u) => { const url = mdUrl(u.replace(/&amp;/g, "&"), dir, true); return url ? `<img src="${esc(url)}" alt="${alt}" loading="lazy">` : ""; });
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, u) => { const url = mdUrl(u.replace(/&amp;/g, "&"), dir, false); return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${label}</a>` : label; });
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|[\s(])_([^_]+)_(?=[\s.,;:)!?]|$)/g, "$1<i>$2</i>").replace(/(^|[\s(])\*([^*\s][^*]*)\*(?=[\s.,;:)!?]|$)/g, "$1<i>$2</i>");
+  return t.replace(/\u0000(\d+)\u0000/g, (_, n) => `<code>${codes[+n]}</code>`);
+}
+function md(src, dir) {
+  const lines = src.replace(/\r/g, "").split("\n");
+  const out = [];
+  let i = 0, para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${mdInline(para.join(" "), dir)}</p>`); para = []; } };
+  const isList = l => /^\s*([-*+]|\d+\.)\s+/.test(l);
+  while (i < lines.length) {
+    const l = lines[i];
+    if (/^\s*```/.test(l)) {
+      flush();
+      const code = [];
+      i++;
+      while (i < lines.length && !/^\s*```/.test(lines[i])) code.push(lines[i++]);
+      out.push(`<pre class="mdcode"><code>${esc(code.join("\n"))}</code></pre>`);
+      i++; continue;
+    }
+    const h = l.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { flush(); const n = Math.min(h[1].length + 2, 6); out.push(`<h${n}>${mdInline(h[2], dir)}</h${n}>`); i++; continue; }
+    if (/^\s*\|/.test(l) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
+      flush();
+      const cells = r => r.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+      const head = cells(l);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(cells(lines[i++]));
+      out.push(`<div class="mdtable"><table><thead><tr>${head.map(c => `<th>${mdInline(c, dir)}</th>`).join("")}</tr></thead><tbody>${rows.map(r =>
+        `<tr>${r.map(c => `<td>${mdInline(c, dir)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      continue;
+    }
+    if (/^\s*>/.test(l)) {
+      flush();
+      const q = [];
+      while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*>\s?/, "").replace(/^\[!(\w+)\]$/, "<b>$1</b>"));
+      out.push(`<blockquote>${mdInline(q.join(" "), dir).replace(/&lt;b&gt;(\w+)&lt;\/b&gt;/, "<b>$1</b>")}</blockquote>`);
+      continue;
+    }
+    if (isList(l)) {
+      flush();
+      // nested by indentation: a stack of open lists
+      const stack = [];
+      while (i < lines.length && (isList(lines[i]) || (/^\s{2,}\S/.test(lines[i]) && stack.length))) {
+        const line = lines[i];
+        const m = line.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
+        if (!m) { out.push(" " + mdInline(line.trim(), dir)); i++; continue; }
+        const indent = m[1].length, tag = /\d/.test(m[2]) ? "ol" : "ul";
+        while (stack.length && indent < stack[stack.length - 1].indent) out.push(`</li></${stack.pop().tag}>`);
+        if (!stack.length || indent > stack[stack.length - 1].indent) { out.push(`<${tag}>`); stack.push({indent, tag}); }
+        else out.push("</li>");
+        out.push(`<li>${mdInline(m[3], dir)}`);
+        i++;
+      }
+      while (stack.length) out.push(`</li></${stack.pop().tag}>`);
+      continue;
+    }
+    if (!l.trim()) { flush(); i++; continue; }
+    para.push(l.trim());
+    i++;
+  }
+  flush();
+  return out.join("\n");
+}
+
 function renderDetail() {
   const e = state.sel ? byPath(state.sel) : null;
   if (!e) {
@@ -440,6 +564,9 @@ function renderDetail() {
       ${e.docs_url ? `<a class="lbtn" href="${esc(e.docs_url)}" target="_blank" rel="noopener">📘 Confluent docs ↗</a>` : ""}
       ${DEEP[e.category] ? `<a class="lbtn" href="${DOCS + DEEP[e.category]}" target="_blank" rel="noopener">🍪 Deep dive ↗</a>` : ""}
       <a class="lbtn" href="${GITHUB.replace("/tree/", "/blob/") + esc(e.path)}" target="_blank" rel="noopener">📜 Script ↗</a></div>`;
+
+  // the README of the folder, fetched from GitHub when the example is picked (cached), as a preview that unfolds
+  html += `<div class="sec"><h3>📖 README <a class="hlink" href="${GITHUB + esc(e.dir)}#readme" target="_blank" rel="noopener">open on GitHub ↗</a></h3>${readmeBlock(e)}</div>`;
 
   // run builder
   const sm = !e.managed && e.category !== "ccloud" && e.category !== "custom-connector";
@@ -560,7 +687,7 @@ $("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b)
   state.topics = state.topics.includes(t) ? state.topics.filter(x => x !== t) : [...state.topics, t]; render(); };
 $("nocreds").onchange = e => { state.nocreds = e.target.checked; render(); };
 $("cif").onclick = e => { const b = e.target.closest("[data-ci]"); if (!b) return; state.ci = state.ci === b.dataset.ci ? "" : b.dataset.ci; render(); };
-$("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; renderList(); renderDetail(); saveHash(); };
+$("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; readmeOpen = false; renderList(); renderDetail(); saveHash(); };
 $("detail").addEventListener("input", e => {
   if (e.target.id === "o-tag" && e.target.tagName === "INPUT") state.tag = e.target.value.trim();
   else if (e.target.id === "o-ctag" && e.target.tagName === "INPUT") state.ctag = e.target.value.trim();
@@ -600,6 +727,7 @@ $("detail").addEventListener("click", e => {
     }
     state[key] = item.dataset.value; renderDetail(); saveHash(); return;
   }
+  if (e.target.closest("[data-readme]")) { readmeOpen = !readmeOpen; renderDetail(); return; }
   const back = e.target.closest("[data-back]");
   if (back) { other[back.dataset.back] = false; renderDetail(); return; }
   if (e.target.closest(".dd-panel")) return;
