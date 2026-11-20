@@ -135,6 +135,7 @@ Other shapes:
 * **fan-out**: `-f` is a sink example, its producer feeds the other sinks too
 * **fully managed**: `ccloud/fm-*` source and sinks, on one cluster (the cloud and region a sink needs win), one question at the end to delete every connector
 * **ksqlDB step**: `--pipeline-step ksqldb` enables ksqlDB, and a stream copies the topic of the source to `<topic>_ksqldb`, read by the sinks (values with a schema)
+* **Flink step**: `--pipeline-step flink` starts a Flink cluster (plaintext environment) with the Kafka connector and the `avro-confluent` format, and a job copies the topic of the source to `<topic>_flink`, read by the sinks. The two tables are written at run time from the Avro value schema of the source by [`playground flink table-ddl`](/playground%20flink%20table-ddl) (Avro values; the records of `<topic>_flink` have no key)
 
 > [!TIP]
 > While the model runs, [`playground connector flow`](/playground%20connector%20flow) shows source → topic → sinks with the records, the lag and the DLQ:

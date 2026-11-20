@@ -20,6 +20,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, HERE)
 
 import catalog  # noqa: E402
+import flink_ddl  # noqa: E402
 import flow  # noqa: E402
 import pipeline  # noqa: E402
 
@@ -68,6 +69,16 @@ playground connector create-or-update --connector file-source << EOF
   "topic": "file-topic",
   "value.converter": "org.apache.kafka.connect.json.JsonConverter",
   "value.converter.schemas.enable": "false"
+}
+EOF
+'''
+
+DATAGEN_SOURCE = HEAD + SM_ENV + '''
+playground connector create-or-update --connector datagen-source << EOF
+{
+  "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+  "kafka.topic": "pageviews",
+  "quickstart": "pageviews"
 }
 EOF
 '''
@@ -272,6 +283,7 @@ class Repo:
     def __init__(self):
         self.root = tempfile.mkdtemp(prefix="pipeline-test-")
         self.add("connect/connect-debezium-mysql-source/dbz.sh", DBZ_SOURCE, COMPOSE_MYSQL)
+        self.add("connect/connect-datagen-source/datagen.sh", DATAGEN_SOURCE, "---\nservices:\n  connect:\n    environment:\n      CONNECT_PLUGIN_PATH: /z\n")
         self.add("connect/connect-filestream-source/file.sh", JSON_SOURCE, "---\nservices:\n  connect:\n    environment:\n      CONNECT_PLUGIN_PATH: /x\n")
         self.add("connect/connect-jdbc-postgresql-sink/pg.sh", JDBC_SINK, COMPOSE_POSTGRES)
         self.add("connect/connect-aws-s3-sink/s3.sh", REGEX_SINK, "---\nservices:\n  connect:\n    environment:\n      CONNECT_PLUGIN_PATH: /y\n")
@@ -439,6 +451,31 @@ class BuildTest(unittest.TestCase):
         self.assertIn("CREATE STREAM PIPELINE_SOURCE WITH (KAFKA_TOPIC='server1.mydb.CUSTOMERS', KEY_FORMAT='KAFKA', VALUE_FORMAT='AVRO');", model)
         self.assertEqual(heredoc_json(model, r"--connector pg-sink << EOF")["topics"], "server1.mydb.CUSTOMERS_ksqldb")
 
+    def test_flink_step(self):
+        model, out = self.repo.build("connect/connect-debezium-mysql-source/dbz.sh", ["connect/connect-aws-s3-sink/s3.sh"], step="flink")
+        self.assertTrue(bash_ok(model)[0])
+        self.assertIn("-> flink -> connect/connect-aws-s3-sink/s3.sh (topic server1.mydb.CUSTOMERS)", model)
+        env = model.index("playground start-environment")
+        for line in ("export ENABLE_FLINK=true", 'export FLINK_TAG="2.2"', "flink-sql-avro-confluent-registry-2.2.0.jar", "exit 111"):
+            self.assertLess(model.index(line), env, line)
+        self.assertIn("source_table=$(playground flink table-ddl --topic server1.mydb.CUSTOMERS --table pipeline_source)", model)
+        # a Debezium source: the job flattens the envelope, the sinks get no ExtractNewRecordState
+        self.assertIn("step_table=$(playground flink table-ddl --topic server1.mydb.CUSTOMERS_flink --schema-topic server1.mydb.CUSTOMERS --field after --table pipeline_step --sink)", model)
+        self.assertIn("step_select=$(playground flink table-ddl --topic server1.mydb.CUSTOMERS --field after --select-from pipeline_source)", model)
+        self.assertIn("INSERT INTO pipeline_step $step_select;", model)
+        cfg = heredoc_json(model, r"--connector pg-sink << EOF")
+        self.assertEqual(cfg["topics"], "server1.mydb.CUSTOMERS_flink")
+        self.assertNotIn("transforms", cfg)
+        self.assertIn("🐿️ Flink step", out)
+        # any other Avro source: SELECT * of the whole value
+        model, _ = self.repo.build("connect/connect-datagen-source/datagen.sh", ["connect/connect-aws-s3-sink/s3.sh"], step="flink")
+        self.assertTrue(bash_ok(model)[0])
+        self.assertIn('step_select="SELECT * FROM pipeline_source"', model)
+        self.assertIn("--topic pageviews_flink --schema-topic pageviews --table pipeline_step --sink)", model)
+
+        src, _, topic, step = catalog.from_model(self.repo.path("model.sh"), self.repo.root)
+        self.assertEqual((topic, step), ("pageviews", "flink"))
+
     def test_fully_managed(self):
         model, out = self.repo.build("ccloud/fm-datagen-source/fm.sh", ["ccloud/fm-aws-s3-sink/fm.sh"])
         self.assertTrue(bash_ok(model)[0])
@@ -482,6 +519,8 @@ class BuildTest(unittest.TestCase):
             ("connect/connect-debezium-mysql-source/dbz.sh", ["connect/connect-filestream-source/file.sh"], {}, "not a sink"),
             ("ccloud/fm-datagen-source/fm.sh", ["ccloud/fm-aws-s3-sink/fm.sh"], {"step": "ksqldb"}, "only supported with self-managed"),
             ("connect/connect-filestream-source/file.sh", ["connect/connect-aws-s3-sink/s3.sh"], {"step": "ksqldb"}, "needs values with a schema"),
+            ("connect/connect-filestream-source/file.sh", ["connect/connect-aws-s3-sink/s3.sh"], {"step": "flink"}, "needs Avro values"),
+            ("connect/connect-jdbc-postgresql-sink/pg.sh", ["connect/connect-aws-s3-sink/s3.sh"], {"step": "flink"}, "needs a source example"),
         ]:
             out = io.StringIO()
             pipeline.messages.clear()
@@ -492,6 +531,61 @@ class BuildTest(unittest.TestCase):
     def test_topic_override(self):
         model, _ = self.repo.build("connect/connect-filestream-source/file.sh", ["connect/connect-aws-s3-sink/s3.sh"], topic="other")
         self.assertIn('"topics": "other"', model)
+
+
+class FlinkDdlTest(unittest.TestCase):
+    SCHEMA = {
+        "type": "record", "name": "Envelope", "namespace": "server1.mydb.CUSTOMERS",
+        "fields": [
+            {"name": "before", "type": ["null", {"type": "record", "name": "Value", "fields": [
+                {"name": "id", "type": "int"},
+                {"name": "email", "type": ["null", "string"], "default": None},
+                {"name": "update_ts", "type": {"type": "string", "connect.name": "io.debezium.time.ZonedTimestamp"}},
+                {"name": "price", "type": {"type": "bytes", "logicalType": "decimal", "precision": 10, "scale": 2}},
+                {"name": "day", "type": {"type": "int", "logicalType": "date"}},
+                {"name": "ts", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+            ]}], "default": None},
+            {"name": "after", "type": ["null", "Value"], "default": None},
+            {"name": "op", "type": "string"},
+            {"name": "tags", "type": {"type": "array", "items": "string"}},
+            {"name": "attrs", "type": {"type": "map", "values": "long"}},
+            {"name": "level", "type": {"type": "enum", "name": "Level", "symbols": ["A", "B"]}},
+        ]}
+
+    def test_columns_from_the_registry_answer(self):
+        answer = json.dumps({"subject": "t-value", "version": 1, "id": 3, "schema": json.dumps(self.SCHEMA)})
+        cols = dict(flink_ddl.columns(answer))
+        row = "ROW<`id` INT, `email` STRING, `update_ts` STRING, `price` DECIMAL(10, 2), `day` DATE, `ts` TIMESTAMP(3)>"
+        self.assertEqual(cols["before"], row)
+        self.assertEqual(cols["after"], row, "a named type used again")
+        self.assertEqual((cols["op"], cols["tags"], cols["attrs"], cols["level"]), ("STRING", "ARRAY<STRING>", "MAP<STRING, BIGINT>", "STRING"))
+
+    def test_ddl_source_and_sink(self):
+        cols = [("id", "INT"), ("my`col", "STRING")]
+        src = flink_ddl.ddl("pipeline_source", "a'topic", cols)
+        self.assertIn("`my``col` STRING", src)
+        self.assertIn("'topic' = 'a''topic'", src)
+        self.assertIn("'scan.startup.mode' = 'earliest-offset'", src)
+        self.assertIn("'value.format' = 'avro-confluent'", src)
+        sink = flink_ddl.ddl("pipeline_step", "t_flink", cols, sink=True)
+        self.assertNotIn("scan.startup.mode", sink)
+        self.assertNotIn("properties.group.id", sink)
+
+    def test_debezium_after_columns_and_select(self):
+        answer = json.dumps({"schema": json.dumps(self.SCHEMA)})
+        cols = flink_ddl.columns(answer, "after")
+        self.assertEqual([n for n, _ in cols], ["id", "email", "update_ts", "price", "day", "ts"])
+        self.assertEqual(flink_ddl.select("after", cols[:2], "pipeline_source"),
+                         "SELECT `after`.`id` AS `id`, `after`.`email` AS `email` FROM `pipeline_source` WHERE `after` IS NOT NULL")
+        with self.assertRaises(flink_ddl.Unsupported):
+            flink_ddl.columns(answer, "op")
+
+    def test_unsupported(self):
+        for schema in ({"schemaType": "PROTOBUF", "schema": "syntax = 'proto3';"},
+                       {"type": "record", "name": "r", "fields": [{"name": "u", "type": ["int", "string"]}]},
+                       {"type": "record", "name": "n", "fields": [{"name": "next", "type": ["null", "n"]}]}):
+            with self.assertRaises(flink_ddl.Unsupported):
+                flink_ddl.columns(json.dumps(schema))
 
 
 class FlowTest(unittest.TestCase):

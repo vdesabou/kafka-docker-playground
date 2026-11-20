@@ -127,6 +127,11 @@ How it fails, and what the command adds:
 
 Gotchas:
 
+- **Avro topics: let `playground flink table-ddl --topic <t>` write the columns.** Flink cannot read them from Schema
+  Registry: the command maps the latest value schema of `<t>-value` to Flink types (records become `ROW<…>`, unions
+  with null a nullable column, logical types `DATE` / `TIMESTAMP(3)` / `DECIMAL(p, s)`), with the `avro-confluent`
+  format. `--sink` for the table of an `INSERT INTO`, `--schema-topic` to take the columns of another topic:
+  `ddl=$(playground flink table-ddl --topic orders)` then `playground flink sql << EOF … $ddl … EOF`.
 - **`SET` only lasts for the call**, like the tables: put `SET 'execution.runtime-mode' = 'batch';`,
   `SET 'parallelism.default' = '2';`, `SET 'restart-strategy.type' = 'none';`… at the top of each call that needs them.
 - **The `print` connector writes to the stdout of the taskmanager**, not to the output of the command: read it with
@@ -412,7 +417,8 @@ Where the context comes from:
 | "the job fails after a few records" | `playground flink list-jobs --state FAILED` (root cause), then `playground container logs -c jobmanager --errors` and `-c taskmanager --errors` |
 | "the job never fails but makes no progress" | `list-jobs`: `RESTARTING` again and again; `SET 'restart-strategy.type' = 'none';` to see the error once |
 | "bad records in the topic break the job" | `playground topic produce -t <t> --value 'not json' --value-format raw` next to valid records, then the customer's `'json.ignore-parse-errors' = 'true'` or not |
-| "Avro records with Schema Registry" | `'format' = 'avro-confluent'`, `'avro-confluent.url' = 'http://schema-registry:8081'`, with the `flink-sql-avro-confluent-registry` jar in `FLINK_URL` |
+| "Avro records with Schema Registry" | `playground flink table-ddl --topic <t>` writes the `CREATE TABLE` with the columns of the Avro value schema (`avro-confluent`, `http://schema-registry:8081`), with the `flink-sql-avro-confluent-registry` jar in `FLINK_URL` |
+| "our CDC / connector pipeline goes through a Flink job" | `playground repro bootstrap -f <source example> --pipeline <sink example> --pipeline-step flink -d "<case>" --no-run`: Flink started with both jars, `INSERT INTO pipeline_step SELECT * FROM pipeline_source` from the topic of the source to `<topic>_flink`, read by the sinks (Avro values) |
 | "it worked in Flink X, not in Y" | the same statements with `FLINK_TAG=X` then `FLINK_TAG=Y` (and the matching Kafka connector jar) |
 | "the job keeps consuming after we stopped the client" | `playground flink list-jobs --state RUNNING`: an `INSERT INTO` (and a `SELECT` stopped by force) runs on the cluster until `playground flink cancel` |
 | "our Confluent Cloud Flink statement gives a wrong result / fails" | `playground run -f ccloud/flink-sql-kafka/flink-sql-kafka.sh` for the environment, cluster and compute pool, produce the customer's records with `playground topic produce`, then their statements with `playground flink sql` (topics are tables already); `list-jobs` prints the `status_detail` of a FAILED one |
@@ -435,6 +441,7 @@ FLINK_TAG=2.2 FLINK_URL="<jar> [<jar>…]" playground run -f <plaintext example>
 playground flink sql [--file <file.sql> | << 'EOF' … EOF] [--max-wait 120]
 playground flink list-jobs [--state RUNNING|FAILED|…] [--json]
 playground flink cancel [--job <id> | --all]
+playground flink table-ddl --topic <t> [--table <name>] [--schema-topic <t>] [--sink]   # CREATE TABLE from the Avro schema in Schema Registry
 playground flink sql|list-jobs|cancel --environment ccloud      # Confluent Cloud compute pool; cancel --delete
 ```
 

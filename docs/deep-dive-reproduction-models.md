@@ -79,6 +79,7 @@ playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh"
 playground repro bootstrap -f "…/jdbc-mysql-sink.sh" -d "123456 smt drops field" --custom-smt --no-run    # a no-op SMT to edit, built and wired in
 playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc to s3" --pipeline "…/s3-sink.sh" --no-run       # source -> sinks, see below
 playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc via ksqldb" --pipeline "…/elasticsearch-sink.sh" --pipeline-step ksqldb --no-run
+playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc via flink" --pipeline "…/postgres-sink.sh" --pipeline-step flink --no-run
 playground repro pipeline-builder                                                    # pick the source and sinks in a page, copy the command
 playground repro bootstrap -f "…/http_no_auth.sh" -d "123456 two plugins" --connector-plugin confluentinc/kafka-connect-jdbc --no-run
 playground repro bootstrap -f "…/http_no_auth.sh" -d "123456 dlq not working" --no-run \
@@ -683,7 +684,7 @@ hosts) and never customer data.
 
 ```bash
 playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symptom>" --no-run] \
-  [--config <customer file> [--config-connector <name>]] [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>" … [--pipeline-topic <t>] [--pipeline-step ksqldb]]
+  [--config <customer file> [--config-connector <name>]] [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>" … [--pipeline-topic <t>] [--pipeline-step ksqldb|flink]]
 playground repro pipeline-builder [--output-dir <dir>] [--no-open]
 playground connector flow [--json] [--fail-on-error]
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
