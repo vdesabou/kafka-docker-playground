@@ -185,15 +185,7 @@ then
   exit 1
 fi
 
-log "Granting Firestore read/write IAM role to principal $GCP_FIRESTORE_CONNECTION_PRINCIPAL"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud projects add-iam-policy-binding $GCP_PROJECT \
-  --member="$GCP_FIRESTORE_CONNECTION_PRINCIPAL" \
-  --role="roles/datastore.user" > /dev/null 2>&1
-
-GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS=${GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS:-60}
-log "Waiting ${GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS}s for IAM propagation"
-sleep $GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS
-
+# set before the grant, so that a failure still deletes the user credential and the database
 function cleanup_cloud_resources {
   if [ -n "$GCP_FIRESTORE_CONNECTION_PRINCIPAL" ]
   then
@@ -219,6 +211,34 @@ EOF
   docker rm -f gcloud-config
 }
 trap cleanup_cloud_resources EXIT
+
+log "Granting Firestore read/write IAM role to principal $GCP_FIRESTORE_CONNECTION_PRINCIPAL"
+# the IAM policy of the project is shared: show why the binding fails, and retry
+MAX_ATTEMPTS=3
+for attempt in $(seq 1 $MAX_ATTEMPTS)
+do
+  set +e
+  output=$(docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud projects add-iam-policy-binding $GCP_PROJECT \
+    --member="$GCP_FIRESTORE_CONNECTION_PRINCIPAL" \
+    --role="roles/datastore.user" 2>&1 < /dev/null)
+  ret=$?
+  set -e
+  if [ $ret -eq 0 ]
+  then
+    break
+  fi
+  logerror "❌ failed to grant IAM role roles/datastore.user to $GCP_FIRESTORE_CONNECTION_PRINCIPAL (attempt $attempt/$MAX_ATTEMPTS):"
+  echo "$output" | tail -20
+  if [ $attempt -eq $MAX_ATTEMPTS ]
+  then
+    exit 1
+  fi
+  sleep 20
+done
+
+GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS=${GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS:-60}
+log "Waiting ${GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS}s for IAM propagation"
+sleep $GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS
 
 log "Sending messages to topic products"
 playground topic produce -t products --nb-messages 2 << 'EOF'
