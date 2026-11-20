@@ -8,6 +8,7 @@ help: |-
   problem, so that anyone can reproduce it with a single command.
 
     bootstrap   scaffold one from an existing example, then edit it
+    pipeline-builder   pick a source and sinks in a page, copy the bootstrap --pipeline command
     list        find models by case, status, verdict, base example, author, date
     diff        what a model changes compared with its base example
     status      show or update what a model proves: expected, actual, jira, status
@@ -479,11 +480,33 @@ commands:
       dynamic:
       - playground get-examples-list-with-fzf --without-repro --sink-only "$completion_current"
     help: |-
-      🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.
-      
+      🔗 Sink example to chain after the example of --file, in one model. Repeat it for several sinks.
+
+      --file is a source example (source -> sinks), or a sink example (fan-out: its producer feeds the other sinks too). All self-managed (connect/) or all fully managed (ccloud/fm-*).
+
+      For each sink: its producers are removed, it reads the topic of the base example (the old topic name is replaced in its checks too), its converters (or input.data.format) are the ones of the base, a duplicated connector name is renamed, the docker compose services are added (lists such as volumes are joined), and the compatibility rules apply (ExtractNewRecordState for a Debezium envelope, warnings for a schemaless source into a sink that needs a schema...). After the sink connector, the model waits until it has consumed every record (playground connector show-lag); the checks of the sink example follow under set +e. The chain is written in the header (# 🔗 pipeline:).
+
       ❕ It must be absolute full path.
 
-      🎓 Tip: use <tab> completion to trigger fzf completion
+      🎓 Tip: use <tab> completion to trigger fzf completion, or pick the examples in the pipeline builder page (playground repro pipeline-builder)
+
+  - long: --pipeline-topic
+    required: false
+    arg: topic
+    help: |-
+      🗳 Topic the sinks of --pipeline read
+
+      Default: the topic the source example checks (playground topic consume --topic ...), else its kafka.topic. Needed when the source writes several topics or builds the name at run time.
+
+  - long: --pipeline-step
+    required: false
+    arg: step
+    allowed:
+      - ksqldb
+    help: |-
+      🧪 Processing step between the source and the sinks of --pipeline (self-managed only)
+
+      ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro, Protobuf or JSON Schema).
 
   - long: --no-run
     required: false
@@ -500,6 +523,25 @@ commands:
   - playground repro bootstrap -f "\$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --no-run
   - playground repro bootstrap --config ~/Downloads/customer-connector.yaml -d "123456 dlq not working" --no-run
   - playground repro bootstrap -f "\$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --expected "bad records go to the DLQ" --actual "the task fails with Unknown magic byte" --jira CC-1234 --no-run
+  - playground repro bootstrap -f "\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "123456 cdc to postgres and s3" --pipeline "\$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" --pipeline "\$PWD/connect/connect-aws-s3-sink/s3-sink.sh" --no-run
+  - playground repro bootstrap -f "\$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "123456 cdc through ksqldb" --pipeline "\$PWD/connect/connect-elasticsearch-sink/elasticsearch-sink.sh" --pipeline-step ksqldb --no-run
+  - playground repro bootstrap -f "\$PWD/ccloud/fm-datagen-source/fully-managed-datagen-source.sh" -d "123456 datagen to s3" --pipeline "\$PWD/ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh" --no-run
+
+- name: pipeline-builder
+  help: |-
+    🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command
+
+    A self-contained HTML page with every connector example of connect/ and ccloud/fm-*: pick the source (or a sink for a fan-out) and the sinks, and it shows the flow (source → topic → optional ksqlDB step → sinks), the topic the sinks will read, the converters, the credentials needed, and the same compatibility checks as 'repro bootstrap --pipeline' (Debezium envelope into a flat sink, a schemaless source into a sink that needs a schema, the same docker compose service or host port in two examples...). Then copy the ready-to-paste 'playground repro bootstrap ... --pipeline ... --no-run' command. The selection is kept in the URL, to share it.
+
+    It only writes a command: nothing runs from the page.
+
+    🌐 Also on the website: https://kafka-docker-playground.io/pipeline-builder.html (commands with \$PWD)
+  flags:
+  - import: src/flags/output-dir.yml
+  - import: src/flags/no-open.yml
+  examples:
+  - playground repro pipeline-builder
+  - playground repro pipeline-builder --output-dir /tmp/pipeline --no-open
 
 - name: status
   help: |-

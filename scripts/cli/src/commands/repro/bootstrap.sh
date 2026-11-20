@@ -7,6 +7,8 @@ nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
 
 eval "pipeline_array=(${args[--pipeline]})"
+pipeline_topic="${args[--pipeline-topic]}"
+pipeline_step="${args[--pipeline-step]}"
 
 eval "connector_plugin_array=(${args[--connector-plugin]})"
 
@@ -175,6 +177,8 @@ then
 
   MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
   MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
+  MENU_PIPELINE_STEP="$(menu_label "🧪" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
+  readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the ksqlDB step"
 
   readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
   readonly MENU_GO_BACK="🔙 Go back"
@@ -216,12 +220,22 @@ then
 
     # an entry is only added when it applies to this example
     options=("$MENU_LETS_GO")
+    # a source example (source -> sinks) or a sink example (fan-out), self-managed or fully managed
+    if [ $connector_example == 1 ] || [[ "$test_file" =~ /ccloud/fm-[^/]*-(source|sink)/ ]]
+    then
+      options+=("$MENU_PIPELINE")
+      if ((length > 0)) && [[ "$test_file" != */ccloud/* ]] && [[ "$test_file" == *source* ]]
+      then
+        if [ -z "$pipeline_step" ]
+        then
+          options+=("$MENU_PIPELINE_STEP")
+        else
+          options+=("$MENU_PIPELINE_NO_STEP")
+        fi
+      fi
+    fi
     if [ $connector_example == 1 ]
     then
-      if [[ $test_file != *"sink"* ]]
-      then
-        options+=("$MENU_PIPELINE")
-      fi
       if [ -z "$CUSTOM_SMT" ]
       then
         options+=("$MENU_ENABLE_CUSTOM_SMT")
@@ -294,15 +308,37 @@ then
       set -e
     fi
 
+    if [[ $res == *"$MENU_PIPELINE_STEP"* ]]
+    then
+      pipeline_step="ksqldb"
+      array_flag_list+=("--pipeline-step=ksqldb")
+    fi
+    if [[ $res == *"$MENU_PIPELINE_NO_STEP"* ]]
+    then
+      pipeline_step=""
+      array_flag_list=("${array_flag_list[@]/"--pipeline-step=ksqldb"}")
+    fi
+
     if [[ $res == *"$MENU_PIPELINE"* ]]
     then
-      sink_file=$(playground get-examples-list-with-fzf --without-repro --sink-only )
+      if [[ "$test_file" == */ccloud/* ]]
+      then
+        sink_file=$(playground get-examples-list-with-fzf --fully-managed-connector-only)
+      else
+        sink_file=$(playground get-examples-list-with-fzf --without-repro --sink-only )
+      fi
       if [[ $sink_file == *"@"* ]]
       then
         sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
       fi
-      array_flag_list+=("--pipeline=$sink_file")
-      pipeline_array+=("$sink_file")
+      if [[ "$sink_file" != *-sink/* ]]
+      then
+        logwarn "🔗 $sink_file is not a sink example, not added to the pipeline"
+      elif [ -n "$sink_file" ]
+      then
+        array_flag_list+=("--pipeline=$sink_file")
+        pipeline_array+=("$sink_file")
+      fi
     fi
   done # end while loop stop
 fi
@@ -386,18 +422,39 @@ dir1="${test_file_directory%/*}" #connect
 dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
 final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
-length=${#pipeline_array[@]}
-if ((length > 0))
+pipeline_length=${#pipeline_array[@]}
+if ((pipeline_length == 0)) && { [ -n "$pipeline_topic" ] || [ -n "$pipeline_step" ]; }
 then
-  if [[ "$base1" != *source ]]
+  logerror "❌ --pipeline-topic and --pipeline-step need --pipeline"
+  exit 1
+fi
+if ((pipeline_length > 0))
+then
+  if ! command -v python3 > /dev/null 2>&1
   then
-    logerror "example <$base1> must be source connector example when building a pipeline !"
+    logerror "❌ python3 is required to build a pipeline"
     exit 1
   fi
-
-  if [[ "$dir2" != connect* ]]
+  # the sinks, without the fzf "<emoji>@" prefix
+  pipeline_sink_args=()
+  for sink_file in "${pipeline_array[@]}"
+  do
+    if [ -n "$sink_file" ]
+    then
+      pipeline_sink_args+=(--sink "${sink_file#*@}")
+    fi
+  done
+  pipeline_extra_args=()
+  [ -n "$pipeline_topic" ] && pipeline_extra_args+=(--topic "$pipeline_topic")
+  [ -n "$pipeline_step" ] && pipeline_extra_args+=(--step "$pipeline_step")
+  # source or sink example, all self-managed or all fully managed, the topic can be found: checked before any file is written
+  set +e
+  pipeline_output=$(python3 -I "$root_folder/tools/pipeline-builder/pipeline.py" --validate --base "$test_file" "${pipeline_sink_args[@]}" "${pipeline_extra_args[@]}" --root "$root_folder")
+  pipeline_rc=$?
+  set -e
+  print_pipeline_messages "$pipeline_output"
+  if [ $pipeline_rc -ne 0 ]
   then
-    logerror "example <$dir2> is not from connect folder, only connect in connect folder are supported"
     exit 1
   fi
 fi
@@ -1310,256 +1367,67 @@ EOF
 
 fi
 ####
-#### pipeline
-remove_connect_cp_version_greater_than_8_blocks () {
-  awk '
-    /^[[:space:]]*if connect_cp_version_greater_than_8/ {skip=1; next}
-    skip && /^[[:space:]]*fi([[:space:]]*#.*)?$/ {skip=0; next}
-    !skip {print}
-  ' "$1" > $tmp_dir/tmp_file2
-  mv $tmp_dir/tmp_file2 "$1"
-}
-
-length=${#pipeline_array[@]}
-if ((length > 0))
+#### pipeline: the sinks read the topic of the base example (tools/pipeline-builder/pipeline.py)
+if ((pipeline_length > 0))
 then
-  remove_connect_cp_version_greater_than_8_blocks "$repro_test_file"
-fi
+  for sink_file in "${pipeline_array[@]}"
+  do
+    sink_file="${sink_file#*@}"
+    if [ -z "$sink_file" ] || [[ "$test_file" == */ccloud/* ]]
+    then
+      continue
+    fi
+    # docker compose: the services of the sink example are added. When both define the same key, the value of the
+    # base wins; lists (volumes, depends_on, ports...) are joined
+    if [ -z "$docker_compose_test_file" ] || [ ! -f "$docker_compose_test_file" ]
+    then
+      logwarn "📁 the model has no docker compose override: add the services of $sink_file by hand"
+      continue
+    fi
+    docker_compose_sink_file=$(grep "start-environment" "$sink_file" | awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+    docker_compose_sink_file="$(dirname "$sink_file")/${docker_compose_sink_file}"
+    if [ ! -f "$docker_compose_sink_file" ]
+    then
+      logwarn "📁 could not find the docker compose override of $sink_file: add its services by hand"
+      continue
+    fi
+    base_plugin_path=$(yq '.services.connect.environment.CONNECT_PLUGIN_PATH // ""' "$docker_compose_test_file")
+    sink_plugin_path=$(yq '.services.connect.environment.CONNECT_PLUGIN_PATH // ""' "$docker_compose_sink_file")
+    if [ -z "$sink_plugin_path" ]
+    then
+      logwarn "🔌 no CONNECT_PLUGIN_PATH in $docker_compose_sink_file: add the plugin of the sink by hand"
+    fi
+    set +e
+    yq eval-all '. as $item ireduce ({}; . *+ $item) | (.. | select(tag == "!!seq")) |= unique' "$docker_compose_sink_file" "$docker_compose_test_file" > $tmp_dir/merged.yml 2> $tmp_dir/merged.err
+    merge_rc=$?
+    set -e
+    if [ $merge_rc -ne 0 ]
+    then
+      logwarn "📁 could not join the lists of $(basename "$docker_compose_sink_file") ($(head -1 $tmp_dir/merged.err)): the lists of the base are kept"
+      yq ". *= load(\"$docker_compose_test_file\")" "$docker_compose_sink_file" > $tmp_dir/merged.yml
+    fi
+    cp $tmp_dir/merged.yml "$docker_compose_test_file"
+    new_plugin_path=$(echo "$base_plugin_path,$sink_plugin_path" | tr ',' '\n' | sed 's/[[:space:]]//g' | awk 'NF && !seen[$0]++' | paste -sd, -)
+    if [ -n "$new_plugin_path" ]
+    then
+      NEW_PLUGIN_PATH="$new_plugin_path" yq -i '.services.connect.environment.CONNECT_PLUGIN_PATH = strenv(NEW_PLUGIN_PATH)' "$docker_compose_test_file"
+    fi
+    log "🐳 services of $(basename "$docker_compose_sink_file") added to $(basename "$docker_compose_test_file")"
+  done
 
-for sink_file in "${pipeline_array[@]}"; do
-  if [[ -n "$sink_file" ]]
+  set +e
+  pipeline_output=$(python3 -I "$root_folder/tools/pipeline-builder/pipeline.py" --model "$repro_test_file" --base "$test_file" "${pipeline_sink_args[@]}" "${pipeline_extra_args[@]}" --root "$root_folder")
+  pipeline_rc=$?
+  set -e
+  print_pipeline_messages "$pipeline_output"
+  if [ $pipeline_rc -ne 0 ]
   then
-    if [[ $sink_file == *"@"* ]]
-    then
-      sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
-    fi
-    test_sink_file_directory="$(dirname "${sink_file}")"
-    ## 
-    # docker-compose part
-    # determining the docker-compose file from from test_file
-    docker_compose_sink_file=$(grep "start-environment" "$sink_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-    docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
-    cp $docker_compose_test_file /tmp/1.yml
-    cp $docker_compose_sink_file /tmp/2.yml
-    yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
-
-    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
-    sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
-    if [ "$sink_connector_paths" == "" ]
-    then
-      logerror "cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
-      exit 1
-    else
-      tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
-      new_connector_paths=$(echo "$tmp_new_connector_paths" | sed 's/ //g')
-      cp $docker_compose_test_file /tmp/1.yml
-
-      yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" /tmp/1.yml
-      cp /tmp/1.yml $docker_compose_test_file
-    fi
-
-    ## 
-    # sh part
-    
-    line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-    line_final_environment=$(grep -n 'playground start-environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-    line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1) 
-    line_sink_environment=$(grep -n 'playground start-environment' $sink_file | cut -d ":" -f 1 | tail -n1)
-
-    # get converter info
-    source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
-    if [ "$source_key_converter" == "" ]
-    then
-      log "💱 Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
-    else
-      if [ "$source_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-      then
-        # check schemas.enable
-        source_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
-        if [ "$source_key_json_converter_schemas_enable" == "" ]
-        then
-          log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=true"
-        else
-          log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
-        fi
-      else
-        log "💱 Source connector is using key.converter $source_key_converter"
-      fi
-    fi
-
-    source_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
-    if [ "$source_value_converter" == "" ]
-    then
-      log "💱 Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
-    else
-      if [ "$source_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-      then
-        # check schemas.enable
-        source_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
-        if [ "$source_value_json_converter_schemas_enable" == "" ]
-        then
-          log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=true"
-        else
-          log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
-        fi
-      else
-        log "💱 Source connector is using value.converter $source_value_converter"
-      fi
-    fi
-
-    sink_key_converter=$(grep "\"key.converter\"" $sink_file | cut -d '"' -f 4)
-    if [ "$sink_key_converter" == "" ]
-    then
-      log "💱 Sink connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
-    else
-      if [ "$sink_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-      then
-        # check schemas.enable
-        sink_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
-        if [ "$sink_key_json_converter_schemas_enable" == "" ]
-        then
-          log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=true"
-        else
-          log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=$sink_key_json_converter_schemas_enable"
-        fi
-      else
-        log "💱 Sink connector is using key.converter $sink_key_converter"
-      fi
-    fi
-
-    sink_value_converter=$(grep "\"value.converter\"" $sink_file | cut -d '"' -f 4)
-    if [ "$sink_value_converter" == "" ]
-    then
-      log "💱 Sink connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
-    else
-      if [ "$sink_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
-      then
-        # check schemas.enable
-        sink_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
-        if [ "$sink_value_json_converter_schemas_enable" == "" ]
-        then
-          log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=true"
-        else
-          log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=$sink_value_json_converter_schemas_enable"
-        fi
-      else
-        log "💱 Sink connector is using value.converter $sink_value_converter"
-      fi
-    fi
-
-    sed -n "$(($line_sink_source+1)),$(($line_sink_environment-1))p" $sink_file > $tmp_dir/pre_sink
-    cp $repro_test_file $tmp_dir/tmp_file
-
-    { head -n $(($line_final_environment-1)) $tmp_dir/tmp_file; cat $tmp_dir/pre_sink; tail -n +$line_final_environment $tmp_dir/tmp_file; } > $repro_test_file
-    remove_connect_cp_version_greater_than_8_blocks "$repro_test_file"
-
-    sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
-
-    # deal with converters
-    set +e
-    if [ "$source_value_converter" == "" ] && [ "$sink_value_converter" == "" ]
-    then
-      # do nothing
-      :
-    else
-      grep "\"value.converter" $repro_test_file > $tmp_dir/source_value_converter
-      if [ "$sink_value_converter" == "" ]
-      then
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-        
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      else
-        # remove existing value.converter
-        grep -vwE "\"value.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-        
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      fi
-      log "🔮 Changing Sink connector value.converter to use same as source:"
-      cat $tmp_dir/source_value_converter
-    fi
-    if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
-    then
-      # do nothing
-      :
-    else
-      grep "\"key.converter" $repro_test_file > $tmp_dir/source_key_converter
-      if [ "$sink_key_converter" == "" ]
-      then
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-        
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      else
-        # remove existing key.converter
-        grep -vwE "\"key.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-
-        line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-        
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
-        cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
-      fi
-      log "🔮 Changing Sink connector key.converter to use same as source:"
-      cat $tmp_dir/source_key_converter
-    fi
-    set -e
-    # need to remove cli which produces and change topic
-    # remove the producer of the sink example (and the log line before it): the sink reads what the source produces
-    producer_regex="kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer|playground topic produce"
-    line_kafka_cli_producer=$(grep -En "$producer_regex" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-    set +e
-    if [ -z "$line_kafka_cli_producer" ]
-    then
-      logwarn "Could not find the producer of the sink example, keeping it as is"
-      cat $tmp_dir/tmp_file >> $repro_test_file
-    else
-      line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
-      if sed -n "${line_kafka_cli_producer}p" $tmp_dir/tmp_file | grep -q "EOF"
-      then
-        # heredoc (avro schema...): it ends at the first EOF line after the producer
-        tmp=$(tail -n +$(($line_kafka_cli_producer + 1)) $tmp_dir/tmp_file | grep -n "^EOF" | cut -d ":" -f 1 | head -n1)
-        if [ "$tmp" == "" ]
-        then
-          logwarn "Could not determine EOF for the producer of the sink example, keeping it as is"
-          line_kafka_cli_producer_end=""
-        else
-          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp + 1))
-        fi
-      fi
-
-      if [ -n "$line_kafka_cli_producer_end" ]
-      then
-        # head -n 0 (or negative) is an error on macOS
-        { if [ $line_kafka_cli_producer -gt 2 ]; then head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; fi; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
-        cat $tmp_dir/tmp_file2 >> $repro_test_file
-      else
-        cat $tmp_dir/tmp_file >> $repro_test_file
-      fi
-    fi
-    set -e
-
-    awk -F'--topic ' '{print $2}' $repro_test_file > $tmp_dir/tmp
-    sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
-    original_topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
-
-    if [ "$original_topic_name" != "" ]
-    then
-      cp $repro_test_file $tmp_dir/tmp_file
-      line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-
-      # replace the topic of the sink example (adding a second "topics" key would leave the original one in the config)
-      sed "${line}s|\"topics\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"topics\": \"$original_topic_name\"|" $tmp_dir/tmp_file > $repro_test_file
-    else 
-      logwarn "Could not find original topic name! "
-      logwarn "You would need to change topics config for sink by yourself."
-    fi
+    logerror "❌ the pipeline could not be built, removing $repro_test_file"
+    rm -f "$repro_test_file"
+    exit 1
   fi
-done
+  log "🗺️ see the flow while it runs: playground connector flow"
+fi
 
 cat $repro_test_file > $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file

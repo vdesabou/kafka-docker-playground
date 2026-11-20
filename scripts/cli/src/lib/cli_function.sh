@@ -12860,3 +12860,18 @@ function display_ccloud_hints () {
   fi
   return 0
 }
+
+# messages of tools/pipeline-builder/pipeline.py: one per line, 'I ' info, 'W ' warning, 'E ' error
+function print_pipeline_messages () {
+  local line
+  while IFS= read -r line
+  do
+    case "$line" in
+      "I "*) log "${line:2}" ;;
+      "W "*) logwarn "${line:2}" ;;
+      "E "*) logerror "❌ ${line:2}" ;;
+      "") ;;
+      *) echo "$line" ;;
+    esac
+  done <<< "$1"
+}

@@ -2060,7 +2060,7 @@
     },
     {
       "name": "repro",
-      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  list        find models by case, status, verdict, base example, author, date\n  diff        what a model changes compared with its base example\n  status      show or update what a model proves: expected, actual, jira, status\n  assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n  bisect      run a model on several versions: which one introduced or fixed it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
+      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  pipeline-builder   pick a source and sinks in a page, copy the bootstrap --pipeline command\n  list        find models by case, status, verdict, base example, author, date\n  diff        what a model changes compared with its base example\n  status      show or update what a model proves: expected, actual, jira, status\n  assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n  bisect      run a model on several versions: which one introduced or fixed it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
       "usage": "playground repro COMMAND",
       "options": [],
       "subcommands": [
@@ -2290,7 +2290,21 @@
                 "--pipeline"
               ],
               "argument": "SINK_FILE",
-              "description": "🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.\n\n❕ It must be absolute full path.\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRepeatable: ✓ Yes\nConflicts with: --producer"
+              "description": "🔗 Sink example to chain after the example of --file, in one model. Repeat it for several sinks.\n\n--file is a source example (source -> sinks), or a sink example (fan-out: its producer feeds the other sinks too). All self-managed (connect/) or all fully managed (ccloud/fm-*).\n\nFor each sink: its producers are removed, it reads the topic of the base example (the old topic name is replaced in its checks too), its converters (or input.data.format) are the ones of the base, a duplicated connector name is renamed, the docker compose services are added (lists such as volumes are joined), and the compatibility rules apply (ExtractNewRecordState for a Debezium envelope, warnings for a schemaless source into a sink that needs a schema...). After the sink connector, the model waits until it has consumed every record (playground connector show-lag); the checks of the sink example follow under set +e. The chain is written in the header (# 🔗 pipeline:).\n\n❕ It must be absolute full path.\n\n🎓 Tip: use <tab> completion to trigger fzf completion, or pick the examples in the pipeline builder page (playground repro pipeline-builder)\n\nRepeatable: ✓ Yes\nConflicts with: --producer"
+            },
+            {
+              "names": [
+                "--pipeline-topic"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic the sinks of --pipeline read\n\nDefault: the topic the source example checks (playground topic consume --topic ...), else its kafka.topic. Needed when the source writes several topics or builds the name at run time."
+            },
+            {
+              "names": [
+                "--pipeline-step"
+              ],
+              "argument": "STEP",
+              "description": "🧪 Processing step between the source and the sinks of --pipeline (self-managed only)\n\nksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro, Protobuf or JSON Schema).\n\nAllowed values: ksqldb"
             },
             {
               "names": [
@@ -2298,6 +2312,28 @@
               ],
               "argument": "",
               "description": "🛑 Only generate the reproduction model files, then exit\n\nSkips opening the generated file in the editor and running it, so\nthe running environment is left untouched.\n\n🎓 Tip: use it in scripts and from AI agents, together with --file and --description"
+            }
+          ]
+        },
+        {
+          "name": "pipeline-builder",
+          "description": "🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command\n\nA self-contained HTML page with every connector example of connect/ and ccloud/fm-*: pick the source (or a sink for a fan-out) and the sinks, and it shows the flow (source → topic → optional ksqlDB step → sinks), the topic the sinks will read, the converters, the credentials needed, and the same compatibility checks as 'repro bootstrap --pipeline' (Debezium envelope into a flat sink, a schemaless source into a sink that needs a schema, the same docker compose service or host port in two examples...). Then copy the ready-to-paste 'playground repro bootstrap ... --pipeline ... --no-run' command. The selection is kept in the URL, to share it.\n\nIt only writes a command: nothing runs from the page.\n\n🌐 Also on the website: https://kafka-docker-playground.io/pipeline-builder.html (commands with \\$PWD)",
+          "usage": "playground repro pipeline-builder [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: /tmp/playground-<command>, printed at the end)"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🙈 Do not open the HTML report in the browser (it is still written, and its path printed)"
             }
           ]
         },
@@ -12385,6 +12421,35 @@
               ],
               "argument": "CLUSTER",
               "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "flow",
+          "description": "🗺️ Show the flow of the running connectors: source → topic → sinks, with the records, the lag and the DLQ\n\nWhere are the records stuck? One tree per source connector: its state and tasks, the topics it writes with their number of records, then each sink reading them, with its state, its consumer lag and its dead letter queue. Topics read by a sink with no source connector (a producer) are listed too.\n\nThe topics of a source are the active topics tracked by the worker (KIP-558, self-managed), else its kafka.topic / topic config. A storage sink (S3, GCS, Azure Blob, HDFS) commits its offsets when it writes a file, so its lag stays above 0 until then.\n\n🎓 Tip: a reproduction model created with 'playground repro bootstrap --pipeline' prints this command at the end.\n\n☁️ Fully managed: supported (the topics of a source come from its config)",
+          "usage": "playground connector flow [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the flow as JSON on stdout (connectors with the topics they write and read, topics with their records), the log lines go to stderr"
+            },
+            {
+              "names": [
+                "--fail-on-error"
+              ],
+              "argument": "",
+              "description": "❌ Exit 1 when a connector or one of its tasks is FAILED, or the connector is not found (by default the command exits 0, it only displays)"
             }
           ]
         },

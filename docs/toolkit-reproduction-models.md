@@ -92,19 +92,50 @@ And add the transform config to connector:
 
 ### With pipeline (`--pipeline`)
 
-All the steps to create a pipeline, i.e an example with source and sink connectors are automated:
-
-Example:
+Chain a source example and one or more sink examples in a single model: the records of the source go through the sinks.
 
 <video src="videos/repro-pipeline.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
-It will automatically:
+```bash
+playground repro bootstrap -f "$PWD/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "123456 cdc to postgres and s3" \
+  --pipeline "$PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" \
+  --pipeline "$PWD/connect/connect-aws-s3-sink/s3-sink.sh" --no-run
+```
 
-* Add sink example(s) (you can select multiple !) at the end of source example
-* Modify sink converters (key and value) to use same as source example
-* Use same kafka topic for all connectors
-* Add all required containers for all sink and source
-* Update `CONNECT_PLUGIN_PATH` to include all connectors
+```text
+🔗 the sinks read topic server1_mydb_CUSTOMERS
+➕ sink 1: connect/connect-jdbc-postgresql-sink/postgres-sink.sh (connector postgres-sink)
+   🗑️ 2 producer(s) of the sink example removed
+   💱 converters of the worker (the base sets none): key StringConverter, value AvroConverter
+   🩹 the source writes the Debezium envelope (before, after, op...): ExtractNewRecordState is added to the sink, so that it gets the row
+➕ sink 2: connect/connect-aws-s3-sink/s3-sink.sh (connector s3-sink)
+```
+
+For each sink, it automatically:
+
+* removes every producer of the sink example: the records come from the source
+* makes it read the topic of the source (the topic the source example checks, or `--pipeline-topic <topic>`), `topics.regex` included, and replaces the old topic name in the rest of its section (bucket paths, table names, index names)
+* gives it the converters of the source (self-managed), or its `input.data.format` (fully managed)
+* applies the compatibility rules: `ExtractNewRecordState` when a Debezium envelope goes into a JDBC, Elasticsearch, BigQuery… sink, warnings when a source without schema feeds a sink that needs one, when two examples define the same docker compose service or host port…
+* renames a connector name already used in the model, adds `--container <db>` to `playground db` when several databases run
+* adds the docker compose services of the sink (lists like `volumes` and `depends_on` are joined) and its plugin to `CONNECT_PLUGIN_PATH`
+* after its connector, waits until it has consumed every record (`playground connector show-lag`, or its state for a storage sink that commits on flush), then keeps the checks of the sink example under `set +e`: they were written for the records of its producer, adapt them
+* comments out the version guards (`--connector-tag` would apply to every connector) and writes the chain in the header: `# 🔗 pipeline: <source> -> <sinks> (topic <t>)`, shown by `playground repro list` and as a diagram in the `repro export` report
+
+Other shapes:
+
+* **fan-out**: `-f` is a sink example, its producer feeds the other sinks too
+* **fully managed**: `ccloud/fm-*` source and sinks, on one cluster (the cloud and region a sink needs win), one question at the end to delete every connector
+* **ksqlDB step**: `--pipeline-step ksqldb` enables ksqlDB, and a stream copies the topic of the source to `<topic>_ksqldb`, read by the sinks (values with a schema)
+
+> [!TIP]
+> Pick the examples in a page with [`playground repro pipeline-builder`](/playground%20repro%20pipeline-builder) (also on the website: [pipeline builder](pipeline-builder.html ':ignore')): the flow, the topic, the credentials needed and the same checks, then copy the command. While the model runs, [`playground connector flow`](/playground%20connector%20flow) shows source → topic → sinks with the records, the lag and the DLQ:
+>
+> ```text
+> 🔌 debezium-mysql-source · MySqlConnector · ✅ RUNNING 1/1 tasks
+>   └─▶ 🗳 server1_mydb_CUSTOMERS · 2 records
+>         └─▶ 🔌 postgres-sink · JdbcSinkConnector · ✅ RUNNING 1/1 tasks · lag 0 ✔️
+> ```
 
 ## 📦 Share a reproduction model
 

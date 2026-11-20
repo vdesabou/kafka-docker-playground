@@ -45,7 +45,7 @@ then
 fi
 xargs -0 awk '
     function field(line, key) { sub("^# [^ ]+ " key ": ?", "", line); gsub("\t", " ", line); return line }
-    FNR == 1 { if (file != "") print_model(); file = FILENAME; date = author = description = expected = actual = jira = status = "" }
+    FNR == 1 { if (file != "") print_model(); file = FILENAME; date = author = description = expected = actual = jira = status = pipeline = "" }
     FNR > 30 { nextfile }
     /^# [^ ]+ date: / && date == "" { date = field($0, "date") }
     /^# [^ ]+ author: / && author == "" { author = field($0, "author") }
@@ -54,7 +54,8 @@ xargs -0 awk '
     /^# [^ ]+ actual:/ && actual == "" { actual = field($0, "actual") }
     /^# [^ ]+ jira:/ && jira == "" { jira = field($0, "jira") }
     /^# [^ ]+ status:/ && status == "" { status = field($0, "status") }
-    function print_model() { printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", file, date, author, description, expected, actual, jira, status }
+    /^# [^ ]+ pipeline: / && pipeline == "" { pipeline = field($0, "pipeline") }
+    function print_model() { printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", file, date, author, description, expected, actual, jira, status, pipeline }
     END { if (file != "") print_model() }' < "$tmp_dir/files" > "$tmp_dir/headers.tsv"
 
 # 2. what is not in the headers: the base example (the symlinks of each folder), the date the model was committed (models
@@ -117,6 +118,7 @@ models=$(jq -n -R \
             actual: (.[5] // ""),
             jira: (.[6] // ""),
             status: (.[7] // ""),
+            pipeline: (.[8] // ""),
             base_example: ($bases[$path | split("/")[0]] // ""),
             committed: (($uncommitted | index($path)) == null),
             last_verdict: ($verdicts[.[0]] // null)
@@ -135,7 +137,7 @@ filtered=$(echo "$models" | jq \
         and ($verdict == "" or ($verdict == "none" and .last_verdict == null) or (.last_verdict != null and (.last_verdict.verdict | gsub(" "; "-")) == $verdict))
         and ($base == "" or (.base_example | contains($base)))
         and ($since == "" or (.created != "" and .created >= $since))
-        and ($grep == "" or ([.description, .expected, .actual, .path, .jira] | join(" ") | test($grep; "i")))
+        and ($grep == "" or ([.description, .expected, .actual, .path, .jira, .pipeline] | join(" ") | test($grep; "i")))
         and ($uncommitted == "" or (.committed | not))))
     | sort_by(.created, .path) | reverse')
 
@@ -168,8 +170,9 @@ echo "$shown" | jq -r '.[] | [
         (if .status == "" then "-" else .status end),
         (if .last_verdict == null then "-" elif .last_verdict.verdict == "reproduced" then "🐞 \(.last_verdict.date)" else "✅ \(.last_verdict.date)" end),
         (.description + (if .committed then "" else " ✏️" end)),
-        .path] | @tsv' \
-    | while IFS=$'\t' read -r created case status verdict description path
+        .path,
+        (if .pipeline == "" then "-" else .pipeline end)] | @tsv' \
+    | while IFS=$'\t' read -r created case status verdict description path pipeline
     do
         verdict_width=16
         if [ "$verdict" != "-" ]
@@ -178,5 +181,9 @@ echo "$shown" | jq -r '.[] | [
         fi
         printf "   %-10s  %-6s  %-16.16s  %-${verdict_width}s  %.70s\n" "$created" "$case" "$status" "$verdict" "$description"
         printf '   %-10s  ↳ %s\n' "" "$path"
+        if [ "$pipeline" != "-" ]
+        then
+            printf '   %-10s  🔗 %.150s\n' "" "$pipeline"
+        fi
     done
 log "💡 details: playground repro status -f $repro_root/<path> | run: playground run -f $repro_root/<path>"
