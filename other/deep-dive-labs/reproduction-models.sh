@@ -8,6 +8,43 @@ source ${DIR}/lab-utils.bash
 lab_require_plaintext
 
 root_dir="$( cd "${DIR}/../.." >/dev/null && pwd )"
+
+# Step 7 runs first: the pipeline models go to their own folder of the repository (OUTPUT_FOLDER), not to the private
+# submodule, so this step runs in CI too (the other steps need the submodule)
+pipeline_folder=".deep-dive-lab-pipeline-$$"
+prev_clipboard=$(playground config get clipboard 2> /dev/null | tail -1)
+function cleanup_pipeline () {
+    rm -rf "${root_dir:?}/${pipeline_folder}"
+    playground config set clipboard "${prev_clipboard:-true}" > /dev/null 2>&1
+}
+trap cleanup_pipeline EXIT
+playground config set clipboard false > /dev/null 2>&1
+
+log "Step 7: a pipeline, source -> sinks (run first: it needs no private submodule, so CI runs it)"
+export OUTPUT_FOLDER="$pipeline_folder"
+lab_run playground repro bootstrap -f "${root_dir}/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "000000 deep dive lab ci pipeline" \
+    --pipeline "${root_dir}/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" --pipeline "${root_dir}/connect/connect-aws-s3-sink/s3-sink.sh" --no-run
+lab_expect_exit 0
+lab_expect_contains "🔗 the sinks read topic server1_mydb_CUSTOMERS"
+lab_expect_contains "🗑️ 2 producer(s) of the sink example removed"
+lab_expect_contains "🩹 the source writes the Debezium envelope (before, after, op...): ExtractNewRecordState is added to the sink, so that it gets the row"
+lab_expect_contains "🗄️ several databases (mysql, postgres): --container is added to the 'playground db' calls"
+pipeline_model="${root_dir}/${pipeline_folder}/connect-connect-debezium-mysql-source/debezium-mysql-source-repro-000000-deep-dive-lab-ci-pipeline.sh"
+lab_run head -15 "$pipeline_model"
+lab_expect_contains "# 🔗 pipeline: connect/connect-debezium-mysql-source/debezium-mysql-source.sh -> connect/connect-jdbc-postgresql-sink/postgres-sink.sh, connect/connect-aws-s3-sink/s3-sink.sh (topic server1_mydb_CUSTOMERS)"
+lab_run grep -c "playground topic produce" "$pipeline_model"
+lab_expect_equals "$LAB_OUTPUT" "0" "producers of the sink examples left"
+lab_run grep -n "show-lag\|--fail-on-error" "$pipeline_model"
+lab_expect_contains "playground connector show-lag --connector postgres-sink --max-wait 300 --fail-on-timeout"
+lab_expect_contains "playground connector status --connector s3-sink --fail-on-error" "a storage sink commits on flush"
+lab_run bash -n "$pipeline_model"
+lab_expect_exit 0
+lab_run playground repro bootstrap -f "${root_dir}/connect/connect-aws-s3-sink/s3-sink.sh" -d "000000 deep dive lab ci pipeline error" \
+    --pipeline "${root_dir}/ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh" --no-run
+lab_expect_exit 1
+lab_expect_contains "a pipeline is all self-managed (connect/) or all fully managed (ccloud/fm-*)"
+unset OUTPUT_FOLDER
+
 model_dir="${root_dir}/reproduction-models/connect-connect-filestream-sink"
 if [ ! -d "$model_dir" ]
 then
@@ -32,10 +69,7 @@ do
     fi
 done
 prev_test_file=$(playground state get run.test_file 2> /dev/null | tail -1)
-prev_clipboard=$(playground config get clipboard 2> /dev/null | tail -1)
 export_dir=$(mktemp -d)
-# the pipeline models go to their own folder of the repository (OUTPUT_FOLDER), removed at the end
-pipeline_folder=".deep-dive-lab-pipeline-$$"
 function cleanup_lab () {
     rm -f "$model" "$override" "$imported" "$report" "$config_model" "$config_override"
     rm -rf "$export_dir" "${root_dir:?}/${pipeline_folder}"
@@ -241,30 +275,6 @@ lab_run playground repro check -f "$config_model" --skip-secrets-store
 lab_expect_exit 0
 lab_expect_contains "✅ no secret nor customer data found"
 
-log "Step 7: a pipeline, source -> sinks"
-export OUTPUT_FOLDER="$pipeline_folder"
-lab_run playground repro bootstrap -f "${root_dir}/connect/connect-debezium-mysql-source/debezium-mysql-source.sh" -d "000000 deep dive lab ci pipeline" \
-    --pipeline "${root_dir}/connect/connect-jdbc-postgresql-sink/postgres-sink.sh" --pipeline "${root_dir}/connect/connect-aws-s3-sink/s3-sink.sh" --no-run
-lab_expect_exit 0
-lab_expect_contains "🔗 the sinks read topic server1_mydb_CUSTOMERS"
-lab_expect_contains "🗑️ 2 producer(s) of the sink example removed"
-lab_expect_contains "🩹 the source writes the Debezium envelope (before, after, op...): ExtractNewRecordState is added to the sink, so that it gets the row"
-lab_expect_contains "🗄️ several databases (mysql, postgres): --container is added to the 'playground db' calls"
-pipeline_model="${root_dir}/${pipeline_folder}/connect-connect-debezium-mysql-source/debezium-mysql-source-repro-000000-deep-dive-lab-ci-pipeline.sh"
-lab_run head -15 "$pipeline_model"
-lab_expect_contains "# 🔗 pipeline: connect/connect-debezium-mysql-source/debezium-mysql-source.sh -> connect/connect-jdbc-postgresql-sink/postgres-sink.sh, connect/connect-aws-s3-sink/s3-sink.sh (topic server1_mydb_CUSTOMERS)"
-lab_run grep -c "playground topic produce" "$pipeline_model"
-lab_expect_equals "$LAB_OUTPUT" "0" "producers of the sink examples left"
-lab_run grep -n "show-lag\|--fail-on-error" "$pipeline_model"
-lab_expect_contains "playground connector show-lag --connector postgres-sink --max-wait 300 --fail-on-timeout"
-lab_expect_contains "playground connector status --connector s3-sink --fail-on-error" "a storage sink commits on flush"
-lab_run bash -n "$pipeline_model"
-lab_expect_exit 0
-lab_run playground repro bootstrap -f "${root_dir}/connect/connect-aws-s3-sink/s3-sink.sh" -d "000000 deep dive lab ci pipeline error" \
-    --pipeline "${root_dir}/ccloud/fm-aws-s3-sink/fully-managed-s3-sink.sh" --no-run
-lab_expect_exit 1
-lab_expect_contains "a pipeline is all self-managed (connect/) or all fully managed (ccloud/fm-*)"
-unset OUTPUT_FOLDER
 
 log "Step 8: clean up (in the EXIT trap: the models, their compose overrides and the imported copy)"
 
