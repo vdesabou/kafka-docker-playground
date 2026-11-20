@@ -3,116 +3,255 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🔗 Pipeline builder - kafka-docker-playground</title>
+<title>🔗 Pipeline builder · kafka-docker-playground</title>
 <style>
-:root{--bg:#f1f5f9;--card:#fff;--fg:#1e293b;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent-soft:#dbeafe;--ok:#15803d;--warn:#b45309;--warn-soft:#fef3c7;--fix:#7c3aed;--fix-soft:#ede9fe;--info-soft:#e0f2fe;--code:#f8fafc}
-@media (prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--fg:#e2e8f0;--muted:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-soft:#1e3a5f;--ok:#4ade80;--warn:#fbbf24;--warn-soft:#422006;--fix:#c4b5fd;--fix-soft:#2e1065;--info-soft:#0c4a6e;--code:#0f172a}}
+:root{
+  --bg:#f4f6fb;--bg2:#e9edf7;--card:#ffffff;--card2:#f8faff;--fg:#0f172a;--muted:#5b6478;--line:#e3e8f2;
+  --a1:#4f46e5;--a2:#7c3aed;--a3:#06b6d4;--glow:rgba(79,70,229,.18);
+  --ok:#059669;--warn:#d97706;--fix:#7c3aed;--info:#0284c7;
+  --warn-bg:#fff7e6;--fix-bg:#f3edff;--info-bg:#e9f6fd;--ok-bg:#e8f8f1;
+  --term:#0b1020;--term-fg:#e2e8f0;--shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0a0e1a;--bg2:#0f1526;--card:#121a2e;--card2:#162038;--fg:#e6ebf5;--muted:#8f9bb5;--line:#22304d;
+  --glow:rgba(124,58,237,.28);--warn-bg:#2a1f0b;--fix-bg:#221539;--info-bg:#0b2233;--ok-bg:#0b2a20;
+  --term:#060912;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.35);
+}}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.45}
-header{padding:16px 24px;border-bottom:1px solid var(--line);background:var(--card);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-header h1{margin:0;font-size:1.25rem}
-header .sub{color:var(--muted);font-size:.85rem}
-main{padding:16px 24px;max-width:1500px;margin:0 auto}
-.tabs{display:flex;gap:6px}
-.tab{border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:.85rem}
-.tab[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media (max-width:900px){.grid{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
-.card h2{margin:0 0 8px;font-size:1rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.card h2 small{color:var(--muted);font-weight:normal;font-size:.8rem}
-input[type=search],input[type=text],select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit;font-size:.88rem}
-.list{max-height:330px;overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:6px}
-.item{display:flex;gap:8px;align-items:flex-start;padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:.85rem}
-.item:last-child{border-bottom:0}
-.item:hover{background:var(--accent-soft)}
-.item.selected{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
-.item .t{font-weight:600;word-break:break-all}
-.item .d{color:var(--muted);font-size:.78rem;word-break:break-all}
-.item input{margin-top:3px}
-.count{color:var(--muted);font-size:.78rem;margin-top:4px}
-.flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:10px 4px;min-height:120px}
-.node{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 12px;min-width:150px;max-width:260px;font-size:.82rem}
-.node b{display:block;word-break:break-all}
-.node span{color:var(--muted);font-size:.75rem;word-break:break-all;display:block}
-.node.topic{border-radius:999px;text-align:center;background:var(--accent-soft);border-color:var(--accent)}
-.node.step{border-style:dashed;border-color:var(--fix)}
-.node.empty{color:var(--muted);border-style:dashed}
-.arrow{color:var(--muted);padding:0 8px;font-size:1.2rem;flex:none}
-.sinks{display:flex;flex-direction:column;gap:6px}
-.findings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.findings li{padding:8px 10px;border-radius:6px;font-size:.84rem}
-.sev-fix{background:var(--fix-soft)}.sev-warn{background:var(--warn-soft)}.sev-info{background:var(--info-soft)}.sev-ok{background:var(--info-soft)}
-.findings li b{font-weight:600}
-.row{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:.86rem}
-.row label{color:var(--muted)}
-pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:10px;white-space:pre-wrap;word-break:break-all;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;margin:0}
-code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;background:var(--code);padding:1px 5px;border-radius:4px}
-button.copy{border:0;background:var(--accent);color:#fff;padding:7px 14px;border-radius:6px;cursor:pointer;font:inherit;font-size:.85rem}
-.muted{color:var(--muted);font-size:.82rem}
-a{color:var(--accent)}
+html,body{margin:0}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--fg);line-height:1.45;
+  background:radial-gradient(1200px 500px at 10% -10%,var(--glow),transparent 60%),radial-gradient(900px 400px at 100% 0%,rgba(6,182,212,.12),transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:1360px;margin:0 auto;padding:0 28px}
+code,pre,.mono{font-family:'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace}
+
+/* hero */
+header{background:linear-gradient(120deg,var(--a1),var(--a2) 55%,var(--a3));color:#fff;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;inset:0;background:radial-gradient(600px 200px at 80% 120%,rgba(255,255,255,.25),transparent 70%);pointer-events:none}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:26px;padding-bottom:26px;flex-wrap:wrap;position:relative;z-index:1}
+.brand{display:flex;gap:16px;align-items:center;min-width:0}
+.logo{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:28px;backdrop-filter:blur(4px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
+.tag{opacity:.9;font-size:.92rem;margin-top:2px}
+.tag code{background:rgba(255,255,255,.18);padding:1px 6px;border-radius:6px;font-size:.82rem}
+.seg{display:inline-flex;background:rgba(255,255,255,.16);border-radius:999px;padding:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.seg button{border:0;background:transparent;color:#fff;font:inherit;font-weight:600;font-size:.9rem;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.2s;white-space:nowrap}
+.seg button[aria-pressed=true]{background:#fff;color:var(--a1);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+
+main{padding:26px 0 40px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
 .full{grid-column:1/-1}
+.card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px 18px 16px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.head h2{margin:0;font-size:1.02rem;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+.num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 4px 10px var(--glow)}
+.hint{color:var(--muted);font-size:.8rem}
+
+/* search + lists */
+.search{position:relative}
+.search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:12px;background:var(--card2);color:var(--fg);font:inherit;font-size:.9rem;outline:none;transition:.15s}
+.search input:focus{border-color:var(--a1);box-shadow:0 0 0 4px var(--glow)}
+.search::before{content:"🔎";position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.7}
+.list{max-height:360px;overflow:auto;margin-top:10px;padding:2px;display:flex;flex-direction:column;gap:6px}
+.item{display:flex;gap:12px;align-items:center;padding:9px 11px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:.12s;background:transparent}
+.item:hover{background:var(--card2);border-color:var(--line)}
+.item.selected{background:linear-gradient(var(--card2),var(--card2)) padding-box,linear-gradient(120deg,var(--a1),var(--a3)) border-box;border:1px solid transparent;box-shadow:0 6px 18px var(--glow)}
+.ico{width:34px;height:34px;flex:none;border-radius:9px;background:#fff;display:grid;place-items:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(15,23,42,.08)}
+.ico img{max-width:24px;max-height:24px}
+.ico.fallback{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:16px}
+.txt{min-width:0;flex:1}
+.t{font-weight:650;font-size:.9rem;white-space:nowrap;display:flex;align-items:center;gap:8px;min-width:0}
+.t>.name{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.t .name{overflow:hidden;text-overflow:ellipsis}
+.d{color:var(--muted);font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.variant{display:inline-block;flex:0 1 auto;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis;padding:1px 8px;border-radius:999px;font-family:'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace;
+  font-size:.72rem;font-weight:700;vertical-align:1px;color:var(--a1);background:var(--glow);border:1px solid rgba(124,58,237,.35);white-space:nowrap}
+.variant.default{color:var(--muted);background:transparent;border-color:var(--line);font-weight:600}
+@media (prefers-color-scheme:dark){.variant{color:#c4b5fd}}
+.node .variant{margin-top:3px;max-width:100%}
+.tick{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;transition:.12s}
+.item.selected .tick{background:linear-gradient(135deg,var(--a1),var(--a3));border-color:transparent}
+.count{color:var(--muted);font-size:.78rem;margin-top:8px}
+.empty{color:var(--muted);font-size:.85rem;padding:18px;text-align:center}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);cursor:pointer;user-select:none}
+.switch input{display:none}
+.switch i{width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;transition:.2s}
+.switch i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch input:checked+i{background:linear-gradient(120deg,var(--a1),var(--a2))}
+.switch input:checked+i::after{left:16px}
+
+/* flow */
+.flow{display:flex;align-items:center;justify-content:safe center;gap:0;overflow-x:auto;padding:26px 8px;min-height:170px;
+  background:radial-gradient(circle at 1px 1px,var(--line) 1px,transparent 0) 0 0/18px 18px;border-radius:14px;border:1px dashed var(--line)}
+.node{flex:none;display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;width:214px;box-shadow:var(--shadow)}
+.node b{display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node .txt>span:not(.variant){display:block;color:var(--muted);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node a{font-size:.72rem;color:var(--a1);text-decoration:none}
+.node.ghost{border-style:dashed;color:var(--muted);box-shadow:none;justify-content:center;font-size:.85rem}
+.topic{flex:none;display:flex;flex-direction:column;align-items:center;padding:12px 20px;border-radius:999px;color:#fff;font-weight:650;font-size:.86rem;max-width:240px;
+  background:linear-gradient(120deg,var(--a1),var(--a3));box-shadow:0 8px 24px var(--glow)}
+.topic small{font-weight:500;opacity:.85;font-size:.7rem}
+.topic b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.step{flex:none;white-space:nowrap;display:flex;flex-direction:column;align-items:center;padding:12px 18px;border-radius:14px;color:#fff;font-weight:650;font-size:.86rem;
+  background:linear-gradient(135deg,#a21caf,var(--a2));box-shadow:0 8px 24px rgba(162,28,175,.3)}
+.step small{font-weight:500;opacity:.85;font-size:.7rem}
+.step small.to{max-width:190px;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.pipe{flex:none;width:44px;height:3px;border-radius:3px;position:relative;margin:0 6px;
+  background:repeating-linear-gradient(90deg,var(--a1) 0 8px,transparent 8px 14px);background-size:28px 3px;animation:flowing 1s linear infinite;opacity:.8}
+.pipe::after{content:"";position:absolute;right:-2px;top:-4px;border:5.5px solid transparent;border-left:8px solid var(--a1)}
+@keyframes flowing{to{background-position:28px 0}}
+.sinks{flex:none;display:flex;flex-direction:column;gap:10px}
+@media (prefers-reduced-motion:reduce){.pipe{animation:none}}
+
+.settings{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.9fr) minmax(0,1fr) minmax(0,.9fr);gap:12px;margin-top:16px}
+@media (max-width:980px){.settings{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.set{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.set label,.set .lbl{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.set select,.set input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;font-size:.84rem;outline:none}
+.set select:focus,.set input:focus{border-color:var(--a1)}
+.set .val{font-size:.84rem}
+.set select{appearance:none;-webkit-appearance:none;padding-right:30px;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;cursor:pointer;font:inherit;color:var(--fg);
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 9px;transition:.15s;min-width:0}
+.choice b{font-size:.8rem;white-space:nowrap}
+.choice small{color:var(--muted);font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.choice:hover:not(:disabled){border-color:var(--a1)}
+.choice[aria-checked=true]{background:linear-gradient(var(--card2),var(--card2)) padding-box,linear-gradient(120deg,var(--a1),var(--a2)) border-box;border:1px solid transparent;box-shadow:0 4px 14px var(--glow)}
+.choice[aria-checked=true] small{color:var(--fg);opacity:.8}
+.choice:disabled{opacity:.45;cursor:not-allowed}
+.set input{margin-top:6px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:.78rem}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:.74rem}
+code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:5px;font-size:.78rem}
+
+/* checks */
+.findings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.findings li{display:flex;gap:10px;padding:10px 12px;border-radius:12px;font-size:.85rem;border:1px solid var(--line);border-left-width:4px}
+.findings li .ic{font-size:1rem;line-height:1.3}
+.sev-fix{background:var(--fix-bg);border-left-color:var(--fix)!important}
+.sev-warn{background:var(--warn-bg);border-left-color:var(--warn)!important}
+.sev-info{background:var(--info-bg);border-left-color:var(--info)!important}
+.sev-ok{background:var(--ok-bg);border-left-color:var(--ok)!important}
+.findings b{font-weight:650}
+.adds{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+
+/* command */
+.desc{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.desc label{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.desc input{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card2);color:var(--fg);font:inherit;font-size:.88rem;outline:none}
+.desc input:focus{border-color:var(--a1);box-shadow:0 0 0 4px var(--glow)}
+.term{background:var(--term);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06)}
+.term .bar{display:flex;align-items:center;gap:7px;padding:9px 12px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06)}
+.term .bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.term .bar span{margin-left:auto;color:#7a869e;font-size:.72rem}
+.term pre{margin:0;padding:14px 16px;color:var(--term-fg);font-size:.8rem;white-space:pre-wrap;word-break:break-all;line-height:1.6}
+.k{color:#67e8f9}.f{color:#f0abfc}.s{color:#86efac}.c{color:#7a869e}
+.btn{border:0;cursor:pointer;font:inherit;font-weight:650;font-size:.85rem;color:#fff;padding:9px 16px;border-radius:10px;background:linear-gradient(120deg,var(--a1),var(--a2));box-shadow:0 6px 18px var(--glow);transition:.15s}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.note{color:var(--muted);font-size:.8rem;margin:10px 2px 0}
+footer{color:var(--muted);font-size:.78rem;text-align:center;padding:10px 0 30px}
+footer a{color:var(--a1);text-decoration:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.85rem;font-weight:600;transition:.25s;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 <header>
-  <div>
-    <h1>🔗 Pipeline builder</h1>
-    <div class="sub">Chain a source example and sink examples of kafka-docker-playground into one reproduction model, then copy the <code>playground repro bootstrap</code> command.</div>
-  </div>
-  <div class="tabs" role="group" aria-label="connectors">
-    <button class="tab" id="tab-sm" aria-pressed="true">🐳 Self-managed</button>
-    <button class="tab" id="tab-fm" aria-pressed="false">☁️ Fully managed</button>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo">🔗</div>
+      <div>
+        <h1>Pipeline builder</h1>
+        <div class="tag">Chain a source and sink examples of kafka-docker-playground into one reproduction model, then copy the <code>playground repro bootstrap</code> command</div>
+      </div>
+    </div>
+    <div class="seg" role="group" aria-label="connectors">
+      <button id="tab-sm" aria-pressed="true">🐳 Self-managed</button>
+      <button id="tab-fm" aria-pressed="false">☁️ Fully managed</button>
+    </div>
   </div>
 </header>
-<main>
+
+<main class="wrap">
   <div class="grid">
     <section class="card">
-      <h2><span id="base-title">1️⃣ Source example</span>
-        <label class="muted"><input type="checkbox" id="fanout"> fan-out: start from a sink</label></h2>
-      <input type="search" id="base-filter" placeholder="filter: debezium mysql, datagen, s3…" autocomplete="off">
+      <div class="head">
+        <h2><span class="num">1</span><span id="base-title">Source example</span></h2>
+        <label class="switch" title="start from a sink example: its producer feeds every sink"><input type="checkbox" id="fanout"><i></i>fan-out from a sink</label>
+      </div>
+      <div class="search"><input type="search" id="base-filter" placeholder="debezium mysql, datagen, s3…" autocomplete="off"></div>
       <div class="list" id="base-list" role="listbox"></div>
       <div class="count" id="base-count"></div>
     </section>
     <section class="card">
-      <h2><span>2️⃣ Sink examples</span><small>select one or more</small></h2>
-      <input type="search" id="sink-filter" placeholder="filter: jdbc postgres, elasticsearch, s3…" autocomplete="off">
+      <div class="head">
+        <h2><span class="num">2</span>Sink examples</h2>
+        <span class="hint">one or more</span>
+      </div>
+      <div class="search"><input type="search" id="sink-filter" placeholder="jdbc postgres, elasticsearch, s3…" autocomplete="off"></div>
       <div class="list" id="sink-list"></div>
       <div class="count" id="sink-count"></div>
     </section>
 
     <section class="card full">
-      <h2><span>3️⃣ Flow</span><small id="generated"></small></h2>
+      <div class="head">
+        <h2><span class="num">3</span>Flow</h2>
+        <span class="hint" id="generated"></span>
+      </div>
       <div class="flow" id="flow"></div>
-      <div class="row"><label for="topic">🗳 topic</label><div><select id="topic"></select>
-        <input type="text" id="topic-custom" placeholder="another topic (--pipeline-topic)" style="margin-top:6px"></div></div>
-      <div class="row" id="step-row"><label for="step">🧪 processing step</label>
-        <select id="step"><option value="">none: the sinks read the topic of the source</option>
-          <option value="ksqldb">ksqlDB: a stream copies the topic (--pipeline-step ksqldb)</option>
-          <option value="flink">Flink: a job copies the topic, tables from the Avro schema (--pipeline-step flink)</option></select></div>
-      <div class="row"><label>💱 format</label><div id="format" class="muted"></div></div>
-      <div class="row"><label>🔐 credentials</label><div id="creds" class="chips"></div></div>
+      <div class="settings">
+        <div class="set">
+          <label for="topic">🗳 Topic the sinks read</label>
+          <select id="topic"></select>
+          <input type="text" id="topic-custom" placeholder="another topic (--pipeline-topic)">
+        </div>
+        <div class="set" id="step-row">
+          <span class="lbl">⚙️ Processing step</span>
+          <div class="choices" id="step" role="radiogroup" aria-label="processing step">
+            <button type="button" role="radio" data-step="" class="choice"><b>➖ None</b><small>the sinks read the topic</small></button>
+            <button type="button" role="radio" data-step="ksqldb" class="choice"><b>🚀 ksqlDB</b><small>a stream copies it</small></button>
+            <button type="button" role="radio" data-step="flink" class="choice"><b>🐿️ Flink</b><small>a job copies it</small></button>
+          </div>
+        </div>
+        <div class="set"><span class="lbl">💱 Format</span><div class="val" id="format"></div></div>
+        <div class="set"><span class="lbl">🔐 Credentials</span><div class="chips" id="creds"></div></div>
+      </div>
     </section>
 
     <section class="card">
-      <h2><span>4️⃣ Checks</span><small>same rules as the CLI</small></h2>
+      <div class="head">
+        <h2><span class="num">4</span>Checks</h2>
+        <span class="hint">same rules as the CLI</span>
+      </div>
       <ul class="findings" id="findings"></ul>
     </section>
     <section class="card">
-      <h2><span>5️⃣ Command</span><button class="copy" id="copy">📋 copy</button></h2>
-      <div class="row"><label for="desc">💡 description</label><input type="text" id="desc" value="123456 my pipeline" placeholder="case number + a few words"></div>
-      <pre id="cmd"></pre>
-      <p class="muted" id="cmd-note"></p>
+      <div class="head">
+        <h2><span class="num">5</span>Command</h2>
+        <button class="btn" id="copy">📋 Copy</button>
+      </div>
+      <div class="desc"><label for="desc">💡 Description</label><input type="text" id="desc" value="123456 my pipeline" placeholder="case number + a few words"></div>
+      <div class="term">
+        <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>zsh · kafka-docker-playground</span></div>
+        <pre id="cmd"></pre>
+      </div>
+      <p class="note" id="cmd-note"></p>
     </section>
   </div>
 </main>
+<footer>The selection is kept in the URL: share the link with a colleague · <a href="https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=with-pipeline-pipeline" target="_blank" rel="noopener">documentation</a></footer>
+<div class="toast" id="toast">✅ Command copied</div>
+
 <script>
-// filled in by tools/pipeline-builder/catalog.py html: the catalog of the examples, and the root folder of the
-// checkout ('' on the website: the command uses $PWD, run it from the root of your clone)
+// filled in by tools/pipeline-builder/catalog.py html: the catalog of the examples, the root folder of the checkout
+// ('' on the website: the command uses $PWD, run it from the root of your clone) and where the icons are
 const CATALOG = /*__PIPELINE_CATALOG__*/null;
 const ROOT = /*__PIPELINE_ROOT__*/"";
+const ICONS = /*__PIPELINE_ICONS__*/"https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/images/icons/";
 const GITHUB = "https://github.com/vdesabou/kafka-docker-playground/tree/master/";
 
 const state = {managed: false, fanout: false, base: null, sinks: [], topic: "", custom: "", step: ""};
@@ -121,9 +260,27 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp
 let examples = [], rules = [];
 
 function short(cls) { return (cls || "").split(".").pop(); }
-function label(ex) { return ex.dir.split("/").pop() + " / " + ex.name; }
+function title(ex) { return ex.display || ex.title || ex.dir.split("/").pop(); }
+// the examples of one folder share their display name: the chip says what each one adds (mysql-mtls.sh → mtls)
+function computeVariants() {
+  const groups = {};
+  for (const e of examples) (groups[e.dir] = groups[e.dir] || []).push(e);
+  for (const list of Object.values(groups)) {
+    if (list.length < 2) continue;
+    const base = list.map(e => e.name).sort((a, b) => a.length - b.length || a.localeCompare(b))[0];
+    for (const e of list) {
+      let v = e.name.startsWith(base) ? e.name.slice(base.length).replace(/^[-_.]+/, "") : e.name;
+      e._variant = v || "default";
+    }
+  }
+}
+function variant(ex) { return ex._variant ? `<span class="variant${ex._variant === "default" ? " default" : ""}">${esc(ex._variant)}</span>` : ""; }
+function icon(ex) {
+  return ex.icon ? `<span class="ico"><img src="${esc(ICONS + ex.icon)}" alt="" loading="lazy" onerror="this.parentNode.className='ico fallback';this.replaceWith('🔌')"></span>`
+                 : `<span class="ico fallback">🔌</span>`;
+}
 function matchesFilter(ex, words) {
-  const hay = (ex.path + " " + ex.title + " " + (ex.connector ? ex.connector.class : "")).toLowerCase();
+  const hay = (ex.path + " " + ex.title + " " + ex.display + " " + (ex.connector ? ex.connector.class : "")).toLowerCase();
   return words.every(w => hay.includes(w));
 }
 
@@ -171,76 +328,92 @@ function check(base, sinks) {
 }
 
 // ---------------------------------------------------------------- rendering
+function item(e, selected, multi) {
+  return `<div class="item${selected ? " selected" : ""}" data-path="${esc(e.path)}" role="option" aria-selected="${selected}">
+    ${icon(e)}<div class="txt"><div class="t"><span class="name">${esc(title(e))}</span>${variant(e)}</div><div class="d">${esc(e.name)}.sh · ${esc(short(e.connector.class))}</div></div>
+    ${multi || selected ? `<span class="tick">${selected ? "✓" : ""}</span>` : ""}</div>`;
+}
+
 function renderLists() {
   const baseKind = state.fanout ? "sink" : "source";
-  $("base-title").textContent = state.fanout ? "1️⃣ Sink example (its producer feeds every sink)" : "1️⃣ Source example";
+  $("base-title").textContent = state.fanout ? "Sink example (its producer feeds every sink)" : "Source example";
   const bw = $("base-filter").value.toLowerCase().split(/\s+/).filter(Boolean);
   const sw = $("sink-filter").value.toLowerCase().split(/\s+/).filter(Boolean);
-  // the selected examples first, so that they stay in sight
   const first = (sel) => (a, b) => (sel(b) ? 1 : 0) - (sel(a) ? 1 : 0);
   const bases = examples.filter(e => e.kind === baseKind && e.managed === state.managed && e.connector && (e.path === state.base || matchesFilter(e, bw)))
     .sort(first(e => e.path === state.base));
   const sinks = examples.filter(e => e.kind === "sink" && e.managed === state.managed && e.connector && (state.sinks.includes(e.path) || matchesFilter(e, sw)))
     .sort(first(e => state.sinks.includes(e.path)));
-  $("base-list").innerHTML = bases.slice(0, 400).map(e =>
-    `<div class="item${state.base === e.path ? " selected" : ""}" data-path="${esc(e.path)}" role="option">
-      <div><div class="t">${esc(label(e))}</div><div class="d">${esc(short(e.connector.class))}${e.title ? " · " + esc(e.title) : ""}</div></div></div>`).join("")
-    || `<div class="item muted">no example matches</div>`;
+  $("base-list").innerHTML = bases.slice(0, 400).map(e => item(e, state.base === e.path, false)).join("") || `<div class="empty">no example matches</div>`;
   $("base-count").textContent = bases.length + " example(s)";
-  $("sink-list").innerHTML = sinks.slice(0, 400).map(e =>
-    `<label class="item${state.sinks.includes(e.path) ? " selected" : ""}" data-path="${esc(e.path)}">
-      <input type="checkbox" ${state.sinks.includes(e.path) ? "checked" : ""}>
-      <div><div class="t">${esc(label(e))}</div><div class="d">${esc(short(e.connector.class))}${e.title ? " · " + esc(e.title) : ""}</div></div></label>`).join("")
-    || `<div class="item muted">no example matches</div>`;
-  $("sink-count").textContent = sinks.length + " example(s), " + state.sinks.length + " selected";
+  $("sink-list").innerHTML = sinks.slice(0, 400).map(e => item(e, state.sinks.includes(e.path), true)).join("") || `<div class="empty">no example matches</div>`;
+  $("sink-count").textContent = sinks.length + " example(s) · " + state.sinks.length + " selected";
 }
 
 function byPath(p) { return examples.find(e => e.path === p); }
 
+function highlight(cmd) {
+  return esc(cmd)
+    .replace(/^(playground repro bootstrap)/, '<span class="k">$1</span>')
+    .replace(/(\s)(-d|-f|--pipeline-topic|--pipeline-step|--pipeline|--no-run)(?=\s|$)/g, '$1<span class="f">$2</span>')
+    .replace(/(&quot;[^&]*?&quot;)/g, '<span class="s">$1</span>');
+}
+
 function renderPipeline() {
   const base = state.base ? byPath(state.base) : null;
   const sinks = state.sinks.map(byPath).filter(Boolean);
-  // topics
   const candidates = base ? (state.fanout ? base.topics_in : base.topics_out) : [];
   const sel = $("topic");
   if (sel.dataset.base !== String(state.base)) {
-    sel.innerHTML = candidates.map(t => `<option>${esc(t)}</option>`).join("") || `<option value="">(not found: type it below)</option>`;
+    sel.innerHTML = candidates.map(t => `<option>${esc(t)}</option>`).join("") || `<option value="">not found: type it below</option>`;
     sel.dataset.base = String(state.base);
     state.topic = candidates[0] || "";
   }
   const topic = state.custom || state.topic;
   const step = !state.managed && !state.fanout ? state.step : "";
   $("step-row").style.display = state.managed || state.fanout ? "none" : "";
+  // the steps the base can't feed are greyed out, with the reason (the same refusals as bootstrap)
+  const why = {
+    ksqldb: base && !/(Avro|Protobuf|JsonSchema)/i.test(base.value_converter_effective) ? "needs a schema (Avro, Protobuf, JSON Schema)" : "",
+    flink: base && !/avro/i.test(base.value_converter_effective) ? "needs Avro values" : "",
+  };
+  for (const b of document.querySelectorAll("#step .choice")) {
+    const v = b.dataset.step;
+    b.setAttribute("aria-checked", String(state.step === v));
+    b.disabled = !!why[v] && state.step !== v;
+    b.querySelector("small").textContent = (why[v] ? why[v].replace(/ \(.*\)$/, "") : "") || {"": "the sinks read the topic", ksqldb: "a stream copies it", flink: "a job copies it"}[v];
+    b.title = why[v] ? "--pipeline-step " + v + ": " + why[v] + " (the source writes " + short(base.value_converter_effective) + ")"
+      : v ? "--pipeline-step " + v : "no processing step";
+  }
 
   // flow
-  const node = (ex) => `<div class="node"><b>${esc(ex.dir.split("/").pop())}</b><span>${esc(ex.name)}.sh · ${esc(short(ex.connector.class))}</span>
-     ${ex.path ? `<span><a href="${GITHUB + esc(ex.dir)}" target="_blank" rel="noopener">README</a></span>` : ""}</div>`;
-  let html = base ? node(base) : `<div class="node empty">pick a ${state.fanout ? "sink" : "source"} example</div>`;
-  html += `<div class="arrow">➜</div><div class="node topic"><b>${esc(topic || "?")}</b><span>topic</span></div>`;
-  if (step) html += `<div class="arrow">➜</div><div class="node step"><b>${step === "flink" ? "Flink" : "ksqlDB"}</b><span>${step === "flink" ? "INSERT INTO … SELECT *" : "CREATE STREAM … AS SELECT *"}</span></div><div class="arrow">➜</div><div class="node topic"><b>${esc((topic || "?") + "_" + step)}</b><span>topic</span></div>`;
-  html += `<div class="arrow">➜</div><div class="sinks">${sinks.length ? sinks.map(node).join("") : `<div class="node empty">pick sink examples</div>`}</div>`;
+  const node = ex => `<div class="node" title="${esc(ex.path)}">${icon(ex)}<div class="txt"><b>${esc(title(ex))}</b>${variant(ex)}<span>${esc(ex.name)}.sh · ${esc(short(ex.connector.class))}</span>
+      <a href="${GITHUB + esc(ex.dir)}" target="_blank" rel="noopener">README ↗</a></div></div>`;
+  let html = base ? node(base) : `<div class="node ghost">pick a ${state.fanout ? "sink" : "source"} example</div>`;
+  html += `<div class="pipe"></div><div class="topic" title="${esc(topic || "?")}"><small>topic</small><b>${esc(topic || "?")}</b></div>`;
+  if (step) html += `<div class="pipe"></div><div class="step" title="${step === "flink" ? "INSERT INTO pipeline_step SELECT … FROM pipeline_source" : "CREATE STREAM PIPELINE_STEP AS SELECT * FROM PIPELINE_SOURCE"}, written to ${esc((topic || "?") + "_" + step)}"><small>processing step</small>${step === "flink" ? "🐿️ Flink job" : "🚀 ksqlDB stream"}<small class="to">→ ${esc((topic || "?") + "_" + step)}</small></div>`;
+  html += `<div class="pipe"></div><div class="sinks">${sinks.length ? sinks.map(node).join("") : `<div class="node ghost">pick sink examples</div>`}</div>`;
   $("flow").innerHTML = html;
 
-  // format
   if (base) {
     $("format").innerHTML = base.managed
-      ? (base.data_format ? `${state.fanout ? "input" : "output"}.data.format <code>${esc(base.data_format)}</code>: the sinks get the same input.data.format` : "the base sets no data format")
-      : `key <code>${esc(short(base.key_converter_effective))}</code>, value <code>${esc(short(base.value_converter_effective))}</code>${base.value_converter ? "" : " (worker default)"}: the sinks use the same converters`;
-  } else $("format").textContent = "";
+      ? (base.data_format ? `<code>${esc(base.data_format)}</code> → same input.data.format in the sinks` : `<span class="hint">not set by the base</span>`)
+      : `key <code>${esc(short(base.key_converter_effective))}</code><br>value <code>${esc(short(base.value_converter_effective))}</code>${base.value_converter ? "" : ` <span class="hint">(worker)</span>`}`;
+  } else $("format").innerHTML = `<span class="hint">—</span>`;
 
-  // credentials
   const creds = new Set();
   for (const ex of [base, ...sinks].filter(Boolean)) {
-    (ex.credentials || []).forEach(c => creds.add("handle_" + c + "_credentials"));
+    (ex.credentials || []).forEach(c => creds.add(c));
     (ex.required_env || []).forEach(v => creds.add("$" + v));
   }
-  $("creds").innerHTML = creds.size ? [...creds].sort().map(c => `<span class="chip">${esc(c)}</span>`).join("") : `<span class="muted">none</span>`;
+  $("creds").innerHTML = creds.size ? [...creds].sort().map(c => `<span class="chip">${esc(c)}</span>`).join("") : `<span class="hint">none</span>`;
 
-  // findings
+  // checks
   const f = [];
   if (base && sinks.length) {
     let found = check(base, sinks);
     if (state.fanout) found = found.filter(x => x.rule.startsWith("compose-"));
+    if (step === "flink" && base.envelope === "debezium") found = found.filter(x => x.rule !== "debezium-envelope-into-flat-sink");
     f.push(...found);
     if (candidates.length > 1 && !state.custom) f.push({severity: "info", sink: "", message: `the base uses several topics (${candidates.join(", ")}): the sinks read ${topic}`});
     if (!topic) f.push({severity: "warn", sink: "", message: "the topic of the base could not be found: type it (--pipeline-topic)"});
@@ -249,18 +422,18 @@ function renderPipeline() {
     if (step === "flink") {
       if (!/avro/i.test(base.value_converter_effective))
         f.push({severity: "warn", sink: "", message: "the Flink step needs Avro values (the columns of the tables come from the Avro schema): bootstrap refuses it"});
-      f.push({severity: "info", sink: "", message: "Flink step: plaintext environment only, and the records of " + (topic || "?") + "_flink have no key (value only)"});
+      if (base.envelope === "debezium")
+        f.push({severity: "fix", sink: "", message: "the Flink job flattens the Debezium envelope (the columns of after, deletes left out): no ExtractNewRecordState in the sinks"});
+      f.push({severity: "info", sink: "", message: "Flink step: plaintext environment only, the records of " + (topic || "?") + "_flink have no key. Follow the job in the Flink UI: playground flink ui"});
     }
     const names = {};
     for (const s of sinks) { const n = s.connector.name; if (n && !n.startsWith("$")) names[n] = (names[n] || 0) + 1; }
     if (base.connector && names[base.connector.name]) names[base.connector.name]++;
     for (const [n, c] of Object.entries(names)) if (c > 1) f.push({severity: "info", sink: "", message: `connector ${n} is used several times: bootstrap renames the others ${n}-<n>`});
-    for (const s of sinks) if (s.connector.class.match(/(S3SinkConnector|S3_SINK|GcsSink|AzureBlob|DataLakeGen[12]|HdfsSinkConnector|Hdfs3SinkConnector)/))
-      f.push({severity: "info", sink: s.path, message: "commits its offsets when it writes a file (flush.size): the model checks its state instead of waiting for a lag of 0"});
   }
-  const icon = {fix: "🩹", warn: "⚠️", info: "ℹ️", ok: "✅"};
-  $("findings").innerHTML = (f.length ? f : [{severity: "ok", sink: "", message: base && sinks.length ? "no problem found" : "pick a base example and at least one sink"}])
-    .map(x => `<li class="sev-${x.severity}">${icon[x.severity]} ${x.sink ? `<b>${esc(x.sink.split("/").slice(-2, -1)[0])}</b>: ` : ""}${esc(x.message)}${x.add && Object.keys(x.add).length ? `<br><span class="muted">bootstrap adds ${Object.entries(x.add).map(([k, v]) => `<code>${esc(k)}=${esc(v)}</code>`).join(" ")}</span>` : ""}</li>`).join("");
+  const ic = {fix: "🩹", warn: "⚠️", info: "ℹ️", ok: "✅"};
+  $("findings").innerHTML = (f.length ? f : [{severity: "ok", sink: "", message: base && sinks.length ? "no problem found: ready to bootstrap" : "pick a base example and at least one sink"}])
+    .map(x => `<li class="sev-${x.severity}"><span class="ic">${ic[x.severity]}</span><div>${x.sink ? `<b>${esc(title(byPath(x.sink) || {dir: x.sink}))}</b>: ` : ""}${esc(x.message)}${x.add && Object.keys(x.add).length ? `<div class="adds">${Object.entries(x.add).map(([k, v]) => `<code>${esc(k)}=${esc(v)}</code>`).join("")}</div>` : ""}</div></li>`).join("");
 
   // command
   const prefix = ROOT ? ROOT.replace(/\/$/, "") + "/" : "$PWD/";
@@ -274,7 +447,9 @@ function renderPipeline() {
     if (step) cmd += `  --pipeline-step ${step} \\\n`;
     cmd += `  --no-run`;
   }
-  $("cmd").textContent = cmd || "# pick a base example and at least one sink";
+  $("cmd").dataset.cmd = cmd;
+  $("cmd").innerHTML = cmd ? highlight(cmd) : `<span class="c"># pick a base example and at least one sink</span>`;
+  $("copy").disabled = !cmd;
   $("cmd-note").innerHTML = cmd ? (ROOT ? "" : "Run it from the root of your kafka-docker-playground clone. ") +
     "Then <code>playground run -f &lt;generated model&gt;</code>, and <code>playground connector flow</code> to see the records go through." : "";
 }
@@ -303,7 +478,7 @@ function loadHash() {
   if (p.get("desc")) $("desc").value = p.get("desc");
   $("fanout").checked = state.fanout;
   $("topic-custom").value = state.custom;
-  $("step").value = state.step;
+
   $("tab-sm").setAttribute("aria-pressed", String(!state.managed)); $("tab-fm").setAttribute("aria-pressed", String(state.managed));
 }
 
@@ -317,27 +492,28 @@ function setManaged(m) {
 
 function init(data) {
   examples = data.examples; rules = data.rules;
-  $("generated").textContent = `${examples.length} examples · catalog of ${data.generated}`;
+  computeVariants();
+  $("generated").textContent = `${examples.length} examples · catalog of ${data.generated.slice(0, 10)}`;
   $("tab-sm").onclick = () => setManaged(false);
   $("tab-fm").onclick = () => setManaged(true);
   $("fanout").onchange = e => { state.fanout = e.target.checked; state.base = null; render(); };
   $("base-filter").oninput = renderLists;
   $("sink-filter").oninput = renderLists;
-  $("base-list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.base = it.dataset.path; state.custom = ""; $("topic-custom").value = ""; render(); };
-  $("sink-list").onchange = e => {
+  $("base-list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.base = state.base === it.dataset.path ? null : it.dataset.path; state.custom = ""; $("topic-custom").value = ""; render(); };
+  $("sink-list").onclick = e => {
     const it = e.target.closest(".item[data-path]"); if (!it) return;
     const p = it.dataset.path;
-    state.sinks = e.target.checked ? [...state.sinks, p] : state.sinks.filter(x => x !== p);
+    state.sinks = state.sinks.includes(p) ? state.sinks.filter(x => x !== p) : [...state.sinks, p];
     render();
   };
   $("topic").onchange = e => { state.topic = e.target.value; renderPipeline(); saveHash(); };
   $("topic-custom").oninput = e => { state.custom = e.target.value.trim(); renderPipeline(); saveHash(); };
-  $("step").onchange = e => { state.step = e.target.value; renderPipeline(); saveHash(); };
+  $("step").onclick = e => { const b = e.target.closest(".choice"); if (!b || b.disabled) return; state.step = b.dataset.step; renderPipeline(); saveHash(); };
   $("desc").oninput = () => { renderPipeline(); saveHash(); };
   $("copy").onclick = () => {
-    const text = $("cmd").textContent;
-    if (text.startsWith("#")) return;
-    navigator.clipboard.writeText(text).then(() => { $("copy").textContent = "✅ copied"; setTimeout(() => $("copy").textContent = "📋 copy", 1500); });
+    const text = $("cmd").dataset.cmd;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => { $("toast").classList.add("on"); setTimeout(() => $("toast").classList.remove("on"), 1600); });
   };
   loadHash();
   render();

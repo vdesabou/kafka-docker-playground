@@ -2651,16 +2651,14 @@ subcommands:
     - names:
       - "--pipeline-step"
       argument: STEP
-      description: "\U0001F9EA Processing step between the source and the sinks of
-        --pipeline (self-managed only)\n\nksqldb: ksqlDB is enabled, a stream reads
-        the topic of the source and writes <topic>_ksqldb, the topic the sinks read.
-        The values need a schema (Avro, Protobuf or JSON Schema).\n\nflink: a Flink
-        cluster is started (plaintext environment), and a job copies the topic of
-        the source to <topic>_flink, the topic the sinks read: INSERT INTO pipeline_step
-        SELECT * FROM pipeline_source, the two tables written at run time from the
-        Avro value schema of the source (playground flink table-ddl). The values must
-        be Avro; the records of <topic>_flink have no key.\n\nAllowed values: ksqldb,
-        flink"
+      description: |-
+        ⚙️ Processing step between the source and the sinks of --pipeline (self-managed only)
+
+        ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro, Protobuf or JSON Schema).
+
+        flink: a Flink cluster is started (plaintext environment), and a job copies the topic of the source to <topic>_flink, the topic the sinks read: INSERT INTO pipeline_step SELECT * FROM pipeline_source, the two tables written at run time from the Avro value schema of the source (playground flink table-ddl). The values must be Avro; the records of <topic>_flink have no key.
+
+        Allowed values: ksqldb, flink
     - names:
       - "--no-run"
       argument: ''

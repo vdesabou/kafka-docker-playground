@@ -454,7 +454,29 @@ def from_model(model, root):
 
 # ---------------------------------------------------------------- catalog
 
+CONTENT_LINE_RE = re.compile(r"images/icons/([^\"\s)]+)[^\[]*\[([^\]]+)\].*\s:([a-z0-9/_.\-]+):\s*$")
+
+
+def content_icons(root):
+    """{example folder: (icon file, display name)} from the examples page (docs/content-template.md)."""
+    found = {}
+    path = os.path.join(root, "docs", "content-template.md")
+    if os.path.isfile(path):
+        for line in read(path).splitlines():
+            m = CONTENT_LINE_RE.search(line)
+            if m and m.group(3) not in found:
+                found[m.group(3)] = (m.group(1), m.group(2).strip())
+    return found
+
 def catalog(root):
+    icons = content_icons(root)
+    # the icon of a class, for the examples missing from the examples page (tools/report-common/connector_icons.json)
+    class_icons = {}
+    try:
+        with open(os.path.join(root, "tools", "report-common", "connector_icons.json"), encoding="utf-8") as f:
+            class_icons = json.load(f).get("classes", {})
+    except (OSError, ValueError):
+        pass
     examples = []
     folders = []
     for parent in ("connect", "ccloud"):
@@ -489,6 +511,9 @@ def catalog(root):
                               r"input\.data\.format|output\.data\.format|output\.key\.format|after\.state\.only|"
                               r"insert\.mode|schema\.ignore|tasks\.max|flush\.size)$")
             facts["config"] = {k: v for k, v in facts["config"].items() if keep.match(k)}
+            facts["icon"], facts["display"] = icons.get(facts["dir"], ("", ""))
+            if not facts["icon"] and facts["connector"]:
+                facts["icon"] = class_icons.get(facts["connector"]["class"].split(".")[-1], "")
             examples.append(facts)
     return {
         "generated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -506,6 +531,11 @@ def html(root, output, site=False):
     data = json.dumps(catalog(root), separators=(",", ":")).replace("</", "<\\/")
     page = page.replace("/*__PIPELINE_CATALOG__*/null", data, 1)
     page = page.replace('/*__PIPELINE_ROOT__*/""', json.dumps("" if site else root), 1)
+    # the icons of the examples page: the files of the clone locally (works offline), GitHub on the website
+    icons = "https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/images/icons/"
+    if not site and os.path.isdir(os.path.join(root, "images", "icons")):
+        icons = "file://" + os.path.join(root, "images", "icons") + "/"
+    page = re.sub(r'/\*__PIPELINE_ICONS__\*/"[^"]*"', lambda _: json.dumps(icons), page, count=1)
     with open(output, "w", encoding="utf-8") as f:
         f.write(page)
 

@@ -429,7 +429,7 @@ def build(model_path, base_path, sink_paths, topic=None, step=None, root=None, v
             "",
             "playground topic consume --topic %s --min-expected-messages 1 --timeout 120" % sink_topic,
         ]
-        info("🧪 ksqlDB step: %s -> PIPELINE_STEP -> %s (KEY_FORMAT %s, VALUE_FORMAT %s)" % (topic, sink_topic, key_format, value_format))
+        info("🚀 ksqlDB step: %s -> PIPELINE_STEP -> %s (KEY_FORMAT %s, VALUE_FORMAT %s)" % (topic, sink_topic, key_format, value_format))
         if base["envelope"] == "debezium":
             warn("the ksqlDB step keeps the Debezium envelope, the sinks unwrap it: to flatten it in ksqlDB instead, use SELECT AFTER->* and remove ExtractNewRecordState from the sinks")
 

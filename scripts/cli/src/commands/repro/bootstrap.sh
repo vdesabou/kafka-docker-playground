@@ -177,9 +177,9 @@ then
 
   MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
   MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
-  MENU_PIPELINE_STEP="$(menu_label "🧪" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
+  MENU_PIPELINE_STEP="$(menu_label "🚀" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
   MENU_PIPELINE_STEP_FLINK="$(menu_label "🐿️" "Add a Flink step between the source and the sinks" "--pipeline-step flink")"
-  readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the processing step"
+  readonly MENU_PIPELINE_NO_STEP="❌⚙️ Remove the processing step"
 
   readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
   readonly MENU_GO_BACK="🔙 Go back"

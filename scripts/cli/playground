@@ -7235,7 +7235,7 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline-step STEP")"
-    printf "    🧪 Processing step between the source and the sinks of --pipeline\n    (self-managed only)\n    \n    ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes\n    <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro,\n    Protobuf or JSON Schema).\n    \n    flink: a Flink cluster is started (plaintext environment), and a job copies\n    the topic of the source to <topic>_flink, the topic the sinks read: INSERT\n    INTO pipeline_step SELECT * FROM pipeline_source, the two tables written at\n    run time from the Avro value schema of the source (playground flink\n    table-ddl). The values must be Avro; the records of <topic>_flink have no\n    key.\n"
+    printf "    ⚙️ Processing step between the source and the sinks of --pipeline\n    (self-managed only)\n    \n    ksqldb: ksqlDB is enabled, a stream reads the topic of the source and writes\n    <topic>_ksqldb, the topic the sinks read. The values need a schema (Avro,\n    Protobuf or JSON Schema).\n    \n    flink: a Flink cluster is started (plaintext environment), and a job copies\n    the topic of the source to <topic>_flink, the topic the sinks read: INSERT\n    INTO pipeline_step SELECT * FROM pipeline_source, the two tables written at\n    run time from the Avro value schema of the source (playground flink\n    table-ddl). The values must be Avro; the records of <topic>_flink have no\n    key.\n"
     printf "    %s\n" "Allowed: ksqldb, flink"
     echo
 
@@ -63342,9 +63342,9 @@ playground_repro_bootstrap_command() {
 
     MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
     MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
-    MENU_PIPELINE_STEP="$(menu_label "🧪" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
+    MENU_PIPELINE_STEP="$(menu_label "🚀" "Add a ksqlDB step between the source and the sinks" "--pipeline-step ksqldb")"
     MENU_PIPELINE_STEP_FLINK="$(menu_label "🐿️" "Add a Flink step between the source and the sinks" "--pipeline-step flink")"
-    readonly MENU_PIPELINE_NO_STEP="❌🧪 Remove the processing step"
+    readonly MENU_PIPELINE_NO_STEP="❌⚙️ Remove the processing step"
 
     readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
     readonly MENU_GO_BACK="🔙 Go back"
