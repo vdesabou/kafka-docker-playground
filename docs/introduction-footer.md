@@ -108,7 +108,9 @@ Turn an example into a reproduction model of your own issue, ready to edit and r
 
 #### **🔗 Pipeline**
 
-Chain a source example and a sink example on the same topic in a single [reproduction model](/toolkit-reproduction-models?id=with-pipeline-pipeline).
+Chain a source example and sink examples in a single [reproduction model](/toolkit-reproduction-models?id=with-pipeline-pipeline): the records of the source go through the sinks (producers removed, same topic and converters, ExtractNewRecordState for a Debezium envelope…). Pick the examples in the [🔗 pipeline builder](pipeline-builder.html ':ignore') and copy the command, then follow the records with `playground connector flow`.
+
+[![pipeline builder](images/pipeline-builder.jpg)](pipeline-builder.html ':ignore')
 
 <video src="videos/repro-pipeline.mp4" autoplay loop muted playsinline controls width="100%"></video>
 

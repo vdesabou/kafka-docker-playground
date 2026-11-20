@@ -94,6 +94,14 @@ And add the transform config to connector:
 
 Chain a source example and one or more sink examples in a single model: the records of the source go through the sinks.
 
+#### 🧭 Pipeline builder
+
+**[👉 Open the pipeline builder](pipeline-builder.html ':ignore')**: pick the source (or a sink for a fan-out) and the sinks, self-managed or fully managed. It shows the flow, the topic the sinks will read, the converters, the credentials needed and the same compatibility checks as the CLI, then gives the `playground repro bootstrap … --pipeline … --no-run` command to copy. The selection is kept in the URL: share the link with a colleague. Locally, `playground repro pipeline-builder` opens the same page, with the paths of your clone in the command.
+
+[![pipeline builder](images/pipeline-builder.jpg)](pipeline-builder.html ':ignore')
+
+#### From the command line
+
 <video src="videos/repro-pipeline.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
 ```bash
@@ -129,7 +137,7 @@ Other shapes:
 * **ksqlDB step**: `--pipeline-step ksqldb` enables ksqlDB, and a stream copies the topic of the source to `<topic>_ksqldb`, read by the sinks (values with a schema)
 
 > [!TIP]
-> Pick the examples in a page with [`playground repro pipeline-builder`](/playground%20repro%20pipeline-builder) (also on the website: [pipeline builder](pipeline-builder.html ':ignore')): the flow, the topic, the credentials needed and the same checks, then copy the command. While the model runs, [`playground connector flow`](/playground%20connector%20flow) shows source → topic → sinks with the records, the lag and the DLQ:
+> While the model runs, [`playground connector flow`](/playground%20connector%20flow) shows source → topic → sinks with the records, the lag and the DLQ:
 >
 > ```text
 > 🔌 debezium-mysql-source · MySqlConnector · ✅ RUNNING 1/1 tasks
