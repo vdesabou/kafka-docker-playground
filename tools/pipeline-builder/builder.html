@@ -52,10 +52,10 @@ main{padding:26px 0 40px}
 .search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:12px;background:var(--card2);color:var(--fg);font:inherit;font-size:.9rem;outline:none;transition:.15s}
 .search input:focus{border-color:var(--a1);box-shadow:0 0 0 4px var(--glow)}
 .search::before{content:"🔎";position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.7}
-.list{max-height:360px;overflow:auto;margin-top:10px;padding:2px;display:flex;flex-direction:column;gap:6px}
+.list{max-height:360px;overflow:auto;margin:10px -6px 0;padding:6px 10px 8px 6px;display:flex;flex-direction:column;gap:6px;scrollbar-gutter:stable}
 .item{display:flex;gap:12px;align-items:center;padding:9px 11px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:.12s;background:transparent}
 .item:hover{background:var(--card2);border-color:var(--line)}
-.item.selected{background:linear-gradient(var(--card2),var(--card2)) padding-box,linear-gradient(120deg,var(--a1),var(--a3)) border-box;border:1px solid transparent;box-shadow:0 6px 18px var(--glow)}
+.item.selected{background:linear-gradient(var(--card2),var(--card2)) padding-box,linear-gradient(120deg,var(--a1),var(--a3)) border-box;border:1px solid transparent;box-shadow:0 3px 10px var(--glow)}
 .ico{width:34px;height:34px;flex:none;border-radius:9px;background:#fff;display:grid;place-items:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(15,23,42,.08)}
 .ico img{max-width:24px;max-height:24px}
 .ico.fallback{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:16px}
