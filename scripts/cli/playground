@@ -15787,9 +15787,32 @@ playground_topic_produce_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--throughput THROUGHPUT")"
-    printf "    🐢 Maximum number of records per second (default is 0, no limit)\n    \n    Useful with --nb-messages -1 to get a steady flow of records, for example:\n    \n    playground topic produce -t a-topic --nb-messages -1 --throughput 10 --value\n    '{\"id\": %%g}'\n"
+    printf "  %s\n" "$(magenta "--throughput, --rate THROUGHPUT")"
+    printf "    🐢 Maximum number of records per second (default is 0, no limit), alias\n    --rate\n    \n    Useful with --nb-messages -1 or --duration to get a steady flow of records,\n    for example:\n    \n    playground topic produce -t a-topic --nb-messages -1 --throughput 10 --value\n    '{\"id\": %%g}'\n"
     printf "    %s\n" "Default: 0"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--duration DURATION")"
+    printf "    ⏱️ Stop producing after this time: seconds, or a number with a unit s, m or\n    h (e.g. 90s, 10m, 1h)\n    \n    Without --nb-messages, the records are produced until then (--nb-messages\n    -1). With\n    --nb-messages N, the first of the two ends it.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--background")"
+    printf "    🌙 Produce in the background: the command returns once the schemas are\n    registered and the\n    topic is created, the records flow until --duration, --nb-messages or --stop\n    (without\n    --nb-messages, until --duration or --stop)\n    \n    Steady traffic while you inject a fault (broker rolling-restart, debug\n    block-traffic,\n    debug dns, debug clock...), then judge the result with connector reconcile\n    or topic consume.\n    The log, the progress and how to stop it are printed.\n"
+    printf "    %s\n" "Conflicts: --stop, --status"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--stop")"
+    printf "    🛑 Stop the background producers of --topic, and print what they produced\n    (also collects\n    the result of the ones that already ended)\n"
+    printf "    %s\n" "Conflicts: --background, --status"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--status")"
+    printf "    🔎 The background producers of --topic: running or ended, records sent so\n    far, rate, log\n"
+    printf "    %s\n" "Conflicts: --background, --stop"
     echo
 
     # :flag.usage
@@ -15945,7 +15968,7 @@ playground_topic_produce_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t payments --nb-messages 10 --value 'payment-%%g'\n  --transactional-id payments-txn --transaction open --transaction-timeout\n  900000\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n{\n    \"_meta\": {\n        \"topic\": \"\",\n        \"key\": \"\",\n        \"relationships\": []\n    },\n    \"nested\": {\n        \"phone\": \"faker.phone.imei()\",\n        \"website\": \"faker.internet.domainName()\"\n    },\n    \"id\": \"iteration.index\",\n    \"name\": \"faker.internet.userName()\",\n    \"email\": \"faker.internet.exampleEmail()\",\n    \"phone\": \"faker.phone.imei()\",\n    \"website\": \"faker.internet.domainName()\",\n    \"city\": \"faker.location.city()\",\n    \"company\": \"faker.company.name()\"\n}\nEOF\n  \n  playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'\n{\n        \"namespace\": \"ksql\",\n        \"name\": \"users\",\n        \"type\": \"record\",\n        \"fields\": [\n                {\"name\": \"registertime\", \"type\": {\n                    \"type\": \"long\",\n                    \"arg.properties\": {\n                        \"range\": {\n                            \"min\": 1487715775521,\n                            \"max\": 1519273364600\n                        }\n                    }\n                }},\n                {\"name\": \"userid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"User_[1-9]\"\n                    }\n                }},\n                {\"name\": \"regionid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"Region_[1-9]\"\n                    }\n                }},\n                {\"name\": \"gender\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"options\": [\n                            \"MALE\",\n                            \"FEMALE\",\n                            \"OTHER\"\n                        ]\n                    }\n                }}\n        ]\n}\nEOF\n  \n  playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value\n  predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"default\": null,\n      \"name\": \"address\",\n      \"type\": [\n        \"null\",\n        \"string\"\n      ]\n    },\n    {\n      \"name\": \"last_sale_date\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"name\": \"last_sale_price\",\n      \"type\": {\n        \"logicalType\": \"decimal\",\n        \"precision\": 15,\n        \"scale\": 2,\n        \"type\": \"bytes\"\n      }\n    },\n    {\n      \"name\": \"last_connection\",\n      \"type\": {\n        \"logicalType\": \"date\",\n        \"type\": \"int\"\n      }\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 1 << 'EOF'\nsyntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Customer {\n    int64 count = 1;\n    string first_name = 2;\n    string last_name = 3;\n    string address = 4;\n}\nEOF\n  \n  playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'\nCREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY COMMENT 'faker.number.int({ min: 1, max: 1000000 })',\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.number.int()',\n    \"price\" int COMMENT 'faker.number.int()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime COMMENT 'faker.date.past().toISOString()'\n);\nEOF\n  \n  playground topic produce -t topic-json --nb-messages 1 --producer-property\n  \"max.request.size=990485760\" < bigjson.json\n  \n  playground topic produce -t topic-string --nb-messages 5000 << 'EOF'\nAd et ut pariatur officia eos.\nNesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet\natque.\nQuidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto\nneque.\nQuibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat\nmolestiae natus assumenda omnis expedita.\nEt sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum\nculpa.\nQui enim facilis eos similique aperiam totam eius et at dolor dolores.\nUt sunt quia qui quia consectetur aut reiciendis.\nModi adipisci iusto aut voluptatem dolores laudantium.\nSequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.\nRerum aut amet quo possimus nihil velit quisquam ut cumque.\nPariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.\nEOF\n  \n  # key and headers\n  # mykey1 %%g can also be used\n  playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key\n  \"mykey1\" --headers \"header1:value1,header2:value2\" << 'EOF'\n{\"u_name\": \"scissors\", \"u_price\": 2.75, \"u_quantity\": 3}\n{\"u_name\": \"tape\", \"u_price\": 0.99, \"u_quantity\": 10}\n{\"u_name\": \"notebooks\", \"u_price\": 1.99, \"u_quantity\": 5}\nEOF\n  \n  # avro key\n  playground topic produce -t topic-avro-with-key --nb-messages 10 --key '\n  {\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      }\n    ],\n    \"name\": \"Key\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  ' << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # tombstone\n  playground topic produce -t topic-json-multiple-lines --tombstone --key\n  \"mykey1\"\n  \n  # input file\n  playground topic produce -t topic-avro-example3 < avro-schema.avsc\n  \n  # record-size\n  playground topic produce -t topic-avro-example-big-size --nb-messages 3\n  --record-size 10000000 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # validate\n  playground topic produce -t topic-json-schema-validate --nb-messages 3\n  --validate << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    },\n    \"holiday\": {\n      \"oneOf\": [\n        {\n          \"title\": \"Not included\",\n          \"type\": \"null\"\n        },\n        {}\n      ]\n    },\n    \"f2\": {}\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  #  --value-subject-name-strategy\n  playground topic produce -t topic-avro-example-value-subject-name-strategy\n  --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy <<\n  'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --generate-only\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 10 \n  --generate-only << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --forced-value\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 1\n  --forced-value '{\"count\":4,\"first_name\":\"Vincent\",\"last_name\":\"de\n  Saboulin\",\"address\":\"xxx\",\"createdDate\":1697852606000,\"warranty_expiration\":{\"int\":19653}}'\n  << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --derive-value-schema-as\n  playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF\n  --derive-key-schema-as PROTOBUF --key '{\"id\": \"1\"}' << 'EOF'\n{\"name\": \"Foo\", \"Age\": {\"int\": 12}}\nEOF\n"
+    printf "  playground topic produce -t orders --value '{\"id\": %%g}' --rate 100 --duration\n  10m --background\n  \n  playground topic produce -t orders --status\n  \n  playground topic produce -t orders --stop\n  \n  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t payments --nb-messages 10 --value 'payment-%%g'\n  --transactional-id payments-txn --transaction open --transaction-timeout\n  900000\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n{\n    \"_meta\": {\n        \"topic\": \"\",\n        \"key\": \"\",\n        \"relationships\": []\n    },\n    \"nested\": {\n        \"phone\": \"faker.phone.imei()\",\n        \"website\": \"faker.internet.domainName()\"\n    },\n    \"id\": \"iteration.index\",\n    \"name\": \"faker.internet.userName()\",\n    \"email\": \"faker.internet.exampleEmail()\",\n    \"phone\": \"faker.phone.imei()\",\n    \"website\": \"faker.internet.domainName()\",\n    \"city\": \"faker.location.city()\",\n    \"company\": \"faker.company.name()\"\n}\nEOF\n  \n  playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'\n{\n        \"namespace\": \"ksql\",\n        \"name\": \"users\",\n        \"type\": \"record\",\n        \"fields\": [\n                {\"name\": \"registertime\", \"type\": {\n                    \"type\": \"long\",\n                    \"arg.properties\": {\n                        \"range\": {\n                            \"min\": 1487715775521,\n                            \"max\": 1519273364600\n                        }\n                    }\n                }},\n                {\"name\": \"userid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"User_[1-9]\"\n                    }\n                }},\n                {\"name\": \"regionid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"Region_[1-9]\"\n                    }\n                }},\n                {\"name\": \"gender\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"options\": [\n                            \"MALE\",\n                            \"FEMALE\",\n                            \"OTHER\"\n                        ]\n                    }\n                }}\n        ]\n}\nEOF\n  \n  playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value\n  predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"default\": null,\n      \"name\": \"address\",\n      \"type\": [\n        \"null\",\n        \"string\"\n      ]\n    },\n    {\n      \"name\": \"last_sale_date\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"name\": \"last_sale_price\",\n      \"type\": {\n        \"logicalType\": \"decimal\",\n        \"precision\": 15,\n        \"scale\": 2,\n        \"type\": \"bytes\"\n      }\n    },\n    {\n      \"name\": \"last_connection\",\n      \"type\": {\n        \"logicalType\": \"date\",\n        \"type\": \"int\"\n      }\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 1 << 'EOF'\nsyntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Customer {\n    int64 count = 1;\n    string first_name = 2;\n    string last_name = 3;\n    string address = 4;\n}\nEOF\n  \n  playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'\nCREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY COMMENT 'faker.number.int({ min: 1, max: 1000000 })',\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.number.int()',\n    \"price\" int COMMENT 'faker.number.int()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime COMMENT 'faker.date.past().toISOString()'\n);\nEOF\n  \n  playground topic produce -t topic-json --nb-messages 1 --producer-property\n  \"max.request.size=990485760\" < bigjson.json\n  \n  playground topic produce -t topic-string --nb-messages 5000 << 'EOF'\nAd et ut pariatur officia eos.\nNesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet\natque.\nQuidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto\nneque.\nQuibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat\nmolestiae natus assumenda omnis expedita.\nEt sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum\nculpa.\nQui enim facilis eos similique aperiam totam eius et at dolor dolores.\nUt sunt quia qui quia consectetur aut reiciendis.\nModi adipisci iusto aut voluptatem dolores laudantium.\nSequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.\nRerum aut amet quo possimus nihil velit quisquam ut cumque.\nPariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.\nEOF\n  \n  # key and headers\n  # mykey1 %%g can also be used\n  playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key\n  \"mykey1\" --headers \"header1:value1,header2:value2\" << 'EOF'\n{\"u_name\": \"scissors\", \"u_price\": 2.75, \"u_quantity\": 3}\n{\"u_name\": \"tape\", \"u_price\": 0.99, \"u_quantity\": 10}\n{\"u_name\": \"notebooks\", \"u_price\": 1.99, \"u_quantity\": 5}\nEOF\n  \n  # avro key\n  playground topic produce -t topic-avro-with-key --nb-messages 10 --key '\n  {\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      }\n    ],\n    \"name\": \"Key\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  ' << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # tombstone\n  playground topic produce -t topic-json-multiple-lines --tombstone --key\n  \"mykey1\"\n  \n  # input file\n  playground topic produce -t topic-avro-example3 < avro-schema.avsc\n  \n  # record-size\n  playground topic produce -t topic-avro-example-big-size --nb-messages 3\n  --record-size 10000000 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # validate\n  playground topic produce -t topic-json-schema-validate --nb-messages 3\n  --validate << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    },\n    \"holiday\": {\n      \"oneOf\": [\n        {\n          \"title\": \"Not included\",\n          \"type\": \"null\"\n        },\n        {}\n      ]\n    },\n    \"f2\": {}\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  #  --value-subject-name-strategy\n  playground topic produce -t topic-avro-example-value-subject-name-strategy\n  --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy <<\n  'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --generate-only\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 10 \n  --generate-only << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --forced-value\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 1\n  --forced-value '{\"count\":4,\"first_name\":\"Vincent\",\"last_name\":\"de\n  Saboulin\",\"address\":\"xxx\",\"createdDate\":1697852606000,\"warranty_expiration\":{\"int\":19653}}'\n  << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --derive-value-schema-as\n  playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF\n  --derive-key-schema-as PROTOBUF --key '{\"id\": \"1\"}' << 'EOF'\n{\"name\": \"Foo\", \"Age\": {\"int\": 12}}\nEOF\n"
 echo
 
 fi
@@ -60331,6 +60354,21 @@ playground_stop_command() {
       docker rm -f $debug_dns_proxies > /dev/null 2>&1 || true
   fi
 
+  # the background producers of 'playground topic produce --background' started from this folder
+  for info in /tmp/playground-topic-produce/*.info
+  do
+      [ -f "$info" ] || continue
+      [ "$(sed -n 's/^root_folder=//p' "$info" | head -1)" == "$root_folder" ] || continue
+      background_id=$(basename "$info" .info)
+      background_pid=$(cat "/tmp/playground-topic-produce/$background_id.pid" 2> /dev/null)
+      if [[ -n "$background_pid" ]] && kill -0 "$background_pid" 2> /dev/null
+      then
+          log "🌙 stopping background producer $background_id (pid $background_pid)"
+          kill_tree "$background_pid"
+      fi
+      rm -f /tmp/playground-topic-produce/$background_id.{info,pid,progress,stop,rc}
+  done
+
   echo "$docker_command" > $tmp_dir/tmp
 
   sed -e "s|up -d|down -v --remove-orphans|g" \
@@ -84411,6 +84449,154 @@ playground_topic_produce_command() {
   eval "validate_config=(${args[--validate-config]})"
   eval "producer_property=(${args[--producer-property]})"
   eval "references=(${args[--reference]})"
+  duration="${args[--duration]}"
+  background="${args[--background]}"
+  stop_background="${args[--stop]}"
+  status_background="${args[--status]}"
+
+  # background producers (--background): one set of files per producer in $background_dir, named <topic>-<date>-<pid>:
+  # .info (what it produces), .pid, .log, .progress (records sent so far), .stop (asks it to stop), .rc (exit code)
+  background_dir="/tmp/playground-topic-produce"
+
+  function background_value () {
+      sed -n "s/^$2=//p" "$1" 2> /dev/null | head -1
+  }
+
+  # one line per background producer of $topic
+  function background_producer_status () {
+      local info="$1" id pid rc sent rate started dur nb state
+      id=$(basename "$info" .info)
+      pid=$(cat "$background_dir/$id.pid" 2> /dev/null)
+      sent=$(cat "$background_dir/$id.progress" 2> /dev/null)
+      rate=$(background_value "$info" rate)
+      started=$(background_value "$info" started)
+      dur=$(background_value "$info" duration)
+      nb=$(background_value "$info" nb_messages)
+      if [[ -n "$pid" ]] && kill -0 "$pid" 2> /dev/null && [ ! -f "$background_dir/$id.rc" ]
+      then
+          state="🟢 running"
+      else
+          rc=$(cat "$background_dir/$id.rc" 2> /dev/null)
+          if [ "$rc" == "0" ]
+          then
+              state="✅ ended"
+          else
+              state="❌ ended (exit code ${rc:-unknown})"
+          fi
+      fi
+      log "🌙 $id: $state, ${sent:-0} records sent, rate ${rate:-no limit}/s, since $started${dur:+, for $dur}$( [ "$nb" != "-1" ] && echo ", at most $nb records")"
+      log "   📄 log: $background_dir/$id.log"
+  }
+
+  # $1 and all its descendants, one pid per line
+  function background_process_tree () {
+      local child
+      echo "$1"
+      for child in $(pgrep -P "$1" 2> /dev/null)
+      do
+          background_process_tree "$child"
+      done
+  }
+
+  if [[ -n "$stop_background" ]] || [[ -n "$status_background" ]]
+  then
+      infos=()
+      for info in "$background_dir"/*.info
+      do
+          [ -f "$info" ] || continue
+          [ "$(background_value "$info" topic)" == "$topic" ] && infos+=("$info")
+      done
+      if [ ${#infos[@]} -eq 0 ]
+      then
+          log "💤 no background producer for topic $topic"
+          exit 0
+      fi
+      if [[ -n "$status_background" ]]
+      then
+          for info in "${infos[@]}"
+          do
+              background_producer_status "$info"
+          done
+          log "🛑 to stop: playground topic produce --topic $topic --stop"
+          exit 0
+      fi
+      rc_all=0
+      for info in "${infos[@]}"
+      do
+          id=$(basename "$info" .info)
+          pid=$(cat "$background_dir/$id.pid" 2> /dev/null)
+          if [[ -n "$pid" ]] && kill -0 "$pid" 2> /dev/null
+          then
+              log "🛑 stopping background producer $id (pid $pid)"
+              touch "$background_dir/$id.stop"
+              # the producer flushes the records it has, then exits: it can hang when the brokers are unreachable
+              for _ in $(seq 1 60)
+              do
+                  kill -0 "$pid" 2> /dev/null || break
+                  sleep 1
+              done
+              if kill -0 "$pid" 2> /dev/null
+              then
+                  # its processes, listed before they go (kill_tree reparents nothing it kills), killed for good if TERM
+                  # was not enough
+                  tree=$(background_process_tree "$pid")
+                  kill_tree "$pid"
+                  sleep 2
+                  for p in $tree
+                  do
+                      kill -9 "$p" 2> /dev/null || true
+                  done
+                  logwarn "⏱️ $id did not stop within 60 seconds (brokers unreachable?): killed after $(cat "$background_dir/$id.progress" 2> /dev/null || echo 0) records, the last ones may not have been sent"
+                  logwarn "   📄 log: $background_dir/$id.log"
+                  rm -f "$background_dir/$id.info" "$background_dir/$id.pid" "$background_dir/$id.progress" "$background_dir/$id.stop" "$background_dir/$id.rc"
+                  rc_all=1
+                  continue
+              fi
+          fi
+          summary=$(grep -E "📤 produced [0-9]+ records|❌" "$background_dir/$id.log" 2> /dev/null | tail -1 | sed -E 's/^.*(📤|❌)/\1/')
+          rc=$(cat "$background_dir/$id.rc" 2> /dev/null)
+          if [ "$rc" == "0" ]
+          then
+              log "✅ $id: ${summary:-ended}"
+          else
+              logerror "❌ $id ended with exit code ${rc:-unknown}${summary:+: $summary}"
+              logerror "   📄 log: $background_dir/$id.log"
+              rc_all=1
+          fi
+          rm -f "$background_dir/$id.info" "$background_dir/$id.pid" "$background_dir/$id.progress" "$background_dir/$id.stop" "$background_dir/$id.rc"
+      done
+      exit $rc_all
+  fi
+
+  if [[ -n "$background" ]]
+  then
+      if [[ -n "$transactional_id" ]] || [[ -n "$consume" ]] || [[ -n "$generate_only" ]]
+      then
+          logerror "❌ --background can't be used with --transactional-id, --consume or --generate-only"
+          exit 1
+      fi
+  fi
+
+  duration_seconds=0
+  if [[ -n "$duration" ]]
+  then
+      if [[ ! "$duration" =~ ^[0-9]+[smh]?$ ]] || [[ "$duration" =~ ^0+[smh]?$ ]]
+      then
+          logerror "❌ --duration $duration is not valid: seconds, or a number with a unit s, m or h, e.g. 90s, 10m, 1h"
+          exit 1
+      fi
+      case "$duration" in
+          *h) duration_seconds=$(( ${duration%h} * 3600 )) ;;
+          *m) duration_seconds=$(( ${duration%m} * 60 )) ;;
+          *s) duration_seconds=${duration%s} ;;
+          *) duration_seconds=$duration ;;
+      esac
+  fi
+  # --nb-messages left to its default with --duration or --background: records until the end of --duration, or --stop
+  if [ "$nb_messages" == "1" ] && { [[ -n "$duration" ]] || [[ -n "$background" ]]; }
+  then
+      nb_messages=-1
+  fi
 
   function identify_schema() {
       schema_file=$1
@@ -84480,6 +84666,11 @@ playground_topic_produce_command() {
   container_files=()
   staging_topic=""
   function produce_cleanup() {
+      # --background: the subshell producing the records owns the files
+      if [[ -n "$background_started" ]]
+      then
+          return
+      fi
       if [[ -n "$staging_topic" ]]
       then
           playground topic delete --topic "$staging_topic" > /dev/null 2>&1 || true
@@ -85931,20 +86122,44 @@ playground_topic_produce_command() {
   # - counted, so that the number of records sent is right when the batch is interrupted with ctrl-c
   # - with --throughput, throttled, and the progress is logged every 10 seconds as a batch can last hours
   #   (300000 records at 10 records/s)
+  # - with --duration ($deadline, epoch seconds) or a --stop of a background producer ($stop_file), it stops passing
+  #   records: the console producer gets the end of its input, sends what it has and exits
+  # - for a background producer, the records sent so far are written to $progress_file every second (--status)
   function pass_records() {
       rm -f "$tmp_dir/nb_records_passed"
-      PG_LOG_LEVEL="$PG_LOG_LEVEL" COUNT_FILE="$tmp_dir/nb_records_passed" perl -MTime::HiRes=time,sleep -MPOSIX=strftime -e '
+      PG_LOG_LEVEL="$PG_LOG_LEVEL" COUNT_FILE="$tmp_dir/nb_records_passed" DEADLINE="${deadline:-0}" STOP_FILE="$stop_file" PROGRESS_FILE="$progress_file" perl -MTime::HiRes=time,sleep -MPOSIX=strftime -e '
           my ($rate, $sent_before) = @ARGV;
           $| = $rate > 0;
           my $start = time;
           my $last_progress = $start;
           my $i = 0;
           my $quiet = ($ENV{PG_LOG_LEVEL} // "") =~ /^(WARN|ERROR)$/;
+          my ($deadline, $stop_file, $progress_file) = ($ENV{DEADLINE}, $ENV{STOP_FILE}, $ENV{PROGRESS_FILE});
+          my $watch = $deadline > 0 || $stop_file ne "" || $progress_file ne "";
+          my $next_check = 0;
           sub save_count {
               if (open(my $fh, ">", $ENV{COUNT_FILE})) { print $fh $i; close($fh); }
           }
-          $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_count(); exit 0; };
+          sub save_progress {
+              return if $progress_file eq "";
+              if (open(my $fh, ">", "$progress_file.tmp")) { print $fh $sent_before + $i; close($fh); rename("$progress_file.tmp", $progress_file); }
+          }
+          $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_count(); save_progress(); exit 0; };
           while (my $line = <STDIN>) {
+              if ($watch) {
+                  my $t = time;
+                  # the deadline on every record (nothing is throttled past it), the stop file once a second
+                  if ($deadline > 0 && $t >= $deadline) {
+                      save_count(); save_progress(); exit 0;
+                  }
+                  if ($t >= $next_check) {
+                      if ($stop_file ne "" && -e $stop_file) {
+                          save_count(); save_progress(); exit 0;
+                      }
+                      save_progress();
+                      $next_check = $t + 1;
+                  }
+              }
               print $line;
               $i++;
               next if $rate <= 0;
@@ -85954,11 +86169,29 @@ playground_topic_produce_command() {
                   $last_progress = $now;
               }
               my $wait = $start + $i / $rate - $now;
+              # not past the end of --duration: a low rate would otherwise end it up to 1/rate seconds late
+              if ($deadline > 0 && $wait > $deadline - $now) {
+                  sleep($deadline - $now) if $deadline > $now;
+                  save_count(); save_progress(); exit 0;
+              }
               sleep($wait) if $wait > 0;
           }
-          save_count();' "$throughput" "$1"
+          save_count();
+          save_progress();' "$throughput" "$1"
   }
 
+  # the records are sent by produce_records: in the foreground, or with --background in a subshell detached from the
+  # terminal, that owns the cleanup of the temporary files from then on
+  deadline=0
+  stop_file=""
+  progress_file=""
+  end_reason=""
+  function produce_records() {
+  if [ "$duration_seconds" -gt 0 ]
+  then
+      deadline=$(( $(date +%s) + duration_seconds ))
+      log "⏱️ --duration $duration: producing until $(date -r "$deadline" '+%H:%M:%S' 2> /dev/null || date -d "@$deadline" '+%H:%M:%S')"
+  fi
   interrupted=0
   function handle_signal {
     echo "Stopping..."
@@ -85976,6 +86209,11 @@ playground_topic_produce_command() {
   should_stop=0
   while [ $stop != 1 ]
   do
+      if { [ "$deadline" -gt 0 ] && [ "$(date +%s)" -ge "$deadline" ]; } || { [[ -n "$stop_file" ]] && [ -f "$stop_file" ]; }
+      then
+          stop=1
+          continue
+      fi
       if [ $nb_messages -eq -1 ]
       then
           nb_messages_to_send=$nb_generated_messages
@@ -86042,6 +86280,13 @@ playground_topic_produce_command() {
       fi
   done
   ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+  if [[ -n "$stop_file" ]] && [ -f "$stop_file" ]
+  then
+      end_reason=" (stopped with --stop)"
+  elif [ "$deadline" -gt 0 ] && [ "$(date +%s)" -ge "$deadline" ] && { [ $nb_messages = -1 ] || [ $nb_messages_sent -lt $nb_messages ]; }
+  then
+      end_reason=" (end of --duration $duration)"
+  fi
   if [ $interrupted = 1 ]
   then
       log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
@@ -86062,7 +86307,7 @@ playground_topic_produce_command() {
           logerror "❌ $nb_send_errors record(s) could not be sent to topic $topic${first_send_error:+: $first_send_error}"
           exit 1
       fi
-      log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
+      log "📤 produced $nb_messages_sent records to topic $topic$end_reason, $ELAPSED"
   fi
 
   if [[ -n "$transactional_id" ]] && [ $interrupted = 1 ]
@@ -86115,6 +86360,43 @@ playground_topic_produce_command() {
       log "📥 --consume is set, consuming topic $topic"
       playground topic consume --topic $topic --min-expected-messages $nb_messages_sent --timeout 60
   fi
+  }
+
+  if [[ -z "$background" ]]
+  then
+      produce_records
+      exit 0
+  fi
+
+  mkdir -p "$background_dir"
+  background_id="$topic-$(date +%Y%m%d-%H%M%S)-$$"
+  background_log="$background_dir/$background_id.log"
+  stop_file="$background_dir/$background_id.stop"
+  progress_file="$background_dir/$background_id.progress"
+  rm -f "$stop_file"
+  echo 0 > "$progress_file"
+  {
+      echo "topic=$topic"
+      echo "rate=$( [ "$throughput" -gt 0 ] && echo "$throughput")"
+      echo "duration=$duration"
+      echo "nb_messages=$nb_messages"
+      echo "started=$(date '+%Y-%m-%d %H:%M:%S')"
+      echo "root_folder=$root_folder"
+  } > "$background_dir/$background_id.info"
+  # HUP ignored: closing the terminal doesn't stop it; stdin closed, output to the log; the exit code is saved for --stop
+  (
+      trap '' HUP
+      trap 'echo $? > "$background_dir/$background_id.rc"; produce_cleanup' EXIT
+      produce_records
+  ) < /dev/null > "$background_log" 2>&1 &
+  background_pid=$!
+  echo "$background_pid" > "$background_dir/$background_id.pid"
+  # the subshell cleans up the temporary files when it ends, not this process
+  background_started=1
+  log "🌙 producing in the background to topic $topic (pid $background_pid, id $background_id)"
+  log "   📄 log:     tail -f $background_log"
+  log "   🔎 status:  playground topic produce --topic $topic --status"
+  log "   🛑 stop:    playground topic produce --topic $topic --stop"
 
 }
 
@@ -143509,7 +143791,7 @@ playground_topic_produce_parse_requirements() {
         ;;
 
       # :flag.case
-      --throughput)
+      --throughput | --rate)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -143517,9 +143799,68 @@ playground_topic_produce_parse_requirements() {
           shift
           shift
         else
-          printf "%s\n" "--throughput requires an argument: --throughput THROUGHPUT" >&2
+          printf "%s\n" "--throughput requires an argument: --throughput, --rate THROUGHPUT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --duration)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--duration']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--duration requires an argument: --duration DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --background)
+        # :flag.conflicts
+        for conflict in --stop --status; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--background']=1
+        shift
+        ;;
+
+      # :flag.case
+      --stop)
+        # :flag.conflicts
+        for conflict in --background --status; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--stop']=1
+        shift
+        ;;
+
+      # :flag.case
+      --status)
+        # :flag.conflicts
+        for conflict in --background --stop; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--status']=1
+        shift
         ;;
 
       # :flag.case
@@ -143945,7 +144286,7 @@ playground_topic_produce_parse_requirements() {
   if [[ -v args['--throughput'] ]]; then
     validation_output="$(validate_integer "${args['--throughput']:-}")"
     if [[ -n "${validation_output}" ]]; then
-      printf "validation error in %s:\n%s\n" "--throughput THROUGHPUT" "$validation_output" >&2
+      printf "validation error in %s:\n%s\n" "--throughput, --rate THROUGHPUT" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -186353,7 +186694,7 @@ playground_topic_produce_completion() {
         completion_blocked_flags["--sleep-time-between-batch"]=1
 
         ;;
-      --throughput)
+      --throughput | --rate)
         shift
         if [[ $# -eq 0 ]]; then
 
@@ -186362,6 +186703,37 @@ playground_topic_produce_completion() {
         shift
         completion_blocked_flags["--throughput"]=1
 
+        ;;
+      --duration)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--duration"]=1
+
+        ;;
+      --background)
+        completion_blocked_flags["--background"]=1
+        completion_blocked_flags["--stop"]=1
+        completion_blocked_flags["--status"]=1
+
+        shift
+        ;;
+      --stop)
+        completion_blocked_flags["--stop"]=1
+        completion_blocked_flags["--background"]=1
+        completion_blocked_flags["--status"]=1
+
+        shift
+        ;;
+      --status)
+        completion_blocked_flags["--status"]=1
+        completion_blocked_flags["--background"]=1
+        completion_blocked_flags["--stop"]=1
+
+        shift
         ;;
       --nb-partitions)
         shift
@@ -186653,7 +187025,11 @@ playground_topic_produce_completion() {
     completion_flag_candidates --max-nb-messages-per-batch "$completion_current" --max-nb-messages-per-batch
     completion_flag_candidates --max-nb-messages-to-generate "$completion_current" --max-nb-messages-to-generate
     completion_flag_candidates --sleep-time-between-batch "$completion_current" --sleep-time-between-batch
-    completion_flag_candidates --throughput "$completion_current" --throughput
+    completion_flag_candidates --throughput "$completion_current" --throughput --rate
+    completion_flag_candidates --duration "$completion_current" --duration
+    completion_flag_candidates --background "$completion_current" --background
+    completion_flag_candidates --stop "$completion_current" --stop
+    completion_flag_candidates --status "$completion_current" --status
     completion_flag_candidates --nb-partitions "$completion_current" --nb-partitions
     completion_flag_candidates --compression-codec "$completion_current" --compression-codec
     completion_flag_candidates --compatibility "$completion_current" --compatibility

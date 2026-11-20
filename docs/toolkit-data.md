@@ -150,6 +150,16 @@ after ctrl-c the number of records sent is exact:
 playground topic produce -t a-topic --nb-messages -1 --throughput 10 --value '{"id": %g}'
 ```
 
+To keep that flow while you inject a fault (a broker rolling restart, `playground debug block-traffic`…), produce in the
+background, `--rate` being an alias of `--throughput`. The command returns, `--status` shows the records sent so far and
+`--stop` ends it, with the exact number of records sent:
+
+```bash
+playground topic produce -t a-topic --value '{"id": %g}' --rate 100 --duration 10m --background
+playground topic produce -t a-topic --status
+playground topic produce -t a-topic --stop
+```
+
 #### **Force the format**
 
 The format of `--value` (and `--key`) is detected from its content: a raw payload that contains `"_meta"`, `proto3`,

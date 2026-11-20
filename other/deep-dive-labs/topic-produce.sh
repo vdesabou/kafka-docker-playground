@@ -97,6 +97,29 @@ then
 fi
 log "✅ $nb_ticks records sent at 5 records per second"
 
+log "Step 7b: steady traffic in the background"
+lab_run playground topic produce -t lab-steady --value '{"id": %g}' --rate 20 --duration 10m --background
+lab_expect_exit 0
+lab_expect_contains "🌙 producing in the background to topic lab-steady"
+lab_expect_contains "🛑 stop:    playground topic produce --topic lab-steady --stop"
+sleep 10
+lab_run playground topic produce -t lab-steady --status
+lab_expect_exit 0
+lab_expect_contains "🟢 running"
+lab_expect_contains "rate 20/s"
+lab_run playground topic produce -t lab-steady --stop
+lab_expect_exit 0
+lab_expect_contains "(stopped with --stop)"
+nb_sent=$(echo "$LAB_OUTPUT" | sed -n 's/.*📤 produced \([0-9]*\) records.*/\1/p' | tail -1)
+lab_run playground topic get-number-records --topic lab-steady
+lab_expect_exit 0
+lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1)" "$nb_sent" "records in lab-steady = records sent by the background producer"
+lab_run playground topic produce -t lab-steady --status
+lab_expect_contains "💤 no background producer for topic lab-steady"
+lab_run playground topic produce -t lab-steady --value x --duration 0m
+lab_expect_exit 1
+lab_expect_contains "--duration 0m is not valid"
+
 log "Step 8: transactions, aborted then committed"
 lab_run playground topic produce -t lab-txn --nb-messages 3 --value 'paid-%g' --transactional-id lab-txn-id --transaction abort
 lab_expect_exit 0

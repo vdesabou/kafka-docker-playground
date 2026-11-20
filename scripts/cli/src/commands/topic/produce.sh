@@ -37,6 +37,154 @@ transaction_timeout="${args[--transaction-timeout]}"
 eval "validate_config=(${args[--validate-config]})"
 eval "producer_property=(${args[--producer-property]})"
 eval "references=(${args[--reference]})"
+duration="${args[--duration]}"
+background="${args[--background]}"
+stop_background="${args[--stop]}"
+status_background="${args[--status]}"
+
+# background producers (--background): one set of files per producer in $background_dir, named <topic>-<date>-<pid>:
+# .info (what it produces), .pid, .log, .progress (records sent so far), .stop (asks it to stop), .rc (exit code)
+background_dir="/tmp/playground-topic-produce"
+
+function background_value () {
+    sed -n "s/^$2=//p" "$1" 2> /dev/null | head -1
+}
+
+# one line per background producer of $topic
+function background_producer_status () {
+    local info="$1" id pid rc sent rate started dur nb state
+    id=$(basename "$info" .info)
+    pid=$(cat "$background_dir/$id.pid" 2> /dev/null)
+    sent=$(cat "$background_dir/$id.progress" 2> /dev/null)
+    rate=$(background_value "$info" rate)
+    started=$(background_value "$info" started)
+    dur=$(background_value "$info" duration)
+    nb=$(background_value "$info" nb_messages)
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2> /dev/null && [ ! -f "$background_dir/$id.rc" ]
+    then
+        state="🟢 running"
+    else
+        rc=$(cat "$background_dir/$id.rc" 2> /dev/null)
+        if [ "$rc" == "0" ]
+        then
+            state="✅ ended"
+        else
+            state="❌ ended (exit code ${rc:-unknown})"
+        fi
+    fi
+    log "🌙 $id: $state, ${sent:-0} records sent, rate ${rate:-no limit}/s, since $started${dur:+, for $dur}$( [ "$nb" != "-1" ] && echo ", at most $nb records")"
+    log "   📄 log: $background_dir/$id.log"
+}
+
+# $1 and all its descendants, one pid per line
+function background_process_tree () {
+    local child
+    echo "$1"
+    for child in $(pgrep -P "$1" 2> /dev/null)
+    do
+        background_process_tree "$child"
+    done
+}
+
+if [[ -n "$stop_background" ]] || [[ -n "$status_background" ]]
+then
+    infos=()
+    for info in "$background_dir"/*.info
+    do
+        [ -f "$info" ] || continue
+        [ "$(background_value "$info" topic)" == "$topic" ] && infos+=("$info")
+    done
+    if [ ${#infos[@]} -eq 0 ]
+    then
+        log "💤 no background producer for topic $topic"
+        exit 0
+    fi
+    if [[ -n "$status_background" ]]
+    then
+        for info in "${infos[@]}"
+        do
+            background_producer_status "$info"
+        done
+        log "🛑 to stop: playground topic produce --topic $topic --stop"
+        exit 0
+    fi
+    rc_all=0
+    for info in "${infos[@]}"
+    do
+        id=$(basename "$info" .info)
+        pid=$(cat "$background_dir/$id.pid" 2> /dev/null)
+        if [[ -n "$pid" ]] && kill -0 "$pid" 2> /dev/null
+        then
+            log "🛑 stopping background producer $id (pid $pid)"
+            touch "$background_dir/$id.stop"
+            # the producer flushes the records it has, then exits: it can hang when the brokers are unreachable
+            for _ in $(seq 1 60)
+            do
+                kill -0 "$pid" 2> /dev/null || break
+                sleep 1
+            done
+            if kill -0 "$pid" 2> /dev/null
+            then
+                # its processes, listed before they go (kill_tree reparents nothing it kills), killed for good if TERM
+                # was not enough
+                tree=$(background_process_tree "$pid")
+                kill_tree "$pid"
+                sleep 2
+                for p in $tree
+                do
+                    kill -9 "$p" 2> /dev/null || true
+                done
+                logwarn "⏱️ $id did not stop within 60 seconds (brokers unreachable?): killed after $(cat "$background_dir/$id.progress" 2> /dev/null || echo 0) records, the last ones may not have been sent"
+                logwarn "   📄 log: $background_dir/$id.log"
+                rm -f "$background_dir/$id.info" "$background_dir/$id.pid" "$background_dir/$id.progress" "$background_dir/$id.stop" "$background_dir/$id.rc"
+                rc_all=1
+                continue
+            fi
+        fi
+        summary=$(grep -E "📤 produced [0-9]+ records|❌" "$background_dir/$id.log" 2> /dev/null | tail -1 | sed -E 's/^.*(📤|❌)/\1/')
+        rc=$(cat "$background_dir/$id.rc" 2> /dev/null)
+        if [ "$rc" == "0" ]
+        then
+            log "✅ $id: ${summary:-ended}"
+        else
+            logerror "❌ $id ended with exit code ${rc:-unknown}${summary:+: $summary}"
+            logerror "   📄 log: $background_dir/$id.log"
+            rc_all=1
+        fi
+        rm -f "$background_dir/$id.info" "$background_dir/$id.pid" "$background_dir/$id.progress" "$background_dir/$id.stop" "$background_dir/$id.rc"
+    done
+    exit $rc_all
+fi
+
+if [[ -n "$background" ]]
+then
+    if [[ -n "$transactional_id" ]] || [[ -n "$consume" ]] || [[ -n "$generate_only" ]]
+    then
+        logerror "❌ --background can't be used with --transactional-id, --consume or --generate-only"
+        exit 1
+    fi
+fi
+
+duration_seconds=0
+if [[ -n "$duration" ]]
+then
+    if [[ ! "$duration" =~ ^[0-9]+[smh]?$ ]] || [[ "$duration" =~ ^0+[smh]?$ ]]
+    then
+        logerror "❌ --duration $duration is not valid: seconds, or a number with a unit s, m or h, e.g. 90s, 10m, 1h"
+        exit 1
+    fi
+    case "$duration" in
+        *h) duration_seconds=$(( ${duration%h} * 3600 )) ;;
+        *m) duration_seconds=$(( ${duration%m} * 60 )) ;;
+        *s) duration_seconds=${duration%s} ;;
+        *) duration_seconds=$duration ;;
+    esac
+fi
+# --nb-messages left to its default with --duration or --background: records until the end of --duration, or --stop
+if [ "$nb_messages" == "1" ] && { [[ -n "$duration" ]] || [[ -n "$background" ]]; }
+then
+    nb_messages=-1
+fi
 
 function identify_schema() {
     schema_file=$1
@@ -106,6 +254,11 @@ container_files_owner=""
 container_files=()
 staging_topic=""
 function produce_cleanup() {
+    # --background: the subshell producing the records owns the files
+    if [[ -n "$background_started" ]]
+    then
+        return
+    fi
     if [[ -n "$staging_topic" ]]
     then
         playground topic delete --topic "$staging_topic" > /dev/null 2>&1 || true
@@ -1553,20 +1706,44 @@ producer_cmd+=("${producer_args[@]}")
 # - counted, so that the number of records sent is right when the batch is interrupted with ctrl-c
 # - with --throughput, throttled, and the progress is logged every 10 seconds as a batch can last hours
 #   (300000 records at 10 records/s)
+# - with --duration ($deadline, epoch seconds) or a --stop of a background producer ($stop_file), it stops passing
+#   records: the console producer gets the end of its input, sends what it has and exits
+# - for a background producer, the records sent so far are written to $progress_file every second (--status)
 function pass_records() {
     rm -f "$tmp_dir/nb_records_passed"
-    PG_LOG_LEVEL="$PG_LOG_LEVEL" COUNT_FILE="$tmp_dir/nb_records_passed" perl -MTime::HiRes=time,sleep -MPOSIX=strftime -e '
+    PG_LOG_LEVEL="$PG_LOG_LEVEL" COUNT_FILE="$tmp_dir/nb_records_passed" DEADLINE="${deadline:-0}" STOP_FILE="$stop_file" PROGRESS_FILE="$progress_file" perl -MTime::HiRes=time,sleep -MPOSIX=strftime -e '
         my ($rate, $sent_before) = @ARGV;
         $| = $rate > 0;
         my $start = time;
         my $last_progress = $start;
         my $i = 0;
         my $quiet = ($ENV{PG_LOG_LEVEL} // "") =~ /^(WARN|ERROR)$/;
+        my ($deadline, $stop_file, $progress_file) = ($ENV{DEADLINE}, $ENV{STOP_FILE}, $ENV{PROGRESS_FILE});
+        my $watch = $deadline > 0 || $stop_file ne "" || $progress_file ne "";
+        my $next_check = 0;
         sub save_count {
             if (open(my $fh, ">", $ENV{COUNT_FILE})) { print $fh $i; close($fh); }
         }
-        $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_count(); exit 0; };
+        sub save_progress {
+            return if $progress_file eq "";
+            if (open(my $fh, ">", "$progress_file.tmp")) { print $fh $sent_before + $i; close($fh); rename("$progress_file.tmp", $progress_file); }
+        }
+        $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_count(); save_progress(); exit 0; };
         while (my $line = <STDIN>) {
+            if ($watch) {
+                my $t = time;
+                # the deadline on every record (nothing is throttled past it), the stop file once a second
+                if ($deadline > 0 && $t >= $deadline) {
+                    save_count(); save_progress(); exit 0;
+                }
+                if ($t >= $next_check) {
+                    if ($stop_file ne "" && -e $stop_file) {
+                        save_count(); save_progress(); exit 0;
+                    }
+                    save_progress();
+                    $next_check = $t + 1;
+                }
+            }
             print $line;
             $i++;
             next if $rate <= 0;
@@ -1576,11 +1753,29 @@ function pass_records() {
                 $last_progress = $now;
             }
             my $wait = $start + $i / $rate - $now;
+            # not past the end of --duration: a low rate would otherwise end it up to 1/rate seconds late
+            if ($deadline > 0 && $wait > $deadline - $now) {
+                sleep($deadline - $now) if $deadline > $now;
+                save_count(); save_progress(); exit 0;
+            }
             sleep($wait) if $wait > 0;
         }
-        save_count();' "$throughput" "$1"
+        save_count();
+        save_progress();' "$throughput" "$1"
 }
 
+# the records are sent by produce_records: in the foreground, or with --background in a subshell detached from the
+# terminal, that owns the cleanup of the temporary files from then on
+deadline=0
+stop_file=""
+progress_file=""
+end_reason=""
+function produce_records() {
+if [ "$duration_seconds" -gt 0 ]
+then
+    deadline=$(( $(date +%s) + duration_seconds ))
+    log "⏱️ --duration $duration: producing until $(date -r "$deadline" '+%H:%M:%S' 2> /dev/null || date -d "@$deadline" '+%H:%M:%S')"
+fi
 interrupted=0
 function handle_signal {
   echo "Stopping..."
@@ -1598,6 +1793,11 @@ stop=0
 should_stop=0
 while [ $stop != 1 ]
 do
+    if { [ "$deadline" -gt 0 ] && [ "$(date +%s)" -ge "$deadline" ]; } || { [[ -n "$stop_file" ]] && [ -f "$stop_file" ]; }
+    then
+        stop=1
+        continue
+    fi
     if [ $nb_messages -eq -1 ]
     then
         nb_messages_to_send=$nb_generated_messages
@@ -1664,6 +1864,13 @@ do
     fi
 done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+if [[ -n "$stop_file" ]] && [ -f "$stop_file" ]
+then
+    end_reason=" (stopped with --stop)"
+elif [ "$deadline" -gt 0 ] && [ "$(date +%s)" -ge "$deadline" ] && { [ $nb_messages = -1 ] || [ $nb_messages_sent -lt $nb_messages ]; }
+then
+    end_reason=" (end of --duration $duration)"
+fi
 if [ $interrupted = 1 ]
 then
     log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
@@ -1684,7 +1891,7 @@ else
         logerror "❌ $nb_send_errors record(s) could not be sent to topic $topic${first_send_error:+: $first_send_error}"
         exit 1
     fi
-    log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
+    log "📤 produced $nb_messages_sent records to topic $topic$end_reason, $ELAPSED"
 fi
 
 if [[ -n "$transactional_id" ]] && [ $interrupted = 1 ]
@@ -1737,3 +1944,40 @@ then
     log "📥 --consume is set, consuming topic $topic"
     playground topic consume --topic $topic --min-expected-messages $nb_messages_sent --timeout 60
 fi
+}
+
+if [[ -z "$background" ]]
+then
+    produce_records
+    exit 0
+fi
+
+mkdir -p "$background_dir"
+background_id="$topic-$(date +%Y%m%d-%H%M%S)-$$"
+background_log="$background_dir/$background_id.log"
+stop_file="$background_dir/$background_id.stop"
+progress_file="$background_dir/$background_id.progress"
+rm -f "$stop_file"
+echo 0 > "$progress_file"
+{
+    echo "topic=$topic"
+    echo "rate=$( [ "$throughput" -gt 0 ] && echo "$throughput")"
+    echo "duration=$duration"
+    echo "nb_messages=$nb_messages"
+    echo "started=$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "root_folder=$root_folder"
+} > "$background_dir/$background_id.info"
+# HUP ignored: closing the terminal doesn't stop it; stdin closed, output to the log; the exit code is saved for --stop
+(
+    trap '' HUP
+    trap 'echo $? > "$background_dir/$background_id.rc"; produce_cleanup' EXIT
+    produce_records
+) < /dev/null > "$background_log" 2>&1 &
+background_pid=$!
+echo "$background_pid" > "$background_dir/$background_id.pid"
+# the subshell cleans up the temporary files when it ends, not this process
+background_started=1
+log "🌙 producing in the background to topic $topic (pid $background_pid, id $background_id)"
+log "   📄 log:     tail -f $background_log"
+log "   🔎 status:  playground topic produce --topic $topic --status"
+log "   🛑 stop:    playground topic produce --topic $topic --stop"

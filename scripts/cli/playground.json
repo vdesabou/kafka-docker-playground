@@ -7675,10 +7675,39 @@
             },
             {
               "names": [
-                "--throughput"
+                "--throughput",
+                "--rate"
               ],
               "argument": "THROUGHPUT",
-              "description": "🐢 Maximum number of records per second (default is 0, no limit)\n\nUseful with --nb-messages -1 to get a steady flow of records, for example:\n\nplayground topic produce -t a-topic --nb-messages -1 --throughput 10 --value '{\"id\": %g}'\n\nDefault value: 0"
+              "description": "🐢 Maximum number of records per second (default is 0, no limit), alias --rate\n\nUseful with --nb-messages -1 or --duration to get a steady flow of records, for example:\n\nplayground topic produce -t a-topic --nb-messages -1 --throughput 10 --value '{\"id\": %g}'\n\nDefault value: 0"
+            },
+            {
+              "names": [
+                "--duration"
+              ],
+              "argument": "DURATION",
+              "description": "⏱️ Stop producing after this time: seconds, or a number with a unit s, m or h (e.g. 90s, 10m, 1h)\n\nWithout --nb-messages, the records are produced until then (--nb-messages -1). With\n--nb-messages N, the first of the two ends it."
+            },
+            {
+              "names": [
+                "--background"
+              ],
+              "argument": "",
+              "description": "🌙 Produce in the background: the command returns once the schemas are registered and the\ntopic is created, the records flow until --duration, --nb-messages or --stop (without\n--nb-messages, until --duration or --stop)\n\nSteady traffic while you inject a fault (broker rolling-restart, debug block-traffic,\ndebug dns, debug clock...), then judge the result with connector reconcile or topic consume.\nThe log, the progress and how to stop it are printed.\n\nConflicts with: --stop, --status"
+            },
+            {
+              "names": [
+                "--stop"
+              ],
+              "argument": "",
+              "description": "🛑 Stop the background producers of --topic, and print what they produced (also collects\nthe result of the ones that already ended)\n\nConflicts with: --background, --status"
+            },
+            {
+              "names": [
+                "--status"
+              ],
+              "argument": "",
+              "description": "🔎 The background producers of --topic: running or ended, records sent so far, rate, log\n\nConflicts with: --background, --stop"
             },
             {
               "names": [

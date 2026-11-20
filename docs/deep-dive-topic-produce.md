@@ -172,6 +172,11 @@ playground topic produce -t load --nb-messages 2000000 --value '{"id": %g}'
 # a steady flow until ctrl-c: 20 records/s, progress logged every 10 seconds
 playground topic produce -t ticks --nb-messages -1 --throughput 20 --value '{"tick": %g}'
 
+# 100 records/s for 10 minutes, in the background: the command returns, you inject a fault meanwhile
+playground topic produce -t orders --value '{"id": %g}' --rate 100 --duration 10m --background
+playground topic produce -t orders --status        # running or ended, records sent so far, log
+playground topic produce -t orders --stop          # ends it (or collects the result of one that ended)
+
 # big records: the first string field is padded to reach the size
 playground topic produce -t big --nb-messages 2 --record-size 2000000 < scripts/cli/predefined-schemas/avro/lead.avsc
 
@@ -185,7 +190,10 @@ What happens behind the flags:
 | Flag | What it does |
 | --- | --- |
 | `--nb-messages -1` | infinite, in batches; ctrl-c stops and prints the exact number of records sent |
-| `--throughput N` | at most N records per second (paced on the host, before the producer) |
+| `--throughput N` (alias `--rate N`) | at most N records per second (paced on the host, before the producer) |
+| `--duration 10m` | stops after that time (`s`, `m`, `h`); without `--nb-messages`, records until then. The summary says `(end of --duration 10m)` |
+| `--background` | the schemas, the topic and the first checks run in the foreground (errors show at once), then the records flow in a detached process: closing the terminal doesn't stop it. Without `--nb-messages`: until `--duration` or `--stop`. Its log is `/tmp/playground-topic-produce/<topic>-<date>-<pid>.log` |
+| `--status` / `--stop` (with `-t <topic>`) | the background producers of the topic: running or ended, records sent so far (updated every second) / ends them: the producer sends what it has and exits, then the exact number of records sent is printed, `(stopped with --stop)` |
 | `--sleep-time-between-batch N` | pause N seconds between batches (bursty load) |
 | `--record-size N` | pads the **first string field** of each record (nested fields and the `string` branch of an Avro union included, only that one); above 1 MB, also sets `max.request.size`, `buffer.memory`, `request.timeout.ms` (60 s instead of the 1.5 s of the console producer) and the topic's `max.message.bytes` for you |
 | `--nb-partitions N` | creates the topic with N partitions (1 by default). If it exists with another count, `--nb-partitions 1` included: **re-created when empty, error when not** |
@@ -196,6 +204,10 @@ Gotchas:
 
 - **Each call costs a few seconds** (generator container + producer JVM). In a loop, one call per record is slow:
   produce N records in one call instead.
+- `--stop` waits 60 seconds for the producer to flush. When the brokers are unreachable (the fault you injected), it
+  kills it: warning `did not stop within 60 seconds`, exit code 1, the number of records sent so far, the last ones
+  may be lost. `playground stop` also ends the background producers started from the same folder.
+- `--background` can't be combined with `--transactional-id`, `--consume` or `--generate-only`.
 - `--record-size` with a schema that has no string field can't reach the size (warning
   `could not find string field`).
 - Because of the pool, 1 million records with `--record-size` are 100 distinct big records repeated: fine for
@@ -288,6 +300,20 @@ playground topic produce -t lab-ticks --nb-messages -1 --throughput 5 --value '{
 playground topic get-number-records --topic lab-ticks
 ```
 
+**Step 7b: steady traffic in the background, while something else happens**
+
+```bash
+playground topic produce -t lab-steady --value '{"id": %g}' --rate 20 --duration 10m --background
+# 🌙 producing in the background to topic lab-steady (pid 51746, id lab-steady-20261120-121235-51091)
+#    📄 log:     tail -f /tmp/playground-topic-produce/lab-steady-20261120-121235-51091.log
+playground topic produce -t lab-steady --status
+# 🌙 lab-steady-20261120-121235-51091: 🟢 running, 205 records sent, rate 20/s, since 2026-11-20 12:12:35, for 10m
+# … inject a fault here: playground broker rolling-restart, playground debug block-traffic …
+playground topic produce -t lab-steady --stop
+# ✅ lab-steady-20261120-121235-51091: 📤 produced 308 records to topic lab-steady (stopped with --stop), took: 0min 17sec
+playground topic get-number-records --topic lab-steady     # 308: nothing lost
+```
+
 **Step 8: transactions, aborted then committed**
 
 ```bash
@@ -320,7 +346,8 @@ playground stop
 | "`RecordTooLargeException` / big documents" | `--record-size 2000000` (producer and topic limits are raised for you, the consumer or sink limits are not) |
 | "SMT / routing based on headers" | `--headers 'type:invoice,region:eu'` |
 | "ordering per key, several partitions" | `--nb-partitions 3 --key 'k%g'` (or a fixed key to pin one partition) |
-| "lag, rebalances under steady load" | `--nb-messages -1 --throughput 50` in the background, then `playground connector show-lag` |
+| "lag, rebalances under steady load" | `--rate 50 --background`, then `playground connector show-lag` |
+| "records lost / duplicated during a rolling restart, an outage, a DNS or clock change" | `--rate 100 --duration 5m --background`, inject the fault (`broker rolling-restart`, `debug block-traffic`, `debug dns`, `debug clock`), `--stop`: compare the records sent with the topic (`topic get-number-records`) or the target (`connector reconcile`) |
 | "schema id in headers (new serializers)" | `--schema-id-in-header` (CP 8.1.1+) |
 | "`read_committed` consumer / exactly-once pipeline: committed, aborted or never ending transactions" | `--transactional-id <id> --transaction commit\|abort\|open` (`--transaction-timeout 900000` keeps an open one 15 minutes), then `topic consume --isolation-level read_committed --count` and `broker transactions describe-producers --topic <t>` |
 
@@ -345,10 +372,11 @@ playground topic produce -t <topic> [--nb-messages N|-1] \
   [< schema | --value '<payload>'|<file>|@predefined-schemas/<fmt>/<file>] [--forced-value '<record>'] \
   [--key '<key>'|<schema> [--forced-key '<key>']] [--headers 'k1:v1,k2:v2'] [--tombstone] \
   [--value-format raw|avro|…] [--derive-value-schema-as AVRO|JSON|PROTOBUF] [--generate-only] \
-  [--throughput N] [--record-size BYTES] [--nb-partitions N] [--compression-codec zstd] \
+  [--throughput|--rate N] [--duration 10m] [--background] [--record-size BYTES] [--nb-partitions N] [--compression-codec zstd] \
   [--producer-property k=v] [--value-subject-name-strategy …] [--compatibility …] [--validate] \
   [--transactional-id <id> [--transaction commit|abort|open] [--transaction-timeout <ms>]] \
   [--delete-topic] [--consume] [--verbose]
+playground topic produce -t <topic> --status | --stop
 ```
 
 - A pool of distinct records is generated, then repeated. `%g` keeps counting.
