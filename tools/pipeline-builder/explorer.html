@@ -131,9 +131,11 @@ html[data-theme="dark"] .badge{color:#c4b5fd}
 /* README preview */
 .hlink{font-size:.76rem;font-weight:600;color:var(--a1);text-decoration:none}
 .readme-msg{color:var(--muted);font-size:.84rem}
-.readme{position:relative;max-height:280px;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--card2);padding:4px 16px}
-.readme:not(.open)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(transparent,var(--card2));pointer-events:none}
-.readme.open{max-height:none}
+.readme{max-height:420px;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:12px;background:var(--card2);padding:4px 16px;
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.readme::-webkit-scrollbar{width:8px}
+.readme::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px}
+.readme.open{max-height:none;overflow:visible}
 .more-btn{margin-top:8px;padding:5px 12px}
 .md{font-size:.86rem;line-height:1.55;overflow-wrap:anywhere}
 .md h3,.md h4,.md h5,.md h6{margin:16px 0 6px;letter-spacing:-.01em}
@@ -435,6 +437,7 @@ function connectorSelect(e) {
 const RAW = "https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/";
 const readmes = {};          // dir -> markdown, or "loading" / "failed"
 let readmeOpen = false;      // the whole README shown, or the preview
+let readmeScroll = {dir: null, top: 0};   // the scroll of the preview, kept when the detail is drawn again
 function readmeBlock(e) {
   const r = readmes[e.dir];
   if (r === undefined) {
@@ -447,7 +450,7 @@ function readmeBlock(e) {
   if (r === "loading") return `<div class="readme-msg">loading the README…</div>`;
   if (r === "failed") return `<div class="readme-msg">the README could not be loaded (offline?): <a href="${GITHUB + esc(e.dir)}" target="_blank" rel="noopener">read it on GitHub ↗</a></div>`;
   return `<div class="readme${readmeOpen ? " open" : ""}"><div class="md">${md(r, e.dir)}</div></div>
-    <button type="button" class="mini more-btn" data-readme="1">${readmeOpen ? "▲ Show less" : "▼ Show the whole README"}</button>`;
+    <button type="button" class="mini more-btn" data-readme="1">${readmeOpen ? "▲ Back to the scrolling preview" : "▼ Unfold the whole README"}</button>`;
 }
 
 // a small Markdown renderer for the READMEs: everything is escaped first (no HTML from the file), then headings,
@@ -534,6 +537,8 @@ function md(src, dir) {
 
 function renderDetail() {
   const e = state.sel ? byPath(state.sel) : null;
+  const keepScroll = e && readmeScroll.dir === e.dir ? readmeScroll.top : 0;
+  requestAnimationFrame(() => { const r = document.querySelector("#detail .readme"); if (r && keepScroll) r.scrollTop = keepScroll; });
   if (!e) {
     $("detail").innerHTML = `<div class="empty-detail"><div class="big">🧭</div><h2>Pick an example</h2>
       <div>Search by connector, database, cloud, security mechanism…<br>then choose its options and copy the <code>playground run</code> command.</div>
@@ -704,6 +709,9 @@ $("detail").addEventListener("change", e => {
   else return;
   renderDetail(); saveHash();
 });
+$("detail").addEventListener("scroll", e => {
+  if (e.target.classList && e.target.classList.contains("readme") && state.sel) readmeScroll = {dir: byPath(state.sel).dir, top: e.target.scrollTop};
+}, true);
 $("detail").addEventListener("click", e => {
   const btn = e.target.closest(".dd-btn");
   if (btn && !btn.disabled) {
