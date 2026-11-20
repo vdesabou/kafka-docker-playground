@@ -94141,15 +94141,17 @@ playground_connector_reconcile_command() {
           [[ "$type" != *RegexRouter* ]] && continue
           regex=$(cfg "transforms.$alias.regex")
           replacement=$(cfg "transforms.$alias.replacement")
-          name=$(python3 -I -c '
-  import re, sys
-  name, regex, replacement = sys.argv[1:4]
-  m = re.fullmatch(regex, name)
-  if m:
-      # java replacement syntax: $1, \$ for a literal $
-      out = re.sub(r"\\\$|\$(\d+)", lambda g: "$" if g.group(0) == "\\$" else (m.group(int(g.group(1))) or ""), replacement)
-      name = out
-  print(name)' "$name" "$regex" "$replacement" 2>/dev/null || echo "$name")
+          # "if True:" keeps the code valid once bashly indents it in scripts/cli/playground: python < 3.14 does not
+          # dedent the code of -c, and the IndentationError would silently leave the topic name unchanged
+          name=$(python3 -I -c 'if True:
+      import re, sys
+      name, regex, replacement = sys.argv[1:4]
+      m = re.fullmatch(regex, name)
+      if m:
+          # java replacement syntax: $1, \$ for a literal $
+          out = re.sub(r"\\\$|\$(\d+)", lambda g: "$" if g.group(0) == "\\$" else (m.group(int(g.group(1))) or ""), replacement)
+          name = out
+      print(name)' "$name" "$regex" "$replacement" 2>/dev/null || echo "$name")
       done
       echo "$name"
   }
