@@ -498,7 +498,7 @@ Header name to pull value for external versioning, defaults to using the kafka r
 
 🔘 routing.header
 
-Header name to pull the value used as Elasticsearch's ``_routing`` field, which decides the shard a document is written to. The header value must not contain ``"`` or ``\``, which would produce a malformed bulk request that Elasticsearch rejects.
+Header name to pull the value used as Elasticsearch's ``_routing`` field, which decides the shard a document is written to.
 
 	 - Type: STRING
 	 - Default: 
