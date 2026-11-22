@@ -72,6 +72,15 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -82,15 +91,6 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
-
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
@@ -128,17 +128,6 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
-🔘 couchbase.enable.tls
-
-Use secure connection to Couchbase Server.
-
-If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.hostname.verification
 
 Set this to `false` to disable TLS hostname verification for Couchbase connections. Less secure, but might be required if for some reason you can't issue a certificate whose Subject Alternative Names match the hostname used to connect to the server. Only disable if you understand the impact and can accept the risks.
@@ -203,6 +192,17 @@ Note that this config is considered advanced, please only customize the cipher l
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.enable.tls
+
+Use secure connection to Couchbase Server.
+
+If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.trust.store.password
 
 Password for accessing the trust store.
@@ -217,15 +217,6 @@ May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment vari
 ==========================
 Logging
 ==========================
-🔘 couchbase.log.redaction
-
-Determines which kinds of sensitive log messages from the Couchbase connector will be tagged for later redaction by the Couchbase log redaction tool. NONE = no tagging; PARTIAL = user data is tagged; FULL = user, meta, and system data is tagged.
-
-	 - Type: STRING
-	 - Default: NONE
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.log.document.lifecycle
 
 If true, document lifecycle milestones will be logged at INFO level instead of DEBUG. Enabling this feature lets you watch documents flow through the connector. Disabled by default because it generates many log messages.
@@ -247,6 +238,15 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 
 	 - Type: STRING
 	 - Default: 10m
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.log.redaction
+
+Determines which kinds of sensitive log messages from the Couchbase connector will be tagged for later redaction by the Couchbase log redaction tool. NONE = no tagging; PARTIAL = user data is tagged; FULL = user, meta, and system data is tagged.
+
+	 - Type: STRING
+	 - Default: NONE
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -501,19 +501,6 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 ==========================
 Schema
 ==========================
-🔘 couchbase.dlq.topic
-
-This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
-
-If `couchbase.schema.failure.action` is set to DLQ then documents that encounter any Schema failures will be sent to this topic. Headers will be added for future investigation such as the intended destination and the reason it was sent to the DLQ
-
-UNCOMMITTED; this feature may change in a patch release without notice.
-
-	 - Type: STRING
-	 - Default: couchbase.dlq
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.schema.failure.action
 
 Determines the behaviour when a Schema Mismatch or Missing Schema is encountered for a document using the Schema Registry. This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
@@ -548,6 +535,19 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.dlq.topic
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+
+If `couchbase.schema.failure.action` is set to DLQ then documents that encounter any Schema failures will be sent to this topic. Headers will be added for future investigation such as the intended destination and the reason it was sent to the DLQ
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+	 - Type: STRING
+	 - Default: couchbase.dlq
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Database Change Protocol
 ==========================
@@ -557,23 +557,6 @@ To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to 
 
 	 - Type: STRING
 	 - Default: ENABLED
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.persistence.polling.interval
-
-When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
-
-To enable this feature, specify a non-zero persistence polling interval. The interval is how frequently the connector asks each Couchbase node which changes have been fully replicated and persisted. This ensures consistency between Couchbase and Kafka, at the cost of additional latency and bandwidth usage.
-
-To disable this feature, specify a zero duration (`0`). In this mode the connector publishes changes to Kafka immediately, without waiting for replication. This is fast and uses less network bandwidth, but can result in publishing "phantom changes" that don’t reflect the actual state of a document in Couchbase after a failover.
-
-TIP: Documents written to Couchbase with enhanced durability are never published to Kafka until the durability requirements are met, regardless of whether persistence polling is enabled.
-
-CAUTION: When connecting to an ephemeral bucket, always disable persistence polling by setting this config option to `0`, otherwise the connector will never publish any changes.
-
-	 - Type: STRING
-	 - Default: 100ms
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -622,6 +605,23 @@ Ignored if `couchbase.enable.dcp.trace` is false.
 
 	 - Type: STRING
 	 - Default: .*
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.persistence.polling.interval
+
+When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
+
+To enable this feature, specify a non-zero persistence polling interval. The interval is how frequently the connector asks each Couchbase node which changes have been fully replicated and persisted. This ensures consistency between Couchbase and Kafka, at the cost of additional latency and bandwidth usage.
+
+To disable this feature, specify a zero duration (`0`). In this mode the connector publishes changes to Kafka immediately, without waiting for replication. This is fast and uses less network bandwidth, but can result in publishing "phantom changes" that don’t reflect the actual state of a document in Couchbase after a failover.
+
+TIP: Documents written to Couchbase with enhanced durability are never published to Kafka until the durability requirements are met, regardless of whether persistence polling is enabled.
+
+CAUTION: When connecting to an ephemeral bucket, always disable persistence polling by setting this config option to `0`, otherwise the connector will never publish any changes.
+
+	 - Type: STRING
+	 - Default: 100ms
 	 - Importance: MEDIUM
 	 - Required: false
 
