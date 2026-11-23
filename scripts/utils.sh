@@ -846,7 +846,7 @@ function salesforce_ensure_jwt_keystore() {
   local target_dir="${1:-$PWD}"
   local keystore_path="$target_dir/salesforce-confluent.keystore.jks"
 
-  # The keystore of 'playground salesforce setup', when there is one, wins over the shared one of
+  # The keystore of 'playground account salesforce setup', when there is one, wins over the shared one of
   # the S3 bucket: the External Client App of the user's org trusts its certificate.
   salesforce_sync_user_keystore "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" "$target_dir"
 

@@ -87,6 +87,7 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "bashly-reload")                             "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "state")                                     "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   ☁️ Deprecated: use 'playground account salesforce' (same subcommands and flags)\n" "$(green "salesforce")                                "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🧹 Deprecated: use 'playground cloud-resources cleanup' (same flags)\n" "$(green "cleanup-cloud-resources")                   "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   💰 Deprecated: use 'playground cloud-resources ccloud costs' (same flags)\n" "$(green "ccloud-costs")                              "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   👛 Deprecated: use 'playground cloud-resources ccloud costs-history' (same flags)\n" "$(green "ccloud-costs-history")                      "
@@ -109,10 +110,10 @@ playground_usage() {
   printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "secrets scan")                              "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🧹 List the examples whose environment variables are not auto-detected\n" "$(green "secrets lint")                              "
   echo
-  printf "%s\n" "$(bold "Salesforce commands:")"
-  printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "salesforce")                                "
-  printf "  %s   🛠️ Configure a Salesforce org for the Salesforce examples\n" "$(green "salesforce setup")                          "
-  printf "  %s   🩺 Check that the stored Salesforce credentials work\n" "$(green "salesforce check")                          "
+  printf "%s\n" "$(bold "Accounts commands:")"
+  printf "  %s   ☁️ Set up and check the third-party accounts the examples run against\n" "$(green "account")                                   "
+  printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "account salesforce")                        "
+  printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "account gcp")                               "
   echo
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n" "$(green "ccloud")                                    "
@@ -3640,17 +3641,53 @@ playground_secrets_lint_usage() {
 }
 
 # :command.usage
-playground_salesforce_usage() {
+playground_account_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground salesforce\n\n"
-    printf "  ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n  \n    setup   configure an org: External Client App (JWT bearer), Platform Event,\n  Change Data Capture\n    check   verify that the stored credentials can log in, and that the org has\n  what the examples need\n  \n  Replaces the manual steps of the Salesforce example READMEs. Only signing\n  up for the Developer Edition org stays manual.\n  \n  📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\n  https://kafka-docker-playground.io/#/salesforce\n\n"
+    printf "playground account\n\n"
+    printf "  ☁️ Set up and check the third-party accounts the examples run against\n  \n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and 'check' (a few seconds,\n  read-only: does the stored login still work, and what is missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n\n"
   else
-    printf "playground salesforce - ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n"
+    printf "playground account - ☁️ Set up and check the third-party accounts the examples run against\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground salesforce COMMAND\n"
-  printf "  playground salesforce [COMMAND] --help | -h\n"
+  printf "  playground account COMMAND\n"
+  printf "  playground account [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "salesforce")      "
+  printf "  %s   🛠️ Configure a Salesforce org for the Salesforce examples\n" "$(green "salesforce setup")"
+  printf "  %s   🩺 Check that the stored Salesforce credentials work\n" "$(green "salesforce check")"
+  printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "gcp")             "
+  printf "  %s   🛠️ Configure a Google Cloud project for the GCP examples\n" "$(green "gcp setup")       "
+  printf "  %s   🩺 Check that the stored GCP key works for the GCP examples\n" "$(green "gcp check")       "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_salesforce_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account salesforce\n\n"
+    printf "  ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n  \n    setup   configure an org: External Client App (JWT bearer), Platform Event,\n  Change Data Capture\n    check   verify that the stored credentials can log in, and that the org has\n  what the examples need\n  \n  Replaces the manual steps of the Salesforce example READMEs. Only signing\n  up for the Developer Edition org stays manual.\n  \n  📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\n  https://kafka-docker-playground.io/#/salesforce\n\n"
+  else
+    printf "playground account salesforce - ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account salesforce COMMAND\n"
+  printf "  playground account salesforce [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
@@ -3672,17 +3709,17 @@ playground_salesforce_usage() {
 }
 
 # :command.usage
-playground_salesforce_setup_usage() {
+playground_account_salesforce_setup_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground salesforce setup\n\n"
+    printf "playground account salesforce setup\n\n"
     printf "  🛠️ Configure a Salesforce org for the Salesforce examples\n  \n  Deploys, with the Salesforce CLI (sf) installed on your machine:\n  \n    • an External Client App with the OAuth JWT bearer flow, trusting the\n      certificate of your keystore, pre-authorized for the profile of your\n      user (no browser approval) and with IP restrictions relaxed\n    • the Platform Event MyPlatformEvent__e with the text field Message__c\n    • Change Data Capture on Contact\n  \n  then reads the consumer key back, waits until a JWT bearer login works\n  (a new app takes 2 to 10 minutes to be active), and stores\n  SALESFORCE_USERNAME, SALESFORCE_INSTANCE and\n  SALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.\n  \n  Without --target-org, 'sf org login web' opens the browser once to log\n  in: that is the only manual step. Running it again on the same org\n  changes nothing.\n  \n  🔐 Your keystore (JWT private key and certificate, password confluent)\n  is ~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks,\n  outside the repository, and is copied into the Salesforce example\n  folders, where the examples read it. The first time, the command\n  reuses the keystore already in the examples if there is one (so the\n  orgs that trust it keep working), else generates a key pair that never\n  leaves your machine.\n  \n  SALESFORCE_PASSWORD and SALESFORCE_SECURITY_TOKEN can't be read from\n  Salesforce: the command tells you how to store them.\n  \n  🎓 Tip: use --suffix KDP_CDC (or --account2 for the second org of the\n  sink examples) to store the per-test variables read by\n  salesforce_use_test_creds.\n\n"
   else
-    printf "playground salesforce setup - 🛠️ Configure a Salesforce org for the Salesforce examples\n\n"
+    printf "playground account salesforce setup - 🛠️ Configure a Salesforce org for the Salesforce examples\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground salesforce setup [OPTIONS]\n"
-  printf "  playground salesforce setup --help | -h\n"
+  printf "  playground account salesforce setup [OPTIONS]\n"
+  printf "  playground account salesforce setup --help | -h\n"
   echo
 
   # :command.long_usage
@@ -3757,27 +3794,27 @@ playground_salesforce_setup_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground salesforce setup\n"
-    printf "  playground salesforce setup --target-org my-dev-org --suffix KDP_CDC\n"
-    printf "  playground salesforce setup --account2\n"
-    printf "  playground salesforce setup --instance-url https://test.salesforce.com\n  --no-store\n"
+    printf "  playground account salesforce setup\n"
+    printf "  playground account salesforce setup --target-org my-dev-org --suffix KDP_CDC\n"
+    printf "  playground account salesforce setup --account2\n"
+    printf "  playground account salesforce setup --instance-url https://test.salesforce.com\n  --no-store\n"
     echo
 
   fi
 }
 
 # :command.usage
-playground_salesforce_check_usage() {
+playground_account_salesforce_check_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground salesforce check\n\n"
+    printf "playground account salesforce check\n\n"
     printf "  🩺 Check that the stored Salesforce credentials work\n  \n  Logs in with the OAuth JWT bearer flow, exactly like a connector with\n  salesforce.grant.type=JWT_BEARER (stored SALESFORCE_USERNAME,\n  SALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE and the keystore),\n  explains a rejection, then checks that the org has MyPlatformEvent__e and\n  Change Data Capture on Contact (warnings: only some examples need them).\n  Needs neither Docker nor the sf CLI.\n  \n  Exits with 1 when the login fails.\n\n"
   else
-    printf "playground salesforce check - 🩺 Check that the stored Salesforce credentials work\n\n"
+    printf "playground account salesforce check - 🩺 Check that the stored Salesforce credentials work\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground salesforce check [OPTIONS]\n"
-  printf "  playground salesforce check --help | -h\n"
+  printf "  playground account salesforce check [OPTIONS]\n"
+  printf "  playground account salesforce check --help | -h\n"
   echo
 
   # :command.long_usage
@@ -3808,9 +3845,190 @@ playground_salesforce_check_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground salesforce check\n"
-    printf "  playground salesforce check --suffix KDP_CDC\n"
-    printf "  playground salesforce check --account2\n"
+    printf "  playground account salesforce check\n"
+    printf "  playground account salesforce check --suffix KDP_CDC\n"
+    printf "  playground account salesforce check --account2\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_gcp_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account gcp\n\n"
+    printf "  ☁️ Set up a Google Cloud project for the GCP examples, and check it\n  \n    setup   enable the APIs, create a service account with its roles and a key,\n  store them\n    check   verify that the stored key works, and that each API the examples use\n  answers\n  \n  Replaces the manual steps of the GCP example READMEs (service account,\n  roles, keyfile.json copied in every example folder). Only creating the\n  project, with billing enabled, stays manual.\n  \n  📖 Step by step guide (project, billing, what each example needs,\n  troubleshooting):\n  https://kafka-docker-playground.io/#/gcp\n\n"
+  else
+    printf "playground account gcp - ☁️ Set up a Google Cloud project for the GCP examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account gcp COMMAND\n"
+  printf "  playground account gcp [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Configure a Google Cloud project for the GCP examples\n" "$(green "setup")"
+  printf "  %s   🩺 Check that the stored GCP key works for the GCP examples\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_gcp_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account gcp setup\n\n"
+    printf "  🛠️ Configure a Google Cloud project for the GCP examples\n  \n  With gcloud (installed on your machine, else the google/cloud-sdk image\n  the examples already use):\n  \n    • enables the APIs of the examples: Cloud Storage, Pub/Sub, BigQuery,\n      Spanner, Bigtable, Firestore, Realtime Database, Cloud Functions,\n      Cloud Run, Dataproc, IAM, Resource Manager\n    • creates the service account kdp-playground (reused if it exists)\n      and grants it the roles the examples need on the project\n    • creates a key, saved once as\n      ~/.config/kafka-docker-playground/gcp-keyfile.json (reused on the\n      next runs while the key still exists)\n  \n  then waits until the key can log in, and stores GCP_PROJECT and\n  GCP_KEYFILE_CONTENT with 'playground secrets set': no more keyfile.json\n  to copy into each example folder.\n  \n  Without --account, 'gcloud auth login' opens the browser once, in a\n  gcloud configuration of its own: your gcloud login and default project\n  are left alone. Running it again on the same project changes nothing.\n  \n  Can't create service accounts in the project (shared project)? Pass the\n  key you were given with --keyfile: it is checked and stored, nothing is\n  changed in the project.\n  \n  ⚠️ The roles are broad (Storage Admin, Pub/Sub Admin, BigQuery Admin,\n  Spanner Admin, Bigtable Admin, Project IAM Admin…): use a sandbox\n  project, not a shared one.\n\n"
+  else
+    printf "playground account gcp setup - 🛠️ Configure a Google Cloud project for the GCP examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account gcp setup [OPTIONS]\n"
+  printf "  playground account gcp setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--project, -p PROJECT")"
+    printf "    🗂️ Project id\n    \n    Default: GCP_PROJECT (environment, then secrets store), else the only\n    project the account can see.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--account, -a ACCOUNT")"
+    printf "    🔑 An account your own gcloud is already logged into (gcloud auth list): no\n    browser\n    \n    Uses your gcloud configuration instead of the dedicated one.\n"
+    printf "    %s\n" "Conflicts: --keyfile"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--service-account SERVICE_ACCOUNT")"
+    printf "    🤖 Name of the service account (6 to 30 lowercase letters, digits and dashes)\n"
+    printf "    %s\n" "Default: kdp-playground"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keyfile KEYFILE")"
+    printf "    📄 Use this existing service account key instead of creating a service\n    account\n    \n    For a shared project where you can't create service accounts: the key\n    is checked, saved once and stored (GCP_PROJECT defaults to its\n    project_id), then 'playground account gcp check' runs. Nothing is\n    changed in the project, gcloud is not needed.\n"
+    printf "    %s\n" "Conflicts: --account, --new-key"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--new-key")"
+    printf "    ♻️ Create a new key even if the saved one still works (the previous file is\n    kept as .bak)\n"
+    printf "    %s\n" "Conflicts: --keyfile"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Only print the APIs, the service account and the roles, change nothing\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing GCP_PROJECT and\n    GCP_KEYFILE_CONTENT\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account gcp setup\n"
+    printf "  playground account gcp setup --project my-sandbox-project\n"
+    printf "  playground account gcp setup --account me@example.com --project\n  my-sandbox-project\n"
+    printf "  playground account gcp setup --keyfile\n  ~/Downloads/my-project-3f2a91c07b4e.json\n"
+    printf "  playground account gcp setup --dry-run\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_gcp_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account gcp check\n\n"
+    printf "  🩺 Check that the stored GCP key works for the GCP examples\n  \n  Logs in with the service account key exactly like a connector does\n  (OAuth JWT bearer, key from GCP_KEYFILE_CONTENT, else\n  ~/.config/kafka-docker-playground/gcp-keyfile.json), explains a\n  rejection, then calls each API the examples use (Cloud Storage, Pub/Sub,\n  BigQuery, Spanner, Bigtable, Firestore, Cloud Functions, Dataproc,\n  Realtime Database) and the project permissions some of them need. Each\n  failure says whether the API is disabled, billing is off or a role is\n  missing, and which examples it breaks.\n  \n  Read-only, needs neither Docker nor gcloud, takes a few seconds.\n  \n  Exits with 1 when the key can't log in.\n\n"
+  else
+    printf "playground account gcp check - 🩺 Check that the stored GCP key works for the GCP examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account gcp check [OPTIONS]\n"
+  printf "  playground account gcp check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--project, -p PROJECT")"
+    printf "    🗂️ Project id\n    \n    Default: GCP_PROJECT (environment, then secrets store), else the only\n    project the account can see.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keyfile KEYFILE")"
+    printf "    📄 Service account key file to check instead of the stored one (e.g. an\n    example's keyfile.json)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account gcp check\n"
+    printf "  playground account gcp check --keyfile\n  connect/connect-gcp-gcs-sink/keyfile.json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_salesforce_usage() {
+  printf "playground salesforce - ☁️ Deprecated: use 'playground account salesforce' (same subcommands and flags)\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground salesforce [--] [SUBCOMMAND...]\n"
+  printf "  playground salesforce --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    echo "  SUBCOMMAND..."
+    printf "    subcommand and flags of 'playground account salesforce'\n"
     echo
 
   fi
@@ -37086,7 +37304,7 @@ function display_newer_cp_patch_hint () {
   log "🔄 To update: playground update-version --tag $newer_cp_version"
 }
 
-# playground salesforce setup|check: the org is driven with the Salesforce CLI (sf) installed on the
+# playground account salesforce setup|check: the org is driven with the Salesforce CLI (sf) installed on the
 # host. The sfdx-cli image of the examples is too old to know the External Client App metadata types,
 # and 'sf org login web' needs the host browser anyway.
 function salesforce_setup_require_tools () {
@@ -37150,7 +37368,7 @@ function salesforce_setup_install_keystore () {
   if [ -f "$user_keystore" ] && ! cmp -s "$src" "$user_keystore"
   then
     mv "$user_keystore" "$user_keystore.bak"
-    logwarn "⚠️ previous keystore kept as $user_keystore.bak: the orgs set up with it must be set up again (playground salesforce setup)"
+    logwarn "⚠️ previous keystore kept as $user_keystore.bak: the orgs set up with it must be set up again (playground account salesforce setup)"
   fi
   if ! cmp -s "$src" "$user_keystore" 2> /dev/null
   then
@@ -37160,7 +37378,7 @@ function salesforce_setup_install_keystore () {
   salesforce_sync_user_keystore "$root_folder"
 }
 
-# The keystore 'playground salesforce setup' uses, made the user keystore:
+# The keystore 'playground account salesforce setup' uses, made the user keystore:
 #   --keystore <file>      that file
 #   --generate-keystore    a new key pair
 #   otherwise              the user keystore, else the one already in the examples (the shared one of
@@ -37223,7 +37441,7 @@ function salesforce_setup_load_keystore () {
   fi
 }
 
-# Prints the consumer key of an External Client App created by 'playground salesforce setup', empty if
+# Prints the consumer key of an External Client App created by 'playground account salesforce setup', empty if
 # the app does not exist. Retrieving ExtlClntAppGlobalOauthSettings returns it.
 function salesforce_setup_get_consumer_key () {
   target_org="$1"
@@ -37245,7 +37463,7 @@ function salesforce_setup_base64url () {
 
 # One OAuth JWT bearer token request, exactly what a connector with salesforce.grant.type=JWT_BEARER
 # does. Prints Salesforce's answer (without the token), returns 0 when it contains an access token,
-# kept in sf_access_token / sf_token_instance_url for the REST calls of 'playground salesforce check'
+# kept in sf_access_token / sf_token_instance_url for the REST calls of 'playground account salesforce check'
 # (so don't call it in a subshell). Nothing is stored and the sf CLI logins are left alone.
 function salesforce_setup_jwt_token () {
   login_url="${1%/}"
@@ -37286,6 +37504,168 @@ function salesforce_setup_var_name () {
     name="${name}_ACCOUNT2"
   fi
   echo "$name"
+}
+
+# ---------------------------------------------------------------------------
+# playground account gcp setup | check
+# ---------------------------------------------------------------------------
+
+function gcp_user_keyfile_path () {
+  echo "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/gcp-keyfile.json"
+}
+
+# The APIs the GCP examples call: api|what|examples
+function gcp_setup_apis () {
+  cat << 'APIS'
+storage.googleapis.com|Cloud Storage|gcs sink and source, dataproc sink
+pubsub.googleapis.com|Pub/Sub|pubsub source and sink
+bigquery.googleapis.com|BigQuery|bigquery sink and source
+bigquerystorage.googleapis.com|BigQuery Storage|bigquery v2 sink
+spanner.googleapis.com|Spanner|spanner sink, debezium spanner source
+bigtable.googleapis.com|Bigtable|bigtable sink
+bigtableadmin.googleapis.com|Bigtable Admin|bigtable sink
+firestore.googleapis.com|Firestore|firestore sink
+firebasedatabase.googleapis.com|Realtime Database|firebase sink and source
+cloudfunctions.googleapis.com|Cloud Functions|cloud functions sink
+run.googleapis.com|Cloud Run|cloud functions gen2 sink
+dataproc.googleapis.com|Dataproc|dataproc sink
+compute.googleapis.com|Compute Engine|dataproc sink (cluster vms)
+iam.googleapis.com|IAM|service account and keys
+cloudresourcemanager.googleapis.com|Resource Manager|project roles, firestore sink
+serviceusage.googleapis.com|Service Usage|enabling the APIs
+cloudbilling.googleapis.com|Cloud Billing|billing check
+APIS
+}
+
+# The roles granted to the service account on the project: role|why
+function gcp_setup_roles () {
+  cat << 'ROLES'
+roles/storage.admin|Cloud Storage buckets and objects (gcs, dataproc)
+roles/pubsub.admin|Pub/Sub topics and subscriptions
+roles/bigquery.admin|BigQuery datasets, tables and jobs
+roles/spanner.admin|Spanner instances, databases and change streams
+roles/bigtable.admin|Bigtable instances and tables
+roles/datastore.owner|Firestore databases and user credentials
+roles/firebasedatabase.admin|Realtime Database
+roles/cloudfunctions.invoker|invoking Cloud Functions (gen1)
+roles/cloudfunctions.viewer|listing the functions, to check that the one the examples call exists
+roles/run.invoker|invoking Cloud Functions gen2 (Cloud Run)
+roles/dataproc.editor|Dataproc clusters
+roles/iam.serviceAccountUser|Dataproc clusters run as the default compute service account
+roles/resourcemanager.projectIamAdmin|firestore sink grants roles/datastore.user to its Firestore user
+ROLES
+}
+
+# gcloud, the local one if installed, else the google/cloud-sdk image the examples use.
+# gcp_gcloud_config: configuration folder (empty = your own default one, local gcloud only)
+# gcp_gcloud_interactive: set to 1 for the commands that prompt (auth login)
+# gcp_gcloud_account: account to use, without changing the active account of the configuration
+function gcp_gcloud () {
+  # an empty CLOUDSDK_CORE_ACCOUNT would hide the account of the configuration: only set when given
+  gcp_env=()
+  if [ -n "${gcp_gcloud_account:-}" ]
+  then
+    gcp_env+=("CLOUDSDK_CORE_ACCOUNT=$gcp_gcloud_account")
+  fi
+  if [ "$gcp_gcloud_mode" == "local" ]
+  then
+    if [ -n "$gcp_gcloud_config" ]
+    then
+      gcp_env+=("CLOUDSDK_CONFIG=$gcp_gcloud_config")
+    fi
+    env "${gcp_env[@]}" gcloud "$@"
+  else
+    docker_flags=(--rm -i --user "$(id -u):$(id -g)" -e CLOUDSDK_CONFIG=/gcloud-config)
+    if [ "${gcp_gcloud_interactive:-}" == "1" ]
+    then
+      docker_flags+=(-t)
+    fi
+    if [ -n "${gcp_gcloud_account:-}" ]
+    then
+      docker_flags+=(-e "CLOUDSDK_CORE_ACCOUNT=$gcp_gcloud_account")
+    fi
+    docker run "${docker_flags[@]}" \
+      -v "$gcp_gcloud_config:/gcloud-config" \
+      -v "$gcp_tmp_dir:$gcp_tmp_dir" \
+      google/cloud-sdk:latest gcloud "$@"
+  fi
+}
+
+# Sets gcp_gcloud_mode (local or docker)
+function gcp_setup_require_tools () {
+  for tool in jq openssl curl
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+  if command -v gcloud > /dev/null 2>&1
+  then
+    gcp_gcloud_mode="local"
+  elif command -v docker > /dev/null 2>&1 && docker info > /dev/null 2>&1
+  then
+    gcp_gcloud_mode="docker"
+    log "🐳 gcloud is not installed, using the google/cloud-sdk image (the one the examples use)"
+  else
+    logerror "❌ neither gcloud nor a running docker"
+    logerror "   install gcloud (https://cloud.google.com/sdk/docs/install, or brew install --cask google-cloud-sdk), or start docker"
+    exit 1
+  fi
+}
+
+# GCP_KEYFILE_CONTENT is the key file escaped as a JSON string without the quotes
+# (jq -aRs . keyfile.json | sed 's/^"//' | sed 's/"$//'), what the examples and CI use.
+function gcp_keyfile_to_content () {
+  jq -aRs . "$1" | sed 's/^"//' | sed 's/"$//'
+}
+
+# Prints the key file JSON from a GCP_KEYFILE_CONTENT value (escaped, or plain JSON)
+function gcp_content_to_keyfile () {
+  content="$1"
+  if printf '%s' "$content" | jq -e '.type' > /dev/null 2>&1
+  then
+    printf '%s\n' "$content"
+  else
+    printf '"%s"' "$content" | jq -r . 2> /dev/null
+  fi
+}
+
+function gcp_base64url () {
+  openssl base64 -A | tr '+/' '-_' | tr -d '='
+}
+
+# One OAuth JWT bearer token request with a service account key file, what the
+# Google client libraries of the connectors do. Sets gcp_access_token, prints the error response.
+function gcp_jwt_token () {
+  key_file="$1"
+  client_email=$(jq -r '.client_email // empty' "$key_file")
+  token_uri=$(jq -r '.token_uri // "https://oauth2.googleapis.com/token"' "$key_file")
+  pem_file=$(mktemp -t playground-gcp-key.XXXXXX)
+  jq -r '.private_key // empty' "$key_file" > "$pem_file"
+  now=$(date +%s)
+  header=$(printf '{"alg":"RS256","typ":"JWT"}' | gcp_base64url)
+  claims=$(jq -cn --arg iss "$client_email" --arg aud "$token_uri" --argjson iat "$now" --argjson exp "$((now + 600))" \
+    '{iss: $iss, scope: "https://www.googleapis.com/auth/cloud-platform", aud: $aud, iat: $iat, exp: $exp}' | gcp_base64url)
+  signature=$(printf '%s.%s' "$header" "$claims" | openssl dgst -sha256 -sign "$pem_file" -binary 2> /dev/null | gcp_base64url)
+  rm -f "$pem_file"
+  gcp_access_token=""
+  if [ -z "$signature" ]
+  then
+    echo '{"error":"invalid_key","error_description":"the private_key of the key file can not sign (not a valid PEM private key)"}'
+    return 1
+  fi
+  response=$(curl -sS -m 30 -X POST "$token_uri" \
+    --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+    --data-urlencode "assertion=$header.$claims.$signature" 2>&1) || true
+  gcp_access_token=$(echo "$response" | jq -r '.access_token // empty' 2> /dev/null) || true
+  if [ -n "$gcp_access_token" ]
+  then
+    return 0
+  fi
+  echo "$response" | jq -c 'del(.access_token)' 2> /dev/null || echo "$response"
+  return 1
 }
 
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
@@ -48301,6 +48681,13 @@ function get_optional_env_vars () {
       echo "AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
     fi
 
+    # the examples check GCP_KEYFILE_CONTENT with their own message (keyfile.json or the variable),
+    # so it is not a mandatory variable; 'playground account gcp setup' stores it
+    if [[ "$(example_relative_path "$test_file")" == *"gcp"* ]]
+    then
+      echo "GCP_PROJECT GCP_KEYFILE_CONTENT"
+    fi
+
     # tunnels on a bore server instead of ngrok (tools/bore-tunnel)
     if grep -q "display_ngrok_warning" "$test_file"
     then
@@ -48936,7 +49323,7 @@ function connect_cp_version_greater_than_8 () {
     return 1
   fi
 }
-# The JWT keystore of the Salesforce examples generated or imported by 'playground salesforce setup':
+# The JWT keystore of the Salesforce examples generated or imported by 'playground account salesforce setup':
 # one per user, outside the repository (git clean can't remove it), next to the secrets store.
 function salesforce_user_keystore_path () {
   echo "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/salesforce-confluent.keystore.jks"
@@ -52400,9 +52787,12 @@ playground_secrets_check_command() {
           echo -e "🔑 ${GREEN}$test_file_directory/keyfile.json${NC} is present"
       elif [ -n "$GCP_KEYFILE_CONTENT" ]
       then
-          echo -e "🔑 ${GREEN}GCP_KEYFILE_CONTENT${NC} is set"
+          echo -e "🔑 ${GREEN}GCP_KEYFILE_CONTENT${NC} is set (environment)"
+      elif ref=$(secret_lookup_reference GCP_KEYFILE_CONTENT "$profile") && [ -n "$ref" ] && secret_get GCP_KEYFILE_CONTENT "$profile" > /dev/null 2>&1
+      then
+          echo -e "🔐 ${GREEN}GCP_KEYFILE_CONTENT${NC} set ($(secret_reference_backend "$ref"))"
       else
-          echo -e "❌ ${RED}$test_file_directory/keyfile.json${NC} missing"
+          echo -e "❌ ${RED}GCP key${NC} missing (no $test_file_directory/keyfile.json, no GCP_KEYFILE_CONTENT)        👉 playground account gcp setup"
           nb_missing=$((nb_missing+1))
       fi
   fi
@@ -53258,9 +53648,9 @@ playground_secrets_lint_command() {
 }
 
 # :command.function
-playground_salesforce_setup_command() {
+playground_account_salesforce_setup_command() {
 
-  # src/commands/salesforce/setup.sh
+  # src/commands/account/salesforce/setup.sh
   target_org="${args[--target-org]}"
   alias="${args[--alias]}"
   instance_url="${args[--instance-url]%/}"
@@ -53396,7 +53786,7 @@ playground_salesforce_setup_command() {
       if [ $SECONDS -ge $deadline ]
       then
           logerror "❌ the JWT bearer login still fails after $max_wait seconds: $(cat "$sf_tmp_dir/token.out")"
-          logerror "   check Setup > Login History in Salesforce, then run 'playground salesforce check' later"
+          logerror "   check Setup > Login History in Salesforce, then run 'playground account salesforce check' later"
           exit 1
       fi
       log "   not yet: $(jq -r '.error_description // .error // .' "$sf_tmp_dir/token.out" 2> /dev/null | head -1), retrying in 20 seconds"
@@ -53436,21 +53826,21 @@ playground_salesforce_setup_command() {
   then
       check_flags="$check_flags --account2"
   fi
-  log "🩺 check it any time with: playground salesforce check$check_flags"
+  log "🩺 check it any time with: playground account salesforce check$check_flags"
 
 }
 
 # :command.function
-playground_salesforce_check_command() {
+playground_account_salesforce_check_command() {
 
-  # src/commands/salesforce/check.sh
+  # src/commands/account/salesforce/check.sh
   suffix="$(echo "${args[--suffix]}" | tr '[:lower:]' '[:upper:]')"
   account2="${args[--account2]}"
   keystore="${args[--keystore]}"
 
   if [[ ! -n "$keystore" ]]
   then
-      # what the examples use: the keystore of 'playground salesforce setup', else the one in the examples
+      # what the examples use: the keystore of 'playground account salesforce setup', else the one in the examples
       keystore="$(salesforce_user_keystore_path)"
       if [ ! -f "$keystore" ]
       then
@@ -53460,7 +53850,7 @@ playground_salesforce_check_command() {
   if [ ! -f "$keystore" ]
   then
       logerror "❌ keystore $keystore is missing"
-      logerror "👉 playground salesforce setup generates one"
+      logerror "👉 playground account salesforce setup generates one"
       exit 1
   fi
   for tool in openssl curl jq
@@ -53500,7 +53890,7 @@ playground_salesforce_check_command() {
   done
   if [ $missing -eq 1 ]
   then
-      logerror "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" )"
+      logerror "👉 playground account salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" )"
       exit 1
   fi
 
@@ -53517,7 +53907,7 @@ playground_salesforce_check_command() {
           *"client identifier invalid"*)
               logerror "   $consumer_key_var is not the consumer key of an External Client App of this org, or the app was created less than 10 minutes ago" ;;
           *"hasn't approved this consumer"*|*"not approved"*)
-              logerror "   the app is not pre-authorized for this user: its OAuth policy must be 'Admin approved users are pre-authorized' and list the user's profile (playground salesforce setup does it)" ;;
+              logerror "   the app is not pre-authorized for this user: its OAuth policy must be 'Admin approved users are pre-authorized' and list the user's profile (playground account salesforce setup does it)" ;;
           *"invalid assertion"*|*"invalid signature"*|*"invalid_grant"*"certificate"*)
               logerror "   the certificate of the External Client App does not match the private key of $keystore" ;;
           *"audience is invalid"*)
@@ -53554,10 +53944,635 @@ playground_salesforce_check_command() {
 
   if [ $missing_objects -eq 1 ]
   then
-      log "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
+      log "👉 playground account salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
       exit 0
   fi
   log "🎉 the org is ready for all the Salesforce examples"
+
+}
+
+# :command.function
+playground_account_gcp_setup_command() {
+
+  # src/commands/account/gcp/setup.sh
+  project="${args[--project]}"
+  account="${args[--account]}"
+  service_account="${args[--service-account]}"
+  new_key="${args[--new-key]}"
+  dry_run="${args[--dry-run]}"
+  no_store="${args[--no-store]}"
+  keyfile_arg="${args[--keyfile]}"
+
+  function gcp_setup_store () {
+      store_project="$1"
+      store_keyfile="$2"
+      if [[ -n "$no_store" ]]
+      then
+          log "📋 --no-store, the values to export:"
+          echo "export GCP_PROJECT=\"$store_project\""
+          echo "export GCP_KEYFILE_CONTENT=\$(jq -aRs . \"$store_keyfile\" | sed 's/^\"//' | sed 's/\"\$//')"
+      else
+          playground secrets set GCP_PROJECT --value "$store_project" --plain
+          playground secrets set GCP_KEYFILE_CONTENT --value "$(gcp_keyfile_to_content "$store_keyfile")" --secret
+          log "💾 stored GCP_PROJECT and GCP_KEYFILE_CONTENT"
+      fi
+  }
+
+  # a keyfile.json left in an example folder wins over GCP_KEYFILE_CONTENT
+  function gcp_setup_warn_stale_keyfiles () {
+      private_key_id=$(jq -r '.private_key_id' "$1")
+      stale=""
+      for f in "$root_folder"/connect/*/keyfile.json "$root_folder"/ccloud/*/keyfile.json
+      do
+          [ -f "$f" ] || continue
+          if [ "$(jq -r '.private_key_id // empty' "$f" 2> /dev/null)" != "$private_key_id" ]
+          then
+              stale="$stale ${f#$root_folder/}"
+          fi
+      done
+      if [[ -n "$stale" ]]
+      then
+          logwarn "⚠️ these example folders have their own keyfile.json, another key, used instead of GCP_KEYFILE_CONTENT:"
+          for f in $stale
+          do
+              logwarn "   $f"
+          done
+          remove=""
+          if [ -t 0 ] && [[ ! -n "$no_store" ]]
+          then
+              read -r -p "🗑️ remove them, so that the examples use the stored key? [y/N] " remove
+          fi
+          if [[ "$remove" == "y" ]] || [[ "$remove" == "Y" ]]
+          then
+              (cd "$root_folder" && rm -f $stale)
+              log "🗑️ removed$stale"
+          else
+              logwarn "   to use the stored key everywhere: (cd $root_folder && rm$stale)"
+          fi
+      fi
+  }
+
+  # an existing key (shared project): check it, save it, store it, change nothing in the project
+  if [[ -n "$keyfile_arg" ]]
+  then
+      for tool in jq openssl curl
+      do
+          if ! command -v $tool > /dev/null 2>&1
+          then
+              logerror "❌ $tool is not installed"
+              exit 1
+          fi
+      done
+      if [ "$(jq -r '.type // empty' "$keyfile_arg" 2> /dev/null)" != "service_account" ]
+      then
+          logerror "❌ $keyfile_arg is not a service account key file (JSON with \"type\": \"service_account\")"
+          exit 1
+      fi
+      client_email=$(jq -r '.client_email' "$keyfile_arg")
+      if [[ ! -n "$project" ]]
+      then
+          project=$(jq -r '.project_id // empty' "$keyfile_arg")
+      fi
+      if [[ -n "$dry_run" ]]
+      then
+          log "🧪 --dry-run: nothing changed. setup would check the key of $client_email, save it in $(gcp_user_keyfile_path) and store GCP_PROJECT=$project and GCP_KEYFILE_CONTENT"
+          exit 0
+      fi
+      token_out=$(gcp_jwt_token "$keyfile_arg") || {
+          logerror "❌ the key of $client_email can't log in: $token_out"
+          logerror "   playground account gcp check --keyfile $keyfile_arg explains why"
+          exit 1
+      }
+      log "✅ the key of $client_email can log in"
+
+      keyfile="$(gcp_user_keyfile_path)"
+      mkdir -p "$(dirname "$keyfile")"
+      if [ -f "$keyfile" ] && ! cmp -s "$keyfile" "$keyfile_arg"
+      then
+          cp -p "$keyfile" "$keyfile.bak"
+          logwarn "💾 previous key file kept as $keyfile.bak"
+      fi
+      if ! cmp -s "$keyfile" "$keyfile_arg" 2> /dev/null
+      then
+          (umask 077 && cat "$keyfile_arg" > "$keyfile")
+      fi
+      chmod 600 "$keyfile"
+      log "🔑 key $(jq -r '.private_key_id' "$keyfile" | cut -c1-12)… saved in $keyfile"
+
+      gcp_setup_store "$project" "$keyfile"
+      gcp_setup_warn_stale_keyfiles "$keyfile"
+      log "🩺 what this key can do in $project:"
+      playground account gcp check --keyfile "$keyfile" --project "$project"
+      exit $?
+  fi
+
+  if [[ ! "$service_account" =~ ^[a-z][a-z0-9-]{4,28}[a-z0-9]$ ]]
+  then
+      logerror "❌ --service-account $service_account is not a valid name (6 to 30 lowercase letters, digits and dashes, starting with a letter)"
+      exit 1
+  fi
+
+  if [[ ! -n "$project" ]]
+  then
+      project="$(secret_get GCP_PROJECT "$(get_active_secret_profile)" 2> /dev/null || true)"
+  fi
+
+  apis=$(gcp_setup_apis | cut -d'|' -f1 | tr '\n' ' ')
+  if [[ -n "$dry_run" ]]
+  then
+      sa_email="$service_account@${project:-<project>}.iam.gserviceaccount.com"
+      log "🧪 --dry-run: nothing changed. On project ${project:-<project>}, setup would:"
+      log "🔌 enable the APIs:"
+      gcp_setup_apis | while IFS='|' read -r api what examples
+      do
+          printf '   %-38s %-18s %s\n' "$api" "$what" "$examples"
+      done
+      log "🤖 create the service account $sa_email (or reuse it) and grant it:"
+      gcp_setup_roles | while IFS='|' read -r role why
+      do
+          printf '   %-38s %s\n' "$role" "$why"
+      done
+      log "🔑 create a key in $(gcp_user_keyfile_path) (or reuse it while it still exists)"
+      log "💾 store GCP_PROJECT and GCP_KEYFILE_CONTENT with playground secrets set"
+      exit 0
+  fi
+
+  gcp_setup_require_tools
+
+  # under $HOME: shared with docker desktop (not /private/tmp), and the new key never lands in a shared folder
+  mkdir -p "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}"
+  gcp_tmp_dir=$(mktemp -d "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/tmp-gcp-setup.XXXXXX")
+  chmod 700 "$gcp_tmp_dir"
+  trap 'rm -rf "$gcp_tmp_dir"' EXIT
+
+  # 1. the account
+  if [[ -n "$account" ]]
+  then
+      # your own gcloud, already logged in
+      if [ "$gcp_gcloud_mode" == "local" ]
+      then
+          gcp_gcloud_config=""
+      else
+          gcp_gcloud_config="$HOME/.config/gcloud"
+      fi
+      if ! gcp_gcloud auth list --format="value(account)" 2> /dev/null | grep -qx "$account"
+      then
+          logerror "❌ gcloud is not logged into $account (gcloud auth list)"
+          logerror "   log in with: gcloud auth login $account, or run without --account"
+          exit 1
+      fi
+      gcp_gcloud_account="$account"
+  else
+      gcp_gcloud_config="${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/gcloud"
+      mkdir -p "$gcp_gcloud_config"
+      account=$(gcp_gcloud config get-value account 2> /dev/null | tail -1) || true
+      if [[ ! -n "$account" ]] || ! gcp_gcloud auth print-access-token > /dev/null 2>&1
+      then
+          # local gcloud logs in through the browser; the docker image prints a link and reads a code from the terminal
+          if [ "$gcp_gcloud_mode" != "local" ] && [ ! -t 0 ]
+          then
+              logerror "❌ logging in without a local gcloud needs a terminal to paste the code: run it in a terminal, or pass --account with an account your gcloud is logged into"
+              exit 1
+          fi
+          log "🌐 log into Google Cloud in the browser, with the account that owns the project"
+          if [ "$gcp_gcloud_mode" == "local" ]
+          then
+              gcp_gcloud_interactive=1 gcp_gcloud auth login --quiet || { logerror "❌ gcloud auth login failed"; exit 1; }
+          else
+              log "   open the link below, then paste the verification code"
+              gcp_gcloud_interactive=1 gcp_gcloud auth login --no-launch-browser --quiet || { logerror "❌ gcloud auth login failed"; exit 1; }
+          fi
+          account=$(gcp_gcloud config get-value account 2> /dev/null | tail -1) || true
+      fi
+  fi
+  log "👤 account $account"
+
+  # 2. the project
+  if [[ ! -n "$project" ]]
+  then
+      projects=$(gcp_gcloud projects list --format="value(projectId)" 2> /dev/null) || true
+      if [ "$(echo "$projects" | awk 'NF' | wc -l | tr -d ' ')" == "1" ]
+      then
+          project="$projects"
+      else
+          logerror "❌ pass the project with --project, $account can see:"
+          echo "$projects" | awk 'NF { print "   " $0 }' | head -20 >&2
+          logerror "   no project yet? create one with billing enabled: https://console.cloud.google.com/projectcreate"
+          exit 1
+      fi
+  fi
+  if ! gcp_gcloud projects describe "$project" --format="value(projectNumber)" > "$gcp_tmp_dir/project.out" 2>&1
+  then
+      logerror "❌ project $project not found, or $account can't see it:"
+      sed 's/^/   /' "$gcp_tmp_dir/project.out" | head -5 >&2
+      exit 1
+  fi
+  log "🗂️ project $project"
+
+  # 3. the APIs
+  log "🔌 enabling the APIs of the examples (a minute the first time)"
+  if ! gcp_gcloud services enable $apis --project "$project" --quiet > "$gcp_tmp_dir/enable.out" 2>&1
+  then
+      # one by one, to tell which one fails (often: billing not enabled)
+      failed_apis=""
+      for api in $apis
+      do
+          if ! gcp_gcloud services enable "$api" --project "$project" --quiet > "$gcp_tmp_dir/enable-one.out" 2>&1
+          then
+              failed_apis="$failed_apis $api"
+              logwarn "   ⚠️ $api: $(grep -m1 -iE 'error|denied|billing' "$gcp_tmp_dir/enable-one.out" | cut -c1-200)"
+          fi
+      done
+      if [[ " $failed_apis " == *" iam.googleapis.com "* ]] || [[ " $failed_apis " == *" cloudresourcemanager.googleapis.com "* ]]
+      then
+          logerror "❌ IAM and Resource Manager APIs are required to create the service account"
+          exit 1
+      fi
+      if [[ -n "$failed_apis" ]]
+      then
+          logwarn "⚠️ not enabled:$failed_apis (the examples using them will fail). Billing enabled on $project? https://console.cloud.google.com/billing/linkedaccount?project=$project"
+      fi
+  fi
+  billing=$(gcp_gcloud billing projects describe "$project" --format="value(billingEnabled)" 2> /dev/null | tail -1) || true
+  if [ "$billing" == "False" ]
+  then
+      logwarn "⚠️ billing is not enabled on $project: Spanner, Bigtable, Dataproc and Cloud Functions need it"
+      logwarn "   https://console.cloud.google.com/billing/linkedaccount?project=$project"
+  fi
+
+  # 4. the service account and its roles
+  sa_email="$service_account@$project.iam.gserviceaccount.com"
+  if gcp_gcloud iam service-accounts describe "$sa_email" --project "$project" > /dev/null 2>&1
+  then
+      log "🤖 service account $sa_email already exists"
+  else
+      log "🤖 creating service account $sa_email"
+      if ! gcp_gcloud iam service-accounts create "$service_account" --project "$project" \
+          --display-name "kafka-docker-playground" \
+          --description "created by playground account gcp setup, used by the GCP examples" > "$gcp_tmp_dir/sa.out" 2>&1
+      then
+          logerror "❌ failed to create the service account:"
+          sed 's/^/   /' "$gcp_tmp_dir/sa.out" | head -5 >&2
+          exit 1
+      fi
+  fi
+
+  existing_roles=$(gcp_gcloud projects get-iam-policy "$project" --flatten="bindings[].members" \
+      --filter="bindings.members:serviceAccount:$sa_email" --format="value(bindings.role)" 2> /dev/null) || true
+  nb_granted=0
+  while IFS='|' read -r role why
+  do
+      if echo "$existing_roles" | grep -qx "$role"
+      then
+          continue
+      fi
+      # a new service account takes a few seconds to be visible to IAM
+      attempt=1
+      until gcp_gcloud projects add-iam-policy-binding "$project" --member "serviceAccount:$sa_email" \
+          --role "$role" --condition=None --quiet --format=none > "$gcp_tmp_dir/role.out" 2>&1 < /dev/null
+      do
+          if [ $attempt -ge 6 ]
+          then
+              logerror "❌ failed to grant $role to $sa_email:"
+              sed 's/^/   /' "$gcp_tmp_dir/role.out" | head -5 >&2
+              logerror "   your account needs the Owner or Project IAM Admin role on $project"
+              exit 1
+          fi
+          attempt=$((attempt + 1))
+          sleep 5
+      done
+      nb_granted=$((nb_granted + 1))
+  done < <(gcp_setup_roles)
+  log "🎭 $sa_email has the $(gcp_setup_roles | wc -l | tr -d ' ') roles of the examples ($nb_granted granted now)"
+
+  # 5. the key
+  keyfile="$(gcp_user_keyfile_path)"
+  mkdir -p "$(dirname "$keyfile")"
+  key_ids=$(gcp_gcloud iam service-accounts keys list --iam-account "$sa_email" --project "$project" \
+      --managed-by user --format="value(name.basename())" 2> /dev/null) || true
+  reuse=""
+  if [[ ! -n "$new_key" ]] && [ -f "$keyfile" ] && [ "$(jq -r '.client_email // empty' "$keyfile" 2> /dev/null)" == "$sa_email" ]
+  then
+      if echo "$key_ids" | grep -qx "$(jq -r '.private_key_id // empty' "$keyfile")"
+      then
+          reuse=1
+      fi
+  fi
+  if [[ -n "$reuse" ]]
+  then
+      log "🔑 reusing the key in $keyfile ($(jq -r '.private_key_id' "$keyfile" | cut -c1-12)…)"
+  else
+      nb_keys=$(echo "$key_ids" | awk 'NF' | wc -l | tr -d ' ')
+      if [ "$nb_keys" -ge 10 ]
+      then
+          logerror "❌ $sa_email already has 10 keys, the maximum: delete old ones first"
+          logerror "   gcloud iam service-accounts keys list --iam-account $sa_email"
+          logerror "   gcloud iam service-accounts keys delete <key id> --iam-account $sa_email"
+          exit 1
+      fi
+      log "🔑 creating a key for $sa_email"
+      if ! gcp_gcloud iam service-accounts keys create "$gcp_tmp_dir/key.json" --iam-account "$sa_email" --project "$project" > "$gcp_tmp_dir/key.out" 2>&1
+      then
+          logerror "❌ failed to create a key:"
+          sed 's/^/   /' "$gcp_tmp_dir/key.out" | head -5 >&2
+          if grep -q "disableServiceAccountKeyCreation" "$gcp_tmp_dir/key.out"
+          then
+              logerror "   the organization policy iam.disableServiceAccountKeyCreation forbids keys in this project:"
+              logerror "   use a project outside that organization (a personal one), or ask an admin for an exception"
+          fi
+          exit 1
+      fi
+      if [ -f "$keyfile" ]
+      then
+          cp -p "$keyfile" "$keyfile.bak"
+          logwarn "💾 previous key file kept as $keyfile.bak"
+      fi
+      (umask 077 && cat "$gcp_tmp_dir/key.json" > "$keyfile")
+      chmod 600 "$keyfile"
+      log "🔑 key $(jq -r '.private_key_id' "$keyfile" | cut -c1-12)… saved in $keyfile"
+      if [ "$nb_keys" -ge 7 ]
+      then
+          logwarn "⚠️ $sa_email now has $((nb_keys + 1)) keys (max 10): delete the ones you no longer use (gcloud iam service-accounts keys list --iam-account $sa_email)"
+      fi
+  fi
+
+  # 6. wait until the key can log in (a new key takes a few seconds)
+  deadline=$((SECONDS + 120))
+  until gcp_jwt_token "$keyfile" > "$gcp_tmp_dir/token.out"
+  do
+      if [ $SECONDS -ge $deadline ]
+      then
+          logerror "❌ the key still can't log in after 120 seconds: $(cat "$gcp_tmp_dir/token.out")"
+          exit 1
+      fi
+      sleep 10
+  done
+  log "✅ the key of $sa_email can log in"
+
+  # 7. store
+  gcp_setup_store "$project" "$keyfile"
+  gcp_setup_warn_stale_keyfiles "$keyfile"
+
+  # 8. check, waiting for the roles granted now to apply (IAM takes up to 2 minutes)
+  check_out="$gcp_tmp_dir/check.out"
+  if [ $nb_granted -gt 0 ]
+  then
+      log "⏳ waiting for the $nb_granted new roles to apply (up to 2 minutes, max 180 seconds)"
+      deadline=$((SECONDS + 180))
+      until playground account gcp check --keyfile "$keyfile" --project "$project" > "$check_out" 2>&1 && grep -q "ready for the GCP examples" "$check_out"
+      do
+          if [ $SECONDS -ge $deadline ]
+          then
+              break
+          fi
+          sleep 20
+      done
+  else
+      playground account gcp check --keyfile "$keyfile" --project "$project" > "$check_out" 2>&1 || true
+  fi
+  log "🩺 what the key can do in $project:"
+  grep -v "functions found" "$check_out"
+  log "🩺 check it any time with: playground account gcp check"
+  log "✋ two examples need something setup can't create, see https://kafka-docker-playground.io/#/gcp:"
+  log "   cloud functions sink: a function (function-1 / function-11 in europe-west2)"
+  log "   firebase sink and source: the default Realtime Database of the project"
+
+}
+
+# :command.function
+playground_account_gcp_check_command() {
+
+  # src/commands/account/gcp/check.sh
+  project="${args[--project]}"
+  keyfile_arg="${args[--keyfile]}"
+
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  YELLOW='\033[0;33m'
+  NC='\033[0m'
+
+  for tool in jq openssl curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  gcp_tmp_dir=$(mktemp -d -t playground-gcp-check.XXXXXX)
+  chmod 700 "$gcp_tmp_dir"
+  trap 'rm -rf "$gcp_tmp_dir"' EXIT
+  keyfile="$gcp_tmp_dir/keyfile.json"
+
+  # same resolution as an example (without a keyfile.json in its folder): GCP_KEYFILE_CONTENT, exported or
+  # in the active secrets profile, then the key file of 'playground account gcp setup'
+  profile="$(get_active_secret_profile)"
+  if [[ -n "$keyfile_arg" ]]
+  then
+      cp "$keyfile_arg" "$keyfile"
+      key_source="$keyfile_arg"
+  else
+      content="$(secret_get GCP_KEYFILE_CONTENT "$profile" 2> /dev/null || true)"
+      if [ -n "$content" ]
+      then
+          gcp_content_to_keyfile "$content" > "$keyfile"
+          key_source="GCP_KEYFILE_CONTENT"
+      elif [ -f "$(gcp_user_keyfile_path)" ]
+      then
+          cp "$(gcp_user_keyfile_path)" "$keyfile"
+          key_source="$(gcp_user_keyfile_path)"
+          logwarn "⚠️ GCP_KEYFILE_CONTENT is not set, the examples won't find this key: run playground account gcp setup"
+      else
+          logerror "❌ no key: GCP_KEYFILE_CONTENT is not set and $(gcp_user_keyfile_path) is missing"
+          logerror "👉 playground account gcp setup creates a service account and its key"
+          exit 1
+      fi
+  fi
+  if [ "$(jq -r '.type // empty' "$keyfile" 2> /dev/null)" != "service_account" ]
+  then
+      logerror "❌ $key_source is not a service account key file (JSON with \"type\": \"service_account\")"
+      exit 1
+  fi
+  client_email=$(jq -r '.client_email' "$keyfile")
+  key_project=$(jq -r '.project_id // empty' "$keyfile")
+  private_key_id=$(jq -r '.private_key_id // empty' "$keyfile")
+
+  if [[ ! -n "$project" ]]
+  then
+      project="$(secret_get GCP_PROJECT "$profile" 2> /dev/null || true)"
+  fi
+  if [[ ! -n "$project" ]]
+  then
+      project="$key_project"
+      logwarn "⚠️ GCP_PROJECT is not set (the examples require it), using the project of the key: $project"
+  elif [ "$project" != "$key_project" ]
+  then
+      logwarn "⚠️ GCP_PROJECT is $project but the key belongs to project $key_project: some examples use one, some the other"
+  fi
+
+  # 1. login
+  log "🔑 OAuth login of $client_email (key ${private_key_id:0:12}…, from $key_source)"
+  if ! gcp_jwt_token "$keyfile" > "$gcp_tmp_dir/token.out"
+  then
+      error=$(jq -r '.error // empty' "$gcp_tmp_dir/token.out" 2> /dev/null)
+      description=$(jq -r '.error_description // empty' "$gcp_tmp_dir/token.out" 2> /dev/null)
+      if [[ "$error" == "invalid_key" ]]
+      then
+          logerror "❌ $description"
+      else
+          logerror "❌ Google rejected the login: ${error:-$(cat "$gcp_tmp_dir/token.out")} ${description}"
+      fi
+      case "$description" in
+          *"Invalid JWT Signature"*)
+              logerror "   the key was deleted or disabled: run playground account gcp setup (it creates a new one)" ;;
+          *"account not found"*)
+              logerror "   the service account $client_email does not exist (deleted?): run playground account gcp setup" ;;
+          *"Invalid JWT"*|*"iat"*|*"exp"*)
+              logerror "   the clock of this machine is off: check the date" ;;
+          *)
+              if [[ "$error" == "invalid_key" ]]
+              then
+                  logerror "   the private_key of the key file is damaged: GCP_KEYFILE_CONTENT must be the output of jq -aRs . keyfile.json without the surrounding quotes"
+              elif ! grep -q '{' "$gcp_tmp_dir/token.out"
+              then
+                  logerror "   oauth2.googleapis.com is not reachable from this machine (proxy, firewall?)"
+              fi ;;
+      esac
+      exit 1
+  fi
+  log "✅ login works"
+
+  # 2. one read-only call per API: name|url|examples|role
+  function gcp_check_probe () {
+      name="$1"
+      url="$2"
+      examples="$3"
+      role="$4"
+      api="$5"
+      code=$(curl -sS -m 30 -o "$gcp_tmp_dir/probe.json" -w '%{http_code}' -H "Authorization: Bearer $gcp_access_token" "$url" 2> /dev/null) || code="000"
+      if [ "$code" == "200" ]
+      then
+          echo -e "✅ ${GREEN}$name${NC}"
+          return 0
+      fi
+      message=$(jq -r '.error.message // empty' "$gcp_tmp_dir/probe.json" 2> /dev/null | head -1 | cut -c1-160)
+      reasons=$(jq -r '[.error.details[]?.reason // empty, .error.status // empty] | join(" ")' "$gcp_tmp_dir/probe.json" 2> /dev/null)
+      if [[ "$reasons" == *SERVICE_DISABLED* ]] || [[ "$message" == *"has not been used in project"* ]] || [[ "$message" == *"is disabled"* ]]
+      then
+          echo -e "❌ ${RED}$name${NC}: the API is not enabled        👉 gcloud services enable $api --project $project"
+      elif [[ "$reasons" == *BILLING_DISABLED* ]] || [[ "$message" == *"billing"* ]] || [[ "$message" == *"Billing"* ]]
+      then
+          echo -e "❌ ${RED}$name${NC}: billing is not enabled on $project        👉 https://console.cloud.google.com/billing/linkedaccount?project=$project"
+      elif [ "$code" == "403" ]
+      then
+          echo -e "❌ ${RED}$name${NC}: permission denied, missing role $role        👉 playground account gcp setup"
+      else
+          echo -e "❌ ${RED}$name${NC}: HTTP $code ${message}"
+      fi
+      echo "      needed by: $examples"
+      [ -n "$message" ] && [ "$code" == "403" ] && echo "      Google says: $message"
+      nb_failed=$((nb_failed + 1))
+      return 1
+  }
+
+  nb_failed=0
+  gcp_check_probe "Cloud Storage" "https://storage.googleapis.com/storage/v1/b?project=$project&maxResults=1" \
+      "gcs sink and source, dataproc sink" "roles/storage.admin" storage.googleapis.com || true
+  gcp_check_probe "Pub/Sub" "https://pubsub.googleapis.com/v1/projects/$project/topics?pageSize=1" \
+      "pubsub source and sink" "roles/pubsub.admin" pubsub.googleapis.com || true
+  gcp_check_probe "BigQuery" "https://bigquery.googleapis.com/bigquery/v2/projects/$project/datasets?maxResults=1" \
+      "bigquery sink and source" "roles/bigquery.admin" bigquery.googleapis.com || true
+  gcp_check_probe "Spanner" "https://spanner.googleapis.com/v1/projects/$project/instances?pageSize=1" \
+      "spanner sink, debezium spanner source" "roles/spanner.admin" spanner.googleapis.com || true
+  gcp_check_probe "Bigtable" "https://bigtableadmin.googleapis.com/v2/projects/$project/instances" \
+      "bigtable sink" "roles/bigtable.admin" bigtableadmin.googleapis.com || true
+  gcp_check_probe "Firestore" "https://firestore.googleapis.com/v1/projects/$project/databases" \
+      "firestore sink" "roles/datastore.owner" firestore.googleapis.com || true
+  gcp_check_probe "Dataproc" "https://dataproc.googleapis.com/v1/projects/$project/regions/us-east1/clusters?pageSize=1" \
+      "dataproc sink" "roles/dataproc.editor" dataproc.googleapis.com || true
+
+  # the function the cloud functions examples call must exist
+  if gcp_check_probe "Cloud Functions" "https://cloudfunctions.googleapis.com/v2/projects/$project/locations/-/functions?pageSize=100" \
+      "cloud functions sink (only to check that its function exists)" "roles/cloudfunctions.viewer" cloudfunctions.googleapis.com
+  then
+      functions=$(jq -r '.functions[]?.name' "$gcp_tmp_dir/probe.json" | sed -E 's|.*/locations/([^/]+)/functions/(.*)|\2 (\1)|')
+      for wanted in "function-1|connect-gcp-cloud-functions-sink" "function-11|fm-gcp-cloud-functions-gen2-sink"
+      do
+          fn="${wanted%%|*}"
+          example="${wanted##*|}"
+          if echo "$functions" | grep -q "^$fn (europe-west2)$"
+          then
+              echo "   ✅ function $fn in europe-west2 ($example)"
+          else
+              echo "   ⚠️ no function $fn in europe-west2, needed by $example unless GCP_FUNCTION_FUNCTION / GCP_FUNCTION_REGION point to another one"
+          fi
+      done
+      if [ -n "$functions" ]
+      then
+          echo "      functions found: $(echo "$functions" | tr '\n' ',' | sed 's/,$//; s/,/, /g')"
+      fi
+  fi
+
+  # the firebase examples write to the default Realtime Database of the project
+  if gcp_check_probe "Realtime Database" "https://firebasedatabase.googleapis.com/v1beta/projects/$project/locations/-/instances" \
+      "firebase sink and source" "roles/firebasedatabase.admin" firebasedatabase.googleapis.com
+  then
+      rtdb=$(jq -r '.instances[]? | select(.type == "DEFAULT_DATABASE") | .databaseUrl' "$gcp_tmp_dir/probe.json")
+      if [ -n "$rtdb" ]
+      then
+          echo "   ✅ default database $rtdb"
+      else
+          echo "   ⚠️ no default Realtime Database: create it in the Firebase console (Build > Realtime Database), needed by the firebase examples"
+      fi
+  fi
+
+  # 3. project permissions of the examples that create IAM bindings or Dataproc clusters
+  permissions='["resourcemanager.projects.setIamPolicy","iam.serviceAccounts.actAs"]'
+  code=$(curl -sS -m 30 -o "$gcp_tmp_dir/perms.json" -w '%{http_code}' -X POST -H "Authorization: Bearer $gcp_access_token" \
+      -H "Content-Type: application/json" -d "{\"permissions\": $permissions}" \
+      "https://cloudresourcemanager.googleapis.com/v1/projects/$project:testIamPermissions" 2> /dev/null) || code="000"
+  if [ "$code" == "200" ]
+  then
+      granted=$(jq -r '.permissions[]?' "$gcp_tmp_dir/perms.json")
+      if echo "$granted" | grep -qx "resourcemanager.projects.setIamPolicy"
+      then
+          echo -e "✅ ${GREEN}Project IAM${NC}: can grant roles (firestore sink)"
+      else
+          echo -e "❌ ${RED}Project IAM${NC}: can't grant roles, missing role roles/resourcemanager.projectIamAdmin        👉 playground account gcp setup"
+          echo "      needed by: firestore sink"
+          nb_failed=$((nb_failed + 1))
+      fi
+      if echo "$granted" | grep -qx "iam.serviceAccounts.actAs"
+      then
+          echo -e "✅ ${GREEN}Service Account User${NC}: can start Dataproc clusters"
+      else
+          # only a project level grant is visible here, not one on the compute service account itself
+          echo -e "⚠️ ${YELLOW}Service Account User${NC}: no roles/iam.serviceAccountUser on the project (fine if it is granted on the default compute service account)        👉 playground account gcp setup"
+          echo "      needed by: dataproc sink"
+      fi
+  else
+      message=$(jq -r '.error.message // empty' "$gcp_tmp_dir/perms.json" 2> /dev/null | head -1 | cut -c1-160)
+      echo -e "⚠️ ${YELLOW}Project IAM${NC}: can't test the project permissions (HTTP $code ${message})"
+  fi
+
+  echo ""
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail (new roles can take 2 minutes to apply)"
+  else
+      log "🎉 project $project is ready for the GCP examples"
+  fi
+
+}
+
+# :command.function
+playground_salesforce_command() {
+
+  # src/commands/salesforce.sh
+  # deprecated: moved under 'playground account', kept for the habits and docs that still call it
+  logwarn "⚠️ 'playground salesforce' is deprecated, use 'playground account salesforce' (same subcommands and flags)"
+  playground account salesforce "${other_args[@]}"
 
 }
 
@@ -57341,7 +58356,7 @@ playground_run_command() {
 
           if [ -z "$GCP_KEYFILE_CONTENT" ]
           then
-            missing_env="${missing_env}❌ ${RED}GCP_KEYFILE_CONTENT is missing!${NC}\n"
+            missing_env="${missing_env}❌ ${RED}GCP_KEYFILE_CONTENT is missing!${NC} 👉 playground account gcp setup\n"
             has_error=1
             missing_env_list+=("GCP_KEYFILE_CONTENT")
           fi
@@ -106666,6 +107681,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    account)
+      action="account"
+      shift
+      playground_account_parse_requirements "$@"
+      shift $#
+      ;;
+
     salesforce)
       action="salesforce"
       shift
@@ -114405,7 +115427,7 @@ playground_secrets_lint_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_salesforce_parse_requirements() {
+playground_account_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -114414,7 +115436,7 @@ playground_salesforce_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        playground_salesforce_usage
+        playground_account_usage
         exit
         ;;
 
@@ -114431,23 +115453,23 @@ playground_salesforce_parse_requirements() {
   case $action in
     -*) ;;
 
-    setup)
-      action="setup"
+    salesforce)
+      action="salesforce"
       shift
-      playground_salesforce_setup_parse_requirements "$@"
+      playground_account_salesforce_parse_requirements "$@"
       shift $#
       ;;
 
-    check)
-      action="check"
+    gcp)
+      action="gcp"
       shift
-      playground_salesforce_check_parse_requirements "$@"
+      playground_account_gcp_parse_requirements "$@"
       shift $#
       ;;
 
     # :command.command_fallback
     "")
-      playground_salesforce_usage >&2
+      playground_account_usage >&2
       exit 1
       ;;
 
@@ -114495,7 +115517,7 @@ playground_salesforce_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_salesforce_setup_parse_requirements() {
+playground_account_salesforce_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -114504,7 +115526,7 @@ playground_salesforce_setup_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        playground_salesforce_setup_usage
+        playground_account_salesforce_usage
         exit
         ;;
 
@@ -114516,7 +115538,97 @@ playground_salesforce_setup_parse_requirements() {
   done
 
   # :command.command_filter
-  action="salesforce setup"
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_salesforce_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_salesforce_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_salesforce_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_salesforce_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_salesforce_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account salesforce setup"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -114700,7 +115812,7 @@ playground_salesforce_setup_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_salesforce_check_parse_requirements() {
+playground_account_salesforce_check_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -114709,7 +115821,7 @@ playground_salesforce_check_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        playground_salesforce_check_usage
+        playground_account_salesforce_check_usage
         exit
         ;;
 
@@ -114721,7 +115833,7 @@ playground_salesforce_check_parse_requirements() {
   done
 
   # :command.command_filter
-  action="salesforce check"
+  action="account salesforce check"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -114786,6 +115898,415 @@ playground_salesforce_check_parse_requirements() {
         # :command.parse_requirements_case_simple
         printf "invalid argument: %s\n" "$key" >&2
         exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_gcp_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_gcp_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_gcp_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_gcp_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_gcp_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_gcp_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_gcp_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account gcp setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --project | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--project']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--project requires an argument: --project, -p PROJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --account | -a)
+        # :flag.conflicts
+        if [[ -n "${args['--keyfile']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--keyfile" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--account']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--account requires an argument: --account, -a ACCOUNT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --service-account)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--service-account']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--service-account requires an argument: --service-account SERVICE_ACCOUNT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --keyfile)
+        # :flag.conflicts
+        for conflict in --account --new-key; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--keyfile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--keyfile requires an argument: --keyfile KEYFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --new-key)
+        # :flag.conflicts
+        if [[ -n "${args['--keyfile']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--keyfile" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--new-key']=1
+        shift
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--service-account']:-} ]] || args['--service-account']="kdp-playground"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--keyfile'] ]]; then
+    validation_output="$(validate_file_exists "${args['--keyfile']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--keyfile KEYFILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_account_gcp_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_gcp_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account gcp check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --project | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--project']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--project requires an argument: --project, -p PROJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --keyfile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--keyfile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--keyfile requires an argument: --keyfile KEYFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--keyfile'] ]]; then
+    validation_output="$(validate_file_exists "${args['--keyfile']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--keyfile KEYFILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_salesforce_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_salesforce_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="salesforce"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
+      -?*)
+        other_args+=("$1")
+        shift
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_catch_all
+        other_args+=("$1")
+        shift
 
         ;;
 
@@ -169034,9 +170555,9 @@ playground_completion() {
         playground_secrets_completion "$completion_current" "$@"
         return
         ;;
-      salesforce)
+      account)
         shift
-        playground_salesforce_completion "$completion_current" "$@"
+        playground_account_completion "$completion_current" "$@"
         return
         ;;
       ccloud)
@@ -169318,7 +170839,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets account ccloud cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -172459,7 +173980,41 @@ playground_secrets_lint_completion() {
 }
 
 # :command.completion_function
-playground_salesforce_completion() {
+playground_account_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      salesforce)
+        shift
+        playground_account_salesforce_completion "$completion_current" "$@"
+        return
+        ;;
+      gcp)
+        shift
+        playground_account_gcp_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" salesforce gcp
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_salesforce_completion() {
   local completion_current="$1"
   shift
 
@@ -172467,12 +174022,12 @@ playground_salesforce_completion() {
     case "$1" in
       setup)
         shift
-        playground_salesforce_setup_completion "$completion_current" "$@"
+        playground_account_salesforce_setup_completion "$completion_current" "$@"
         return
         ;;
       check)
         shift
-        playground_salesforce_check_completion "$completion_current" "$@"
+        playground_account_salesforce_check_completion "$completion_current" "$@"
         return
         ;;
       --help | -h)
@@ -172493,7 +174048,7 @@ playground_salesforce_completion() {
 }
 
 # :command.completion_function
-playground_salesforce_setup_completion() {
+playground_account_salesforce_setup_completion() {
   local completion_current="$1"
   shift
 
@@ -172617,7 +174172,7 @@ playground_salesforce_setup_completion() {
 }
 
 # :command.completion_function
-playground_salesforce_check_completion() {
+playground_account_salesforce_check_completion() {
   local completion_current="$1"
   shift
 
@@ -172663,6 +174218,197 @@ playground_salesforce_check_completion() {
     completion_flag_candidates --suffix "$completion_current" --suffix
     completion_flag_candidates --account2 "$completion_current" --account2
     completion_flag_candidates --keystore "$completion_current" --keystore
+  fi
+
+}
+
+# :command.completion_function
+playground_account_gcp_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_gcp_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_gcp_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_gcp_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --project | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--project"]=1
+
+        ;;
+      --account | -a)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--account"]=1
+        completion_blocked_flags["--keyfile"]=1
+
+        ;;
+      --service-account)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--service-account"]=1
+
+        ;;
+      --keyfile)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--keyfile"]=1
+        completion_blocked_flags["--account"]=1
+        completion_blocked_flags["--new-key"]=1
+
+        ;;
+      --new-key)
+        completion_blocked_flags["--new-key"]=1
+        completion_blocked_flags["--keyfile"]=1
+
+        shift
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --project "$completion_current" --project -p
+    completion_flag_candidates --account "$completion_current" --account -a
+    completion_flag_candidates --service-account "$completion_current" --service-account
+    completion_flag_candidates --keyfile "$completion_current" --keyfile
+    completion_flag_candidates --new-key "$completion_current" --new-key
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_gcp_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --project | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--project"]=1
+
+        ;;
+      --keyfile)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--keyfile"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --project "$completion_current" --project -p
+    completion_flag_candidates --keyfile "$completion_current" --keyfile
+  fi
+
+}
+
+# :command.completion_function
+playground_salesforce_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
   fi
 
 }
@@ -200539,9 +202285,14 @@ run() {
     "secrets profile") playground_secrets_profile_command ;;
     "secrets scan") playground_secrets_scan_command ;;
     "secrets lint") playground_secrets_lint_command ;;
+    "account") playground_account_command ;;
+    "account salesforce") playground_account_salesforce_command ;;
+    "account salesforce setup") playground_account_salesforce_setup_command ;;
+    "account salesforce check") playground_account_salesforce_check_command ;;
+    "account gcp") playground_account_gcp_command ;;
+    "account gcp setup") playground_account_gcp_setup_command ;;
+    "account gcp check") playground_account_gcp_check_command ;;
     "salesforce") playground_salesforce_command ;;
-    "salesforce setup") playground_salesforce_setup_command ;;
-    "salesforce check") playground_salesforce_check_command ;;
     "ccloud") playground_ccloud_command ;;
     "ccloud setup") playground_ccloud_setup_command ;;
     "cloud-resources") playground_cloud_resources_command ;;

@@ -133,7 +133,7 @@ do
     if [ $SECONDS -ge $deadline ]
     then
         logerror "❌ the JWT bearer login still fails after $max_wait seconds: $(cat "$sf_tmp_dir/token.out")"
-        logerror "   check Setup > Login History in Salesforce, then run 'playground salesforce check' later"
+        logerror "   check Setup > Login History in Salesforce, then run 'playground account salesforce check' later"
         exit 1
     fi
     log "   not yet: $(jq -r '.error_description // .error // .' "$sf_tmp_dir/token.out" 2> /dev/null | head -1), retrying in 20 seconds"
@@ -173,4 +173,4 @@ if [[ -n "$account2" ]]
 then
     check_flags="$check_flags --account2"
 fi
-log "🩺 check it any time with: playground salesforce check$check_flags"
+log "🩺 check it any time with: playground account salesforce check$check_flags"

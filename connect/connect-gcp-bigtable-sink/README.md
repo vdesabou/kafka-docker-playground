@@ -6,6 +6,8 @@ Quickly test the [GCP BigTable Sink](https://docs.confluent.io/kafka-connectors/
 
 ## Prerequisites
 
+> `playground account gcp setup` configures the GCP project (APIs, service account with its roles, key stored as `GCP_KEYFILE_CONTENT`: no `keyfile.json` to copy here), see [GCP examples: set up a project](https://kafka-docker-playground.io/#/gcp). `playground account gcp check` verifies it.
+
 An active Google Cloud Platform (GCP) account with authorization to create resources.
 
 With CP 8.x, the minimal supported connector version is 2.0.0 (the scripts exit with code 111 otherwise).

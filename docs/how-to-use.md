@@ -391,7 +391,10 @@ They are stored in `~/.config/kafka-docker-playground` (never in the repository)
 > 🍪 The deep dive [Credentials and the 1Password setup](/deep-dive-secrets.md) explains the store, the backends, profiles, and how to set up 1Password (desktop app, service account, shared team vault), with a hands-on lab.
 
 > [!TIP]
-> ☁️ The Salesforce examples need a configured Salesforce org: [Salesforce examples: set up an org](/salesforce.md) does it with `playground salesforce setup` (and `playground salesforce check` when a login fails).
+> ☁️ The Salesforce examples need a configured Salesforce org: [Salesforce examples: set up an org](/salesforce.md) does it with `playground account salesforce setup` (and `playground account salesforce check` when a login fails).
+
+> [!TIP]
+> ☁️ The GCP examples need a project with the right APIs and a service account key: [GCP examples: set up a project](/gcp.md) does it with `playground account gcp setup` (and `playground account gcp check` when an example fails on permissions).
 
 ## 🌤️ Confluent Cloud examples
 

@@ -8,11 +8,11 @@ The Salesforce examples run against a **real Salesforce org**:
 The org needs a few things the connectors rely on: an External Client App for the OAuth JWT Bearer flow, a Platform
 Event, and Change Data Capture on `Contact`. The examples also read your credentials from environment variables.
 
-`playground salesforce setup` configures an org in one command. Only signing up for the org stays manual.
-`playground salesforce check` tells you, in a few seconds, whether the stored credentials still work.
+`playground account salesforce setup` configures an org in one command. Only signing up for the org stays manual.
+`playground account salesforce check` tells you, in a few seconds, whether the stored credentials still work.
 
 ?> **TL;DR**: sign up for a free Developer Edition org, install the Salesforce CLI
-(`npm install --global @salesforce/cli`), run `playground salesforce setup`, store your password and security token
+(`npm install --global @salesforce/cli`), run `playground account salesforce setup`, store your password and security token
 with `playground secrets set`, run an example.
 
 ## 📋 What you need
@@ -59,10 +59,10 @@ records, are too old for the External Client App metadata that `setup` deploys.
 
 To update it later: `npm update --global @salesforce/cli` (or `sf update` with the installers).
 
-### 3. Run `playground salesforce setup`
+### 3. Run `playground account salesforce setup`
 
 ```bash
-playground salesforce setup
+playground account salesforce setup
 ```
 
 A browser opens once: log into your new org and click **Allow**. The command then does the rest, in about 30 seconds
@@ -81,7 +81,7 @@ on a fresh org:
 ✋ Salesforce can't give these two back, store them yourself if not done yet:
    playground secrets set SALESFORCE_PASSWORD
    playground secrets set SALESFORCE_SECURITY_TOKEN      (emailed by Salesforce: Settings > My Personal Information > Reset My Security Token)
-🩺 check it any time with: playground salesforce check
+🩺 check it any time with: playground account salesforce check
 ```
 
 What it configures in the org:
@@ -114,11 +114,11 @@ and the token.
 ### 5. Check, then run an example
 
 ```bash
-playground salesforce check
+playground account salesforce check
 playground run -f connect/connect-salesforce-cdc-source/salesforce-cdc-source.sh
 ```
 
-## 🩺 When something stops working: `playground salesforce check`
+## 🩺 When something stops working: `playground account salesforce check`
 
 `check` logs in exactly like a connector does (JWT Bearer, with the stored `SALESFORCE_USERNAME`,
 `SALESFORCE_CONSUMER_KEY_WITH_JWT`, `SALESFORCE_INSTANCE` and your keystore). It needs neither Docker nor `sf`, and
@@ -156,20 +156,20 @@ failed.
 | `connect-salesforce-pushtopics-source`, `fm-salesforce-pushtopics-source` | #1 | (PushTopic created by the example) |
 | `connect-salesforce-bulkapi-source`, `fm-salesforce-bulkapi-2-0-source`, `fm-salesforce-v2-source` | #1 | |
 | `fm-salesforce-bulkapi-source` | #1 | also the username-password OAuth flow: `SALESFORCE_CONSUMER_KEY` / `SALESFORCE_CONSUMER_PASSWORD` of a Connected App, set up by hand (see its README); blocked by default on new orgs |
-| `connect-salesforce-bulkapi-sink`, `connect-salesforce-sobject-sink`, `fm-salesforce-bulkapi-2-0-sink`, `fm-salesforce-sobject-sink` | #1 (source) **and #2** (sink) | `playground salesforce setup --account2` on the second org |
+| `connect-salesforce-bulkapi-sink`, `connect-salesforce-sobject-sink`, `fm-salesforce-bulkapi-2-0-sink`, `fm-salesforce-sobject-sink` | #1 (source) **and #2** (sink) | `playground account salesforce setup --account2` on the second org |
 
 For the second org:
 
 ```bash
-playground salesforce setup --account2            # stores SALESFORCE_USERNAME_ACCOUNT2, …_INSTANCE_ACCOUNT2, …_CONSUMER_KEY_WITH_JWT_ACCOUNT2
+playground account salesforce setup --account2            # stores SALESFORCE_USERNAME_ACCOUNT2, …_INSTANCE_ACCOUNT2, …_CONSUMER_KEY_WITH_JWT_ACCOUNT2
 playground secrets set SALESFORCE_PASSWORD_ACCOUNT2
 playground secrets set SALESFORCE_SECURITY_TOKEN_ACCOUNT2
-playground salesforce check --account2
+playground account salesforce check --account2
 ```
 
 | Variable | Set by |
 | --- | --- |
-| `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE`, `SALESFORCE_CONSUMER_KEY_WITH_JWT` (`_ACCOUNT2`) | `playground salesforce setup` (`--account2`) |
+| `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE`, `SALESFORCE_CONSUMER_KEY_WITH_JWT` (`_ACCOUNT2`) | `playground account salesforce setup` (`--account2`) |
 | `SALESFORCE_PASSWORD`, `SALESFORCE_SECURITY_TOKEN` (`_ACCOUNT2`) | you, with `playground secrets set` |
 
 ## ⚙️ Options
@@ -186,7 +186,7 @@ playground salesforce check --account2
 | `--keystore <file>` / `--generate-keystore` | import a keystore / replace yours with a new key pair (see below) |
 | `--max-wait <seconds>` | how long to wait for the new app to accept JWT logins (default 600) |
 
-`playground salesforce check` takes `--account2`, `--suffix` and `--keystore` too.
+`playground account salesforce check` takes `--account2`, `--suffix` and `--keystore` too.
 
 ## 🔐 The keystore (JWT key pair)
 
@@ -222,5 +222,5 @@ The JWT Bearer flow signs the login with a private key; the External Client App 
 
 ## 🧠 CLI reference
 
-[playground salesforce setup](/playground%20salesforce%20setup) · [playground salesforce check](/playground%20salesforce%20check) ·
+[playground account salesforce setup](/playground%20account%20salesforce%20setup) · [playground account salesforce check](/playground%20account%20salesforce%20check) ·
 [playground secrets set](/playground%20secrets%20set)

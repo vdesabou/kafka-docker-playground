@@ -6678,6 +6678,13 @@ function get_optional_env_vars () {
       echo "AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
     fi
 
+    # the examples check GCP_KEYFILE_CONTENT with their own message (keyfile.json or the variable),
+    # so it is not a mandatory variable; 'playground account gcp setup' stores it
+    if [[ "$(example_relative_path "$test_file")" == *"gcp"* ]]
+    then
+      echo "GCP_PROJECT GCP_KEYFILE_CONTENT"
+    fi
+
     # tunnels on a bore server instead of ngrok (tools/bore-tunnel)
     if grep -q "display_ngrok_warning" "$test_file"
     then
@@ -7312,7 +7319,7 @@ function connect_cp_version_greater_than_8 () {
     return 1
   fi
 }
-# The JWT keystore of the Salesforce examples generated or imported by 'playground salesforce setup':
+# The JWT keystore of the Salesforce examples generated or imported by 'playground account salesforce setup':
 # one per user, outside the repository (git clean can't remove it), next to the secrets store.
 function salesforce_user_keystore_path () {
   echo "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/salesforce-confluent.keystore.jks"

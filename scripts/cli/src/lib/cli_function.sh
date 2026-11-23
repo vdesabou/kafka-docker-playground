@@ -10847,7 +10847,7 @@ function display_newer_cp_patch_hint () {
   log "🔄 To update: playground update-version --tag $newer_cp_version"
 }
 
-# playground salesforce setup|check: the org is driven with the Salesforce CLI (sf) installed on the
+# playground account salesforce setup|check: the org is driven with the Salesforce CLI (sf) installed on the
 # host. The sfdx-cli image of the examples is too old to know the External Client App metadata types,
 # and 'sf org login web' needs the host browser anyway.
 function salesforce_setup_require_tools () {
@@ -10911,7 +10911,7 @@ function salesforce_setup_install_keystore () {
   if [ -f "$user_keystore" ] && ! cmp -s "$src" "$user_keystore"
   then
     mv "$user_keystore" "$user_keystore.bak"
-    logwarn "⚠️ previous keystore kept as $user_keystore.bak: the orgs set up with it must be set up again (playground salesforce setup)"
+    logwarn "⚠️ previous keystore kept as $user_keystore.bak: the orgs set up with it must be set up again (playground account salesforce setup)"
   fi
   if ! cmp -s "$src" "$user_keystore" 2> /dev/null
   then
@@ -10921,7 +10921,7 @@ function salesforce_setup_install_keystore () {
   salesforce_sync_user_keystore "$root_folder"
 }
 
-# The keystore 'playground salesforce setup' uses, made the user keystore:
+# The keystore 'playground account salesforce setup' uses, made the user keystore:
 #   --keystore <file>      that file
 #   --generate-keystore    a new key pair
 #   otherwise              the user keystore, else the one already in the examples (the shared one of
@@ -10984,7 +10984,7 @@ function salesforce_setup_load_keystore () {
   fi
 }
 
-# Prints the consumer key of an External Client App created by 'playground salesforce setup', empty if
+# Prints the consumer key of an External Client App created by 'playground account salesforce setup', empty if
 # the app does not exist. Retrieving ExtlClntAppGlobalOauthSettings returns it.
 function salesforce_setup_get_consumer_key () {
   target_org="$1"
@@ -11006,7 +11006,7 @@ function salesforce_setup_base64url () {
 
 # One OAuth JWT bearer token request, exactly what a connector with salesforce.grant.type=JWT_BEARER
 # does. Prints Salesforce's answer (without the token), returns 0 when it contains an access token,
-# kept in sf_access_token / sf_token_instance_url for the REST calls of 'playground salesforce check'
+# kept in sf_access_token / sf_token_instance_url for the REST calls of 'playground account salesforce check'
 # (so don't call it in a subshell). Nothing is stored and the sf CLI logins are left alone.
 function salesforce_setup_jwt_token () {
   login_url="${1%/}"
@@ -11047,6 +11047,168 @@ function salesforce_setup_var_name () {
     name="${name}_ACCOUNT2"
   fi
   echo "$name"
+}
+
+# ---------------------------------------------------------------------------
+# playground account gcp setup | check
+# ---------------------------------------------------------------------------
+
+function gcp_user_keyfile_path () {
+  echo "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/gcp-keyfile.json"
+}
+
+# The APIs the GCP examples call: api|what|examples
+function gcp_setup_apis () {
+  cat << 'APIS'
+storage.googleapis.com|Cloud Storage|gcs sink and source, dataproc sink
+pubsub.googleapis.com|Pub/Sub|pubsub source and sink
+bigquery.googleapis.com|BigQuery|bigquery sink and source
+bigquerystorage.googleapis.com|BigQuery Storage|bigquery v2 sink
+spanner.googleapis.com|Spanner|spanner sink, debezium spanner source
+bigtable.googleapis.com|Bigtable|bigtable sink
+bigtableadmin.googleapis.com|Bigtable Admin|bigtable sink
+firestore.googleapis.com|Firestore|firestore sink
+firebasedatabase.googleapis.com|Realtime Database|firebase sink and source
+cloudfunctions.googleapis.com|Cloud Functions|cloud functions sink
+run.googleapis.com|Cloud Run|cloud functions gen2 sink
+dataproc.googleapis.com|Dataproc|dataproc sink
+compute.googleapis.com|Compute Engine|dataproc sink (cluster vms)
+iam.googleapis.com|IAM|service account and keys
+cloudresourcemanager.googleapis.com|Resource Manager|project roles, firestore sink
+serviceusage.googleapis.com|Service Usage|enabling the APIs
+cloudbilling.googleapis.com|Cloud Billing|billing check
+APIS
+}
+
+# The roles granted to the service account on the project: role|why
+function gcp_setup_roles () {
+  cat << 'ROLES'
+roles/storage.admin|Cloud Storage buckets and objects (gcs, dataproc)
+roles/pubsub.admin|Pub/Sub topics and subscriptions
+roles/bigquery.admin|BigQuery datasets, tables and jobs
+roles/spanner.admin|Spanner instances, databases and change streams
+roles/bigtable.admin|Bigtable instances and tables
+roles/datastore.owner|Firestore databases and user credentials
+roles/firebasedatabase.admin|Realtime Database
+roles/cloudfunctions.invoker|invoking Cloud Functions (gen1)
+roles/cloudfunctions.viewer|listing the functions, to check that the one the examples call exists
+roles/run.invoker|invoking Cloud Functions gen2 (Cloud Run)
+roles/dataproc.editor|Dataproc clusters
+roles/iam.serviceAccountUser|Dataproc clusters run as the default compute service account
+roles/resourcemanager.projectIamAdmin|firestore sink grants roles/datastore.user to its Firestore user
+ROLES
+}
+
+# gcloud, the local one if installed, else the google/cloud-sdk image the examples use.
+# gcp_gcloud_config: configuration folder (empty = your own default one, local gcloud only)
+# gcp_gcloud_interactive: set to 1 for the commands that prompt (auth login)
+# gcp_gcloud_account: account to use, without changing the active account of the configuration
+function gcp_gcloud () {
+  # an empty CLOUDSDK_CORE_ACCOUNT would hide the account of the configuration: only set when given
+  gcp_env=()
+  if [ -n "${gcp_gcloud_account:-}" ]
+  then
+    gcp_env+=("CLOUDSDK_CORE_ACCOUNT=$gcp_gcloud_account")
+  fi
+  if [ "$gcp_gcloud_mode" == "local" ]
+  then
+    if [ -n "$gcp_gcloud_config" ]
+    then
+      gcp_env+=("CLOUDSDK_CONFIG=$gcp_gcloud_config")
+    fi
+    env "${gcp_env[@]}" gcloud "$@"
+  else
+    docker_flags=(--rm -i --user "$(id -u):$(id -g)" -e CLOUDSDK_CONFIG=/gcloud-config)
+    if [ "${gcp_gcloud_interactive:-}" == "1" ]
+    then
+      docker_flags+=(-t)
+    fi
+    if [ -n "${gcp_gcloud_account:-}" ]
+    then
+      docker_flags+=(-e "CLOUDSDK_CORE_ACCOUNT=$gcp_gcloud_account")
+    fi
+    docker run "${docker_flags[@]}" \
+      -v "$gcp_gcloud_config:/gcloud-config" \
+      -v "$gcp_tmp_dir:$gcp_tmp_dir" \
+      google/cloud-sdk:latest gcloud "$@"
+  fi
+}
+
+# Sets gcp_gcloud_mode (local or docker)
+function gcp_setup_require_tools () {
+  for tool in jq openssl curl
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+  if command -v gcloud > /dev/null 2>&1
+  then
+    gcp_gcloud_mode="local"
+  elif command -v docker > /dev/null 2>&1 && docker info > /dev/null 2>&1
+  then
+    gcp_gcloud_mode="docker"
+    log "🐳 gcloud is not installed, using the google/cloud-sdk image (the one the examples use)"
+  else
+    logerror "❌ neither gcloud nor a running docker"
+    logerror "   install gcloud (https://cloud.google.com/sdk/docs/install, or brew install --cask google-cloud-sdk), or start docker"
+    exit 1
+  fi
+}
+
+# GCP_KEYFILE_CONTENT is the key file escaped as a JSON string without the quotes
+# (jq -aRs . keyfile.json | sed 's/^"//' | sed 's/"$//'), what the examples and CI use.
+function gcp_keyfile_to_content () {
+  jq -aRs . "$1" | sed 's/^"//' | sed 's/"$//'
+}
+
+# Prints the key file JSON from a GCP_KEYFILE_CONTENT value (escaped, or plain JSON)
+function gcp_content_to_keyfile () {
+  content="$1"
+  if printf '%s' "$content" | jq -e '.type' > /dev/null 2>&1
+  then
+    printf '%s\n' "$content"
+  else
+    printf '"%s"' "$content" | jq -r . 2> /dev/null
+  fi
+}
+
+function gcp_base64url () {
+  openssl base64 -A | tr '+/' '-_' | tr -d '='
+}
+
+# One OAuth JWT bearer token request with a service account key file, what the
+# Google client libraries of the connectors do. Sets gcp_access_token, prints the error response.
+function gcp_jwt_token () {
+  key_file="$1"
+  client_email=$(jq -r '.client_email // empty' "$key_file")
+  token_uri=$(jq -r '.token_uri // "https://oauth2.googleapis.com/token"' "$key_file")
+  pem_file=$(mktemp -t playground-gcp-key.XXXXXX)
+  jq -r '.private_key // empty' "$key_file" > "$pem_file"
+  now=$(date +%s)
+  header=$(printf '{"alg":"RS256","typ":"JWT"}' | gcp_base64url)
+  claims=$(jq -cn --arg iss "$client_email" --arg aud "$token_uri" --argjson iat "$now" --argjson exp "$((now + 600))" \
+    '{iss: $iss, scope: "https://www.googleapis.com/auth/cloud-platform", aud: $aud, iat: $iat, exp: $exp}' | gcp_base64url)
+  signature=$(printf '%s.%s' "$header" "$claims" | openssl dgst -sha256 -sign "$pem_file" -binary 2> /dev/null | gcp_base64url)
+  rm -f "$pem_file"
+  gcp_access_token=""
+  if [ -z "$signature" ]
+  then
+    echo '{"error":"invalid_key","error_description":"the private_key of the key file can not sign (not a valid PEM private key)"}'
+    return 1
+  fi
+  response=$(curl -sS -m 30 -X POST "$token_uri" \
+    --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+    --data-urlencode "assertion=$header.$claims.$signature" 2>&1) || true
+  gcp_access_token=$(echo "$response" | jq -r '.access_token // empty' 2> /dev/null) || true
+  if [ -n "$gcp_access_token" ]
+  then
+    return 0
+  fi
+  echo "$response" | jq -c 'del(.access_token)' 2> /dev/null || echo "$response"
+  return 1
 }
 
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)

@@ -154,6 +154,8 @@ commands:
 
 - import: src/commands/secrets.yml
 
+- import: src/commands/account.yml
+
 - import: src/commands/salesforce.yml
 
 - import: src/commands/ccloud.yml

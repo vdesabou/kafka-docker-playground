@@ -106,9 +106,12 @@ then
         echo -e "🔑 ${GREEN}$test_file_directory/keyfile.json${NC} is present"
     elif [ -n "$GCP_KEYFILE_CONTENT" ]
     then
-        echo -e "🔑 ${GREEN}GCP_KEYFILE_CONTENT${NC} is set"
+        echo -e "🔑 ${GREEN}GCP_KEYFILE_CONTENT${NC} is set (environment)"
+    elif ref=$(secret_lookup_reference GCP_KEYFILE_CONTENT "$profile") && [ -n "$ref" ] && secret_get GCP_KEYFILE_CONTENT "$profile" > /dev/null 2>&1
+    then
+        echo -e "🔐 ${GREEN}GCP_KEYFILE_CONTENT${NC} set ($(secret_reference_backend "$ref"))"
     else
-        echo -e "❌ ${RED}$test_file_directory/keyfile.json${NC} missing"
+        echo -e "❌ ${RED}GCP key${NC} missing (no $test_file_directory/keyfile.json, no GCP_KEYFILE_CONTENT)        👉 playground account gcp setup"
         nb_missing=$((nb_missing+1))
     fi
 fi
