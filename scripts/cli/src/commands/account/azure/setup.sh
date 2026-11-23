@@ -187,7 +187,8 @@ nb_role_failed=0
 while IFS='|' read -r role role_id why
 do
     # < /dev/null: az reads stdin, and would swallow the next roles of the loop
-    count=$(azure_az role assignment list --assignee "$app_id" --scope "$scope" --role "$role" --include-inherited --query "length(@)" -o tsv 2> /dev/null < /dev/null) || count=""
+    # --subscription: without a current subscription in az (MissingSubscription), even with --scope
+    count=$(azure_az role assignment list --subscription "$subscription_id" --assignee "$app_id" --scope "$scope" --role "$role" --include-inherited --query "length(@)" -o tsv 2> /dev/null < /dev/null) || count=""
     if [ "${count:-0}" != "0" ]
     then
         continue
@@ -196,7 +197,7 @@ do
     granted=""
     for attempt in 1 2 3 4
     do
-        if azure_az role assignment create --assignee-object-id "$sp_oid" --assignee-principal-type ServicePrincipal \
+        if azure_az role assignment create --subscription "$subscription_id" --assignee-object-id "$sp_oid" --assignee-principal-type ServicePrincipal \
             --role "$role" --scope "$scope" -o none --only-show-errors > /dev/null 2> "$azure_tmp_dir/role.err" < /dev/null
         then
             granted=1
