@@ -5078,7 +5078,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
                 + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
                 + (f"<div class='tl-after'>🔗{e(after_text(ev))}</div>" if ev.get("after") else "")
                 + (f"<div class='tl-effects'>{e(effects_text(ev))}</div>" if ev.get("effects") else "")
-                + f"</td><td class='mono'>{where}</td></tr>")
+                + f"</td><td class='mono tl-where'>{where}</td></tr>")
     head = ("<tr><th>Time</th><th title='time since the previous event shown (bold: a big gap)'>Δ</th><th>Component</th>"
             "<th>What</th><th>Where</th></tr>")
     first = "".join(row(ev) for ev in events[:shown])
@@ -5092,6 +5092,8 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "tr.tl-config_change td{background:#fefce8}html[data-theme=dark] tr.tl-known td{background:#3a2406}"
             "html[data-theme=dark] tr.tl-start td,html[data-theme=dark] tr.tl-connector_config td{background:#0c2a3a}"
             "html[data-theme=dark] tr.tl-config_change td{background:#33300a}"
+            # the "☸️ connect/Connector/<name>" of a CFK event: a readable column, cut at - / . rather than one letter a line
+            ".tl-where{min-width:220px;max-width:360px;word-break:normal;overflow-wrap:anywhere}"
             ".tl-time{white-space:nowrap}.tl-delta{white-space:nowrap;color:#64748b;font-size:.8rem}.tl-delta.tl-big{color:#b91c1c;font-weight:700}"
             "html[data-theme=dark] .tl-delta.tl-big{color:#fca5a5}"
             ".tl-chart{margin:6px 0 4px}.tl-chart svg{display:block;font-size:12px}.tl-lane{fill:#f8fafc}.tl-lane-alt{fill:#f1f5f9}"

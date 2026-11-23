@@ -37,7 +37,8 @@ MESSAGE_KEYS = ("@message", "message", "log", "msg", "line", "textPayload", "_ra
 # _time: Splunk (its CSV exports are newest first: the time decides the order)
 TIME_KEYS = ("@timestamp", "timestamp", "time", "ts", "@t", "date", "eventTime", "_time")
 LEVEL_KEYS = ("level", "log.level", "severity", "loglevel", "@l")
-LOGGER_KEYS = ("logger_name", "logger", "loggerName", "log.logger", "class")
+# sourceLocation.function: the GCP structured logging layout ({"severity", "textPayload", "sourceLocation"})
+LOGGER_KEYS = ("logger_name", "logger", "loggerName", "log.logger", "class", "sourceLocation.function")
 STACK_KEYS = ("stack_trace", "exception", "error.stack_trace", "stacktrace", "throwable")
 # the task of an event of a fully managed connector (confluent connect logs): "task-0", or none for the connector itself
 TASK_KEYS = ("task_id", "taskId")
