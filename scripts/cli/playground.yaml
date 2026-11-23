@@ -507,7 +507,9 @@ subcommands:
     admin login, roles, edition\n  aws          AWS access keys and region, the IAM
     role of the assume-role variants\n  servicenow   a ServiceNow developer instance:
     URL, admin login, hibernation\n  databricks   a Databricks workspace: token, SQL
-    warehouse, S3 staging bucket\n\nEach provider has 'setup' (configure the account
+    warehouse, S3 staging bucket\n\n  zendesk, jira, marketo, clickhouse, couchbase,
+    mongodb-atlas, pagerduty\n               a few values each: validated, stored,
+    checked (expired, paused, idle)\n\nEach provider has 'setup' (configure the account
     in one command, store\nthe variables with 'playground secrets set') and, except
     ccloud, 'check'\n(a few seconds, read-only: does the stored login still work,
     and what is\nmissing).\n\n\U0001F4D6 All the providers, how they behave, and the
@@ -1154,6 +1156,243 @@ subcommands:
         (it does not start the warehouse). Uses curl, and the aws CLI\nor the amazon/aws-cli
         image for the bucket.\n\nExits with 1 when the token is refused."
       usage: playground account databricks check
+      options: []
+  - name: zendesk
+    description: "\U0001F3AB Set up and check the Zendesk account of the Zendesk examples
+      (connect-zendesk-source, fm-zendesk-source)\n\n  setup   validate and store
+      ZENDESK_URL, ZENDESK_USERNAME and ZENDESK_PASSWORD\n  check   verify them in
+      a few seconds: the login (users/me, the <email>/token form) and the tickets
+      the sources read\n\nNothing to configure in Zendesk: these examples only need
+      the values,\nin the right form, still valid (a trial account ends after 14 days).\n\n\U0001F4D6
+      https://kafka-docker-playground.io/#/accounts"
+    usage: playground account zendesk COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the Zendesk account of the Zendesk
+        examples (connect-zendesk-source, fm-zendesk-source)\n\nTakes ZENDESK_URL,
+        ZENDESK_USERNAME and ZENDESK_PASSWORD from the environment, then the secrets
+        store, else asks\nfor them (secrets without echo), puts them in the form the
+        examples use,\nvalidates them (the login (users/me, the <email>/token form)
+        and the tickets the sources read), then stores them with 'playground secrets
+        set'.\nNothing is stored when the login fails."
+      usage: playground account zendesk setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the Zendesk account of the Zendesk examples (connect-zendesk-source,
+        fm-zendesk-source)\n\nRead-only, a few seconds: the login (users/me, the <email>/token
+        form) and the tickets the sources read. Each failure says why (a trial account
+        ends after 14 days...)\nand which examples it breaks.\n\nExits with 1 when
+        the login fails."
+      usage: playground account zendesk check
+      options: []
+  - name: jira
+    description: "\U0001F4CB Set up and check the Jira account of the Jira examples
+      (connect-jira-source, fm-jira-source)\n\n  setup   validate and store JIRA_URL,
+      JIRA_USERNAME and JIRA_API_TOKEN\n  check   verify them in a few seconds: the
+      login (myself) and the projects the sources read\n\nNothing to configure in
+      Jira: these examples only need the values,\nin the right form, still valid (API
+      tokens expire).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+    usage: playground account jira COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the Jira account of the Jira examples
+        (connect-jira-source, fm-jira-source)\n\nTakes JIRA_URL, JIRA_USERNAME and
+        JIRA_API_TOKEN from the environment, then the secrets store, else asks\nfor
+        them (secrets without echo), puts them in the form the examples use,\nvalidates
+        them (the login (myself) and the projects the sources read), then stores them
+        with 'playground secrets set'.\nNothing is stored when the login fails."
+      usage: playground account jira setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the Jira account of the Jira examples (connect-jira-source,
+        fm-jira-source)\n\nRead-only, a few seconds: the login (myself) and the projects
+        the sources read. Each failure says why (API tokens expire...)\nand which
+        examples it breaks.\n\nExits with 1 when the login fails."
+      usage: playground account jira check
+      options: []
+  - name: marketo
+    description: "\U0001F4E3 Set up and check the Marketo account of the Marketo examples
+      (connect-marketo-source, fm-marketo-sink)\n\n  setup   validate and store MARKETO_ENDPOINT_URL,
+      MARKETO_CLIENT_ID and MARKETO_CLIENT_SECRET\n  check   verify them in a few
+      seconds: the OAuth token of the LaunchPoint service and the leads API (603:
+      missing API role)\n\nNothing to configure in Marketo: these examples only need
+      the values,\nin the right form, still valid (sandboxes expire).\n\n\U0001F4D6
+      https://kafka-docker-playground.io/#/accounts"
+    usage: playground account marketo COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the Marketo account of the Marketo
+        examples (connect-marketo-source, fm-marketo-sink)\n\nTakes MARKETO_ENDPOINT_URL,
+        MARKETO_CLIENT_ID and MARKETO_CLIENT_SECRET from the environment, then the
+        secrets store, else asks\nfor them (secrets without echo), puts them in the
+        form the examples use,\nvalidates them (the OAuth token of the LaunchPoint
+        service and the leads API (603: missing API role)), then stores them with
+        'playground secrets set'.\nNothing is stored when the login fails."
+      usage: playground account marketo setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the Marketo account of the Marketo examples (connect-marketo-source,
+        fm-marketo-sink)\n\nRead-only, a few seconds: the OAuth token of the LaunchPoint
+        service and the leads API (603: missing API role). Each failure says why (sandboxes
+        expire...)\nand which examples it breaks.\n\nExits with 1 when the login fails."
+      usage: playground account marketo check
+      options: []
+  - name: clickhouse
+    description: "\U0001F3E0 Set up and check the ClickHouse Cloud account of the
+      ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\n  setup
+      \  validate and store CLICKHOUSE_CLOUD_HOSTNAME, CLICKHOUSE_CLOUD_USERNAME and
+      CLICKHOUSE_CLOUD_PASSWORD\n  check   verify them in a few seconds: a SELECT
+      over HTTPS (it also wakes an idle service up)\n\nNothing to configure in ClickHouse
+      Cloud: these examples only need the values,\nin the right form, still valid
+      (services idle when unused, trials end).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+    usage: playground account clickhouse COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the ClickHouse Cloud account of
+        the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\nTakes
+        CLICKHOUSE_CLOUD_HOSTNAME, CLICKHOUSE_CLOUD_USERNAME and CLICKHOUSE_CLOUD_PASSWORD
+        from the environment, then the secrets store, else asks\nfor them (secrets
+        without echo), puts them in the form the examples use,\nvalidates them (a
+        SELECT over HTTPS (it also wakes an idle service up)), then stores them with
+        'playground secrets set'.\nNothing is stored when the login fails."
+      usage: playground account clickhouse setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the ClickHouse Cloud account of the ClickHouse
+        examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\nRead-only, a few
+        seconds: a SELECT over HTTPS (it also wakes an idle service up). Each failure
+        says why (services idle when unused, trials end...)\nand which examples it
+        breaks.\n\nExits with 1 when the login fails."
+      usage: playground account clickhouse check
+      options: []
+  - name: couchbase
+    description: "\U0001F6CB️ Set up and check the Couchbase Capella account of the
+      Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n\n  setup   validate
+      and store COUCHBASE_HOSTNAME, COUCHBASE_USERNAME, COUCHBASE_PASSWORD and the
+      optional COUCHBASE_CAPELLA_* (API key, organization, project, cluster)\n  check
+      \  verify them in a few seconds: the cluster state and its allowed IPs through
+      the Capella API\n\nNothing to configure in Couchbase Capella: these examples
+      only need the values,\nin the right form, still valid (free tier clusters are
+      turned off after 72 hours without use: setup turns them back on).\n\n\U0001F4D6
+      https://kafka-docker-playground.io/#/accounts"
+    usage: playground account couchbase COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the Couchbase Capella account of
+        the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n\nTakes COUCHBASE_HOSTNAME,
+        COUCHBASE_USERNAME, COUCHBASE_PASSWORD and the optional COUCHBASE_CAPELLA_*
+        (API key, organization, project, cluster) from the environment, then the secrets
+        store, else asks\nfor them (secrets without echo), puts them in the form the
+        examples use,\nvalidates them (the cluster state and its allowed IPs through
+        the Capella API), then stores them with 'playground secrets set'.\nNothing
+        is stored when the login fails."
+      usage: playground account couchbase setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the Couchbase Capella account of the Couchbase
+        examples (fm-couchbase-sink, fm-couchbase-source)\n\nRead-only, a few seconds:
+        the cluster state and its allowed IPs through the Capella API. Each failure
+        says why (free tier clusters are turned off after 72 hours without use: setup
+        turns them back on...)\nand which examples it breaks.\n\nExits with 1 when
+        the login fails."
+      usage: playground account couchbase check
+      options: []
+  - name: mongodb-atlas
+    description: "\U0001F343 Set up and check the MongoDB Atlas account of the MongoDB
+      Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\n  setup   validate
+      and store MONGODB_ATLAS_HOST, MONGODB_ATLAS_USER and MONGODB_ATLAS_PASSWORD\n
+      \ check   verify them in a few seconds: the mongodb+srv record of the host and
+      a ping with mongosh (mongo image)\n\nNothing to configure in MongoDB Atlas:
+      these examples only need the values,\nin the right form, still valid (M0 clusters
+      pause after 60 days without connections).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+    usage: playground account mongodb-atlas COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the MongoDB Atlas account of the
+        MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\nTakes
+        MONGODB_ATLAS_HOST, MONGODB_ATLAS_USER and MONGODB_ATLAS_PASSWORD from the
+        environment, then the secrets store, else asks\nfor them (secrets without
+        echo), puts them in the form the examples use,\nvalidates them (the mongodb+srv
+        record of the host and a ping with mongosh (mongo image)), then stores them
+        with 'playground secrets set'.\nNothing is stored when the login fails."
+      usage: playground account mongodb-atlas setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the MongoDB Atlas account of the MongoDB Atlas
+        examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\nRead-only, a
+        few seconds: the mongodb+srv record of the host and a ping with mongosh (mongo
+        image). Each failure says why (M0 clusters pause after 60 days without connections...)\nand
+        which examples it breaks.\n\nExits with 1 when the login fails."
+      usage: playground account mongodb-atlas check
+      options: []
+  - name: pagerduty
+    description: "\U0001F6CE️ Set up and check the PagerDuty account of the PagerDuty
+      example (connect-pagerduty-sink)\n\n  setup   validate and store PAGERDUTY_API_KEY,
+      PAGERDUTY_SERVICE_ID and PAGERDUTY_USER_EMAIL\n  check   verify them in a few
+      seconds: the service the incidents go to, and the user that sends them\n\nNothing
+      to configure in PagerDuty: these examples only need the values,\nin the right
+      form, still valid (keys get revoked, services deleted).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+    usage: playground account pagerduty COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the PagerDuty account of the PagerDuty
+        example (connect-pagerduty-sink)\n\nTakes PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID
+        and PAGERDUTY_USER_EMAIL from the environment, then the secrets store, else
+        asks\nfor them (secrets without echo), puts them in the form the examples
+        use,\nvalidates them (the service the incidents go to, and the user that sends
+        them), then stores them with 'playground secrets set'.\nNothing is stored
+        when the login fails."
+      usage: playground account pagerduty setup [OPTIONS]
+      options:
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the PagerDuty account of the PagerDuty example
+        (connect-pagerduty-sink)\n\nRead-only, a few seconds: the service the incidents
+        go to, and the user that sends them. Each failure says why (keys get revoked,
+        services deleted...)\nand which examples it breaks.\n\nExits with 1 when the
+        login fails."
+      usage: playground account pagerduty check
       options: []
 - name: cloud-resources
   description: "☁️ What the playground left behind in your cloud accounts, what it

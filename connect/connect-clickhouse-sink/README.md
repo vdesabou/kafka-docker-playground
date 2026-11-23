@@ -6,6 +6,8 @@ Quickly test the [ClickHouse Sink](https://clickhouse.com/docs/integrations/kafk
 
 ## Prerequisites
 
+> `playground account clickhouse setup` validates and stores the values below, `playground account clickhouse check` tells you in a few seconds whether they still work (expired, paused, idle…), see [Accounts of the examples](https://kafka-docker-playground.io/#/accounts?id=🧾-the-saas-accounts).
+
 A [ClickHouse Cloud](https://clickhouse.com/cloud) service is required.
 
 | Variable | Description |

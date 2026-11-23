@@ -65,7 +65,7 @@ ACCESS_TOKEN=$(playground container exec --container connect --command "curl -X 
 log "Create one lead to Marketo"
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
-playground container exec --container connect --command "curl -X POST \"${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN\" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}'"
+playground container exec --container connect --command "curl -X POST \"${MARKETO_ENDPOINT_URL}/rest/v1/leads.json\" -H 'Authorization: Bearer $ACCESS_TOKEN' -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}'"
 
 # since last hour
 

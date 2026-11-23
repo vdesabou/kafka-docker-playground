@@ -11534,6 +11534,416 @@ function databricks_explain_http () {
   esac
 }
 
+# ---------------------------------------------------------------------------
+# playground account <zendesk|jira|marketo|clickhouse|couchbase|mongodb-atlas|pagerduty> setup | check
+# Accounts with a few variables and nothing to configure: a table per provider (account_simple_spec_<p>), a
+# normalization (account_simple_normalize_<p>) and a probe (account_simple_probe_<p>), shared by setup and check.
+# ---------------------------------------------------------------------------
+
+ACCOUNT_GREEN='\033[0;32m'
+ACCOUNT_RED='\033[0;31m'
+ACCOUNT_YELLOW='\033[0;33m'
+ACCOUNT_NC='\033[0m'
+
+function account_ok () { echo -e "✅ ${ACCOUNT_GREEN}$1${ACCOUNT_NC}${2:+ $2}"; }
+function account_ko () { echo -e "❌ ${ACCOUNT_RED}$1${ACCOUNT_NC}${2:+: $2}"; account_simple_failed=$((account_simple_failed + 1)); }
+function account_warn () { echo -e "⚠️ ${ACCOUNT_YELLOW}$1${ACCOUNT_NC}${2:+: $2}"; }
+
+# spec lines: VARIABLE|plain or secret|prompt|required or optional
+function account_simple_spec_zendesk () {
+  echo "ZENDESK_URL|plain|🌐 Zendesk URL (https://<subdomain>.zendesk.com)|required"
+  echo "ZENDESK_USERNAME|plain|👤 user, as <email>/token for an API token|required"
+  echo "ZENDESK_PASSWORD|secret|🔐 API token|required"
+}
+function account_simple_spec_jira () {
+  echo "JIRA_URL|plain|🌐 Jira site (https://<site>.atlassian.net)|required"
+  echo "JIRA_USERNAME|plain|👤 email of the Atlassian account|required"
+  echo "JIRA_API_TOKEN|secret|🔐 API token (id.atlassian.com > Security > API tokens)|required"
+}
+function account_simple_spec_marketo () {
+  echo "MARKETO_ENDPOINT_URL|plain|🌐 REST endpoint (https://<munchkin-id>.mktorest.com, Admin > Web Services)|required"
+  echo "MARKETO_CLIENT_ID|plain|👤 client id of the LaunchPoint service|required"
+  echo "MARKETO_CLIENT_SECRET|secret|🔐 its client secret|required"
+}
+function account_simple_spec_clickhouse () {
+  echo "CLICKHOUSE_CLOUD_HOSTNAME|plain|🌐 hostname of the service (xxxx.<region>.<cloud>.clickhouse.cloud)|required"
+  echo "CLICKHOUSE_CLOUD_USERNAME|plain|👤 user (default)|required"
+  echo "CLICKHOUSE_CLOUD_PASSWORD|secret|🔐 its password|required"
+}
+function account_simple_spec_couchbase () {
+  echo "COUCHBASE_HOSTNAME|plain|🌐 Capella connection string, without couchbases:// (cb.xxxx.cloud.couchbase.com)|required"
+  echo "COUCHBASE_USERNAME|plain|👤 cluster access (database) user|required"
+  echo "COUCHBASE_PASSWORD|secret|🔐 its password|required"
+  echo "COUCHBASE_CAPELLA_API_KEY|secret|🔑 Capella API key (optional: turns a paused free tier cluster back on)|optional"
+  echo "COUCHBASE_CAPELLA_ORG_ID|plain|🏢 Capella organization id|optional"
+  echo "COUCHBASE_CAPELLA_PROJECT_ID|plain|🗂️ Capella project id|optional"
+  echo "COUCHBASE_CAPELLA_CLUSTER_ID|plain|🎰 Capella cluster id|optional"
+}
+function account_simple_spec_mongodb-atlas () {
+  echo "MONGODB_ATLAS_HOST|plain|🌐 cluster host, without mongodb+srv:// (cluster0.xxxxx.mongodb.net)|required"
+  echo "MONGODB_ATLAS_USER|plain|👤 database user|required"
+  echo "MONGODB_ATLAS_PASSWORD|secret|🔐 its password|required"
+}
+function account_simple_spec_pagerduty () {
+  echo "PAGERDUTY_API_KEY|secret|🔑 REST API key (Integrations > API Access Keys)|required"
+  echo "PAGERDUTY_SERVICE_ID|plain|🛎️ id of the service the incidents go to (in its URL, e.g. PY7K7O3)|required"
+  echo "PAGERDUTY_USER_EMAIL|plain|👤 email of a user of the account (sender of the incidents)|required"
+}
+
+# examples of each provider, for the messages
+function account_simple_examples () {
+  case "$1" in
+    zendesk) echo "connect-zendesk-source, fm-zendesk-source" ;;
+    jira) echo "connect-jira-source, fm-jira-source" ;;
+    marketo) echo "connect-marketo-source, fm-marketo-sink" ;;
+    clickhouse) echo "connect-clickhouse-sink, fm-clickhouse-sink" ;;
+    couchbase) echo "fm-couchbase-sink, fm-couchbase-source" ;;
+    mongodb-atlas) echo "fm-mongodb-atlas-sink, fm-mongodb-atlas-source" ;;
+    pagerduty) echo "connect-pagerduty-sink" ;;
+  esac
+}
+
+function account_simple_strip_url () {
+  echo "$1" | sed -E 's|^[a-z+]+://||; s|/.*$||'
+}
+
+# normalizations: the form the examples use
+function account_simple_normalize_zendesk () { ZENDESK_URL="https://$(account_simple_strip_url "$ZENDESK_URL")"; }
+function account_simple_normalize_jira () { JIRA_URL="https://$(account_simple_strip_url "$JIRA_URL")"; }
+function account_simple_normalize_marketo () { MARKETO_ENDPOINT_URL="https://$(account_simple_strip_url "$MARKETO_ENDPOINT_URL")"; }
+function account_simple_normalize_clickhouse () { CLICKHOUSE_CLOUD_HOSTNAME="$(account_simple_strip_url "$CLICKHOUSE_CLOUD_HOSTNAME" | sed -E 's/:[0-9]+$//')"; }
+function account_simple_normalize_couchbase () { COUCHBASE_HOSTNAME="$(account_simple_strip_url "$COUCHBASE_HOSTNAME")"; }
+function account_simple_normalize_mongodb-atlas () { MONGODB_ATLAS_HOST="$(account_simple_strip_url "$MONGODB_ATLAS_HOST")"; }
+function account_simple_normalize_pagerduty () { :; }
+
+# GET with curl: sets account_http_code and account_body (not in a $( ))
+function account_simple_get () {
+  local body_file
+  body_file=$(mktemp)
+  account_http_code=$(curl -sS -m "${ACCOUNT_HTTP_TIMEOUT:-30}" -o "$body_file" -w '%{http_code}' "$@" 2> /dev/null) || account_http_code="000"
+  account_body=$(cat "$body_file")
+  rm -f "$body_file"
+}
+
+# probes: print one line per item, return 1 when the login itself fails
+function account_simple_probe_zendesk () {
+  if [[ "$ZENDESK_USERNAME" != */token ]]
+  then
+    account_warn "ZENDESK_USERNAME" "\"$ZENDESK_USERNAME\" does not end with /token: with an API token, Zendesk expects <email>/token"
+  fi
+  account_simple_get -u "$ZENDESK_USERNAME:$ZENDESK_PASSWORD" "$ZENDESK_URL/api/v2/users/me.json"
+  local user_id
+  user_id=$(echo "$account_body" | jq -r '.user.id // empty' 2> /dev/null)
+  if [ "$account_http_code" == "200" ] && [ -n "$user_id" ] && [ "$user_id" != "null" ]
+  then
+    account_ok "Login" "$(echo "$account_body" | jq -r '"\(.user.email) (\(.user.role))"')"
+  elif [ "$account_http_code" == "000" ]
+  then
+    account_ko "Login" "nothing answers at $ZENDESK_URL: wrong URL, or the account was deleted"; return 1
+  elif [ "$account_http_code" == "401" ] || [ "$account_http_code" == "200" ]
+  then
+    account_ko "Login" "Zendesk refused the credentials: wrong API token, the /token suffix missing in ZENDESK_USERNAME, or token access disabled (Admin Center > Apps and integrations > Zendesk API)"; return 1
+  else
+    account_ko "Login" "HTTP $account_http_code $(echo "$account_body" | jq -r '.error // .description // empty' 2> /dev/null | head -1): a suspended account (trial ended) answers 402 or 403"; return 1
+  fi
+  account_simple_get -u "$ZENDESK_USERNAME:$ZENDESK_PASSWORD" "$ZENDESK_URL/api/v2/tickets.json?per_page=1"
+  if [ "$account_http_code" == "200" ]
+  then
+    account_ok "Tickets" "readable ($(echo "$account_body" | jq -r '.count // "?"') tickets)"
+  else
+    account_ko "Tickets" "HTTP $account_http_code: the user can't read tickets (the sources read them)"
+  fi
+}
+
+function account_simple_probe_jira () {
+  account_simple_get -u "$JIRA_USERNAME:$JIRA_API_TOKEN" -H "Accept: application/json" "$JIRA_URL/rest/api/3/myself"
+  case "$account_http_code" in
+    200) account_ok "Login" "$(echo "$account_body" | jq -r '"\(.emailAddress // .displayName) (\(.accountType))"')" ;;
+    401) account_ko "Login" "Atlassian refused the credentials: wrong or expired JIRA_API_TOKEN (API tokens expire, at most one year), or JIRA_USERNAME is not the email of its account"; return 1 ;;
+    000) account_ko "Login" "nothing answers at $JIRA_URL: wrong site"; return 1 ;;
+    404) account_ko "Login" "HTTP 404: $JIRA_URL is not a Jira Cloud site (or the site was deleted)"; return 1 ;;
+    *) account_ko "Login" "HTTP $account_http_code"; return 1 ;;
+  esac
+  account_simple_get -u "$JIRA_USERNAME:$JIRA_API_TOKEN" -H "Accept: application/json" "$JIRA_URL/rest/api/3/project/search?maxResults=50"
+  local total
+  total=$(echo "$account_body" | jq -r '.total // 0' 2> /dev/null)
+  if [ "$account_http_code" == "200" ] && [ "${total:-0}" != "0" ]
+  then
+    account_ok "Projects" "$total visible ($(echo "$account_body" | jq -r '[.values[].key] | .[0:5] | join(", ")'))"
+  else
+    account_ko "Projects" "none visible to $JIRA_USERNAME: the sources read the issues of a project"
+  fi
+}
+
+function account_simple_probe_marketo () {
+  account_simple_get "$MARKETO_ENDPOINT_URL/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET"
+  local token
+  token=$(echo "$account_body" | jq -r '.access_token // empty' 2> /dev/null)
+  if [ -n "$token" ]
+  then
+    account_ok "Login" "OAuth token of the LaunchPoint service (munchkin $(echo "$MARKETO_ENDPOINT_URL" | sed -E 's#https?://([^.]*)\..*#\1#'))"
+  elif [ "$account_http_code" == "000" ]
+  then
+    account_ko "Login" "nothing answers at $MARKETO_ENDPOINT_URL: wrong endpoint (Admin > Web Services > REST API, without /rest)"; return 1
+  else
+    account_ko "Login" "$(echo "$account_body" | jq -r '"\(.error // "HTTP '"$account_http_code"'") \(.error_description // "")"' 2> /dev/null | head -1): wrong MARKETO_CLIENT_ID / MARKETO_CLIENT_SECRET, or the sandbox has expired"; return 1
+  fi
+  # the token goes in a header: Marketo refuses it as an access_token query parameter (603 Access denied)
+  account_simple_get -H "Authorization: Bearer $token" "$MARKETO_ENDPOINT_URL/rest/v1/leads/describe.json"
+  if [ "$(echo "$account_body" | jq -r '.success' 2> /dev/null)" == "true" ]
+  then
+    account_ok "Leads API" "describe answers"
+  else
+    local code
+    code=$(echo "$account_body" | jq -r '.errors[0].code // empty' 2> /dev/null)
+    case "$code" in
+      603) account_ko "Leads API" "603 access denied: the API user of the LaunchPoint service needs a role with Read-Write Lead (Admin > Users & Roles)" ;;
+      *) account_ko "Leads API" "${code:-HTTP $account_http_code} $(echo "$account_body" | jq -r '.errors[0].message // empty' 2> /dev/null)" ;;
+    esac
+  fi
+}
+
+function account_simple_probe_clickhouse () {
+  # an idle service wakes up on the first query: up to a minute
+  ACCOUNT_HTTP_TIMEOUT=90 account_simple_get -H "X-ClickHouse-User: $CLICKHOUSE_CLOUD_USERNAME" -H "X-ClickHouse-Key: $CLICKHOUSE_CLOUD_PASSWORD" \
+    "https://$CLICKHOUSE_CLOUD_HOSTNAME:8443/?query=SELECT%20version()"
+  case "$account_http_code" in
+    200) account_ok "Login" "ClickHouse $(echo "$account_body" | head -1) answers SELECT on port 8443 (an idle service is woken up by it)" ;;
+    000) account_ko "Login" "nothing answers at $CLICKHOUSE_CLOUD_HOSTNAME:8443: wrong hostname, a service deleted or stopped (trial ended), or an IP access list that does not allow this machine"; return 1 ;;
+    *)
+      if echo "$account_body" | grep -qi "authentication failed\|AUTHENTICATION_FAILED\|password is incorrect"
+      then
+        account_ko "Login" "authentication failed: wrong CLICKHOUSE_CLOUD_USERNAME / CLICKHOUSE_CLOUD_PASSWORD"
+      else
+        account_ko "Login" "HTTP $account_http_code $(echo "$account_body" | head -1 | cut -c1-160)"
+      fi
+      return 1 ;;
+  esac
+  account_warn "IP access list" "the fully managed sink connects from Confluent Cloud IPs: the service must allow them (or 0.0.0.0/0)"
+}
+
+function account_simple_probe_couchbase () {
+  if [ -z "$COUCHBASE_CAPELLA_API_KEY" ] || [ -z "$COUCHBASE_CAPELLA_ORG_ID" ] || [ -z "$COUCHBASE_CAPELLA_PROJECT_ID" ] || [ -z "$COUCHBASE_CAPELLA_CLUSTER_ID" ]
+  then
+    account_warn "Capella API" "COUCHBASE_CAPELLA_* not all set: cluster state and allowed IPs not checked, a paused free tier cluster is not turned back on"
+  else
+    local base="https://cloudapi.cloud.couchbase.com/v4/organizations/$COUCHBASE_CAPELLA_ORG_ID/projects/$COUCHBASE_CAPELLA_PROJECT_ID"
+    local cluster_path="clusters/$COUCHBASE_CAPELLA_CLUSTER_ID"
+    if [ "${COUCHBASE_CAPELLA_FREE_TIER:-true}" == "true" ]
+    then
+      cluster_path="clusters/freeTier/$COUCHBASE_CAPELLA_CLUSTER_ID"
+    fi
+    account_simple_get -H "Authorization: Bearer $COUCHBASE_CAPELLA_API_KEY" "$base/$cluster_path"
+    local state
+    state=$(echo "$account_body" | jq -r '.currentState // empty' 2> /dev/null)
+    case "$account_http_code:$state" in
+      200:healthy) account_ok "Cluster" "$(echo "$account_body" | jq -r '.name') is healthy" ;;
+      200:turnedOff) account_ko "Cluster" "$(echo "$account_body" | jq -r '.name') is turned off (free tier clusters pause after 72 hours without use): playground account couchbase setup turns it back on" ;;
+      200:*) account_warn "Cluster" "$(echo "$account_body" | jq -r '.name') is $state" ;;
+      401:*|403:*) account_ko "Capella API" "HTTP $account_http_code: COUCHBASE_CAPELLA_API_KEY is wrong or expired, or has no access to the project" ;;
+      *) account_ko "Capella API" "HTTP $account_http_code $(echo "$account_body" | jq -r '.message // empty' 2> /dev/null): check COUCHBASE_CAPELLA_ORG_ID / _PROJECT_ID / _CLUSTER_ID (COUCHBASE_CAPELLA_FREE_TIER=false for a paid cluster)" ;;
+    esac
+    account_simple_get -H "Authorization: Bearer $COUCHBASE_CAPELLA_API_KEY" "$base/$cluster_path/allowedcidrs"
+    if [ "$account_http_code" == "200" ]
+    then
+      local cidrs
+      cidrs=$(echo "$account_body" | jq -r '[.data[]?.cidr] | join(", ")' 2> /dev/null)
+      if echo "$cidrs" | grep -q "0.0.0.0/0"
+      then
+        account_ok "Allowed IPs" "$cidrs"
+      else
+        account_warn "Allowed IPs" "${cidrs:-none}: the fully managed connectors connect from Confluent Cloud IPs, they must be allowed (or 0.0.0.0/0)"
+      fi
+    fi
+  fi
+  account_warn "Database user" "$COUCHBASE_USERNAME: its password can't be checked without a Couchbase SDK, the connector tells"
+}
+
+function account_simple_probe_mongodb-atlas () {
+  if command -v dig > /dev/null 2>&1
+  then
+    if [ -n "$(dig +short SRV "_mongodb._tcp.$MONGODB_ATLAS_HOST" 2> /dev/null)" ]
+    then
+      account_ok "Host" "$MONGODB_ATLAS_HOST has its mongodb+srv record"
+    else
+      account_ko "Host" "no _mongodb._tcp SRV record for $MONGODB_ATLAS_HOST: wrong host (Atlas > Connect > Drivers, the host after mongodb+srv://), or the cluster was deleted"; return 1
+    fi
+  fi
+  if ! docker info > /dev/null 2>&1
+  then
+    account_warn "Login" "not checked: needs docker (mongosh in the mongo image)"
+    return 0
+  fi
+  local out
+  out=$(docker run --quiet --rm -i mongo:latest mongosh "mongodb+srv://$MONGODB_ATLAS_HOST/" --apiVersion 1 --quiet \
+    --username "$MONGODB_ATLAS_USER" --password "$MONGODB_ATLAS_PASSWORD" --eval 'db.runCommand({ping: 1}).ok' 2>&1 < /dev/null) || true
+  if echo "$out" | tail -1 | grep -qx "1"
+  then
+    account_ok "Login" "$MONGODB_ATLAS_USER can connect (ping)"
+  elif echo "$out" | grep -qi "bad auth\|Authentication failed"
+  then
+    account_ko "Login" "authentication failed: wrong MONGODB_ATLAS_USER / MONGODB_ATLAS_PASSWORD (a database user, Atlas > Database Access)"; return 1
+  elif echo "$out" | grep -qi "Server selection timed out\|ECONNREFUSED\|ETIMEDOUT\|timed out"
+  then
+    account_ko "Login" "no answer from the cluster: paused (M0 clusters pause after 60 days without connections: Resume in Atlas), or the IP access list does not allow this machine"; return 1
+  else
+    account_ko "Login" "$(echo "$out" | grep -v '^$' | tail -1 | cut -c1-160)"; return 1
+  fi
+  account_warn "IP access list" "the fully managed connectors connect from Confluent Cloud IPs: Atlas > Network Access must allow them (or 0.0.0.0/0)"
+}
+
+function account_simple_probe_pagerduty () {
+  local headers=(-H "Authorization: Token token=$PAGERDUTY_API_KEY" -H "Accept: application/vnd.pagerduty+json;version=2")
+  account_simple_get "${headers[@]}" "https://api.pagerduty.com/services/$PAGERDUTY_SERVICE_ID"
+  case "$account_http_code" in
+    200) account_ok "Service" "$(echo "$account_body" | jq -r '"\(.service.name) (\(.service.status))"')" ;;
+    401) account_ko "Login" "PagerDuty refused PAGERDUTY_API_KEY: wrong or revoked key (a REST API key, not an integration key)"; return 1 ;;
+    404) account_ko "Service" "no service $PAGERDUTY_SERVICE_ID: wrong PAGERDUTY_SERVICE_ID, or the service was deleted" ;;
+    000) account_ko "Login" "api.pagerduty.com is not reachable from this machine"; return 1 ;;
+    *) account_ko "Service" "HTTP $account_http_code $(echo "$account_body" | jq -r '.error.message // empty' 2> /dev/null)" ;;
+  esac
+  account_simple_get "${headers[@]}" --get --data-urlencode "query=$PAGERDUTY_USER_EMAIL" "https://api.pagerduty.com/users"
+  if [ "$account_http_code" == "200" ] && echo "$account_body" | jq -e --arg e "$PAGERDUTY_USER_EMAIL" '[.users[]? | select((.email | ascii_downcase) == ($e | ascii_downcase))] | length > 0' > /dev/null 2>&1
+  then
+    account_ok "User" "$PAGERDUTY_USER_EMAIL"
+  else
+    account_ko "User" "$PAGERDUTY_USER_EMAIL is not a user of the account: incidents need the From email of a user"
+  fi
+}
+
+# Loads the variables of a provider (environment, then the active secrets profile) as globals
+function account_simple_load () {
+  local p="$1" var kind prompt need profile
+  profile="$(get_active_secret_profile)"
+  account_simple_missing=""
+  while IFS='|' read -r var kind prompt need
+  do
+    printf -v "$var" '%s' "$(secret_get "$var" "$profile" 2> /dev/null || true)"
+    if [ -z "${!var}" ] && [ "$need" == "required" ]
+    then
+      account_simple_missing="$account_simple_missing $var"
+    fi
+  done < <(account_simple_spec_$p)
+}
+
+function account_simple_check () {
+  local p="$1"
+  for tool in jq curl
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+  account_simple_load "$p"
+  if [ -n "$account_simple_missing" ]
+  then
+    logerror "❌ not set:$account_simple_missing (needed by $(account_simple_examples "$p"))"
+    logerror "👉 playground account $p setup"
+    exit 1
+  fi
+  local var entry saved=()
+  while IFS='|' read -r var _; do saved+=("$var=${!var}"); done < <(account_simple_spec_$p)
+  account_simple_normalize_$p
+  for entry in "${saved[@]}"
+  do
+    var="${entry%%=*}"
+    if [ "${entry#*=}" != "${!var}" ]
+    then
+      logwarn "⚠️ $var is \"${entry#*=}\": the examples need \"${!var}\"        👉 playground account $p setup"
+    fi
+  done
+  log "🔑 $p account of $(account_simple_examples "$p")"
+  account_simple_failed=0
+  if ! account_simple_probe_$p
+  then
+    exit 1
+  fi
+  echo ""
+  if [ $account_simple_failed -gt 0 ]
+  then
+    logwarn "⚠️ $account_simple_failed check(s) failed: $(account_simple_examples "$p") would fail"
+  else
+    log "🎉 the $p account is ready for $(account_simple_examples "$p")"
+  fi
+}
+
+function account_simple_setup () {
+  local p="$1" no_store="$2" var kind prompt need value profile
+  profile="$(get_active_secret_profile)"
+  for tool in jq curl
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+  # values: environment, then the secrets store, else asked for
+  while IFS='|' read -r var kind prompt need
+  do
+    value="$(secret_get "$var" "$profile" 2> /dev/null || true)"
+    if [ -z "$value" ] && [ -t 0 ]
+    then
+      if [ "$kind" == "secret" ]
+      then
+        read -r -s -p "$prompt: " value < /dev/tty
+        echo "" >&2
+      else
+        read -r -p "$prompt: " value < /dev/tty
+      fi
+    fi
+    if [ -z "$value" ] && [ "$need" == "required" ]
+    then
+      logerror "❌ $var is not set: export it, or run this in a terminal to be asked for it"
+      exit 1
+    fi
+    printf -v "$var" '%s' "$value"
+    export "$var"
+  done < <(account_simple_spec_$p)
+  account_simple_normalize_$p
+
+  # a paused free tier Capella cluster: turn it on first, like the examples
+  if [ "$p" == "couchbase" ] && [ -n "$COUCHBASE_CAPELLA_API_KEY" ] && [ -n "$COUCHBASE_CAPELLA_CLUSTER_ID" ]
+  then
+    couchbase_capella_ensure_cluster_on
+  fi
+
+  log "🔑 validating the $p account"
+  account_simple_failed=0
+  if ! account_simple_probe_$p
+  then
+    logerror "❌ nothing stored"
+    exit 1
+  fi
+
+  if [[ -n "$no_store" ]]
+  then
+    log "📋 --no-store, the values to export:"
+    while IFS='|' read -r var kind prompt need
+    do
+      [ -n "${!var}" ] && echo "export $var=\"${!var}\""
+    done < <(account_simple_spec_$p)
+  else
+    local stored=""
+    while IFS='|' read -r var kind prompt need
+    do
+      if [ -n "${!var}" ]
+      then
+        playground secrets set "$var" --value "${!var}" "--$kind" < /dev/null
+        stored="$stored $var"
+      fi
+    done < <(account_simple_spec_$p)
+    log "💾 stored$stored"
+  fi
+  if [ $account_simple_failed -gt 0 ]
+  then
+    logwarn "⚠️ $account_simple_failed check(s) failed: $(account_simple_examples "$p") would fail"
+  fi
+  log "🩺 check it any time with: playground account $p check"
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""

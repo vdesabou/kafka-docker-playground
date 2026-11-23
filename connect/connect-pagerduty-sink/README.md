@@ -6,6 +6,8 @@ Quickly test the [PagerDuty Sink](https://docs.confluent.io/kafka-connectors/pag
 
 ## Prerequisites
 
+> `playground account pagerduty setup` validates and stores the values below, `playground account pagerduty check` tells you in a few seconds whether they still work (expired, paused, idle…), see [Accounts of the examples](https://kafka-docker-playground.io/#/accounts?id=🧾-the-saas-accounts).
+
 | Variable | Description |
 | --- | --- |
 | `PAGERDUTY_USER_EMAIL` | Email of your PagerDuty user (used as `fromEmail` of the incidents) |

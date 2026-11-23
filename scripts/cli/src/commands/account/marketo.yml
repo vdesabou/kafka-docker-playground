@@ -1,0 +1,37 @@
+name: marketo
+expose: always
+help: |-
+  📣 Set up and check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)
+
+    setup   validate and store MARKETO_ENDPOINT_URL, MARKETO_CLIENT_ID and MARKETO_CLIENT_SECRET
+    check   verify them in a few seconds: the OAuth token of the LaunchPoint service and the leads API (603: missing API role)
+
+  Nothing to configure in Marketo: these examples only need the values,
+  in the right form, still valid (sandboxes expire).
+
+  📖 https://kafka-docker-playground.io/#/accounts
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)
+
+    Takes MARKETO_ENDPOINT_URL, MARKETO_CLIENT_ID and MARKETO_CLIENT_SECRET from the environment, then the secrets store, else asks
+    for them (secrets without echo), puts them in the form the examples use,
+    validates them (the OAuth token of the LaunchPoint service and the leads API (603: missing API role)), then stores them with 'playground secrets set'.
+    Nothing is stored when the login fails.
+  flags:
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account marketo setup
+- name: check
+  help: |-
+    🩺 Check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)
+
+    Read-only, a few seconds: the OAuth token of the LaunchPoint service and the leads API (603: missing API role). Each failure says why (sandboxes expire...)
+    and which examples it breaks.
+
+    Exits with 1 when the login fails.
+  examples:
+  - playground account marketo check

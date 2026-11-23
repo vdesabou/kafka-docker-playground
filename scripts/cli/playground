@@ -121,6 +121,13 @@ playground_usage() {
   printf "  %s   ☁️ Set up the AWS credentials of the AWS examples, and check them\n" "$(green "account aws")                               "
   printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "account servicenow")                        "
   printf "  %s   ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n" "$(green "account databricks")                        "
+  printf "  %s   🎫 Set up and check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n" "$(green "account zendesk")                           "
+  printf "  %s   📋 Set up and check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n" "$(green "account jira")                              "
+  printf "  %s   📣 Set up and check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n" "$(green "account marketo")                           "
+  printf "  %s   🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n" "$(green "account clickhouse")                        "
+  printf "  %s   🛋️ Set up and check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n" "$(green "account couchbase")                         "
+  printf "  %s   🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n" "$(green "account mongodb-atlas")                     "
+  printf "  %s   🛎️ Set up and check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n" "$(green "account pagerduty")                         "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -3649,7 +3656,7 @@ playground_secrets_lint_usage() {
 playground_account_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account\n\n"
-    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n    databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 All the providers, how they behave, and the guide of each one:\n  https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n    databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n  \n    zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty\n                 a few values each: validated, stored, checked (expired, paused,\n  idle)\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 All the providers, how they behave, and the guide of each one:\n  https://kafka-docker-playground.io/#/accounts\n\n"
   else
     printf "playground account - ☁️ Set up and check the accounts the examples run against\n\n"
   fi
@@ -3660,29 +3667,50 @@ playground_account_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n" "$(green "ccloud")          "
-  printf "  %s   🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n" "$(green "ccloud setup")    "
-  printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "salesforce")      "
-  printf "  %s   🛠️ Configure a Salesforce org for the Salesforce examples\n" "$(green "salesforce setup")"
-  printf "  %s   🩺 Check that the stored Salesforce credentials work\n" "$(green "salesforce check")"
-  printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "gcp")             "
-  printf "  %s   🛠️ Configure a Google Cloud project for the GCP examples\n" "$(green "gcp setup")       "
-  printf "  %s   🩺 Check that the stored GCP key works for the GCP examples\n" "$(green "gcp check")       "
-  printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "azure")           "
-  printf "  %s   🛠️ Configure an Azure subscription for the Azure examples\n" "$(green "azure setup")     "
-  printf "  %s   🩺 Check that the stored Azure service principal works for the Azure examples\n" "$(green "azure check")     "
-  printf "  %s   ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n" "$(green "snowflake")       "
-  printf "  %s   🛠️ Validate and store the Snowflake login of the Snowflake examples\n" "$(green "snowflake setup") "
-  printf "  %s   🩺 Check that the stored Snowflake login works for the Snowflake examples\n" "$(green "snowflake check") "
-  printf "  %s   ☁️ Set up the AWS credentials of the AWS examples, and check them\n" "$(green "aws")             "
-  printf "  %s   🛠️ Validate and store the AWS credentials of the AWS examples\n" "$(green "aws setup")       "
-  printf "  %s   🩺 Check the AWS credentials of the AWS examples\n" "$(green "aws check")       "
-  printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "servicenow")      "
-  printf "  %s   🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow setup")"
-  printf "  %s   🩺 Check the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow check")"
-  printf "  %s   ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n" "$(green "databricks")      "
-  printf "  %s   🛠️ Validate and store the Databricks workspace of the Databricks examples\n" "$(green "databricks setup")"
-  printf "  %s   🩺 Check the Databricks workspace of the Databricks examples\n" "$(green "databricks check")"
+  printf "  %s   🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n" "$(green "ccloud")             "
+  printf "  %s   🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n" "$(green "ccloud setup")       "
+  printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "salesforce")         "
+  printf "  %s   🛠️ Configure a Salesforce org for the Salesforce examples\n" "$(green "salesforce setup")   "
+  printf "  %s   🩺 Check that the stored Salesforce credentials work\n" "$(green "salesforce check")   "
+  printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "gcp")                "
+  printf "  %s   🛠️ Configure a Google Cloud project for the GCP examples\n" "$(green "gcp setup")          "
+  printf "  %s   🩺 Check that the stored GCP key works for the GCP examples\n" "$(green "gcp check")          "
+  printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "azure")              "
+  printf "  %s   🛠️ Configure an Azure subscription for the Azure examples\n" "$(green "azure setup")        "
+  printf "  %s   🩺 Check that the stored Azure service principal works for the Azure examples\n" "$(green "azure check")        "
+  printf "  %s   ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n" "$(green "snowflake")          "
+  printf "  %s   🛠️ Validate and store the Snowflake login of the Snowflake examples\n" "$(green "snowflake setup")    "
+  printf "  %s   🩺 Check that the stored Snowflake login works for the Snowflake examples\n" "$(green "snowflake check")    "
+  printf "  %s   ☁️ Set up the AWS credentials of the AWS examples, and check them\n" "$(green "aws")                "
+  printf "  %s   🛠️ Validate and store the AWS credentials of the AWS examples\n" "$(green "aws setup")          "
+  printf "  %s   🩺 Check the AWS credentials of the AWS examples\n" "$(green "aws check")          "
+  printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "servicenow")         "
+  printf "  %s   🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow setup")   "
+  printf "  %s   🩺 Check the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow check")   "
+  printf "  %s   ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n" "$(green "databricks")         "
+  printf "  %s   🛠️ Validate and store the Databricks workspace of the Databricks examples\n" "$(green "databricks setup")   "
+  printf "  %s   🩺 Check the Databricks workspace of the Databricks examples\n" "$(green "databricks check")   "
+  printf "  %s   🎫 Set up and check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n" "$(green "zendesk")            "
+  printf "  %s   🛠️ Validate and store the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n" "$(green "zendesk setup")      "
+  printf "  %s   🩺 Check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n" "$(green "zendesk check")      "
+  printf "  %s   📋 Set up and check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n" "$(green "jira")               "
+  printf "  %s   🛠️ Validate and store the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n" "$(green "jira setup")         "
+  printf "  %s   🩺 Check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n" "$(green "jira check")         "
+  printf "  %s   📣 Set up and check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n" "$(green "marketo")            "
+  printf "  %s   🛠️ Validate and store the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n" "$(green "marketo setup")      "
+  printf "  %s   🩺 Check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n" "$(green "marketo check")      "
+  printf "  %s   🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n" "$(green "clickhouse")         "
+  printf "  %s   🛠️ Validate and store the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n" "$(green "clickhouse setup")   "
+  printf "  %s   🩺 Check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n" "$(green "clickhouse check")   "
+  printf "  %s   🛋️ Set up and check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n" "$(green "couchbase")          "
+  printf "  %s   🛠️ Validate and store the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n" "$(green "couchbase setup")    "
+  printf "  %s   🩺 Check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n" "$(green "couchbase check")    "
+  printf "  %s   🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n" "$(green "mongodb-atlas")      "
+  printf "  %s   🛠️ Validate and store the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n" "$(green "mongodb-atlas setup")"
+  printf "  %s   🩺 Check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n" "$(green "mongodb-atlas check")"
+  printf "  %s   🛎️ Set up and check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n" "$(green "pagerduty")          "
+  printf "  %s   🛠️ Validate and store the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n" "$(green "pagerduty setup")    "
+  printf "  %s   🩺 Check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n" "$(green "pagerduty check")    "
   echo
 
   # :command.long_usage
@@ -4785,6 +4813,720 @@ playground_account_databricks_check_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground account databricks check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_zendesk_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account zendesk\n\n"
+    printf "  🎫 Set up and check the Zendesk account of the Zendesk examples\n  (connect-zendesk-source, fm-zendesk-source)\n  \n    setup   validate and store ZENDESK_URL, ZENDESK_USERNAME and\n  ZENDESK_PASSWORD\n    check   verify them in a few seconds: the login (users/me, the <email>/token\n  form) and the tickets the sources read\n  \n  Nothing to configure in Zendesk: these examples only need the values,\n  in the right form, still valid (a trial account ends after 14 days).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account zendesk - 🎫 Set up and check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account zendesk COMMAND\n"
+  printf "  playground account zendesk [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_zendesk_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account zendesk setup\n\n"
+    printf "  🛠️ Validate and store the Zendesk account of the Zendesk examples\n  (connect-zendesk-source, fm-zendesk-source)\n  \n  Takes ZENDESK_URL, ZENDESK_USERNAME and ZENDESK_PASSWORD from the environment,\n  then the secrets store, else asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (the login (users/me, the <email>/token form) and the tickets\n  the sources read), then stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account zendesk setup - 🛠️ Validate and store the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account zendesk setup [OPTIONS]\n"
+  printf "  playground account zendesk setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account zendesk setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_zendesk_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account zendesk check\n\n"
+    printf "  🩺 Check the Zendesk account of the Zendesk examples (connect-zendesk-source,\n  fm-zendesk-source)\n  \n  Read-only, a few seconds: the login (users/me, the <email>/token form) and the\n  tickets the sources read. Each failure says why (a trial account ends after 14\n  days...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account zendesk check - 🩺 Check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account zendesk check\n"
+  printf "  playground account zendesk check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account zendesk check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_jira_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account jira\n\n"
+    printf "  📋 Set up and check the Jira account of the Jira examples (connect-jira-source,\n  fm-jira-source)\n  \n    setup   validate and store JIRA_URL, JIRA_USERNAME and JIRA_API_TOKEN\n    check   verify them in a few seconds: the login (myself) and the projects\n  the sources read\n  \n  Nothing to configure in Jira: these examples only need the values,\n  in the right form, still valid (API tokens expire).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account jira - 📋 Set up and check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account jira COMMAND\n"
+  printf "  playground account jira [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_jira_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account jira setup\n\n"
+    printf "  🛠️ Validate and store the Jira account of the Jira examples\n  (connect-jira-source, fm-jira-source)\n  \n  Takes JIRA_URL, JIRA_USERNAME and JIRA_API_TOKEN from the environment, then\n  the secrets store, else asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (the login (myself) and the projects the sources read), then\n  stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account jira setup - 🛠️ Validate and store the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account jira setup [OPTIONS]\n"
+  printf "  playground account jira setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account jira setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_jira_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account jira check\n\n"
+    printf "  🩺 Check the Jira account of the Jira examples (connect-jira-source,\n  fm-jira-source)\n  \n  Read-only, a few seconds: the login (myself) and the projects the sources\n  read. Each failure says why (API tokens expire...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account jira check - 🩺 Check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account jira check\n"
+  printf "  playground account jira check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account jira check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_marketo_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account marketo\n\n"
+    printf "  📣 Set up and check the Marketo account of the Marketo examples\n  (connect-marketo-source, fm-marketo-sink)\n  \n    setup   validate and store MARKETO_ENDPOINT_URL, MARKETO_CLIENT_ID and\n  MARKETO_CLIENT_SECRET\n    check   verify them in a few seconds: the OAuth token of the LaunchPoint\n  service and the leads API (603: missing API role)\n  \n  Nothing to configure in Marketo: these examples only need the values,\n  in the right form, still valid (sandboxes expire).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account marketo - 📣 Set up and check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account marketo COMMAND\n"
+  printf "  playground account marketo [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_marketo_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account marketo setup\n\n"
+    printf "  🛠️ Validate and store the Marketo account of the Marketo examples\n  (connect-marketo-source, fm-marketo-sink)\n  \n  Takes MARKETO_ENDPOINT_URL, MARKETO_CLIENT_ID and MARKETO_CLIENT_SECRET from\n  the environment, then the secrets store, else asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (the OAuth token of the LaunchPoint service and the leads API\n  (603: missing API role)), then stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account marketo setup - 🛠️ Validate and store the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account marketo setup [OPTIONS]\n"
+  printf "  playground account marketo setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account marketo setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_marketo_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account marketo check\n\n"
+    printf "  🩺 Check the Marketo account of the Marketo examples (connect-marketo-source,\n  fm-marketo-sink)\n  \n  Read-only, a few seconds: the OAuth token of the LaunchPoint service and the\n  leads API (603: missing API role). Each failure says why (sandboxes expire...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account marketo check - 🩺 Check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account marketo check\n"
+  printf "  playground account marketo check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account marketo check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_clickhouse_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account clickhouse\n\n"
+    printf "  🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples\n  (connect-clickhouse-sink, fm-clickhouse-sink)\n  \n    setup   validate and store CLICKHOUSE_CLOUD_HOSTNAME,\n  CLICKHOUSE_CLOUD_USERNAME and CLICKHOUSE_CLOUD_PASSWORD\n    check   verify them in a few seconds: a SELECT over HTTPS (it also wakes an\n  idle service up)\n  \n  Nothing to configure in ClickHouse Cloud: these examples only need the values,\n  in the right form, still valid (services idle when unused, trials end).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account clickhouse - 🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account clickhouse COMMAND\n"
+  printf "  playground account clickhouse [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_clickhouse_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account clickhouse setup\n\n"
+    printf "  🛠️ Validate and store the ClickHouse Cloud account of the ClickHouse examples\n  (connect-clickhouse-sink, fm-clickhouse-sink)\n  \n  Takes CLICKHOUSE_CLOUD_HOSTNAME, CLICKHOUSE_CLOUD_USERNAME and\n  CLICKHOUSE_CLOUD_PASSWORD from the environment, then the secrets store, else\n  asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (a SELECT over HTTPS (it also wakes an idle service up)), then\n  stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account clickhouse setup - 🛠️ Validate and store the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account clickhouse setup [OPTIONS]\n"
+  printf "  playground account clickhouse setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account clickhouse setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_clickhouse_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account clickhouse check\n\n"
+    printf "  🩺 Check the ClickHouse Cloud account of the ClickHouse examples\n  (connect-clickhouse-sink, fm-clickhouse-sink)\n  \n  Read-only, a few seconds: a SELECT over HTTPS (it also wakes an idle service\n  up). Each failure says why (services idle when unused, trials end...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account clickhouse check - 🩺 Check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account clickhouse check\n"
+  printf "  playground account clickhouse check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account clickhouse check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_couchbase_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account couchbase\n\n"
+    printf "  🛋️ Set up and check the Couchbase Capella account of the Couchbase examples\n  (fm-couchbase-sink, fm-couchbase-source)\n  \n    setup   validate and store COUCHBASE_HOSTNAME, COUCHBASE_USERNAME,\n  COUCHBASE_PASSWORD and the optional COUCHBASE_CAPELLA_* (API key,\n  organization, project, cluster)\n    check   verify them in a few seconds: the cluster state and its allowed IPs\n  through the Capella API\n  \n  Nothing to configure in Couchbase Capella: these examples only need the\n  values,\n  in the right form, still valid (free tier clusters are turned off after 72\n  hours without use: setup turns them back on).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account couchbase - 🛋️ Set up and check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account couchbase COMMAND\n"
+  printf "  playground account couchbase [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_couchbase_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account couchbase setup\n\n"
+    printf "  🛠️ Validate and store the Couchbase Capella account of the Couchbase examples\n  (fm-couchbase-sink, fm-couchbase-source)\n  \n  Takes COUCHBASE_HOSTNAME, COUCHBASE_USERNAME, COUCHBASE_PASSWORD and the\n  optional COUCHBASE_CAPELLA_* (API key, organization, project, cluster) from\n  the environment, then the secrets store, else asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (the cluster state and its allowed IPs through the Capella\n  API), then stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account couchbase setup - 🛠️ Validate and store the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account couchbase setup [OPTIONS]\n"
+  printf "  playground account couchbase setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account couchbase setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_couchbase_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account couchbase check\n\n"
+    printf "  🩺 Check the Couchbase Capella account of the Couchbase examples\n  (fm-couchbase-sink, fm-couchbase-source)\n  \n  Read-only, a few seconds: the cluster state and its allowed IPs through the\n  Capella API. Each failure says why (free tier clusters are turned off after 72\n  hours without use: setup turns them back on...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account couchbase check - 🩺 Check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account couchbase check\n"
+  printf "  playground account couchbase check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account couchbase check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_mongodb_atlas_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account mongodb-atlas\n\n"
+    printf "  🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples\n  (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n  \n    setup   validate and store MONGODB_ATLAS_HOST, MONGODB_ATLAS_USER and\n  MONGODB_ATLAS_PASSWORD\n    check   verify them in a few seconds: the mongodb+srv record of the host and\n  a ping with mongosh (mongo image)\n  \n  Nothing to configure in MongoDB Atlas: these examples only need the values,\n  in the right form, still valid (M0 clusters pause after 60 days without\n  connections).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account mongodb-atlas - 🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account mongodb-atlas COMMAND\n"
+  printf "  playground account mongodb-atlas [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_mongodb_atlas_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account mongodb-atlas setup\n\n"
+    printf "  🛠️ Validate and store the MongoDB Atlas account of the MongoDB Atlas examples\n  (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n  \n  Takes MONGODB_ATLAS_HOST, MONGODB_ATLAS_USER and MONGODB_ATLAS_PASSWORD from\n  the environment, then the secrets store, else asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (the mongodb+srv record of the host and a ping with mongosh\n  (mongo image)), then stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account mongodb-atlas setup - 🛠️ Validate and store the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account mongodb-atlas setup [OPTIONS]\n"
+  printf "  playground account mongodb-atlas setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account mongodb-atlas setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_mongodb_atlas_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account mongodb-atlas check\n\n"
+    printf "  🩺 Check the MongoDB Atlas account of the MongoDB Atlas examples\n  (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n  \n  Read-only, a few seconds: the mongodb+srv record of the host and a ping with\n  mongosh (mongo image). Each failure says why (M0 clusters pause after 60 days\n  without connections...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account mongodb-atlas check - 🩺 Check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account mongodb-atlas check\n"
+  printf "  playground account mongodb-atlas check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account mongodb-atlas check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_pagerduty_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account pagerduty\n\n"
+    printf "  🛎️ Set up and check the PagerDuty account of the PagerDuty example\n  (connect-pagerduty-sink)\n  \n    setup   validate and store PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID and\n  PAGERDUTY_USER_EMAIL\n    check   verify them in a few seconds: the service the incidents go to, and\n  the user that sends them\n  \n  Nothing to configure in PagerDuty: these examples only need the values,\n  in the right form, still valid (keys get revoked, services deleted).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+  else
+    printf "playground account pagerduty - 🛎️ Set up and check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account pagerduty COMMAND\n"
+  printf "  playground account pagerduty [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n" "$(green "setup")"
+  printf "  %s   🩺 Check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_pagerduty_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account pagerduty setup\n\n"
+    printf "  🛠️ Validate and store the PagerDuty account of the PagerDuty example\n  (connect-pagerduty-sink)\n  \n  Takes PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID and PAGERDUTY_USER_EMAIL from\n  the environment, then the secrets store, else asks\n  for them (secrets without echo), puts them in the form the examples use,\n  validates them (the service the incidents go to, and the user that sends\n  them), then stores them with 'playground secrets set'.\n  Nothing is stored when the login fails.\n\n"
+  else
+    printf "playground account pagerduty setup - 🛠️ Validate and store the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account pagerduty setup [OPTIONS]\n"
+  printf "  playground account pagerduty setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account pagerduty setup\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_pagerduty_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account pagerduty check\n\n"
+    printf "  🩺 Check the PagerDuty account of the PagerDuty example\n  (connect-pagerduty-sink)\n  \n  Read-only, a few seconds: the service the incidents go to, and the user that\n  sends them. Each failure says why (keys get revoked, services deleted...)\n  and which examples it breaks.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account pagerduty check - 🩺 Check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account pagerduty check\n"
+  printf "  playground account pagerduty check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account pagerduty check\n"
     echo
 
   fi
@@ -38690,6 +39432,416 @@ function databricks_explain_http () {
   esac
 }
 
+# ---------------------------------------------------------------------------
+# playground account <zendesk|jira|marketo|clickhouse|couchbase|mongodb-atlas|pagerduty> setup | check
+# Accounts with a few variables and nothing to configure: a table per provider (account_simple_spec_<p>), a
+# normalization (account_simple_normalize_<p>) and a probe (account_simple_probe_<p>), shared by setup and check.
+# ---------------------------------------------------------------------------
+
+ACCOUNT_GREEN='\033[0;32m'
+ACCOUNT_RED='\033[0;31m'
+ACCOUNT_YELLOW='\033[0;33m'
+ACCOUNT_NC='\033[0m'
+
+function account_ok () { echo -e "✅ ${ACCOUNT_GREEN}$1${ACCOUNT_NC}${2:+ $2}"; }
+function account_ko () { echo -e "❌ ${ACCOUNT_RED}$1${ACCOUNT_NC}${2:+: $2}"; account_simple_failed=$((account_simple_failed + 1)); }
+function account_warn () { echo -e "⚠️ ${ACCOUNT_YELLOW}$1${ACCOUNT_NC}${2:+: $2}"; }
+
+# spec lines: VARIABLE|plain or secret|prompt|required or optional
+function account_simple_spec_zendesk () {
+  echo "ZENDESK_URL|plain|🌐 Zendesk URL (https://<subdomain>.zendesk.com)|required"
+  echo "ZENDESK_USERNAME|plain|👤 user, as <email>/token for an API token|required"
+  echo "ZENDESK_PASSWORD|secret|🔐 API token|required"
+}
+function account_simple_spec_jira () {
+  echo "JIRA_URL|plain|🌐 Jira site (https://<site>.atlassian.net)|required"
+  echo "JIRA_USERNAME|plain|👤 email of the Atlassian account|required"
+  echo "JIRA_API_TOKEN|secret|🔐 API token (id.atlassian.com > Security > API tokens)|required"
+}
+function account_simple_spec_marketo () {
+  echo "MARKETO_ENDPOINT_URL|plain|🌐 REST endpoint (https://<munchkin-id>.mktorest.com, Admin > Web Services)|required"
+  echo "MARKETO_CLIENT_ID|plain|👤 client id of the LaunchPoint service|required"
+  echo "MARKETO_CLIENT_SECRET|secret|🔐 its client secret|required"
+}
+function account_simple_spec_clickhouse () {
+  echo "CLICKHOUSE_CLOUD_HOSTNAME|plain|🌐 hostname of the service (xxxx.<region>.<cloud>.clickhouse.cloud)|required"
+  echo "CLICKHOUSE_CLOUD_USERNAME|plain|👤 user (default)|required"
+  echo "CLICKHOUSE_CLOUD_PASSWORD|secret|🔐 its password|required"
+}
+function account_simple_spec_couchbase () {
+  echo "COUCHBASE_HOSTNAME|plain|🌐 Capella connection string, without couchbases:// (cb.xxxx.cloud.couchbase.com)|required"
+  echo "COUCHBASE_USERNAME|plain|👤 cluster access (database) user|required"
+  echo "COUCHBASE_PASSWORD|secret|🔐 its password|required"
+  echo "COUCHBASE_CAPELLA_API_KEY|secret|🔑 Capella API key (optional: turns a paused free tier cluster back on)|optional"
+  echo "COUCHBASE_CAPELLA_ORG_ID|plain|🏢 Capella organization id|optional"
+  echo "COUCHBASE_CAPELLA_PROJECT_ID|plain|🗂️ Capella project id|optional"
+  echo "COUCHBASE_CAPELLA_CLUSTER_ID|plain|🎰 Capella cluster id|optional"
+}
+function account_simple_spec_mongodb-atlas () {
+  echo "MONGODB_ATLAS_HOST|plain|🌐 cluster host, without mongodb+srv:// (cluster0.xxxxx.mongodb.net)|required"
+  echo "MONGODB_ATLAS_USER|plain|👤 database user|required"
+  echo "MONGODB_ATLAS_PASSWORD|secret|🔐 its password|required"
+}
+function account_simple_spec_pagerduty () {
+  echo "PAGERDUTY_API_KEY|secret|🔑 REST API key (Integrations > API Access Keys)|required"
+  echo "PAGERDUTY_SERVICE_ID|plain|🛎️ id of the service the incidents go to (in its URL, e.g. PY7K7O3)|required"
+  echo "PAGERDUTY_USER_EMAIL|plain|👤 email of a user of the account (sender of the incidents)|required"
+}
+
+# examples of each provider, for the messages
+function account_simple_examples () {
+  case "$1" in
+    zendesk) echo "connect-zendesk-source, fm-zendesk-source" ;;
+    jira) echo "connect-jira-source, fm-jira-source" ;;
+    marketo) echo "connect-marketo-source, fm-marketo-sink" ;;
+    clickhouse) echo "connect-clickhouse-sink, fm-clickhouse-sink" ;;
+    couchbase) echo "fm-couchbase-sink, fm-couchbase-source" ;;
+    mongodb-atlas) echo "fm-mongodb-atlas-sink, fm-mongodb-atlas-source" ;;
+    pagerduty) echo "connect-pagerduty-sink" ;;
+  esac
+}
+
+function account_simple_strip_url () {
+  echo "$1" | sed -E 's|^[a-z+]+://||; s|/.*$||'
+}
+
+# normalizations: the form the examples use
+function account_simple_normalize_zendesk () { ZENDESK_URL="https://$(account_simple_strip_url "$ZENDESK_URL")"; }
+function account_simple_normalize_jira () { JIRA_URL="https://$(account_simple_strip_url "$JIRA_URL")"; }
+function account_simple_normalize_marketo () { MARKETO_ENDPOINT_URL="https://$(account_simple_strip_url "$MARKETO_ENDPOINT_URL")"; }
+function account_simple_normalize_clickhouse () { CLICKHOUSE_CLOUD_HOSTNAME="$(account_simple_strip_url "$CLICKHOUSE_CLOUD_HOSTNAME" | sed -E 's/:[0-9]+$//')"; }
+function account_simple_normalize_couchbase () { COUCHBASE_HOSTNAME="$(account_simple_strip_url "$COUCHBASE_HOSTNAME")"; }
+function account_simple_normalize_mongodb-atlas () { MONGODB_ATLAS_HOST="$(account_simple_strip_url "$MONGODB_ATLAS_HOST")"; }
+function account_simple_normalize_pagerduty () { :; }
+
+# GET with curl: sets account_http_code and account_body (not in a $( ))
+function account_simple_get () {
+  local body_file
+  body_file=$(mktemp)
+  account_http_code=$(curl -sS -m "${ACCOUNT_HTTP_TIMEOUT:-30}" -o "$body_file" -w '%{http_code}' "$@" 2> /dev/null) || account_http_code="000"
+  account_body=$(cat "$body_file")
+  rm -f "$body_file"
+}
+
+# probes: print one line per item, return 1 when the login itself fails
+function account_simple_probe_zendesk () {
+  if [[ "$ZENDESK_USERNAME" != */token ]]
+  then
+    account_warn "ZENDESK_USERNAME" "\"$ZENDESK_USERNAME\" does not end with /token: with an API token, Zendesk expects <email>/token"
+  fi
+  account_simple_get -u "$ZENDESK_USERNAME:$ZENDESK_PASSWORD" "$ZENDESK_URL/api/v2/users/me.json"
+  local user_id
+  user_id=$(echo "$account_body" | jq -r '.user.id // empty' 2> /dev/null)
+  if [ "$account_http_code" == "200" ] && [ -n "$user_id" ] && [ "$user_id" != "null" ]
+  then
+    account_ok "Login" "$(echo "$account_body" | jq -r '"\(.user.email) (\(.user.role))"')"
+  elif [ "$account_http_code" == "000" ]
+  then
+    account_ko "Login" "nothing answers at $ZENDESK_URL: wrong URL, or the account was deleted"; return 1
+  elif [ "$account_http_code" == "401" ] || [ "$account_http_code" == "200" ]
+  then
+    account_ko "Login" "Zendesk refused the credentials: wrong API token, the /token suffix missing in ZENDESK_USERNAME, or token access disabled (Admin Center > Apps and integrations > Zendesk API)"; return 1
+  else
+    account_ko "Login" "HTTP $account_http_code $(echo "$account_body" | jq -r '.error // .description // empty' 2> /dev/null | head -1): a suspended account (trial ended) answers 402 or 403"; return 1
+  fi
+  account_simple_get -u "$ZENDESK_USERNAME:$ZENDESK_PASSWORD" "$ZENDESK_URL/api/v2/tickets.json?per_page=1"
+  if [ "$account_http_code" == "200" ]
+  then
+    account_ok "Tickets" "readable ($(echo "$account_body" | jq -r '.count // "?"') tickets)"
+  else
+    account_ko "Tickets" "HTTP $account_http_code: the user can't read tickets (the sources read them)"
+  fi
+}
+
+function account_simple_probe_jira () {
+  account_simple_get -u "$JIRA_USERNAME:$JIRA_API_TOKEN" -H "Accept: application/json" "$JIRA_URL/rest/api/3/myself"
+  case "$account_http_code" in
+    200) account_ok "Login" "$(echo "$account_body" | jq -r '"\(.emailAddress // .displayName) (\(.accountType))"')" ;;
+    401) account_ko "Login" "Atlassian refused the credentials: wrong or expired JIRA_API_TOKEN (API tokens expire, at most one year), or JIRA_USERNAME is not the email of its account"; return 1 ;;
+    000) account_ko "Login" "nothing answers at $JIRA_URL: wrong site"; return 1 ;;
+    404) account_ko "Login" "HTTP 404: $JIRA_URL is not a Jira Cloud site (or the site was deleted)"; return 1 ;;
+    *) account_ko "Login" "HTTP $account_http_code"; return 1 ;;
+  esac
+  account_simple_get -u "$JIRA_USERNAME:$JIRA_API_TOKEN" -H "Accept: application/json" "$JIRA_URL/rest/api/3/project/search?maxResults=50"
+  local total
+  total=$(echo "$account_body" | jq -r '.total // 0' 2> /dev/null)
+  if [ "$account_http_code" == "200" ] && [ "${total:-0}" != "0" ]
+  then
+    account_ok "Projects" "$total visible ($(echo "$account_body" | jq -r '[.values[].key] | .[0:5] | join(", ")'))"
+  else
+    account_ko "Projects" "none visible to $JIRA_USERNAME: the sources read the issues of a project"
+  fi
+}
+
+function account_simple_probe_marketo () {
+  account_simple_get "$MARKETO_ENDPOINT_URL/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET"
+  local token
+  token=$(echo "$account_body" | jq -r '.access_token // empty' 2> /dev/null)
+  if [ -n "$token" ]
+  then
+    account_ok "Login" "OAuth token of the LaunchPoint service (munchkin $(echo "$MARKETO_ENDPOINT_URL" | sed -E 's#https?://([^.]*)\..*#\1#'))"
+  elif [ "$account_http_code" == "000" ]
+  then
+    account_ko "Login" "nothing answers at $MARKETO_ENDPOINT_URL: wrong endpoint (Admin > Web Services > REST API, without /rest)"; return 1
+  else
+    account_ko "Login" "$(echo "$account_body" | jq -r '"\(.error // "HTTP '"$account_http_code"'") \(.error_description // "")"' 2> /dev/null | head -1): wrong MARKETO_CLIENT_ID / MARKETO_CLIENT_SECRET, or the sandbox has expired"; return 1
+  fi
+  # the token goes in a header: Marketo refuses it as an access_token query parameter (603 Access denied)
+  account_simple_get -H "Authorization: Bearer $token" "$MARKETO_ENDPOINT_URL/rest/v1/leads/describe.json"
+  if [ "$(echo "$account_body" | jq -r '.success' 2> /dev/null)" == "true" ]
+  then
+    account_ok "Leads API" "describe answers"
+  else
+    local code
+    code=$(echo "$account_body" | jq -r '.errors[0].code // empty' 2> /dev/null)
+    case "$code" in
+      603) account_ko "Leads API" "603 access denied: the API user of the LaunchPoint service needs a role with Read-Write Lead (Admin > Users & Roles)" ;;
+      *) account_ko "Leads API" "${code:-HTTP $account_http_code} $(echo "$account_body" | jq -r '.errors[0].message // empty' 2> /dev/null)" ;;
+    esac
+  fi
+}
+
+function account_simple_probe_clickhouse () {
+  # an idle service wakes up on the first query: up to a minute
+  ACCOUNT_HTTP_TIMEOUT=90 account_simple_get -H "X-ClickHouse-User: $CLICKHOUSE_CLOUD_USERNAME" -H "X-ClickHouse-Key: $CLICKHOUSE_CLOUD_PASSWORD" \
+    "https://$CLICKHOUSE_CLOUD_HOSTNAME:8443/?query=SELECT%20version()"
+  case "$account_http_code" in
+    200) account_ok "Login" "ClickHouse $(echo "$account_body" | head -1) answers SELECT on port 8443 (an idle service is woken up by it)" ;;
+    000) account_ko "Login" "nothing answers at $CLICKHOUSE_CLOUD_HOSTNAME:8443: wrong hostname, a service deleted or stopped (trial ended), or an IP access list that does not allow this machine"; return 1 ;;
+    *)
+      if echo "$account_body" | grep -qi "authentication failed\|AUTHENTICATION_FAILED\|password is incorrect"
+      then
+        account_ko "Login" "authentication failed: wrong CLICKHOUSE_CLOUD_USERNAME / CLICKHOUSE_CLOUD_PASSWORD"
+      else
+        account_ko "Login" "HTTP $account_http_code $(echo "$account_body" | head -1 | cut -c1-160)"
+      fi
+      return 1 ;;
+  esac
+  account_warn "IP access list" "the fully managed sink connects from Confluent Cloud IPs: the service must allow them (or 0.0.0.0/0)"
+}
+
+function account_simple_probe_couchbase () {
+  if [ -z "$COUCHBASE_CAPELLA_API_KEY" ] || [ -z "$COUCHBASE_CAPELLA_ORG_ID" ] || [ -z "$COUCHBASE_CAPELLA_PROJECT_ID" ] || [ -z "$COUCHBASE_CAPELLA_CLUSTER_ID" ]
+  then
+    account_warn "Capella API" "COUCHBASE_CAPELLA_* not all set: cluster state and allowed IPs not checked, a paused free tier cluster is not turned back on"
+  else
+    local base="https://cloudapi.cloud.couchbase.com/v4/organizations/$COUCHBASE_CAPELLA_ORG_ID/projects/$COUCHBASE_CAPELLA_PROJECT_ID"
+    local cluster_path="clusters/$COUCHBASE_CAPELLA_CLUSTER_ID"
+    if [ "${COUCHBASE_CAPELLA_FREE_TIER:-true}" == "true" ]
+    then
+      cluster_path="clusters/freeTier/$COUCHBASE_CAPELLA_CLUSTER_ID"
+    fi
+    account_simple_get -H "Authorization: Bearer $COUCHBASE_CAPELLA_API_KEY" "$base/$cluster_path"
+    local state
+    state=$(echo "$account_body" | jq -r '.currentState // empty' 2> /dev/null)
+    case "$account_http_code:$state" in
+      200:healthy) account_ok "Cluster" "$(echo "$account_body" | jq -r '.name') is healthy" ;;
+      200:turnedOff) account_ko "Cluster" "$(echo "$account_body" | jq -r '.name') is turned off (free tier clusters pause after 72 hours without use): playground account couchbase setup turns it back on" ;;
+      200:*) account_warn "Cluster" "$(echo "$account_body" | jq -r '.name') is $state" ;;
+      401:*|403:*) account_ko "Capella API" "HTTP $account_http_code: COUCHBASE_CAPELLA_API_KEY is wrong or expired, or has no access to the project" ;;
+      *) account_ko "Capella API" "HTTP $account_http_code $(echo "$account_body" | jq -r '.message // empty' 2> /dev/null): check COUCHBASE_CAPELLA_ORG_ID / _PROJECT_ID / _CLUSTER_ID (COUCHBASE_CAPELLA_FREE_TIER=false for a paid cluster)" ;;
+    esac
+    account_simple_get -H "Authorization: Bearer $COUCHBASE_CAPELLA_API_KEY" "$base/$cluster_path/allowedcidrs"
+    if [ "$account_http_code" == "200" ]
+    then
+      local cidrs
+      cidrs=$(echo "$account_body" | jq -r '[.data[]?.cidr] | join(", ")' 2> /dev/null)
+      if echo "$cidrs" | grep -q "0.0.0.0/0"
+      then
+        account_ok "Allowed IPs" "$cidrs"
+      else
+        account_warn "Allowed IPs" "${cidrs:-none}: the fully managed connectors connect from Confluent Cloud IPs, they must be allowed (or 0.0.0.0/0)"
+      fi
+    fi
+  fi
+  account_warn "Database user" "$COUCHBASE_USERNAME: its password can't be checked without a Couchbase SDK, the connector tells"
+}
+
+function account_simple_probe_mongodb-atlas () {
+  if command -v dig > /dev/null 2>&1
+  then
+    if [ -n "$(dig +short SRV "_mongodb._tcp.$MONGODB_ATLAS_HOST" 2> /dev/null)" ]
+    then
+      account_ok "Host" "$MONGODB_ATLAS_HOST has its mongodb+srv record"
+    else
+      account_ko "Host" "no _mongodb._tcp SRV record for $MONGODB_ATLAS_HOST: wrong host (Atlas > Connect > Drivers, the host after mongodb+srv://), or the cluster was deleted"; return 1
+    fi
+  fi
+  if ! docker info > /dev/null 2>&1
+  then
+    account_warn "Login" "not checked: needs docker (mongosh in the mongo image)"
+    return 0
+  fi
+  local out
+  out=$(docker run --quiet --rm -i mongo:latest mongosh "mongodb+srv://$MONGODB_ATLAS_HOST/" --apiVersion 1 --quiet \
+    --username "$MONGODB_ATLAS_USER" --password "$MONGODB_ATLAS_PASSWORD" --eval 'db.runCommand({ping: 1}).ok' 2>&1 < /dev/null) || true
+  if echo "$out" | tail -1 | grep -qx "1"
+  then
+    account_ok "Login" "$MONGODB_ATLAS_USER can connect (ping)"
+  elif echo "$out" | grep -qi "bad auth\|Authentication failed"
+  then
+    account_ko "Login" "authentication failed: wrong MONGODB_ATLAS_USER / MONGODB_ATLAS_PASSWORD (a database user, Atlas > Database Access)"; return 1
+  elif echo "$out" | grep -qi "Server selection timed out\|ECONNREFUSED\|ETIMEDOUT\|timed out"
+  then
+    account_ko "Login" "no answer from the cluster: paused (M0 clusters pause after 60 days without connections: Resume in Atlas), or the IP access list does not allow this machine"; return 1
+  else
+    account_ko "Login" "$(echo "$out" | grep -v '^$' | tail -1 | cut -c1-160)"; return 1
+  fi
+  account_warn "IP access list" "the fully managed connectors connect from Confluent Cloud IPs: Atlas > Network Access must allow them (or 0.0.0.0/0)"
+}
+
+function account_simple_probe_pagerduty () {
+  local headers=(-H "Authorization: Token token=$PAGERDUTY_API_KEY" -H "Accept: application/vnd.pagerduty+json;version=2")
+  account_simple_get "${headers[@]}" "https://api.pagerduty.com/services/$PAGERDUTY_SERVICE_ID"
+  case "$account_http_code" in
+    200) account_ok "Service" "$(echo "$account_body" | jq -r '"\(.service.name) (\(.service.status))"')" ;;
+    401) account_ko "Login" "PagerDuty refused PAGERDUTY_API_KEY: wrong or revoked key (a REST API key, not an integration key)"; return 1 ;;
+    404) account_ko "Service" "no service $PAGERDUTY_SERVICE_ID: wrong PAGERDUTY_SERVICE_ID, or the service was deleted" ;;
+    000) account_ko "Login" "api.pagerduty.com is not reachable from this machine"; return 1 ;;
+    *) account_ko "Service" "HTTP $account_http_code $(echo "$account_body" | jq -r '.error.message // empty' 2> /dev/null)" ;;
+  esac
+  account_simple_get "${headers[@]}" --get --data-urlencode "query=$PAGERDUTY_USER_EMAIL" "https://api.pagerduty.com/users"
+  if [ "$account_http_code" == "200" ] && echo "$account_body" | jq -e --arg e "$PAGERDUTY_USER_EMAIL" '[.users[]? | select((.email | ascii_downcase) == ($e | ascii_downcase))] | length > 0' > /dev/null 2>&1
+  then
+    account_ok "User" "$PAGERDUTY_USER_EMAIL"
+  else
+    account_ko "User" "$PAGERDUTY_USER_EMAIL is not a user of the account: incidents need the From email of a user"
+  fi
+}
+
+# Loads the variables of a provider (environment, then the active secrets profile) as globals
+function account_simple_load () {
+  local p="$1" var kind prompt need profile
+  profile="$(get_active_secret_profile)"
+  account_simple_missing=""
+  while IFS='|' read -r var kind prompt need
+  do
+    printf -v "$var" '%s' "$(secret_get "$var" "$profile" 2> /dev/null || true)"
+    if [ -z "${!var}" ] && [ "$need" == "required" ]
+    then
+      account_simple_missing="$account_simple_missing $var"
+    fi
+  done < <(account_simple_spec_$p)
+}
+
+function account_simple_check () {
+  local p="$1"
+  for tool in jq curl
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+  account_simple_load "$p"
+  if [ -n "$account_simple_missing" ]
+  then
+    logerror "❌ not set:$account_simple_missing (needed by $(account_simple_examples "$p"))"
+    logerror "👉 playground account $p setup"
+    exit 1
+  fi
+  local var entry saved=()
+  while IFS='|' read -r var _; do saved+=("$var=${!var}"); done < <(account_simple_spec_$p)
+  account_simple_normalize_$p
+  for entry in "${saved[@]}"
+  do
+    var="${entry%%=*}"
+    if [ "${entry#*=}" != "${!var}" ]
+    then
+      logwarn "⚠️ $var is \"${entry#*=}\": the examples need \"${!var}\"        👉 playground account $p setup"
+    fi
+  done
+  log "🔑 $p account of $(account_simple_examples "$p")"
+  account_simple_failed=0
+  if ! account_simple_probe_$p
+  then
+    exit 1
+  fi
+  echo ""
+  if [ $account_simple_failed -gt 0 ]
+  then
+    logwarn "⚠️ $account_simple_failed check(s) failed: $(account_simple_examples "$p") would fail"
+  else
+    log "🎉 the $p account is ready for $(account_simple_examples "$p")"
+  fi
+}
+
+function account_simple_setup () {
+  local p="$1" no_store="$2" var kind prompt need value profile
+  profile="$(get_active_secret_profile)"
+  for tool in jq curl
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+  # values: environment, then the secrets store, else asked for
+  while IFS='|' read -r var kind prompt need
+  do
+    value="$(secret_get "$var" "$profile" 2> /dev/null || true)"
+    if [ -z "$value" ] && [ -t 0 ]
+    then
+      if [ "$kind" == "secret" ]
+      then
+        read -r -s -p "$prompt: " value < /dev/tty
+        echo "" >&2
+      else
+        read -r -p "$prompt: " value < /dev/tty
+      fi
+    fi
+    if [ -z "$value" ] && [ "$need" == "required" ]
+    then
+      logerror "❌ $var is not set: export it, or run this in a terminal to be asked for it"
+      exit 1
+    fi
+    printf -v "$var" '%s' "$value"
+    export "$var"
+  done < <(account_simple_spec_$p)
+  account_simple_normalize_$p
+
+  # a paused free tier Capella cluster: turn it on first, like the examples
+  if [ "$p" == "couchbase" ] && [ -n "$COUCHBASE_CAPELLA_API_KEY" ] && [ -n "$COUCHBASE_CAPELLA_CLUSTER_ID" ]
+  then
+    couchbase_capella_ensure_cluster_on
+  fi
+
+  log "🔑 validating the $p account"
+  account_simple_failed=0
+  if ! account_simple_probe_$p
+  then
+    logerror "❌ nothing stored"
+    exit 1
+  fi
+
+  if [[ -n "$no_store" ]]
+  then
+    log "📋 --no-store, the values to export:"
+    while IFS='|' read -r var kind prompt need
+    do
+      [ -n "${!var}" ] && echo "export $var=\"${!var}\""
+    done < <(account_simple_spec_$p)
+  else
+    local stored=""
+    while IFS='|' read -r var kind prompt need
+    do
+      if [ -n "${!var}" ]
+      then
+        playground secrets set "$var" --value "${!var}" "--$kind" < /dev/null
+        stored="$stored $var"
+      fi
+    done < <(account_simple_spec_$p)
+    log "💾 stored$stored"
+  fi
+  if [ $account_simple_failed -gt 0 ]
+  then
+    logwarn "⚠️ $account_simple_failed check(s) failed: $(account_simple_examples "$p") would fail"
+  fi
+  log "🩺 check it any time with: playground account $p check"
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
@@ -57734,6 +58886,118 @@ playground_account_databricks_check_command() {
   else
       log "🎉 the Databricks workspace is ready for the Databricks examples"
   fi
+
+}
+
+# :command.function
+playground_account_zendesk_setup_command() {
+
+  # src/commands/account/zendesk/setup.sh
+  account_simple_setup zendesk "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_zendesk_check_command() {
+
+  # src/commands/account/zendesk/check.sh
+  account_simple_check zendesk
+
+}
+
+# :command.function
+playground_account_jira_setup_command() {
+
+  # src/commands/account/jira/setup.sh
+  account_simple_setup jira "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_jira_check_command() {
+
+  # src/commands/account/jira/check.sh
+  account_simple_check jira
+
+}
+
+# :command.function
+playground_account_marketo_setup_command() {
+
+  # src/commands/account/marketo/setup.sh
+  account_simple_setup marketo "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_marketo_check_command() {
+
+  # src/commands/account/marketo/check.sh
+  account_simple_check marketo
+
+}
+
+# :command.function
+playground_account_clickhouse_setup_command() {
+
+  # src/commands/account/clickhouse/setup.sh
+  account_simple_setup clickhouse "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_clickhouse_check_command() {
+
+  # src/commands/account/clickhouse/check.sh
+  account_simple_check clickhouse
+
+}
+
+# :command.function
+playground_account_couchbase_setup_command() {
+
+  # src/commands/account/couchbase/setup.sh
+  account_simple_setup couchbase "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_couchbase_check_command() {
+
+  # src/commands/account/couchbase/check.sh
+  account_simple_check couchbase
+
+}
+
+# :command.function
+playground_account_mongodb_atlas_setup_command() {
+
+  # src/commands/account/mongodb-atlas/setup.sh
+  account_simple_setup mongodb-atlas "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_mongodb_atlas_check_command() {
+
+  # src/commands/account/mongodb-atlas/check.sh
+  account_simple_check mongodb-atlas
+
+}
+
+# :command.function
+playground_account_pagerduty_setup_command() {
+
+  # src/commands/account/pagerduty/setup.sh
+  account_simple_setup pagerduty "${args[--no-store]}"
+
+}
+
+# :command.function
+playground_account_pagerduty_check_command() {
+
+  # src/commands/account/pagerduty/check.sh
+  account_simple_check pagerduty
 
 }
 
@@ -118338,6 +119602,55 @@ playground_account_parse_requirements() {
       shift $#
       ;;
 
+    zendesk)
+      action="zendesk"
+      shift
+      playground_account_zendesk_parse_requirements "$@"
+      shift $#
+      ;;
+
+    jira)
+      action="jira"
+      shift
+      playground_account_jira_parse_requirements "$@"
+      shift $#
+      ;;
+
+    marketo)
+      action="marketo"
+      shift
+      playground_account_marketo_parse_requirements "$@"
+      shift $#
+      ;;
+
+    clickhouse)
+      action="clickhouse"
+      shift
+      playground_account_clickhouse_parse_requirements "$@"
+      shift $#
+      ;;
+
+    couchbase)
+      action="couchbase"
+      shift
+      playground_account_couchbase_parse_requirements "$@"
+      shift $#
+      ;;
+
+    mongodb-atlas)
+      action="mongodb-atlas"
+      shift
+      playground_account_mongodb_atlas_parse_requirements "$@"
+      shift $#
+      ;;
+
+    pagerduty)
+      action="pagerduty"
+      shift
+      playground_account_pagerduty_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_account_usage >&2
@@ -120814,6 +122127,1525 @@ playground_account_databricks_check_parse_requirements() {
 
   # :command.command_filter
   action="account databricks check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_zendesk_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_zendesk_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_zendesk_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_zendesk_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_zendesk_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_zendesk_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_zendesk_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account zendesk setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_zendesk_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_zendesk_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account zendesk check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_jira_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_jira_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_jira_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_jira_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_jira_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_jira_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_jira_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account jira setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_jira_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_jira_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account jira check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_marketo_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_marketo_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_marketo_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_marketo_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_marketo_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_marketo_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_marketo_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account marketo setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_marketo_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_marketo_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account marketo check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_clickhouse_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_clickhouse_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_clickhouse_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_clickhouse_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_clickhouse_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_clickhouse_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_clickhouse_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account clickhouse setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_clickhouse_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_clickhouse_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account clickhouse check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_couchbase_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_couchbase_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_couchbase_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_couchbase_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_couchbase_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_couchbase_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_couchbase_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account couchbase setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_couchbase_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_couchbase_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account couchbase check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_mongodb_atlas_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_mongodb_atlas_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_mongodb_atlas_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_mongodb_atlas_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_mongodb_atlas_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_mongodb_atlas_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_mongodb_atlas_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account mongodb-atlas setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_mongodb_atlas_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_mongodb_atlas_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account mongodb-atlas check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_pagerduty_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_pagerduty_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_pagerduty_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_pagerduty_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_pagerduty_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_pagerduty_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_pagerduty_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account pagerduty setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_pagerduty_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_pagerduty_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account pagerduty check"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -178363,6 +181195,41 @@ playground_account_completion() {
         playground_account_databricks_completion "$completion_current" "$@"
         return
         ;;
+      zendesk)
+        shift
+        playground_account_zendesk_completion "$completion_current" "$@"
+        return
+        ;;
+      jira)
+        shift
+        playground_account_jira_completion "$completion_current" "$@"
+        return
+        ;;
+      marketo)
+        shift
+        playground_account_marketo_completion "$completion_current" "$@"
+        return
+        ;;
+      clickhouse)
+        shift
+        playground_account_clickhouse_completion "$completion_current" "$@"
+        return
+        ;;
+      couchbase)
+        shift
+        playground_account_couchbase_completion "$completion_current" "$@"
+        return
+        ;;
+      mongodb-atlas)
+        shift
+        playground_account_mongodb_atlas_completion "$completion_current" "$@"
+        return
+        ;;
+      pagerduty)
+        shift
+        playground_account_pagerduty_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -178372,7 +181239,7 @@ playground_account_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake aws servicenow databricks
+  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake aws servicenow databricks zendesk jira marketo clickhouse couchbase mongodb-atlas pagerduty
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -179595,6 +182462,608 @@ playground_account_databricks_setup_completion() {
 
 # :command.completion_function
 playground_account_databricks_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_zendesk_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_zendesk_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_zendesk_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_zendesk_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_zendesk_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_jira_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_jira_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_jira_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_jira_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_jira_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_marketo_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_marketo_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_marketo_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_marketo_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_marketo_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_clickhouse_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_clickhouse_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_clickhouse_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_clickhouse_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_clickhouse_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_couchbase_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_couchbase_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_couchbase_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_couchbase_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_couchbase_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_mongodb_atlas_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_mongodb_atlas_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_mongodb_atlas_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_mongodb_atlas_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_mongodb_atlas_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_pagerduty_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_pagerduty_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_pagerduty_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_pagerduty_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_pagerduty_check_completion() {
   local completion_current="$1"
   shift
 
@@ -207390,6 +210859,27 @@ run() {
     "account databricks") playground_account_databricks_command ;;
     "account databricks setup") playground_account_databricks_setup_command ;;
     "account databricks check") playground_account_databricks_check_command ;;
+    "account zendesk") playground_account_zendesk_command ;;
+    "account zendesk setup") playground_account_zendesk_setup_command ;;
+    "account zendesk check") playground_account_zendesk_check_command ;;
+    "account jira") playground_account_jira_command ;;
+    "account jira setup") playground_account_jira_setup_command ;;
+    "account jira check") playground_account_jira_check_command ;;
+    "account marketo") playground_account_marketo_command ;;
+    "account marketo setup") playground_account_marketo_setup_command ;;
+    "account marketo check") playground_account_marketo_check_command ;;
+    "account clickhouse") playground_account_clickhouse_command ;;
+    "account clickhouse setup") playground_account_clickhouse_setup_command ;;
+    "account clickhouse check") playground_account_clickhouse_check_command ;;
+    "account couchbase") playground_account_couchbase_command ;;
+    "account couchbase setup") playground_account_couchbase_setup_command ;;
+    "account couchbase check") playground_account_couchbase_check_command ;;
+    "account mongodb-atlas") playground_account_mongodb_atlas_command ;;
+    "account mongodb-atlas setup") playground_account_mongodb_atlas_setup_command ;;
+    "account mongodb-atlas check") playground_account_mongodb_atlas_check_command ;;
+    "account pagerduty") playground_account_pagerduty_command ;;
+    "account pagerduty setup") playground_account_pagerduty_setup_command ;;
+    "account pagerduty check") playground_account_pagerduty_check_command ;;
     "salesforce") playground_salesforce_command ;;
     "ccloud") playground_ccloud_command ;;
     "cloud-resources") playground_cloud_resources_command ;;

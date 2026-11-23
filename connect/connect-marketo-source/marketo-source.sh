@@ -66,7 +66,7 @@ do
      LEAD_LASTNAME="Doe_$RANDOM_${i}"
 
      log "Lead: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-     playground container exec --container connect --command "curl -s -X POST \"${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN\" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}'"
+     playground container exec --container connect --command "curl -s -X POST \"${MARKETO_ENDPOINT_URL}/rest/v1/leads.json\" -H 'Authorization: Bearer $ACCESS_TOKEN' -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}'"
 done
 
 if [[ "$OSTYPE" == "darwin"* ]]
