@@ -6,6 +6,8 @@ Quickly test the [Zendesk Source](https://docs.confluent.io/kafka-connectors/zen
 
 ## Prerequisites
 
+> `playground account zendesk setup` validates and stores the values below, `playground account zendesk check` tells you in a few seconds whether they still work (expired, paused, idle…), see [Accounts of the examples](https://kafka-docker-playground.io/#/accounts?id=🧾-the-saas-accounts).
+
 * A Zendesk account with an API token (see [Create an API token](#create-an-api-token)).
 * With CP 8.x, connector version 1.3.0 or later.
 

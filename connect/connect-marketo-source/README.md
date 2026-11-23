@@ -6,6 +6,8 @@ Quickly test the [Marketo Source](https://docs.confluent.io/current/connect/kafk
 
 ## Prerequisites
 
+> `playground account marketo setup` validates and stores the values below, `playground account marketo check` tells you in a few seconds whether they still work (expired, paused, idle…), see [Accounts of the examples](https://kafka-docker-playground.io/#/accounts?id=🧾-the-saas-accounts).
+
 This is a preview connector, not supported with CP 8.0 and later (the script exits with code 111).
 
 | Variable | Description |

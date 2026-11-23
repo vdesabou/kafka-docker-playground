@@ -13,6 +13,9 @@ help: |-
     servicenow   a ServiceNow developer instance: URL, admin login, hibernation
     databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket
 
+    zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty
+                 a few values each: validated, stored, checked (expired, paused, idle)
+
   Each provider has 'setup' (configure the account in one command, store
   the variables with 'playground secrets set') and, except ccloud, 'check'
   (a few seconds, read-only: does the stored login still work, and what is
@@ -29,3 +32,10 @@ commands:
 - import: src/commands/account/aws.yml
 - import: src/commands/account/servicenow.yml
 - import: src/commands/account/databricks.yml
+- import: src/commands/account/zendesk.yml
+- import: src/commands/account/jira.yml
+- import: src/commands/account/marketo.yml
+- import: src/commands/account/clickhouse.yml
+- import: src/commands/account/couchbase.yml
+- import: src/commands/account/mongodb-atlas.yml
+- import: src/commands/account/pagerduty.yml

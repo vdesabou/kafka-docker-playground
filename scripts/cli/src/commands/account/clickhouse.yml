@@ -1,0 +1,37 @@
+name: clickhouse
+expose: always
+help: |-
+  🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)
+
+    setup   validate and store CLICKHOUSE_CLOUD_HOSTNAME, CLICKHOUSE_CLOUD_USERNAME and CLICKHOUSE_CLOUD_PASSWORD
+    check   verify them in a few seconds: a SELECT over HTTPS (it also wakes an idle service up)
+
+  Nothing to configure in ClickHouse Cloud: these examples only need the values,
+  in the right form, still valid (services idle when unused, trials end).
+
+  📖 https://kafka-docker-playground.io/#/accounts
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)
+
+    Takes CLICKHOUSE_CLOUD_HOSTNAME, CLICKHOUSE_CLOUD_USERNAME and CLICKHOUSE_CLOUD_PASSWORD from the environment, then the secrets store, else asks
+    for them (secrets without echo), puts them in the form the examples use,
+    validates them (a SELECT over HTTPS (it also wakes an idle service up)), then stores them with 'playground secrets set'.
+    Nothing is stored when the login fails.
+  flags:
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account clickhouse setup
+- name: check
+  help: |-
+    🩺 Check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)
+
+    Read-only, a few seconds: a SELECT over HTTPS (it also wakes an idle service up). Each failure says why (services idle when unused, trials end...)
+    and which examples it breaks.
+
+    Exits with 1 when the login fails.
+  examples:
+  - playground account clickhouse check

@@ -6,6 +6,8 @@ Quickly test the [Jira Source](https://docs.confluent.io/kafka-connectors/jira/c
 
 ## Prerequisites
 
+> `playground account jira setup` validates and stores the values below, `playground account jira check` tells you in a few seconds whether they still work (expired, paused, idle…), see [Accounts of the examples](https://kafka-docker-playground.io/#/accounts?id=🧾-the-saas-accounts).
+
 | Variable | Description |
 | --- | --- |
 | `JIRA_URL` | Jira instance URL (e.g. `https://<your-site>.atlassian.net`) |

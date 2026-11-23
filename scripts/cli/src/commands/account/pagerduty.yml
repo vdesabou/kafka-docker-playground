@@ -1,0 +1,37 @@
+name: pagerduty
+expose: always
+help: |-
+  🛎️ Set up and check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)
+
+    setup   validate and store PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID and PAGERDUTY_USER_EMAIL
+    check   verify them in a few seconds: the service the incidents go to, and the user that sends them
+
+  Nothing to configure in PagerDuty: these examples only need the values,
+  in the right form, still valid (keys get revoked, services deleted).
+
+  📖 https://kafka-docker-playground.io/#/accounts
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)
+
+    Takes PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID and PAGERDUTY_USER_EMAIL from the environment, then the secrets store, else asks
+    for them (secrets without echo), puts them in the form the examples use,
+    validates them (the service the incidents go to, and the user that sends them), then stores them with 'playground secrets set'.
+    Nothing is stored when the login fails.
+  flags:
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account pagerduty setup
+- name: check
+  help: |-
+    🩺 Check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)
+
+    Read-only, a few seconds: the service the incidents go to, and the user that sends them. Each failure says why (keys get revoked, services deleted...)
+    and which examples it breaks.
+
+    Exits with 1 when the login fails.
+  examples:
+  - playground account pagerduty check

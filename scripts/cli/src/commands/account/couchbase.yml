@@ -1,0 +1,37 @@
+name: couchbase
+expose: always
+help: |-
+  🛋️ Set up and check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)
+
+    setup   validate and store COUCHBASE_HOSTNAME, COUCHBASE_USERNAME, COUCHBASE_PASSWORD and the optional COUCHBASE_CAPELLA_* (API key, organization, project, cluster)
+    check   verify them in a few seconds: the cluster state and its allowed IPs through the Capella API
+
+  Nothing to configure in Couchbase Capella: these examples only need the values,
+  in the right form, still valid (free tier clusters are turned off after 72 hours without use: setup turns them back on).
+
+  📖 https://kafka-docker-playground.io/#/accounts
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)
+
+    Takes COUCHBASE_HOSTNAME, COUCHBASE_USERNAME, COUCHBASE_PASSWORD and the optional COUCHBASE_CAPELLA_* (API key, organization, project, cluster) from the environment, then the secrets store, else asks
+    for them (secrets without echo), puts them in the form the examples use,
+    validates them (the cluster state and its allowed IPs through the Capella API), then stores them with 'playground secrets set'.
+    Nothing is stored when the login fails.
+  flags:
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account couchbase setup
+- name: check
+  help: |-
+    🩺 Check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)
+
+    Read-only, a few seconds: the cluster state and its allowed IPs through the Capella API. Each failure says why (free tier clusters are turned off after 72 hours without use: setup turns them back on...)
+    and which examples it breaks.
+
+    Exits with 1 when the login fails.
+  examples:
+  - playground account couchbase check

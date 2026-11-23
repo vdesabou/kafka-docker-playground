@@ -1,0 +1,1 @@
+account_simple_check couchbase

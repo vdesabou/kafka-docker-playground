@@ -6,6 +6,8 @@ Quickly test the [Fully Managed MongoDB Atlas Sink](https://docs.confluent.io/cl
 
 ## Prerequisites
 
+> `playground account mongodb-atlas setup` validates and stores the values below, `playground account mongodb-atlas check` tells you in a few seconds whether they still work (expired, paused, idle…), see [Accounts of the examples](https://kafka-docker-playground.io/#/accounts?id=🧾-the-saas-accounts).
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 | Variable | Description |
