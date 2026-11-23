@@ -6711,6 +6711,15 @@ function get_optional_env_vars () {
 }
 
 function handle_aws_credentials () {
+  # an example that mounts its own credentials file in connect sets AWS_CREDENTIALS_FILE_NAME before calling this
+  # (the *-with-assuming-iam-role.sh scripts: a profile with role_arn + source_profile): keep it for the container,
+  # /tmp/aws_credentials and the exported keys below are still prepared for the aws commands run on the host
+  local example_credentials_file=""
+  if [ -n "${AWS_CREDENTIALS_FILE_NAME:-}" ] && [ "$AWS_CREDENTIALS_FILE_NAME" != "/tmp/aws_credentials" ] && [ -f "$AWS_CREDENTIALS_FILE_NAME" ]
+  then
+    example_credentials_file="$AWS_CREDENTIALS_FILE_NAME"
+  fi
+
   # rewritten in place below, never deleted: the connect container mounts this file (a single file bind mount keeps
   # the inode, and 'playground run' calls this again at the end through get_3rdparty_file), unless docker created a
   # folder in its place because it did not exist
@@ -6859,6 +6868,12 @@ EOF
           logerror "❌ either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
           exit 1
       fi
+  fi
+
+  if [ -n "$example_credentials_file" ]
+  then
+    export AWS_CREDENTIALS_FILE_NAME="$example_credentials_file"
+    log "🎭 connect gets $AWS_CREDENTIALS_FILE_NAME as its credentials file (the aws commands of the example use AWS_ACCESS_KEY_ID)"
   fi
 
   if [[ "$TAG" == *ubi8 ]] || [[ "$TAG" == *ubi9 ]] || version_gt $TAG_BASE "5.9.0"
