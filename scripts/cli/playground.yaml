@@ -510,7 +510,8 @@ subcommands:
     warehouse, S3 staging bucket\n\nEach provider has 'setup' (configure the account
     in one command, store\nthe variables with 'playground secrets set') and, except
     ccloud, 'check'\n(a few seconds, read-only: does the stored login still work,
-    and what is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake\nhttps://kafka-docker-playground.io/#/aws\nhttps://kafka-docker-playground.io/#/servicenow\nhttps://kafka-docker-playground.io/#/databricks"
+    and what is\nmissing).\n\n\U0001F4D6 All the providers, how they behave, and the
+    guide of each one:\nhttps://kafka-docker-playground.io/#/accounts"
   usage: playground account COMMAND
   options: []
   subcommands:

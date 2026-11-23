@@ -129,6 +129,10 @@ Exit code 1 means the login fails.
   [credentials](deep-dive-secrets.md)). When `secrets.github-repo` is configured (maintainers), it also pushes them to
   the GitHub Actions secrets and variables: use `--no-store` to try another account without changing CI.
 
+## ☁️ The other accounts
+
+[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+
 ## 🧠 CLI reference
 
 [playground account snowflake setup](/playground%20account%20snowflake%20setup) · [playground account snowflake check](/playground%20account%20snowflake%20check) ·

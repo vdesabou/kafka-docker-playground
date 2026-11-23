@@ -167,6 +167,10 @@ Exit code 1 means the keys don't work.
 - **Costs:** a run stopped halfway can leave a Redshift cluster, a Kinesis stream or a bucket behind:
   `playground cloud-resources aws list`, and `playground cloud-resources cleanup --resource aws --dry-run`.
 
+## ☁️ The other accounts
+
+[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+
 ## 🧠 CLI reference
 
 [playground account aws setup](/playground%20account%20aws%20setup) · [playground account aws check](/playground%20account%20aws%20check) ·

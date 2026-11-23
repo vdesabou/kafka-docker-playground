@@ -391,25 +391,7 @@ They are stored in `~/.config/kafka-docker-playground` (never in the repository)
 > 🍪 The deep dive [Credentials and the 1Password setup](/deep-dive-secrets.md) explains the store, the backends, profiles, and how to set up 1Password (desktop app, service account, shared team vault), with a hands-on lab.
 
 > [!TIP]
-> ☁️ The Salesforce examples need a configured Salesforce org: [Salesforce examples: set up an org](/salesforce.md) does it with `playground account salesforce setup` (and `playground account salesforce check` when a login fails).
-
-> [!TIP]
-> ☁️ The GCP examples need a project with the right APIs and a service account key: [GCP examples: set up a project](/gcp.md) does it with `playground account gcp setup` (and `playground account gcp check` when an example fails on permissions).
-
-> [!TIP]
-> ☁️ The Azure examples log in with a service principal (no browser on every run): [Azure examples: set up a subscription](/azure.md) creates it with `playground account azure setup` (and `playground account azure check` when an example fails on its login, roles or resource providers).
-
-> [!TIP]
-> ☁️ The Snowflake examples need an admin login in the right form: [Snowflake examples: set up an account](/snowflake.md) validates and stores it with `playground account snowflake setup` (and `playground account snowflake check` when a login fails or a role is missing).
-
-> [!TIP]
-> ☁️ The AWS examples need access keys and a region (and an IAM role for the assume-role variants): [AWS examples: set up the credentials](/aws.md) validates and stores them with `playground account aws setup` (and `playground account aws check` when an example fails on its keys, region or a service permission).
-
-> [!TIP]
-> ☁️ The ServiceNow examples need a developer instance that is awake: [ServiceNow examples: set up a developer instance](/servicenow.md) validates it, wakes it up and stores it with `playground account servicenow setup` (and `playground account servicenow check` when an example fails: hibernating, released, 401).
-
-> [!TIP]
-> ☁️ The Databricks examples need a SQL warehouse, a token and an S3 staging bucket: [Databricks examples: set up a workspace](/databricks.md) validates and stores them with `playground account databricks setup` (and `playground account databricks check` when an example fails on its token, warehouse or bucket).
+> ☁️ The examples that run against a third-party account (Salesforce, GCP, Azure, Snowflake, AWS, ServiceNow, Databricks, and your Confluent Cloud clusters) have a setup command each: `playground account <provider> setup` configures the account and stores the variables, `playground account <provider> check` tells you in a few seconds what is wrong. See [Accounts of the examples](/accounts.md).
 
 ## 🌤️ Confluent Cloud examples
 
