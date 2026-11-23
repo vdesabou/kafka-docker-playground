@@ -340,6 +340,7 @@ The **⚙️ CLI preferences (playground config)** action opens a submenu with e
 
 * editor used to open files, folders searched for connector zip or jar, copy of the connector config to the clipboard (macOS only)
 * kill all containers before each run, deletion of the Confluent Cloud resources left by the last run (`ask`, `true` or `false`), check that the repository is up to date
+* check the account of the example before starting it (`account-check-before-run`, see [Accounts of the examples](/accounts?id=🩺-when-an-example-fails))
 * masked run log of each run, and its folder (see [📄 Sharing a run](/how-to-use?id=📄-sharing-a-run-the-masked-run-log))
 * whether fully managed connectors and Grafana are opened in the browser, and in which browser
 

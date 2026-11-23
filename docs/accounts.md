@@ -86,6 +86,12 @@ are kept in `~/.config/kafka-docker-playground/`.
 
 ## 🩺 When an example fails
 
+`playground run` already runs the `check` of the example's provider before stopping or starting anything (a few
+seconds). If the login fails, the run stops right there, with the `setup` command to fix it; an item only some
+examples need is shown and the run goes on. Not in CI; to turn it off: `playground config account-check-before-run false`.
+
+Otherwise, or for a closer look:
+
 1. `playground account <provider> check`: a login refused, a role missing, an API disabled, an instance hibernating…
 2. `playground secrets check -f <example>`: which variables the example needs, and where each one comes from (or
    that it is missing).
