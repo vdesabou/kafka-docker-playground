@@ -6,6 +6,8 @@ Quickly test the [Fully Managed S3 Source](https://docs.confluent.io/cloud/curre
 
 ## Prerequisites
 
+> `playground account aws setup` validates and stores the AWS keys and region (and with `--assume-role`, the IAM role of the assume-role variants), see [AWS examples: set up the credentials](https://kafka-docker-playground.io/#/aws). `playground account aws check` verifies them, service by service.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).

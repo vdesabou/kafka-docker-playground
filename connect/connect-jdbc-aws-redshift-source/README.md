@@ -6,6 +6,8 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 
 ## Prerequisites
 
+> `playground account aws setup` validates and stores the AWS keys and region (and with `--assume-role`, the IAM role of the assume-role variants), see [AWS examples: set up the credentials](https://kafka-docker-playground.io/#/aws). `playground account aws check` verifies them, service by service.
+
 * AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
 * The `aws` CLI must be installed. The credentials must allow creating and deleting Redshift clusters and EC2 security groups.
 * With CP 8.x, connector version 10.8.0 or later is required (older `--connector-tag` values exit with code 111).

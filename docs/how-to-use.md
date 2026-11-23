@@ -402,6 +402,9 @@ They are stored in `~/.config/kafka-docker-playground` (never in the repository)
 > [!TIP]
 > ☁️ The Snowflake examples need an admin login in the right form: [Snowflake examples: set up an account](/snowflake.md) validates and stores it with `playground account snowflake setup` (and `playground account snowflake check` when a login fails or a role is missing).
 
+> [!TIP]
+> ☁️ The AWS examples need access keys and a region (and an IAM role for the assume-role variants): [AWS examples: set up the credentials](/aws.md) validates and stores them with `playground account aws setup` (and `playground account aws check` when an example fails on its keys, region or a service permission).
+
 ## 🌤️ Confluent Cloud examples
 
 Simply use [playground run](/playground%20run) command ! Below, the menu shows the Confluent Cloud options of a fully managed connector example (it quits before running it):

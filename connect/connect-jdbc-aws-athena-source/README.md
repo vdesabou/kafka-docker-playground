@@ -6,6 +6,8 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 
 ## Prerequisites
 
+> `playground account aws setup` validates and stores the AWS keys and region (and with `--assume-role`, the IAM role of the assume-role variants), see [AWS examples: set up the credentials](https://kafka-docker-playground.io/#/aws). `playground account aws check` verifies them, service by service.
+
 * AWS credentials: export `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (or configure `~/.aws/credentials`), and `AWS_REGION` (or configure the region in `~/.aws/config`, read with `aws configure get region`).
 * The `aws` CLI must be installed.
 * An S3 bucket named `pg-bucket-$USER` with dashes and dots removed (e.g. `pgbucketjdoe`) is used as Athena staging directory (`s3://<bucket>/athena`). The script does not create it.

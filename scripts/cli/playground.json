@@ -460,7 +460,7 @@
     },
     {
       "name": "account",
-      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n  azure        an Azure subscription: service principal with its roles, resource providers\n  snowflake    a Snowflake account: account identifier, admin login, roles, edition\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and, except ccloud, 'check'\n(a few seconds, read-only: does the stored login still work, and what is\nmissing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake",
+      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n  azure        an Azure subscription: service principal with its roles, resource providers\n  snowflake    a Snowflake account: account identifier, admin login, roles, edition\n  aws          AWS access keys and region, the IAM role of the assume-role variants\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and, except ccloud, 'check'\n(a few seconds, read-only: does the stored login still work, and what is\nmissing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake\nhttps://kafka-docker-playground.io/#/aws",
       "usage": "playground account COMMAND",
       "options": [],
       "subcommands": [
@@ -876,6 +876,69 @@
               "name": "check",
               "description": "🩺 Check that the stored Snowflake login works for the Snowflake examples\n\nLogs in with SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME and\nSNOWFLAKE_PASSWORD exactly like the examples (password login, as\nsnowsql does), explains a rejection (wrong password, MFA required,\nlocked user, network policy, wrong account identifier), then checks the\nroles the examples use (SECURITYADMIN, SYSADMIN, USERADMIN, ACCOUNTADMIN\nfor Iceberg), the default role, the edition (Enterprise for Iceberg)\nand the warehouses the examples left behind.\n\nRead-only, needs neither snowsql nor Docker, takes a few seconds.\n\nExits with 1 when the login fails.",
               "usage": "playground account snowflake check",
+              "options": []
+            }
+          ]
+        },
+        {
+          "name": "aws",
+          "description": "☁️ Set up the AWS credentials of the AWS examples, and check them\n\n  setup   validate and store the access keys and the region; optionally the IAM role of the assume-role variants\n  check   verify the keys, the region, each service the examples use, and the assume-role setup\n\nEvery AWS example creates its own resources (bucket, stream, queue,\ntable...) and deletes them: what they need is access keys allowed to do\nit, a region, and, for the assume-role variants, an IAM role.\n\n📖 Step by step guide (keys, region, assume role, troubleshooting):\nhttps://kafka-docker-playground.io/#/aws",
+          "usage": "playground account aws COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "setup",
+              "description": "🛠️ Validate and store the AWS credentials of the AWS examples\n\nTakes the access keys from --profile (a profile of your aws CLI), else\nthe environment, else the first key pair of ~/.aws/credentials (what\nthe examples use), and the region from --region, else your aws CLI.\nRefuses temporary credentials (session token): fully managed\nconnectors can't use them. Validates the keys (sts\nget-caller-identity), stores AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY\nand AWS_REGION with 'playground secrets set', then runs check.\n\nWith --assume-role, also creates the IAM role of the assume-role\nvariants (pg-assume-role-<user>, trusted by the principal of\n--assume-role-profile with the external id 123 the examples use, allowed\non S3, Kinesis, SQS, DynamoDB, Lambda, CloudWatch), and stores\nAWS_STS_ROLE_ARN and AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID /\n_SECRET_ACCESS_KEY. --dry-run prints the policies.",
+              "usage": "playground account aws setup [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--profile"
+                  ],
+                  "argument": "PROFILE",
+                  "description": "👤 Profile of your aws CLI to take the keys (and the region) from"
+                },
+                {
+                  "names": [
+                    "--region"
+                  ],
+                  "argument": "REGION",
+                  "description": "🌍 Region of the examples (a region Confluent Cloud supports, for the fully managed ones)"
+                },
+                {
+                  "names": [
+                    "--assume-role"
+                  ],
+                  "argument": "",
+                  "description": "🎭 Also create the IAM role of the assume-role variants"
+                },
+                {
+                  "names": [
+                    "--assume-role-profile"
+                  ],
+                  "argument": "ASSUME_ROLE_PROFILE",
+                  "description": "👥 Profile of the second account (the principal that assumes the role)\n\nDefault: the stored AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID /\n_SECRET_ACCESS_KEY."
+                },
+                {
+                  "names": [
+                    "--dry-run"
+                  ],
+                  "argument": "",
+                  "description": "🧪 Only print what would be stored and the IAM policies, change nothing"
+                },
+                {
+                  "names": [
+                    "--no-store"
+                  ],
+                  "argument": "",
+                  "description": "📋 Print the export commands instead of storing the variables"
+                }
+              ]
+            },
+            {
+              "name": "check",
+              "description": "🩺 Check the AWS credentials of the AWS examples\n\nResolves the keys like the examples (environment or secrets store, then\n~/.aws/credentials), tells temporary credentials apart (fully managed\nconnectors refuse them), validates them (sts get-caller-identity) and the\nregion, then calls each service the examples use (S3, Kinesis, SQS,\nDynamoDB, Lambda and IAM roles, CloudWatch Logs and Metrics, Redshift,\nAthena), checks the bucket name of your examples, and, when\nAWS_STS_ROLE_ARN is set, assumes the role like the assume-role variants\ndo. Each failure says why and which examples it breaks.\n\nRead-only. Uses your aws CLI, else the amazon/aws-cli image.\n\nExits with 1 when the keys don't work.",
+              "usage": "playground account aws check",
               "options": []
             }
           ]

@@ -1,0 +1,83 @@
+name: aws
+expose: always
+help: |-
+  ☁️ Set up the AWS credentials of the AWS examples, and check them
+
+    setup   validate and store the access keys and the region; optionally the IAM role of the assume-role variants
+    check   verify the keys, the region, each service the examples use, and the assume-role setup
+
+  Every AWS example creates its own resources (bucket, stream, queue,
+  table...) and deletes them: what they need is access keys allowed to do
+  it, a region, and, for the assume-role variants, an IAM role.
+
+  📖 Step by step guide (keys, region, assume role, troubleshooting):
+  https://kafka-docker-playground.io/#/aws
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the AWS credentials of the AWS examples
+
+    Takes the access keys from --profile (a profile of your aws CLI), else
+    the environment, else the first key pair of ~/.aws/credentials (what
+    the examples use), and the region from --region, else your aws CLI.
+    Refuses temporary credentials (session token): fully managed
+    connectors can't use them. Validates the keys (sts
+    get-caller-identity), stores AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+    and AWS_REGION with 'playground secrets set', then runs check.
+
+    With --assume-role, also creates the IAM role of the assume-role
+    variants (pg-assume-role-<user>, trusted by the principal of
+    --assume-role-profile with the external id 123 the examples use, allowed
+    on S3, Kinesis, SQS, DynamoDB, Lambda, CloudWatch), and stores
+    AWS_STS_ROLE_ARN and AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID /
+    _SECRET_ACCESS_KEY. --dry-run prints the policies.
+  flags:
+  - long: --profile
+    arg: profile
+    required: false
+    help: |-
+      👤 Profile of your aws CLI to take the keys (and the region) from
+  - long: --region
+    arg: region
+    required: false
+    help: |-
+      🌍 Region of the examples (a region Confluent Cloud supports, for the fully managed ones)
+  - long: --assume-role
+    help: |-
+      🎭 Also create the IAM role of the assume-role variants
+  - long: --assume-role-profile
+    arg: assume_role_profile
+    required: false
+    help: |-
+      👥 Profile of the second account (the principal that assumes the role)
+
+      Default: the stored AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID /
+      _SECRET_ACCESS_KEY.
+  - long: --dry-run
+    help: |-
+      🧪 Only print what would be stored and the IAM policies, change nothing
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account aws setup
+  - playground account aws setup --profile my-sandbox --region eu-west-3
+  - playground account aws setup --assume-role --assume-role-profile my-second-account --dry-run
+- name: check
+  help: |-
+    🩺 Check the AWS credentials of the AWS examples
+
+    Resolves the keys like the examples (environment or secrets store, then
+    ~/.aws/credentials), tells temporary credentials apart (fully managed
+    connectors refuse them), validates them (sts get-caller-identity) and the
+    region, then calls each service the examples use (S3, Kinesis, SQS,
+    DynamoDB, Lambda and IAM roles, CloudWatch Logs and Metrics, Redshift,
+    Athena), checks the bucket name of your examples, and, when
+    AWS_STS_ROLE_ARN is set, assumes the role like the assume-role variants
+    do. Each failure says why and which examples it breaks.
+
+    Read-only. Uses your aws CLI, else the amazon/aws-cli image.
+
+    Exits with 1 when the keys don't work.
+  examples:
+  - playground account aws check
