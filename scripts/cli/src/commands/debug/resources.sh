@@ -357,7 +357,7 @@ do
             logerror "   🎓 give $disk_path a filesystem of its own in the docker-compose override of the example, then run this command again:"
             echo "  $c:"
             echo "    tmpfs:"
-            echo "      - $disk_path:size=2g,uid=1000,gid=1000"
+            echo "      - $disk_path:size=2g,mode=1777"
             exit 1
         fi
         need_kb=$(awk -v u="$used" -v a="$avail" -v p="$fill_disk" 'BEGIN { printf "%d", (u + a) * p / 100 - u }')

@@ -383,7 +383,7 @@ playground debug resources --container connect --container broker --reset
 
 > [!NOTE]
 > * The JVM sizes its heap when it starts: a limit below `-Xmx` plus the off-heap memory gets the container OOM killed rather than an `OutOfMemoryError`.
-> * On Docker Desktop, a data folder and `/tmp` are on the disk of Docker itself, shared by every container: `--fill-disk` refuses to fill it. Give the folder a tmpfs of its own in the docker-compose override (`tmpfs: [/var/lib/kafka/data:size=1g,uid=1000,gid=1000]`).
+> * On Docker Desktop, a data folder and `/tmp` are on the disk of Docker itself, shared by every container: `--fill-disk` refuses to fill it. Give the folder a tmpfs of its own in the docker-compose override (`tmpfs: [/var/lib/kafka/data:size=1g,mode=1777]`).
 > * A recreate of the container drops the limits. Docker only (not cfk).
 
 > [!TIP]

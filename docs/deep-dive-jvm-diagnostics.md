@@ -363,7 +363,7 @@ What to know:
 | podman (docker CLI on its compat API) ignores `docker update --cpus` | on podman, `--cpus` is applied as a cpu quota over 100 ms (`--cpu-period 100000 --cpu-quota <cpus × 100000>`): same limit, same output |
 | `docker update` cannot remove a limit (0 means "unchanged") | `--reset` restores the limits recorded before the first change; "no limit" becomes the cpus and memory of the docker host |
 | A recreate (`container recreate`, `debug clock`, a new run) drops the limits | apply them again after it |
-| On Docker Desktop, a data folder (an anonymous volume) and `/tmp` are on the disk of docker itself, shared by every container and image | `--fill-disk` refuses: give the folder a filesystem of its own in the docker-compose override, e.g. `tmpfs: [/var/lib/kafka/data:size=1g,uid=1000,gid=1000]`, then fill it |
+| On Docker Desktop, a data folder (an anonymous volume) and `/tmp` are on the disk of docker itself, shared by every container and image | `--fill-disk` refuses: give the folder a filesystem of its own in the docker-compose override, e.g. `tmpfs: [/var/lib/kafka/data:size=1g,mode=1777]`, then fill it |
 | A tmpfs is memory | the fill file counts in the memory of the container |
 | A broker whose only log dir is full | `No space left on device`, the log dir goes offline (`KafkaStorageException` for the clients of its partitions) and the broker stops |
 | Docker only | not with cfk yet (the command exits with an error) |
