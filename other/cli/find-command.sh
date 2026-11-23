@@ -12,8 +12,9 @@ log "🧭 Checking the ranking of playground find-command"
 # question|expected command (without "playground ")|in the first N hits
 cases=(
     "why is my connector not working|connector diagnose|1"
-    "memory issue with connector|analyze heap-dump|2"
-    "memory issue with connector|analyze gc-logs|2"
+    "memory issue with connector|analyze heap-dump|3"
+    "memory issue with connector|analyze gc-logs|3"
+    "memory issue with connector|debug resources|3"
     "OutOfMemoryError|analyze heap-dump|1"
     "connector stuck high cpu|analyze thread-dump|1"
     "customer support bundle cfk|analyze logs|1"
