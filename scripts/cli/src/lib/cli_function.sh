@@ -11364,6 +11364,90 @@ function snowflake_explain_login_error () {
   esac
 }
 
+# ---------------------------------------------------------------------------
+# playground account aws setup | check
+# ---------------------------------------------------------------------------
+
+# The aws CLI with explicit credentials (aws_key_id, aws_secret, aws_token, aws_region): the local binary if
+# installed (the aws() function of utils_function.sh shadows it), else the amazon/aws-cli image the examples use.
+# No profile, config or credentials file is read: only the given keys.
+function aws_account_cli () {
+  aws_bin="$(type -P aws 2> /dev/null || true)"
+  if [ -n "$aws_bin" ]
+  then
+    env -u AWS_PROFILE AWS_CONFIG_FILE=/dev/null AWS_SHARED_CREDENTIALS_FILE=/dev/null \
+      AWS_ACCESS_KEY_ID="$aws_key_id" AWS_SECRET_ACCESS_KEY="$aws_secret" ${aws_token:+AWS_SESSION_TOKEN="$aws_token"} \
+      AWS_REGION="$aws_region" AWS_DEFAULT_REGION="$aws_region" AWS_PAGER="" \
+      "$aws_bin" --cli-read-timeout 15 --cli-connect-timeout 10 --output json "$@"
+  else
+    docker run --quiet --rm -i -e AWS_ACCESS_KEY_ID="$aws_key_id" -e AWS_SECRET_ACCESS_KEY="$aws_secret" \
+      ${aws_token:+-e AWS_SESSION_TOKEN="$aws_token"} -e AWS_REGION="$aws_region" -e AWS_DEFAULT_REGION="$aws_region" -e AWS_PAGER="" \
+      amazon/aws-cli --cli-read-timeout 15 --cli-connect-timeout 10 --output json "$@"
+  fi
+}
+
+# The error code of an aws CLI failure ("An error occurred (AccessDenied) when calling ...")
+function aws_account_error_code () {
+  code=$(echo "$1" | grep -oE 'An error occurred \([A-Za-z0-9.]+\)' | head -1 | sed -E 's/.*\((.*)\)/\1/')
+  if [ -z "$code" ] && echo "$1" | grep -q "Could not connect to the endpoint URL"
+  then
+    code="EndpointConnectionError"
+  fi
+  echo "$code"
+}
+
+# Likely cause of an aws error code
+function aws_account_explain_error () {
+  case "$1" in
+    InvalidClientTokenId|UnrecognizedClientException|InvalidAccessKeyId) echo "the access key id is unknown or deleted (or a session token is missing for a temporary ASIA… key)" ;;
+    SignatureDoesNotMatch) echo "wrong secret access key (or a stray space / CR in it)" ;;
+    ExpiredToken|ExpiredTokenException|RequestExpired) echo "the temporary credentials have expired: export new ones" ;;
+    AccessDenied|AccessDeniedException|UnauthorizedOperation|AuthorizationError|UnauthorizedException) echo "missing IAM permission" ;;
+    EndpointConnectionError) echo "no endpoint for this region: check AWS_REGION" ;;
+    OptInRequired|SubscriptionRequiredException) echo "the service is not enabled for this account or region" ;;
+    *) echo "" ;;
+  esac
+}
+
+# Where the examples take their keys from, like handle_aws_credentials: environment / secrets store, then the
+# first key pair of ~/.aws/credentials. Sets aws_key_id, aws_secret, aws_token, aws_region, aws_key_source.
+function aws_account_resolve_credentials () {
+  profile="$(get_active_secret_profile)"
+  aws_key_id="$(secret_get AWS_ACCESS_KEY_ID "$profile" 2> /dev/null || true)"
+  aws_secret="$(secret_get AWS_SECRET_ACCESS_KEY "$profile" 2> /dev/null || true)"
+  aws_token="${AWS_SESSION_TOKEN:-}"
+  aws_region="$(secret_get AWS_REGION "$profile" 2> /dev/null || true)"
+  aws_key_source="AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY"
+  if [ -n "${AWS_ACCESS_KEY_ID:-}" ]
+  then
+    aws_key_source="$aws_key_source (environment)"
+  elif [ -n "$aws_key_id" ]
+  then
+    aws_key_source="$aws_key_source (secrets store)"
+  fi
+  if { [ -z "$aws_key_id" ] || [ -z "$aws_secret" ]; } && [ -f "$HOME/.aws/credentials" ]
+  then
+    aws_key_id=$(grep "^aws_access_key_id" "$HOME/.aws/credentials" | head -1 | awk -F'=' '{print $2;}' | tr -d ' \r')
+    aws_secret=$(grep "^aws_secret_access_key" "$HOME/.aws/credentials" | head -1 | awk -F'=' '{print $2;}' | tr -d ' \r')
+    aws_key_source="first key pair of $HOME/.aws/credentials"
+  fi
+  if [ -z "$aws_region" ]
+  then
+    aws_region=$(env -u AWS_PROFILE "$(type -P aws 2> /dev/null || echo false)" configure get region 2> /dev/null | tr -d '\r') || true
+  fi
+}
+
+# The IAM role of the assume-role variants: trusted by the principal of the second account, external id 123
+# (hardcoded in the examples), allowed on the services the variants use
+function aws_assume_role_trust_policy () {
+  jq -cn --arg p "$1" '{Version: "2012-10-17", Statement: [{Effect: "Allow", Principal: {AWS: $p}, Action: "sts:AssumeRole", Condition: {StringEquals: {"sts:ExternalId": "123"}}}]}'
+}
+function aws_assume_role_permission_policy () {
+  jq -cn '{Version: "2012-10-17", Statement: [
+    {Effect: "Allow", Action: ["s3:*"], Resource: ["arn:aws:s3:::pgbucket*", "arn:aws:s3:::pgbucket*/*"]},
+    {Effect: "Allow", Action: ["s3:ListAllMyBuckets", "kinesis:*", "sqs:*", "dynamodb:*", "lambda:InvokeFunction", "lambda:GetFunction", "logs:*", "cloudwatch:PutMetricData", "cloudwatch:ListMetrics", "redshift:Describe*", "redshift:GetClusterCredentials"], Resource: "*"}]}'
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""

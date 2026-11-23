@@ -9,6 +9,8 @@ Quickly test the [S3 Source](https://docs.confluent.io/kafka-connectors/s3-sourc
 
 ## Prerequisites
 
+> `playground account aws setup` validates and stores the AWS keys and region (and with `--assume-role`, the IAM role of the assume-role variants), see [AWS examples: set up the credentials](https://kafka-docker-playground.io/#/aws). `playground account aws check` verifies them, service by service.
+
 - An [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws), see also [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials).
 - AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
 - Version guards (the scripts exit with code `111` otherwise): connector 2.0.0+ requires CP 6.0+, and with CP 8.0+ connector version 2.6.16 or later is required when `--connector-tag` is set. `s3-source-generalized.sh` requires connector 2.0.0+, `s3-source-backup-and-restore-with-assuming-iam-role-config.sh` requires connector 2.5.1+.

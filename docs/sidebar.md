@@ -7,6 +7,7 @@
 - [☁️ GCP examples](/gcp.md)
 - [☁️ Azure examples](/azure.md)
 - [☁️ Snowflake examples](/snowflake.md)
+- [☁️ AWS examples](/aws.md)
 - [🧠 CLI](/cli.md)
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)

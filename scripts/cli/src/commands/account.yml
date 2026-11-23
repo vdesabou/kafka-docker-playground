@@ -9,6 +9,7 @@ help: |-
     gcp          a Google Cloud project: APIs, service account with its roles, key
     azure        an Azure subscription: service principal with its roles, resource providers
     snowflake    a Snowflake account: account identifier, admin login, roles, edition
+    aws          AWS access keys and region, the IAM role of the assume-role variants
 
   Each provider has 'setup' (configure the account in one command, store
   the variables with 'playground secrets set') and, except ccloud, 'check'
@@ -20,9 +21,11 @@ help: |-
   https://kafka-docker-playground.io/#/gcp
   https://kafka-docker-playground.io/#/azure
   https://kafka-docker-playground.io/#/snowflake
+  https://kafka-docker-playground.io/#/aws
 commands:
 - import: src/commands/account/ccloud.yml
 - import: src/commands/account/salesforce.yml
 - import: src/commands/account/gcp.yml
 - import: src/commands/account/azure.yml
 - import: src/commands/account/snowflake.yml
+- import: src/commands/account/aws.yml

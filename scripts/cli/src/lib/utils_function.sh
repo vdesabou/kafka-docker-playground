@@ -6678,6 +6678,12 @@ function get_optional_env_vars () {
       echo "AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
     fi
 
+    # the assume-role variants, set up by 'playground account aws setup --assume-role'
+    if grep -q "AWS_STS_ROLE_ARN" "$test_file"
+    then
+      echo "AWS_STS_ROLE_ARN AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY"
+    fi
+
     # the examples check GCP_KEYFILE_CONTENT with their own message (keyfile.json or the variable),
     # so it is not a mandatory variable; 'playground account gcp setup' stores it
     if [[ "$(example_relative_path "$test_file")" == *"gcp"* ]]
