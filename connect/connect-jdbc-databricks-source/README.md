@@ -6,6 +6,8 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 
 ## Prerequisites
 
+> `playground account databricks setup` validates and stores the workspace (token, the HTTP path and host of the SQL warehouse you pick, the S3 staging bucket and its keys) and prints the grants to give, see [Databricks examples: set up a workspace](https://kafka-docker-playground.io/#/databricks). `playground account databricks check` verifies it.
+
 ### Register a trial account
 
 1. Go to [Databricks](https://www.databricks.com/try-databricks) and register for a trial.

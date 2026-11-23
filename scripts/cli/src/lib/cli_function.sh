@@ -11488,6 +11488,40 @@ function servicenow_account_state () {
   rm -f "$body"
 }
 
+# ---------------------------------------------------------------------------
+# playground account databricks setup | check
+# ---------------------------------------------------------------------------
+
+# Workspace host as the examples use it (no https://, no path)
+function databricks_normalize_host () {
+  echo "$1" | sed -E 's|^https?://||; s|/.*$||' | tr '[:upper:]' '[:lower:]'
+}
+
+# GET on the REST API of the workspace with the token. Not in a $( ): sets databricks_http_code and
+# databricks_body (the answer) in the calling shell.
+function databricks_api () {
+  body_file=$(mktemp)
+  databricks_http_code=$(curl -sS -m 30 -o "$body_file" -w '%{http_code}' -H "Authorization: Bearer $databricks_token" "https://$databricks_host$1" 2> /dev/null) || databricks_http_code="000"
+  databricks_body=$(cat "$body_file")
+  rm -f "$body_file"
+}
+
+# Likely cause of an HTTP answer of the workspace
+function databricks_explain_http () {
+  if echo "${2:-}" | grep -qi "Invalid access token\|token is expired\|expired token"
+  then
+    echo "invalid or expired DATABRICKS_TOKEN (Settings > Developer > Access tokens)"
+    return
+  fi
+  case "$1" in
+    000) echo "no workspace answers at this host: wrong DATABRICKS_SERVER_HOSTNAME (the host of the workspace URL)" ;;
+    401) echo "invalid or expired DATABRICKS_TOKEN (Settings > Developer > Access tokens)" ;;
+    403) echo "the token is not allowed (IP access list of the workspace, or token usage restricted)" ;;
+    404) echo "not found" ;;
+    *) echo "" ;;
+  esac
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""

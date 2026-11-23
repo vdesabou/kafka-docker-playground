@@ -506,10 +506,11 @@ subcommands:
     its roles, resource providers\n  snowflake    a Snowflake account: account identifier,
     admin login, roles, edition\n  aws          AWS access keys and region, the IAM
     role of the assume-role variants\n  servicenow   a ServiceNow developer instance:
-    URL, admin login, hibernation\n\nEach provider has 'setup' (configure the account
+    URL, admin login, hibernation\n  databricks   a Databricks workspace: token, SQL
+    warehouse, S3 staging bucket\n\nEach provider has 'setup' (configure the account
     in one command, store\nthe variables with 'playground secrets set') and, except
     ccloud, 'check'\n(a few seconds, read-only: does the stored login still work,
-    and what is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake\nhttps://kafka-docker-playground.io/#/aws\nhttps://kafka-docker-playground.io/#/servicenow"
+    and what is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake\nhttps://kafka-docker-playground.io/#/aws\nhttps://kafka-docker-playground.io/#/servicenow\nhttps://kafka-docker-playground.io/#/databricks"
   usage: playground account COMMAND
   options: []
   subcommands:
@@ -1083,6 +1084,75 @@ subcommands:
         a browser, takes a few seconds.\n\nExits with 1 when the instance does not
         answer with admin logged in."
       usage: playground account servicenow check
+      options: []
+  - name: databricks
+    description: "☁️ Set up the Databricks workspace of the Databricks examples, and
+      check it\n\n  setup   validate the token, pick the SQL warehouse (http path),
+      validate the S3 staging bucket, store them\n  check   verify the token, the
+      SQL warehouse, the staging bucket, and print the grants the Delta Lake sink
+      needs\n\nThe Delta Lake sink and the JDBC examples run against a Databricks\nworkspace
+      on AWS: a SQL warehouse, a personal access token, and for the\nDelta Lake sink
+      an S3 staging bucket with keys allowed on it. Only\ncreating the workspace (a
+      trial works) stays manual.\n\n\U0001F4D6 Step by step guide (workspace, warehouse,
+      bucket, grants, troubleshooting):\nhttps://kafka-docker-playground.io/#/databricks"
+    usage: playground account databricks COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the Databricks workspace of the
+        Databricks examples\n\nValidates the personal access token, lists the SQL
+        warehouses and takes\nDATABRICKS_HTTP_PATH and DATABRICKS_SERVER_HOSTNAME
+        from the connection\ndetails of the one you pick (the values people get wrong),
+        validates\nthe S3 staging bucket with the staging keys, stores everything
+        with\n'playground secrets set' (DATABRICKS_HOST too, for the JDBC examples),\nprints
+        the grants the Delta Lake sink needs, and runs check.\n\nMissing values are
+        taken from the stored ones, else asked for (secrets\nwithout echo)."
+      usage: playground account databricks setup [OPTIONS]
+      options:
+      - names:
+        - "--host"
+        argument: HOST
+        description: "\U0001F3E0 Workspace URL or host (https://dbc-xxxx.cloud.databricks.com)"
+      - names:
+        - "--token"
+        argument: TOKEN
+        description: "\U0001F510 Personal access token (Settings > Developer > Access
+          tokens)"
+      - names:
+        - "--warehouse"
+        argument: WAREHOUSE
+        description: "\U0001F3ED Name or id of the SQL warehouse (default: the only
+          one, else the stored one)"
+      - names:
+        - "--bucket"
+        argument: BUCKET
+        description: "\U0001FAA3 S3 staging bucket of the Delta Lake sink"
+      - names:
+        - "--bucket-region"
+        argument: BUCKET_REGION
+        description: "\U0001F30D Region of the staging bucket"
+      - names:
+        - "--staging-access-key-id"
+        argument: STAGING_ACCESS_KEY_ID
+        description: "\U0001F511 AWS access key id allowed on the staging bucket"
+      - names:
+        - "--staging-secret-access-key"
+        argument: STAGING_SECRET_ACCESS_KEY
+        description: "\U0001F510 Its secret access key"
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check the Databricks workspace of the Databricks examples\n\nValidates
+        the token (and shows its principal, the one the grants must\ntarget), the
+        SQL warehouse (or cluster) of DATABRICKS_HTTP_PATH and its\nstate, DATABRICKS_HOST
+        for the JDBC examples, and the S3 staging bucket\nwith the staging keys, like
+        the Delta Lake sink. Prints the grants the\nDelta Lake sink needs.\n\nRead-only
+        (it does not start the warehouse). Uses curl, and the aws CLI\nor the amazon/aws-cli
+        image for the bucket.\n\nExits with 1 when the token is refused."
+      usage: playground account databricks check
       options: []
 - name: cloud-resources
   description: "☁️ What the playground left behind in your cloud accounts, what it
