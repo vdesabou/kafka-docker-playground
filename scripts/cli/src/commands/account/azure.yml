@@ -1,0 +1,97 @@
+name: azure
+expose: always
+help: |-
+  ☁️ Set up an Azure subscription for the Azure examples, and check it
+
+    setup   a service principal for the examples (no browser login on every run), resource providers
+    check   verify that the stored service principal logs in, its roles, the resource providers
+
+  Every Azure example creates its own resource group and deletes it at the
+  end: what they need is a login allowed to do it. Without a service
+  principal, each run opens the browser for 'az login'.
+
+  📖 Step by step guide (subscription, roles, what each example needs, troubleshooting):
+  https://kafka-docker-playground.io/#/azure
+commands:
+- name: setup
+  help: |-
+    🛠️ Configure an Azure subscription for the Azure examples
+
+    With the az CLI installed on your machine:
+
+      • registers the resource providers the examples use (Storage,
+        DocumentDB, EventHub, ServiceBus, Kusto, Search, Web,
+        OperationalInsights, Insights, Sql)
+      • creates the service principal kdp-playground-<user> (reused if it
+        exists) with the roles Contributor and Role Based Access Control
+        Administrator on the subscription, and a client secret valid 1 year
+
+    then waits until the service principal can log in, and stores
+    AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME and
+    AZ_USER with 'playground secrets set': the examples then log in with it,
+    no browser.
+
+    Without --current-login, 'az login' opens the browser once, in an az
+    configuration of its own: your own az login is left alone. Running it
+    again changes nothing while the stored secret still works.
+
+    ⚠️ Contributor on the whole subscription: use a subscription for tests,
+    not a production one.
+  flags:
+  - &azure-subscription
+    long: --subscription
+    short: -s
+    arg: subscription
+    required: false
+    help: |-
+      🗂️ Subscription name (stored as AZURE_SUBSCRIPTION_NAME)
+
+      Default: AZURE_SUBSCRIPTION_NAME (environment, then secrets store),
+      else the only subscription the account can see.
+  - long: --current-login
+    help: |-
+      🔑 Use the account your own az is already logged into (az account show): no browser
+  - long: --tenant
+    arg: tenant
+    required: false
+    help: |-
+      🏢 Tenant id or domain to log into (az login --tenant), when your account belongs to several
+  - long: --service-principal
+    arg: service_principal
+    required: false
+    help: |-
+      🤖 Display name of the service principal (default kdp-playground-<user>)
+
+      Never pg<user>: the data lake example resets the secrets of that app.
+  - long: --new-secret
+    help: |-
+      ♻️ Add a new client secret even if the stored one still works
+  - long: --dry-run
+    help: |-
+      🧪 Only print the providers, the service principal and the roles, change nothing
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account azure setup --subscription "My test subscription"
+  - playground account azure setup --current-login
+  - playground account azure setup --dry-run
+- name: check
+  help: |-
+    🩺 Check that the stored Azure service principal works for the Azure examples
+
+    Logs in with AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID exactly like
+    the examples do (client credentials), explains a rejection, then checks
+    the subscription AZURE_SUBSCRIPTION_NAME, the roles of the service
+    principal on it, the resource providers the examples use, the extra
+    service principals of the CI (AZURE_LOGS_*, AZURE_DATALAKE_*,
+    AZURE_COGNITIVE_*) when they are set, and the resource groups your
+    examples left behind.
+
+    Read-only, needs neither az nor Docker, takes a few seconds.
+
+    Exits with 1 when the service principal can't log in.
+  flags:
+  - *azure-subscription
+  examples:
+  - playground account azure check

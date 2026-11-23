@@ -6,6 +6,8 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 
 ## Prerequisites
 
+> `playground account azure setup` creates a service principal for the Azure examples (no browser login on every run) and registers the resource providers, see [Azure examples: set up a subscription](https://kafka-docker-playground.io/#/azure). `playground account azure check` verifies it.
+
 * The `az` CLI must be installed. Login is interactive (browser), or via a Service Principal when `AZ_CLIENT_ID`, `AZ_CLIENT_SECRET` and `AZ_TENANT_ID` are set.
 * With CP 8.x, connector version 10.8.0 or later is required (older `--connector-tag` values exit with code 111).
 

@@ -6,6 +6,8 @@ Quickly test the [Azure Cosmos DB Source](https://github.com/microsoft/kafka-con
 
 ## Prerequisites
 
+> `playground account azure setup` creates a service principal for the Azure examples (no browser login on every run) and registers the resource providers, see [Azure examples: set up a subscription](https://kafka-docker-playground.io/#/azure). `playground account azure check` verifies it.
+
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (`az`). The script logs in automatically: interactive browser login, or service principal login when `AZ_CLIENT_ID`, `AZ_CLIENT_SECRET` and `AZ_TENANT_ID` are set.
 - CP 6.0 or later: the connector does not work with JDK 8, see [microsoft/kafka-connect-cosmosdb#413](https://github.com/microsoft/kafka-connect-cosmosdb/issues/413) (the script exits with code `111` otherwise).
 

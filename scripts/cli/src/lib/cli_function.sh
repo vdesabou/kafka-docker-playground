@@ -11211,6 +11211,88 @@ function gcp_jwt_token () {
   return 1
 }
 
+# ---------------------------------------------------------------------------
+# playground account azure setup | check
+# ---------------------------------------------------------------------------
+
+# The resource providers the Azure examples create resources with: provider|examples
+function azure_setup_providers () {
+  cat << 'PROVIDERS'
+Microsoft.Storage|blob storage, data lake gen2, functions
+Microsoft.DocumentDB|cosmosdb
+Microsoft.EventHub|event hubs source
+Microsoft.ServiceBus|service bus source
+Microsoft.Kusto|data explorer (kusto) sink
+Microsoft.Search|cognitive search sink
+Microsoft.Web|functions sink
+Microsoft.OperationalInsights|log analytics sink
+Microsoft.Insights|log analytics v2 sink (data collection rules), functions
+Microsoft.Sql|synapse analytics sink and source
+PROVIDERS
+}
+
+# Roles of the service principal on the subscription: role|role definition id|why
+function azure_setup_roles () {
+  cat << 'ROLES'
+Contributor|b24988ac-6180-42a0-ab88-20f7382dd24c|create and delete the resource group of each example
+Role Based Access Control Administrator|f58310d9-a9f6-439a-9e8d-f62e7b41a168|the log analytics v2 and data lake examples assign roles (Monitoring Metrics Publisher, Storage Blob Data Owner)
+ROLES
+}
+
+# az with a configuration folder of its own (empty azure_az_config = your own ~/.azure)
+function azure_az () {
+  if [ -n "${azure_az_config:-}" ]
+  then
+    AZURE_CONFIG_DIR="$azure_az_config" az "$@"
+  else
+    az "$@"
+  fi
+}
+
+# Client credentials token of a service principal, what the examples get with 'az login --service-principal'.
+# Sets azure_access_token, prints the error response.
+function azure_sp_token () {
+  tenant="$1"
+  client_id="$2"
+  client_secret="$3"
+  scope="${4:-https://management.azure.com/.default}"
+  azure_access_token=""
+  response=$(curl -sS -m 30 -X POST "https://login.microsoftonline.com/$tenant/oauth2/v2.0/token" \
+    --data-urlencode "grant_type=client_credentials" \
+    --data-urlencode "client_id=$client_id" \
+    --data-urlencode "client_secret=$client_secret" \
+    --data-urlencode "scope=$scope" 2>&1) || true
+  azure_access_token=$(echo "$response" | jq -r '.access_token // empty' 2> /dev/null) || true
+  if [ -n "$azure_access_token" ]
+  then
+    return 0
+  fi
+  echo "$response" | jq -c '{error, error_description: (.error_description // "" | split("\r\n")[0] | split(" Trace ID:")[0])}' 2> /dev/null || echo "$response"
+  return 1
+}
+
+# One claim of a JWT (the oid of a token)
+function azure_jwt_claim () {
+  payload=$(echo "$1" | cut -d. -f2 | tr '_-' '/+')
+  while [ $(( ${#payload} % 4 )) -ne 0 ]
+  do
+    payload="${payload}="
+  done
+  echo "$payload" | openssl base64 -d -A 2> /dev/null | jq -r ".$2 // empty"
+}
+
+# Likely cause of an Entra ID (AADSTS) error
+function azure_explain_login_error () {
+  case "$1" in
+    *AADSTS7000215*) echo "invalid client secret: AZ_CLIENT_SECRET is wrong (or the secret ID was stored instead of its value)" ;;
+    *AADSTS7000222*) echo "the client secret has expired: run playground account azure setup (it creates a new one)" ;;
+    *AADSTS700016*|*AADSTS700038*) echo "no application with this AZ_CLIENT_ID in tenant AZ_TENANT_ID: wrong tenant, or the app was deleted" ;;
+    *AADSTS90002*|*AADSTS900023*) echo "tenant AZ_TENANT_ID not found" ;;
+    *AADSTS53003*) echo "blocked by a conditional access policy of the tenant" ;;
+    *) echo "" ;;
+  esac
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
