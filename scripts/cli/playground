@@ -38322,6 +38322,7 @@ function gcp_keyfile_to_content () {
 
 # Prints the key file JSON from a GCP_KEYFILE_CONTENT value (escaped, or plain JSON)
 function gcp_content_to_keyfile () {
+  local content
   content="$1"
   if printf '%s' "$content" | jq -e '.type' > /dev/null 2>&1
   then
@@ -38338,6 +38339,7 @@ function gcp_base64url () {
 # One OAuth JWT bearer token request with a service account key file, what the
 # Google client libraries of the connectors do. Sets gcp_access_token, prints the error response.
 function gcp_jwt_token () {
+  local key_file client_email token_uri pem_file now header claims signature response
   key_file="$1"
   client_email=$(jq -r '.client_email // empty' "$key_file")
   token_uri=$(jq -r '.token_uri // "https://oauth2.googleapis.com/token"' "$key_file")
@@ -38408,6 +38410,7 @@ function azure_az () {
 # Client credentials token of a service principal, what the examples get with 'az login --service-principal'.
 # Sets azure_access_token, prints the error response.
 function azure_sp_token () {
+  local tenant client_id client_secret scope response
   tenant="$1"
   client_id="$2"
   client_secret="$3"
@@ -38429,6 +38432,7 @@ function azure_sp_token () {
 
 # One claim of a JWT (the oid of a token)
 function azure_jwt_claim () {
+  local payload
   payload=$(echo "$1" | cut -d. -f2 | tr '_-' '/+')
   while [ $(( ${#payload} % 4 )) -ne 0 ]
   do
@@ -38465,6 +38469,7 @@ function snowflake_uuid () {
 # Logs in like the drivers and snowsql do (password), what the examples do with kurron/snowsql.
 # Sets snowflake_token and snowflake_host, prints the error response.
 function snowflake_login () {
+  local account user password account_name body response
   account="$1"
   user="$2"
   password="$3"
@@ -38487,6 +38492,7 @@ function snowflake_login () {
 
 # One statement in the session of snowflake_login: prints the rowset as JSON ([[...], ...]), returns 1 with the message
 function snowflake_query () {
+  local response
   # without request_guid, a driver-like User-Agent and Accept: application/snowflake, Snowflake answers 400 Bad Request
   response=$(curl -sS -m 60 -X POST "https://$snowflake_host/queries/v1/query-request?requestId=$(snowflake_uuid)&request_guid=$(snowflake_uuid)" \
     -H "Authorization: Snowflake Token=\"$snowflake_token\"" -H "Content-Type: application/json" -H "Accept: application/snowflake" \
@@ -38528,6 +38534,7 @@ function snowflake_explain_login_error () {
 # installed (the aws() function of utils_function.sh shadows it), else the amazon/aws-cli image the examples use.
 # No profile, config or credentials file is read: only the given keys.
 function aws_account_cli () {
+  local aws_bin
   aws_bin="$(type -P aws 2> /dev/null || true)"
   if [ -n "$aws_bin" ]
   then
@@ -38544,6 +38551,7 @@ function aws_account_cli () {
 
 # The error code of an aws CLI failure ("An error occurred (AccessDenied) when calling ...")
 function aws_account_error_code () {
+  local code
   code=$(echo "$1" | grep -oE 'An error occurred \([A-Za-z0-9.]+\)' | head -1 | sed -E 's/.*\((.*)\)/\1/')
   if [ -z "$code" ] && echo "$1" | grep -q "Could not connect to the endpoint URL"
   then
@@ -38568,6 +38576,7 @@ function aws_account_explain_error () {
 # Where the examples take their keys from, like handle_aws_credentials: environment / secrets store, then the
 # first key pair of ~/.aws/credentials. Sets aws_key_id, aws_secret, aws_token, aws_region, aws_key_source.
 function aws_account_resolve_credentials () {
+  local profile
   profile="$(get_active_secret_profile)"
   aws_key_id="$(secret_get AWS_ACCESS_KEY_ID "$profile" 2> /dev/null || true)"
   aws_secret="$(secret_get AWS_SECRET_ACCESS_KEY "$profile" 2> /dev/null || true)"
@@ -38610,6 +38619,7 @@ function aws_assume_role_permission_policy () {
 
 # https://<host>/ with the trailing / the examples need (they build ${SERVICENOW_URL}api/now/...)
 function servicenow_normalize_url () {
+  local url
   url=$(echo "$1" | sed -E 's|^https?://||; s|/.*$||' | tr '[:upper:]' '[:lower:]')
   if [[ "$url" != *.* ]]
   then
@@ -38621,6 +38631,7 @@ function servicenow_normalize_url () {
 # State of the instance for admin: awake (200), unauthorized (401), hibernating, waking, missing (no
 # instance answers: wrong URL or released), unknown. Uses SERVICENOW_URL and SERVICENOW_PASSWORD.
 function servicenow_account_state () {
+  local body code
   body=$(mktemp)
   code=$(curl -s -m 30 -o "$body" -w '%{http_code}' -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1" 2> /dev/null) || code="000"
   if grep -qi "hibernat" "$body"
@@ -38656,6 +38667,7 @@ function databricks_normalize_host () {
 # GET on the REST API of the workspace with the token. Not in a $( ): sets databricks_http_code and
 # databricks_body (the answer) in the calling shell.
 function databricks_api () {
+  local body_file
   body_file=$(mktemp)
   databricks_http_code=$(curl -sS -m 30 -o "$body_file" -w '%{http_code}' -H "Authorization: Bearer $databricks_token" "https://$databricks_host$1" 2> /dev/null) || databricks_http_code="000"
   databricks_body=$(cat "$body_file")
