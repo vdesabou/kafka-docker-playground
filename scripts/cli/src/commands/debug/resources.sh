@@ -113,6 +113,17 @@ function check_state_container () {
     fi
 }
 
+# the docker update arguments for a number of cpus. podman (docker CLI on its compat API) ignores --cpus (NanoCpus) in
+# an update, the container keeps no limit: a cpu quota over a period of 100 ms instead, the same limit
+function cpu_args_for () {
+    if container_engine_is_podman
+    then
+        cpu_args=(--cpu-period 100000 --cpu-quota "$(awk -v c="$1" 'BEGIN { printf "%.0f", c * 100000 }')")
+    else
+        cpu_args=(--cpus "$1")
+    fi
+}
+
 # folder filled by default: the first log dir of a broker or a controller, /tmp otherwise
 function default_path () {
     local c="$1" dirs
@@ -249,12 +260,12 @@ then
         fi
         if [ "${o_nano:-0}" -gt 0 ]
         then
-            cpu_args=(--cpus "$(awk -v n="$o_nano" 'BEGIN { printf "%g", n / 1e9 }')")
+            cpu_args_for "$(awk -v n="$o_nano" 'BEGIN { printf "%g", n / 1e9 }')"
         elif [ "${o_quota:-0}" -gt 0 ]
         then
             cpu_args=(--cpu-quota "$o_quota" --cpu-period "$o_period")
         else
-            cpu_args=(--cpus "$(host_cpus "$c")")
+            cpu_args_for "$(host_cpus "$c")"
         fi
         if ! docker update "${memory_args[@]}" "${cpu_args[@]}" "$c" > /dev/null
         then
@@ -281,7 +292,8 @@ do
             logerror "❌ --cpus $cpus: from 0.01 to $vm_cpus (the cpus of the docker host)"
             exit 1
         fi
-        update_args+=(--cpus "$cpus")
+        cpu_args_for "$cpus"
+        update_args+=("${cpu_args[@]}")
     fi
     if [[ -n "$memory" ]]
     then
