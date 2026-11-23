@@ -360,6 +360,7 @@ What to know:
 | --- | --- |
 | The JVM sizes its heap when it starts (`-Xmx`, 2G for connect in the playground) | a limit below `-Xmx` plus the off-heap memory (metaspace, threads, direct buffers) ends with an **OOM kill** (exit 137), not an `OutOfMemoryError`. For an `OutOfMemoryError`, lower `-Xmx` instead: `container set-environment-variables --env "KAFKA_HEAP_OPTS: -Xmx512m"` |
 | The `OOMKilled` flag of `docker inspect` is cleared when the restart policy starts the container again | `debug resources -c <c>` counts the `oom` events of docker since the container was created, and shows the restarts |
+| podman (docker CLI on its compat API) ignores `docker update --cpus` | on podman, `--cpus` is applied as a cpu quota over 100 ms (`--cpu-period 100000 --cpu-quota <cpus × 100000>`): same limit, same output |
 | `docker update` cannot remove a limit (0 means "unchanged") | `--reset` restores the limits recorded before the first change; "no limit" becomes the cpus and memory of the docker host |
 | A recreate (`container recreate`, `debug clock`, a new run) drops the limits | apply them again after it |
 | On Docker Desktop, a data folder (an anonymous volume) and `/tmp` are on the disk of docker itself, shared by every container and image | `--fill-disk` refuses: give the folder a filesystem of its own in the docker-compose override, e.g. `tmpfs: [/var/lib/kafka/data:size=1g,uid=1000,gid=1000]`, then fill it |
