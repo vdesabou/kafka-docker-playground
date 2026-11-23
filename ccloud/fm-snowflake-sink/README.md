@@ -6,6 +6,8 @@ Quickly test the [Snowflake Sink](https://docs.confluent.io/cloud/current/connec
 
 ## Prerequisites
 
+> `playground account snowflake setup` validates and stores the Snowflake login (account identifier from the account URL or any form, user, password), see [Snowflake examples: set up an account](https://kafka-docker-playground.io/#/snowflake). `playground account snowflake check` verifies it, with the roles and the edition.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 * A Snowflake account (see [Register a trial account](#register-a-trial-account)). The Iceberg variants require Snowflake **Enterprise Edition** (select it when you sign up for a trial).

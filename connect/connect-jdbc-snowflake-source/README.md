@@ -8,6 +8,8 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 
 ## Prerequisites
 
+> `playground account snowflake setup` validates and stores the Snowflake login (account identifier from the account URL or any form, user, password), see [Snowflake examples: set up an account](https://kafka-docker-playground.io/#/snowflake). `playground account snowflake check` verifies it, with the roles and the edition.
+
 ### Register a trial account
 
 Go to [Snowflake](https://www.snowflake.com) and register an account. You'll receive an email to set up your account and access a 30-day trial instance.

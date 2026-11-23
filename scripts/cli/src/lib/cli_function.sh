@@ -11293,6 +11293,77 @@ function azure_explain_login_error () {
   esac
 }
 
+# ---------------------------------------------------------------------------
+# playground account snowflake setup | check
+# ---------------------------------------------------------------------------
+
+# Account identifier as the examples use it (https://<it>.snowflakecomputing.com): accepts a URL too
+function snowflake_normalize_account () {
+  echo "$1" | sed -E 's|^https?://||; s|/.*$||; s|\.snowflakecomputing\.com$||' | tr '[:upper:]' '[:lower:]'
+}
+
+function snowflake_uuid () {
+  uuidgen 2> /dev/null | tr '[:upper:]' '[:lower:]' || cat /proc/sys/kernel/random/uuid
+}
+
+# Logs in like the drivers and snowsql do (password), what the examples do with kurron/snowsql.
+# Sets snowflake_token and snowflake_host, prints the error response.
+function snowflake_login () {
+  account="$1"
+  user="$2"
+  password="$3"
+  snowflake_host="$account.snowflakecomputing.com"
+  snowflake_token=""
+  # ACCOUNT_NAME: the account part of the identifier (the locator without its region, or orgname-accountname)
+  account_name="${account%%.*}"
+  body=$(jq -cn --arg a "$account_name" --arg u "$user" --arg p "$password" \
+    '{data: {CLIENT_APP_ID: "JavaScript", CLIENT_APP_VERSION: "1.9.0", ACCOUNT_NAME: $a, LOGIN_NAME: $u, PASSWORD: $p, CLIENT_ENVIRONMENT: {APPLICATION: "kafka-docker-playground"}}}')
+  response=$(curl -sS -m 30 -X POST "https://$snowflake_host/session/v1/login-request?request_id=$(snowflake_uuid)&request_guid=$(snowflake_uuid)" \
+    -H "Content-Type: application/json" -H "Accept: application/json" -H "User-Agent: JavaScript/1.9.0 (kafka-docker-playground)" -d "$body" 2>&1) || true
+  snowflake_token=$(echo "$response" | jq -r 'if .success then .data.token else empty end' 2> /dev/null) || true
+  if [ -n "$snowflake_token" ]
+  then
+    return 0
+  fi
+  echo "$response" | jq -c '{code, message}' 2> /dev/null || echo "$response" | head -3
+  return 1
+}
+
+# One statement in the session of snowflake_login: prints the rowset as JSON ([[...], ...]), returns 1 with the message
+function snowflake_query () {
+  # without request_guid, a driver-like User-Agent and Accept: application/snowflake, Snowflake answers 400 Bad Request
+  response=$(curl -sS -m 60 -X POST "https://$snowflake_host/queries/v1/query-request?requestId=$(snowflake_uuid)&request_guid=$(snowflake_uuid)" \
+    -H "Authorization: Snowflake Token=\"$snowflake_token\"" -H "Content-Type: application/json" -H "Accept: application/snowflake" \
+    -H "User-Agent: JavaScript/1.9.0 (kafka-docker-playground)" \
+    -d "$(jq -cn --arg q "$1" --argjson t "$(date +%s)000" '{sqlText: $q, asyncExec: false, sequenceId: 1, querySubmissionTime: $t}')" 2>&1) || true
+  if [ "$(echo "$response" | jq -r '.success' 2> /dev/null)" == "true" ]
+  then
+    echo "$response" | jq -c '.data.rowset // []'
+    return 0
+  fi
+  echo "$response" | jq -r '.message // .' 2> /dev/null | head -1
+  return 1
+}
+
+function snowflake_logout () {
+  curl -sS -m 10 -o /dev/null -X POST "https://$snowflake_host/session?delete=true&request_guid=$(snowflake_uuid)" \
+    -H "Authorization: Snowflake Token=\"$snowflake_token\"" -H "Accept: application/snowflake" -H "User-Agent: JavaScript/1.9.0 (kafka-docker-playground)" 2> /dev/null || true
+}
+
+# Likely cause of a login error (code and message of the login response)
+function snowflake_explain_login_error () {
+  case "$1" in
+    *390100*|*"Incorrect username or password"*) echo "wrong SNOWFLAKE_USERNAME or SNOWFLAKE_PASSWORD" ;;
+    *390101*|*"disabled"*) echo "the user is disabled" ;;
+    *390102*|*"locked"*) echo "the user is temporarily locked (too many failed logins): wait 15 minutes" ;;
+    *MFA*|*"multi-factor"*|*"Multi-factor"*) echo "Snowflake requires MFA for this user: the examples log in with a password only, use a user of TYPE = SERVICE or LEGACY_SERVICE, or one without MFA enforcement" ;;
+    *390422*|*"IP"*"not allowed"*) echo "a network policy blocks this IP address" ;;
+    *trial*|*Trial*) echo "the trial account has ended" ;;
+    *"Could not resolve"*|*"404"*|*"403 Forbidden"*|*"<html"*|*"<!DOCTYPE"*) echo "wrong SNOWFLAKE_ACCOUNT_NAME: use orgname-accountname or <locator>.<region>.<cloud> (Snowsight > Admin > Accounts, or the account URL without https:// and .snowflakecomputing.com)" ;;
+    *) echo "" ;;
+  esac
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""

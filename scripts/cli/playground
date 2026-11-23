@@ -117,6 +117,7 @@ playground_usage() {
   printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "account salesforce")                        "
   printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "account gcp")                               "
   printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "account azure")                             "
+  printf "  %s   ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n" "$(green "account snowflake")                         "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -3645,7 +3646,7 @@ playground_secrets_lint_usage() {
 playground_account_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account\n\n"
-    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n\n"
+    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n  https://kafka-docker-playground.io/#/snowflake\n\n"
   else
     printf "playground account - ☁️ Set up and check the accounts the examples run against\n\n"
   fi
@@ -3667,6 +3668,9 @@ playground_account_usage() {
   printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "azure")           "
   printf "  %s   🛠️ Configure an Azure subscription for the Azure examples\n" "$(green "azure setup")     "
   printf "  %s   🩺 Check that the stored Azure service principal works for the Azure examples\n" "$(green "azure check")     "
+  printf "  %s   ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n" "$(green "snowflake")       "
+  printf "  %s   🛠️ Validate and store the Snowflake login of the Snowflake examples\n" "$(green "snowflake setup") "
+  printf "  %s   🩺 Check that the stored Snowflake login works for the Snowflake examples\n" "$(green "snowflake check") "
   echo
 
   # :command.long_usage
@@ -4261,6 +4265,124 @@ playground_account_azure_check_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground account azure check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_snowflake_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account snowflake\n\n"
+    printf "  ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n  \n    setup   validate and store the account identifier, admin user and password\n    check   verify that the stored login works and has the roles the examples\n  need\n  \n  The examples create their own database, role, warehouse and user with the\n  admin login you give them: what they need is that login, in the right\n  form, with the right roles. Only signing up for the account (a 30-day\n  trial works, Enterprise edition for the Iceberg variants) stays manual.\n  \n  📖 Step by step guide (trial, account identifier, roles, troubleshooting):\n  https://kafka-docker-playground.io/#/snowflake\n\n"
+  else
+    printf "playground account snowflake - ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account snowflake COMMAND\n"
+  printf "  playground account snowflake [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the Snowflake login of the Snowflake examples\n" "$(green "setup")"
+  printf "  %s   🩺 Check that the stored Snowflake login works for the Snowflake examples\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_snowflake_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account snowflake setup\n\n"
+    printf "  🛠️ Validate and store the Snowflake login of the Snowflake examples\n  \n  Takes the account identifier in any form (the account URL,\n  orgname-accountname or <locator>.<region>.<cloud>) and turns it into the\n  one the examples use, logs in with the admin user and password exactly\n  like the examples (password login, as snowsql does), shows the roles\n  and the edition, then stores SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME\n  and SNOWFLAKE_PASSWORD with 'playground secrets set', and runs check.\n  \n  Missing values are taken from the stored ones, else asked for (the\n  password without echo). Needs neither snowsql nor Docker.\n\n"
+  else
+    printf "playground account snowflake setup - 🛠️ Validate and store the Snowflake login of the Snowflake examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account snowflake setup [OPTIONS]\n"
+  printf "  playground account snowflake setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--account ACCOUNT")"
+    printf "    🏔️ Account identifier, or the account URL\n    (https://<it>.snowflakecomputing.com)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user USER")"
+    printf "    👤 Admin user (must be able to use SECURITYADMIN, SYSADMIN and USERADMIN,\n    ACCOUNTADMIN for Iceberg)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔐 Its password (asked for without echo when missing)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account snowflake setup\n"
+    printf "  playground account snowflake setup --account\n  https://xy12345.eu-west-3.aws.snowflakecomputing.com --user ADMIN\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_snowflake_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account snowflake check\n\n"
+    printf "  🩺 Check that the stored Snowflake login works for the Snowflake examples\n  \n  Logs in with SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME and\n  SNOWFLAKE_PASSWORD exactly like the examples (password login, as\n  snowsql does), explains a rejection (wrong password, MFA required,\n  locked user, network policy, wrong account identifier), then checks the\n  roles the examples use (SECURITYADMIN, SYSADMIN, USERADMIN, ACCOUNTADMIN\n  for Iceberg), the default role, the edition (Enterprise for Iceberg)\n  and the warehouses the examples left behind.\n  \n  Read-only, needs neither snowsql nor Docker, takes a few seconds.\n  \n  Exits with 1 when the login fails.\n\n"
+  else
+    printf "playground account snowflake check - 🩺 Check that the stored Snowflake login works for the Snowflake examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account snowflake check\n"
+  printf "  playground account snowflake check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account snowflake check\n"
     echo
 
   fi
@@ -37925,6 +38047,77 @@ function azure_explain_login_error () {
   esac
 }
 
+# ---------------------------------------------------------------------------
+# playground account snowflake setup | check
+# ---------------------------------------------------------------------------
+
+# Account identifier as the examples use it (https://<it>.snowflakecomputing.com): accepts a URL too
+function snowflake_normalize_account () {
+  echo "$1" | sed -E 's|^https?://||; s|/.*$||; s|\.snowflakecomputing\.com$||' | tr '[:upper:]' '[:lower:]'
+}
+
+function snowflake_uuid () {
+  uuidgen 2> /dev/null | tr '[:upper:]' '[:lower:]' || cat /proc/sys/kernel/random/uuid
+}
+
+# Logs in like the drivers and snowsql do (password), what the examples do with kurron/snowsql.
+# Sets snowflake_token and snowflake_host, prints the error response.
+function snowflake_login () {
+  account="$1"
+  user="$2"
+  password="$3"
+  snowflake_host="$account.snowflakecomputing.com"
+  snowflake_token=""
+  # ACCOUNT_NAME: the account part of the identifier (the locator without its region, or orgname-accountname)
+  account_name="${account%%.*}"
+  body=$(jq -cn --arg a "$account_name" --arg u "$user" --arg p "$password" \
+    '{data: {CLIENT_APP_ID: "JavaScript", CLIENT_APP_VERSION: "1.9.0", ACCOUNT_NAME: $a, LOGIN_NAME: $u, PASSWORD: $p, CLIENT_ENVIRONMENT: {APPLICATION: "kafka-docker-playground"}}}')
+  response=$(curl -sS -m 30 -X POST "https://$snowflake_host/session/v1/login-request?request_id=$(snowflake_uuid)&request_guid=$(snowflake_uuid)" \
+    -H "Content-Type: application/json" -H "Accept: application/json" -H "User-Agent: JavaScript/1.9.0 (kafka-docker-playground)" -d "$body" 2>&1) || true
+  snowflake_token=$(echo "$response" | jq -r 'if .success then .data.token else empty end' 2> /dev/null) || true
+  if [ -n "$snowflake_token" ]
+  then
+    return 0
+  fi
+  echo "$response" | jq -c '{code, message}' 2> /dev/null || echo "$response" | head -3
+  return 1
+}
+
+# One statement in the session of snowflake_login: prints the rowset as JSON ([[...], ...]), returns 1 with the message
+function snowflake_query () {
+  # without request_guid, a driver-like User-Agent and Accept: application/snowflake, Snowflake answers 400 Bad Request
+  response=$(curl -sS -m 60 -X POST "https://$snowflake_host/queries/v1/query-request?requestId=$(snowflake_uuid)&request_guid=$(snowflake_uuid)" \
+    -H "Authorization: Snowflake Token=\"$snowflake_token\"" -H "Content-Type: application/json" -H "Accept: application/snowflake" \
+    -H "User-Agent: JavaScript/1.9.0 (kafka-docker-playground)" \
+    -d "$(jq -cn --arg q "$1" --argjson t "$(date +%s)000" '{sqlText: $q, asyncExec: false, sequenceId: 1, querySubmissionTime: $t}')" 2>&1) || true
+  if [ "$(echo "$response" | jq -r '.success' 2> /dev/null)" == "true" ]
+  then
+    echo "$response" | jq -c '.data.rowset // []'
+    return 0
+  fi
+  echo "$response" | jq -r '.message // .' 2> /dev/null | head -1
+  return 1
+}
+
+function snowflake_logout () {
+  curl -sS -m 10 -o /dev/null -X POST "https://$snowflake_host/session?delete=true&request_guid=$(snowflake_uuid)" \
+    -H "Authorization: Snowflake Token=\"$snowflake_token\"" -H "Accept: application/snowflake" -H "User-Agent: JavaScript/1.9.0 (kafka-docker-playground)" 2> /dev/null || true
+}
+
+# Likely cause of a login error (code and message of the login response)
+function snowflake_explain_login_error () {
+  case "$1" in
+    *390100*|*"Incorrect username or password"*) echo "wrong SNOWFLAKE_USERNAME or SNOWFLAKE_PASSWORD" ;;
+    *390101*|*"disabled"*) echo "the user is disabled" ;;
+    *390102*|*"locked"*) echo "the user is temporarily locked (too many failed logins): wait 15 minutes" ;;
+    *MFA*|*"multi-factor"*|*"Multi-factor"*) echo "Snowflake requires MFA for this user: the examples log in with a password only, use a user of TYPE = SERVICE or LEGACY_SERVICE, or one without MFA enforcement" ;;
+    *390422*|*"IP"*"not allowed"*) echo "a network policy blocks this IP address" ;;
+    *trial*|*Trial*) echo "the trial account has ended" ;;
+    *"Could not resolve"*|*"404"*|*"403 Forbidden"*|*"<html"*|*"<!DOCTYPE"*) echo "wrong SNOWFLAKE_ACCOUNT_NAME: use orgname-accountname or <locator>.<region>.<cloud> (Snowsight > Admin > Accounts, or the account URL without https:// and .snowflakecomputing.com)" ;;
+    *) echo "" ;;
+  esac
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
@@ -55653,6 +55846,260 @@ playground_account_azure_check_command() {
       logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail (new roles can take a few minutes to apply)"
   else
       log "🎉 subscription $subscription is ready for the Azure examples"
+  fi
+
+}
+
+# :command.function
+playground_account_snowflake_setup_command() {
+
+  # src/commands/account/snowflake/setup.sh
+  account="${args[--account]}"
+  user="${args[--user]}"
+  password="${args[--password]}"
+  no_store="${args[--no-store]}"
+
+  for tool in jq curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  # missing values: the stored ones, else asked for
+  profile="$(get_active_secret_profile)"
+  function snowflake_setup_value () {
+      name="$1"
+      prompt="$2"
+      silent="$3"
+      value="$(secret_get "$name" "$profile" 2> /dev/null || true)"
+      if [ -z "$value" ]
+      then
+          if [ ! -t 0 ]
+          then
+              logerror "❌ $name is not set: pass it as a flag (see --help)"
+              exit 1
+          fi
+          if [[ -n "$silent" ]]
+          then
+              read -r -s -p "$prompt: " value < /dev/tty
+              echo "" >&2
+          else
+              read -r -p "$prompt: " value < /dev/tty
+          fi
+      fi
+      printf '%s' "$value"
+  }
+  if [[ ! -n "$account" ]]
+  then
+      account=$(snowflake_setup_value SNOWFLAKE_ACCOUNT_NAME "🏔️ account identifier or URL (Snowsight > your name > Account > copy the account URL)")
+  fi
+  if [[ ! -n "$user" ]]
+  then
+      user=$(snowflake_setup_value SNOWFLAKE_USERNAME "👤 admin user")
+  fi
+  if [[ ! -n "$password" ]]
+  then
+      password=$(snowflake_setup_value SNOWFLAKE_PASSWORD "🔐 password of $user" silent)
+  fi
+
+  account_input="$account"
+  account=$(snowflake_normalize_account "$account")
+  if [ "$account" != "$(echo "$account_input" | tr '[:upper:]' '[:lower:]')" ]
+  then
+      log "🏔️ account identifier: $account (from $account_input)"
+  fi
+
+  # validate the login, then show what check reports (roles, default role, edition)
+  if ! snowflake_login "$account" "$user" "$password" > /tmp/playground-snowflake-login.$$ 2>&1
+  then
+      out=$(cat /tmp/playground-snowflake-login.$$)
+      rm -f /tmp/playground-snowflake-login.$$
+      reason=$(echo "$out" | jq -r '"\(.code // "") \(.message // "")"' 2> /dev/null | head -1) || reason=""
+      if [ -z "${reason// /}" ]
+      then
+          reason="no Snowflake account answers at $account.snowflakecomputing.com"
+      fi
+      logerror "❌ Snowflake rejected the login: $reason"
+      cause=$(snowflake_explain_login_error "$out")
+      if [ -n "$cause" ]
+      then
+          logerror "   $cause"
+      fi
+      logerror "   nothing stored"
+      exit 1
+  fi
+  rm -f /tmp/playground-snowflake-login.$$
+  snowflake_logout
+  log "✅ $user can log into $account"
+
+  if [[ -n "$no_store" ]]
+  then
+      log "📋 --no-store, the values to export:"
+      echo "export SNOWFLAKE_ACCOUNT_NAME=\"$account\""
+      echo "export SNOWFLAKE_USERNAME=\"$user\""
+      echo "export SNOWFLAKE_PASSWORD=\"$password\""
+  else
+      playground secrets set SNOWFLAKE_ACCOUNT_NAME --value "$account" --plain
+      playground secrets set SNOWFLAKE_USERNAME --value "$user" --plain
+      playground secrets set SNOWFLAKE_PASSWORD --value "$password" --secret
+      log "💾 stored SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME and SNOWFLAKE_PASSWORD"
+  fi
+
+  log "🩺 what this login can do:"
+  SNOWFLAKE_ACCOUNT_NAME="$account" SNOWFLAKE_USERNAME="$user" SNOWFLAKE_PASSWORD="$password" playground account snowflake check || true
+  log "🩺 check it any time with: playground account snowflake check"
+
+}
+
+# :command.function
+playground_account_snowflake_check_command() {
+
+  # src/commands/account/snowflake/check.sh
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  YELLOW='\033[0;33m'
+  NC='\033[0m'
+
+  for tool in jq curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  # same resolution as an example: exported variable, then the active secrets profile
+  profile="$(get_active_secret_profile)"
+  account_raw="$(secret_get SNOWFLAKE_ACCOUNT_NAME "$profile" 2> /dev/null || true)"
+  user="$(secret_get SNOWFLAKE_USERNAME "$profile" 2> /dev/null || true)"
+  password="$(secret_get SNOWFLAKE_PASSWORD "$profile" 2> /dev/null || true)"
+  missing=""
+  [ -z "$account_raw" ] && missing="$missing SNOWFLAKE_ACCOUNT_NAME"
+  [ -z "$user" ] && missing="$missing SNOWFLAKE_USERNAME"
+  [ -z "$password" ] && missing="$missing SNOWFLAKE_PASSWORD"
+  if [ -n "$missing" ]
+  then
+      logerror "❌ not set:$missing (all the Snowflake examples need them)"
+      logerror "👉 playground account snowflake setup"
+      exit 1
+  fi
+  account=$(snowflake_normalize_account "$account_raw")
+  if [ "$account" != "$(echo "$account_raw" | tr '[:upper:]' '[:lower:]')" ]
+  then
+      logwarn "⚠️ SNOWFLAKE_ACCOUNT_NAME is \"$account_raw\": the examples build https://\$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com, it must be \"$account\""
+      logwarn "   👉 playground account snowflake setup (it stores the right form)"
+  fi
+
+  # 1. login
+  log "🔑 password login of $user on $account.snowflakecomputing.com (like snowsql in the examples)"
+  if ! snowflake_login "$account" "$user" "$password" > /tmp/playground-snowflake-login.$$ 2>&1
+  then
+      out=$(cat /tmp/playground-snowflake-login.$$)
+      rm -f /tmp/playground-snowflake-login.$$
+      reason=$(echo "$out" | jq -r '"\(.code // "") \(.message // "")"' 2> /dev/null | head -1) || reason=""
+      if [ -z "${reason// /}" ]
+      then
+          reason="no Snowflake account answers at $account.snowflakecomputing.com"
+      fi
+      logerror "❌ Snowflake rejected the login: $reason"
+      cause=$(snowflake_explain_login_error "$out")
+      if [ -n "$cause" ]
+      then
+          logerror "   $cause"
+      fi
+      exit 1
+  fi
+  rm -f /tmp/playground-snowflake-login.$$
+  trap 'snowflake_logout' EXIT
+  log "✅ login works"
+
+  nb_failed=0
+  row=$(snowflake_query "SELECT CURRENT_VERSION(), CURRENT_ROLE(), CURRENT_AVAILABLE_ROLES(), CURRENT_ORGANIZATION_NAME(), CURRENT_ACCOUNT_NAME(), CURRENT_REGION()") || row=""
+  if [ -z "$row" ] || [ "${row:0:1}" != "[" ]
+  then
+      logerror "❌ the login works but a query fails: $row"
+      exit 1
+  fi
+  version=$(echo "$row" | jq -r '.[0][0]')
+  default_role=$(echo "$row" | jq -r '.[0][1]')
+  roles=$(echo "$row" | jq -r '.[0][2] | fromjson | .[]' 2> /dev/null)
+  org=$(echo "$row" | jq -r '.[0][3] | ascii_downcase')
+  account_name=$(echo "$row" | jq -r '.[0][4] | ascii_downcase')
+  region=$(echo "$row" | jq -r '.[0][5]')
+  echo -e "✅ ${GREEN}Account${NC} $org-${account_name//_/-} (region $region, Snowflake $version)"
+
+  # 2. roles: ACCOUNTADMIN inherits SECURITYADMIN (which inherits USERADMIN) and SYSADMIN
+  has_accountadmin=""
+  echo "$roles" | grep -qx "ACCOUNTADMIN" && has_accountadmin=1
+  for role in SECURITYADMIN SYSADMIN USERADMIN
+  do
+      if [[ -n "$has_accountadmin" ]] || echo "$roles" | grep -qx "$role"
+      then
+          echo -e "✅ ${GREEN}Role $role${NC}"
+      else
+          echo -e "❌ ${RED}Role $role${NC}: $user can't use it        👉 GRANT ROLE $role TO USER $user (as ACCOUNTADMIN)"
+          echo "      needed by: all the Snowflake examples (they create a role, a warehouse and a user)"
+          nb_failed=$((nb_failed + 1))
+      fi
+  done
+  if [[ -n "$has_accountadmin" ]]
+  then
+      echo -e "✅ ${GREEN}Role ACCOUNTADMIN${NC}"
+  else
+      echo -e "⚠️ ${YELLOW}Role ACCOUNTADMIN${NC}: $user can't use it"
+      echo "      needed by: the Iceberg variants (connect-snowflake-sink, fm-snowflake-sink)"
+  fi
+  case "$default_role" in
+      ACCOUNTADMIN)
+          echo -e "✅ ${GREEN}Default role${NC} ACCOUNTADMIN" ;;
+      SYSADMIN)
+          echo -e "✅ ${GREEN}Default role${NC} SYSADMIN (the Iceberg external volume variants need ACCOUNTADMIN as default role)" ;;
+      *)
+          echo -e "❌ ${RED}Default role${NC} $default_role: the examples create their database with the default role        👉 ALTER USER $user SET DEFAULT_ROLE = ACCOUNTADMIN"
+          nb_failed=$((nb_failed + 1)) ;;
+  esac
+
+  # 3. edition (Enterprise for Iceberg), visible to ORGADMIN only
+  edition=""
+  if echo "$roles" | grep -qx "ORGADMIN" && snowflake_query "USE ROLE ORGADMIN" > /dev/null
+  then
+      if snowflake_query "SHOW ORGANIZATION ACCOUNTS" > /dev/null
+      then
+          edition=$(snowflake_query "SELECT \"edition\" FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) WHERE LOWER(\"account_name\") = '$account_name'" 2> /dev/null | jq -r '.[0][0] // empty' 2> /dev/null) || true
+      fi
+      snowflake_query "USE ROLE $default_role" > /dev/null || true
+  fi
+  case "$edition" in
+      ENTERPRISE|BUSINESS_CRITICAL|VIRTUAL_PRIVATE_SNOWFLAKE)
+          echo -e "✅ ${GREEN}Edition${NC} $edition" ;;
+      STANDARD)
+          echo -e "⚠️ ${YELLOW}Edition${NC} STANDARD: the Iceberg variants need Enterprise (pick it when signing up for a trial)" ;;
+      *)
+          echo -e "⚠️ ${YELLOW}Edition${NC} unknown (only ORGADMIN sees it): the Iceberg variants need Enterprise" ;;
+  esac
+
+  # 4. warehouses the examples left behind (PGWH<user>..., snowflake_object_name): a running one costs credits
+  if snowflake_query "SHOW WAREHOUSES LIKE 'PGWH%'" > /dev/null
+  then
+      counts=$(snowflake_query "SELECT COUNT(*), COUNT_IF(\"state\" = 'STARTED') FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))" 2> /dev/null) || counts=""
+      total=$(echo "$counts" | jq -r '.[0][0] // 0' 2> /dev/null)
+      started=$(echo "$counts" | jq -r '.[0][1] // 0' 2> /dev/null)
+      if [ "${total:-0}" != "0" ]
+      then
+          echo -e "ℹ️  $total warehouse(s) PGWH… left by the examples, $started running (they suspend themselves; drop them with DROP WAREHOUSE)"
+      fi
+  fi
+
+  echo ""
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail"
+  else
+      log "🎉 the Snowflake account is ready for the Snowflake examples"
   fi
 
 }
@@ -116230,6 +116677,13 @@ playground_account_parse_requirements() {
       shift $#
       ;;
 
+    snowflake)
+      action="snowflake"
+      shift
+      playground_account_snowflake_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_account_usage >&2
@@ -117589,6 +118043,265 @@ playground_account_azure_check_parse_requirements() {
           exit 1
         fi
         ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_snowflake_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_snowflake_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_snowflake_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_snowflake_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_snowflake_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_snowflake_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_snowflake_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account snowflake setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --account)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--account']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--account requires an argument: --account ACCOUNT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --user)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_snowflake_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_snowflake_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account snowflake check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
 
       --)
         shift
@@ -175113,6 +175826,11 @@ playground_account_completion() {
         playground_account_azure_completion "$completion_current" "$@"
         return
         ;;
+      snowflake)
+        shift
+        playground_account_snowflake_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -175122,7 +175840,7 @@ playground_account_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" ccloud salesforce gcp azure
+  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -175819,6 +176537,125 @@ playground_account_azure_check_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subscription "$completion_current" --subscription -s
+  fi
+
+}
+
+# :command.completion_function
+playground_account_snowflake_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_snowflake_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_snowflake_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_snowflake_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --account)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--account"]=1
+
+        ;;
+      --user)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --account "$completion_current" --account
+    completion_flag_candidates --user "$completion_current" --user
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_snowflake_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
   fi
 
 }
@@ -203585,6 +204422,9 @@ run() {
     "account azure") playground_account_azure_command ;;
     "account azure setup") playground_account_azure_setup_command ;;
     "account azure check") playground_account_azure_check_command ;;
+    "account snowflake") playground_account_snowflake_command ;;
+    "account snowflake setup") playground_account_snowflake_setup_command ;;
+    "account snowflake check") playground_account_snowflake_check_command ;;
     "salesforce") playground_salesforce_command ;;
     "ccloud") playground_ccloud_command ;;
     "cloud-resources") playground_cloud_resources_command ;;

@@ -1,0 +1,68 @@
+name: snowflake
+expose: always
+help: |-
+  ❄️ Set up the Snowflake account of the Snowflake examples, and check it
+
+    setup   validate and store the account identifier, admin user and password
+    check   verify that the stored login works and has the roles the examples need
+
+  The examples create their own database, role, warehouse and user with the
+  admin login you give them: what they need is that login, in the right
+  form, with the right roles. Only signing up for the account (a 30-day
+  trial works, Enterprise edition for the Iceberg variants) stays manual.
+
+  📖 Step by step guide (trial, account identifier, roles, troubleshooting):
+  https://kafka-docker-playground.io/#/snowflake
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the Snowflake login of the Snowflake examples
+
+    Takes the account identifier in any form (the account URL,
+    orgname-accountname or <locator>.<region>.<cloud>) and turns it into the
+    one the examples use, logs in with the admin user and password exactly
+    like the examples (password login, as snowsql does), shows the roles
+    and the edition, then stores SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME
+    and SNOWFLAKE_PASSWORD with 'playground secrets set', and runs check.
+
+    Missing values are taken from the stored ones, else asked for (the
+    password without echo). Needs neither snowsql nor Docker.
+  flags:
+  - long: --account
+    arg: account
+    required: false
+    help: |-
+      🏔️ Account identifier, or the account URL (https://<it>.snowflakecomputing.com)
+  - long: --user
+    arg: user
+    required: false
+    help: |-
+      👤 Admin user (must be able to use SECURITYADMIN, SYSADMIN and USERADMIN, ACCOUNTADMIN for Iceberg)
+  - long: --password
+    arg: password
+    required: false
+    help: |-
+      🔐 Its password (asked for without echo when missing)
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account snowflake setup
+  - playground account snowflake setup --account https://xy12345.eu-west-3.aws.snowflakecomputing.com --user ADMIN
+- name: check
+  help: |-
+    🩺 Check that the stored Snowflake login works for the Snowflake examples
+
+    Logs in with SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME and
+    SNOWFLAKE_PASSWORD exactly like the examples (password login, as
+    snowsql does), explains a rejection (wrong password, MFA required,
+    locked user, network policy, wrong account identifier), then checks the
+    roles the examples use (SECURITYADMIN, SYSADMIN, USERADMIN, ACCOUNTADMIN
+    for Iceberg), the default role, the edition (Enterprise for Iceberg)
+    and the warehouses the examples left behind.
+
+    Read-only, needs neither snowsql nor Docker, takes a few seconds.
+
+    Exits with 1 when the login fails.
+  examples:
+  - playground account snowflake check

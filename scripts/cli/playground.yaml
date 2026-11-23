@@ -503,10 +503,11 @@ subcommands:
     \ salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event,
     Change Data Capture\n  gcp          a Google Cloud project: APIs, service account
     with its roles, key\n  azure        an Azure subscription: service principal with
-    its roles, resource providers\n\nEach provider has 'setup' (configure the account
+    its roles, resource providers\n  snowflake    a Snowflake account: account identifier,
+    admin login, roles, edition\n\nEach provider has 'setup' (configure the account
     in one command, store\nthe variables with 'playground secrets set') and, except
     ccloud, 'check'\n(a few seconds, read-only: does the stored login still work,
-    and what is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure"
+    and what is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake"
   usage: playground account COMMAND
   options: []
   subcommands:
@@ -900,6 +901,59 @@ subcommands:
         description: "\U0001F5C2️ Subscription name (stored as AZURE_SUBSCRIPTION_NAME)\n\nDefault:
           AZURE_SUBSCRIPTION_NAME (environment, then secrets store),\nelse the only
           subscription the account can see."
+  - name: snowflake
+    description: "❄️ Set up the Snowflake account of the Snowflake examples, and check
+      it\n\n  setup   validate and store the account identifier, admin user and password\n
+      \ check   verify that the stored login works and has the roles the examples
+      need\n\nThe examples create their own database, role, warehouse and user with
+      the\nadmin login you give them: what they need is that login, in the right\nform,
+      with the right roles. Only signing up for the account (a 30-day\ntrial works,
+      Enterprise edition for the Iceberg variants) stays manual.\n\n\U0001F4D6 Step
+      by step guide (trial, account identifier, roles, troubleshooting):\nhttps://kafka-docker-playground.io/#/snowflake"
+    usage: playground account snowflake COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Validate and store the Snowflake login of the Snowflake
+        examples\n\nTakes the account identifier in any form (the account URL,\norgname-accountname
+        or <locator>.<region>.<cloud>) and turns it into the\none the examples use,
+        logs in with the admin user and password exactly\nlike the examples (password
+        login, as snowsql does), shows the roles\nand the edition, then stores SNOWFLAKE_ACCOUNT_NAME,
+        SNOWFLAKE_USERNAME\nand SNOWFLAKE_PASSWORD with 'playground secrets set',
+        and runs check.\n\nMissing values are taken from the stored ones, else asked
+        for (the\npassword without echo). Needs neither snowsql nor Docker."
+      usage: playground account snowflake setup [OPTIONS]
+      options:
+      - names:
+        - "--account"
+        argument: ACCOUNT
+        description: "\U0001F3D4️ Account identifier, or the account URL (https://<it>.snowflakecomputing.com)"
+      - names:
+        - "--user"
+        argument: USER
+        description: "\U0001F464 Admin user (must be able to use SECURITYADMIN, SYSADMIN
+          and USERADMIN, ACCOUNTADMIN for Iceberg)"
+      - names:
+        - "--password"
+        argument: PASSWORD
+        description: "\U0001F510 Its password (asked for without echo when missing)"
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check that the stored Snowflake login works for the
+        Snowflake examples\n\nLogs in with SNOWFLAKE_ACCOUNT_NAME, SNOWFLAKE_USERNAME
+        and\nSNOWFLAKE_PASSWORD exactly like the examples (password login, as\nsnowsql
+        does), explains a rejection (wrong password, MFA required,\nlocked user, network
+        policy, wrong account identifier), then checks the\nroles the examples use
+        (SECURITYADMIN, SYSADMIN, USERADMIN, ACCOUNTADMIN\nfor Iceberg), the default
+        role, the edition (Enterprise for Iceberg)\nand the warehouses the examples
+        left behind.\n\nRead-only, needs neither snowsql nor Docker, takes a few seconds.\n\nExits
+        with 1 when the login fails."
+      usage: playground account snowflake check
+      options: []
 - name: cloud-resources
   description: "☁️ What the playground left behind in your cloud accounts, what it
     costs, and cleaning it up\n\nExamples that talk to a real cloud create real resources,
