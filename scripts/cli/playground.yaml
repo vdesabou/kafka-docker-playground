@@ -502,10 +502,11 @@ subcommands:
     \      your Confluent Cloud environment, one cluster per cloud, their API keys\n
     \ salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event,
     Change Data Capture\n  gcp          a Google Cloud project: APIs, service account
-    with its roles, key\n\nEach provider has 'setup' (configure the account in one
-    command, store\nthe variables with 'playground secrets set') and, except ccloud,
-    'check'\n(a few seconds, read-only: does the stored login still work, and what
-    is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp"
+    with its roles, key\n  azure        an Azure subscription: service principal with
+    its roles, resource providers\n\nEach provider has 'setup' (configure the account
+    in one command, store\nthe variables with 'playground secrets set') and, except
+    ccloud, 'check'\n(a few seconds, read-only: does the stored login still work,
+    and what is\nmissing).\n\n\U0001F4D6 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure"
   usage: playground account COMMAND
   options: []
   subcommands:
@@ -816,6 +817,89 @@ subcommands:
         argument: KEYFILE
         description: "\U0001F4C4 Service account key file to check instead of the
           stored one (e.g. an example's keyfile.json)"
+  - name: azure
+    description: "☁️ Set up an Azure subscription for the Azure examples, and check
+      it\n\n  setup   a service principal for the examples (no browser login on every
+      run), resource providers\n  check   verify that the stored service principal
+      logs in, its roles, the resource providers\n\nEvery Azure example creates its
+      own resource group and deletes it at the\nend: what they need is a login allowed
+      to do it. Without a service\nprincipal, each run opens the browser for 'az login'.\n\n\U0001F4D6
+      Step by step guide (subscription, roles, what each example needs, troubleshooting):\nhttps://kafka-docker-playground.io/#/azure"
+    usage: playground account azure COMMAND
+    options: []
+    subcommands:
+    - name: setup
+      description: "\U0001F6E0️ Configure an Azure subscription for the Azure examples\n\nWith
+        the az CLI installed on your machine:\n\n  • registers the resource providers
+        the examples use (Storage,\n    DocumentDB, EventHub, ServiceBus, Kusto, Search,
+        Web,\n    OperationalInsights, Insights, Sql)\n  • creates the service principal
+        kdp-playground-<user> (reused if it\n    exists) with the roles Contributor
+        and Role Based Access Control\n    Administrator on the subscription, and
+        a client secret valid 1 year\n\nthen waits until the service principal can
+        log in, and stores\nAZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME
+        and\nAZ_USER with 'playground secrets set': the examples then log in with
+        it,\nno browser.\n\nWithout --current-login, 'az login' opens the browser
+        once, in an az\nconfiguration of its own: your own az login is left alone.
+        Running it\nagain changes nothing while the stored secret still works.\n\n⚠️
+        Contributor on the whole subscription: use a subscription for tests,\nnot
+        a production one."
+      usage: playground account azure setup [OPTIONS]
+      options:
+      - names:
+        - "--subscription"
+        - "-s"
+        argument: SUBSCRIPTION
+        description: "\U0001F5C2️ Subscription name (stored as AZURE_SUBSCRIPTION_NAME)\n\nDefault:
+          AZURE_SUBSCRIPTION_NAME (environment, then secrets store),\nelse the only
+          subscription the account can see."
+      - names:
+        - "--current-login"
+        argument: ''
+        description: "\U0001F511 Use the account your own az is already logged into
+          (az account show): no browser"
+      - names:
+        - "--tenant"
+        argument: TENANT
+        description: "\U0001F3E2 Tenant id or domain to log into (az login --tenant),
+          when your account belongs to several"
+      - names:
+        - "--service-principal"
+        argument: SERVICE_PRINCIPAL
+        description: "\U0001F916 Display name of the service principal (default kdp-playground-<user>)\n\nNever
+          pg<user>: the data lake example resets the secrets of that app."
+      - names:
+        - "--new-secret"
+        argument: ''
+        description: "♻️ Add a new client secret even if the stored one still works"
+      - names:
+        - "--dry-run"
+        argument: ''
+        description: "\U0001F9EA Only print the providers, the service principal and
+          the roles, change nothing"
+      - names:
+        - "--no-store"
+        argument: ''
+        description: "\U0001F4CB Print the export commands instead of storing the
+          variables"
+    - name: check
+      description: "\U0001FA7A Check that the stored Azure service principal works
+        for the Azure examples\n\nLogs in with AZ_CLIENT_ID, AZ_CLIENT_SECRET and
+        AZ_TENANT_ID exactly like\nthe examples do (client credentials), explains
+        a rejection, then checks\nthe subscription AZURE_SUBSCRIPTION_NAME, the roles
+        of the service\nprincipal on it, the resource providers the examples use,
+        the extra\nservice principals of the CI (AZURE_LOGS_*, AZURE_DATALAKE_*,\nAZURE_COGNITIVE_*)
+        when they are set, and the resource groups your\nexamples left behind.\n\nRead-only,
+        needs neither az nor Docker, takes a few seconds.\n\nExits with 1 when the
+        service principal can't log in."
+      usage: playground account azure check [OPTIONS]
+      options:
+      - names:
+        - "--subscription"
+        - "-s"
+        argument: SUBSCRIPTION
+        description: "\U0001F5C2️ Subscription name (stored as AZURE_SUBSCRIPTION_NAME)\n\nDefault:
+          AZURE_SUBSCRIPTION_NAME (environment, then secrets store),\nelse the only
+          subscription the account can see."
 - name: cloud-resources
   description: "☁️ What the playground left behind in your cloud accounts, what it
     costs, and cleaning it up\n\nExamples that talk to a real cloud create real resources,

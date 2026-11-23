@@ -396,6 +396,9 @@ They are stored in `~/.config/kafka-docker-playground` (never in the repository)
 > [!TIP]
 > ☁️ The GCP examples need a project with the right APIs and a service account key: [GCP examples: set up a project](/gcp.md) does it with `playground account gcp setup` (and `playground account gcp check` when an example fails on permissions).
 
+> [!TIP]
+> ☁️ The Azure examples log in with a service principal (no browser on every run): [Azure examples: set up a subscription](/azure.md) creates it with `playground account azure setup` (and `playground account azure check` when an example fails on its login, roles or resource providers).
+
 ## 🌤️ Confluent Cloud examples
 
 Simply use [playground run](/playground%20run) command ! Below, the menu shows the Confluent Cloud options of a fully managed connector example (it quits before running it):

@@ -6,6 +6,8 @@ Quickly test the [Fully Managed Azure Event Hubs Source](https://docs.confluent.
 
 ## Prerequisites
 
+> `playground account azure setup` creates a service principal for the Azure examples (no browser login on every run) and registers the resource providers, see [Azure examples: set up a subscription](https://kafka-docker-playground.io/#/azure). `playground account azure check` verifies it.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 Azure login: the script runs `az login` (browser), unless `AZ_CLIENT_ID`, `AZ_CLIENT_SECRET` and `AZ_TENANT_ID` are set, in which case it logs in with that service principal.

@@ -5,6 +5,7 @@
 - [🚀 How to Use](/how-to-use.md)
 - [☁️ Salesforce examples](/salesforce.md)
 - [☁️ GCP examples](/gcp.md)
+- [☁️ Azure examples](/azure.md)
 - [🧠 CLI](/cli.md)
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)

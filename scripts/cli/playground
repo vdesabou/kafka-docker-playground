@@ -116,6 +116,7 @@ playground_usage() {
   printf "  %s   🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n" "$(green "account ccloud")                            "
   printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "account salesforce")                        "
   printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "account gcp")                               "
+  printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "account azure")                             "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -3644,7 +3645,7 @@ playground_secrets_lint_usage() {
 playground_account_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account\n\n"
-    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n\n"
+    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n\n"
   else
     printf "playground account - ☁️ Set up and check the accounts the examples run against\n\n"
   fi
@@ -3663,6 +3664,9 @@ playground_account_usage() {
   printf "  %s   ☁️ Set up a Google Cloud project for the GCP examples, and check it\n" "$(green "gcp")             "
   printf "  %s   🛠️ Configure a Google Cloud project for the GCP examples\n" "$(green "gcp setup")       "
   printf "  %s   🩺 Check that the stored GCP key works for the GCP examples\n" "$(green "gcp check")       "
+  printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "azure")           "
+  printf "  %s   🛠️ Configure an Azure subscription for the Azure examples\n" "$(green "azure setup")     "
+  printf "  %s   🩺 Check that the stored Azure service principal works for the Azure examples\n" "$(green "azure check")     "
   echo
 
   # :command.long_usage
@@ -4117,6 +4121,146 @@ playground_account_gcp_check_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground account gcp check\n"
     printf "  playground account gcp check --keyfile\n  connect/connect-gcp-gcs-sink/keyfile.json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_azure_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account azure\n\n"
+    printf "  ☁️ Set up an Azure subscription for the Azure examples, and check it\n  \n    setup   a service principal for the examples (no browser login on every\n  run), resource providers\n    check   verify that the stored service principal logs in, its roles, the\n  resource providers\n  \n  Every Azure example creates its own resource group and deletes it at the\n  end: what they need is a login allowed to do it. Without a service\n  principal, each run opens the browser for 'az login'.\n  \n  📖 Step by step guide (subscription, roles, what each example needs,\n  troubleshooting):\n  https://kafka-docker-playground.io/#/azure\n\n"
+  else
+    printf "playground account azure - ☁️ Set up an Azure subscription for the Azure examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account azure COMMAND\n"
+  printf "  playground account azure [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Configure an Azure subscription for the Azure examples\n" "$(green "setup")"
+  printf "  %s   🩺 Check that the stored Azure service principal works for the Azure examples\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_azure_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account azure setup\n\n"
+    printf "  🛠️ Configure an Azure subscription for the Azure examples\n  \n  With the az CLI installed on your machine:\n  \n    • registers the resource providers the examples use (Storage,\n      DocumentDB, EventHub, ServiceBus, Kusto, Search, Web,\n      OperationalInsights, Insights, Sql)\n    • creates the service principal kdp-playground-<user> (reused if it\n      exists) with the roles Contributor and Role Based Access Control\n      Administrator on the subscription, and a client secret valid 1 year\n  \n  then waits until the service principal can log in, and stores\n  AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME and\n  AZ_USER with 'playground secrets set': the examples then log in with it,\n  no browser.\n  \n  Without --current-login, 'az login' opens the browser once, in an az\n  configuration of its own: your own az login is left alone. Running it\n  again changes nothing while the stored secret still works.\n  \n  ⚠️ Contributor on the whole subscription: use a subscription for tests,\n  not a production one.\n\n"
+  else
+    printf "playground account azure setup - 🛠️ Configure an Azure subscription for the Azure examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account azure setup [OPTIONS]\n"
+  printf "  playground account azure setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subscription, -s SUBSCRIPTION")"
+    printf "    🗂️ Subscription name (stored as AZURE_SUBSCRIPTION_NAME)\n    \n    Default: AZURE_SUBSCRIPTION_NAME (environment, then secrets store),\n    else the only subscription the account can see.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--current-login")"
+    printf "    🔑 Use the account your own az is already logged into (az account show): no\n    browser\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tenant TENANT")"
+    printf "    🏢 Tenant id or domain to log into (az login --tenant), when your account\n    belongs to several\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--service-principal SERVICE_PRINCIPAL")"
+    printf "    🤖 Display name of the service principal (default kdp-playground-<user>)\n    \n    Never pg<user>: the data lake example resets the secrets of that app.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--new-secret")"
+    printf "    ♻️ Add a new client secret even if the stored one still works\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Only print the providers, the service principal and the roles, change\n    nothing\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account azure setup --subscription \"My test subscription\"\n"
+    printf "  playground account azure setup --current-login\n"
+    printf "  playground account azure setup --dry-run\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_azure_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account azure check\n\n"
+    printf "  🩺 Check that the stored Azure service principal works for the Azure examples\n  \n  Logs in with AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID exactly like\n  the examples do (client credentials), explains a rejection, then checks\n  the subscription AZURE_SUBSCRIPTION_NAME, the roles of the service\n  principal on it, the resource providers the examples use, the extra\n  service principals of the CI (AZURE_LOGS_*, AZURE_DATALAKE_*,\n  AZURE_COGNITIVE_*) when they are set, and the resource groups your\n  examples left behind.\n  \n  Read-only, needs neither az nor Docker, takes a few seconds.\n  \n  Exits with 1 when the service principal can't log in.\n\n"
+  else
+    printf "playground account azure check - 🩺 Check that the stored Azure service principal works for the Azure examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account azure check [OPTIONS]\n"
+  printf "  playground account azure check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subscription, -s SUBSCRIPTION")"
+    printf "    🗂️ Subscription name (stored as AZURE_SUBSCRIPTION_NAME)\n    \n    Default: AZURE_SUBSCRIPTION_NAME (environment, then secrets store),\n    else the only subscription the account can see.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account azure check\n"
     echo
 
   fi
@@ -37699,6 +37843,88 @@ function gcp_jwt_token () {
   return 1
 }
 
+# ---------------------------------------------------------------------------
+# playground account azure setup | check
+# ---------------------------------------------------------------------------
+
+# The resource providers the Azure examples create resources with: provider|examples
+function azure_setup_providers () {
+  cat << 'PROVIDERS'
+Microsoft.Storage|blob storage, data lake gen2, functions
+Microsoft.DocumentDB|cosmosdb
+Microsoft.EventHub|event hubs source
+Microsoft.ServiceBus|service bus source
+Microsoft.Kusto|data explorer (kusto) sink
+Microsoft.Search|cognitive search sink
+Microsoft.Web|functions sink
+Microsoft.OperationalInsights|log analytics sink
+Microsoft.Insights|log analytics v2 sink (data collection rules), functions
+Microsoft.Sql|synapse analytics sink and source
+PROVIDERS
+}
+
+# Roles of the service principal on the subscription: role|role definition id|why
+function azure_setup_roles () {
+  cat << 'ROLES'
+Contributor|b24988ac-6180-42a0-ab88-20f7382dd24c|create and delete the resource group of each example
+Role Based Access Control Administrator|f58310d9-a9f6-439a-9e8d-f62e7b41a168|the log analytics v2 and data lake examples assign roles (Monitoring Metrics Publisher, Storage Blob Data Owner)
+ROLES
+}
+
+# az with a configuration folder of its own (empty azure_az_config = your own ~/.azure)
+function azure_az () {
+  if [ -n "${azure_az_config:-}" ]
+  then
+    AZURE_CONFIG_DIR="$azure_az_config" az "$@"
+  else
+    az "$@"
+  fi
+}
+
+# Client credentials token of a service principal, what the examples get with 'az login --service-principal'.
+# Sets azure_access_token, prints the error response.
+function azure_sp_token () {
+  tenant="$1"
+  client_id="$2"
+  client_secret="$3"
+  scope="${4:-https://management.azure.com/.default}"
+  azure_access_token=""
+  response=$(curl -sS -m 30 -X POST "https://login.microsoftonline.com/$tenant/oauth2/v2.0/token" \
+    --data-urlencode "grant_type=client_credentials" \
+    --data-urlencode "client_id=$client_id" \
+    --data-urlencode "client_secret=$client_secret" \
+    --data-urlencode "scope=$scope" 2>&1) || true
+  azure_access_token=$(echo "$response" | jq -r '.access_token // empty' 2> /dev/null) || true
+  if [ -n "$azure_access_token" ]
+  then
+    return 0
+  fi
+  echo "$response" | jq -c '{error, error_description: (.error_description // "" | split("\r\n")[0] | split(" Trace ID:")[0])}' 2> /dev/null || echo "$response"
+  return 1
+}
+
+# One claim of a JWT (the oid of a token)
+function azure_jwt_claim () {
+  payload=$(echo "$1" | cut -d. -f2 | tr '_-' '/+')
+  while [ $(( ${#payload} % 4 )) -ne 0 ]
+  do
+    payload="${payload}="
+  done
+  echo "$payload" | openssl base64 -d -A 2> /dev/null | jq -r ".$2 // empty"
+}
+
+# Likely cause of an Entra ID (AADSTS) error
+function azure_explain_login_error () {
+  case "$1" in
+    *AADSTS7000215*) echo "invalid client secret: AZ_CLIENT_SECRET is wrong (or the secret ID was stored instead of its value)" ;;
+    *AADSTS7000222*) echo "the client secret has expired: run playground account azure setup (it creates a new one)" ;;
+    *AADSTS700016*|*AADSTS700038*) echo "no application with this AZ_CLIENT_ID in tenant AZ_TENANT_ID: wrong tenant, or the app was deleted" ;;
+    *AADSTS90002*|*AADSTS900023*) echo "tenant AZ_TENANT_ID not found" ;;
+    *AADSTS53003*) echo "blocked by a conditional access policy of the tenant" ;;
+    *) echo "" ;;
+  esac
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
@@ -54945,6 +55171,488 @@ playground_account_gcp_check_command() {
       logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail (new roles can take 2 minutes to apply)"
   else
       log "🎉 project $project is ready for the GCP examples"
+  fi
+
+}
+
+# :command.function
+playground_account_azure_setup_command() {
+
+  # src/commands/account/azure/setup.sh
+  subscription="${args[--subscription]}"
+  current_login="${args[--current-login]}"
+  tenant_arg="${args[--tenant]}"
+  sp_name="${args[--service-principal]}"
+  new_secret="${args[--new-secret]}"
+  dry_run="${args[--dry-run]}"
+  no_store="${args[--no-store]}"
+
+  user_compact="$(echo "${USER}" | tr -d '._-' | tr '[:upper:]' '[:lower:]')"
+  if [[ ! -n "$sp_name" ]]
+  then
+      sp_name="kdp-playground-$user_compact"
+  fi
+  if [ "$(echo "$sp_name" | tr '[:upper:]' '[:lower:]')" == "pg$user_compact" ]
+  then
+      logerror "❌ --service-principal pg$user_compact is the app the data lake example resets the secrets of: pick another name"
+      exit 1
+  fi
+  profile="$(get_active_secret_profile)"
+  if [[ ! -n "$subscription" ]]
+  then
+      subscription="$(secret_get AZURE_SUBSCRIPTION_NAME "$profile" 2> /dev/null || true)"
+  fi
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 --dry-run: nothing changed. On subscription ${subscription:-<subscription>}, setup would:"
+      log "🔌 register the resource providers (if not registered yet):"
+      azure_setup_providers | while IFS='|' read -r provider examples
+      do
+          printf '   %-32s %s\n' "$provider" "$examples"
+      done
+      log "🤖 create the service principal $sp_name (or reuse it) and give it, on the subscription:"
+      azure_setup_roles | while IFS='|' read -r role role_id why
+      do
+          printf '   %-40s %s\n' "$role" "$why"
+      done
+      log "🔑 add a client secret valid 1 year (or reuse the stored one while it works)"
+      log "💾 store AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME and AZ_USER with playground secrets set"
+      exit 0
+  fi
+
+  for tool in jq openssl curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+  if ! command -v az > /dev/null 2>&1
+  then
+      logerror "❌ the Azure CLI (az) is not installed"
+      logerror "   install it: https://learn.microsoft.com/cli/azure/install-azure-cli (brew install azure-cli on macOS)"
+      exit 1
+  fi
+  azure_tmp_dir=$(mktemp -d -t playground-azure-setup.XXXXXX)
+  chmod 700 "$azure_tmp_dir"
+  trap 'rm -rf "$azure_tmp_dir"' EXIT
+
+  # 1. the account
+  if [[ -n "$current_login" ]]
+  then
+      azure_az_config=""
+      if ! azure_az account show -o none > /dev/null 2>&1
+      then
+          logerror "❌ your az is not logged in (az account show): run az login, or run without --current-login"
+          exit 1
+      fi
+  else
+      azure_az_config="${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/azure"
+      mkdir -p "$azure_az_config"
+      if ! azure_az account show -o none > /dev/null 2>&1
+      then
+          log "🌐 log into Azure in the browser, with an account allowed to create service principals and assign roles"
+          # no interactive subscription picker: the subscription is chosen below
+          azure_az config set core.login_experience_v2=off --only-show-errors > /dev/null 2>&1 || true
+          if ! azure_az login ${tenant_arg:+--tenant "$tenant_arg"} --only-show-errors -o none
+          then
+              logerror "❌ az login failed"
+              exit 1
+          fi
+      fi
+  fi
+  az_user=$(azure_az account show --query user.name -o tsv 2> /dev/null) || true
+  log "👤 account $az_user"
+
+  # 2. the subscription
+  subscriptions=$(azure_az account list --query "[?state=='Enabled'].[name,id,tenantId]" -o tsv 2> /dev/null) || true
+  if [[ ! -n "$subscription" ]]
+  then
+      if [ "$(echo "$subscriptions" | awk 'NF' | wc -l | tr -d ' ')" == "1" ]
+      then
+          subscription=$(echo "$subscriptions" | cut -f1)
+      else
+          logerror "❌ pass the subscription with --subscription, $az_user can see:"
+          echo "$subscriptions" | cut -f1 | awk 'NF { print "   " $0 }' >&2
+          exit 1
+      fi
+  fi
+  subscription_id=$(echo "$subscriptions" | awk -F'\t' -v n="$subscription" '$1 == n { print $2; exit }')
+  tenant=$(echo "$subscriptions" | awk -F'\t' -v n="$subscription" '$1 == n { print $3; exit }')
+  if [ -z "$subscription_id" ]
+  then
+      logerror "❌ subscription $subscription not found (or not enabled) for $az_user"
+      exit 1
+  fi
+  scope="/subscriptions/$subscription_id"
+  log "🗂️ subscription $subscription ($subscription_id), tenant $tenant"
+
+  # 3. resource providers (registration is asynchronous: a few minutes)
+  registered=$(azure_az provider list --subscription "$subscription_id" --query "[?registrationState=='Registered'].namespace" -o tsv 2> /dev/null) || true
+  to_register=""
+  while IFS='|' read -r provider examples
+  do
+      if ! echo "$registered" | grep -qix "$provider"
+      then
+          to_register="$to_register $provider"
+      fi
+  done < <(azure_setup_providers)
+  if [[ -n "$to_register" ]]
+  then
+      log "🔌 registering the resource providers:$to_register (asynchronous, a few minutes)"
+      for provider in $to_register
+      do
+          azure_az provider register --namespace "$provider" --subscription "$subscription_id" --only-show-errors -o none < /dev/null \
+              || logwarn "   ⚠️ could not register $provider (needs Contributor on the subscription)"
+      done
+  else
+      log "🔌 the $(azure_setup_providers | wc -l | tr -d ' ') resource providers of the examples are registered"
+  fi
+
+  # 4. the service principal
+  app_id=$(azure_az ad app list --display-name "$sp_name" --query "[0].appId" -o tsv 2> /dev/null) || true
+  client_secret=""
+  if [ -n "$app_id" ]
+  then
+      log "🤖 service principal $sp_name already exists (app id $app_id)"
+      stored_id="$(secret_get AZ_CLIENT_ID "$profile" 2> /dev/null || true)"
+      stored_secret="$(secret_get AZ_CLIENT_SECRET "$profile" 2> /dev/null || true)"
+      if [[ ! -n "$new_secret" ]] && [ "$stored_id" == "$app_id" ] && [ -n "$stored_secret" ] && azure_sp_token "$tenant" "$app_id" "$stored_secret" > /dev/null
+      then
+          client_secret="$stored_secret"
+          log "🔑 reusing the stored client secret (it still logs in)"
+      fi
+      if ! azure_az ad sp show --id "$app_id" -o none > /dev/null 2>&1
+      then
+          azure_az ad sp create --id "$app_id" -o none --only-show-errors < /dev/null || { logerror "❌ failed to create the service principal of app $app_id"; exit 1; }
+      fi
+  else
+      log "🤖 creating service principal $sp_name"
+      if ! azure_az ad app create --display-name "$sp_name" --sign-in-audience AzureADMyOrg --query appId -o tsv > "$azure_tmp_dir/app.out" 2> "$azure_tmp_dir/app.err" < /dev/null
+      then
+          logerror "❌ failed to create the app registration $sp_name: $(head -3 "$azure_tmp_dir/app.err")"
+          logerror "   your account must be allowed to register applications in tenant $tenant (Entra ID > User settings), or ask an admin"
+          exit 1
+      fi
+      app_id=$(tail -1 "$azure_tmp_dir/app.out")
+      # a new app takes a few seconds to be visible
+      attempt=1
+      until azure_az ad sp create --id "$app_id" -o none --only-show-errors > /dev/null 2> "$azure_tmp_dir/sp.err" < /dev/null
+      do
+          if [ $attempt -ge 6 ]
+          then
+              logerror "❌ failed to create the service principal of app $app_id: $(head -3 "$azure_tmp_dir/sp.err")"
+              exit 1
+          fi
+          attempt=$((attempt + 1))
+          sleep 5
+      done
+  fi
+  if [ -z "$client_secret" ]
+  then
+      # --append: the other secrets of the app (another machine, CI) keep working
+      if ! client_secret=$(azure_az ad app credential reset --id "$app_id" --append --years 1 --display-name kdp-playground --query password -o tsv 2> "$azure_tmp_dir/secret.err" < /dev/null) || [ -z "$client_secret" ]
+      then
+          logerror "❌ failed to add a client secret to app $app_id: $(head -3 "$azure_tmp_dir/secret.err")"
+          exit 1
+      fi
+      log "🔑 added a client secret to $sp_name, valid 1 year"
+  fi
+  sp_oid=$(azure_az ad sp show --id "$app_id" --query id -o tsv 2> /dev/null) || true
+
+  # 5. roles on the subscription
+  nb_granted=0
+  nb_role_failed=0
+  while IFS='|' read -r role role_id why
+  do
+      count=$(azure_az role assignment list --assignee "$app_id" --scope "$scope" --role "$role" --include-inherited --query "length(@)" -o tsv 2> /dev/null) || count=""
+      if [ "${count:-0}" != "0" ]
+      then
+          continue
+      fi
+      # a new service principal takes a few seconds to be visible to role assignments
+      granted=""
+      for attempt in 1 2 3 4
+      do
+          if azure_az role assignment create --assignee-object-id "$sp_oid" --assignee-principal-type ServicePrincipal \
+              --role "$role" --scope "$scope" -o none --only-show-errors > /dev/null 2> "$azure_tmp_dir/role.err" < /dev/null
+          then
+              granted=1
+              break
+          fi
+          sleep 10
+      done
+      if [[ -n "$granted" ]]
+      then
+          nb_granted=$((nb_granted + 1))
+      else
+          nb_role_failed=$((nb_role_failed + 1))
+          logwarn "⚠️ could not give $role to $sp_name: $(grep -m1 -i 'error\|authoriz' "$azure_tmp_dir/role.err" | cut -c1-200)"
+          logwarn "   your account needs Owner or User Access Administrator on the subscription; needed for: $why"
+      fi
+  done < <(azure_setup_roles)
+  log "🎭 roles of $sp_name on the subscription checked ($nb_granted given now)"
+
+  # 6. wait until the service principal can log in (a new secret takes up to a minute)
+  deadline=$((SECONDS + 180))
+  until azure_sp_token "$tenant" "$app_id" "$client_secret" > "$azure_tmp_dir/token.out"
+  do
+      if [ $SECONDS -ge $deadline ]
+      then
+          logerror "❌ the service principal still can't log in after 180 seconds: $(cat "$azure_tmp_dir/token.out")"
+          exit 1
+      fi
+      sleep 10
+  done
+  log "✅ service principal $sp_name can log in"
+  end_date=$(azure_az ad app credential list --id "$app_id" --query "[?displayName=='kdp-playground'].endDateTime | sort(@) | [-1]" -o tsv 2> /dev/null) || true
+  if [ -n "$end_date" ]
+  then
+      log "📅 its client secret expires on ${end_date%%T*}: run setup again before (with --new-secret)"
+  fi
+
+  # 7. store
+  if [[ -n "$no_store" ]]
+  then
+      log "📋 --no-store, the values to export:"
+      echo "export AZ_CLIENT_ID=\"$app_id\""
+      echo "export AZ_CLIENT_SECRET=\"$client_secret\""
+      echo "export AZ_TENANT_ID=\"$tenant\""
+      echo "export AZURE_SUBSCRIPTION_NAME=\"$subscription\""
+      echo "export AZ_USER=\"$az_user\""
+  else
+      playground secrets set AZ_CLIENT_ID --value "$app_id" --plain
+      playground secrets set AZ_CLIENT_SECRET --value "$client_secret" --secret
+      playground secrets set AZ_TENANT_ID --value "$tenant" --plain
+      playground secrets set AZURE_SUBSCRIPTION_NAME --value "$subscription" --plain
+      if [ -n "$az_user" ]
+      then
+          # the owner_email tag of the resource groups: with a service principal login, az would give its app id
+          playground secrets set AZ_USER --value "$az_user" --plain
+      fi
+      log "💾 stored AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_TENANT_ID, AZURE_SUBSCRIPTION_NAME and AZ_USER"
+  fi
+
+  # 8. check, waiting for the roles given now to apply
+  check_out="$azure_tmp_dir/check.out"
+  if [ $nb_granted -gt 0 ]
+  then
+      log "⏳ waiting for the $nb_granted new roles to apply (max 180 seconds)"
+      deadline=$((SECONDS + 180))
+      until AZ_CLIENT_ID="$app_id" AZ_CLIENT_SECRET="$client_secret" AZ_TENANT_ID="$tenant" \
+          playground account azure check --subscription "$subscription" > "$check_out" 2>&1 && grep -q "is ready for the Azure examples" "$check_out"
+      do
+          if [ $SECONDS -ge $deadline ]
+          then
+              break
+          fi
+          sleep 20
+      done
+  else
+      AZ_CLIENT_ID="$app_id" AZ_CLIENT_SECRET="$client_secret" AZ_TENANT_ID="$tenant" \
+          playground account azure check --subscription "$subscription" > "$check_out" 2>&1 || true
+  fi
+  log "🩺 what the service principal can do on $subscription:"
+  cat "$check_out"
+  log "🩺 check it any time with: playground account azure check"
+
+}
+
+# :command.function
+playground_account_azure_check_command() {
+
+  # src/commands/account/azure/check.sh
+  subscription="${args[--subscription]}"
+
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  YELLOW='\033[0;33m'
+  NC='\033[0m'
+
+  for tool in jq openssl curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  azure_tmp_dir=$(mktemp -d -t playground-azure-check.XXXXXX)
+  trap 'rm -rf "$azure_tmp_dir"' EXIT
+
+  # same resolution as an example: exported variable, then the active secrets profile
+  profile="$(get_active_secret_profile)"
+  function azure_check_value () {
+      secret_get "$1" "$profile" 2> /dev/null || true
+  }
+  client_id="$(azure_check_value AZ_CLIENT_ID)"
+  client_secret="$(azure_check_value AZ_CLIENT_SECRET)"
+  tenant="$(azure_check_value AZ_TENANT_ID)"
+  if [[ ! -n "$subscription" ]]
+  then
+      subscription="$(azure_check_value AZURE_SUBSCRIPTION_NAME)"
+  fi
+
+  if [ -z "$client_id" ] || [ -z "$client_secret" ] || [ -z "$tenant" ]
+  then
+      logwarn "⚠️ no service principal: AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID are not all set"
+      logwarn "   the Azure examples open the browser for 'az login' on every run (and can't run unattended)"
+      logerror "👉 playground account azure setup creates a service principal and stores them"
+      exit 1
+  fi
+
+  # 1. login
+  log "🔑 login of service principal $client_id in tenant $tenant (client credentials, like the examples)"
+  # not in a $( ): azure_access_token must reach this shell
+  if ! azure_sp_token "$tenant" "$client_id" "$client_secret" > "$azure_tmp_dir/token.out"
+  then
+      out=$(cat "$azure_tmp_dir/token.out")
+      logerror "❌ Entra ID rejected the login: $(echo "$out" | jq -r '"\(.error) \(.error_description)"' 2> /dev/null || echo "$out")"
+      cause=$(azure_explain_login_error "$out")
+      if [ -n "$cause" ]
+      then
+          logerror "   $cause"
+      elif ! echo "$out" | grep -q '{'
+      then
+          logerror "   login.microsoftonline.com is not reachable from this machine (proxy, firewall?)"
+      fi
+      exit 1
+  fi
+  oid=$(azure_jwt_claim "$azure_access_token" oid)
+  log "✅ login works (object id $oid)"
+
+  function azure_get () {
+      curl -sS -m 30 -o "$azure_tmp_dir/out.json" -w '%{http_code}' -H "Authorization: Bearer $azure_access_token" "https://management.azure.com$1" 2> /dev/null || echo "000"
+  }
+  nb_failed=0
+
+  # 2. the subscription
+  code=$(azure_get "/subscriptions?api-version=2022-12-01")
+  if [ "$code" != "200" ]
+  then
+      logerror "❌ can't list the subscriptions (HTTP $code): $(jq -r '.error.message // empty' "$azure_tmp_dir/out.json" 2> /dev/null)"
+      exit 1
+  fi
+  subscriptions=$(jq -r '.value[] | "\(.subscriptionId)|\(.displayName)|\(.state)"' "$azure_tmp_dir/out.json")
+  if [ -z "$subscriptions" ]
+  then
+      echo -e "❌ ${RED}Subscription${NC}: the service principal has no role on any subscription        👉 playground account azure setup"
+      exit 1
+  fi
+  if [[ ! -n "$subscription" ]]
+  then
+      if [ "$(echo "$subscriptions" | wc -l | tr -d ' ')" == "1" ]
+      then
+          subscription=$(echo "$subscriptions" | cut -d'|' -f2)
+          logwarn "⚠️ AZURE_SUBSCRIPTION_NAME is not set, using the only subscription of the service principal: $subscription"
+      else
+          logerror "❌ AZURE_SUBSCRIPTION_NAME is not set and the service principal sees several subscriptions:"
+          echo "$subscriptions" | cut -d'|' -f2 | sed 's/^/   /' >&2
+          exit 1
+      fi
+  fi
+  subscription_id=$(echo "$subscriptions" | awk -F'|' -v n="$subscription" '$2 == n { print $1; exit }')
+  if [ -z "$subscription_id" ]
+  then
+      echo -e "❌ ${RED}Subscription${NC} $subscription: the service principal has no role on it (it sees: $(echo "$subscriptions" | cut -d'|' -f2 | tr '\n' ',' | sed 's/,$//; s/,/, /g'))"
+      exit 1
+  fi
+  echo -e "✅ ${GREEN}Subscription${NC} $subscription ($subscription_id, $(echo "$subscriptions" | awk -F'|' -v n="$subscription" '$2 == n { print $3; exit }'))"
+
+  # 3. roles of the service principal on the subscription (inherited ones included)
+  code=$(azure_get "/subscriptions/$subscription_id/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01&\$filter=assignedTo('$oid')")
+  if [ "$code" == "200" ]
+  then
+      role_ids=$(jq -r '.value[] | select(.properties.scope as $s | ("/subscriptions/'"$subscription_id"'" | startswith($s)) or ($s == "/") or ($s | startswith("/providers/Microsoft.Management/"))) | .properties.roleDefinitionId | split("/") | last' "$azure_tmp_dir/out.json")
+      owner="8e3af657-a8ff-443b-a75c-2fe8c4bcb635"
+      uaa="18d7d88d-d35e-4fb5-a5c3-7773c20a72d9"
+      while IFS='|' read -r role role_id why
+      do
+          if echo "$role_ids" | grep -qx -e "$role_id" -e "$owner" || { [ "$role_id" != "b24988ac-6180-42a0-ab88-20f7382dd24c" ] && echo "$role_ids" | grep -qx "$uaa"; }
+          then
+              echo -e "✅ ${GREEN}Role $role${NC} (or broader) on the subscription"
+          else
+              echo -e "❌ ${RED}Role $role${NC}: missing on the subscription        👉 playground account azure setup"
+              echo "      needed for: $why"
+              nb_failed=$((nb_failed + 1))
+          fi
+      done < <(azure_setup_roles)
+  else
+      echo -e "⚠️ ${YELLOW}Roles${NC}: can't list the role assignments (HTTP $code $(jq -r '.error.code // empty' "$azure_tmp_dir/out.json" 2> /dev/null))"
+  fi
+
+  # 4. resource providers
+  code=$(azure_get "/subscriptions/$subscription_id/providers?api-version=2021-04-01&\$select=namespace,registrationState")
+  if [ "$code" == "200" ]
+  then
+      while IFS='|' read -r provider examples
+      do
+          state=$(jq -r --arg p "$provider" '.value[] | select(.namespace | ascii_downcase == ($p | ascii_downcase)) | .registrationState' "$azure_tmp_dir/out.json")
+          if [ "$state" == "Registered" ]
+          then
+              echo -e "✅ ${GREEN}$provider${NC}"
+          elif [ "$state" == "Registering" ]
+          then
+              echo -e "⏳ ${YELLOW}$provider${NC}: registering (takes a few minutes)"
+          else
+              echo -e "❌ ${RED}$provider${NC}: ${state:-unknown}        👉 az provider register --namespace $provider --subscription $subscription_id"
+              echo "      needed by: $examples"
+              nb_failed=$((nb_failed + 1))
+          fi
+      done < <(azure_setup_providers)
+  else
+      echo -e "⚠️ ${YELLOW}Resource providers${NC}: can't list them (HTTP $code)"
+  fi
+
+  # 5. the extra service principals CI uses instead of creating Entra apps (only read when GITHUB_RUN_NUMBER is set)
+  for pair in "AZURE_LOGS_CLIENT_ID|AZURE_LOGS_CLIENT_SECRET|log analytics v2 and kusto sinks" \
+              "AZURE_DATALAKE_CLIENT_ID|AZURE_DATALAKE_CLIENT_PASSWORD|data lake gen2 sink" \
+              "AZURE_COGNITIVE_APP_ID|AZURE_COGNITIVE_APP_PASSWORD|cognitive search sink"
+  do
+      id_var="${pair%%|*}"
+      rest="${pair#*|}"
+      secret_var="${rest%%|*}"
+      examples="${rest#*|}"
+      id_value="$(azure_check_value "$id_var")"
+      secret_value="$(azure_check_value "$secret_var")"
+      if [ -z "$id_value" ] || [ -z "$secret_value" ]
+      then
+          continue
+      fi
+      if out=$(azure_sp_token "$tenant" "$id_value" "$secret_value")
+      then
+          echo -e "✅ ${GREEN}$id_var${NC} / $secret_var log in (CI, $examples)"
+      else
+          echo -e "❌ ${RED}$id_var${NC} / $secret_var: $(echo "$out" | jq -r '.error_description' 2> /dev/null | cut -c1-120)"
+          cause=$(azure_explain_login_error "$out")
+          [ -n "$cause" ] && echo "      ${cause//AZ_CLIENT_SECRET/$secret_var}"
+          echo "      needed by: $examples, in CI only (locally the examples create their own Entra app)"
+          nb_failed=$((nb_failed + 1))
+      fi
+  done
+
+  # 6. resource groups your examples left behind (they are named pg<user>...)
+  user_prefix="pg$(echo "${USER}" | tr -d '._-' | tr '[:upper:]' '[:lower:]')"
+  code=$(azure_get "/subscriptions/$subscription_id/resourcegroups?api-version=2021-04-01")
+  if [ "$code" == "200" ]
+  then
+      leftovers=$(jq -r --arg p "$user_prefix" '.value[].name | select(ascii_downcase | startswith($p))' "$azure_tmp_dir/out.json")
+      if [ -n "$leftovers" ]
+      then
+          echo -e "⚠️ ${YELLOW}$(echo "$leftovers" | wc -l | tr -d ' ') resource group(s)${NC} left by your examples: $(echo "$leftovers" | tr '\n' ' ')"
+          echo "      👉 playground cloud-resources cleanup --resource azure --dry-run"
+      fi
+  fi
+
+  echo ""
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail (new roles can take a few minutes to apply)"
+  else
+      log "🎉 subscription $subscription is ready for the Azure examples"
   fi
 
 }
@@ -115515,6 +116223,13 @@ playground_account_parse_requirements() {
       shift $#
       ;;
 
+    azure)
+      action="azure"
+      shift
+      playground_account_azure_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_account_usage >&2
@@ -116607,6 +117322,302 @@ playground_account_gcp_check_parse_requirements() {
       exit 1
     fi
   fi
+
+}
+
+# :command.parse_requirements
+playground_account_azure_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_azure_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_azure_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_azure_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_azure_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_azure_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_azure_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account azure setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subscription | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subscription']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subscription requires an argument: --subscription, -s SUBSCRIPTION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --current-login)
+
+        # :flag.case_no_arg
+        args['--current-login']=1
+        shift
+        ;;
+
+      # :flag.case
+      --tenant)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tenant']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tenant requires an argument: --tenant TENANT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --service-principal)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--service-principal']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--service-principal requires an argument: --service-principal SERVICE_PRINCIPAL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --new-secret)
+
+        # :flag.case_no_arg
+        args['--new-secret']=1
+        shift
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_azure_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_azure_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account azure check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subscription | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subscription']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subscription requires an argument: --subscription, -s SUBSCRIPTION" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -174097,6 +175108,11 @@ playground_account_completion() {
         playground_account_gcp_completion "$completion_current" "$@"
         return
         ;;
+      azure)
+        shift
+        playground_account_azure_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -174106,7 +175122,7 @@ playground_account_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" ccloud salesforce gcp
+  completion_candidates "$completion_current" ccloud salesforce gcp azure
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -174655,6 +175671,154 @@ playground_account_gcp_check_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --project "$completion_current" --project -p
     completion_flag_candidates --keyfile "$completion_current" --keyfile
+  fi
+
+}
+
+# :command.completion_function
+playground_account_azure_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_azure_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_azure_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_azure_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --subscription | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subscription"]=1
+
+        ;;
+      --current-login)
+        completion_blocked_flags["--current-login"]=1
+
+        shift
+        ;;
+      --tenant)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--tenant"]=1
+
+        ;;
+      --service-principal)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--service-principal"]=1
+
+        ;;
+      --new-secret)
+        completion_blocked_flags["--new-secret"]=1
+
+        shift
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --subscription "$completion_current" --subscription -s
+    completion_flag_candidates --current-login "$completion_current" --current-login
+    completion_flag_candidates --tenant "$completion_current" --tenant
+    completion_flag_candidates --service-principal "$completion_current" --service-principal
+    completion_flag_candidates --new-secret "$completion_current" --new-secret
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_azure_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --subscription | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subscription"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --subscription "$completion_current" --subscription -s
   fi
 
 }
@@ -202418,6 +203582,9 @@ run() {
     "account gcp") playground_account_gcp_command ;;
     "account gcp setup") playground_account_gcp_setup_command ;;
     "account gcp check") playground_account_gcp_check_command ;;
+    "account azure") playground_account_azure_command ;;
+    "account azure setup") playground_account_azure_setup_command ;;
+    "account azure check") playground_account_azure_check_command ;;
     "salesforce") playground_salesforce_command ;;
     "ccloud") playground_ccloud_command ;;
     "cloud-resources") playground_cloud_resources_command ;;

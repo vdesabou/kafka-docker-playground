@@ -6,6 +6,8 @@ Quickly test the [Fully Managed Azure Cognitive Search Sink](https://docs.conflu
 
 ## Prerequisites
 
+> `playground account azure setup` creates a service principal for the Azure examples (no browser login on every run) and registers the resource providers, see [Azure examples: set up a subscription](https://kafka-docker-playground.io/#/azure). `playground account azure check` verifies it.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 Azure: the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) logs in with `az login` (browser), or with a service principal when `AZ_CLIENT_ID`, `AZ_CLIENT_SECRET` and `AZ_TENANT_ID` are set.

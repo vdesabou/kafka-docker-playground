@@ -6,6 +6,8 @@ Quickly test the [Azure Blob Storage Sink](https://docs.confluent.io/kafka-conne
 
 ## Prerequisites
 
+> `playground account azure setup` creates a service principal for the Azure examples (no browser login on every run) and registers the resource providers, see [Azure examples: set up a subscription](https://kafka-docker-playground.io/#/azure). `playground account azure check` verifies it.
+
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (`az`). The script logs in automatically: interactive browser login, or service principal login when `AZ_CLIENT_ID`, `AZ_CLIENT_SECRET` and `AZ_TENANT_ID` are set.
 - With CP 8.0+, connector version 1.6.0 or later is required when `--connector-tag` is set (the scripts exit with code `111` otherwise).
 
