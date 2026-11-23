@@ -2,18 +2,21 @@ name: account
 expose: always
 group: Accounts
 help: |-
-  ☁️ Set up and check the third-party accounts the examples run against
+  ☁️ Set up and check the accounts the examples run against
 
+    ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys
     salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture
     gcp          a Google Cloud project: APIs, service account with its roles, key
 
   Each provider has 'setup' (configure the account in one command, store
-  the variables with 'playground secrets set') and 'check' (a few seconds,
-  read-only: does the stored login still work, and what is missing).
+  the variables with 'playground secrets set') and, except ccloud, 'check'
+  (a few seconds, read-only: does the stored login still work, and what is
+  missing).
 
   📖 Step by step guides:
   https://kafka-docker-playground.io/#/salesforce
   https://kafka-docker-playground.io/#/gcp
 commands:
+- import: src/commands/account/ccloud.yml
 - import: src/commands/account/salesforce.yml
 - import: src/commands/account/gcp.yml

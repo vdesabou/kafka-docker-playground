@@ -619,10 +619,10 @@ function renderDetail() {
   }
   const cat = CAT[e.category] || CAT[""];
   const ci = CI && CI[e.dir];
-  // each credential links to how to set it up: Confluent Cloud (confluent login, playground ccloud setup), the others
+  // each credential links to how to set it up: Confluent Cloud (confluent login, playground account ccloud setup), the others
   // stored with playground secrets (AWS, Azure, GCP, variables to export)
   const CRED_LABEL = {aws: "🔑 AWS credentials", azure: "🔑 Azure login", gcp: "🔑 GCP keyfile", ccloud: "☁️ Confluent Cloud"};
-  const SETUP = {ccloud: [DOCS + "how-to-use?id=🌤️-confluent-cloud-examples", "how to set up the Confluent Cloud examples: confluent login, playground ccloud setup"],
+  const SETUP = {ccloud: [DOCS + "how-to-use?id=🌤️-confluent-cloud-examples", "how to set up the Confluent Cloud examples: confluent login, playground account ccloud setup"],
                  other: [DOCS + "how-to-use?id=🔐-storing-credentials-with-playground-secrets", "how to provide it: playground secrets, or an exported variable"]};
   const creds = [...(e.credentials || []).map(c => [CRED_LABEL[c] || "🔑 " + c, SETUP[c === "ccloud" ? "ccloud" : "other"]]),
                  ...(e.required_env || []).map(v => ["🔑 $" + v, SETUP.other])];

@@ -409,16 +409,16 @@ All you have to do is to be already logged in with [confluent CLI](https://docs.
 Set it up once, in your organization or in one shared by your team:
 
 ```bash
-playground ccloud setup --dry-run                     # the plan: nothing is created
-playground ccloud setup                               # environment pg-<user>, clusters pg-<user>-aws|gcp|azure, API keys
+playground account ccloud setup --dry-run                     # the plan: nothing is created
+playground account ccloud setup                               # environment pg-<user>, clusters pg-<user>-aws|gcp|azure, API keys
 playground cloud-resources nightly-cleanup enable     # delete what your examples leave running, every night at 02:00
 ```
 
-* [playground ccloud setup](/playground%20ccloud%20setup) creates an environment `pg-<user>` with one Basic cluster per cloud (`--cloud aws|gcp|azure`, and `--cloud databricks` for an AWS `us-east-2` one used by the Databricks example), with API keys owned by you, and stores all the variables of this section in your [secrets profile](/deep-dive-secrets.md). Every `playground run` of a fully managed example then uses the cluster of the right cloud: no cluster to wait for on each run, and no topic shared with colleagues. The AWS / Azure regions follow `AWS_REGION` / `AZURE_REGION`. Run it again any time: what exists is reused.
+* [playground account ccloud setup](/playground%20account%20ccloud%20setup) creates an environment `pg-<user>` with one Basic cluster per cloud (`--cloud aws|gcp|azure`, and `--cloud databricks` for an AWS `us-east-2` one used by the Databricks example), with API keys owned by you, and stores all the variables of this section in your [secrets profile](/deep-dive-secrets.md). Every `playground run` of a fully managed example then uses the cluster of the right cloud: no cluster to wait for on each run, and no topic shared with colleagues. The AWS / Azure regions follow `AWS_REGION` / `AZURE_REGION`. Run it again any time: what exists is reused.
 * [playground cloud-resources nightly-cleanup](/playground%20cloud-resources%20nightly-cleanup) `enable` schedules, every night (`--time`, default `02:00`; a launchd agent on macOS, a crontab line on Linux), the deletion of your connectors `*_<user>` on any cluster of the organization with their dlq/success/error topics, of the `pg-<user>-sa-*` environments the playground creates when no cluster is set, and of the topics your runs created on shared clusters. It keeps your own clusters and their topics, and never deletes service accounts nor API keys. `--resource aws --resource gcp --resource azure` adds the leftovers of the AWS, GCP and Azure examples (a cloud whose credentials would need a prompt at night is skipped, with a notification). `status` shows what the last runs deleted, `disable` removes it.
 
 > [!WARNING]
-> Variables exported in your shell (`export CLUSTER_NAME=…` in `~/.zshrc`) win over the secrets profile: remove them, `playground ccloud setup` warns about them.
+> Variables exported in your shell (`export CLUSTER_NAME=…` in `~/.zshrc`) win over the secrets profile: remove them, `playground account ccloud setup` warns about them.
 
 > [!TIP]
 > When you don't use them yet, `playground run` of a Confluent Cloud example ends with a tip about these two commands (at most once a day each). Hide the tips with `playground config set ccloud-hints.enabled false`.
@@ -469,7 +469,7 @@ AZURE_CLUSTER_CLOUD
 AZURE_CLUSTER_CREDS
 ```
 
-For example, if you're running an AZURE Fully Managed connector example and `AZURE_CLUSTER_NAME` is set, then this cluster will be used even if you have `CLUSTER_NAME` set. The same goes for any example that requires a cloud (it calls `bootstrap_ccloud_environment "aws" "$AWS_REGION"`), and `AWS_DATABRICKS_CLUSTER_*` is used by the Databricks example. `playground ccloud setup` sets all of them for you.
+For example, if you're running an AZURE Fully Managed connector example and `AZURE_CLUSTER_NAME` is set, then this cluster will be used even if you have `CLUSTER_NAME` set. The same goes for any example that requires a cloud (it calls `bootstrap_ccloud_environment "aws" "$AWS_REGION"`), and `AWS_DATABRICKS_CLUSTER_*` is used by the Databricks example. `playground account ccloud setup` sets all of them for you.
 
 ### 🧹 What is still running, and cleaning up
 

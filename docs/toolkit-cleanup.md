@@ -110,7 +110,7 @@ The **nightly cleanup** runs the same command every night, with two limits:
 
 - In Confluent Cloud, it only deletes what is billed or clutters a shared cluster: the connectors `*_<user>` with their
   dlq/success/error topics, the `pg-<user>-sa-*` environments, and the topics your runs recorded on shared clusters. It
-  keeps your own `pg-<user>-*` clusters ([`playground ccloud setup`](/toolkit-fully-managed.md)) and their topics, and
+  keeps your own `pg-<user>-*` clusters ([`playground account ccloud setup`](/toolkit-fully-managed.md)) and their topics, and
   never deletes service accounts or API keys: run `cleanup --resource ccloud` yourself for those.
 - AWS, GCP and Azure are cleaned up only when you add them with `--resource`. Salesforce is not offered, because
   nothing there is billed.

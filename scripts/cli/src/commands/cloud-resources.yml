@@ -509,7 +509,7 @@ commands:
          no CLUSTER_NAME was set), with their clusters
       📝 on shared clusters, the topics recorded as created by your own runs
 
-    It keeps your own clusters and their topics (playground ccloud setup),
+    It keeps your own clusters and their topics (playground account ccloud setup),
     and never deletes service accounts or API keys: the secrets store may be
     locked at night, so the keys in use can't be told apart. Run
     'playground cloud-resources cleanup --resource ccloud' yourself for those.
@@ -598,7 +598,7 @@ commands:
 
     The cleanups (nightly-cleanup) delete what the playground knows it
     created. This reminder covers the rest: what they keep on purpose (your
-    own clusters of 'playground ccloud setup'), what was created by hand, or
+    own clusters of 'playground account ccloud setup'), what was created by hand, or
     a cloud you did not schedule for cleanup. For each --resource it gives:
 
       ccloud   💰 the cost of the last --days days of your resources, by
