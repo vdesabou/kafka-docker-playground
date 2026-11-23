@@ -6,6 +6,8 @@ Quickly test the [Databricks Delta Lake Sink](https://docs.confluent.io/kafka-co
 
 ## Prerequisites
 
+> `playground account databricks setup` validates and stores the workspace (token, the HTTP path and host of the SQL warehouse you pick, the S3 staging bucket and its keys) and prints the grants to give, see [Databricks examples: set up a workspace](https://kafka-docker-playground.io/#/databricks). `playground account databricks check` verifies it.
+
 ### Databricks setup
 
 Follow all the steps from [Set up Databricks Delta Lake (AWS)](https://docs.confluent.io/kafka-connectors/databricks-delta-lake-sink/current/databricks-aws-setup.html#set-up-databricks-delta-lake-aws).

@@ -11,6 +11,7 @@ help: |-
     snowflake    a Snowflake account: account identifier, admin login, roles, edition
     aws          AWS access keys and region, the IAM role of the assume-role variants
     servicenow   a ServiceNow developer instance: URL, admin login, hibernation
+    databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket
 
   Each provider has 'setup' (configure the account in one command, store
   the variables with 'playground secrets set') and, except ccloud, 'check'
@@ -24,6 +25,7 @@ help: |-
   https://kafka-docker-playground.io/#/snowflake
   https://kafka-docker-playground.io/#/aws
   https://kafka-docker-playground.io/#/servicenow
+  https://kafka-docker-playground.io/#/databricks
 commands:
 - import: src/commands/account/ccloud.yml
 - import: src/commands/account/salesforce.yml
@@ -32,3 +34,4 @@ commands:
 - import: src/commands/account/snowflake.yml
 - import: src/commands/account/aws.yml
 - import: src/commands/account/servicenow.yml
+- import: src/commands/account/databricks.yml

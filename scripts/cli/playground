@@ -120,6 +120,7 @@ playground_usage() {
   printf "  %s   ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n" "$(green "account snowflake")                         "
   printf "  %s   ☁️ Set up the AWS credentials of the AWS examples, and check them\n" "$(green "account aws")                               "
   printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "account servicenow")                        "
+  printf "  %s   ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n" "$(green "account databricks")                        "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -3648,7 +3649,7 @@ playground_secrets_lint_usage() {
 playground_account_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account\n\n"
-    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n  https://kafka-docker-playground.io/#/snowflake\n  https://kafka-docker-playground.io/#/aws\n  https://kafka-docker-playground.io/#/servicenow\n\n"
+    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n    databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n  https://kafka-docker-playground.io/#/snowflake\n  https://kafka-docker-playground.io/#/aws\n  https://kafka-docker-playground.io/#/servicenow\n  https://kafka-docker-playground.io/#/databricks\n\n"
   else
     printf "playground account - ☁️ Set up and check the accounts the examples run against\n\n"
   fi
@@ -3679,6 +3680,9 @@ playground_account_usage() {
   printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "servicenow")      "
   printf "  %s   🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow setup")"
   printf "  %s   🩺 Check the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow check")"
+  printf "  %s   ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n" "$(green "databricks")      "
+  printf "  %s   🛠️ Validate and store the Databricks workspace of the Databricks examples\n" "$(green "databricks setup")"
+  printf "  %s   🩺 Check the Databricks workspace of the Databricks examples\n" "$(green "databricks check")"
   echo
 
   # :command.long_usage
@@ -4643,6 +4647,144 @@ playground_account_servicenow_check_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground account servicenow check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_databricks_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account databricks\n\n"
+    printf "  ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n  \n    setup   validate the token, pick the SQL warehouse (http path), validate the\n  S3 staging bucket, store them\n    check   verify the token, the SQL warehouse, the staging bucket, and print\n  the grants the Delta Lake sink needs\n  \n  The Delta Lake sink and the JDBC examples run against a Databricks\n  workspace on AWS: a SQL warehouse, a personal access token, and for the\n  Delta Lake sink an S3 staging bucket with keys allowed on it. Only\n  creating the workspace (a trial works) stays manual.\n  \n  📖 Step by step guide (workspace, warehouse, bucket, grants, troubleshooting):\n  https://kafka-docker-playground.io/#/databricks\n\n"
+  else
+    printf "playground account databricks - ☁️ Set up the Databricks workspace of the Databricks examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account databricks COMMAND\n"
+  printf "  playground account databricks [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the Databricks workspace of the Databricks examples\n" "$(green "setup")"
+  printf "  %s   🩺 Check the Databricks workspace of the Databricks examples\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_databricks_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account databricks setup\n\n"
+    printf "  🛠️ Validate and store the Databricks workspace of the Databricks examples\n  \n  Validates the personal access token, lists the SQL warehouses and takes\n  DATABRICKS_HTTP_PATH and DATABRICKS_SERVER_HOSTNAME from the connection\n  details of the one you pick (the values people get wrong), validates\n  the S3 staging bucket with the staging keys, stores everything with\n  'playground secrets set' (DATABRICKS_HOST too, for the JDBC examples),\n  prints the grants the Delta Lake sink needs, and runs check.\n  \n  Missing values are taken from the stored ones, else asked for (secrets\n  without echo).\n\n"
+  else
+    printf "playground account databricks setup - 🛠️ Validate and store the Databricks workspace of the Databricks examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account databricks setup [OPTIONS]\n"
+  printf "  playground account databricks setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--host HOST")"
+    printf "    🏠 Workspace URL or host (https://dbc-xxxx.cloud.databricks.com)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--token TOKEN")"
+    printf "    🔐 Personal access token (Settings > Developer > Access tokens)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--warehouse WAREHOUSE")"
+    printf "    🏭 Name or id of the SQL warehouse (default: the only one, else the stored\n    one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--bucket BUCKET")"
+    printf "    🪣 S3 staging bucket of the Delta Lake sink\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--bucket-region BUCKET_REGION")"
+    printf "    🌍 Region of the staging bucket\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--staging-access-key-id STAGING_ACCESS_KEY_ID")"
+    printf "    🔑 AWS access key id allowed on the staging bucket\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--staging-secret-access-key STAGING_SECRET_ACCESS_KEY")"
+    printf "    🔐 Its secret access key\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account databricks setup\n"
+    printf "  playground account databricks setup --host\n  https://dbc-1234.cloud.databricks.com --warehouse \"Serverless Starter\n  Warehouse\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_databricks_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account databricks check\n\n"
+    printf "  🩺 Check the Databricks workspace of the Databricks examples\n  \n  Validates the token (and shows its principal, the one the grants must\n  target), the SQL warehouse (or cluster) of DATABRICKS_HTTP_PATH and its\n  state, DATABRICKS_HOST for the JDBC examples, and the S3 staging bucket\n  with the staging keys, like the Delta Lake sink. Prints the grants the\n  Delta Lake sink needs.\n  \n  Read-only (it does not start the warehouse). Uses curl, and the aws CLI\n  or the amazon/aws-cli image for the bucket.\n  \n  Exits with 1 when the token is refused.\n\n"
+  else
+    printf "playground account databricks check - 🩺 Check the Databricks workspace of the Databricks examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account databricks check\n"
+  printf "  playground account databricks check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account databricks check\n"
     echo
 
   fi
@@ -38502,6 +38644,40 @@ function servicenow_account_state () {
   rm -f "$body"
 }
 
+# ---------------------------------------------------------------------------
+# playground account databricks setup | check
+# ---------------------------------------------------------------------------
+
+# Workspace host as the examples use it (no https://, no path)
+function databricks_normalize_host () {
+  echo "$1" | sed -E 's|^https?://||; s|/.*$||' | tr '[:upper:]' '[:lower:]'
+}
+
+# GET on the REST API of the workspace with the token. Not in a $( ): sets databricks_http_code and
+# databricks_body (the answer) in the calling shell.
+function databricks_api () {
+  body_file=$(mktemp)
+  databricks_http_code=$(curl -sS -m 30 -o "$body_file" -w '%{http_code}' -H "Authorization: Bearer $databricks_token" "https://$databricks_host$1" 2> /dev/null) || databricks_http_code="000"
+  databricks_body=$(cat "$body_file")
+  rm -f "$body_file"
+}
+
+# Likely cause of an HTTP answer of the workspace
+function databricks_explain_http () {
+  if echo "${2:-}" | grep -qi "Invalid access token\|token is expired\|expired token"
+  then
+    echo "invalid or expired DATABRICKS_TOKEN (Settings > Developer > Access tokens)"
+    return
+  fi
+  case "$1" in
+    000) echo "no workspace answers at this host: wrong DATABRICKS_SERVER_HOSTNAME (the host of the workspace URL)" ;;
+    401) echo "invalid or expired DATABRICKS_TOKEN (Settings > Developer > Access tokens)" ;;
+    403) echo "the token is not allowed (IP access list of the workspace, or token usage restricted)" ;;
+    404) echo "not found" ;;
+    *) echo "" ;;
+  esac
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
@@ -57222,6 +57398,312 @@ playground_account_servicenow_check_command() {
       logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail"
   else
       log "🎉 the ServiceNow instance is ready for the ServiceNow examples"
+  fi
+
+}
+
+# :command.function
+playground_account_databricks_setup_command() {
+
+  # src/commands/account/databricks/setup.sh
+  host_arg="${args[--host]}"
+  token_arg="${args[--token]}"
+  warehouse_arg="${args[--warehouse]}"
+  bucket="${args[--bucket]}"
+  bucket_region="${args[--bucket-region]}"
+  staging_key_id="${args[--staging-access-key-id]}"
+  staging_secret="${args[--staging-secret-access-key]}"
+  no_store="${args[--no-store]}"
+
+  for tool in jq curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  # missing values: the stored ones, else asked for
+  profile="$(get_active_secret_profile)"
+  function databricks_setup_value () {
+      name="$1"
+      prompt="$2"
+      silent="$3"
+      value="$(secret_get "$name" "$profile" 2> /dev/null || true)"
+      if [ -z "$value" ] && [ -t 0 ]
+      then
+          if [[ -n "$silent" ]]
+          then
+              read -r -s -p "$prompt: " value < /dev/tty
+              echo "" >&2
+          else
+              read -r -p "$prompt: " value < /dev/tty
+          fi
+      fi
+      if [ -z "$value" ]
+      then
+          logerror "❌ $name is not set: pass it as a flag (see --help)"
+          exit 1
+      fi
+      printf '%s' "$value"
+  }
+  [[ -n "$host_arg" ]] || host_arg=$(databricks_setup_value DATABRICKS_SERVER_HOSTNAME "🏠 workspace URL or host (https://dbc-xxxx.cloud.databricks.com)")
+  [[ -n "$token_arg" ]] || token_arg=$(databricks_setup_value DATABRICKS_TOKEN "🔐 personal access token (Settings > Developer > Access tokens)" silent)
+  databricks_host=$(databricks_normalize_host "$host_arg")
+  databricks_token="$token_arg"
+
+  # 1. the token
+  databricks_api "/api/2.0/preview/scim/v2/Me"
+  me="$databricks_body"
+  if [ "$databricks_http_code" != "200" ]
+  then
+      logerror "❌ the workspace refused the token: HTTP $databricks_http_code"
+      cause=$(databricks_explain_http "$databricks_http_code" "$databricks_body")
+      [ -n "$cause" ] && logerror "   $cause"
+      exit 1
+  fi
+  principal=$(echo "$me" | jq -r '.userName // .displayName')
+  log "✅ token of $principal works on $databricks_host"
+
+  # 2. the SQL warehouse: DATABRICKS_HTTP_PATH and the hostname come from its connection details
+  databricks_api "/api/2.0/sql/warehouses"
+  warehouses="$databricks_body"
+  if [ "$databricks_http_code" != "200" ]
+  then
+      logerror "❌ can't list the SQL warehouses: HTTP $databricks_http_code"
+      exit 1
+  fi
+  if [[ -n "$warehouse_arg" ]]
+  then
+      warehouse=$(echo "$warehouses" | jq -c --arg w "$warehouse_arg" '[.warehouses[]? | select(.id == $w or .name == $w)][0] // empty')
+  elif [ "$(echo "$warehouses" | jq '.warehouses | length')" == "1" ]
+  then
+      warehouse=$(echo "$warehouses" | jq -c '.warehouses[0]')
+  else
+      stored_path="$(secret_get DATABRICKS_HTTP_PATH "$profile" 2> /dev/null || true)"
+      warehouse=$(echo "$warehouses" | jq -c --arg w "${stored_path##*/}" '[.warehouses[]? | select(.id == $w)][0] // empty')
+  fi
+  if [ -z "$warehouse" ]
+  then
+      logerror "❌ pass the SQL warehouse with --warehouse <name or id>, the workspace has:"
+      echo "$warehouses" | jq -r '.warehouses[]? | "   \(.name) (\(.id)): \(.state), \(.cluster_size)"' >&2
+      [ "$(echo "$warehouses" | jq '.warehouses | length')" == "0" ] && logerror "   none: create one in SQL Warehouses (2X-Small, auto stop 10 minutes)"
+      exit 1
+  fi
+  warehouse_id=$(echo "$warehouse" | jq -r '.id')
+  http_path=$(echo "$warehouse" | jq -r '.odbc_params.path // empty')
+  [ -n "$http_path" ] || http_path="/sql/1.0/warehouses/$warehouse_id"
+  server_hostname=$(echo "$warehouse" | jq -r '.odbc_params.hostname // empty')
+  [ -n "$server_hostname" ] || server_hostname="$databricks_host"
+  log "🏭 SQL warehouse $(echo "$warehouse" | jq -r '.name') ($warehouse_id, $(echo "$warehouse" | jq -r '.state')): http path $http_path"
+
+  # 3. the S3 staging bucket of the Delta Lake sink
+  [[ -n "$bucket" ]] || bucket=$(databricks_setup_value DATABRICKS_AWS_BUCKET_NAME "🪣 S3 staging bucket of the Delta Lake sink")
+  [[ -n "$bucket_region" ]] || bucket_region=$(databricks_setup_value DATABRICKS_AWS_BUCKET_REGION "🌍 its region")
+  [[ -n "$staging_key_id" ]] || staging_key_id=$(databricks_setup_value DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID "🔑 access key id allowed on the bucket")
+  [[ -n "$staging_secret" ]] || staging_secret=$(databricks_setup_value DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY "🔐 its secret access key" silent)
+  if type -P aws > /dev/null 2>&1 || docker info > /dev/null 2>&1
+  then
+      if out=$(aws_key_id="$staging_key_id" aws_secret="$staging_secret" aws_token="" aws_region="$bucket_region" aws_account_cli s3api head-bucket --bucket "$bucket" 2>&1)
+      then
+          log "✅ staging bucket $bucket ($bucket_region) reachable with the staging keys"
+      else
+          logerror "❌ staging bucket $bucket: $(echo "$out" | grep -v '^$' | head -1) (wrong region, missing bucket, or keys not allowed): nothing stored"
+          exit 1
+      fi
+  else
+      logwarn "⚠️ staging bucket $bucket not checked (neither the aws CLI nor docker)"
+  fi
+
+  # 4. store
+  if [[ -n "$no_store" ]]
+  then
+      log "📋 --no-store, the values to export:"
+      echo "export DATABRICKS_SERVER_HOSTNAME=\"$server_hostname\""
+      echo "export DATABRICKS_HOST=\"$server_hostname\""
+      echo "export DATABRICKS_HTTP_PATH=\"$http_path\""
+      echo "export DATABRICKS_TOKEN=\"$databricks_token\""
+      echo "export DATABRICKS_AWS_BUCKET_NAME=\"$bucket\""
+      echo "export DATABRICKS_AWS_BUCKET_REGION=\"$bucket_region\""
+      echo "export DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID=\"$staging_key_id\""
+      echo "export DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY=\"$staging_secret\""
+  else
+      playground secrets set DATABRICKS_SERVER_HOSTNAME --value "$server_hostname" --plain
+      playground secrets set DATABRICKS_HOST --value "$server_hostname" --plain
+      playground secrets set DATABRICKS_HTTP_PATH --value "$http_path" --plain
+      playground secrets set DATABRICKS_TOKEN --value "$databricks_token" --secret
+      playground secrets set DATABRICKS_AWS_BUCKET_NAME --value "$bucket" --plain
+      playground secrets set DATABRICKS_AWS_BUCKET_REGION --value "$bucket_region" --plain
+      playground secrets set DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID --value "$staging_key_id" --secret
+      playground secrets set DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY --value "$staging_secret" --secret
+      log "💾 stored DATABRICKS_SERVER_HOSTNAME, DATABRICKS_HOST, DATABRICKS_HTTP_PATH, DATABRICKS_TOKEN, DATABRICKS_AWS_BUCKET_NAME, DATABRICKS_AWS_BUCKET_REGION and DATABRICKS_AWS_STAGING_S3_*"
+  fi
+
+  log "🔏 the Delta Lake sink also needs these grants for $principal (run them in a SQL editor of the workspace):"
+  echo "   GRANT USE CATALOG ON CATALOG workspace TO \`$principal\`;"
+  echo "   GRANT USE SCHEMA, CREATE TABLE ON SCHEMA workspace.default TO \`$principal\`;"
+  echo "   GRANT READ FILES ON EXTERNAL LOCATION <the external location of s3://$bucket> TO \`$principal\`;"
+
+  log "🩺 the workspace now:"
+  DATABRICKS_SERVER_HOSTNAME="$server_hostname" DATABRICKS_HOST="$server_hostname" DATABRICKS_HTTP_PATH="$http_path" DATABRICKS_TOKEN="$databricks_token" \
+  DATABRICKS_AWS_BUCKET_NAME="$bucket" DATABRICKS_AWS_BUCKET_REGION="$bucket_region" \
+  DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID="$staging_key_id" DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY="$staging_secret" \
+      playground account databricks check || true
+  log "🩺 check it any time with: playground account databricks check"
+
+}
+
+# :command.function
+playground_account_databricks_check_command() {
+
+  # src/commands/account/databricks/check.sh
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  YELLOW='\033[0;33m'
+  NC='\033[0m'
+
+  for tool in jq curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  profile="$(get_active_secret_profile)"
+  function databricks_check_value () {
+      secret_get "$1" "$profile" 2> /dev/null || true
+  }
+  host_raw="$(databricks_check_value DATABRICKS_SERVER_HOSTNAME)"
+  jdbc_host="$(databricks_check_value DATABRICKS_HOST)"
+  http_path="$(databricks_check_value DATABRICKS_HTTP_PATH)"
+  databricks_token="$(databricks_check_value DATABRICKS_TOKEN)"
+  bucket="$(databricks_check_value DATABRICKS_AWS_BUCKET_NAME)"
+  bucket_region="$(databricks_check_value DATABRICKS_AWS_BUCKET_REGION)"
+  staging_key_id="$(databricks_check_value DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID)"
+  staging_secret="$(databricks_check_value DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY)"
+
+  if [ -z "$host_raw" ]
+  then
+      host_raw="$jdbc_host"
+  fi
+  missing=""
+  [ -z "$host_raw" ] && missing="$missing DATABRICKS_SERVER_HOSTNAME"
+  [ -z "$http_path" ] && missing="$missing DATABRICKS_HTTP_PATH"
+  [ -z "$databricks_token" ] && missing="$missing DATABRICKS_TOKEN"
+  if [ -n "$missing" ]
+  then
+      logerror "❌ not set:$missing (all the Databricks examples need them)"
+      logerror "👉 playground account databricks setup"
+      exit 1
+  fi
+  databricks_host=$(databricks_normalize_host "$host_raw")
+  if [ "$databricks_host" != "$host_raw" ]
+  then
+      logwarn "⚠️ DATABRICKS_SERVER_HOSTNAME is \"$host_raw\": the examples need the host only, \"$databricks_host\""
+  fi
+  nb_failed=0
+
+  # 1. the token
+  log "🔑 token of workspace $databricks_host"
+  databricks_api "/api/2.0/preview/scim/v2/Me"
+  me="$databricks_body"
+  if [ "$databricks_http_code" != "200" ]
+  then
+      logerror "❌ the workspace refused the token: HTTP $databricks_http_code $(echo "$me" | jq -r '.detail // .message // empty' 2> /dev/null | head -1)"
+      cause=$(databricks_explain_http "$databricks_http_code" "$databricks_body")
+      [ -n "$cause" ] && logerror "   $cause"
+      exit 1
+  fi
+  principal=$(echo "$me" | jq -r '.userName // .displayName')
+  log "✅ token works: $principal (the principal the grants of the examples must target)"
+
+  # 2. the SQL warehouse (or cluster) of DATABRICKS_HTTP_PATH
+  if [[ "$http_path" == */warehouses/* ]]
+  then
+      warehouse_id="${http_path##*/}"
+      databricks_api "/api/2.0/sql/warehouses/$warehouse_id"
+  warehouse="$databricks_body"
+      if [ "$databricks_http_code" == "200" ]
+      then
+          name=$(echo "$warehouse" | jq -r '.name')
+          state=$(echo "$warehouse" | jq -r '.state')
+          details="$(echo "$warehouse" | jq -r '"\(.cluster_size // "?"), \(if .enable_serverless_compute then "serverless" else (.warehouse_type // "classic") end), auto stop \(.auto_stop_mins // "?") min"')"
+          case "$state" in
+              RUNNING|STARTING)
+                  echo -e "✅ ${GREEN}SQL warehouse${NC} $name ($warehouse_id): $state, $details" ;;
+              STOPPED|STOPPING)
+                  echo -e "✅ ${GREEN}SQL warehouse${NC} $name ($warehouse_id): $state (the examples start it), $details" ;;
+              *)
+                  echo -e "❌ ${RED}SQL warehouse${NC} $name ($warehouse_id): $state        👉 playground account databricks setup (pick another warehouse)"
+                  nb_failed=$((nb_failed + 1)) ;;
+          esac
+      else
+          echo -e "❌ ${RED}SQL warehouse${NC} $warehouse_id of DATABRICKS_HTTP_PATH: HTTP $databricks_http_code $(echo "$warehouse" | jq -r '.message // empty' 2> /dev/null)"
+          echo "      wrong DATABRICKS_HTTP_PATH (SQL Warehouses > <warehouse> > Connection details > HTTP path)        👉 playground account databricks setup"
+          nb_failed=$((nb_failed + 1))
+      fi
+  else
+      cluster_id="${http_path##*/}"
+      databricks_api "/api/2.0/clusters/get?cluster_id=$cluster_id"
+  cluster="$databricks_body"
+      if [ "$databricks_http_code" == "200" ]
+      then
+          echo -e "✅ ${GREEN}Cluster${NC} $(echo "$cluster" | jq -r '.cluster_name') ($cluster_id): $(echo "$cluster" | jq -r '.state')"
+      else
+          echo -e "❌ ${RED}Cluster${NC} $cluster_id of DATABRICKS_HTTP_PATH: HTTP $databricks_http_code"
+          nb_failed=$((nb_failed + 1))
+      fi
+  fi
+  echo -e "ℹ️  a workspace whose trial or plan ended refuses to start any compute (denyReason INACTIVE): the examples print it when they start the warehouse"
+
+  # 3. the JDBC examples read DATABRICKS_HOST
+  if [ -z "$jdbc_host" ]
+  then
+      echo -e "⚠️ ${YELLOW}DATABRICKS_HOST${NC} not set: needed by connect-jdbc-databricks-sink / -source        👉 playground account databricks setup"
+  fi
+
+  # 4. the S3 staging bucket of the Delta Lake sink, with the staging keys (like the connector)
+  if [ -z "$bucket" ] || [ -z "$bucket_region" ] || [ -z "$staging_key_id" ] || [ -z "$staging_secret" ]
+  then
+      echo -e "❌ ${RED}Staging bucket${NC}: DATABRICKS_AWS_BUCKET_NAME / _REGION / DATABRICKS_AWS_STAGING_S3_* not all set        👉 playground account databricks setup"
+      echo "      needed by: connect-databricks-delta-lake-sink, fm-databricks-delta-lake-sink"
+      nb_failed=$((nb_failed + 1))
+  elif ! type -P aws > /dev/null 2>&1 && ! docker info > /dev/null 2>&1
+  then
+      echo -e "⚠️ ${YELLOW}Staging bucket${NC} $bucket: not checked (neither the aws CLI nor docker)"
+  else
+      if out=$(aws_key_id="$staging_key_id" aws_secret="$staging_secret" aws_token="" aws_region="$bucket_region" aws_account_cli s3api head-bucket --bucket "$bucket" 2>&1)
+      then
+          echo -e "✅ ${GREEN}Staging bucket${NC} $bucket ($bucket_region) reachable with the staging keys"
+      else
+          code=$(aws_account_error_code "$out")
+          if echo "$out" | grep -q "(301)"
+          then
+              echo -e "❌ ${RED}Staging bucket${NC} $bucket is not in $bucket_region: fix DATABRICKS_AWS_BUCKET_REGION"
+          elif echo "$out" | grep -q "(404)"
+          then
+              echo -e "❌ ${RED}Staging bucket${NC} $bucket does not exist"
+          elif echo "$out" | grep -q "(403)"
+          then
+              echo -e "❌ ${RED}Staging bucket${NC} $bucket: access denied for the staging keys (wrong keys, or no s3 permission on the bucket)"
+          else
+              echo -e "❌ ${RED}Staging bucket${NC} $bucket: ${code:-$(echo "$out" | head -1)}"
+          fi
+          echo "      needed by: connect-databricks-delta-lake-sink, fm-databricks-delta-lake-sink"
+          nb_failed=$((nb_failed + 1))
+      fi
+  fi
+  echo -e "ℹ️  the Delta Lake sink also needs, for $principal: USE CATALOG / USE SCHEMA / CREATE TABLE on workspace.default, and READ FILES on the external location of s3://${bucket:-<bucket>} (a lag of 0 does not prove success: failed COPY INTO only show in Query History)"
+
+  echo ""
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail"
+  else
+      log "🎉 the Databricks workspace is ready for the Databricks examples"
   fi
 
 }
@@ -117820,6 +118302,13 @@ playground_account_parse_requirements() {
       shift $#
       ;;
 
+    databricks)
+      action="databricks"
+      shift
+      playground_account_databricks_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_account_usage >&2
@@ -119981,6 +120470,321 @@ playground_account_servicenow_check_parse_requirements() {
 
   # :command.command_filter
   action="account servicenow check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_databricks_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_databricks_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_databricks_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_databricks_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_databricks_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_databricks_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_databricks_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account databricks setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --host)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--host']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--host requires an argument: --host HOST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --token)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--token']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--token requires an argument: --token TOKEN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --warehouse)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--warehouse']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--warehouse requires an argument: --warehouse WAREHOUSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --bucket)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--bucket']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--bucket requires an argument: --bucket BUCKET" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --bucket-region)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--bucket-region']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--bucket-region requires an argument: --bucket-region BUCKET_REGION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --staging-access-key-id)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--staging-access-key-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--staging-access-key-id requires an argument: --staging-access-key-id STAGING_ACCESS_KEY_ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --staging-secret-access-key)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--staging-secret-access-key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--staging-secret-access-key requires an argument: --staging-secret-access-key STAGING_SECRET_ACCESS_KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_databricks_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_databricks_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account databricks check"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -177525,6 +178329,11 @@ playground_account_completion() {
         playground_account_servicenow_completion "$completion_current" "$@"
         return
         ;;
+      databricks)
+        shift
+        playground_account_databricks_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -177534,7 +178343,7 @@ playground_account_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake aws servicenow
+  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake aws servicenow databricks
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -178594,6 +179403,169 @@ playground_account_servicenow_setup_completion() {
 
 # :command.completion_function
 playground_account_servicenow_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_databricks_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_databricks_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_databricks_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_databricks_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --host)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--host"]=1
+
+        ;;
+      --token)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--token"]=1
+
+        ;;
+      --warehouse)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--warehouse"]=1
+
+        ;;
+      --bucket)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--bucket"]=1
+
+        ;;
+      --bucket-region)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--bucket-region"]=1
+
+        ;;
+      --staging-access-key-id)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--staging-access-key-id"]=1
+
+        ;;
+      --staging-secret-access-key)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--staging-secret-access-key"]=1
+
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --host "$completion_current" --host
+    completion_flag_candidates --token "$completion_current" --token
+    completion_flag_candidates --warehouse "$completion_current" --warehouse
+    completion_flag_candidates --bucket "$completion_current" --bucket
+    completion_flag_candidates --bucket-region "$completion_current" --bucket-region
+    completion_flag_candidates --staging-access-key-id "$completion_current" --staging-access-key-id
+    completion_flag_candidates --staging-secret-access-key "$completion_current" --staging-secret-access-key
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_databricks_check_completion() {
   local completion_current="$1"
   shift
 
@@ -206386,6 +207358,9 @@ run() {
     "account servicenow") playground_account_servicenow_command ;;
     "account servicenow setup") playground_account_servicenow_setup_command ;;
     "account servicenow check") playground_account_servicenow_check_command ;;
+    "account databricks") playground_account_databricks_command ;;
+    "account databricks setup") playground_account_databricks_setup_command ;;
+    "account databricks check") playground_account_databricks_check_command ;;
     "salesforce") playground_salesforce_command ;;
     "ccloud") playground_ccloud_command ;;
     "cloud-resources") playground_cloud_resources_command ;;

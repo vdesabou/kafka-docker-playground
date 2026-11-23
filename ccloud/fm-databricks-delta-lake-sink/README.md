@@ -6,6 +6,8 @@ Quickly test the [Fully Managed Databricks Delta Lake Sink](https://docs.conflue
 
 ## Prerequisites
 
+> `playground account databricks setup` validates and stores the workspace (token, the HTTP path and host of the SQL warehouse you pick, the S3 staging bucket and its keys) and prints the grants to give, see [Databricks examples: set up a workspace](https://kafka-docker-playground.io/#/databricks). `playground account databricks check` verifies it.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 ### Databricks setup

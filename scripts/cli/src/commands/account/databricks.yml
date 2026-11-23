@@ -1,0 +1,87 @@
+name: databricks
+expose: always
+help: |-
+  ☁️ Set up the Databricks workspace of the Databricks examples, and check it
+
+    setup   validate the token, pick the SQL warehouse (http path), validate the S3 staging bucket, store them
+    check   verify the token, the SQL warehouse, the staging bucket, and print the grants the Delta Lake sink needs
+
+  The Delta Lake sink and the JDBC examples run against a Databricks
+  workspace on AWS: a SQL warehouse, a personal access token, and for the
+  Delta Lake sink an S3 staging bucket with keys allowed on it. Only
+  creating the workspace (a trial works) stays manual.
+
+  📖 Step by step guide (workspace, warehouse, bucket, grants, troubleshooting):
+  https://kafka-docker-playground.io/#/databricks
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the Databricks workspace of the Databricks examples
+
+    Validates the personal access token, lists the SQL warehouses and takes
+    DATABRICKS_HTTP_PATH and DATABRICKS_SERVER_HOSTNAME from the connection
+    details of the one you pick (the values people get wrong), validates
+    the S3 staging bucket with the staging keys, stores everything with
+    'playground secrets set' (DATABRICKS_HOST too, for the JDBC examples),
+    prints the grants the Delta Lake sink needs, and runs check.
+
+    Missing values are taken from the stored ones, else asked for (secrets
+    without echo).
+  flags:
+  - long: --host
+    arg: host
+    required: false
+    help: |-
+      🏠 Workspace URL or host (https://dbc-xxxx.cloud.databricks.com)
+  - long: --token
+    arg: token
+    required: false
+    help: |-
+      🔐 Personal access token (Settings > Developer > Access tokens)
+  - long: --warehouse
+    arg: warehouse
+    required: false
+    help: |-
+      🏭 Name or id of the SQL warehouse (default: the only one, else the stored one)
+  - long: --bucket
+    arg: bucket
+    required: false
+    help: |-
+      🪣 S3 staging bucket of the Delta Lake sink
+  - long: --bucket-region
+    arg: bucket_region
+    required: false
+    help: |-
+      🌍 Region of the staging bucket
+  - long: --staging-access-key-id
+    arg: staging_access_key_id
+    required: false
+    help: |-
+      🔑 AWS access key id allowed on the staging bucket
+  - long: --staging-secret-access-key
+    arg: staging_secret_access_key
+    required: false
+    help: |-
+      🔐 Its secret access key
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account databricks setup
+  - playground account databricks setup --host https://dbc-1234.cloud.databricks.com --warehouse "Serverless Starter Warehouse"
+- name: check
+  help: |-
+    🩺 Check the Databricks workspace of the Databricks examples
+
+    Validates the token (and shows its principal, the one the grants must
+    target), the SQL warehouse (or cluster) of DATABRICKS_HTTP_PATH and its
+    state, DATABRICKS_HOST for the JDBC examples, and the S3 staging bucket
+    with the staging keys, like the Delta Lake sink. Prints the grants the
+    Delta Lake sink needs.
+
+    Read-only (it does not start the warehouse). Uses curl, and the aws CLI
+    or the amazon/aws-cli image for the bucket.
+
+    Exits with 1 when the token is refused.
+  examples:
+  - playground account databricks check
