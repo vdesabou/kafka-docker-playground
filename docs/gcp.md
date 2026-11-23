@@ -241,6 +241,10 @@ playground account gcp check --keyfile connect/connect-gcp-gcs-sink/keyfile.json
   the ones named after you, and `playground cloud-resources nightly-cleanup enable --resource gcp` sweeps them every
   night (it reads the `GCP_PROJECT` and `GCP_KEYFILE_CONTENT` that `setup` stores).
 
+## ☁️ The other accounts
+
+[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+
 ## 🧠 CLI reference
 
 [playground account gcp setup](/playground%20account%20gcp%20setup) · [playground account gcp check](/playground%20account%20gcp%20check) ·

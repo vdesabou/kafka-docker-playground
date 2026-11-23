@@ -102,6 +102,10 @@ Exit code 1 means the instance does not answer with `admin` logged in.
   [credentials](deep-dive-secrets.md)). When `secrets.github-repo` is configured (maintainers), it also pushes them to
   the GitHub Actions secrets and variables: use `--no-store` to try another instance without changing CI.
 
+## ☁️ The other accounts
+
+[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+
 ## 🧠 CLI reference
 
 [playground account servicenow setup](/playground%20account%20servicenow%20setup) · [playground account servicenow check](/playground%20account%20servicenow%20check) ·

@@ -220,6 +220,10 @@ The JWT Bearer flow signs the login with a private key; the External Client App 
   [CDC source example README](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#oauth-with-jwt-bearer-flow),
   with screenshots.
 
+## ☁️ The other accounts
+
+[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+
 ## 🧠 CLI reference
 
 [playground account salesforce setup](/playground%20account%20salesforce%20setup) · [playground account salesforce check](/playground%20account%20salesforce%20check) ·

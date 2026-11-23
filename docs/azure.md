@@ -158,6 +158,10 @@ Exit code 1 means the service principal can't log in (or none is stored).
 - **Role assignments and provider registrations take a few minutes to apply**: `setup` waits for the roles, `check`
   shows `Registering` for a provider still on its way.
 
+## ☁️ The other accounts
+
+[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+
 ## 🧠 CLI reference
 
 [playground account azure setup](/playground%20account%20azure%20setup) · [playground account azure check](/playground%20account%20azure%20check) ·
