@@ -57,7 +57,7 @@ comma / double-quote dialect is tried. Exit `2` when the file is not an export o
 then reads it as it is.
 
 JSON lines are streamed (one event at a time, the order fixed afterwards from the offsets of the events), whatever
-the extension: `analyze logs` sends a `.log` / `.txt` whose first character is `{` here. A message without its own
+the extension: `analyze logs` sends a `.log` / `.txt` whose first character is `{` here. Records hard-wrapped over several lines (`kubectl logs` saved by PowerShell at the 120 columns of its console, each record cut mid-string) are detected on the first record (`first_object_and_layout()`: it must start like `{"key":`, joined over at most 1000 lines / 1 MB) and joined back line by line until they form a JSON object (`read_wrapped()`). A message without its own
 time at its start gets the time of the event (`iso_ts()`: epoch seconds / ms / ns become ISO 8601), and the next lines
 of a multi-line message are indented, except exception lines and `Caused by:`.
 

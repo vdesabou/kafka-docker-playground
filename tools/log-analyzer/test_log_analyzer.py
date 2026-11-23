@@ -2909,6 +2909,70 @@ def test_jdbc_source_no_tables():
     check("WARN: 🗂️", got == ["🗂️ JDBC source: no table matches the table filters"], got)
 
 
+def test_powershell_wrapped_json_lines():
+    """JSON lines of Google Cloud Logging shape ({"severity", "timestamp", "textPayload", "sourceLocation"}) saved by
+    PowerShell: a UTF-8 BOM, CRLF and each record hard-wrapped at the 120 columns of the console, cut mid-string. The
+    records are joined back: level, time, message, stack trace, Caused by and logger, not fragments of JSON"""
+    error = {"severity": "ERROR", "timestamp": "2026-11-20T10:00:01.500Z",
+             "textPayload": "Failed to create AzureBlobFileSystem\njava.io.IOException: Invalid UID, could not determine effective user\n"
+                            "\tat org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:2066)\n"
+                            "\tat org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:590)\n"
+                            "Caused by: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name\n"
+                            "\tat jdk.security.auth/com.sun.security.auth.UnixPrincipal.<init>(Unknown Source)\n",
+             "sourceLocation": {"file": "Validations.java", "line": "507", "function": "io.confluent.connect.azure.datalake.gen2.validation.Validations"},
+             "thread": "pool-8-thread-7"}
+    info = {"severity": "INFO", "timestamp": "2026-11-20T10:00:00.100Z",
+            "textPayload": "[adls-sink|task-0] Initializing AzureBlobFileSystem for abfs://container@mystorageaccount.dfs.core.windows.net\n",
+            "sourceLocation": {"file": "AzureBlobFileSystem.java", "line": "188", "function": "org.apache.hadoop.fs.azurebfs.AzureBlobFileSystem"},
+            "thread": "my-connect-0-thread-1"}
+    def wrapped(events, width=119):
+        out = []
+        for e in events:
+            line = json.dumps(e, separators=(",", ":"))
+            out += [line[i:i + width] for i in range(0, len(line), width)]
+        return "\ufeff\r\n" + "\r\n".join(out) + "\r\n"
+    with tempfile.TemporaryDirectory() as d:
+        src, dst = os.path.join(d, "connect-0.log"), os.path.join(d, "out.log")
+        with open(src, "w", encoding="utf-8", newline="") as fh:
+            fh.write(wrapped([info, error]))
+        first, is_wrapped = jle.first_object_and_layout(src)
+        check("wrapped first record", first == info and is_wrapped, (first, is_wrapped))
+        nb = jle.stream_json_lines(src, dst, is_wrapped)
+        out = open(dst, encoding="utf-8").read()
+        check("2 events", nb == 2, (nb, out))
+        check("error record", "[2026-11-20T10:00:01.500Z] ERROR Failed to create AzureBlobFileSystem\n"
+              "java.io.IOException: Invalid UID, could not determine effective user\n" in out, out)
+        check("caused by kept", "\nCaused by: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name" in out, out)
+        check("logger from sourceLocation", "(org.apache.hadoop.fs.azurebfs.AzureBlobFileSystem)" in out, out)
+        check("connector context", "INFO [adls-sink|task-0] Initializing" in out, out)
+        check("no JSON fragments", '"sourceLocation"' not in out and '"textPayload"' not in out, out)
+        # a pretty-printed JSON document is not taken for wrapped JSON lines
+        with open(src, "w", encoding="utf-8") as fh:
+            json.dump({"events": [{"message": "m", "timestamp": 1}]}, fh, indent=2)
+        check("pretty JSON", jle.first_object_and_layout(src) == (None, False), jle.first_object_and_layout(src))
+
+
+def test_unix_user_without_name():
+    """the Hadoop client of a connector on a worker whose UID has no /etc/passwd entry (CFK default pod UID 1001): a
+    known cause with the runAsUser advice, not a root cause left unexplained"""
+    def run(body):
+        text = ("@@PGFILE@@|connect.log|100|1|1|2026-11-20T10:00:00|2026-11-20T11:00:00\n"
+                f"@@PGREC@@|ERROR|3|10|30|2026-11-20T10:00:01|2026-11-20T10:00:21\n{body}\n@@PGTS@@|2026-11-20T10:00:01\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return res
+    for body in ("[2026-11-20 10:00:01,500] ERROR Failed to create AzureBlobFileSystem (io.confluent.connect.azure.datalake.gen2.validation.Validations:507)\n"
+                 "    java.io.IOException: Invalid UID, could not determine effective user\n"
+                 "    javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name",
+                 "[2026-11-20 10:00:01,500] ERROR [hdfs-sink|task-0] WorkerSinkTask{id=hdfs-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask:234)\n"
+                 "    org.apache.hadoop.security.KerberosAuthException: failure to login: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name"):
+        res = run(body)
+        titles = [h["title"] for h in res["known_causes"]]
+        check("known cause", "👤 Worker user without a name (Hadoop client)" in titles, titles)
+        hint = next(h for h in res["known_causes"] if h["title"].startswith("👤"))
+        check("advice", "runAsUser: 1000" in hint["advice"] and "HADOOP_USER_NAME" in hint["advice"], hint["advice"])
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

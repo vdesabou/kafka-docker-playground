@@ -18,6 +18,9 @@ Exports recognized (a JSON array, JSON lines, or one object wrapping the events;
     Logs Insights: one event per row, the columns are its fields; a cell holding a JSON object (a "log" or "message"
     column with the structured JSON log line of the container) is parsed and its fields win
 
+  - JSON lines saved by PowerShell at the width of its console (kubectl logs > file.log): each record hard-wrapped
+    at 120 columns, cut mid-string: the lines of a record are joined back before it is read
+
 JSON lines are streamed one event at a time (a dump of several GB), whatever the extension of the file (.log, .txt):
 analyze logs sends the files whose first line is a JSON object here. Events are written oldest first (exports of the console are newest first), a multi-line message stays multi-line.
 
@@ -332,25 +335,95 @@ def sortable(ts: Any) -> Any:
     return text
 
 
+# a JSON record hard-wrapped over several lines (PowerShell writes the output of kubectl logs at the width of its
+# console, 120 columns, each record cut mid-string): the lines of one record joined back, at most this many lines
+WRAPPED_MAX_LINES = 2000
+WRAPPED_MAX_BYTES = 4 * 1024 * 1024
+# the first record decides: joined over at most this many lines, and it must start like a log event cut mid-way
+WRAPPED_DETECT_LINES = 1000
+WRAPPED_DETECT_BYTES = 1024 * 1024
+WRAP_CANDIDATE = re.compile(rb'^\{"[\w@.$-]+"\s*:')
+
+
 def first_object(path: str) -> Optional[dict]:
-    """the first line of a JSON lines file, when it is a JSON object (None: anything else, a pretty-printed JSON…)"""
+    """the first line of a JSON lines file, when it is a JSON object (None: anything else, a pretty-printed JSON…).
+    A first record hard-wrapped over several lines is joined back (see read_wrapped)"""
+    obj, _ = first_object_and_layout(path)
+    return obj
+
+
+def first_object_and_layout(path: str) -> Tuple[Optional[dict], bool]:
+    """the first JSON object of a JSON lines file, and True when its records are hard-wrapped over several lines"""
     opener = gzip.open if path.endswith(".gz") else open
     with opener(path, "rb") as fh:
+        buf = b""
+        nb = 0
         for raw in fh:
-            line = raw.strip().lstrip(b"\xef\xbb\xbf")
-            if not line:
+            line = raw.rstrip(b"\r\n")
+            if not buf:
+                line = line.strip().lstrip(b"\xef\xbb\xbf")
+                if not line:
+                    continue
+                if not line.startswith(b"{"):
+                    return None, False
+            buf += line
+            nb += 1
+            # a pretty-printed JSON (a lone "{" first) is not wrapped: only lines cut mid-record
+            if nb == 1 and (buf.strip() == b"{" or not buf.startswith(b'{"')):
+                try:
+                    obj = json.loads(buf)
+                except ValueError:
+                    return None, False
+                return (obj if isinstance(obj, dict) else None), False
+            if buf.rstrip().endswith(b"}"):
+                try:
+                    obj = json.loads(buf)
+                except ValueError:
+                    pass
+                else:
+                    return (obj if isinstance(obj, dict) else None), nb > 1
+            if nb == 1 and not WRAP_CANDIDATE.match(buf):
+                return None, False
+            if nb >= WRAPPED_DETECT_LINES or len(buf) > WRAPPED_DETECT_BYTES:
+                return None, False
+    return None, False
+
+
+def read_wrapped(fh):
+    """the records of a JSON lines file whose records are hard-wrapped over several lines (the line breaks of the
+    console width, the content kept): the lines joined until they form a JSON object. A line that never completes one
+    (a plain line in the dump) is given as it is"""
+    buf = b""
+    pending: List[bytes] = []
+    for raw in fh:
+        line = raw.rstrip(b"\r\n")
+        if not buf:
+            line = line.lstrip(b"\xef\xbb\xbf")
+            if not line.strip():
                 continue
-            if not line.startswith(b"{"):
-                return None
+            if not line.lstrip().startswith(b"{"):
+                yield line, len(raw)
+                continue
+        buf += line
+        pending.append(raw)
+        if buf.rstrip().endswith(b"}"):
             try:
-                obj = json.loads(line)
+                json.loads(buf)
             except ValueError:
-                return None
-            return obj if isinstance(obj, dict) else None
-    return None
+                pass
+            else:
+                yield buf, sum(len(p) for p in pending)
+                buf, pending = b"", []
+                continue
+        if len(pending) >= WRAPPED_MAX_LINES or len(buf) > WRAPPED_MAX_BYTES:
+            for p in pending:
+                yield p.rstrip(b"\r\n"), len(p)
+            buf, pending = b"", []
+    for p in pending:
+        yield p.rstrip(b"\r\n"), len(p)
 
 
-def stream_json_lines(path: str, out_path: str) -> int:
+def stream_json_lines(path: str, out_path: str, wrapped: bool = False) -> int:
     """JSON lines (a fluentd / Kubernetes / logstash dump of several GB), converted one event at a time instead of
     loaded in memory. Returns the number of events written, 0 when it is not a log export"""
     try:
@@ -368,10 +441,11 @@ def stream_json_lines(path: str, out_path: str) -> int:
     offsets: List[int] = []
     with opener(path, "rb") as fh, open(out_path, "w", encoding="utf-8") as out:
         try:
-            for raw in fh:
+            records = read_wrapped(fh) if wrapped else ((raw, len(raw)) for raw in fh)
+            for raw, nb_bytes in records:
                 if progress:
-                    progress.update(len(raw))
-                line = raw.strip()
+                    progress.update(nb_bytes)
+                line = raw.strip().lstrip(b"\xef\xbb\xbf")
                 if not line:
                     continue
                 nb_events += 1
@@ -417,10 +491,11 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 1
     try:
-        first = None if sys.argv[1].lower().endswith((".csv", ".csv.gz")) else first_object(sys.argv[1])
-        # JSON lines whose first event is a log event: streamed (a dump can be several GB)
+        first, wrapped = (None, False) if sys.argv[1].lower().endswith((".csv", ".csv.gz")) else first_object_and_layout(sys.argv[1])
+        # JSON lines whose first event is a log event: streamed (a dump can be several GB), each record joined back
+        # first when they are hard-wrapped over several lines
         if first is not None and to_lines(first)[1]:
-            nb = stream_json_lines(sys.argv[1], sys.argv[2])
+            nb = stream_json_lines(sys.argv[1], sys.argv[2], wrapped)
             if not nb:
                 return 2
             print(nb)
