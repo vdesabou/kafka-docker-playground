@@ -6,6 +6,8 @@ Quickly test the [ServiceNow Sink](https://docs.confluent.io/cloud/current/conne
 
 ## Prerequisites
 
+> `playground account servicenow setup` validates and stores the developer instance (URL with its trailing `/`, admin password, your ServiceNow ID for the automatic wake up), waking it up if it hibernates, see [ServiceNow examples: set up a developer instance](https://kafka-docker-playground.io/#/servicenow). `playground account servicenow check` tells you its state.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 * A ServiceNow instance (see [ServiceNow setup](#servicenow-setup))

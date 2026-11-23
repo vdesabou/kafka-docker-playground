@@ -7687,3 +7687,136 @@ function cfk_kmj_locks () {
     done
     echo "$locked"
 }
+
+# ServiceNow Personal Developer Instance helpers, used by the servicenow examples and playground account servicenow
+# Print "awake" when $SERVICENOW_URL (ending with /) answers the REST API with JSON (whatever the
+# credentials), "hibernating" when it answers the Instance Hibernating page, "waking" when it answers a
+# gateway error (502/503/504, what an instance answers for a minute or two while it wakes up),
+# "unknown" otherwise.
+function servicenow_instance_state() {
+  local response=""
+
+  response=$(curl -s -m 30 -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if echo "$response" | jq -e . > /dev/null 2>&1
+  then
+    echo "awake"
+  elif echo "$response" | grep -qi "hibernat"
+  then
+    echo "hibernating"
+  elif echo "$response" | grep -qiE "502 Bad Gateway|503 Service|504 Gateway"
+  then
+    echo "waking"
+  else
+    echo "unknown"
+  fi
+}
+
+# Personal Developer Instances hibernate when unused. When $SERVICENOW_URL is hibernating, wake it up
+# with scripts/servicenow-instance-wakeup/wakeup.py (Playwright: logs in to developer.servicenow.com
+# with SERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD and clicks the wake up button of
+# "Manage my instance"), then wait for the REST API to answer. The portal login alone usually wakes the
+# instance, so a failure of wakeup.py (status not readable on a redesigned page) is only a warning: the
+# REST API decides. When the instance is already waking up (gateway error), just wait. Does nothing
+# when the instance is awake.
+function servicenow_wake_up_instance() {
+  local state="" wait=0 max_wait=900 out_dir=""
+  # examples: DIR_UTILS is scripts/; the playground CLI: root_folder is the repository
+  local script_dir="${DIR_UTILS:-}/servicenow-instance-wakeup"
+  if [ ! -d "$script_dir" ]
+  then
+    script_dir="${root_folder:-}/scripts/servicenow-instance-wakeup"
+  fi
+
+  state=$(servicenow_instance_state)
+  if [ "$state" == "hibernating" ]
+  then
+    if [ -z "$SERVICENOW_DEVELOPER_USERNAME" ] || [ -z "$SERVICENOW_DEVELOPER_PASSWORD" ]
+    then
+      logerror "❌ ServiceNow instance $SERVICENOW_URL is hibernating: wake it up at https://developer.servicenow.com (Manage my instance), or export SERVICENOW_DEVELOPER_USERNAME and SERVICENOW_DEVELOPER_PASSWORD (your ServiceNow ID) to do it automatically"
+      return 1
+    fi
+
+    log "🛌 ServiceNow instance $SERVICENOW_URL is hibernating, waking it up (it can take several minutes)"
+    out_dir=$(mktemp -d /tmp/servicenow-wakeup-XXXXXX)
+    chmod 777 "$out_dir"
+    if ! docker run --rm -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" \
+      -v "$script_dir:/wakeup:ro" -v "$out_dir:/out" mcr.microsoft.com/playwright/python:v1.48.0-noble \
+      bash -c "pip install -q --disable-pip-version-check --root-user-action=ignore playwright==1.48.0 > /dev/null && python3 -I /wakeup/wakeup.py /out 600"
+    then
+      logwarn "🛌 wakeup.py did not confirm that $SERVICENOW_URL is Online (screenshots in $out_dir), the portal login usually wakes it up anyway: checking the REST API"
+    fi
+  elif [ "$state" == "waking" ]
+  then
+    log "🛌 ServiceNow instance $SERVICENOW_URL is waking up (gateway error)"
+  else
+    return 0
+  fi
+
+  log "⌛ Waiting up to $max_wait seconds for the REST API of $SERVICENOW_URL to answer"
+  while [ "$(servicenow_instance_state)" != "awake" ]
+  do
+    if [ $wait -ge $max_wait ]
+    then
+      logerror "❌ ServiceNow instance $SERVICENOW_URL still does not answer the REST API after $max_wait seconds${out_dir:+ (screenshots in $out_dir)}: wake it up at https://developer.servicenow.com (Manage my instance)"
+      return 1
+    fi
+    sleep 15
+    wait=$((wait + 15))
+  done
+  [ -n "$out_dir" ] && rm -rf "$out_dir"
+  log "🛌 ServiceNow instance $SERVICENOW_URL is awake"
+}
+
+# Make sure user admin of $SERVICENOW_URL (ending with /) can use basic authentication on the REST
+# API, which the ServiceNow examples and connectors use. Recent ServiceNow releases answer 401 to
+# basic authentication unless the Identity Type of the user is Machine (User Administration > Users >
+# admin > Identity Type). The UI login still works then, so this logs in with login.do like a browser,
+# takes the session token g_ck from a UI page, and sets identity_type=machine on admin with the REST
+# Table API in that session.
+function servicenow_ensure_machine_identity() {
+  local code="" jar="" ck="" gck="" sys_id="" page="" response=""
+
+  code=$(curl -s -o /dev/null -w "%{http_code}" -u admin:"$SERVICENOW_PASSWORD" "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if [ "$code" != "401" ]
+  then
+    return 0
+  fi
+
+  log "🤖 ServiceNow answers 401 to basic authentication for admin, setting its Identity Type to Machine"
+  jar=$(mktemp)
+  ck=$(curl -s -c "$jar" -b "$jar" "${SERVICENOW_URL}login.do" | grep -oE 'name="sysparm_ck"[^>]*value="[^"]*"' | sed -E 's/.*value="([^"]*)".*/\1/' | head -1)
+  curl -s -o /dev/null -c "$jar" -b "$jar" -L \
+    --data-urlencode "user_name=admin" --data-urlencode "user_password=$SERVICENOW_PASSWORD" \
+    --data-urlencode "sys_action=sysverb_login" --data-urlencode "sysparm_ck=$ck" \
+    --data-urlencode "ni.nolog.user_password=true" "${SERVICENOW_URL}login.do"
+
+  for page in navpage.do home.do
+  do
+    gck=$(curl -s -c "$jar" -b "$jar" -L "${SERVICENOW_URL}${page}" | grep -oE "g_ck *= *['\"][a-f0-9]{20,}['\"]" | grep -oE '[a-f0-9]{20,}' | head -1)
+    if [ ! -z "$gck" ]
+    then
+      break
+    fi
+  done
+  if [ -z "$gck" ]
+  then
+    rm -f "$jar"
+    logerror "❌ could not log in to $SERVICENOW_URL as admin: check SERVICENOW_PASSWORD, or set Identity Type to Machine on admin by hand (see the README of the example)"
+    return 1
+  fi
+
+  sys_id=$(curl -s -c "$jar" -b "$jar" -H "X-UserToken: $gck" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_query=user_name=admin&sysparm_fields=sys_id" | jq -r '.result[0].sys_id // empty' 2> /dev/null) || sys_id=""
+  if [ ! -z "$sys_id" ]
+  then
+    response=$(curl -s -c "$jar" -b "$jar" -X PATCH -H "X-UserToken: $gck" -H 'Accept: application/json' -H 'Content-Type: application/json' -d '{"identity_type": "machine"}' "${SERVICENOW_URL}api/now/table/sys_user/${sys_id}?sysparm_fields=identity_type")
+  fi
+  rm -f "$jar"
+
+  code=$(curl -s -o /dev/null -w "%{http_code}" -u admin:"$SERVICENOW_PASSWORD" "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if [ "$code" != "200" ]
+  then
+    logerror "❌ basic authentication as admin still answers HTTP $code after setting its Identity Type to Machine (response: ${response:-admin user not found}). Set it by hand (see the README of the example)"
+    return 1
+  fi
+  log "🤖 Identity Type of admin is now Machine"
+}

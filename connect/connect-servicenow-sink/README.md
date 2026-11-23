@@ -6,6 +6,8 @@ Quickly test the [ServiceNow Sink](https://docs.confluent.io/kafka-connectors/se
 
 ## Prerequisites
 
+> `playground account servicenow setup` validates and stores the developer instance (URL with its trailing `/`, admin password, your ServiceNow ID for the automatic wake up), waking it up if it hibernates, see [ServiceNow examples: set up a developer instance](https://kafka-docker-playground.io/#/servicenow). `playground account servicenow check` tells you its state.
+
 * A ServiceNow test instance (see [Register a test account](#register-a-test-account)). The scripts create the `u_test_table` table themselves (see [The test_table in ServiceNow](#the-test_table-in-servicenow)).
 * With CP 8.x, connector version 2.5.6 or later.
 
