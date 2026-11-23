@@ -6,6 +6,8 @@ Quickly test the [Snowflake Sink](https://docs.snowflake.com/en/user-guide/kafka
 
 ## Prerequisites
 
+> `playground account snowflake setup` validates and stores the Snowflake login (account identifier from the account URL or any form, user, password), see [Snowflake examples: set up an account](https://kafka-docker-playground.io/#/snowflake). `playground account snowflake check` verifies it, with the roles and the edition.
+
 * A Snowflake account (see [Register a trial account](#register-a-trial-account)). The user must be able to use the `SECURITYADMIN`, `SYSADMIN` and `USERADMIN` roles.
 * The Iceberg variants require Snowflake **Enterprise Edition** (select it when signing up for a trial).
 

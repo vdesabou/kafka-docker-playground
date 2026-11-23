@@ -399,6 +399,9 @@ They are stored in `~/.config/kafka-docker-playground` (never in the repository)
 > [!TIP]
 > ☁️ The Azure examples log in with a service principal (no browser on every run): [Azure examples: set up a subscription](/azure.md) creates it with `playground account azure setup` (and `playground account azure check` when an example fails on its login, roles or resource providers).
 
+> [!TIP]
+> ☁️ The Snowflake examples need an admin login in the right form: [Snowflake examples: set up an account](/snowflake.md) validates and stores it with `playground account snowflake setup` (and `playground account snowflake check` when a login fails or a role is missing).
+
 ## 🌤️ Confluent Cloud examples
 
 Simply use [playground run](/playground%20run) command ! Below, the menu shows the Confluent Cloud options of a fully managed connector example (it quits before running it):
