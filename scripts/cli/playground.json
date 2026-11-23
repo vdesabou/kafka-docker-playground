@@ -459,121 +459,217 @@
       ]
     },
     {
-      "name": "salesforce",
-      "description": "☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  check   verify that the stored credentials can log in, and that the org has what the examples need\n\nReplaces the manual steps of the Salesforce example READMEs. Only signing\nup for the Developer Edition org stays manual.\n\n📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\nhttps://kafka-docker-playground.io/#/salesforce",
-      "usage": "playground salesforce COMMAND",
+      "name": "account",
+      "description": "☁️ Set up and check the third-party accounts the examples run against\n\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and 'check' (a few seconds,\nread-only: does the stored login still work, and what is missing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp",
+      "usage": "playground account COMMAND",
       "options": [],
       "subcommands": [
         {
-          "name": "setup",
-          "description": "🛠️ Configure a Salesforce org for the Salesforce examples\n\nDeploys, with the Salesforce CLI (sf) installed on your machine:\n\n  • an External Client App with the OAuth JWT bearer flow, trusting the\n    certificate of your keystore, pre-authorized for the profile of your\n    user (no browser approval) and with IP restrictions relaxed\n  • the Platform Event MyPlatformEvent__e with the text field Message__c\n  • Change Data Capture on Contact\n\nthen reads the consumer key back, waits until a JWT bearer login works\n(a new app takes 2 to 10 minutes to be active), and stores\nSALESFORCE_USERNAME, SALESFORCE_INSTANCE and\nSALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.\n\nWithout --target-org, 'sf org login web' opens the browser once to log\nin: that is the only manual step. Running it again on the same org\nchanges nothing.\n\n🔐 Your keystore (JWT private key and certificate, password confluent)\nis ~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks,\noutside the repository, and is copied into the Salesforce example\nfolders, where the examples read it. The first time, the command\nreuses the keystore already in the examples if there is one (so the\norgs that trust it keep working), else generates a key pair that never\nleaves your machine.\n\nSALESFORCE_PASSWORD and SALESFORCE_SECURITY_TOKEN can't be read from\nSalesforce: the command tells you how to store them.\n\n🎓 Tip: use --suffix KDP_CDC (or --account2 for the second org of the\nsink examples) to store the per-test variables read by\nsalesforce_use_test_creds.",
-          "usage": "playground salesforce setup [OPTIONS]",
-          "options": [
+          "name": "salesforce",
+          "description": "☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  check   verify that the stored credentials can log in, and that the org has what the examples need\n\nReplaces the manual steps of the Salesforce example READMEs. Only signing\nup for the Developer Edition org stays manual.\n\n📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\nhttps://kafka-docker-playground.io/#/salesforce",
+          "usage": "playground account salesforce COMMAND",
+          "options": [],
+          "subcommands": [
             {
-              "names": [
-                "--target-org",
-                "-o"
-              ],
-              "argument": "TARGET_ORG",
-              "description": "🔑 Alias or username of an org the sf CLI is already logged into\n\nWithout it, 'sf org login web' opens the browser to log in."
+              "name": "setup",
+              "description": "🛠️ Configure a Salesforce org for the Salesforce examples\n\nDeploys, with the Salesforce CLI (sf) installed on your machine:\n\n  • an External Client App with the OAuth JWT bearer flow, trusting the\n    certificate of your keystore, pre-authorized for the profile of your\n    user (no browser approval) and with IP restrictions relaxed\n  • the Platform Event MyPlatformEvent__e with the text field Message__c\n  • Change Data Capture on Contact\n\nthen reads the consumer key back, waits until a JWT bearer login works\n(a new app takes 2 to 10 minutes to be active), and stores\nSALESFORCE_USERNAME, SALESFORCE_INSTANCE and\nSALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.\n\nWithout --target-org, 'sf org login web' opens the browser once to log\nin: that is the only manual step. Running it again on the same org\nchanges nothing.\n\n🔐 Your keystore (JWT private key and certificate, password confluent)\nis ~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks,\noutside the repository, and is copied into the Salesforce example\nfolders, where the examples read it. The first time, the command\nreuses the keystore already in the examples if there is one (so the\norgs that trust it keep working), else generates a key pair that never\nleaves your machine.\n\nSALESFORCE_PASSWORD and SALESFORCE_SECURITY_TOKEN can't be read from\nSalesforce: the command tells you how to store them.\n\n🎓 Tip: use --suffix KDP_CDC (or --account2 for the second org of the\nsink examples) to store the per-test variables read by\nsalesforce_use_test_creds.",
+              "usage": "playground account salesforce setup [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--target-org",
+                    "-o"
+                  ],
+                  "argument": "TARGET_ORG",
+                  "description": "🔑 Alias or username of an org the sf CLI is already logged into\n\nWithout it, 'sf org login web' opens the browser to log in."
+                },
+                {
+                  "names": [
+                    "--alias"
+                  ],
+                  "argument": "ALIAS",
+                  "description": "🏷️ Alias given to the org by 'sf org login web' (ignored with --target-org)\n\nDefault value: kdp-salesforce"
+                },
+                {
+                  "names": [
+                    "--instance-url"
+                  ],
+                  "argument": "INSTANCE_URL",
+                  "description": "🌐 Login URL, stored as SALESFORCE_INSTANCE\n\nhttps://test.salesforce.com for a sandbox.\n\nDefault value: https://login.salesforce.com"
+                },
+                {
+                  "names": [
+                    "--app-name"
+                  ],
+                  "argument": "APP_NAME",
+                  "description": "📛 API name of the External Client App\n\nDefault value: kdp_jwt"
+                },
+                {
+                  "names": [
+                    "--suffix"
+                  ],
+                  "argument": "SUFFIX",
+                  "description": "🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC"
+                },
+                {
+                  "names": [
+                    "--account2"
+                  ],
+                  "argument": "",
+                  "description": "2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples"
+                },
+                {
+                  "names": [
+                    "--keystore"
+                  ],
+                  "argument": "KEYSTORE",
+                  "description": "🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied into the Salesforce example folders.\ncheck: default is your keystore, else connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
+                },
+                {
+                  "names": [
+                    "--generate-keystore"
+                  ],
+                  "argument": "",
+                  "description": "🆕 Generate a new key pair, even if you already have a keystore\n\nThe previous one is kept as .bak: the orgs set up with it must be set up again."
+                },
+                {
+                  "names": [
+                    "--max-wait"
+                  ],
+                  "argument": "MAX_WAIT",
+                  "description": "⏳ Max seconds to wait for the JWT bearer login to work after the deploy (default 600)\n\nDefault value: 600"
+                },
+                {
+                  "names": [
+                    "--dry-run"
+                  ],
+                  "argument": "",
+                  "description": "🧪 Only render the metadata in /tmp/playground-salesforce-setup, deploy and store nothing"
+                },
+                {
+                  "names": [
+                    "--no-store"
+                  ],
+                  "argument": "",
+                  "description": "🚫 Print the values instead of storing them with 'playground secrets set'"
+                }
+              ]
             },
             {
-              "names": [
-                "--alias"
-              ],
-              "argument": "ALIAS",
-              "description": "🏷️ Alias given to the org by 'sf org login web' (ignored with --target-org)\n\nDefault value: kdp-salesforce"
-            },
-            {
-              "names": [
-                "--instance-url"
-              ],
-              "argument": "INSTANCE_URL",
-              "description": "🌐 Login URL, stored as SALESFORCE_INSTANCE\n\nhttps://test.salesforce.com for a sandbox.\n\nDefault value: https://login.salesforce.com"
-            },
-            {
-              "names": [
-                "--app-name"
-              ],
-              "argument": "APP_NAME",
-              "description": "📛 API name of the External Client App\n\nDefault value: kdp_jwt"
-            },
-            {
-              "names": [
-                "--suffix"
-              ],
-              "argument": "SUFFIX",
-              "description": "🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC"
-            },
-            {
-              "names": [
-                "--account2"
-              ],
-              "argument": "",
-              "description": "2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples"
-            },
-            {
-              "names": [
-                "--keystore"
-              ],
-              "argument": "KEYSTORE",
-              "description": "🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied into the Salesforce example folders.\ncheck: default is your keystore, else connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
-            },
-            {
-              "names": [
-                "--generate-keystore"
-              ],
-              "argument": "",
-              "description": "🆕 Generate a new key pair, even if you already have a keystore\n\nThe previous one is kept as .bak: the orgs set up with it must be set up again."
-            },
-            {
-              "names": [
-                "--max-wait"
-              ],
-              "argument": "MAX_WAIT",
-              "description": "⏳ Max seconds to wait for the JWT bearer login to work after the deploy (default 600)\n\nDefault value: 600"
-            },
-            {
-              "names": [
-                "--dry-run"
-              ],
-              "argument": "",
-              "description": "🧪 Only render the metadata in /tmp/playground-salesforce-setup, deploy and store nothing"
-            },
-            {
-              "names": [
-                "--no-store"
-              ],
-              "argument": "",
-              "description": "🚫 Print the values instead of storing them with 'playground secrets set'"
+              "name": "check",
+              "description": "🩺 Check that the stored Salesforce credentials work\n\nLogs in with the OAuth JWT bearer flow, exactly like a connector with\nsalesforce.grant.type=JWT_BEARER (stored SALESFORCE_USERNAME,\nSALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE and the keystore),\nexplains a rejection, then checks that the org has MyPlatformEvent__e and\nChange Data Capture on Contact (warnings: only some examples need them).\nNeeds neither Docker nor the sf CLI.\n\nExits with 1 when the login fails.",
+              "usage": "playground account salesforce check [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--suffix"
+                  ],
+                  "argument": "SUFFIX",
+                  "description": "🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC"
+                },
+                {
+                  "names": [
+                    "--account2"
+                  ],
+                  "argument": "",
+                  "description": "2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples"
+                },
+                {
+                  "names": [
+                    "--keystore"
+                  ],
+                  "argument": "KEYSTORE",
+                  "description": "🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied into the Salesforce example folders.\ncheck: default is your keystore, else connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
+                }
+              ]
             }
           ]
         },
         {
-          "name": "check",
-          "description": "🩺 Check that the stored Salesforce credentials work\n\nLogs in with the OAuth JWT bearer flow, exactly like a connector with\nsalesforce.grant.type=JWT_BEARER (stored SALESFORCE_USERNAME,\nSALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE and the keystore),\nexplains a rejection, then checks that the org has MyPlatformEvent__e and\nChange Data Capture on Contact (warnings: only some examples need them).\nNeeds neither Docker nor the sf CLI.\n\nExits with 1 when the login fails.",
-          "usage": "playground salesforce check [OPTIONS]",
-          "options": [
+          "name": "gcp",
+          "description": "☁️ Set up a Google Cloud project for the GCP examples, and check it\n\n  setup   enable the APIs, create a service account with its roles and a key, store them\n  check   verify that the stored key works, and that each API the examples use answers\n\nReplaces the manual steps of the GCP example READMEs (service account,\nroles, keyfile.json copied in every example folder). Only creating the\nproject, with billing enabled, stays manual.\n\n📖 Step by step guide (project, billing, what each example needs, troubleshooting):\nhttps://kafka-docker-playground.io/#/gcp",
+          "usage": "playground account gcp COMMAND",
+          "options": [],
+          "subcommands": [
             {
-              "names": [
-                "--suffix"
-              ],
-              "argument": "SUFFIX",
-              "description": "🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC"
+              "name": "setup",
+              "description": "🛠️ Configure a Google Cloud project for the GCP examples\n\nWith gcloud (installed on your machine, else the google/cloud-sdk image\nthe examples already use):\n\n  • enables the APIs of the examples: Cloud Storage, Pub/Sub, BigQuery,\n    Spanner, Bigtable, Firestore, Realtime Database, Cloud Functions,\n    Cloud Run, Dataproc, IAM, Resource Manager\n  • creates the service account kdp-playground (reused if it exists)\n    and grants it the roles the examples need on the project\n  • creates a key, saved once as\n    ~/.config/kafka-docker-playground/gcp-keyfile.json (reused on the\n    next runs while the key still exists)\n\nthen waits until the key can log in, and stores GCP_PROJECT and\nGCP_KEYFILE_CONTENT with 'playground secrets set': no more keyfile.json\nto copy into each example folder.\n\nWithout --account, 'gcloud auth login' opens the browser once, in a\ngcloud configuration of its own: your gcloud login and default project\nare left alone. Running it again on the same project changes nothing.\n\nCan't create service accounts in the project (shared project)? Pass the\nkey you were given with --keyfile: it is checked and stored, nothing is\nchanged in the project.\n\n⚠️ The roles are broad (Storage Admin, Pub/Sub Admin, BigQuery Admin,\nSpanner Admin, Bigtable Admin, Project IAM Admin…): use a sandbox\nproject, not a shared one.",
+              "usage": "playground account gcp setup [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--project",
+                    "-p"
+                  ],
+                  "argument": "PROJECT",
+                  "description": "🗂️ Project id\n\nDefault: GCP_PROJECT (environment, then secrets store), else the only\nproject the account can see."
+                },
+                {
+                  "names": [
+                    "--account",
+                    "-a"
+                  ],
+                  "argument": "ACCOUNT",
+                  "description": "🔑 An account your own gcloud is already logged into (gcloud auth list): no browser\n\nUses your gcloud configuration instead of the dedicated one.\n\nConflicts with: --keyfile"
+                },
+                {
+                  "names": [
+                    "--service-account"
+                  ],
+                  "argument": "SERVICE_ACCOUNT",
+                  "description": "🤖 Name of the service account (6 to 30 lowercase letters, digits and dashes)\n\nDefault value: kdp-playground"
+                },
+                {
+                  "names": [
+                    "--keyfile"
+                  ],
+                  "argument": "KEYFILE",
+                  "description": "📄 Use this existing service account key instead of creating a service account\n\nFor a shared project where you can't create service accounts: the key\nis checked, saved once and stored (GCP_PROJECT defaults to its\nproject_id), then 'playground account gcp check' runs. Nothing is\nchanged in the project, gcloud is not needed.\n\nConflicts with: --account, --new-key"
+                },
+                {
+                  "names": [
+                    "--new-key"
+                  ],
+                  "argument": "",
+                  "description": "♻️ Create a new key even if the saved one still works (the previous file is kept as .bak)\n\nConflicts with: --keyfile"
+                },
+                {
+                  "names": [
+                    "--dry-run"
+                  ],
+                  "argument": "",
+                  "description": "🧪 Only print the APIs, the service account and the roles, change nothing"
+                },
+                {
+                  "names": [
+                    "--no-store"
+                  ],
+                  "argument": "",
+                  "description": "📋 Print the export commands instead of storing GCP_PROJECT and GCP_KEYFILE_CONTENT"
+                }
+              ]
             },
             {
-              "names": [
-                "--account2"
-              ],
-              "argument": "",
-              "description": "2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples"
-            },
-            {
-              "names": [
-                "--keystore"
-              ],
-              "argument": "KEYSTORE",
-              "description": "🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied into the Salesforce example folders.\ncheck: default is your keystore, else connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
+              "name": "check",
+              "description": "🩺 Check that the stored GCP key works for the GCP examples\n\nLogs in with the service account key exactly like a connector does\n(OAuth JWT bearer, key from GCP_KEYFILE_CONTENT, else\n~/.config/kafka-docker-playground/gcp-keyfile.json), explains a\nrejection, then calls each API the examples use (Cloud Storage, Pub/Sub,\nBigQuery, Spanner, Bigtable, Firestore, Cloud Functions, Dataproc,\nRealtime Database) and the project permissions some of them need. Each\nfailure says whether the API is disabled, billing is off or a role is\nmissing, and which examples it breaks.\n\nRead-only, needs neither Docker nor gcloud, takes a few seconds.\n\nExits with 1 when the key can't log in.",
+              "usage": "playground account gcp check [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--project",
+                    "-p"
+                  ],
+                  "argument": "PROJECT",
+                  "description": "🗂️ Project id\n\nDefault: GCP_PROJECT (environment, then secrets store), else the only\nproject the account can see."
+                },
+                {
+                  "names": [
+                    "--keyfile"
+                  ],
+                  "argument": "KEYFILE",
+                  "description": "📄 Service account key file to check instead of the stored one (e.g. an example's keyfile.json)"
+                }
+              ]
             }
           ]
         }

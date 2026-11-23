@@ -4,7 +4,7 @@ keystore="${args[--keystore]}"
 
 if [[ ! -n "$keystore" ]]
 then
-    # what the examples use: the keystore of 'playground salesforce setup', else the one in the examples
+    # what the examples use: the keystore of 'playground account salesforce setup', else the one in the examples
     keystore="$(salesforce_user_keystore_path)"
     if [ ! -f "$keystore" ]
     then
@@ -14,7 +14,7 @@ fi
 if [ ! -f "$keystore" ]
 then
     logerror "❌ keystore $keystore is missing"
-    logerror "👉 playground salesforce setup generates one"
+    logerror "👉 playground account salesforce setup generates one"
     exit 1
 fi
 for tool in openssl curl jq
@@ -54,7 +54,7 @@ do
 done
 if [ $missing -eq 1 ]
 then
-    logerror "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" )"
+    logerror "👉 playground account salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" )"
     exit 1
 fi
 
@@ -71,7 +71,7 @@ else
         *"client identifier invalid"*)
             logerror "   $consumer_key_var is not the consumer key of an External Client App of this org, or the app was created less than 10 minutes ago" ;;
         *"hasn't approved this consumer"*|*"not approved"*)
-            logerror "   the app is not pre-authorized for this user: its OAuth policy must be 'Admin approved users are pre-authorized' and list the user's profile (playground salesforce setup does it)" ;;
+            logerror "   the app is not pre-authorized for this user: its OAuth policy must be 'Admin approved users are pre-authorized' and list the user's profile (playground account salesforce setup does it)" ;;
         *"invalid assertion"*|*"invalid signature"*|*"invalid_grant"*"certificate"*)
             logerror "   the certificate of the External Client App does not match the private key of $keystore" ;;
         *"audience is invalid"*)
@@ -108,7 +108,7 @@ fi
 
 if [ $missing_objects -eq 1 ]
 then
-    log "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
+    log "👉 playground account salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
     exit 0
 fi
 log "🎉 the org is ready for all the Salesforce examples"

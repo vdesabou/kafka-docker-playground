@@ -9,12 +9,12 @@ Leads are captured from a first Salesforce account with the Salesforce PushTopic
 ## Prerequisites
 
 > [!TIP]
-> `playground salesforce setup` (account #1) and `playground salesforce setup --account2` (account #2) configure the Salesforce orgs (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and store `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT` (`_ACCOUNT2` for account #2), see [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce) (Salesforce CLI install, second org, troubleshooting). `playground salesforce check` (`--account2`) verifies them.
+> `playground account salesforce setup` (account #1) and `playground account salesforce setup --account2` (account #2) configure the Salesforce orgs (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and store `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT` (`_ACCOUNT2` for account #2), see [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce) (Salesforce CLI install, second org, troubleshooting). `playground account salesforce check` (`--account2`) verifies them.
 
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 * Two Salesforce accounts, each with an External Client App using the JWT Bearer flow (see [Salesforce setup](#salesforce-setup))
-* `salesforce-confluent.keystore.jks` (password `confluent`, it contains the private key matching the certificate of the External Client App) in this folder. The keystore of `playground salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only).
+* `salesforce-confluent.keystore.jks` (password `confluent`, it contains the private key matching the certificate of the External Client App) in this folder. The keystore of `playground account salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only).
 
 | Variable | Description |
 | --- | --- |

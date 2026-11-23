@@ -6,6 +6,8 @@ Quickly test the [Fully Managed GCP Pub/Sub Source](https://docs.confluent.io/cl
 
 ## Prerequisites
 
+> `playground account gcp setup` configures the GCP project (APIs, service account with its roles, key stored as `GCP_KEYFILE_CONTENT`: no `keyfile.json` to copy here), see [GCP examples: set up a project](https://kafka-docker-playground.io/#/gcp). `playground account gcp check` verifies it.
+
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 You need an active Google Cloud Platform (GCP) account with authorization to create resources.

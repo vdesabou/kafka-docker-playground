@@ -6,6 +6,8 @@ Quickly test the [GCP Pub/Sub Source](https://docs.confluent.io/kafka-connectors
 
 ## Prerequisites
 
+> `playground account gcp setup` configures the GCP project (APIs, service account with its roles, key stored as `GCP_KEYFILE_CONTENT`: no `keyfile.json` to copy here), see [GCP examples: set up a project](https://kafka-docker-playground.io/#/gcp). `playground account gcp check` verifies it.
+
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 * A service account key, either saved as `keyfile.json` in this folder or provided through `GCP_KEYFILE_CONTENT` (see [Service account setup](#service-account-setup))
 

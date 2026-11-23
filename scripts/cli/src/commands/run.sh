@@ -1097,7 +1097,7 @@ then
 
         if [ -z "$GCP_KEYFILE_CONTENT" ]
         then
-          missing_env="${missing_env}❌ ${RED}GCP_KEYFILE_CONTENT is missing!${NC}\n"
+          missing_env="${missing_env}❌ ${RED}GCP_KEYFILE_CONTENT is missing!${NC} 👉 playground account gcp setup\n"
           has_error=1
           missing_env_list+=("GCP_KEYFILE_CONTENT")
         fi

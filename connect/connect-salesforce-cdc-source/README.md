@@ -9,9 +9,9 @@ The connector authenticates with the OAuth JWT Bearer flow (`salesforce.grant.ty
 ## Prerequisites
 
 * A Salesforce account (see [Register a test account](#register-a-test-account))
-* An External Client App with the JWT Bearer flow enabled, and Change Data Capture enabled for `Contact`: `playground salesforce setup` does both (see [Automated setup](#automated-setup)), or follow [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow) and [Enable Change Data Capture](#enable-change-data-capture)
+* An External Client App with the JWT Bearer flow enabled, and Change Data Capture enabled for `Contact`: `playground account salesforce setup` does both (see [Automated setup](#automated-setup)), or follow [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow) and [Enable Change Data Capture](#enable-change-data-capture)
 * CP 6.0.0 or later (the keystore was created with JDK 11). With CP 8.x, connector version 2.0.29 or later.
-* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. The keystore of `playground salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only, with AWS credentials set).
+* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. The keystore of `playground account salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only, with AWS credentials set).
 
 | Variable | Description |
 | --- | --- |
@@ -45,13 +45,13 @@ playground run -f salesforce-cdc-source.sh
 ## Automated setup
 
 > The step by step guide, with the Salesforce CLI install, the second org of the sink examples and the
-> troubleshooting of `playground salesforce check`, is on the website:
+> troubleshooting of `playground account salesforce check`, is on the website:
 > [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce).
 
 Once you have an account (see [Register a test account](#register-a-test-account)), one command configures it for all the Salesforce examples. It needs the [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli) (`sf`) on your machine:
 
 ```bash
-playground salesforce setup
+playground account salesforce setup
 ```
 
 1. Opens the browser once to log in (`sf org login web`). Pass `--target-org <alias>` to use an org `sf` is already logged into.
@@ -71,7 +71,7 @@ Your keystore (JWT private key and certificate, password `confluent`) is `~/.con
 | `--dry-run` | only render the metadata in `/tmp/playground-salesforce-setup` |
 | `--no-store` | print the values instead of storing them |
 
-Then, at any time, `playground salesforce check` (same `--suffix` / `--account2`) logs in with the JWT Bearer flow exactly like the connector, explains a rejection, and checks that `MyPlatformEvent__e` and Change Data Capture on `Contact` are there (warnings only: each is needed by some examples only). It needs neither Docker nor `sf`.
+Then, at any time, `playground account salesforce check` (same `--suffix` / `--account2`) logs in with the JWT Bearer flow exactly like the connector, explains a rejection, and checks that `MyPlatformEvent__e` and Change Data Capture on `Contact` are there (warnings only: each is needed by some examples only). It needs neither Docker nor `sf`.
 
 The manual steps below do the same by hand.
 

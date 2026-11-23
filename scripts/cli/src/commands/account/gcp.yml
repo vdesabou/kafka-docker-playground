@@ -1,0 +1,127 @@
+name: gcp
+expose: always
+help: |-
+  ☁️ Set up a Google Cloud project for the GCP examples, and check it
+
+    setup   enable the APIs, create a service account with its roles and a key, store them
+    check   verify that the stored key works, and that each API the examples use answers
+
+  Replaces the manual steps of the GCP example READMEs (service account,
+  roles, keyfile.json copied in every example folder). Only creating the
+  project, with billing enabled, stays manual.
+
+  📖 Step by step guide (project, billing, what each example needs, troubleshooting):
+  https://kafka-docker-playground.io/#/gcp
+commands:
+- name: setup
+  help: |-
+    🛠️ Configure a Google Cloud project for the GCP examples
+
+    With gcloud (installed on your machine, else the google/cloud-sdk image
+    the examples already use):
+
+      • enables the APIs of the examples: Cloud Storage, Pub/Sub, BigQuery,
+        Spanner, Bigtable, Firestore, Realtime Database, Cloud Functions,
+        Cloud Run, Dataproc, IAM, Resource Manager
+      • creates the service account kdp-playground (reused if it exists)
+        and grants it the roles the examples need on the project
+      • creates a key, saved once as
+        ~/.config/kafka-docker-playground/gcp-keyfile.json (reused on the
+        next runs while the key still exists)
+
+    then waits until the key can log in, and stores GCP_PROJECT and
+    GCP_KEYFILE_CONTENT with 'playground secrets set': no more keyfile.json
+    to copy into each example folder.
+
+    Without --account, 'gcloud auth login' opens the browser once, in a
+    gcloud configuration of its own: your gcloud login and default project
+    are left alone. Running it again on the same project changes nothing.
+
+    Can't create service accounts in the project (shared project)? Pass the
+    key you were given with --keyfile: it is checked and stored, nothing is
+    changed in the project.
+
+    ⚠️ The roles are broad (Storage Admin, Pub/Sub Admin, BigQuery Admin,
+    Spanner Admin, Bigtable Admin, Project IAM Admin…): use a sandbox
+    project, not a shared one.
+  flags:
+  - &gcp-project
+    long: --project
+    short: -p
+    arg: project
+    required: false
+    help: |-
+      🗂️ Project id
+
+      Default: GCP_PROJECT (environment, then secrets store), else the only
+      project the account can see.
+  - long: --account
+    short: -a
+    arg: account
+    required: false
+    conflicts: [--keyfile]
+    help: |-
+      🔑 An account your own gcloud is already logged into (gcloud auth list): no browser
+
+      Uses your gcloud configuration instead of the dedicated one.
+  - long: --service-account
+    arg: service_account
+    required: false
+    default: "kdp-playground"
+    help: |-
+      🤖 Name of the service account (6 to 30 lowercase letters, digits and dashes)
+  - long: --keyfile
+    arg: keyfile
+    required: false
+    validate: file_exists
+    conflicts: [--account, --new-key]
+    help: |-
+      📄 Use this existing service account key instead of creating a service account
+
+      For a shared project where you can't create service accounts: the key
+      is checked, saved once and stored (GCP_PROJECT defaults to its
+      project_id), then 'playground account gcp check' runs. Nothing is
+      changed in the project, gcloud is not needed.
+  - long: --new-key
+    conflicts: [--keyfile]
+    help: |-
+      ♻️ Create a new key even if the saved one still works (the previous file is kept as .bak)
+  - long: --dry-run
+    help: |-
+      🧪 Only print the APIs, the service account and the roles, change nothing
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing GCP_PROJECT and GCP_KEYFILE_CONTENT
+  examples:
+  - playground account gcp setup
+  - playground account gcp setup --project my-sandbox-project
+  - playground account gcp setup --account me@example.com --project my-sandbox-project
+  - playground account gcp setup --keyfile ~/Downloads/my-project-3f2a91c07b4e.json
+  - playground account gcp setup --dry-run
+- name: check
+  help: |-
+    🩺 Check that the stored GCP key works for the GCP examples
+
+    Logs in with the service account key exactly like a connector does
+    (OAuth JWT bearer, key from GCP_KEYFILE_CONTENT, else
+    ~/.config/kafka-docker-playground/gcp-keyfile.json), explains a
+    rejection, then calls each API the examples use (Cloud Storage, Pub/Sub,
+    BigQuery, Spanner, Bigtable, Firestore, Cloud Functions, Dataproc,
+    Realtime Database) and the project permissions some of them need. Each
+    failure says whether the API is disabled, billing is off or a role is
+    missing, and which examples it breaks.
+
+    Read-only, needs neither Docker nor gcloud, takes a few seconds.
+
+    Exits with 1 when the key can't log in.
+  flags:
+  - *gcp-project
+  - long: --keyfile
+    arg: keyfile
+    required: false
+    validate: file_exists
+    help: |-
+      📄 Service account key file to check instead of the stored one (e.g. an example's keyfile.json)
+  examples:
+  - playground account gcp check
+  - playground account gcp check --keyfile connect/connect-gcp-gcs-sink/keyfile.json

@@ -6,6 +6,8 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 
 ## Prerequisites
 
+> `playground account gcp setup` configures the GCP project (APIs, service account with its roles, key stored as `GCP_KEYFILE_CONTENT`: no `keyfile.json` to copy here), see [GCP examples: set up a project](https://kafka-docker-playground.io/#/gcp). `playground account gcp check` verifies it.
+
 * An active Google Cloud Platform (GCP) account with authorization to create resources.
 * With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
