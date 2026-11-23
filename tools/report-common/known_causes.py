@@ -86,6 +86,18 @@ KNOWN_CAUSES = [
                "the worker, or an IAM / bucket policy that denies the action (403 AccessDenied): check the credentials "
                "of the connector (aws.access.key.id / aws.secret.access.key, or its credentials provider) and the IAM "
                "policy"},
+    # the Hadoop client of a connector (ADLS Gen2 Sink, HDFS 3, HBase) asks the OS for the name of the user of the JVM
+    # (UserGroupInformation: JAAS UnixLoginModule, REQUIRED) and the UID has no /etc/passwd entry: the CFK default pod
+    # UID 1001 in the cp images. Hadoop 3.4 rethrows it as "Invalid UID, could not determine effective user", older
+    # versions as a KerberosAuthException: before the Kerberos entries. HADOOP_USER_NAME is read after that login
+    {"name": "unix_user_without_name", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"Invalid UID, could not determine effective user|invalid null input: name",
+     "title": "👤 Worker user without a name (Hadoop client)",
+     "advice": "the Connect worker runs as a UID with no /etc/passwd entry (whoami in the pod: \"cannot find name for "
+               "user ID 1001\", the default pod UID of CFK): the Hadoop client of the connector (ADLS Gen2 Sink, HDFS 3 "
+               "Source / Sink, HBase Sink) needs a user name. Run the worker as appuser (CFK: spec.podTemplate."
+               "podSecurityContext runAsUser: 1000, fsGroup: 1000; docker: user 1000) or add a passwd entry for the UID "
+               "in the image. HADOOP_USER_NAME does not help (Hadoop reads it after the OS login has failed)"},
     # the ticket expiry of a Kafka GSSAPI client (KerberosLogin), lines reproduced by other/kerberos-ticket-expiry. The
     # refresh thread fails, but the open connections keep working (connections.max.reauth.ms 0): the break shows at the
     # next reconnect (broker restart, roll, rebalance), as "terminated during authentication". Before kerberos_no_ticket
