@@ -11,8 +11,8 @@ Before reproducing anything on Confluent Cloud, set up your own clusters once an
 examples leave running:
 
 ```bash
-playground ccloud setup --dry-run                     # environment pg-<user>, one Basic cluster per cloud, API keys: the plan
-playground ccloud setup                               # created and stored in your secrets profile, reused by every example
+playground account ccloud setup --dry-run                     # environment pg-<user>, one Basic cluster per cloud, API keys: the plan
+playground account ccloud setup                               # created and stored in your secrets profile, reused by every example
 playground cloud-resources nightly-cleanup enable     # every night: your connectors *_<user>, pg-<user>-sa-* environments, recorded topics
 playground cloud-resources ccloud list                # anytime: what is still running for you, org-wide
 ```

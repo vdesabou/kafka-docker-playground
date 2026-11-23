@@ -18,7 +18,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | You want | Command |
 | --- | --- |
 | run a fully managed example | `playground run -f ccloud/fm-datagen-source/fully-managed-datagen-source.sh` |
-| your own environment and one cluster per cloud, stored in a secrets profile | `playground ccloud setup` (`--profile emea`, `--cloud aws --cloud azure`, `--dry-run`) |
+| your own environment and one cluster per cloud, stored in a secrets profile | `playground account ccloud setup` (`--profile emea`, `--cloud aws --cloud azure`, `--dry-run`) |
 | reuse your own cluster instead of creating one | `export ENVIRONMENT=… CLUSTER_NAME=… CLUSTER_CLOUD=… CLUSTER_REGION=… CLUSTER_CREDS=…` before the run |
 | forget the cached cluster details | `playground cleanup-cloud-details` (nothing is deleted in Confluent Cloud) |
 | create / update and wait for RUNNING | `playground connector create-or-update -c DatagenSource_$USER --wait << EOF … EOF` |
@@ -42,7 +42,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 
 1. **One cluster per machine, cached.** `bootstrap_ccloud_environment` (the first line of every `ccloud/fm-*` example,
    instead of `start-environment`) either reuses a cluster or creates a full stack. The simplest is your own clusters,
-   set up once with `playground ccloud setup` (see the gotchas below):
+   set up once with `playground account ccloud setup` (see the gotchas below):
    - **your cluster**: `CLUSTER_NAME`, `ENVIRONMENT`, `CLUSTER_CLOUD`, `CLUSTER_REGION` and `CLUSTER_CREDS`
      (`<api key>:<secret>`, optionally `SCHEMA_REGISTRY_CREDS`) exported before the run. Without
      `SCHEMA_REGISTRY_CREDS`, the Schema Registry key of another cached cluster of the same environment is reused
@@ -126,7 +126,7 @@ Gotchas:
   cluster is missing:` and the five values).
 - **The cache wins over your intent**: a cluster deleted from the UI, another organization, an API key revoked: run
   `playground cleanup-cloud-details` and start again. Nothing is deleted in Confluent Cloud by it.
-- **`playground ccloud setup` sets all of this up for you**: an environment `pg-<user>`, one Basic cluster
+- **`playground account ccloud setup` sets all of this up for you**: an environment `pg-<user>`, one Basic cluster
   `pg-<user>-<cloud>` per `--cloud`, one Kafka key per cluster and one Schema Registry key owned by you (no service
   account), all stored in a secrets profile (`--profile`, `CLUSTER_*` for `--default-cloud`). The AWS / Azure regions
   default to `AWS_REGION` / `AZURE_REGION`, exported or in the profile, so the cluster sits where the example puts its
@@ -246,7 +246,7 @@ Gotchas:
   deletes them; a cloud whose credentials can't be read without a prompt (1Password without a service account token,
   no saved `az login` session, Docker stopped for GCP) is skipped with a notification, the others still run.
 - **Tips when you don't use them yet**: the end of `playground run` of a Confluent Cloud example (success or failure)
-  and `playground status` suggest `playground ccloud setup` when the run used a cluster created just for it, and
+  and `playground status` suggest `playground account ccloud setup` when the run used a cluster created just for it, and
   `playground cloud-resources nightly-cleanup enable` when it is not scheduled, at most once a day each (kept in
   `playground.ini` `[hints]`). Hide them with `playground config set ccloud-hints.enabled false`.
 - The connector is billed while it exists, RUNNING or not: delete it, don't just pause it.
@@ -333,7 +333,7 @@ playground stop                                                              # d
 | "is the fix of connector version X in a cc-connect image yet? what changed in the last images?" | `connector-plugin fm-versions -c confluentinc/<Type> --find-first X` / `--last 50 --with-log` (employees) |
 | "it behaves differently since day X: did Confluent change something?" / "since when is this option available?" | `playground ccloud-changelog --around <date> --category connectors` / `--connector <Type> [--grep <option>]` (the public Confluent Cloud release notes, citable in the reply; dated, not versioned) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
-| "set up my own clusters in the shared org" | `playground ccloud setup --profile <org> --dry-run`, then without `--dry-run`, then `playground secrets profile <org>` |
+| "set up my own clusters in the shared org" | `playground account ccloud setup --profile <org> --dry-run`, then without `--dry-run`, then `playground secrets profile <org>` |
 | "what did I leave running in the shared org?" | `playground cloud-resources ccloud list` (every environment and cluster: connectors `*_<user>` with status and age, `pg-<user>-*` resources, what `cleanup` deletes) |
 | "how much did that test cost?" | `playground cloud-resources ccloud costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `cloud-resources ccloud costs-history` for the trend |
 
@@ -343,7 +343,7 @@ playground stop                                                              # d
 
 ```bash
 # once: your own clusters (one per cloud, in your secrets profile), and the nightly deletion of what examples leave
-playground ccloud setup [--dry-run] [--cloud aws --cloud gcp --cloud azure --cloud databricks]
+playground account ccloud setup [--dry-run] [--cloud aws --cloud gcp --cloud azure --cloud databricks]
 playground cloud-resources nightly-cleanup enable [--time 02:00] [--resource aws]   # status, disable
 # cluster: reuse yours, or let the playground create one (AWS eu-west-2, basic)
 export ENVIRONMENT=… CLUSTER_NAME=… CLUSTER_CLOUD=… CLUSTER_REGION=… CLUSTER_CREDS="<key>:<secret>"

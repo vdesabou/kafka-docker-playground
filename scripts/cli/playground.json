@@ -460,10 +460,88 @@
     },
     {
       "name": "account",
-      "description": "☁️ Set up and check the third-party accounts the examples run against\n\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and 'check' (a few seconds,\nread-only: does the stored login still work, and what is missing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp",
+      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and, except ccloud, 'check'\n(a few seconds, read-only: does the stored login still work, and what is\nmissing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp",
       "usage": "playground account COMMAND",
       "options": [],
       "subcommands": [
+        {
+          "name": "ccloud",
+          "description": "🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n\n  account ccloud setup  a personal environment, one Basic cluster per cloud,\n                        their API keys, stored in a secrets profile\n\nThe examples then run on these clusters with no bootstrap to wait for. To\nsee what is still running, or delete it: 'playground cloud-resources ccloud\nlist' and 'playground cloud-resources cleanup --resource ccloud'.\n\n🌙 Then let the playground delete what your examples leave running, every\nnight: 'playground cloud-resources nightly-cleanup enable'.",
+          "usage": "playground account ccloud COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "setup",
+              "description": "🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n\nFor an organization shared by a team, or your own: rather than a cluster\ncreated on every run, or a team cluster where everybody's topics collide,\nyou get, in the organization your confluent CLI is logged into:\n\n  🌐 an environment pg-<user> (Stream Governance essentials)\n  🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,\n     and databricks only when asked)\n  🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n     by you (no service account)\n\nand the secrets profile (--profile, default: the active one) gets\nENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n_CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n'playground run' loads for the fully managed examples (fm-aws-* on the\nAWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\nothers on --default-cloud).\n\nRun it again any time: what exists is reused (same names), API keys\nalready stored in the profile are kept when they still belong to the\ncluster, and only what is missing is created. --dry-run shows the plan.\n\nNames matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\ndeletes all the topics of clusters named pg-<user>-* (yours), never the\nclusters, and never the environment pg-<user> nor the keys stored here.\n\n🌙 Next: 'playground cloud-resources nightly-cleanup enable' deletes, every\nnight, the connectors your examples leave running (your clusters are kept).\n\n🎓 Tip: one profile per organization (--profile <org>), then 'playground\nsecrets profile <name>' to switch, and 'confluent login --organization\n<id> --save' for the confluent CLI.",
+              "usage": "playground account ccloud setup [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--cloud"
+                  ],
+                  "argument": "CLOUD",
+                  "description": "🌤️ Cloud provider of a cluster to create (repeat it for several)\n\ndatabricks is never created by default: an AWS cluster\npg-<user>-databricks (--databricks-region, default us-east-2) stored as\nAWS_DATABRICKS_CLUSTER_*, the cluster of fm-databricks-delta-lake-sink.\nAdd it with --cloud databricks (alone, the other clusters are kept).\n\nRepeatable: ✓ Yes\nDefault value: [\"aws\", \"gcp\", \"azure\"]\nAllowed values: aws, gcp, azure, databricks"
+                },
+                {
+                  "names": [
+                    "--aws-region"
+                  ],
+                  "argument": "REGION",
+                  "description": "🗺️ Region of the AWS cluster (default: AWS_REGION, exported or in the profile, else eu-west-2)\n\nExamples that need a given region stop when the cluster is elsewhere:\nkeep AWS_REGION equal to it."
+                },
+                {
+                  "names": [
+                    "--gcp-region"
+                  ],
+                  "argument": "REGION",
+                  "description": "🗺️ Region of the GCP cluster (default: europe-west2)"
+                },
+                {
+                  "names": [
+                    "--azure-region"
+                  ],
+                  "argument": "REGION",
+                  "description": "🗺️ Region of the Azure cluster (default: AZURE_REGION, exported or in the profile, else westeurope)"
+                },
+                {
+                  "names": [
+                    "--databricks-region"
+                  ],
+                  "argument": "REGION",
+                  "description": "🗺️ Region of the Databricks cluster, with --cloud databricks (default: us-east-2)"
+                },
+                {
+                  "names": [
+                    "--default-cloud"
+                  ],
+                  "argument": "CLOUD",
+                  "description": "🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*), default: the first --cloud (not databricks)\n\nAllowed values: aws, gcp, azure"
+                },
+                {
+                  "names": [
+                    "--environment-name"
+                  ],
+                  "argument": "NAME",
+                  "description": "🌐 Name of the environment (default: pg-<user>)"
+                },
+                {
+                  "names": [
+                    "--profile"
+                  ],
+                  "argument": "PROFILE",
+                  "description": "🗂️ Secrets profile to write (default: the active one)"
+                },
+                {
+                  "names": [
+                    "--dry-run"
+                  ],
+                  "argument": "",
+                  "description": "🔎 Show what would be created and stored, without creating nor storing anything"
+                }
+              ]
+            }
+          ]
+        },
         {
           "name": "salesforce",
           "description": "☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  check   verify that the stored credentials can log in, and that the org has what the examples need\n\nReplaces the manual steps of the Salesforce example READMEs. Only signing\nup for the Developer Edition org stays manual.\n\n📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\nhttps://kafka-docker-playground.io/#/salesforce",
@@ -670,84 +748,6 @@
                   "description": "📄 Service account key file to check instead of the stored one (e.g. an example's keyfile.json)"
                 }
               ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "ccloud",
-      "description": "🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n\n  ccloud setup        a personal environment, one Basic cluster per cloud,\n                      their API keys, stored in a secrets profile\n\nThe examples then run on these clusters with no bootstrap to wait for. To\nsee what is still running, or delete it: 'playground cloud-resources ccloud\nlist' and 'playground cloud-resources cleanup --resource ccloud'.\n\n🌙 Then let the playground delete what your examples leave running, every\nnight: 'playground cloud-resources nightly-cleanup enable'.",
-      "usage": "playground ccloud COMMAND",
-      "options": [],
-      "subcommands": [
-        {
-          "name": "setup",
-          "description": "🏗️ Create (or complete) your personal environment and clusters, and store them in a secrets profile\n\nFor an organization shared by a team, or your own: rather than a cluster\ncreated on every run, or a team cluster where everybody's topics collide,\nyou get, in the organization your confluent CLI is logged into:\n\n  🌐 an environment pg-<user> (Stream Governance essentials)\n  🎰 one Basic cluster pg-<user>-<cloud> per --cloud (aws, gcp, azure,\n     and databricks only when asked)\n  🔑 one Kafka API key per cluster and one Schema Registry API key, owned\n     by you (no service account)\n\nand the secrets profile (--profile, default: the active one) gets\nENVIRONMENT, SCHEMA_REGISTRY_CREDS, AWS_ / GCP_ / AZURE_CLUSTER_NAME,\n_CLOUD, _REGION, _CREDS, and CLUSTER_* for --default-cloud: what\n'playground run' loads for the fully managed examples (fm-aws-* on the\nAWS cluster, fm-gcp-* on the GCP one, fm-azure-* on the Azure one, the\nothers on --default-cloud).\n\nRun it again any time: what exists is reused (same names), API keys\nalready stored in the profile are kept when they still belong to the\ncluster, and only what is missing is created. --dry-run shows the plan.\n\nNames matter for the cleanup: 'cloud-resources cleanup --resource ccloud'\ndeletes all the topics of clusters named pg-<user>-* (yours), never the\nclusters, and never the environment pg-<user> nor the keys stored here.\n\n🌙 Next: 'playground cloud-resources nightly-cleanup enable' deletes, every\nnight, the connectors your examples leave running (your clusters are kept).\n\n🎓 Tip: one profile per organization (--profile <org>), then 'playground\nsecrets profile <name>' to switch, and 'confluent login --organization\n<id> --save' for the confluent CLI.",
-          "usage": "playground ccloud setup [OPTIONS]",
-          "options": [
-            {
-              "names": [
-                "--cloud"
-              ],
-              "argument": "CLOUD",
-              "description": "🌤️ Cloud provider of a cluster to create (repeat it for several)\n\ndatabricks is never created by default: an AWS cluster\npg-<user>-databricks (--databricks-region, default us-east-2) stored as\nAWS_DATABRICKS_CLUSTER_*, the cluster of fm-databricks-delta-lake-sink.\nAdd it with --cloud databricks (alone, the other clusters are kept).\n\nRepeatable: ✓ Yes\nDefault value: [\"aws\", \"gcp\", \"azure\"]\nAllowed values: aws, gcp, azure, databricks"
-            },
-            {
-              "names": [
-                "--aws-region"
-              ],
-              "argument": "REGION",
-              "description": "🗺️ Region of the AWS cluster (default: AWS_REGION, exported or in the profile, else eu-west-2)\n\nExamples that need a given region stop when the cluster is elsewhere:\nkeep AWS_REGION equal to it."
-            },
-            {
-              "names": [
-                "--gcp-region"
-              ],
-              "argument": "REGION",
-              "description": "🗺️ Region of the GCP cluster (default: europe-west2)"
-            },
-            {
-              "names": [
-                "--azure-region"
-              ],
-              "argument": "REGION",
-              "description": "🗺️ Region of the Azure cluster (default: AZURE_REGION, exported or in the profile, else westeurope)"
-            },
-            {
-              "names": [
-                "--databricks-region"
-              ],
-              "argument": "REGION",
-              "description": "🗺️ Region of the Databricks cluster, with --cloud databricks (default: us-east-2)"
-            },
-            {
-              "names": [
-                "--default-cloud"
-              ],
-              "argument": "CLOUD",
-              "description": "🎯 Cluster used by the examples that need no specific cloud (CLUSTER_*), default: the first --cloud (not databricks)\n\nAllowed values: aws, gcp, azure"
-            },
-            {
-              "names": [
-                "--environment-name"
-              ],
-              "argument": "NAME",
-              "description": "🌐 Name of the environment (default: pg-<user>)"
-            },
-            {
-              "names": [
-                "--profile"
-              ],
-              "argument": "PROFILE",
-              "description": "🗂️ Secrets profile to write (default: the active one)"
-            },
-            {
-              "names": [
-                "--dry-run"
-              ],
-              "argument": "",
-              "description": "🔎 Show what would be created and stored, without creating nor storing anything"
             }
           ]
         }
@@ -1035,7 +1035,7 @@
         },
         {
           "name": "nightly-cleanup",
-          "description": "🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n\n  enable     schedule it (default 02:00), then show what tonight's run would delete\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs did\n\nEvery night it runs 'playground cloud-resources cleanup --resource ccloud\n--force', limited to what costs money or clutters a shared cluster:\n\n  🤖 connectors named *_<user>, on any cluster of the organization, with\n     their dlq, success and error topics\n  🌐 environments pg-<user>-sa-* (the stacks the playground created when\n     no CLUSTER_NAME was set), with their clusters\n  📝 on shared clusters, the topics recorded as created by your own runs\n\nIt keeps your own clusters and their topics (playground ccloud setup),\nand never deletes service accounts or API keys: the secrets store may be\nlocked at night, so the keys in use can't be told apart. Run\n'playground cloud-resources cleanup --resource ccloud' yourself for those.\n\n☁️ 'enable --resource aws --resource gcp --resource azure' adds what\n'playground cloud-resources cleanup' deletes in those clouds (Kinesis\nstreams, SQS queues, Redshift clusters, DynamoDB tables, Azure resource\ngroups, GCS buckets, BigQuery datasets, Spanner and Bigtable instances…,\nnamed pg…<user>…). Nothing interactive at night: a cloud whose\ncredentials can't be read without a prompt is skipped, with a\nnotification, and the others still run:\n  aws      ~/.aws/credentials, or AWS_ACCESS_KEY_ID and\n           AWS_SECRET_ACCESS_KEY in the secrets store\n  azure    AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID (service\n           principal) in the secrets store, or a saved 'az login'\n           session; AZURE_SUBSCRIPTION_NAME for a confluent.io account\n  gcp      GCP_PROJECT and GCP_KEYFILE_CONTENT in the secrets store, and\n           Docker running\nThe secrets store is read at night unless it is 1Password without a\nservice account token (it would wait for Touch ID).\n⚠️ Like the connectors in Confluent Cloud, the resources of an example\nstill running at that time are deleted too: pick a time you don't use.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'.\n\n🏗️ Works best with your own clusters, set up once: 'playground ccloud\nsetup'. 'playground cloud-resources ccloud list' shows what is left.",
+          "description": "🌙 Delete what your examples left running in Confluent Cloud (and AWS, GCP, Azure with --resource), every night, automatically\n\n  enable     schedule it (default 02:00), then show what tonight's run would delete\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs did\n\nEvery night it runs 'playground cloud-resources cleanup --resource ccloud\n--force', limited to what costs money or clutters a shared cluster:\n\n  🤖 connectors named *_<user>, on any cluster of the organization, with\n     their dlq, success and error topics\n  🌐 environments pg-<user>-sa-* (the stacks the playground created when\n     no CLUSTER_NAME was set), with their clusters\n  📝 on shared clusters, the topics recorded as created by your own runs\n\nIt keeps your own clusters and their topics (playground account ccloud setup),\nand never deletes service accounts or API keys: the secrets store may be\nlocked at night, so the keys in use can't be told apart. Run\n'playground cloud-resources cleanup --resource ccloud' yourself for those.\n\n☁️ 'enable --resource aws --resource gcp --resource azure' adds what\n'playground cloud-resources cleanup' deletes in those clouds (Kinesis\nstreams, SQS queues, Redshift clusters, DynamoDB tables, Azure resource\ngroups, GCS buckets, BigQuery datasets, Spanner and Bigtable instances…,\nnamed pg…<user>…). Nothing interactive at night: a cloud whose\ncredentials can't be read without a prompt is skipped, with a\nnotification, and the others still run:\n  aws      ~/.aws/credentials, or AWS_ACCESS_KEY_ID and\n           AWS_SECRET_ACCESS_KEY in the secrets store\n  azure    AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID (service\n           principal) in the secrets store, or a saved 'az login'\n           session; AZURE_SUBSCRIPTION_NAME for a confluent.io account\n  gcp      GCP_PROJECT and GCP_KEYFILE_CONTENT in the secrets store, and\n           Docker running\nThe secrets store is read at night unless it is 1Password without a\nservice account token (it would wait for Touch ID).\n⚠️ Like the connectors in Confluent Cloud, the resources of an example\nstill running at that time are deleted too: pick a time you don't use.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line. The\nconfluent CLI must stay logged in: 'confluent login --save'.\n\n🏗️ Works best with your own clusters, set up once: 'playground ccloud\nsetup'. 'playground cloud-resources ccloud list' shows what is left.",
           "usage": "playground cloud-resources nightly-cleanup COMMAND",
           "options": [],
           "subcommands": [
@@ -1084,7 +1084,7 @@
         },
         {
           "name": "cost-reminder",
-          "description": "💸 Every week, a notification when your cloud spend went above a threshold, or something billed is still running for you. Read-only, it never deletes anything\n\n  enable     schedule it (default every Monday at 09:00), then run it once now\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs found\n  run        the check, now\n\nThe cleanups (nightly-cleanup) delete what the playground knows it\ncreated. This reminder covers the rest: what they keep on purpose (your\nown clusters of 'playground ccloud setup'), what was created by hand, or\na cloud you did not schedule for cleanup. For each --resource it gives:\n\n  ccloud   💰 the cost of the last --days days of your resources, by\n           name (connectors *_<user>, clusters and environments\n           pg-<user>-*), next to the total of the organization; and\n           what still runs for you: connectors (RUNNING ones), clusters,\n           environments (playground cloud-resources ccloud list)\n  aws      💰 the cost of the resources tagged cflt_managed_id=<user>\n           (Cost Explorer), and the number of resources still up\n           (playground cloud-resources aws list)\n  azure    💰 the same with Cost Management (cloud-resources azure)\n\nA macOS notification only when your cost is at least --threshold (USD,\ndefault 50), a connector still runs for you (RUNNING, billed per\ntask-hour), or a cloud could not be checked; otherwise the result is only\nlogged. Your own clusters alone never notify: they are there on purpose. Billing data lags (Confluent Cloud up to 72 hours,\nAWS 24 to 48 hours): the last days of the period can be incomplete.\n\nNothing interactive: a cloud whose credentials can't be read without a\nprompt is skipped and said so, as for the nightly cleanup (confluent\nlogin --save, ~/.aws/credentials, an Azure service principal or a saved\naz login session). The Confluent Cloud cost needs a role that can read\nthe billing of the organization.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line (logged,\nno notification).",
+          "description": "💸 Every week, a notification when your cloud spend went above a threshold, or something billed is still running for you. Read-only, it never deletes anything\n\n  enable     schedule it (default every Monday at 09:00), then run it once now\n  disable    remove the schedule\n  status     is it scheduled, when, and what the last runs found\n  run        the check, now\n\nThe cleanups (nightly-cleanup) delete what the playground knows it\ncreated. This reminder covers the rest: what they keep on purpose (your\nown clusters of 'playground account ccloud setup'), what was created by hand, or\na cloud you did not schedule for cleanup. For each --resource it gives:\n\n  ccloud   💰 the cost of the last --days days of your resources, by\n           name (connectors *_<user>, clusters and environments\n           pg-<user>-*), next to the total of the organization; and\n           what still runs for you: connectors (RUNNING ones), clusters,\n           environments (playground cloud-resources ccloud list)\n  aws      💰 the cost of the resources tagged cflt_managed_id=<user>\n           (Cost Explorer), and the number of resources still up\n           (playground cloud-resources aws list)\n  azure    💰 the same with Cost Management (cloud-resources azure)\n\nA macOS notification only when your cost is at least --threshold (USD,\ndefault 50), a connector still runs for you (RUNNING, billed per\ntask-hour), or a cloud could not be checked; otherwise the result is only\nlogged. Your own clusters alone never notify: they are there on purpose. Billing data lags (Confluent Cloud up to 72 hours,\nAWS 24 to 48 hours): the last days of the period can be incomplete.\n\nNothing interactive: a cloud whose credentials can't be read without a\nprompt is skipped and said so, as for the nightly cleanup (confluent\nlogin --save, ~/.aws/credentials, an Azure service principal or a saved\naz login session). The Confluent Cloud cost needs a role that can read\nthe billing of the organization.\n\nmacOS: a launchd agent (~/Library/LaunchAgents), which also runs when the\nMac wakes up if it was asleep at that time. Linux: a crontab line (logged,\nno notification).",
           "usage": "playground cloud-resources cost-reminder COMMAND",
           "options": [],
           "subcommands": [

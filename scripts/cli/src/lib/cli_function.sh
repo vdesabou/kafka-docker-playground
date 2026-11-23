@@ -12997,7 +12997,7 @@ function ccloud_hint_due () {
 }
 
 # 🎓 tips after a Confluent Cloud run and in 'playground status', for what the user does not use yet:
-# 'playground ccloud setup' when the run used a cluster created just for it, 'playground cloud-resources nightly-cleanup
+# 'playground account ccloud setup' when the run used a cluster created just for it, 'playground cloud-resources nightly-cleanup
 # enable' when it is not scheduled
 function display_ccloud_hints () {
   local shown=0 cluster_name
@@ -13006,7 +13006,7 @@ function display_ccloud_hints () {
   then
     echo ""
     log "🏗️ this run used a cluster created just for it (minutes to create, billed until 'playground stop'): create your own clusters once, one per cloud, reused by every example:"
-    echo "playground ccloud setup --dry-run      # the plan, then run it without --dry-run"
+    echo "playground account ccloud setup --dry-run      # the plan, then run it without --dry-run"
     shown=1
   fi
   if ! nightly_cleanup_enabled && ccloud_hint_due nightly

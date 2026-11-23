@@ -974,7 +974,7 @@ then
         #
 
         ccloud_preview="✨ ${YELLOW}cluster-name is not set, a new ccloud cluster will be created...${NC}\n"
-        ccloud_preview="${ccloud_preview}🏗️ ${CYAN}tip: 'playground ccloud setup' creates your own clusters once, one per cloud, reused by every example${NC}\n\n"
+        ccloud_preview="${ccloud_preview}🏗️ ${CYAN}tip: 'playground account ccloud setup' creates your own clusters once, one per cloud, reused by every example${NC}\n\n"
 
         if [ -z $ENVIRONMENT ] && [[ ! -n "$cluster_environment" ]]
         then
