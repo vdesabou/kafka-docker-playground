@@ -186,7 +186,8 @@ nb_granted=0
 nb_role_failed=0
 while IFS='|' read -r role role_id why
 do
-    count=$(azure_az role assignment list --assignee "$app_id" --scope "$scope" --role "$role" --include-inherited --query "length(@)" -o tsv 2> /dev/null) || count=""
+    # < /dev/null: az reads stdin, and would swallow the next roles of the loop
+    count=$(azure_az role assignment list --assignee "$app_id" --scope "$scope" --role "$role" --include-inherited --query "length(@)" -o tsv 2> /dev/null < /dev/null) || count=""
     if [ "${count:-0}" != "0" ]
     then
         continue
