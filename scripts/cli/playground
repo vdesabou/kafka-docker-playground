@@ -71824,8 +71824,9 @@ playground_analyze_logs_command() {
                           return
                       fi
                       # JSON lines whatever the extension (a fluentd / Kubernetes / logstash dump saved as .log): converted
-                      # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON
-                      if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
+                      # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON. The UTF-8 BOM of a
+                      # file saved on Windows (\357\273\277) is skipped: else its GCP / logback JSON lines are read raw
+                      if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n\357\273\277' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
                       then
                           return
                       fi
@@ -75960,8 +75961,9 @@ playground_debug_analyze_logs_command() {
                           return
                       fi
                       # JSON lines whatever the extension (a fluentd / Kubernetes / logstash dump saved as .log): converted
-                      # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON
-                      if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
+                      # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON. The UTF-8 BOM of a
+                      # file saved on Windows (\357\273\277) is skipped: else its GCP / logback JSON lines are read raw
+                      if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n\357\273\277' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
                       then
                           return
                       fi

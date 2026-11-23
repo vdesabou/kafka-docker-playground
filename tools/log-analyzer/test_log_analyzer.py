@@ -62,6 +62,28 @@ def test_numeric_levels():
     check("pino 30", " INFO " in lines({"time": 1, "level": "30", "msg": "m"}))
 
 
+
+def test_gcp_json_lines_with_bom():
+    """GCP structured logging ({"severity", "textPayload", "sourceLocation"}) of a Connect worker saved on Windows (UTF-8
+    BOM): converted to log lines, the connector context and the logger kept, no JSON tail in the connector names"""
+    event = ('{"severity":"INFO","timestamp":"2026-11-23T06:21:42.000Z","textPayload":"[my-sink|task-0] Kafka version: 8.2.0-ce\\n",'
+             '"sourceLocation":{"file":"AppInfoParser.java","line":"145","function":"org.apache.kafka.common.utils.AppInfoParser"},'
+             '"thread":"task-thread-my-sink-0"}')
+    with tempfile.TemporaryDirectory() as d:
+        src, dst = os.path.join(d, "connect-worker.log"), os.path.join(d, "out.log")
+        with open(src, "wb") as fh:
+            fh.write(b"\xef\xbb\xbf" + event.encode() + b"\n" + event.encode() + b"\n")
+        sys.argv = ["x", src, dst]
+        with open(os.devnull, "w") as null:
+            old, sys.stdout = sys.stdout, null
+            try:
+                rc = jle.main()
+            finally:
+                sys.stdout = old
+        text = open(dst).read()
+    expected = "[2026-11-23T06:21:42.000Z] INFO [my-sink|task-0] Kafka version: 8.2.0-ce (org.apache.kafka.common.utils.AppInfoParser)"
+    check("gcp + BOM", rc == 0 and text.splitlines() == [expected, expected], text)
+
 def test_level_word_in_message_keeps_level_and_stack():
     out = lines({"@timestamp": "2026-11-06T10:00:00.000Z", "level": "ERROR", "logger_name": "c.e.Task",
                  "message": "Task failed: WARN threshold reached", "stack_trace": "java.lang.IllegalStateException: x\n\tat a.b(C.java:1)"})
