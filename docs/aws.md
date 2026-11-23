@@ -66,6 +66,23 @@ playground account aws setup --assume-role --assume-role-profile my-second-accou
 When the second account is another AWS account, its user also needs a policy allowing `sts:AssumeRole` on the role:
 `setup` says so.
 
+The `*-with-assuming-iam-role.sh` scripts (without `-config` in their name) don't read these variables: the connector
+assumes the role through its AWS SDK profile. They mount `$HOME/.aws/credentials-with-assuming-iam-role` as the
+`~/.aws/credentials` of connect, a file in this format:
+
+```ini
+[default]
+role_arn = arn:aws:iam::123456789012:role/pg-assume-role-you
+source_profile = second-account
+role_session_name = kafka-docker-playground
+
+[second-account]
+aws_access_key_id = AKIA…
+aws_secret_access_key = …
+```
+
+The `aws` commands these scripts run on the host (creating the bucket, the stream…) keep using `AWS_ACCESS_KEY_ID`.
+
 ### 3. Check, then run an example
 
 ```bash
