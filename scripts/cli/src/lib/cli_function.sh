@@ -5577,6 +5577,7 @@ function interactive_config_menu () {
     "run-log|📄|Write a masked log of each run, to share it|true"
     "run-log-folder|🗂️|Folder of the run logs|$(run_log_default_folder)"
     "open-diagnose-report-on-failure|🩺|Open the diagnose HTML report when a connector fails|true"
+    "account-check-before-run|🔑|Check the account of the example (playground account <provider> check) before starting it|true"
     "display-last-updated-connector-plugins|🆕|List recently released connector plugins at the end of a run|false"
     "display-last-updated-connector-plugins-days|📅|Days to look back for recently released connector plugins|3"
     "display-last-updated-connector-plugins-vendor|🏢|Vendor of recently released connector plugins (all: every vendor)|confluentinc"
@@ -11942,6 +11943,28 @@ function account_simple_setup () {
     logwarn "⚠️ $account_simple_failed check(s) failed: $(account_simple_examples "$p") would fail"
   fi
   log "🩺 check it any time with: playground account $p check"
+}
+
+# The 'playground account' provider of an example, from its path (empty when it needs no account)
+function example_account_provider () {
+  local rel
+  rel=$(example_relative_path "$1")
+  case "$rel" in
+    *salesforce*) echo "salesforce" ;;
+    *snowflake*) echo "snowflake" ;;
+    *servicenow*) echo "servicenow" ;;
+    *databricks*) echo "databricks" ;;
+    *zendesk*) echo "zendesk" ;;
+    *jira*) echo "jira" ;;
+    *marketo*) echo "marketo" ;;
+    *clickhouse*) echo "clickhouse" ;;
+    *pagerduty*) echo "pagerduty" ;;
+    *mongodb-atlas*) echo "mongodb-atlas" ;;
+    *couchbase*) [[ "$rel" == ccloud/* ]] && echo "couchbase" ;;
+    *gcp*) echo "gcp" ;;
+    *azure*) echo "azure" ;;
+    *connect-aws-*|*fm-aws-*|*connect-jdbc-aws-*) echo "aws" ;;
+  esac
 }
 
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)

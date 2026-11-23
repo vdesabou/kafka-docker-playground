@@ -1865,6 +1865,23 @@ then
 fi
 
 #
+# 🔑 Fail fast on the account of the example (expired token, login refused...), before anything is stopped or
+# started: 'playground account <provider> check' is read-only and takes a few seconds. Exit 1 (login refused,
+# values missing) stops the run; an item only some examples need is shown and the run goes on. Skipped in CI.
+#
+account_provider=$(example_account_provider "$test_file")
+if [ -n "$account_provider" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "${PG_RUN_PRINT_FLAGS_AND_EXIT:-}" ] && [ "$(playground config get account-check-before-run)" != "false" ]
+then
+  log "🔑 checking the $account_provider account of the example (playground config account-check-before-run false to skip)"
+  if ! playground account "$account_provider" check
+  then
+    logerror "❌ the $account_provider account of $test_file_rel does not work (see above): the example would fail"
+    logerror "👉 playground account $account_provider setup, or run without this check: playground config account-check-before-run false"
+    exit 1
+  fi
+fi
+
+#
 # 💀 Only now that the example is really started (the interactive menu was not
 # cancelled), stop or kill what the previous run left behind
 #

@@ -45,17 +45,18 @@ case "$state" in
         echo "      👉 playground account servicenow setup (it sets Identity Type = Machine, like the examples)"
         exit 1 ;;
     hibernating)
-        echo -e "❌ ${RED}Instance${NC} hibernating"
+        # not a failure when the examples can wake it up themselves (playground run calls this check)
         if [ -n "$developer_username" ] && [ -n "$developer_password" ]
         then
-            echo "      the examples wake it up by themselves (SERVICENOW_DEVELOPER_* are set, a few minutes), or now: playground account servicenow setup"
-        else
-            echo "      👉 wake it up at https://developer.servicenow.com (Manage my instance), or store your ServiceNow ID so the examples do it: playground account servicenow setup --developer-username <you>"
+            echo -e "⚠️ ${YELLOW}Instance${NC} hibernating: the examples wake it up by themselves (SERVICENOW_DEVELOPER_* are set, a few minutes), or now: playground account servicenow setup"
+            exit 0
         fi
+        echo -e "❌ ${RED}Instance${NC} hibernating"
+        echo "      👉 wake it up at https://developer.servicenow.com (Manage my instance), or store your ServiceNow ID so the examples do it: playground account servicenow setup --developer-username <you>"
         exit 1 ;;
     waking)
-        echo -e "⏳ ${YELLOW}Instance${NC} waking up (gateway error): try again in a minute or two"
-        exit 1 ;;
+        echo -e "⏳ ${YELLOW}Instance${NC} waking up (gateway error): the examples wait for it, a minute or two"
+        exit 0 ;;
     missing)
         echo -e "❌ ${RED}Instance${NC}: nothing answers at $SERVICENOW_URL: wrong URL, or the instance was released (unused for about 10 days)"
         echo "      👉 request a new one at https://developer.servicenow.com, then playground account servicenow setup"

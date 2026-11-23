@@ -18,6 +18,8 @@ help: |-
                                        stop and before the next run
                                        (ask, true or false)
     check-and-update-repo-version      warn when your clone is out of date
+    account-check-before-run           playground account <provider> check
+                                       before the run (true by default)
     run-log true|false                 write a masked log of each
                                        'playground run' to share it
     run-log-folder <dir>               where to write the run logs
@@ -157,6 +159,17 @@ commands:
   examples:
   - playground config container-kill-all-before-run false
   - playground config container-kill-all-before-run true
+
+- name: account-check-before-run
+  help: |
+    when running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.
+  args:
+  - name: enabled
+    required: false
+    default: "true"
+  examples:
+  - playground config account-check-before-run false
+  - playground config account-check-before-run true
 
 - name: run-log
   help: |-
