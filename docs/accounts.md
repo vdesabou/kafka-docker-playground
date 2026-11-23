@@ -55,9 +55,6 @@ and `--dry-run`, where it exists, prints what would be created.
 for each example, the ones it needs. Keys and certificates that must be files (the Salesforce keystore, the GCP key)
 are kept in `~/.config/kafka-docker-playground/`.
 
-!> When `secrets.github-repo` is configured (maintainers), `playground secrets set` also pushes the values to the
-GitHub Actions secrets and variables of that repository: running `setup` then **switches CI to the new credentials**.
-Use `--no-store` to try a setup without changing CI.
 
 ## 🩺 When an example fails
 
