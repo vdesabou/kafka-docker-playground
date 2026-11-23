@@ -145,8 +145,19 @@
       plugins: [
         // the Examples page (examples.md) embeds the examples explorer in an iframe: the selection of the explorer is
         // written in the URL of the page (#/examples?ex=…&tab=…, without reloading it), a link with a selection opens
-        // the explorer on it, and the frame takes the height of the explorer (only the page scrolls)
+        // the explorer on it (the iframe of examples.md has no src: set here only, with the selection, one navigation and
+        // no race with a first load without it), and the frame takes the height of the explorer (only the page
+        // scrolls). The explorer is told where the frame is in the window (kdp-viewport), to keep its detail and its
+        // toast in view while the page scrolls
         function (hook, vm) {
+          var sendViewport = function () {
+            var frame = document.querySelector('.explorer-frame');
+            if (frame && frame.contentWindow) {
+              frame.contentWindow.postMessage({type: 'kdp-viewport', top: frame.getBoundingClientRect().top, height: window.innerHeight}, window.location.origin);
+            }
+          };
+          window.addEventListener('scroll', sendViewport, {passive: true});
+          window.addEventListener('resize', sendViewport);
           window.addEventListener('message', function (event) {
             if (event.origin !== window.location.origin || !event.data || typeof event.data !== 'object') {
               return;
@@ -157,6 +168,7 @@
             }
             if (event.data.type === 'kdp-explorer-height' && event.data.height > 0) {
               frame.style.height = event.data.height + 'px';
+              sendViewport();
             }
             if (event.data.type === 'kdp-explorer-state' && typeof event.data.hash === 'string' && vm.route.path === '/examples') {
               history.replaceState(null, '', '#/examples' + (event.data.hash ? '?' + event.data.hash : ''));

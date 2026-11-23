@@ -9,6 +9,8 @@
   var root = document.documentElement, saved = null;
   try { saved = localStorage.getItem("pg-report-theme"); } catch (e) {}
   root.dataset.theme = saved === "dark" || saved === "light" ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  // embedded in the Examples page of the docs (always dark): same theme, no theme switch
+  if (window.parent !== window) { root.dataset.theme = "dark"; root.classList.add("embedded"); }
 })();
 </script>
 <style>
@@ -44,8 +46,20 @@
 .frow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
 .toggles{display:flex;gap:16px;flex-wrap:wrap}
 #list{max-height:none;height:calc(100vh - 360px);min-height:420px}
-html.embedded #list{height:760px}
-html.embedded body{min-height:0}
+/* embedded in the Examples page of the docs: part of the page, not a page in a frame. No banner, footer or background
+   (the docs page has its title and its links), the cards on the colour of the docs, the list grows with the page (one
+   scroll bar, the page's) and the detail follows the scroll of the page (the docs page sends it: position sticky
+   cannot see the scroll of the parent page) */
+html.embedded body{min-height:0;background:transparent}
+html.embedded header,html.embedded footer{display:none}
+html.embedded .wrap{max-width:none;padding:0 2px}
+html.embedded main{padding:2px 0 12px}
+html.embedded{color-scheme:dark;--card:rgba(255,255,255,.035);--card2:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--shadow:none}
+html.embedded .dd-panel{background:#1c2130}
+html.embedded #list{height:auto;min-height:0;max-height:none;overflow:visible;margin:10px 0 0;padding:0}
+html.embedded .sticky{position:relative;top:0;transition:transform .12s ease-out}
+html.embedded .toast{position:absolute;bottom:auto}
+.more-list{display:block;margin:8px auto 0}
 .ci{width:10px;height:10px;border-radius:50%;flex:none}
 .ci.ok{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
 .ci.fail{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
@@ -259,13 +273,33 @@ const DEEP = {source: "deep-dive-connector-troubleshooting", sink: "deep-dive-co
 
 const $ = id => document.getElementById(id);
 // embedded in the Examples page of the docs: the frame takes the height of the page (sent to the docs page), so the
-// list gets a fixed height instead of one based on the window (that would grow the frame in a loop)
+// list grows with the page (LIST_PAGE examples at a time, a button shows more) instead of a height based on the window
+// (that would grow the frame in a loop). The docs page sends where the frame is in its window (kdp-viewport: top of
+// the frame, height of the window): the detail stays in view while the page scrolls, and so does the toast
 const EMBEDDED = window.parent !== window;
+const LIST_PAGE = 40;
+let listLimit = EMBEDDED ? LIST_PAGE : 300;
+let viewport = null;
+function followViewport() {
+  if (!EMBEDDED || !viewport) return;
+  const detail = $("detail"), layout = detail.parentNode;
+  // one column (narrow window): the detail is under the list, it does not move
+  const side = detail.offsetTop === layout.offsetTop;
+  const room = layout.offsetHeight - detail.offsetHeight;
+  const shift = side && room > 0 ? Math.max(0, Math.min(room, 16 - viewport.top - layout.offsetTop)) : 0;
+  detail.style.transform = shift ? `translateY(${shift}px)` : "";
+  const toast = $("toast");
+  toast.style.top = Math.max(0, Math.min(document.documentElement.scrollHeight - 60, viewport.height - viewport.top - 70)) + "px";
+}
 if (EMBEDDED) {
-  document.documentElement.classList.add("embedded");
-  const sendHeight = () => parent.postMessage({type: "kdp-explorer-height", height: Math.ceil(document.documentElement.scrollHeight)}, "*");
-  if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.body);
+  const sendHeight = () => { parent.postMessage({type: "kdp-explorer-height", height: Math.ceil(document.documentElement.scrollHeight)}, "*"); followViewport(); };
+  if (window.ResizeObserver) { const ro = new ResizeObserver(sendHeight); ro.observe(document.body); ro.observe($("detail")); }
   window.addEventListener("load", sendHeight);
+  window.addEventListener("message", e => {
+    if (e.source !== parent || !e.data || e.data.type !== "kdp-viewport") return;
+    viewport = {top: +e.data.top || 0, height: +e.data.height || 0};
+    followViewport();
+  });
 }
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const examples = DATA ? DATA.examples : [];
@@ -337,7 +371,8 @@ function renderFilters() {
   const forAreas = filtered("area").filter(e => !state.cat || e.category === state.cat);
   const acount = {};
   for (const e of forAreas) acount[e.area] = (acount[e.area] || 0) + 1;
-  $("areas").innerHTML = AREAS.map(a => `<button class="achip" data-area="${a[0]}" aria-pressed="${state.area === a[0]}" title="${esc(a[1])}: the examples of the area, as in kafka-docker-playground.io/#/areas">${esc(a[3])}<small>${acount[a[0]] || 0}</small></button>`).join("");
+  // a label like the topics: the four chips are the support areas (kafka-docker-playground.io/#/areas)
+  $("areas").innerHTML = `<span class="flabel" title="the support areas of kafka-docker-playground.io/#/areas: pick one to see only its examples">🗺️ Per area</span>` + AREAS.map(a => `<button class="achip" data-area="${a[0]}" aria-pressed="${state.area === a[0]}" title="${esc(a[1])}: the examples of the area, as in kafka-docker-playground.io/#/areas">${esc(a[3])}<small>${acount[a[0]] || 0}</small></button>`).join("");
   const base = filtered(true);
   const counts = {};
   for (const e of base) counts[e.category] = (counts[e.category] || 0) + 1;
@@ -355,7 +390,10 @@ function renderFilters() {
 
 function renderList() {
   const list = filtered(false);
-  const shown = list.slice(0, 300);
+  // embedded: the selected example is always in the list (a shared link can pick the 200th)
+  const at = state.sel ? list.findIndex(e => e.path === state.sel) : -1;
+  if (EMBEDDED && at >= listLimit) listLimit = Math.ceil((at + 1) / LIST_PAGE) * LIST_PAGE;
+  const shown = list.slice(0, listLimit);
   $("count").textContent = list.length + " example(s)";
   $("list").innerHTML = shown.map(e => {
     const c = CI && CI[e.dir];
@@ -363,7 +401,9 @@ function renderList() {
       + (c && c.state ? `<span class="ci ${c.state}" title="CI: ${esc(c.label)}"></span>` : "");
     return `<div class="item${state.sel === e.path ? " selected" : ""}" data-path="${esc(e.path)}" role="option" aria-selected="${state.sel === e.path}">
       ${icon(e)}<div class="txt"><div class="t"><span class="name">${esc(title(e))}</span>${variant(e)}</div><div class="d">${esc(e.path)}</div></div>${ci}</div>`;
-  }).join("") + (list.length > shown.length ? `<div class="more">… ${list.length - shown.length} more: refine the search</div>` : "")
+  }).join("") + (list.length <= shown.length ? ""
+    : EMBEDDED ? `<button type="button" class="mini more-btn more-list" data-more="1">▼ Show ${Math.min(LIST_PAGE, list.length - shown.length)} more (${list.length - shown.length} left)</button>`
+    : `<div class="more">… ${list.length - shown.length} more: refine the search</div>`)
     || `<div class="empty">no example matches: try fewer words</div>`;
 }
 
@@ -707,7 +747,8 @@ function loadHash() {
   state.enable = (p.get("enable") || "").split(",").filter(f => RUN.enable.some(x => x.flag === f));
   $("q").value = state.q; $("nocreds").checked = state.nocreds;
 }
-function render() { renderFilters(); renderList(); renderDetail(); saveHash(); }
+// another filter: the list starts again from its first page (embedded)
+function render() { if (EMBEDDED) listLimit = LIST_PAGE; renderFilters(); renderList(); renderDetail(); saveHash(); }
 
 // ---------------------------------------------------------------- CI status, read from the published list of examples
 function loadCI() {
@@ -749,7 +790,7 @@ $("theme").onclick = () => {
   themeButton();
 };
 themeButton();
-$("q").oninput = e => { state.q = e.target.value; renderFilters(); renderList(); saveHash(); };
+$("q").oninput = e => { state.q = e.target.value; if (EMBEDDED) listLimit = LIST_PAGE; renderFilters(); renderList(); saveHash(); };
 $("areas").onclick = e => { const b = e.target.closest("[data-area]"); if (!b) return; state.area = state.area === b.dataset.area ? "" : b.dataset.area; render(); };
 $("cats").onclick = e => { const b = e.target.closest("[data-cat]"); if (!b) return; state.cat = b.dataset.cat; render(); };
 $("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b) return; const t = b.dataset.topic;
@@ -757,7 +798,7 @@ $("topics").onclick = e => { const b = e.target.closest("[data-topic]"); if (!b)
 $("nocreds").onchange = e => { state.nocreds = e.target.checked; render(); };
 $("armonly").onchange = e => { state.arm = e.target.checked; render(); };
 $("cif").onclick = e => { const b = e.target.closest("[data-ci]"); if (!b) return; state.ci = state.ci === b.dataset.ci ? "" : b.dataset.ci; render(); };
-$("list").onclick = e => { const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; readmeOpen = false; renderList(); renderDetail(); saveHash(); };
+$("list").onclick = e => { if (e.target.closest("[data-more]")) { listLimit += LIST_PAGE; renderList(); return; } const it = e.target.closest(".item[data-path]"); if (!it) return; state.sel = it.dataset.path; other.ctag = false; openDD = null; readmeOpen = false; renderList(); renderDetail(); saveHash(); };
 $("detail").addEventListener("input", e => {
   if (e.target.id === "o-tag" && e.target.tagName === "INPUT") state.tag = e.target.value.trim();
   else if (e.target.id === "o-ctag" && e.target.tagName === "INPUT") state.ctag = e.target.value.trim();
@@ -843,6 +884,9 @@ $("detail").addEventListener("keydown", e => {
 loadHash();
 render();
 loadCI();
+// the Examples page of the docs gives the selection of its link by changing the hash of the frame once it is loaded
+// (no reload), and a link opened in the same tab does the same (saveHash uses replaceState: no hashchange, no loop)
+window.addEventListener("hashchange", () => { loadHash(); render(); });
 </script>
 </body>
 </html>
