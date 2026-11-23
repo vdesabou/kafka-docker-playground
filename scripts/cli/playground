@@ -119,6 +119,7 @@ playground_usage() {
   printf "  %s   ☁️ Set up an Azure subscription for the Azure examples, and check it\n" "$(green "account azure")                             "
   printf "  %s   ❄️ Set up the Snowflake account of the Snowflake examples, and check it\n" "$(green "account snowflake")                         "
   printf "  %s   ☁️ Set up the AWS credentials of the AWS examples, and check them\n" "$(green "account aws")                               "
+  printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "account servicenow")                        "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up\n" "$(green "cloud-resources")                           "
@@ -3647,7 +3648,7 @@ playground_secrets_lint_usage() {
 playground_account_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account\n\n"
-    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n  https://kafka-docker-playground.io/#/snowflake\n  https://kafka-docker-playground.io/#/aws\n\n"
+    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and, except ccloud, 'check'\n  (a few seconds, read-only: does the stored login still work, and what is\n  missing).\n  \n  📖 Step by step guides:\n  https://kafka-docker-playground.io/#/salesforce\n  https://kafka-docker-playground.io/#/gcp\n  https://kafka-docker-playground.io/#/azure\n  https://kafka-docker-playground.io/#/snowflake\n  https://kafka-docker-playground.io/#/aws\n  https://kafka-docker-playground.io/#/servicenow\n\n"
   else
     printf "playground account - ☁️ Set up and check the accounts the examples run against\n\n"
   fi
@@ -3675,6 +3676,9 @@ playground_account_usage() {
   printf "  %s   ☁️ Set up the AWS credentials of the AWS examples, and check them\n" "$(green "aws")             "
   printf "  %s   🛠️ Validate and store the AWS credentials of the AWS examples\n" "$(green "aws setup")       "
   printf "  %s   🩺 Check the AWS credentials of the AWS examples\n" "$(green "aws check")       "
+  printf "  %s   ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n" "$(green "servicenow")      "
+  printf "  %s   🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow setup")"
+  printf "  %s   🩺 Check the ServiceNow instance of the ServiceNow examples\n" "$(green "servicenow check")"
   echo
 
   # :command.long_usage
@@ -4516,6 +4520,129 @@ playground_account_aws_check_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground account aws check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_servicenow_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account servicenow\n\n"
+    printf "  ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n  \n    setup   validate and store the instance URL and the admin password, wake the\n  instance up, fix basic authentication\n    check   verify that the instance answers (awake, hibernating, released) and\n  that admin can log in\n  \n  The examples use a free Personal Developer Instance (PDI) and its admin\n  user. A PDI hibernates when unused and is released after a few days\n  without use: most failures are that. Only requesting the PDI on\n  developer.servicenow.com stays manual.\n  \n  📖 Step by step guide (PDI, hibernation, Identity Type, troubleshooting):\n  https://kafka-docker-playground.io/#/servicenow\n\n"
+  else
+    printf "playground account servicenow - ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account servicenow COMMAND\n"
+  printf "  playground account servicenow [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n" "$(green "setup")"
+  printf "  %s   🩺 Check the ServiceNow instance of the ServiceNow examples\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_servicenow_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account servicenow setup\n\n"
+    printf "  🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n  \n  Normalizes the URL (dev12345, dev12345.service-now.com or the full URL\n  become https://dev12345.service-now.com/, with the trailing / the\n  examples need), wakes the instance up if it hibernates (with your\n  ServiceNow ID, like the examples), makes basic authentication work for\n  admin (Identity Type = Machine, like the examples), then stores\n  SERVICENOW_URL, SERVICENOW_PASSWORD and, when given,\n  SERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD with\n  'playground secrets set', and runs check.\n  \n  Missing values are taken from the stored ones, else asked for (the\n  passwords without echo).\n\n"
+  else
+    printf "playground account servicenow setup - 🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account servicenow setup [OPTIONS]\n"
+  printf "  playground account servicenow setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--url URL")"
+    printf "    🌐 Instance: dev12345, dev12345.service-now.com or\n    https://dev12345.service-now.com/\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔐 Password of user admin of the instance (asked for without echo when\n    missing)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--developer-username DEVELOPER_USERNAME")"
+    printf "    👤 Your ServiceNow ID (developer.servicenow.com login): lets the examples\n    wake the instance up\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--developer-password DEVELOPER_PASSWORD")"
+    printf "    🔐 Password of your ServiceNow ID\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    📋 Print the export commands instead of storing the variables\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account servicenow setup --url dev12345\n"
+    printf "  playground account servicenow setup --developer-username me@example.com\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_account_servicenow_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground account servicenow check\n\n"
+    printf "  🩺 Check the ServiceNow instance of the ServiceNow examples\n  \n  Calls the REST API like the examples (basic authentication as admin on\n  SERVICENOW_URL) and tells apart: awake and logged in, wrong password or\n  Identity Type not Machine (401), hibernating, waking up, released or\n  wrong URL. Then checks the tables the examples use, and whether they can\n  wake the instance up by themselves (SERVICENOW_DEVELOPER_*).\n  \n  Read-only, needs neither Docker nor a browser, takes a few seconds.\n  \n  Exits with 1 when the instance does not answer with admin logged in.\n\n"
+  else
+    printf "playground account servicenow check - 🩺 Check the ServiceNow instance of the ServiceNow examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground account servicenow check\n"
+  printf "  playground account servicenow check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground account servicenow check\n"
     echo
 
   fi
@@ -38335,6 +38462,46 @@ function aws_assume_role_permission_policy () {
     {Effect: "Allow", Action: ["s3:ListAllMyBuckets", "kinesis:*", "sqs:*", "dynamodb:*", "lambda:InvokeFunction", "lambda:GetFunction", "logs:*", "cloudwatch:PutMetricData", "cloudwatch:ListMetrics", "redshift:Describe*", "redshift:GetClusterCredentials"], Resource: "*"}]}'
 }
 
+# ---------------------------------------------------------------------------
+# playground account servicenow setup | check
+# ---------------------------------------------------------------------------
+
+# https://<host>/ with the trailing / the examples need (they build ${SERVICENOW_URL}api/now/...)
+function servicenow_normalize_url () {
+  url=$(echo "$1" | sed -E 's|^https?://||; s|/.*$||' | tr '[:upper:]' '[:lower:]')
+  if [[ "$url" != *.* ]]
+  then
+    url="$url.service-now.com"
+  fi
+  echo "https://$url/"
+}
+
+# State of the instance for admin: awake (200), unauthorized (401), hibernating, waking, missing (no
+# instance answers: wrong URL or released), unknown. Uses SERVICENOW_URL and SERVICENOW_PASSWORD.
+function servicenow_account_state () {
+  body=$(mktemp)
+  code=$(curl -s -m 30 -o "$body" -w '%{http_code}' -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1" 2> /dev/null) || code="000"
+  if grep -qi "hibernat" "$body"
+  then
+    echo "hibernating"
+  elif [ "$code" == "200" ] && jq -e . "$body" > /dev/null 2>&1
+  then
+    echo "awake"
+  elif [ "$code" == "401" ]
+  then
+    echo "unauthorized"
+  elif [[ "$code" =~ ^50[234]$ ]] || grep -qiE "502 Bad Gateway|503 Service|504 Gateway" "$body"
+  then
+    echo "waking"
+  elif [ "$code" == "000" ] || [ "$code" == "404" ] || grep -qiE "instance (is )?not available|no such instance|Instance not found" "$body"
+  then
+    echo "missing"
+  else
+    echo "unknown ($code)"
+  fi
+  rm -f "$body"
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
@@ -50359,6 +50526,139 @@ function cfk_kmj_locks () {
     echo "$locked"
 }
 
+# ServiceNow Personal Developer Instance helpers, used by the servicenow examples and playground account servicenow
+# Print "awake" when $SERVICENOW_URL (ending with /) answers the REST API with JSON (whatever the
+# credentials), "hibernating" when it answers the Instance Hibernating page, "waking" when it answers a
+# gateway error (502/503/504, what an instance answers for a minute or two while it wakes up),
+# "unknown" otherwise.
+function servicenow_instance_state() {
+  local response=""
+
+  response=$(curl -s -m 30 -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if echo "$response" | jq -e . > /dev/null 2>&1
+  then
+    echo "awake"
+  elif echo "$response" | grep -qi "hibernat"
+  then
+    echo "hibernating"
+  elif echo "$response" | grep -qiE "502 Bad Gateway|503 Service|504 Gateway"
+  then
+    echo "waking"
+  else
+    echo "unknown"
+  fi
+}
+
+# Personal Developer Instances hibernate when unused. When $SERVICENOW_URL is hibernating, wake it up
+# with scripts/servicenow-instance-wakeup/wakeup.py (Playwright: logs in to developer.servicenow.com
+# with SERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD and clicks the wake up button of
+# "Manage my instance"), then wait for the REST API to answer. The portal login alone usually wakes the
+# instance, so a failure of wakeup.py (status not readable on a redesigned page) is only a warning: the
+# REST API decides. When the instance is already waking up (gateway error), just wait. Does nothing
+# when the instance is awake.
+function servicenow_wake_up_instance() {
+  local state="" wait=0 max_wait=900 out_dir=""
+  # examples: DIR_UTILS is scripts/; the playground CLI: root_folder is the repository
+  local script_dir="${DIR_UTILS:-}/servicenow-instance-wakeup"
+  if [ ! -d "$script_dir" ]
+  then
+    script_dir="${root_folder:-}/scripts/servicenow-instance-wakeup"
+  fi
+
+  state=$(servicenow_instance_state)
+  if [ "$state" == "hibernating" ]
+  then
+    if [ -z "$SERVICENOW_DEVELOPER_USERNAME" ] || [ -z "$SERVICENOW_DEVELOPER_PASSWORD" ]
+    then
+      logerror "❌ ServiceNow instance $SERVICENOW_URL is hibernating: wake it up at https://developer.servicenow.com (Manage my instance), or export SERVICENOW_DEVELOPER_USERNAME and SERVICENOW_DEVELOPER_PASSWORD (your ServiceNow ID) to do it automatically"
+      return 1
+    fi
+
+    log "🛌 ServiceNow instance $SERVICENOW_URL is hibernating, waking it up (it can take several minutes)"
+    out_dir=$(mktemp -d /tmp/servicenow-wakeup-XXXXXX)
+    chmod 777 "$out_dir"
+    if ! docker run --rm -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" \
+      -v "$script_dir:/wakeup:ro" -v "$out_dir:/out" mcr.microsoft.com/playwright/python:v1.48.0-noble \
+      bash -c "pip install -q --disable-pip-version-check --root-user-action=ignore playwright==1.48.0 > /dev/null && python3 -I /wakeup/wakeup.py /out 600"
+    then
+      logwarn "🛌 wakeup.py did not confirm that $SERVICENOW_URL is Online (screenshots in $out_dir), the portal login usually wakes it up anyway: checking the REST API"
+    fi
+  elif [ "$state" == "waking" ]
+  then
+    log "🛌 ServiceNow instance $SERVICENOW_URL is waking up (gateway error)"
+  else
+    return 0
+  fi
+
+  log "⌛ Waiting up to $max_wait seconds for the REST API of $SERVICENOW_URL to answer"
+  while [ "$(servicenow_instance_state)" != "awake" ]
+  do
+    if [ $wait -ge $max_wait ]
+    then
+      logerror "❌ ServiceNow instance $SERVICENOW_URL still does not answer the REST API after $max_wait seconds${out_dir:+ (screenshots in $out_dir)}: wake it up at https://developer.servicenow.com (Manage my instance)"
+      return 1
+    fi
+    sleep 15
+    wait=$((wait + 15))
+  done
+  [ -n "$out_dir" ] && rm -rf "$out_dir"
+  log "🛌 ServiceNow instance $SERVICENOW_URL is awake"
+}
+
+# Make sure user admin of $SERVICENOW_URL (ending with /) can use basic authentication on the REST
+# API, which the ServiceNow examples and connectors use. Recent ServiceNow releases answer 401 to
+# basic authentication unless the Identity Type of the user is Machine (User Administration > Users >
+# admin > Identity Type). The UI login still works then, so this logs in with login.do like a browser,
+# takes the session token g_ck from a UI page, and sets identity_type=machine on admin with the REST
+# Table API in that session.
+function servicenow_ensure_machine_identity() {
+  local code="" jar="" ck="" gck="" sys_id="" page="" response=""
+
+  code=$(curl -s -o /dev/null -w "%{http_code}" -u admin:"$SERVICENOW_PASSWORD" "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if [ "$code" != "401" ]
+  then
+    return 0
+  fi
+
+  log "🤖 ServiceNow answers 401 to basic authentication for admin, setting its Identity Type to Machine"
+  jar=$(mktemp)
+  ck=$(curl -s -c "$jar" -b "$jar" "${SERVICENOW_URL}login.do" | grep -oE 'name="sysparm_ck"[^>]*value="[^"]*"' | sed -E 's/.*value="([^"]*)".*/\1/' | head -1)
+  curl -s -o /dev/null -c "$jar" -b "$jar" -L \
+    --data-urlencode "user_name=admin" --data-urlencode "user_password=$SERVICENOW_PASSWORD" \
+    --data-urlencode "sys_action=sysverb_login" --data-urlencode "sysparm_ck=$ck" \
+    --data-urlencode "ni.nolog.user_password=true" "${SERVICENOW_URL}login.do"
+
+  for page in navpage.do home.do
+  do
+    gck=$(curl -s -c "$jar" -b "$jar" -L "${SERVICENOW_URL}${page}" | grep -oE "g_ck *= *['\"][a-f0-9]{20,}['\"]" | grep -oE '[a-f0-9]{20,}' | head -1)
+    if [ ! -z "$gck" ]
+    then
+      break
+    fi
+  done
+  if [ -z "$gck" ]
+  then
+    rm -f "$jar"
+    logerror "❌ could not log in to $SERVICENOW_URL as admin: check SERVICENOW_PASSWORD, or set Identity Type to Machine on admin by hand (see the README of the example)"
+    return 1
+  fi
+
+  sys_id=$(curl -s -c "$jar" -b "$jar" -H "X-UserToken: $gck" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_query=user_name=admin&sysparm_fields=sys_id" | jq -r '.result[0].sys_id // empty' 2> /dev/null) || sys_id=""
+  if [ ! -z "$sys_id" ]
+  then
+    response=$(curl -s -c "$jar" -b "$jar" -X PATCH -H "X-UserToken: $gck" -H 'Accept: application/json' -H 'Content-Type: application/json' -d '{"identity_type": "machine"}' "${SERVICENOW_URL}api/now/table/sys_user/${sys_id}?sysparm_fields=identity_type")
+  fi
+  rm -f "$jar"
+
+  code=$(curl -s -o /dev/null -w "%{http_code}" -u admin:"$SERVICENOW_PASSWORD" "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if [ "$code" != "200" ]
+  then
+    logerror "❌ basic authentication as admin still answers HTTP $code after setting its Identity Type to Machine (response: ${response:-admin user not found}). Set it by hand (see the README of the example)"
+    return 1
+  fi
+  log "🤖 Identity Type of admin is now Machine"
+}
+
 # src/lib/validations/validate_client_version.sh
 validate_client_version() {
   # the <tab> completion prints <cur>@<version>
@@ -56683,6 +56983,245 @@ playground_account_aws_check_command() {
       logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail"
   else
       log "🎉 the AWS credentials are ready for the AWS examples"
+  fi
+
+}
+
+# :command.function
+playground_account_servicenow_setup_command() {
+
+  # src/commands/account/servicenow/setup.sh
+  url="${args[--url]}"
+  password="${args[--password]}"
+  developer_username="${args[--developer-username]}"
+  developer_password="${args[--developer-password]}"
+  no_store="${args[--no-store]}"
+
+  for tool in jq curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  # missing values: the stored ones, else asked for
+  profile="$(get_active_secret_profile)"
+  function servicenow_setup_value () {
+      name="$1"
+      prompt="$2"
+      silent="$3"
+      optional="$4"
+      value="$(secret_get "$name" "$profile" 2> /dev/null || true)"
+      if [ -z "$value" ] && [ -t 0 ]
+      then
+          if [[ -n "$silent" ]]
+          then
+              read -r -s -p "$prompt: " value < /dev/tty
+              echo "" >&2
+          else
+              read -r -p "$prompt: " value < /dev/tty
+          fi
+      fi
+      if [ -z "$value" ] && [[ ! -n "$optional" ]]
+      then
+          logerror "❌ $name is not set: pass it as a flag (see --help)"
+          exit 1
+      fi
+      printf '%s' "$value"
+  }
+  if [[ ! -n "$url" ]]
+  then
+      url=$(servicenow_setup_value SERVICENOW_URL "🌐 instance (dev12345, or its URL)")
+  fi
+  if [[ ! -n "$password" ]]
+  then
+      password=$(servicenow_setup_value SERVICENOW_PASSWORD "🔐 password of admin" silent)
+  fi
+  if [[ ! -n "$developer_username" ]]
+  then
+      developer_username=$(servicenow_setup_value SERVICENOW_DEVELOPER_USERNAME "👤 your ServiceNow ID, to wake the instance up (empty to skip)" "" optional)
+  fi
+  if [ -n "$developer_username" ] && [[ ! -n "$developer_password" ]]
+  then
+      developer_password=$(servicenow_setup_value SERVICENOW_DEVELOPER_PASSWORD "🔐 password of $developer_username" silent optional)
+  fi
+
+  export SERVICENOW_URL
+  SERVICENOW_URL=$(servicenow_normalize_url "$url")
+  export SERVICENOW_PASSWORD="$password"
+  export SERVICENOW_DEVELOPER_USERNAME="$developer_username"
+  export SERVICENOW_DEVELOPER_PASSWORD="$developer_password"
+  log "🌐 instance $SERVICENOW_URL"
+
+  # 1. wake it up if it hibernates (servicenow_wake_up_instance: Playwright in docker, like the examples)
+  state=$(servicenow_account_state)
+  case "$state" in
+      hibernating|waking)
+          if [ "$state" == "hibernating" ] && { [ -z "$developer_username" ] || [ -z "$developer_password" ]; }
+          then
+              logerror "❌ the instance is hibernating: wake it up at https://developer.servicenow.com (Manage my instance), or pass --developer-username (your ServiceNow ID) so that setup and the examples do it"
+              exit 1
+          fi
+          if ! docker info > /dev/null 2>&1
+          then
+              logerror "❌ the instance is $state and waking it up needs docker (Playwright image): start docker, or wake it up at https://developer.servicenow.com"
+              exit 1
+          fi
+          servicenow_wake_up_instance || exit 1
+          state=$(servicenow_account_state) ;;
+      missing)
+          logerror "❌ nothing answers at $SERVICENOW_URL: wrong URL, or the instance was released (unused for about 10 days): request a new one at https://developer.servicenow.com"
+          exit 1 ;;
+  esac
+
+  # 2. basic authentication for admin (Identity Type = Machine, like the examples)
+  if [ "$state" == "unauthorized" ]
+  then
+      servicenow_ensure_machine_identity || exit 1
+      state=$(servicenow_account_state)
+  fi
+  if [ "$state" != "awake" ]
+  then
+      logerror "❌ the instance answers \"$state\" for admin: nothing stored"
+      exit 1
+  fi
+  log "✅ admin can use the REST API of $SERVICENOW_URL"
+
+  # 3. store
+  if [[ -n "$no_store" ]]
+  then
+      log "📋 --no-store, the values to export:"
+      echo "export SERVICENOW_URL=\"$SERVICENOW_URL\""
+      echo "export SERVICENOW_PASSWORD=\"$SERVICENOW_PASSWORD\""
+      if [ -n "$developer_username" ]
+      then
+          echo "export SERVICENOW_DEVELOPER_USERNAME=\"$developer_username\""
+          echo "export SERVICENOW_DEVELOPER_PASSWORD=\"$developer_password\""
+      fi
+  else
+      playground secrets set SERVICENOW_URL --value "$SERVICENOW_URL" --plain
+      playground secrets set SERVICENOW_PASSWORD --value "$SERVICENOW_PASSWORD" --secret
+      stored="SERVICENOW_URL and SERVICENOW_PASSWORD"
+      if [ -n "$developer_username" ] && [ -n "$developer_password" ]
+      then
+          playground secrets set SERVICENOW_DEVELOPER_USERNAME --value "$developer_username" --plain
+          playground secrets set SERVICENOW_DEVELOPER_PASSWORD --value "$developer_password" --secret
+          stored="$stored, SERVICENOW_DEVELOPER_USERNAME and SERVICENOW_DEVELOPER_PASSWORD"
+      fi
+      log "💾 stored $stored"
+  fi
+
+  log "🩺 the instance now:"
+  playground account servicenow check || true
+  log "🩺 check it any time with: playground account servicenow check"
+
+}
+
+# :command.function
+playground_account_servicenow_check_command() {
+
+  # src/commands/account/servicenow/check.sh
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  YELLOW='\033[0;33m'
+  NC='\033[0m'
+
+  for tool in jq curl
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  profile="$(get_active_secret_profile)"
+  SERVICENOW_URL="$(secret_get SERVICENOW_URL "$profile" 2> /dev/null || true)"
+  SERVICENOW_PASSWORD="$(secret_get SERVICENOW_PASSWORD "$profile" 2> /dev/null || true)"
+  developer_username="$(secret_get SERVICENOW_DEVELOPER_USERNAME "$profile" 2> /dev/null || true)"
+  developer_password="$(secret_get SERVICENOW_DEVELOPER_PASSWORD "$profile" 2> /dev/null || true)"
+  missing=""
+  [ -z "$SERVICENOW_URL" ] && missing="$missing SERVICENOW_URL"
+  [ -z "$SERVICENOW_PASSWORD" ] && missing="$missing SERVICENOW_PASSWORD"
+  if [ -n "$missing" ]
+  then
+      logerror "❌ not set:$missing (all the ServiceNow examples need them)"
+      logerror "👉 playground account servicenow setup"
+      exit 1
+  fi
+  normalized=$(servicenow_normalize_url "$SERVICENOW_URL")
+  if [ "$SERVICENOW_URL" != "$normalized" ]
+  then
+      logwarn "⚠️ SERVICENOW_URL is \"$SERVICENOW_URL\": the examples need \"$normalized\" (https, host only, trailing /)        👉 playground account servicenow setup"
+      SERVICENOW_URL="$normalized"
+  fi
+
+  # 1. the instance
+  log "🔑 REST API of $SERVICENOW_URL as admin (basic authentication, like the examples)"
+  state=$(servicenow_account_state)
+  nb_failed=0
+  case "$state" in
+      awake)
+          echo -e "✅ ${GREEN}Instance${NC} awake, admin logged in" ;;
+      unauthorized)
+          echo -e "❌ ${RED}Login${NC}: HTTP 401 for admin: wrong SERVICENOW_PASSWORD, or the Identity Type of admin is not Machine (recent releases refuse basic authentication otherwise)"
+          echo "      👉 playground account servicenow setup (it sets Identity Type = Machine, like the examples)"
+          exit 1 ;;
+      hibernating)
+          echo -e "❌ ${RED}Instance${NC} hibernating"
+          if [ -n "$developer_username" ] && [ -n "$developer_password" ]
+          then
+              echo "      the examples wake it up by themselves (SERVICENOW_DEVELOPER_* are set, a few minutes), or now: playground account servicenow setup"
+          else
+              echo "      👉 wake it up at https://developer.servicenow.com (Manage my instance), or store your ServiceNow ID so the examples do it: playground account servicenow setup --developer-username <you>"
+          fi
+          exit 1 ;;
+      waking)
+          echo -e "⏳ ${YELLOW}Instance${NC} waking up (gateway error): try again in a minute or two"
+          exit 1 ;;
+      missing)
+          echo -e "❌ ${RED}Instance${NC}: nothing answers at $SERVICENOW_URL: wrong URL, or the instance was released (unused for about 10 days)"
+          echo "      👉 request a new one at https://developer.servicenow.com, then playground account servicenow setup"
+          exit 1 ;;
+      *)
+          echo -e "❌ ${RED}Instance${NC}: unexpected answer from $SERVICENOW_URL: $state"
+          exit 1 ;;
+  esac
+
+  # 2. the tables the examples use
+  code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1" 2> /dev/null) || code="000"
+  if [ "$code" == "200" ]
+  then
+      echo -e "✅ ${GREEN}Table incident${NC} (servicenow sources)"
+  else
+      echo -e "❌ ${RED}Table incident${NC}: HTTP $code"
+      echo "      needed by: the servicenow sources"
+      nb_failed=$((nb_failed + 1))
+  fi
+  count=$(curl -s -m 30 -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_db_object?sysparm_query=name=u_test_table&sysparm_fields=name&sysparm_limit=1" 2> /dev/null | jq -r '.result | length' 2> /dev/null) || count=""
+  if [ "$count" == "1" ]
+  then
+      echo -e "✅ ${GREEN}Table u_test_table${NC} (servicenow sinks)"
+  else
+      echo -e "ℹ️  table u_test_table does not exist yet: the servicenow sinks create it"
+  fi
+
+  # 3. waking up by themselves
+  if [ -n "$developer_username" ] && [ -n "$developer_password" ]
+  then
+      echo -e "✅ ${GREEN}SERVICENOW_DEVELOPER_*${NC} set: the examples wake the instance up when it hibernates (Docker, Playwright image)"
+  else
+      echo -e "⚠️ ${YELLOW}SERVICENOW_DEVELOPER_*${NC} not set: when the instance hibernates, wake it up by hand at https://developer.servicenow.com        👉 playground account servicenow setup --developer-username <you>"
+  fi
+
+  echo ""
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed check(s) failed: the examples listed above would fail"
+  else
+      log "🎉 the ServiceNow instance is ready for the ServiceNow examples"
   fi
 
 }
@@ -117274,6 +117813,13 @@ playground_account_parse_requirements() {
       shift $#
       ;;
 
+    servicenow)
+      action="servicenow"
+      shift
+      playground_account_servicenow_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_account_usage >&2
@@ -119162,6 +119708,279 @@ playground_account_aws_check_parse_requirements() {
 
   # :command.command_filter
   action="account aws check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_servicenow_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_servicenow_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_account_servicenow_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_account_servicenow_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_account_servicenow_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_servicenow_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_servicenow_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account servicenow setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --url)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--url']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--url requires an argument: --url URL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --developer-username)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--developer-username']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--developer-username requires an argument: --developer-username DEVELOPER_USERNAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --developer-password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--developer-password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--developer-password requires an argument: --developer-password DEVELOPER_PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_account_servicenow_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_account_servicenow_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="account servicenow check"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -176701,6 +177520,11 @@ playground_account_completion() {
         playground_account_aws_completion "$completion_current" "$@"
         return
         ;;
+      servicenow)
+        shift
+        playground_account_servicenow_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -176710,7 +177534,7 @@ playground_account_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake aws
+  completion_candidates "$completion_current" ccloud salesforce gcp azure snowflake aws servicenow
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -177640,6 +178464,136 @@ playground_account_aws_setup_completion() {
 
 # :command.completion_function
 playground_account_aws_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_servicenow_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_account_servicenow_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_account_servicenow_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_account_servicenow_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --url)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--url"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --developer-username)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--developer-username"]=1
+
+        ;;
+      --developer-password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--developer-password"]=1
+
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --url "$completion_current" --url
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --developer-username "$completion_current" --developer-username
+    completion_flag_candidates --developer-password "$completion_current" --developer-password
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_account_servicenow_check_completion() {
   local completion_current="$1"
   shift
 
@@ -205429,6 +206383,9 @@ run() {
     "account aws") playground_account_aws_command ;;
     "account aws setup") playground_account_aws_setup_command ;;
     "account aws check") playground_account_aws_check_command ;;
+    "account servicenow") playground_account_servicenow_command ;;
+    "account servicenow setup") playground_account_servicenow_setup_command ;;
+    "account servicenow check") playground_account_servicenow_check_command ;;
     "salesforce") playground_salesforce_command ;;
     "ccloud") playground_ccloud_command ;;
     "cloud-resources") playground_cloud_resources_command ;;

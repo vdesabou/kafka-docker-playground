@@ -1,0 +1,73 @@
+name: servicenow
+expose: always
+help: |-
+  ☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it
+
+    setup   validate and store the instance URL and the admin password, wake the instance up, fix basic authentication
+    check   verify that the instance answers (awake, hibernating, released) and that admin can log in
+
+  The examples use a free Personal Developer Instance (PDI) and its admin
+  user. A PDI hibernates when unused and is released after a few days
+  without use: most failures are that. Only requesting the PDI on
+  developer.servicenow.com stays manual.
+
+  📖 Step by step guide (PDI, hibernation, Identity Type, troubleshooting):
+  https://kafka-docker-playground.io/#/servicenow
+commands:
+- name: setup
+  help: |-
+    🛠️ Validate and store the ServiceNow instance of the ServiceNow examples
+
+    Normalizes the URL (dev12345, dev12345.service-now.com or the full URL
+    become https://dev12345.service-now.com/, with the trailing / the
+    examples need), wakes the instance up if it hibernates (with your
+    ServiceNow ID, like the examples), makes basic authentication work for
+    admin (Identity Type = Machine, like the examples), then stores
+    SERVICENOW_URL, SERVICENOW_PASSWORD and, when given,
+    SERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD with
+    'playground secrets set', and runs check.
+
+    Missing values are taken from the stored ones, else asked for (the
+    passwords without echo).
+  flags:
+  - long: --url
+    arg: url
+    required: false
+    help: |-
+      🌐 Instance: dev12345, dev12345.service-now.com or https://dev12345.service-now.com/
+  - long: --password
+    arg: password
+    required: false
+    help: |-
+      🔐 Password of user admin of the instance (asked for without echo when missing)
+  - long: --developer-username
+    arg: developer_username
+    required: false
+    help: |-
+      👤 Your ServiceNow ID (developer.servicenow.com login): lets the examples wake the instance up
+  - long: --developer-password
+    arg: developer_password
+    required: false
+    help: |-
+      🔐 Password of your ServiceNow ID
+  - long: --no-store
+    help: |-
+      📋 Print the export commands instead of storing the variables
+  examples:
+  - playground account servicenow setup --url dev12345
+  - playground account servicenow setup --developer-username me@example.com
+- name: check
+  help: |-
+    🩺 Check the ServiceNow instance of the ServiceNow examples
+
+    Calls the REST API like the examples (basic authentication as admin on
+    SERVICENOW_URL) and tells apart: awake and logged in, wrong password or
+    Identity Type not Machine (401), hibernating, waking up, released or
+    wrong URL. Then checks the tables the examples use, and whether they can
+    wake the instance up by themselves (SERVICENOW_DEVELOPER_*).
+
+    Read-only, needs neither Docker nor a browser, takes a few seconds.
+
+    Exits with 1 when the instance does not answer with admin logged in.
+  examples:
+  - playground account servicenow check

@@ -8,6 +8,7 @@
 - [☁️ Azure examples](/azure.md)
 - [☁️ Snowflake examples](/snowflake.md)
 - [☁️ AWS examples](/aws.md)
+- [☁️ ServiceNow examples](/servicenow.md)
 - [🧠 CLI](/cli.md)
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)

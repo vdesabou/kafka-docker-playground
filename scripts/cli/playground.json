@@ -460,7 +460,7 @@
     },
     {
       "name": "account",
-      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n  azure        an Azure subscription: service principal with its roles, resource providers\n  snowflake    a Snowflake account: account identifier, admin login, roles, edition\n  aws          AWS access keys and region, the IAM role of the assume-role variants\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and, except ccloud, 'check'\n(a few seconds, read-only: does the stored login still work, and what is\nmissing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake\nhttps://kafka-docker-playground.io/#/aws",
+      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n  azure        an Azure subscription: service principal with its roles, resource providers\n  snowflake    a Snowflake account: account identifier, admin login, roles, edition\n  aws          AWS access keys and region, the IAM role of the assume-role variants\n  servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and, except ccloud, 'check'\n(a few seconds, read-only: does the stored login still work, and what is\nmissing).\n\n📖 Step by step guides:\nhttps://kafka-docker-playground.io/#/salesforce\nhttps://kafka-docker-playground.io/#/gcp\nhttps://kafka-docker-playground.io/#/azure\nhttps://kafka-docker-playground.io/#/snowflake\nhttps://kafka-docker-playground.io/#/aws\nhttps://kafka-docker-playground.io/#/servicenow",
       "usage": "playground account COMMAND",
       "options": [],
       "subcommands": [
@@ -939,6 +939,62 @@
               "name": "check",
               "description": "🩺 Check the AWS credentials of the AWS examples\n\nResolves the keys like the examples (environment or secrets store, then\n~/.aws/credentials), tells temporary credentials apart (fully managed\nconnectors refuse them), validates them (sts get-caller-identity) and the\nregion, then calls each service the examples use (S3, Kinesis, SQS,\nDynamoDB, Lambda and IAM roles, CloudWatch Logs and Metrics, Redshift,\nAthena), checks the bucket name of your examples, and, when\nAWS_STS_ROLE_ARN is set, assumes the role like the assume-role variants\ndo. Each failure says why and which examples it breaks.\n\nRead-only. Uses your aws CLI, else the amazon/aws-cli image.\n\nExits with 1 when the keys don't work.",
               "usage": "playground account aws check",
+              "options": []
+            }
+          ]
+        },
+        {
+          "name": "servicenow",
+          "description": "☁️ Set up the ServiceNow instance of the ServiceNow examples, and check it\n\n  setup   validate and store the instance URL and the admin password, wake the instance up, fix basic authentication\n  check   verify that the instance answers (awake, hibernating, released) and that admin can log in\n\nThe examples use a free Personal Developer Instance (PDI) and its admin\nuser. A PDI hibernates when unused and is released after a few days\nwithout use: most failures are that. Only requesting the PDI on\ndeveloper.servicenow.com stays manual.\n\n📖 Step by step guide (PDI, hibernation, Identity Type, troubleshooting):\nhttps://kafka-docker-playground.io/#/servicenow",
+          "usage": "playground account servicenow COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "setup",
+              "description": "🛠️ Validate and store the ServiceNow instance of the ServiceNow examples\n\nNormalizes the URL (dev12345, dev12345.service-now.com or the full URL\nbecome https://dev12345.service-now.com/, with the trailing / the\nexamples need), wakes the instance up if it hibernates (with your\nServiceNow ID, like the examples), makes basic authentication work for\nadmin (Identity Type = Machine, like the examples), then stores\nSERVICENOW_URL, SERVICENOW_PASSWORD and, when given,\nSERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD with\n'playground secrets set', and runs check.\n\nMissing values are taken from the stored ones, else asked for (the\npasswords without echo).",
+              "usage": "playground account servicenow setup [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--url"
+                  ],
+                  "argument": "URL",
+                  "description": "🌐 Instance: dev12345, dev12345.service-now.com or https://dev12345.service-now.com/"
+                },
+                {
+                  "names": [
+                    "--password"
+                  ],
+                  "argument": "PASSWORD",
+                  "description": "🔐 Password of user admin of the instance (asked for without echo when missing)"
+                },
+                {
+                  "names": [
+                    "--developer-username"
+                  ],
+                  "argument": "DEVELOPER_USERNAME",
+                  "description": "👤 Your ServiceNow ID (developer.servicenow.com login): lets the examples wake the instance up"
+                },
+                {
+                  "names": [
+                    "--developer-password"
+                  ],
+                  "argument": "DEVELOPER_PASSWORD",
+                  "description": "🔐 Password of your ServiceNow ID"
+                },
+                {
+                  "names": [
+                    "--no-store"
+                  ],
+                  "argument": "",
+                  "description": "📋 Print the export commands instead of storing the variables"
+                }
+              ]
+            },
+            {
+              "name": "check",
+              "description": "🩺 Check the ServiceNow instance of the ServiceNow examples\n\nCalls the REST API like the examples (basic authentication as admin on\nSERVICENOW_URL) and tells apart: awake and logged in, wrong password or\nIdentity Type not Machine (401), hibernating, waking up, released or\nwrong URL. Then checks the tables the examples use, and whether they can\nwake the instance up by themselves (SERVICENOW_DEVELOPER_*).\n\nRead-only, needs neither Docker nor a browser, takes a few seconds.\n\nExits with 1 when the instance does not answer with admin logged in.",
+              "usage": "playground account servicenow check",
               "options": []
             }
           ]

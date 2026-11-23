@@ -11448,6 +11448,46 @@ function aws_assume_role_permission_policy () {
     {Effect: "Allow", Action: ["s3:ListAllMyBuckets", "kinesis:*", "sqs:*", "dynamodb:*", "lambda:InvokeFunction", "lambda:GetFunction", "logs:*", "cloudwatch:PutMetricData", "cloudwatch:ListMetrics", "redshift:Describe*", "redshift:GetClusterCredentials"], Resource: "*"}]}'
 }
 
+# ---------------------------------------------------------------------------
+# playground account servicenow setup | check
+# ---------------------------------------------------------------------------
+
+# https://<host>/ with the trailing / the examples need (they build ${SERVICENOW_URL}api/now/...)
+function servicenow_normalize_url () {
+  url=$(echo "$1" | sed -E 's|^https?://||; s|/.*$||' | tr '[:upper:]' '[:lower:]')
+  if [[ "$url" != *.* ]]
+  then
+    url="$url.service-now.com"
+  fi
+  echo "https://$url/"
+}
+
+# State of the instance for admin: awake (200), unauthorized (401), hibernating, waking, missing (no
+# instance answers: wrong URL or released), unknown. Uses SERVICENOW_URL and SERVICENOW_PASSWORD.
+function servicenow_account_state () {
+  body=$(mktemp)
+  code=$(curl -s -m 30 -o "$body" -w '%{http_code}' -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1" 2> /dev/null) || code="000"
+  if grep -qi "hibernat" "$body"
+  then
+    echo "hibernating"
+  elif [ "$code" == "200" ] && jq -e . "$body" > /dev/null 2>&1
+  then
+    echo "awake"
+  elif [ "$code" == "401" ]
+  then
+    echo "unauthorized"
+  elif [[ "$code" =~ ^50[234]$ ]] || grep -qiE "502 Bad Gateway|503 Service|504 Gateway" "$body"
+  then
+    echo "waking"
+  elif [ "$code" == "000" ] || [ "$code" == "404" ] || grep -qiE "instance (is )?not available|no such instance|Instance not found" "$body"
+  then
+    echo "missing"
+  else
+    echo "unknown ($code)"
+  fi
+  rm -f "$body"
+}
+
 # url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
 function get_flink_rest_url () {
   flink_rest_url=""
