@@ -165,6 +165,12 @@ wait_for_ccloud_connector_up $connector_name 180
 playground connector show-lag --max-wait 120 --connector $connector_name
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as $PLAYGROUND_USER user)"
+# the connector loads with Snowpipe: a lag of 0 only means the file was handed to the pipe, Snowpipe loads it
+# into the table asynchronously (often 10 to 60 seconds later), so poll the table
+MAX_WAIT=180
+CUR_WAIT=0
+while true
+do
 docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
 USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
@@ -172,6 +178,14 @@ USE SCHEMA PUBLIC;
 USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
+    if grep -qi "u_name" /tmp/result.log || [[ "$CUR_WAIT" -ge "$MAX_WAIT" ]]
+    then
+        break
+    fi
+    log "⏳ no row in TEST_TABLE yet (Snowpipe still loading), retrying in 15 seconds ($CUR_WAIT/$MAX_WAIT seconds)"
+    sleep 15
+    CUR_WAIT=$(( CUR_WAIT + 15 ))
+done
 cat /tmp/result.log
 grep -i "u_name" /tmp/result.log
 
