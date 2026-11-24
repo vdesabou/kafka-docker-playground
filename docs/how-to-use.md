@@ -116,7 +116,7 @@ Prefer to do it by hand? Follow the sections below.
 
 #### ☑️ Prerequisites
 
-* You just need to have [docker](https://docs.docker.com/get-docker/) with the [compose v2 plugin](https://docs.docker.com/compose/install/) (`docker compose` 2.0.0 or greater) installed on your machine, or [Podman](/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) 5.0 or greater !
+* You just need to have [docker](https://docs.docker.com/get-docker/) with the [compose v2 plugin](https://docs.docker.com/compose/install/) (`docker compose` 2.0.0 or greater) installed on your machine, or [Podman](/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) 5.0 or greater.
 
 * Install the [🧠 CLI](/cli) by following [Setup](/cli?id=%f0%9f%9a%9c-setup). [fzf](https://github.com/junegunn/fzf) is required when using CLI (see installation [instructions](https://github.com/junegunn/fzf#installation))
 
@@ -130,9 +130,7 @@ Prefer to do it by hand? Follow the sections below.
 > Run [playground doctor](/playground%20doctor) first: it checks that the container engine is reachable, that compose v2 is there and that there is enough memory. It is the one command that still works when the engine is down.
 
 > [!NOTE]
-> Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc...Only exceptions are `fzf` and `confluent`
-> 
-> The goal is to have a consistent behavior and only depends on Docker.
+> Third-party tools (`jq`, `aws`, `az`, `gcloud`…) run in Docker images when they are not on your host, so that the behaviour is the same everywhere. What must be on your host: bash 4+, fzf, python3, unzip, and the Confluent CLI for the Confluent Cloud examples. `gh` is only needed by [playground codespace](/playground%20codespace), and `sf` / `az` by `playground account salesforce setup` / `playground account azure setup`.
 
 > [!WARNING]
 > The playground is only tested on macOS (including with [M1 *arm64* chip](/how-to-use?id=%f0%9f%a7%91%f0%9f%92%bb-m1-chip-arm64-mac-support)) and Linux (Ubuntu and Amazon Linux) . It is not tested on Windows, but it should be working with WSL.
@@ -294,7 +292,7 @@ playground switch-podman    # points docker and docker compose at the podman soc
 
 ## 🏎️ Start an example
 
-Pick an example in the **[👾 Examples](/examples.md)** page (or the [📋 full list](/content.md)) and simply use [playground run](/playground%20run) CLI command!
+Pick an example in the **[👾 Examples](/examples.md)** page (or the [📋 full list](/content.md)) and run it with [playground run](/playground%20run).
 
 > [!TIP]
 > Not sure which one? The **[👾 Examples](/examples.md)** page searches and filters every example, shows its README, Confluent docs, credentials needed and CI status, and turns the environment, versions and `--enable-*` options you pick into the `playground run` command to copy (`playground find-example --browse` opens it locally).
@@ -340,7 +338,7 @@ The **⚙️ CLI preferences (playground config)** action opens a submenu with e
 
 * editor used to open files, folders searched for connector zip or jar, copy of the connector config to the clipboard (macOS only)
 * kill all containers before each run, deletion of the Confluent Cloud resources left by the last run (`ask`, `true` or `false`), check that the repository is up to date
-* check the account of the example before starting it (`account-check-before-run`, see [Accounts of the examples](/how-to-use?id=🩺-when-an-example-fails))
+* check the account of the example before starting it (`account-check-before-run`, see [When an example fails](/how-to-use?id=🩺-when-an-example-fails))
 * masked run log of each run, and its folder (see [📄 Sharing a run](/how-to-use?id=📄-sharing-a-run-the-masked-run-log))
 * whether fully managed connectors and Grafana are opened in the browser, and in which browser
 
@@ -425,7 +423,6 @@ first: it says why, and which examples it breaks.
 | `aws` | `connect-aws-*`, `connect-jdbc-aws-*`, `fm-aws-*` | validates the access keys and the region; `--assume-role` creates the IAM role of the assume-role variants | the keys, temporary credentials, region, one probe per service, bucket name, assume role | creating the IAM user and its access key | [AWS examples](/aws.md) |
 | `servicenow` | `connect-servicenow-*`, `fm-servicenow-*` | normalizes the URL, wakes the instance up, fixes basic authentication for admin | awake, hibernating, released, 401, the tables | requesting the developer instance | [ServiceNow examples](/servicenow.md) |
 | `databricks` | `connect-databricks-delta-lake-sink`, `connect-jdbc-databricks-*`, `fm-databricks-delta-lake-sink` | takes the HTTP path and host from the SQL warehouse, validates the token and the S3 staging bucket, prints the grants | the token, the warehouse, the staging bucket | creating the workspace, running the grants | [Databricks examples](/databricks.md) |
-
 | `zendesk`, `jira`, `marketo`, `clickhouse`, `couchbase`, `mongodb-atlas`, `pagerduty` | see [below](/how-to-use?id=🧾-the-saas-accounts) | asks for the 3 values, puts them in the right form, validates them, stores them | one or two calls: login, and what expires, pauses or idles | signing up | [The SaaS accounts](/how-to-use?id=🧾-the-saas-accounts) |
 
 Each guide has the same sections: what you need, step by step, the `check` output with the likely cause of each
@@ -498,7 +495,7 @@ Otherwise, or for a closer look:
 
 ## 🌤️ Confluent Cloud examples
 
-Simply use [playground run](/playground%20run) command ! Below, the menu shows the Confluent Cloud options of a fully managed connector example (it quits before running it):
+Use [playground run](/playground%20run). Below, the menu shows the Confluent Cloud options of a fully managed connector example (it quits before running it):
 
 <video src="videos/ccloud-run-menu.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
@@ -533,13 +530,13 @@ You can configure the new cluster by using flags with [playground run](/playgrou
 * `--cluster-type` (or `CLUSTER_TYPE` environment variable): the type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)
 * `--cluster-cloud` (or `CLUSTER_CLOUD` environment variable): The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
 * `--cluster-region` (or `CLUSTER_REGION` environment variable): The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2` for aws, `westeurope` for azure and `europe-west2` for gcp)
-* `--cluster-environment` (or `ENVIRONMENT` environment variable) (optional): The environment id where want your new cluster (example: `txxxxx`) 
+* `--cluster-environment` (or `ENVIRONMENT` environment variable) (optional): The environment id where you want your new cluster (example: `txxxxx`) 
 
 In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
 
 * `--cluster-name` (or `CLUSTER_NAME` environment variable): The cluster name
-* `--cluster-creds` (or `CLUSTER_CREDS` environment variable): The Kafka api key and secret to use, it should be separated with colon (example: `<API_KEY>:<API_KEY_SECRET>`)
-* `--cluster-schema-registry-creds` (or `SCHEMA_REGISTRY_CREDS` environment variable) (optional, if not set, the key of another cluster of the same environment already used on this machine is reused, else a new one owned by you is created): The Schema Registry api key and secret to use, it should be separated with colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
+* `--cluster-creds` (or `CLUSTER_CREDS` environment variable): The Kafka api key and secret to use, separated with a colon (example: `<API_KEY>:<API_KEY_SECRET>`)
+* `--cluster-schema-registry-creds` (or `SCHEMA_REGISTRY_CREDS` environment variable) (optional, if not set, the key of another cluster of the same environment already used on this machine is reused, else a new one owned by you is created): The Schema Registry api key and secret to use, separated with a colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
 
 🤖 For [Fully Managed connectors](/content?id=%f0%9f%a4%96-fully-managed-connectors), as examples are [dependent of cloud providers](https://docs.confluent.io/cloud/current/connectors/index.html#cloud-platforms-support), you have the possibility to define specific existing clusters per cloud provider:
 
@@ -590,7 +587,7 @@ Add `--ccloud-service-account` (or tick *👤 Connector service account* in the 
 
 ## 🪄 Specify versions
 
-[playground run](/playground%20run) command allows you to do that very easily !
+[playground run](/playground%20run) options set the versions, or pick them in its menu:
 
 ![specify versions](./images/versions.jpg)
 
@@ -623,26 +620,25 @@ The playground has 3 different ways to use different connector version when runn
 *Example:*
 
 ```bash
-00:33:47 ℹ️ 🎯 CONNECTOR_JAR is set with /tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
-/usr/share/confluent-hub-components/confluentinc-kafka-connect-http/lib/kafka-connect-http-1.2.4.jar
-00:33:48 ℹ️ 👷 Building Docker image confluentinc/cp-server-connect-base:cp-6.2.1-kafka-connect-http-1.2.4-kafka-connect-http-1.3.1-SNAPSHOT.jar
-00:33:48 ℹ️ Remplacing kafka-connect-http-1.2.4.jar by kafka-connect-http-1.3.1-SNAPSHOT.jar
+00:33:47 ℹ️ 🎯☕ CONNECTOR_JAR (--connector-jar option) is set with /tmp/kafka-connect-http-1.7.7-SNAPSHOT.jar
+/home/me/kafka-docker-playground/scripts/../confluent-hub/confluentinc-kafka-connect-http/lib/kafka-connect-http-1.7.6.jar
+00:33:48 ℹ️ 🔮 Replacing kafka-connect-http-1.7.6.jar by kafka-connect-http-1.7.7-SNAPSHOT.jar
 ```
 
-When jar to replace cannot be found automatically, the user is able to select the one to replace automatically:
+When the jar to replace cannot be found automatically, you select it in a list:
 
 ```bash
-11:02:43 ℹ️ 🎯 CONNECTOR_JAR is set with /tmp/debezium-connector-postgres-1.4.0-SNAPSHOT.jar
-ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-1.4.0.jar': No such file or directory
-11:02:44 ❗ debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-1.4.0.jar does not exist, the jar name to replace could not be found automatically
-11:02:45 ℹ️ Select the jar to replace:
-1) debezium-api-1.4.0.Final.jar
-2) debezium-connector-postgres-1.4.0.Final.jar
-3) debezium-core-1.4.0.Final.jar
+11:02:43 ℹ️ 🎯☕ CONNECTOR_JAR (--connector-jar option) is set with /tmp/debezium-connector-postgres-2.5.4-SNAPSHOT.jar
+ls: cannot access '/home/me/kafka-docker-playground/scripts/../confluent-hub/debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-2.5.4.jar': No such file or directory
+11:02:44 ❗ ☕ debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-2.5.4.jar does not exist, the jar name to replace could not be found automatically
+11:02:44 ℹ️ ☕ Select the jar to replace:
+1) debezium-api-2.5.4.Final.jar
+2) debezium-connector-postgres-2.5.4.Final.jar
+3) debezium-core-2.5.4.Final.jar
 ```
 
-> [!WARNING]
-> You can use both `--connector-tag` and `--connector-jar` at same time (along with `--tag`), but `--connector-tag` and `--connector-zip` are mutually exclusive.
+> [!NOTE]
+> You can use both `--connector-tag` and `--connector-jar` at the same time (along with `--tag`), but `--connector-tag` and `--connector-zip` are mutually exclusive.
 
 > [!NOTE]
 > For more information about the Connect image used, check [here](/how-it-works?id=🔗-connect-image-used).
@@ -700,17 +696,17 @@ Docker images tags being used can be overridden by exporting following environme
 
 The java applications that some examples build (Kafka Streams, producers, consumers) use the Apache Kafka clients matching the CP version (`KAFKA_CLIENT_TAG`, CP 8.2 → 4.2.0). `--client-version 3.7.1` (`CLIENT_VERSION`) pins another version, a patch version included, for example the customer's Kafka Streams version. For the client examples (`other/client-*`, `ccloud/client-*`), it is the version of their client (librdkafka, confluent-kafka-python…). Press <kbd>TAB</kbd> after `--client-version` (with `-f` typed before it, otherwise the last example run is used) to pick one of the published versions of that client in fzf, releases first; the interactive menu offers the same list.
 
-*Example:* schema registry 7.9.1 with everything else on 8.3.2:
+*Example:* schema registry 7.9.1 with everything else on the default version:
 
 ```bash
 playground run -f datagen-source<tab> --schema-registry-tag 7.9.1
 ```
 
-## 📡 Kraft mode
+## 📡 KRaft mode
 
-[Kraft](https://docs.confluent.io/platform/current/kafka-metadata/kraft.html) is enabled by default when used with CP 8+. For CP 7.4 to 7.9, you can force it with `--enable-kraft` option of [playground run](/playground%20run) (or by setting environment variable `ENABLE_KRAFT`). It is refused for CP < 7.4, and has no effect with CP 8+.
+[KRaft](https://docs.confluent.io/platform/current/kafka-metadata/kraft.html) is enabled by default when used with CP 8+. For CP 7.4 to 7.9, you can force it with `--enable-kraft` option of [playground run](/playground%20run) (or by setting environment variable `ENABLE_KRAFT`). It is refused for CP < 7.4, and has no effect with CP 8+.
 
-In Kraft mode, a `controller` container replaces the `zookeeper` container (its JMX port is `10005`). ZooKeeper is only used with CP < 8 when `ENABLE_KRAFT` is not set.
+In KRaft mode, a `controller` container replaces the `zookeeper` container (its JMX port is `10005`). ZooKeeper is only used with CP < 8 when `ENABLE_KRAFT` is not set.
 
 ## ⛳ Options
 
@@ -813,7 +809,7 @@ You can enable this with `--enable-jmx-grafana` option of [playground run](/play
 
 📊 Grafana is reachable at [http://127.0.0.1:3000](http://127.0.0.1:3000)
 🛡️ Prometheus is reachable at [http://127.0.0.1:9090](http://127.0.0.1:9090) (it scrapes the JMX exporters every 15 s)
-📛 [Pyroscope](https://pyroscope.io/docs/) is reachable at [http://127.0.0.1:4040](http://127.0.0.1:4040)
+📛 [Pyroscope](https://grafana.com/docs/pyroscope/latest/) is reachable at [http://127.0.0.1:4040](http://127.0.0.1:4040)
 
 It works with the single-cluster environments and with the multi data center environment `mdc-plaintext`: there, the `env` variable of the dashboards picks the cluster (`europe` or `us`), and the Kafka Lag Exporter watches both clusters (see [environment/mdc-plaintext](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)).
 
@@ -964,7 +960,7 @@ JMX metrics are available locally on those ports:
 * schema-registry: `10001`
 * connect: `10002` (`connect2`: `10022`, `connect3`: `10032` with multiple connect workers)
 * ksqldb-server: `10003`
-* controller: `10005` (Kraft mode)
+* controller: `10005` (KRaft mode)
 * zookeeper: `9999` (CP < 8 only)
 
 For a digest instead of raw MBeans, one command per component, with ⚠️ on the values to look at:
@@ -1000,14 +996,14 @@ The [observability deep dive](/deep-dive-observability.md) maps each support que
 
 ## 📝 See properties file
 
-Because the playground uses **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file.
+Because the playground uses **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in the same `docker-compose.yml` file.
 
 In order to easily see the end result properties file, you can use [playground container get-properties](/playground%20container%20get-properties) command
 
 *Example:*
 
 ```bash
-$ playground get-properties -c connect
+$ playground container get-properties -c connect
 bootstrap.servers=broker:9092
 config.providers.file.class=org.apache.kafka.common.config.provider.FileConfigProvider
 config.providers=file
@@ -1042,17 +1038,16 @@ value.converter=io.confluent.connect.avro.AvroConverter
 
 ## ♻️ Re-create containers
 
-Because the playground uses **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and also `docker-compose` files in the playground depends on environment variables to be set.
+As seen above, the configuration of a container is spread over several `docker-compose` files, and these files depend on environment variables set by the example.
 
-For these reasons, if you want to make a change in one of the `docker-compose` files (without restarting the example from scratch), it is not simply a matter of doing `docker compose up -d` 😅!
+So, to apply a change made to one of the `docker-compose` files without restarting the example from scratch, a plain `docker compose up -d` is not enough 😅!
 
-However, when you execute an example, you get in the output the [playground container recreate](/playground%20container%20recreate) in order to easily re-create modified container(s) 🥳.
+Each run prints the [playground container recreate](/playground%20container%20recreate) command that re-creates the modified container(s) 🥳.
 
 *Example:*
 
 ```bash
-12:02:18 ℹ️ ✨If you modify a docker-compose file and want to re-create the container(s),
- run cli command playground container recreate
+12:02:18 ℹ️ ✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'
 ```
 
 So you can modify one of the `docker-compose` files (in that case either [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml) or [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml)), and then run [playground container recreate](/playground%20container%20recreate) command:
