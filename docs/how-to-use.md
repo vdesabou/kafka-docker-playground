@@ -112,51 +112,25 @@ When no engine answers and none is installed, the installer asks which one to in
 
 Pass options after `bash -s --`, for example `curl -fsSL https://kafka-docker-playground.io/install.sh | bash -s -- --uninstall`. Running it again is safe: it updates the clone and leaves the block as it is.
 
-Prefer to do it by hand? Follow the sections below.
+Prefer to do it by hand? Follow the steps below.
 
 #### ☑️ Prerequisites
 
-* You just need to have [docker](https://docs.docker.com/get-docker/) with the [compose v2 plugin](https://docs.docker.com/compose/install/) (`docker compose` 2.0.0 or greater) installed on your machine, or [Podman](/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) 5.0 or greater.
+* A container engine: [docker](https://docs.docker.com/get-docker/) with the [compose v2 plugin](https://docs.docker.com/compose/install/) (`docker compose` 2.0.0 or greater), or [Podman](/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) 5.0 or greater. Give it at least 8GB of memory: Docker Desktop in [Settings > Resources](https://docs.docker.com/desktop/settings-and-maintenance/settings/#resources), Podman with `podman machine init --memory` (see [Setup on macOS](/how-to-use?id=%f0%9f%8d%8f-setup-on-macos)).
 
-* Install the [🧠 CLI](/cli) by following [Setup](/cli?id=%f0%9f%9a%9c-setup). [fzf](https://github.com/junegunn/fzf) is required when using CLI (see installation [instructions](https://github.com/junegunn/fzf#installation))
+* bash 4 or higher. macOS ships bash 3.2: run `brew install bash` with [Homebrew](https://brew.sh/), then check that `bash --version` says 4 or more in a new terminal (Homebrew's `bin` folder, `/opt/homebrew/bin` on Apple silicon or `/usr/local/bin` on Intel, must come before `/bin` in your `PATH`).
 
-* bash version 4 or higher is required. Mac users can upgrade bash with [brew](https://brew.sh/) by running `brew install bash` and then make sure it is in PATH (`export PATH=/opt/homebrew/bin:$PATH`)
+* [fzf](https://github.com/junegunn/fzf), used by the menus and completion of the CLI (see its [installation instructions](https://github.com/junegunn/fzf#installation)).
 
 * python3 (3.9 or later, standard library only) is required by the support commands: `playground analyze`, `schema diff|history|import|compare`, `connector-plugin`, `connector diagnose`, `streams status`, `topic check-format`. macOS has it with the Xcode Command Line Tools (`xcode-select --install`), Linux distributions ship it. `unzip` is also needed (`sudo apt-get install -y unzip` on a minimal Linux)
 
-* You also need internet connectivity when running connect tests as connectors are downloaded from Confluent Hub on the fly.
-
-> [!TIP]
-> Run [playground doctor](/playground%20doctor) first: it checks that the container engine is reachable, that compose v2 is there and that there is enough memory. It is the one command that still works when the engine is down.
+* Internet access when running connector examples: connectors are downloaded from Confluent Hub on the fly.
 
 > [!NOTE]
 > Third-party tools (`jq`, `aws`, `az`, `gcloud`…) run in Docker images when they are not on your host, so that the behaviour is the same everywhere. What must be on your host: bash 4+, fzf, python3, unzip, and the Confluent CLI for the Confluent Cloud examples. `gh` is only needed by [playground codespace](/playground%20codespace), and `sf` / `az` by `playground account salesforce setup` / `playground account azure setup`.
 
 > [!WARNING]
-> The playground is only tested on macOS (including with [M1 *arm64* chip](/how-to-use?id=%f0%9f%a7%91%f0%9f%92%bb-m1-chip-arm64-mac-support)) and Linux (Ubuntu and Amazon Linux) . It is not tested on Windows, but it should be working with WSL.
-
-> [!ATTENTION]
-> On MacOS, the [Docker memory](https://docs.docker.com/desktop/settings-and-maintenance/settings/#resources) should be set to at least 8Gb.
-
-#### 🧑‍💻 M1 chip (ARM64) Mac Support
-
-Examples in the playground have been tested on best effort (since it is a manual process) on M1 Mac (arm64).
-
-arm64 support results are displayed in **[Content](/content.md)** section:
-
-Example:
-
-![arm64_results](./images/arm64_results.jpg)
-
-The badges are:
-
-* ![arm64](https://img.shields.io/badge/arm64-native%20support-green): example works natively.
-* ![arm64](https://img.shields.io/badge/arm64-not%20working-red): example **cannot work at all**. You will need to run it using AWS EC2 instance, see [playground ec2](/playground%20ec2) CLI command, or in your browser with [GitHub Codespaces](/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces) (x86_64)
-* ![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange): example is working but emulation is required. 
-
-Docker Desktop now provides **Rosetta 2** virtualization feature, see detailed steps [here](https://levelup.gitconnected.com/docker-on-apple-silicon-mac-how-to-run-x86-containers-with-rosetta-2-4a679913a0d5) on how to enable it, basically, you need to enable this:
-
-![rosetta](./images/arm64_rosetta.jpg)
+> The playground is tested on macOS (Apple silicon) and Linux (Ubuntu and Amazon Linux). It is not tested on Windows: use WSL 2, which the [one command install](/how-to-use?id=%e2%9a%a1-install-in-one-command) supports.
 
 #### 🔽 Clone the repository
 
@@ -165,21 +139,43 @@ git clone --depth 1 https://github.com/vdesabou/kafka-docker-playground.git
 ```
 
 > [!TIP]
-> Specifying `--depth 1` only get the latest version of the playground, which reduces a lot the size of the download.
+> `--depth 1` only gets the latest version of the playground, which makes the download much smaller.
 
-### ☁️ AWS EC2 instance (using Cloud Formation)
+#### 🚜 Set up the CLI
 
-If you want to run the playground on an EC2 instance, you can use the AWS Cloud Formation [template](https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml).
+Add `scripts/cli` to your `PATH` and source the completion of your shell, in `~/.zshrc` or `~/.bashrc` (details in the [CLI Setup](/cli?id=%f0%9f%9a%9c-setup)):
 
-More details [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/cloudformation).
+```bash
+export PATH="/path/to/kafka-docker-playground/scripts/cli:$PATH"
+source /path/to/kafka-docker-playground/scripts/cli/completions.zsh     # or completions.bash
+```
 
-### ✨ AWS EC2 playground ec2 command
+Then open a new terminal and run [playground doctor](/playground%20doctor): it checks that the container engine is reachable, that compose v2 is there and that there is enough memory. It is the one command that still works when the engine is down.
+
+#### 🍏 Apple silicon (ARM64)
+
+Examples are tested on Apple silicon on a best-effort basis (it is a manual process). The result is the arm64 badge of each example in the **[Content](/content.md)** page:
+
+![arm64_results](./images/arm64_results.jpg)
+
+* ![arm64](https://img.shields.io/badge/arm64-native%20support-green): the example works natively.
+* ![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange): the example works, with amd64 emulation.
+* ![arm64](https://img.shields.io/badge/arm64-not%20working-red): the example **cannot work at all** on Apple silicon: run it on an [AWS EC2 instance](/how-to-use?id=%e2%98%81%ef%b8%8f-on-an-aws-ec2-instance) or in your browser with [GitHub Codespaces](/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces) (both x86_64).
+
+Emulation is much faster and more reliable with Rosetta 2 than with QEMU, under which some amd64-only images (SQL Server, Oracle, Db2…) hang or crash:
+
+* Docker Desktop: **Use Rosetta for x86_64/amd64 emulation on Apple Silicon** in Settings > General (on by default in recent versions).
+* Podman: `rosetta = true` in the `[machine]` table of `~/.config/containers/containers.conf`, before the machine starts. The [one command install](/how-to-use?id=%e2%9a%a1-install-in-one-command) sets it, and installs Rosetta 2 when it is missing (`softwareupdate --install-rosetta --agree-to-license`).
+
+### ☁️ On an AWS EC2 instance
 
 The [playground ec2](/playground%20ec2) CLI command creates and manages AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground, and opens them directly in Visual Studio Code using Remote Development (over SSH).
 
 It is what you want for an example that needs far more CPU or memory than you have, one that must run for hours, or one that does not work on arm64.
 
 Main subcommands are `create`, `open`, `list`, `status`, `start`, `stop`, `delete`, `allow-my-ip`, `sync-repro-folder` and `push-secrets`: check [playground ec2](/playground%20ec2) for the full reference. [playground ec2 auto-stop](/playground%20ec2%20auto-stop) `enable` stops, every day at `--time` (default `20:00`), your instances still running and idle (CPU under 5% for `--idle-minutes`, default 60; tag `playground-keep-running=true` to keep one).
+
+Without the CLI, you can deploy the [Cloud Formation template](https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.yml) that it uses yourself.
 
 ## 🦭 Using Podman instead of Docker
 
@@ -195,8 +191,7 @@ and adapts on its own:
   locally, like the connect image with its extra tools, are used and kept
 - bind mounts of `/tmp` use the resolved path, `/private/tmp` on macOS, which a Podman machine shares
 
-Run `playground doctor` to check that your engine is ready. It is the one command that still works
-when the engine is down.
+Run `playground doctor` to check that your engine is ready:
 
 ```
 $ playground doctor
@@ -717,6 +712,21 @@ Selecting options is really easy with [playground run](/playground%20run) menu:
 > [!NOTE]
 > The `ENABLE_*` environment variables below (`ENABLE_KSQLDB=1`, `ENABLE_CONTROL_CENTER=1`…) are the same as the matching `--enable-*` option: when one is exported in your shell, [playground run](/playground%20run) prints `🌱 ENABLE_CONTROL_CENTER is set in your shell: same as --enable-control-center` and adds the option to the run, so that `playground history`, `playground re-run` and the run log replay it. Unset it (`unset ENABLE_CONTROL_CENTER`) to stop enabling the component on every run.
 
+| Option | Environment variable | What it adds | Reachable at |
+| --- | --- | --- | --- |
+| [`--enable-ksqldb`](/how-to-use?id=🚀-enabling-ksqldb) | `ENABLE_KSQLDB` | `ksqldb-server` and `ksqldb-cli` | http://127.0.0.1:8088 |
+| [`--enable-control-center`](/how-to-use?id=💠-enabling-control-center) | `ENABLE_CONTROL_CENTER` | Control Center Next Gen | http://127.0.0.1:9021 |
+| `--enable-legacy-control-center` | `ENABLE_LEGACY_CONTROL_CENTER` | legacy Control Center (CP < 8) | http://127.0.0.1:9021 |
+| [`--enable-conduktor`](/how-to-use?id=🐺-enabling-conduktor-platform) | `ENABLE_CONDUKTOR` | Conduktor Platform | http://127.0.0.1:8080/console |
+| [`--enable-rest-proxy`](/how-to-use?id=🧲-enabling-rest-proxy) | `ENABLE_RESTPROXY` | `rest-proxy` | http://127.0.0.1:8082 |
+| [`--enable-multiple-brokers`](/how-to-use?id=🔢-enabling-multiple-brokers) | `ENABLE_KAFKA_NODES` | `broker2`, `broker3` | |
+| [`--enable-multiple-controllers`](/how-to-use?id=🗳️-enabling-multiple-controllers) | `ENABLE_CONTROLLER_NODES` | `controller2`, `controller3` (or `zookeeper2`, `zookeeper3`) | |
+| [`--enable-multiple-connect-workers`](/how-to-use?id=🥉-enabling-multiple-connect-workers) | `ENABLE_CONNECT_NODES` | `connect2`, `connect3` | |
+| [`--enable-sql-datagen`](/how-to-use?id=🌀-enabling-sql-datagen) | | a SQL load after the example | |
+| [`--enable-jmx-grafana`](/how-to-use?id=📊-enabling-jmx-grafana) | `ENABLE_JMX_GRAFANA` | Grafana, Prometheus, Pyroscope | http://127.0.0.1:3000 |
+| [`--enable-kcat`](/how-to-use?id=🐈‍⬛-enabling-kcat) | `ENABLE_KCAT` | `kcat` | |
+| [`--enable-flink`](/how-to-use?id=🐹-enabling-flink) | `ENABLE_FLINK` | Flink job manager and task manager | http://127.0.0.1:18081 |
+
 ### 🚀 Enabling ksqlDB
 
 By default, `ksqldb-server` and `ksqldb-cli` containers (see [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml)) are not started for every test.
@@ -768,7 +778,9 @@ Conduktor is reachable at [http://127.0.0.1:8080/console](http://127.0.0.1:8080/
 
 By default, `rest-proxy` container is not started for every test.
 
-You can enable this with `--enable-rest-proxy` option of [playground run](/playground%20run).
+You can enable this with `--enable-rest-proxy` option of [playground run](/playground%20run) or by setting environment variable `ENABLE_RESTPROXY=1` in your shell.
+
+REST Proxy is reachable at [http://127.0.0.1:8082](http://127.0.0.1:8082).
 
 ### 🔢 Enabling multiple brokers
 
@@ -800,6 +812,9 @@ For the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, M
 ### 🎯 Starting only some services
 
 Set environment variable `START_SERVICES` with a space-separated list of services (example: `START_SERVICES="broker schema-registry connect"`) to start only those services of the environment.
+
+> [!WARNING]
+> The example is not changed: when it uses a service that is not started (for example Schema Registry with an Avro converter), it fails.
 
 ### 📊 Enabling JMX Grafana
 
