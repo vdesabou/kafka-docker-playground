@@ -351,8 +351,7 @@ playground cloud-resources aws costs|costs-history
   [reproduction models](/deep-dive-reproduction-models.md) (what `sync-repro-folder` moves),
   [Confluent for Kubernetes](/deep-dive-cfk.md) (the memory-hungry environment), [fully managed connectors](/deep-dive-fully-managed.md)
   (costs of Confluent Cloud)
-- 📖 [AWS EC2 instance (using Cloud Formation)](/how-to-use?id=☁️-aws-ec2-instance-using-cloud-formation) and
-  [AWS EC2 playground ec2 command](/how-to-use?id=✨-aws-ec2-playground-ec2-command) in How to Use
+- 📖 [On an AWS EC2 instance](/how-to-use?id=☁️-on-an-aws-ec2-instance) in How to Use
 - 🧠 CLI reference: [playground ec2](/playground%20ec2), [playground ec2 create](/playground%20ec2%20create),
   [playground ec2 open](/playground%20ec2%20open), [playground ec2 sync-repro-folder](/playground%20ec2%20sync-repro-folder),
   [playground ec2 push-secrets](/playground%20ec2%20push-secrets), [playground ec2 delete](/playground%20ec2%20delete),
