@@ -39,7 +39,7 @@ playground run -f fully-managed-snowflake-sink.sh
 3. With `snowsql`, creates a database, a role, a warehouse and a user (with the public key), unique to the script. The Iceberg variants also create the Iceberg table `TEST_TABLE` (and, for the external volume variant, the S3 bucket, IAM role, storage integration and external volume).
 4. Produces Avro records (`u_name`, `u_price`, `u_quantity`) to topic `test_table`.
 5. Creates the fully managed `SnowflakeSink` connector and waits for the lag to reach zero with `playground connector show-lag`.
-6. Queries `TEST_TABLE` with `snowsql` as the connector user to verify the records, every 15 seconds for up to 3 minutes (a lag of zero doesn't mean the rows are already visible: Snowpipe and Snowpipe Streaming load asynchronously).
+6. Polls `SELECT * FROM <db>.PUBLIC.TEST_TABLE` with `snowsql` as the connector user until rows are found (`SNOWFLAKE_CHECK_MAX_ATTEMPTS`, default 24, every `SNOWFLAKE_CHECK_SLEEP_SECONDS`, default 5), like the self-managed examples: a lag of zero doesn't mean the rows are already visible, Snowpipe and Snowpipe Streaming load asynchronously.
 7. Asks whether to delete the connector.
 
 ## Register a trial account

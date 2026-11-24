@@ -416,12 +416,17 @@ wait_for_ccloud_connector_up $connector_name 180
 playground connector show-lag --max-wait 120 --connector $connector_name
 
 log "Confirm that the messages were delivered to the Snowflake Iceberg table (logged as $PLAYGROUND_USER user)"
-# a lag of 0 does not guarantee the rows are already visible in the Iceberg table: poll the table
-MAX_WAIT=180
-CUR_WAIT=0
-while true
-do
-docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
+# a lag of 0 doesn't mean the rows are already visible (Snowpipe and Snowpipe Streaming load asynchronously): poll
+# the table, like the self-managed examples in connect/connect-snowflake-sink
+set +e
+max_attempts=${SNOWFLAKE_CHECK_MAX_ATTEMPTS:-24}
+sleep_seconds=${SNOWFLAKE_CHECK_SLEEP_SECONDS:-5}
+attempt=1
+found=0
+
+while [ $attempt -le $max_attempts ]; do
+  log "Checking Snowflake table for rows (attempt $attempt/$max_attempts)"
+  docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
 USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
@@ -429,16 +434,24 @@ USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 SHOW ICEBERG TABLES IN SCHEMA $PLAYGROUND_DB.PUBLIC;
 EOF
-    if grep -qi "u_name" /tmp/result.log || [[ "$CUR_WAIT" -ge "$MAX_WAIT" ]]
-    then
-        break
-    fi
-    log "⏳ no row in TEST_TABLE yet, retrying in 15 seconds ($CUR_WAIT/$MAX_WAIT seconds)"
-    sleep 15
-    CUR_WAIT=$(( CUR_WAIT + 15 ))
+  cat /tmp/result.log
+
+  if grep -qi "u_name" /tmp/result.log; then
+    found=1
+    break
+  fi
+
+  attempt=$((attempt + 1))
+  if [ $attempt -le $max_attempts ]; then
+    sleep $sleep_seconds
+  fi
 done
-cat /tmp/result.log
-grep -i "u_name" /tmp/result.log
+
+if [ $found -ne 1 ]; then
+  logerror "Timed out waiting for rows in $PLAYGROUND_DB.PUBLIC.TEST_TABLE after $max_attempts attempts"
+  exit 1
+fi
+set -e
 
 log "Validating Iceberg parquet files directly from S3..."
 PARQUET_FILE=$(aws s3 ls s3://${S3_BUCKET_NAME}/ --recursive | grep "\.parquet" | head -1 | awk '{print $4}')
