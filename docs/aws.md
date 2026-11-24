@@ -169,7 +169,7 @@ Exit code 1 means the keys don't work.
 
 ## ☁️ The other accounts
 
-[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+[Accounts of the examples](/how-to-use?id=☁️-accounts-of-the-examples): the `setup` and `check` commands of every provider, and how they behave.
 
 ## 🧠 CLI reference
 

@@ -9,7 +9,7 @@ help: |-
   Nothing to configure in PagerDuty: these examples only need the values,
   in the right form, still valid (keys get revoked, services deleted).
 
-  📖 https://kafka-docker-playground.io/#/accounts
+  📖 https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples
 commands:
 - name: setup
   help: |-
