@@ -40,7 +40,7 @@ playground run -f fully-managed-salesforce-platform-events-source.sh
 1. Bootstraps the Confluent Cloud environment, deletes topic `sfdc-platform-events-from-source` and starts an `sfdx-cli` container.
 2. Creates the fully managed `SalesforcePlatformEventSource` connector on `MyPlatformEvent__e` (`salesforce.initial.start=latest`).
 3. Logs in with the sfdx CLI (JWT) and publishes 2 platform events (`event.apex`).
-4. Verifies the 2 records with `playground topic consume --topic sfdc-platform-events-from-source`.
+4. Verifies the 2 records with `playground topic consume --topic sfdc-platform-events-from-source`. If nothing arrives, it restarts the failed source task and tries once more with new data (another client of the same Salesforce user can end the session of the task, see #10589).
 5. Asks whether to delete the connector.
 
 ## Salesforce setup

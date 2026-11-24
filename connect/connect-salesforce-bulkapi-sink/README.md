@@ -50,7 +50,7 @@ playground run -f salesforce-bulkapi-sink-with-bulkapi-source.sh
 2. Logs in with the sfdx CLI (JWT) on account #1 (PushTopic variants: also re-creates the Lead PushTopic and creates the PushTopic source connector `salesforce-pushtopic-source`, topic `sfdc-pushtopic-leads`).
 3. Creates a random Lead in account #1.
 4. Bulk API variants: creates the Bulk API source connector `salesforce-bulkapi-source` (object `Lead`, topic `sfdc-bulkapi-leads`).
-5. Verifies that the Lead is received in the source topic with `playground topic consume`.
+5. Verifies that the Lead is received in the source topic with `playground topic consume`. PushTopic variants: if nothing arrives, the source task is restarted (if FAILED) and the step runs once more with a new Lead, because another client of the same Salesforce user can end the session of the task, which then misses the event (#10589).
 6. Creates the Bulk API sink connector `salesforce-bulkapi-sink` on account #2 (object `Lead`, `salesforce.ignore.fields=CleanStatus`, `salesforce.ignore.reference.fields=true`, results reported to topics `success-responses` and `error-responses`).
 7. Verifies that topic `success-responses` receives a record and that `error-responses` is empty (PushTopic variants: that it has no error for the Lead of the run, since the PushTopic also sends the Leads created by other jobs in the same org), then queries account #2 with the sfdx CLI to check that the Lead was created.
 8. Deletes the test Leads (and the PushTopic) on exit.

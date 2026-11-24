@@ -39,7 +39,7 @@ playground run -f salesforce-cdc-source.sh
 1. Starts the environment with an `sfdx-cli` container and the keystore mounted in `connect`.
 2. Creates the Salesforce CDC Source connector on channel `ContactChangeEvent`, writing to topic `sfdc-cdc-contacts` (JSON converter), and waits for the subscription.
 3. Logs in with the sfdx CLI (JWT) and creates a random Contact in Salesforce.
-4. Verifies the change event is received with `playground topic consume --topic sfdc-cdc-contacts`.
+4. Verifies the change event is received with `playground topic consume --topic sfdc-cdc-contacts`. If nothing arrives, the source task is restarted (if FAILED) and the step runs once more with new data: another client of the same Salesforce user can end the session of the task, which then misses the event (#10589).
 5. Deletes the Contact created by the test on exit.
 
 ## Automated setup

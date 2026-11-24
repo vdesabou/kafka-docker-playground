@@ -39,8 +39,8 @@ playground run -f fully-managed-salesforce-v2-source.sh
 1. Bootstraps the Confluent Cloud environment, recreates topic `salesforce.Lead` and starts an `sfdx-cli` container.
 2. Creates the fully managed `SalesforceSourceV2` connector on SObject `Lead` with `since` set to today.
 3. Logs in with the sfdx CLI (JWT) and creates a random Lead.
-4. Verifies the record with `playground topic consume --topic salesforce.Lead`.
-5. Deletes the Lead created by the test on exit, and asks whether to delete the connector.
+4. Verifies the record with `playground topic consume --topic salesforce.Lead`. If nothing arrives, it restarts the failed source task and tries once more with new data (another client of the same Salesforce user can end the session of the task, see #10589).
+5. Deletes the Leads created by the test on exit, and asks whether to delete the connector.
 
 ## Salesforce setup
 

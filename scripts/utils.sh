@@ -482,6 +482,48 @@ function salesforce_sfdx_relogin() {
     --command "sfdx auth:jwt:grant --username \"$u\" --client-id \"$k\" --jwt-key-file $SALESFORCE_SFDX_JWT_KEY_FILE --instance-url \"$i\"" --shell sh < /dev/null
 }
 
+# Insert data into Salesforce, then check that a streaming source connector (CDC, PushTopic,
+# Platform Events, Source V2) delivered it to Kafka. If nothing arrives, restart the
+# connector's FAILED task and try once more with new data.
+#
+# Every Salesforce job of a CI run uses the same Salesforce user and External Client App. A
+# Bulk API connector (connect/connect-salesforce-bulkapi-*) calls SOAP logout() at the end of
+# every validation, and that ends the session shared by every JWT client of the user. The
+# streaming task then gets META_DISCONNECT, its single re-authentication can fail with
+# 401 INVALID_SESSION_ID, and the task dies. A self-managed task stays FAILED; Confluent Cloud
+# restarts a fully managed one about a minute later from the latest replayId. Either way the
+# event of the data inserted in between is lost for good (#10589). A connector that never
+# delivers anything still fails, on the second attempt.
+#
+# <insert function> is a function of the calling script that inserts new data on each call
+# (new random names) and registers it for the cleanup of its EXIT trap. The flags after it go
+# to 'playground topic consume'. SALESFORCE_VERIFY_DELAY (default 10) is the number of seconds
+# to wait between the insert and the consume.
+#
+#   salesforce_insert_and_verify salesforce-cdc-source add_contact \
+#     --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
+function salesforce_insert_and_verify() {
+  local connector="$1" insert_function="$2"
+  shift 2
+
+  "$insert_function"
+  sleep "${SALESFORCE_VERIFY_DELAY:-10}"
+  if playground topic consume "$@"
+  then
+    return 0
+  fi
+
+  logwarn "⚠️ the data inserted into Salesforce did not reach Kafka: another client of the same Salesforce user may have ended the session of connector $connector (see #10589), restarting its FAILED task and trying again with new data"
+  playground connector status --connector "$connector" || true
+  playground connector restart --connector "$connector" --only-failed || true
+  playground connector wait --connector "$connector" --max-wait 180
+  sleep 10
+
+  "$insert_function"
+  sleep "${SALESFORCE_VERIFY_DELAY:-10}"
+  playground topic consume "$@"
+}
+
 # Delete the records a test created, in one org. Best effort: warns and never changes the
 # test's exit status, so a cleanup problem cannot mask or invent a test failure.
 #

@@ -40,8 +40,8 @@ playground run -f fully-managed-salesforce-cdc-source.sh
 1. Bootstraps the Confluent Cloud environment, recreates topic `sfdc-cdc-contacts` and starts an `sfdx-cli` container.
 2. Creates the fully managed `SalesforceCdcSource` connector on `ContactChangeEvent`.
 3. Logs in with the sfdx CLI (JWT) and creates a random Contact.
-4. Verifies the change event with `playground topic consume --topic sfdc-cdc-contacts`.
-5. Deletes the Contact created by the test on exit, and asks whether to delete the connector.
+4. Verifies the change event with `playground topic consume --topic sfdc-cdc-contacts`. If none arrives, it restarts the failed task and tries once more with a new Contact: another client of the same Salesforce user (for example a Bulk API connector, whose validation calls SOAP `logout()`) can invalidate the session of the task, which then misses the change event.
+5. Deletes the Contacts created by the test on exit, and asks whether to delete the connector.
 
 ## Salesforce setup
 

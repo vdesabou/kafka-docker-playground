@@ -44,7 +44,7 @@ playground run -f salesforce-pushtopic-source.sh
 2. Logs in with the sfdx CLI (JWT), deletes the PushTopic if it already exists, and creates it on `Lead`.
 3. Creates the Salesforce PushTopics Source connector (object `Lead`), writing to topic `sfdc-pushtopic-leads` (JSON converter), and waits for the subscription.
 4. Creates a random Lead in Salesforce.
-5. Verifies the record is received with `playground topic consume --topic sfdc-pushtopic-leads`.
+5. Verifies the record is received with `playground topic consume --topic sfdc-pushtopic-leads`. If nothing arrives, the source task is restarted (if FAILED) and the step runs once more with new data: another client of the same Salesforce user can end the session of the task, which then misses the event (#10589).
 6. Deletes the Lead created by the test on exit.
 
 ## Find your security token

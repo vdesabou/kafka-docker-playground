@@ -79,9 +79,6 @@ fi
 # unique per script and environment, see salesforce_push_topic_name
 PUSH_TOPICS_NAME=$(salesforce_push_topic_name bsptLead)
 
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-
 # no WHERE clause in the PushTopic query: with WHERE FirstName = '...' Salesforce sent no event (#9445).
 # Leads of other CI jobs sharing the org can reach the sink, see salesforce_assert_no_error_for_lead below
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
@@ -167,27 +164,36 @@ EOF
 
 salesforce_wait_for_subscription "$PUSH_TOPICS_NAME"
 
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
-
 # Remove the records this test created, so repeated runs do not accumulate data in a
-# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# shared Salesforce org. Only the exact records created below are matched. An EXIT trap,
 # so cleanup also happens when an assertion fails.
+SALESFORCE_RECORDS_TO_CLEANUP=()
+SALESFORCE_RECORDS_TO_CLEANUP_ACCOUNT2=()
 cleanup_salesforce_test_data() {
   set +e
   salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
-    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'" \
+    "${SALESFORCE_RECORDS_TO_CLEANUP[@]}" \
     "PushTopic:Name = '$PUSH_TOPICS_NAME'"
-  salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
-    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
+  if [ ${#SALESFORCE_RECORDS_TO_CLEANUP_ACCOUNT2[@]} -gt 0 ]
+  then
+    salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
+      "${SALESFORCE_RECORDS_TO_CLEANUP_ACCOUNT2[@]}"
+  fi
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
 
-sleep 30
+add_lead() {
+  LEAD_FIRSTNAME=John_$RANDOM
+  LEAD_LASTNAME=Doe_$RANDOM
+  log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+  SALESFORCE_RECORDS_TO_CLEANUP+=("Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'")
+  SALESFORCE_RECORDS_TO_CLEANUP_ACCOUNT2+=("Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'")
+  salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+}
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
-playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
+SALESFORCE_VERIFY_DELAY=30 salesforce_insert_and_verify salesforce-pushtopic-source add_lead --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
 
 
 log "Creating Salesforce Bulk API Sink connector"

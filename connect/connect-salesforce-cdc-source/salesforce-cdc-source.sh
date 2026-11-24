@@ -93,25 +93,28 @@ salesforce_wait_for_subscription ContactChangeEvent
 log "Login with sfdx CLI"
 salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
-# Captured in variables (rather than inlined) so the cleanup below can match the
-# exact Contact this run created.
-CONTACT_FIRSTNAME=John_$RANDOM
-CONTACT_LASTNAME=Doe_$RANDOM
-log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
-salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
-
 # Remove the records this test created, so repeated runs do not accumulate data in a
-# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# shared Salesforce org. Only the exact records created below are matched. An EXIT trap,
 # so cleanup also happens when an assertion fails.
+SALESFORCE_RECORDS_TO_CLEANUP=()
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
-    "Contact:FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'"
+  if [ ${#SALESFORCE_RECORDS_TO_CLEANUP[@]} -gt 0 ]
+  then
+    salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
+      "${SALESFORCE_RECORDS_TO_CLEANUP[@]}"
+  fi
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
 
-sleep 10
+add_contact() {
+  CONTACT_FIRSTNAME=John_$RANDOM
+  CONTACT_LASTNAME=Doe_$RANDOM
+  log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
+  SALESFORCE_RECORDS_TO_CLEANUP+=("Contact:FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'")
+  salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
+}
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 180
+salesforce_insert_and_verify salesforce-cdc-source add_contact --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 180

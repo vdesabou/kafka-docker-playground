@@ -43,7 +43,7 @@ playground run -f salesforce-platform-events-sink.sh
 
 1. Creates a Salesforce Platform Events Source connector on `MyPlatformEvent__e`, writing to topic `sfdc-platform-events`.
 2. Logs in with the sfdx CLI (JWT) and publishes 2 platform events with `event.apex`.
-3. Verifies the events are received in `sfdc-platform-events`, then pauses the source connector (to avoid a publish loop).
+3. Verifies the events are received in `sfdc-platform-events`, then pauses the source connector (to avoid a publish loop). If nothing arrives, the source task is restarted (if FAILED) and the step runs once more with new data: another client of the same Salesforce user can end the session of the task, which then misses the event (#10589).
 4. Creates the Salesforce Platform Events Sink connector reading `sfdc-platform-events` and publishing back to `MyPlatformEvent__e`, with a `MaskField` SMT on `Message__c`.
 5. Verifies 2 records in the `success-responses` reporter topic and that `error-responses` is empty.
 

@@ -83,27 +83,32 @@ wait_for_ccloud_connector_up $connector_name 180
 log "Login with sfdx CLI"
 salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
-
 # Remove the records this test created, so repeated runs do not accumulate data in a
-# shared Salesforce org. Only the exact records created above are matched (stop.sh used to
+# shared Salesforce org. Only the exact records created below are matched (stop.sh used to
 # bulk-delete every Lead, which wiped the records of tests running concurrently). An EXIT
 # trap, so cleanup also happens when an assertion fails.
+LEADS_TO_CLEANUP=()
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
-    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
+  if [ ${#LEADS_TO_CLEANUP[@]} -gt 0 ]
+  then
+    salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
+      "${LEADS_TO_CLEANUP[@]}"
+  fi
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
 
-sleep 10
+add_lead() {
+  LEAD_FIRSTNAME=John_$RANDOM
+  LEAD_LASTNAME=Doe_$RANDOM
+  log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+  LEADS_TO_CLEANUP+=("Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'")
+  docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+}
 
-log "Verify we have received the data in salesforce.Lead topic"
-playground topic consume --topic salesforce.Lead --min-expected-messages 1 --timeout 60
+log "Add a Lead and verify we have received the data in salesforce.Lead topic"
+salesforce_insert_and_verify $connector_name add_lead --topic salesforce.Lead --min-expected-messages 1 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

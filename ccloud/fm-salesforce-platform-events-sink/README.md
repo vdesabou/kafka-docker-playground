@@ -39,7 +39,7 @@ playground run -f fully-managed-salesforce-platform-events-sink.sh
 
 1. Bootstraps the Confluent Cloud environment, deletes topic `sfdc-platform-events` and starts an `sfdx-cli` container.
 2. Creates the fully managed `SalesforcePlatformEventSource` connector on `MyPlatformEvent__e`, writing to `sfdc-platform-events`.
-3. Publishes 2 platform events with the sfdx CLI (`event.apex`) and verifies them with `playground topic consume`.
+3. Publishes 2 platform events with the sfdx CLI (`event.apex`) and verifies them with `playground topic consume`. If nothing arrives, it restarts the failed source task and tries once more with new data (another client of the same Salesforce user can end the session of the task, see #10589).
 4. Pauses the source connector, so it does not pick up the events published by the sink (infinite loop).
 5. Creates the fully managed `SalesforcePlatformEventSink` connector reading `sfdc-platform-events`.
 6. Verifies 2 records in the `success-<connector id>` topic.
