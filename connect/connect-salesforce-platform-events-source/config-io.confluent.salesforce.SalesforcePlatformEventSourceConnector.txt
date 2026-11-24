@@ -238,6 +238,15 @@ Specify the initial starting point for the connector for replaying events. Use `
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 max.buffered.records
+
+Maximum number of Salesforce events buffered in memory per task. When reached, the connector stops requesting events until buffered events are written to |ak|.
+
+	 - Type: INT
+	 - Default: 4096
+	 - Importance: LOW
+	 - Required: false
+
 🔘 salesforce.platform.event.name
 
 The Salesforce platform event name to subscribe to.
