@@ -180,6 +180,12 @@ function show_status () {
     # the OOMKilled flag is cleared when the restart policy starts the container again: the oom events of docker stay
     read -r created restarts <<< "$(docker inspect -f '{{.Created}} {{.RestartCount}}' "$c")"
     oom=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --filter event=oom --format '{{.Action}}' 2> /dev/null | grep -c oom || true)
+    if [ "${oom:-0}" -eq 0 ] && [ "$(docker inspect -f '{{.State.OOMKilled}}' "$c" 2> /dev/null)" == "true" ]
+    then
+        # podman emits no oom event: one die event with exit code 137 per kill, and OOMKilled stays true after a restart
+        oom=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --filter event=die --format '{{index .Actor.Attributes "exitCode"}}' 2> /dev/null | grep -c '^137$' || true)
+        [ "${oom:-0}" -gt 0 ] || oom=1
+    fi
     if [ "${oom:-0}" -gt 0 ]
     then
         logwarn "💀 $c: $oom OOM kill(s) since it was created (the kernel killed a process above the memory limit), $restarts restart(s)"
@@ -220,8 +226,12 @@ do
     status=$(docker inspect -f '{{.State.Status}}' "$c" 2> /dev/null)
     if [[ "$status" != "running" && "$status" != "restarting" ]]
     then
-        logerror "❌ container $c is not running${status:+ ($status)}"
-        exit 1
+        # exited: OOM killed and not (yet) started again by the restart policy (podman), the status and --reset still work
+        if [[ "$status" != "exited" || -n "$cpus" || -n "$memory" || -n "$fill_disk" ]]
+        then
+            logerror "❌ container $c is not running${status:+ ($status)}"
+            exit 1
+        fi
     fi
 done
 
@@ -274,6 +284,15 @@ then
         fi
         rm -f "$state_dir/$c"
         log "🟢 $c is back to its original limits"
+        if [[ "$(docker inspect -f '{{.State.Status}}' "$c" 2> /dev/null)" == "exited" ]]
+        then
+            log "▶️ starting $c again (it exited with code $(docker inspect -f '{{.State.ExitCode}}' "$c"))"
+            if ! docker start "$c" > /dev/null
+            then
+                logerror "❌ could not start $c"
+                exit 1
+            fi
+        fi
         show_status "$c"
     done
     exit 0
