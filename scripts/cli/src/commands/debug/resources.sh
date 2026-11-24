@@ -180,9 +180,26 @@ function show_status () {
     # the OOMKilled flag is cleared when the restart policy starts the container again: the oom events of docker stay
     read -r created restarts <<< "$(docker inspect -f '{{.Created}} {{.RestartCount}}' "$c")"
     oom=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --filter event=oom --format '{{.Action}}' 2> /dev/null | grep -c oom || true)
+    if [ "${oom:-0}" -eq 0 ] && [ "$(docker inspect -f '{{.State.OOMKilled}}' "$c" 2> /dev/null)" == "true" ]
+    then
+        # podman emits no oom event: one die event with exit code 137 per kill, and OOMKilled stays true after a restart
+        oom=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --filter event=die --format '{{index .Actor.Attributes "exitCode"}}' 2> /dev/null | grep -c '^137$' || true)
+        [ "${oom:-0}" -gt 0 ] || oom=1
+    fi
     if [ "${oom:-0}" -gt 0 ]
     then
         logwarn "💀 $c: $oom OOM kill(s) since it was created (the kernel killed a process above the memory limit), $restarts restart(s)"
+    elif [[ -f "$state_dir/$c" && "$(state_get "$c" id)" == "$(docker inspect -f '{{.Id}}' "$c")" ]] && [ "$memory_limit" -gt 0 ] && [ "$memory_limit" != "$(state_get "$c" original | awk '{ print $1 }')" ]
+    then
+        # podman 5.x (crun, systemd cgroups) sets neither OOMKilled nor an oom event when the kernel OOM kills the
+        # process: a die with exit code 137 that no kill event explains, under the memory limit set here, is one
+        local probable
+        probable=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --format '{{.Action}} {{index .Actor.Attributes "exitCode"}}' 2> /dev/null \
+            | awk '$1 == "kill" { killed = 1 } $1 == "die" { if ($2 == "137" && !killed) n++; killed = 0 } END { print n + 0 }')
+        if [ "${probable:-0}" -gt 0 ]
+        then
+            logwarn "💀 $c: $probable probable OOM kill(s) since it was created (exit code 137 with no kill event, under the $(human_bytes "$memory_limit") limit set by playground debug resources: the engine did not flag it as OOMKilled), $restarts restart(s)"
+        fi
     fi
     container_running "$c" || return 0
     fill_file=$(state_get "$c" fill_file)
@@ -220,8 +237,12 @@ do
     status=$(docker inspect -f '{{.State.Status}}' "$c" 2> /dev/null)
     if [[ "$status" != "running" && "$status" != "restarting" ]]
     then
-        logerror "❌ container $c is not running${status:+ ($status)}"
-        exit 1
+        # exited: OOM killed and not (yet) started again by the restart policy (podman), the status and --reset still work
+        if [[ "$status" != "exited" || -n "$cpus" || -n "$memory" || -n "$fill_disk" ]]
+        then
+            logerror "❌ container $c is not running${status:+ ($status)}"
+            exit 1
+        fi
     fi
 done
 
@@ -274,6 +295,15 @@ then
         fi
         rm -f "$state_dir/$c"
         log "🟢 $c is back to its original limits"
+        if [[ "$(docker inspect -f '{{.State.Status}}' "$c" 2> /dev/null)" == "exited" ]]
+        then
+            log "▶️ starting $c again (it exited with code $(docker inspect -f '{{.State.ExitCode}}' "$c"))"
+            if ! docker start "$c" > /dev/null
+            then
+                logerror "❌ could not start $c"
+                exit 1
+            fi
+        fi
         show_status "$c"
     done
     exit 0
