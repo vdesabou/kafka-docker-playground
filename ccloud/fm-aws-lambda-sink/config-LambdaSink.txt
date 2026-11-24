@@ -252,7 +252,7 @@ Map of Kafka topics to Lambda functions. Format: comma-separated tuples, for exa
 
 🔘 aws.lambda.region
 
-The AWS region where the lambda is defined.
+The AWS region where the Lambda function is defined. Defaults to the region of your Kafka cluster. If your Kafka cluster runs on Google Cloud or Azure, or your function is in a different AWS region, set this to the AWS region of your function (for example, ``us-west-2``). Invoking a function in a different region or cloud than your Kafka cluster incurs data transfer charges.
 
 	 - Type: STRING
 	 - Default: ${kafka.region}
