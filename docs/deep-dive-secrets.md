@@ -19,6 +19,7 @@ and run.
 | store a credential (prompted, never in the shell history) | `playground secrets set <NAME>` |
 | what is stored, without printing values | `playground secrets list` (`--show-source` for the references) |
 | move an old `secret.properties` into the store | `playground secrets import --file <file> --shred` |
+| move the `export` lines of your `~/.zshrc` into the store | [🚚 Moving from exported variables](/deep-dive-secrets?id=🚚-moving-from-exported-variables) |
 | use 1Password | `playground secrets backend op` (+ `playground config set secrets.op-vault <vault>`) |
 | reuse a secret you already have, in any vault | `playground secrets link <NAME> op://<vault>/<item>/<field>` |
 | one set of credentials per support case | `playground secrets profile case-123456` |
@@ -183,6 +184,58 @@ terminal**: until then, the exported values keep winning (3 things to remember, 
 `unset` removes the variable **and its value**: the keychain entry is deleted, the 1Password item archived. A linked
 reference is only forgotten, see the 1Password gotchas for the exception. `secrets edit` opens `secrets.ini` (`--plain`
 for `env.ini`) in your editor, to rename a variable or move it between profiles.
+
+### 🚚 Moving from exported variables
+
+If your credentials are `export` lines in `~/.zshrc` (or `~/.bashrc`, `~/.zprofile`) rather than a properties file,
+move them in one go. Nothing is lost on the way: the exports keep working until you remove them in step 3.
+
+1. **Pick the backend first** (`playground secrets backend`, see 4.): the import writes to the current one.
+2. **Dump, then import.** In a terminal where your exports are loaded, from the root of your clone, this writes the
+   variables the examples use (the ones they declare with the standard error string, plus those read by the shared
+   helpers: AWS, GCP, Azure, tunnels, Confluent Cloud clusters) and their current values to a file only you can
+   read, then imports it and deletes it:
+
+   ```bash
+   umask 077
+   names=$( {
+     grep -rhoE '[A-Z][A-Z0-9_]+ is not set\. Export it as environment variable' --include='*.sh' \
+       connect ccloud other ksqldb flink schema-registry rest-proxy multi-data-center environment | awk '{print $1}'
+     echo AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AZURE_REGION GCP_PROJECT GCP_KEYFILE_CONTENT \
+          NGROK_AUTH_TOKEN BORE_SERVER BORE_SECRET CONFLUENT_LICENSE \
+          AZ_USER AZ_PASS AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME \
+          CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET ENVIRONMENT SCHEMA_REGISTRY_CREDS
+     for p in "" AWS_ GCP_ AZURE_ AWS_DATABRICKS_; do echo ${p}CLUSTER_NAME ${p}CLUSTER_CLOUD ${p}CLUSTER_REGION ${p}CLUSTER_CREDS; done
+   } | tr ' ' '\n' | awk 'NF' | sort -u | tr '\n' ' ' )
+   NAMES="$names" bash -c '
+   for n in $NAMES; do
+     v="${!n:-}"
+     [ -n "$v" ] || continue
+     if [[ "$v" == *$'"'"'\n'"'"'* ]]; then echo "⚠️ $n has several lines, not written: store it by hand" >&2; continue; fi
+     printf "%s=%s\n" "$n" "$v"
+   done' > ~/kdp-migration.properties
+   cut -d= -f1 ~/kdp-migration.properties          # the names only, never the values
+   playground secrets import --file ~/kdp-migration.properties --shred
+   ```
+
+   `bash -c` makes it work the same from zsh. A personal variable that no example declares is not taken: add it to
+   the `echo` line. A value on several lines can't be stored (most often `GCP_KEYFILE_CONTENT` as pretty-printed
+   JSON): `playground account gcp setup --keyfile <keyfile.json>` stores the GCP key for you.
+3. **Remove the exports**: back up your shell profile, delete the `export` lines of the imported variables, and open
+   a new terminal (restart VS Code if you use its terminal): every shell already open keeps the old values, and they
+   win.
+4. **Verify**, in the new terminal: `playground secrets list` must show no `⚠️ overridden by the environment`, and,
+   with `names` from step 2, every variable you had must now come from the store:
+
+   ```bash
+   for n in $(echo $names); do playground secrets get "$n" > /dev/null 2>&1 && echo "✅ $n"; done
+   ```
+
+5. **Check the accounts**: `playground account <provider> check` for each provider you use, `setup` for what fails
+   (see [Accounts of the examples](/accounts.md)), and `playground account ccloud check` for your Confluent Cloud
+   environment, clusters and API keys (`playground account ccloud setup` creates your own set when you had none).
+   Anything without an `account` command is reported by `playground secrets check -f <example>` and stored with
+   `playground secrets set <NAME>`.
 
 ---
 
@@ -644,6 +697,7 @@ unset PLAYGROUND_SECRETS_DIR PLAYGROUND_SECRETS_BACKEND
 | the repro model reads a credential | declare it with the standard error string (`<NAME> is not set. Export it as environment variable or pass it as argument`) so that `run` loads it, never hardcode the value; `playground repro check` before committing |
 | you pasted a password while debugging | `playground secrets scan` (or `--staged`) before the commit |
 | copy-pasting parts of an example script into a terminal | `source <(playground secrets env -f <example>)` |
+| a colleague always kept their credentials as `export` lines in `~/.zshrc` | [🚚 Moving from exported variables](/deep-dive-secrets?id=🚚-moving-from-exported-variables): dump, `secrets import --shred`, remove the exports, `secrets list`, then `account <provider> check` and `account ccloud check` |
 | "it still uses the old password" after a rotation | `playground secrets list`: `⚠️ overridden by the environment` means an `export` wins |
 | run on an ec2 instance, or anywhere without Touch ID | service account (5.3), then `playground ec2 push-secrets` for an ec2 playground instance |
 
