@@ -232,7 +232,7 @@ move them in one go. Nothing is lost on the way: the exports keep working until 
    ```
 
 5. **Check the accounts**: `playground account <provider> check` for each provider you use, `setup` for what fails
-   (see [Accounts of the examples](/accounts.md)), and `playground account ccloud check` for your Confluent Cloud
+   (see [Accounts of the examples](/how-to-use?id=☁️-accounts-of-the-examples)), and `playground account ccloud check` for your Confluent Cloud
    environment, clusters and API keys (`playground account ccloud setup` creates your own set when you had none).
    Anything without an `account` command is reported by `playground secrets check -f <example>` and stored with
    `playground secrets set <NAME>`.
