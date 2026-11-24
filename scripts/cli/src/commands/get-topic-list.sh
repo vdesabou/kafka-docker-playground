@@ -7,11 +7,11 @@ then
   if [[ -n "$skip_internal_topics" ]]
   then
     set +e
-    confluent kafka topic list | awk '{if(NR>2) print $1}' | grep -v "^connect-" | grep -v "^_confluent-monitoring" | grep -v "^_confluent-command"
+    confluent kafka topic list $(get_ccloud_cluster_flags) | awk '{if(NR>2) print $1}' | grep -v "^connect-" | grep -v "^_confluent-monitoring" | grep -v "^_confluent-command"
     set -e
   else
     set +e
-    confluent kafka topic list | awk '{if(NR>2) print $1}'
+    confluent kafka topic list $(get_ccloud_cluster_flags) | awk '{if(NR>2) print $1}'
     set -e
   fi
 elif [[ "$environment" == cfk* ]]
