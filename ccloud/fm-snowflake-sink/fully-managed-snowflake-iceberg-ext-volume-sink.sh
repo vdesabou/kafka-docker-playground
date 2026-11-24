@@ -416,6 +416,11 @@ wait_for_ccloud_connector_up $connector_name 180
 playground connector show-lag --max-wait 120 --connector $connector_name
 
 log "Confirm that the messages were delivered to the Snowflake Iceberg table (logged as $PLAYGROUND_USER user)"
+# a lag of 0 does not guarantee the rows are already visible in the Iceberg table: poll the table
+MAX_WAIT=180
+CUR_WAIT=0
+while true
+do
 docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
 USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
@@ -424,6 +429,14 @@ USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 SHOW ICEBERG TABLES IN SCHEMA $PLAYGROUND_DB.PUBLIC;
 EOF
+    if grep -qi "u_name" /tmp/result.log || [[ "$CUR_WAIT" -ge "$MAX_WAIT" ]]
+    then
+        break
+    fi
+    log "⏳ no row in TEST_TABLE yet, retrying in 15 seconds ($CUR_WAIT/$MAX_WAIT seconds)"
+    sleep 15
+    CUR_WAIT=$(( CUR_WAIT + 15 ))
+done
 cat /tmp/result.log
 grep -i "u_name" /tmp/result.log
 
