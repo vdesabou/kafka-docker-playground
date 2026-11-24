@@ -68,6 +68,17 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
+🔘 couchbase.enable.tls
+
+Use secure connection to Couchbase Server.
+
+If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.hostname.verification
 
 Set this to `false` to disable TLS hostname verification for Couchbase connections. Less secure, but might be required if for some reason you can't issue a certificate whose Subject Alternative Names match the hostname used to connect to the server. Only disable if you understand the impact and can accept the risks.
@@ -129,17 +140,6 @@ Note that this config is considered advanced, please only customize the cipher l
 
 	 - Type: LIST
 	 - Default: 
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.enable.tls
-
-Use secure connection to Couchbase Server.
-
-If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
-
-	 - Type: BOOLEAN
-	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 

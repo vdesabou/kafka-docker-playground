@@ -11960,7 +11960,9 @@ function example_account_provider () {
     *clickhouse*) echo "clickhouse" ;;
     *pagerduty*) echo "pagerduty" ;;
     *mongodb-atlas*) echo "mongodb-atlas" ;;
-    *couchbase*) [[ "$rel" == ccloud/* ]] && echo "couchbase" ;;
+    # 'if', not '[[ ]] && echo': the function must return 0 for connect/connect-couchbase-* (local Couchbase,
+    # no account), else 'account_provider=$(...)' in run.sh exits the run silently under set -e
+    *couchbase*) if [[ "$rel" == ccloud/* ]]; then echo "couchbase"; fi ;;
     *gcp*) echo "gcp" ;;
     *azure*) echo "azure" ;;
     *connect-aws-*|*fm-aws-*|*connect-jdbc-aws-*) echo "aws" ;;

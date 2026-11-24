@@ -1869,7 +1869,7 @@ fi
 # started: 'playground account <provider> check' is read-only and takes a few seconds. Exit 1 (login refused,
 # values missing) stops the run; an item only some examples need is shown and the run goes on. Skipped in CI.
 #
-account_provider=$(example_account_provider "$test_file")
+account_provider=$(example_account_provider "$test_file" || true)
 if [ -n "$account_provider" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "${PG_RUN_PRINT_FLAGS_AND_EXIT:-}" ] && [ "$(playground config get account-check-before-run)" != "false" ]
 then
   log "🔑 checking the $account_provider account of the example (playground config account-check-before-run false to skip)"
