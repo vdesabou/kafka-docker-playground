@@ -9,7 +9,7 @@ help: |-
   Nothing to configure in Couchbase Capella: these examples only need the values,
   in the right form, still valid (free tier clusters are turned off after 72 hours without use: setup turns them back on).
 
-  📖 https://kafka-docker-playground.io/#/accounts
+  📖 https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples
 commands:
 - name: setup
   help: |-

@@ -113,7 +113,7 @@ playground run -f connect/connect-databricks-delta-lake-sink/databricks-delta-la
 
 ## ☁️ The other accounts
 
-[Accounts of the examples](/accounts.md): the `setup` and `check` commands of every provider, and how they behave.
+[Accounts of the examples](/how-to-use?id=☁️-accounts-of-the-examples): the `setup` and `check` commands of every provider, and how they behave.
 
 ## 🧠 CLI reference
 

@@ -522,7 +522,7 @@ subcommands:
     checked (expired, paused, idle)\n\nEach provider has 'setup' (configure the account
     in one command, store\nthe variables with 'playground secrets set') and 'check'
     (a few seconds,\nread-only: does the stored login still work, and what is missing).\n\n\U0001F4D6
-    All the providers, how they behave, and the guide of each one:\nhttps://kafka-docker-playground.io/#/accounts"
+    All the providers, how they behave, and the guide of each one:\nhttps://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
   usage: playground account COMMAND
   options: []
   subcommands:
@@ -1196,7 +1196,7 @@ subcommands:
       a few seconds: the login (users/me, the <email>/token form) and the tickets
       the sources read\n\nNothing to configure in Zendesk: these examples only need
       the values,\nin the right form, still valid (a trial account ends after 14 days).\n\n\U0001F4D6
-      https://kafka-docker-playground.io/#/accounts"
+      https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account zendesk COMMAND
     options: []
     subcommands:
@@ -1229,7 +1229,7 @@ subcommands:
       JIRA_USERNAME and JIRA_API_TOKEN\n  check   verify them in a few seconds: the
       login (myself) and the projects the sources read\n\nNothing to configure in
       Jira: these examples only need the values,\nin the right form, still valid (API
-      tokens expire).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+      tokens expire).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account jira COMMAND
     options: []
     subcommands:
@@ -1261,7 +1261,7 @@ subcommands:
       seconds: the OAuth token of the LaunchPoint service and the leads API (603:
       missing API role)\n\nNothing to configure in Marketo: these examples only need
       the values,\nin the right form, still valid (sandboxes expire).\n\n\U0001F4D6
-      https://kafka-docker-playground.io/#/accounts"
+      https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account marketo COMMAND
     options: []
     subcommands:
@@ -1294,7 +1294,7 @@ subcommands:
       CLICKHOUSE_CLOUD_PASSWORD\n  check   verify them in a few seconds: a SELECT
       over HTTPS (it also wakes an idle service up)\n\nNothing to configure in ClickHouse
       Cloud: these examples only need the values,\nin the right form, still valid
-      (services idle when unused, trials end).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+      (services idle when unused, trials end).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account clickhouse COMMAND
     options: []
     subcommands:
@@ -1330,7 +1330,7 @@ subcommands:
       the Capella API\n\nNothing to configure in Couchbase Capella: these examples
       only need the values,\nin the right form, still valid (free tier clusters are
       turned off after 72 hours without use: setup turns them back on).\n\n\U0001F4D6
-      https://kafka-docker-playground.io/#/accounts"
+      https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account couchbase COMMAND
     options: []
     subcommands:
@@ -1366,7 +1366,7 @@ subcommands:
       \ check   verify them in a few seconds: the mongodb+srv record of the host and
       a ping with mongosh (mongo image)\n\nNothing to configure in MongoDB Atlas:
       these examples only need the values,\nin the right form, still valid (M0 clusters
-      pause after 60 days without connections).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+      pause after 60 days without connections).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account mongodb-atlas COMMAND
     options: []
     subcommands:
@@ -1399,7 +1399,7 @@ subcommands:
       PAGERDUTY_SERVICE_ID and PAGERDUTY_USER_EMAIL\n  check   verify them in a few
       seconds: the service the incidents go to, and the user that sends them\n\nNothing
       to configure in PagerDuty: these examples only need the values,\nin the right
-      form, still valid (keys get revoked, services deleted).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/accounts"
+      form, still valid (keys get revoked, services deleted).\n\n\U0001F4D6 https://kafka-docker-playground.io/#/how-to-use?id=%e2%98%81%ef%b8%8f-accounts-of-the-examples"
     usage: playground account pagerduty COMMAND
     options: []
     subcommands:

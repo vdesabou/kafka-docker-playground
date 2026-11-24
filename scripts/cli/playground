@@ -3699,7 +3699,7 @@ playground_secrets_lint_usage() {
 playground_account_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account\n\n"
-    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n    databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n  \n    zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty\n                 a few values each: validated, stored, checked (expired, paused,\n  idle)\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and 'check' (a few seconds,\n  read-only: does the stored login still work, and what is missing).\n  \n  📖 All the providers, how they behave, and the guide of each one:\n  https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  ☁️ Set up and check the accounts the examples run against\n  \n    ccloud       your Confluent Cloud environment, one cluster per cloud, their\n  API keys\n    salesforce   a Salesforce org: External Client App (JWT bearer), Platform\n  Event, Change Data Capture\n    gcp          a Google Cloud project: APIs, service account with its roles,\n  key\n    azure        an Azure subscription: service principal with its roles,\n  resource providers\n    snowflake    a Snowflake account: account identifier, admin login, roles,\n  edition\n    aws          AWS access keys and region, the IAM role of the assume-role\n  variants\n    servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n    databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n  \n    zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty\n                 a few values each: validated, stored, checked (expired, paused,\n  idle)\n  \n  Each provider has 'setup' (configure the account in one command, store\n  the variables with 'playground secrets set') and 'check' (a few seconds,\n  read-only: does the stored login still work, and what is missing).\n  \n  📖 All the providers, how they behave, and the guide of each one:\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account - ☁️ Set up and check the accounts the examples run against\n\n"
   fi
@@ -4906,7 +4906,7 @@ playground_account_databricks_check_usage() {
 playground_account_zendesk_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account zendesk\n\n"
-    printf "  🎫 Set up and check the Zendesk account of the Zendesk examples\n  (connect-zendesk-source, fm-zendesk-source)\n  \n    setup   validate and store ZENDESK_URL, ZENDESK_USERNAME and\n  ZENDESK_PASSWORD\n    check   verify them in a few seconds: the login (users/me, the <email>/token\n  form) and the tickets the sources read\n  \n  Nothing to configure in Zendesk: these examples only need the values,\n  in the right form, still valid (a trial account ends after 14 days).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  🎫 Set up and check the Zendesk account of the Zendesk examples\n  (connect-zendesk-source, fm-zendesk-source)\n  \n    setup   validate and store ZENDESK_URL, ZENDESK_USERNAME and\n  ZENDESK_PASSWORD\n    check   verify them in a few seconds: the login (users/me, the <email>/token\n  form) and the tickets the sources read\n  \n  Nothing to configure in Zendesk: these examples only need the values,\n  in the right form, still valid (a trial account ends after 14 days).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account zendesk - 🎫 Set up and check the Zendesk account of the Zendesk examples (connect-zendesk-source, fm-zendesk-source)\n\n"
   fi
@@ -5008,7 +5008,7 @@ playground_account_zendesk_check_usage() {
 playground_account_jira_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account jira\n\n"
-    printf "  📋 Set up and check the Jira account of the Jira examples (connect-jira-source,\n  fm-jira-source)\n  \n    setup   validate and store JIRA_URL, JIRA_USERNAME and JIRA_API_TOKEN\n    check   verify them in a few seconds: the login (myself) and the projects\n  the sources read\n  \n  Nothing to configure in Jira: these examples only need the values,\n  in the right form, still valid (API tokens expire).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  📋 Set up and check the Jira account of the Jira examples (connect-jira-source,\n  fm-jira-source)\n  \n    setup   validate and store JIRA_URL, JIRA_USERNAME and JIRA_API_TOKEN\n    check   verify them in a few seconds: the login (myself) and the projects\n  the sources read\n  \n  Nothing to configure in Jira: these examples only need the values,\n  in the right form, still valid (API tokens expire).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account jira - 📋 Set up and check the Jira account of the Jira examples (connect-jira-source, fm-jira-source)\n\n"
   fi
@@ -5110,7 +5110,7 @@ playground_account_jira_check_usage() {
 playground_account_marketo_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account marketo\n\n"
-    printf "  📣 Set up and check the Marketo account of the Marketo examples\n  (connect-marketo-source, fm-marketo-sink)\n  \n    setup   validate and store MARKETO_ENDPOINT_URL, MARKETO_CLIENT_ID and\n  MARKETO_CLIENT_SECRET\n    check   verify them in a few seconds: the OAuth token of the LaunchPoint\n  service and the leads API (603: missing API role)\n  \n  Nothing to configure in Marketo: these examples only need the values,\n  in the right form, still valid (sandboxes expire).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  📣 Set up and check the Marketo account of the Marketo examples\n  (connect-marketo-source, fm-marketo-sink)\n  \n    setup   validate and store MARKETO_ENDPOINT_URL, MARKETO_CLIENT_ID and\n  MARKETO_CLIENT_SECRET\n    check   verify them in a few seconds: the OAuth token of the LaunchPoint\n  service and the leads API (603: missing API role)\n  \n  Nothing to configure in Marketo: these examples only need the values,\n  in the right form, still valid (sandboxes expire).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account marketo - 📣 Set up and check the Marketo account of the Marketo examples (connect-marketo-source, fm-marketo-sink)\n\n"
   fi
@@ -5212,7 +5212,7 @@ playground_account_marketo_check_usage() {
 playground_account_clickhouse_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account clickhouse\n\n"
-    printf "  🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples\n  (connect-clickhouse-sink, fm-clickhouse-sink)\n  \n    setup   validate and store CLICKHOUSE_CLOUD_HOSTNAME,\n  CLICKHOUSE_CLOUD_USERNAME and CLICKHOUSE_CLOUD_PASSWORD\n    check   verify them in a few seconds: a SELECT over HTTPS (it also wakes an\n  idle service up)\n  \n  Nothing to configure in ClickHouse Cloud: these examples only need the values,\n  in the right form, still valid (services idle when unused, trials end).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples\n  (connect-clickhouse-sink, fm-clickhouse-sink)\n  \n    setup   validate and store CLICKHOUSE_CLOUD_HOSTNAME,\n  CLICKHOUSE_CLOUD_USERNAME and CLICKHOUSE_CLOUD_PASSWORD\n    check   verify them in a few seconds: a SELECT over HTTPS (it also wakes an\n  idle service up)\n  \n  Nothing to configure in ClickHouse Cloud: these examples only need the values,\n  in the right form, still valid (services idle when unused, trials end).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account clickhouse - 🏠 Set up and check the ClickHouse Cloud account of the ClickHouse examples (connect-clickhouse-sink, fm-clickhouse-sink)\n\n"
   fi
@@ -5314,7 +5314,7 @@ playground_account_clickhouse_check_usage() {
 playground_account_couchbase_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account couchbase\n\n"
-    printf "  🛋️ Set up and check the Couchbase Capella account of the Couchbase examples\n  (fm-couchbase-sink, fm-couchbase-source)\n  \n    setup   validate and store COUCHBASE_HOSTNAME, COUCHBASE_USERNAME,\n  COUCHBASE_PASSWORD and the optional COUCHBASE_CAPELLA_* (API key,\n  organization, project, cluster)\n    check   verify them in a few seconds: the cluster state and its allowed IPs\n  through the Capella API\n  \n  Nothing to configure in Couchbase Capella: these examples only need the\n  values,\n  in the right form, still valid (free tier clusters are turned off after 72\n  hours without use: setup turns them back on).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  🛋️ Set up and check the Couchbase Capella account of the Couchbase examples\n  (fm-couchbase-sink, fm-couchbase-source)\n  \n    setup   validate and store COUCHBASE_HOSTNAME, COUCHBASE_USERNAME,\n  COUCHBASE_PASSWORD and the optional COUCHBASE_CAPELLA_* (API key,\n  organization, project, cluster)\n    check   verify them in a few seconds: the cluster state and its allowed IPs\n  through the Capella API\n  \n  Nothing to configure in Couchbase Capella: these examples only need the\n  values,\n  in the right form, still valid (free tier clusters are turned off after 72\n  hours without use: setup turns them back on).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account couchbase - 🛋️ Set up and check the Couchbase Capella account of the Couchbase examples (fm-couchbase-sink, fm-couchbase-source)\n\n"
   fi
@@ -5416,7 +5416,7 @@ playground_account_couchbase_check_usage() {
 playground_account_mongodb_atlas_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account mongodb-atlas\n\n"
-    printf "  🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples\n  (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n  \n    setup   validate and store MONGODB_ATLAS_HOST, MONGODB_ATLAS_USER and\n  MONGODB_ATLAS_PASSWORD\n    check   verify them in a few seconds: the mongodb+srv record of the host and\n  a ping with mongosh (mongo image)\n  \n  Nothing to configure in MongoDB Atlas: these examples only need the values,\n  in the right form, still valid (M0 clusters pause after 60 days without\n  connections).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples\n  (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n  \n    setup   validate and store MONGODB_ATLAS_HOST, MONGODB_ATLAS_USER and\n  MONGODB_ATLAS_PASSWORD\n    check   verify them in a few seconds: the mongodb+srv record of the host and\n  a ping with mongosh (mongo image)\n  \n  Nothing to configure in MongoDB Atlas: these examples only need the values,\n  in the right form, still valid (M0 clusters pause after 60 days without\n  connections).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account mongodb-atlas - 🍃 Set up and check the MongoDB Atlas account of the MongoDB Atlas examples (fm-mongodb-atlas-sink, fm-mongodb-atlas-source)\n\n"
   fi
@@ -5518,7 +5518,7 @@ playground_account_mongodb_atlas_check_usage() {
 playground_account_pagerduty_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground account pagerduty\n\n"
-    printf "  🛎️ Set up and check the PagerDuty account of the PagerDuty example\n  (connect-pagerduty-sink)\n  \n    setup   validate and store PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID and\n  PAGERDUTY_USER_EMAIL\n    check   verify them in a few seconds: the service the incidents go to, and\n  the user that sends them\n  \n  Nothing to configure in PagerDuty: these examples only need the values,\n  in the right form, still valid (keys get revoked, services deleted).\n  \n  📖 https://kafka-docker-playground.io/#/accounts\n\n"
+    printf "  🛎️ Set up and check the PagerDuty account of the PagerDuty example\n  (connect-pagerduty-sink)\n  \n    setup   validate and store PAGERDUTY_API_KEY, PAGERDUTY_SERVICE_ID and\n  PAGERDUTY_USER_EMAIL\n    check   verify them in a few seconds: the service the incidents go to, and\n  the user that sends them\n  \n  Nothing to configure in PagerDuty: these examples only need the values,\n  in the right form, still valid (keys get revoked, services deleted).\n  \n  📖\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%98%%81%%ef%%b8%%8f-accounts-of-the-examples\n\n"
   else
     printf "playground account pagerduty - 🛎️ Set up and check the PagerDuty account of the PagerDuty example (connect-pagerduty-sink)\n\n"
   fi
