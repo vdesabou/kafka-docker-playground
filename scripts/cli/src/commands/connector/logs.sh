@@ -65,6 +65,9 @@ then
         start_time=$(date -u -d "71 hours ago" +"%Y-%m-%dT%H:%M:%SZ")
     fi
     end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    # explicit environment and cluster: the current ones of the confluent CLI can be switched by another session
+    # shellcheck disable=SC2207
+    cluster_flags=($(get_ccloud_cluster_flags))
     for connector in "${items[@]}"
     do
         connectorId=$(get_ccloud_connector_lcc "$connector" || true)
@@ -82,7 +85,7 @@ then
             if [[ -n "$verbose" ]]
             then
                 log "🐞 CLI command used"
-                echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time <now> --search-text \"$log\""
+                echo "confluent connect logs \"$connectorId\" ${cluster_flags[*]} --level \"$levels\" --start-time \"$start_time\" --end-time <now> --search-text \"$log\""
             fi
             # poll until the text is found: a single search returned whatever the outcome
             log "😴 Waiting up to $max_wait seconds for log \"$log\" in fully managed connector $connector ($connectorId)"
@@ -90,7 +93,7 @@ then
             while true
             do
                 end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-                output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" --search-text "$log" 2>&1 || true)
+                output=$(confluent connect logs "$connectorId" "${cluster_flags[@]}" --level "$levels" --start-time "$start_time" --end-time "$end_time" --search-text "$log" 2>&1 || true)
                 if ! echo "$output" | grep -q "No logs found" && echo "$output" | grep -qF "$log"
                 then
                     echo "$output"
@@ -117,14 +120,14 @@ then
             if [[ -n "$verbose" ]]
             then
                 log "🐞 CLI command used"
-                echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --output-file \"$fm_jsonl\" [--next]"
+                echo "confluent connect logs \"$connectorId\" ${cluster_flags[*]} --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --output-file \"$fm_jsonl\" [--next]"
             fi
             log "📄 Fetching the logs of fully managed connector $connector ($connectorId, $levels, last 71 hours)..."
             page_num=1
             maybe_next=()
             while true
             do
-                output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" "${maybe_next[@]}" --output-file "$fm_jsonl" 2>&1) && status=0 || status=$?
+                output=$(confluent connect logs "$connectorId" "${cluster_flags[@]}" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" "${maybe_next[@]}" --output-file "$fm_jsonl" 2>&1) && status=0 || status=$?
                 if echo "$output" | grep -q "No logs found"
                 then
                     break

@@ -662,6 +662,20 @@ function get_ccloud_environment_id () {
   grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta 2>/dev/null | cut -d " " -f 4
 }
 
+# Prints "--environment <env id> --cluster <cluster id>" of the cluster of the current ccloud run (from
+# .ccloud/ak-tools-ccloud.delta, written by bootstrap_ccloud_environment), nothing when unknown. Pass it to the confluent
+# CLI instead of relying on its current environment / cluster: that is a global setting (~/.confluent/config.json)
+# that another playground session, or the user, can switch at any time during a run.
+function get_ccloud_cluster_flags () {
+  local environment_id cluster_id
+  environment_id=$(get_ccloud_environment_id)
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  if [ -n "$environment_id" ] && [ -n "$cluster_id" ]
+  then
+    echo "--environment $environment_id --cluster $cluster_id"
+  fi
+}
+
 # $1 = topic, "prefix:<topic prefix>" or "connector:<connector name>"
 function record_ccloud_created_topic () {
   local entry="$1"

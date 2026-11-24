@@ -5881,9 +5881,12 @@ function cleanup_confluent_cloud_resources () {
   # done
 
   cluster_id=$(get_ccloud_kafka_cluster_id)
+  # explicit environment and cluster: the current ones of the confluent CLI can be switched by another session
+  local cluster_flags
+  cluster_flags=$(get_ccloud_cluster_flags)
   # dlq/success/error topics of the connectors deleted below
   connector_related_topics=""
-  for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
+  for row in $(confluent connect cluster list $cluster_flags --output json | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
       }
@@ -5893,10 +5896,10 @@ function cleanup_confluent_cloud_resources () {
 
       if [[ $name = *_${user}* ]]
       then
-          connector_config=$(confluent connect cluster describe $id --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+          connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
           connector_related_topics="$connector_related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
           log "deleting connector $id ($name)"
-          check_if_skip "confluent connect cluster delete $id --force || true"
+          check_if_skip "confluent connect cluster delete $id $cluster_flags --force || true"
       fi
   done
 
@@ -5921,7 +5924,7 @@ function cleanup_confluent_cloud_resources () {
       check_if_skip "delete_ccloud_connector_service_account $id"
   done
 
-  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  existing_topics=$(confluent kafka topic list $cluster_flags | awk '{if(NR>2) print $1}')
   if [ ! -z "$GITHUB_RUN_NUMBER" ] || [[ $CLUSTER_NAME = pg-${user}-* ]]
   then
     # cluster created by the playground for this user (or CI): nobody else uses it
@@ -5937,14 +5940,14 @@ function cleanup_confluent_cloud_resources () {
   for topic in $topics_to_delete
   do
       log "delete topic $topic"
-      check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
+      check_if_skip "confluent kafka topic delete \"$topic\" $cluster_flags --force || true"
   done
   # their subjects (TopicNameStrategy), deleted below in CI
   deleted_topics="$topics_to_delete"
 
   # forget recorded topics and connectors that are gone (deleted above or by someone else)
   # only when both listings succeed, an empty list would forget everything; not in a dry-run (nothing was deleted)
-  if [[ -z "${dry_run:-}" ]] && topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
+  if [[ -z "${dry_run:-}" ]] && topics_json=$(confluent kafka topic list $cluster_flags --output json) && connectors_json=$(confluent connect cluster list $cluster_flags --output json)
   then
     prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name')" "$(echo "$connectors_json" | jq -r '.[].name')"
   fi

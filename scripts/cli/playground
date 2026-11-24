@@ -33824,9 +33824,12 @@ function cleanup_confluent_cloud_resources () {
   # done
 
   cluster_id=$(get_ccloud_kafka_cluster_id)
+  # explicit environment and cluster: the current ones of the confluent CLI can be switched by another session
+  local cluster_flags
+  cluster_flags=$(get_ccloud_cluster_flags)
   # dlq/success/error topics of the connectors deleted below
   connector_related_topics=""
-  for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
+  for row in $(confluent connect cluster list $cluster_flags --output json | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
       }
@@ -33836,10 +33839,10 @@ function cleanup_confluent_cloud_resources () {
 
       if [[ $name = *_${user}* ]]
       then
-          connector_config=$(confluent connect cluster describe $id --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+          connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
           connector_related_topics="$connector_related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
           log "deleting connector $id ($name)"
-          check_if_skip "confluent connect cluster delete $id --force || true"
+          check_if_skip "confluent connect cluster delete $id $cluster_flags --force || true"
       fi
   done
 
@@ -33864,7 +33867,7 @@ function cleanup_confluent_cloud_resources () {
       check_if_skip "delete_ccloud_connector_service_account $id"
   done
 
-  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  existing_topics=$(confluent kafka topic list $cluster_flags | awk '{if(NR>2) print $1}')
   if [ ! -z "$GITHUB_RUN_NUMBER" ] || [[ $CLUSTER_NAME = pg-${user}-* ]]
   then
     # cluster created by the playground for this user (or CI): nobody else uses it
@@ -33880,14 +33883,14 @@ function cleanup_confluent_cloud_resources () {
   for topic in $topics_to_delete
   do
       log "delete topic $topic"
-      check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
+      check_if_skip "confluent kafka topic delete \"$topic\" $cluster_flags --force || true"
   done
   # their subjects (TopicNameStrategy), deleted below in CI
   deleted_topics="$topics_to_delete"
 
   # forget recorded topics and connectors that are gone (deleted above or by someone else)
   # only when both listings succeed, an empty list would forget everything; not in a dry-run (nothing was deleted)
-  if [[ -z "${dry_run:-}" ]] && topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
+  if [[ -z "${dry_run:-}" ]] && topics_json=$(confluent kafka topic list $cluster_flags --output json) && connectors_json=$(confluent connect cluster list $cluster_flags --output json)
   then
     prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name')" "$(echo "$connectors_json" | jq -r '.[].name')"
   fi
@@ -44935,6 +44938,20 @@ function get_ccloud_environment_id () {
   grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta 2>/dev/null | cut -d " " -f 4
 }
 
+# Prints "--environment <env id> --cluster <cluster id>" of the cluster of the current ccloud run (from
+# .ccloud/ak-tools-ccloud.delta, written by bootstrap_ccloud_environment), nothing when unknown. Pass it to the confluent
+# CLI instead of relying on its current environment / cluster: that is a global setting (~/.confluent/config.json)
+# that another playground session, or the user, can switch at any time during a run.
+function get_ccloud_cluster_flags () {
+  local environment_id cluster_id
+  environment_id=$(get_ccloud_environment_id)
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  if [ -n "$environment_id" ] && [ -n "$cluster_id" ]
+  then
+    echo "--environment $environment_id --cluster $cluster_id"
+  fi
+}
+
 # $1 = topic, "prefix:<topic prefix>" or "connector:<connector name>"
 function record_ccloud_created_topic () {
   local entry="$1"
@@ -53253,11 +53270,11 @@ playground_get_topic_list_command() {
     if [[ -n "$skip_internal_topics" ]]
     then
       set +e
-      confluent kafka topic list | awk '{if(NR>2) print $1}' | grep -v "^connect-" | grep -v "^_confluent-monitoring" | grep -v "^_confluent-command"
+      confluent kafka topic list $(get_ccloud_cluster_flags) | awk '{if(NR>2) print $1}' | grep -v "^connect-" | grep -v "^_confluent-monitoring" | grep -v "^_confluent-command"
       set -e
     else
       set +e
-      confluent kafka topic list | awk '{if(NR>2) print $1}'
+      confluent kafka topic list $(get_ccloud_cluster_flags) | awk '{if(NR>2) print $1}'
       set -e
     fi
   elif [[ "$environment" == cfk* ]]
@@ -108612,6 +108629,9 @@ playground_connector_logs_command() {
           start_time=$(date -u -d "71 hours ago" +"%Y-%m-%dT%H:%M:%SZ")
       fi
       end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+      # explicit environment and cluster: the current ones of the confluent CLI can be switched by another session
+      # shellcheck disable=SC2207
+      cluster_flags=($(get_ccloud_cluster_flags))
       for connector in "${items[@]}"
       do
           connectorId=$(get_ccloud_connector_lcc "$connector" || true)
@@ -108629,7 +108649,7 @@ playground_connector_logs_command() {
               if [[ -n "$verbose" ]]
               then
                   log "🐞 CLI command used"
-                  echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time <now> --search-text \"$log\""
+                  echo "confluent connect logs \"$connectorId\" ${cluster_flags[*]} --level \"$levels\" --start-time \"$start_time\" --end-time <now> --search-text \"$log\""
               fi
               # poll until the text is found: a single search returned whatever the outcome
               log "😴 Waiting up to $max_wait seconds for log \"$log\" in fully managed connector $connector ($connectorId)"
@@ -108637,7 +108657,7 @@ playground_connector_logs_command() {
               while true
               do
                   end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-                  output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" --search-text "$log" 2>&1 || true)
+                  output=$(confluent connect logs "$connectorId" "${cluster_flags[@]}" --level "$levels" --start-time "$start_time" --end-time "$end_time" --search-text "$log" 2>&1 || true)
                   if ! echo "$output" | grep -q "No logs found" && echo "$output" | grep -qF "$log"
                   then
                       echo "$output"
@@ -108664,14 +108684,14 @@ playground_connector_logs_command() {
               if [[ -n "$verbose" ]]
               then
                   log "🐞 CLI command used"
-                  echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --output-file \"$fm_jsonl\" [--next]"
+                  echo "confluent connect logs \"$connectorId\" ${cluster_flags[*]} --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --output-file \"$fm_jsonl\" [--next]"
               fi
               log "📄 Fetching the logs of fully managed connector $connector ($connectorId, $levels, last 71 hours)..."
               page_num=1
               maybe_next=()
               while true
               do
-                  output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" "${maybe_next[@]}" --output-file "$fm_jsonl" 2>&1) && status=0 || status=$?
+                  output=$(confluent connect logs "$connectorId" "${cluster_flags[@]}" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" "${maybe_next[@]}" --output-file "$fm_jsonl" 2>&1) && status=0 || status=$?
                   if echo "$output" | grep -q "No logs found"
                   then
                       break
