@@ -189,6 +189,17 @@ function show_status () {
     if [ "${oom:-0}" -gt 0 ]
     then
         logwarn "💀 $c: $oom OOM kill(s) since it was created (the kernel killed a process above the memory limit), $restarts restart(s)"
+    elif [[ -f "$state_dir/$c" && "$(state_get "$c" id)" == "$(docker inspect -f '{{.Id}}' "$c")" ]] && [ "$memory_limit" -gt 0 ] && [ "$memory_limit" != "$(state_get "$c" original | awk '{ print $1 }')" ]
+    then
+        # podman 5.x (crun, systemd cgroups) sets neither OOMKilled nor an oom event when the kernel OOM kills the
+        # process: a die with exit code 137 that no kill event explains, under the memory limit set here, is one
+        local probable
+        probable=$(docker events --since "$created" --until "$(date +%s)" --filter "container=$c" --format '{{.Action}} {{index .Actor.Attributes "exitCode"}}' 2> /dev/null \
+            | awk '$1 == "kill" { killed = 1 } $1 == "die" { if ($2 == "137" && !killed) n++; killed = 0 } END { print n + 0 }')
+        if [ "${probable:-0}" -gt 0 ]
+        then
+            logwarn "💀 $c: $probable probable OOM kill(s) since it was created (exit code 137 with no kill event, under the $(human_bytes "$memory_limit") limit set by playground debug resources: the engine did not flag it as OOMKilled), $restarts restart(s)"
+        fi
     fi
     container_running "$c" || return 0
     fill_file=$(state_get "$c" fill_file)
