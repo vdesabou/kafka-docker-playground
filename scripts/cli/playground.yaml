@@ -520,22 +520,23 @@ subcommands:
     warehouse, S3 staging bucket\n\n  zendesk, jira, marketo, clickhouse, couchbase,
     mongodb-atlas, pagerduty\n               a few values each: validated, stored,
     checked (expired, paused, idle)\n\nEach provider has 'setup' (configure the account
-    in one command, store\nthe variables with 'playground secrets set') and, except
-    ccloud, 'check'\n(a few seconds, read-only: does the stored login still work,
-    and what is\nmissing).\n\n\U0001F4D6 All the providers, how they behave, and the
-    guide of each one:\nhttps://kafka-docker-playground.io/#/accounts"
+    in one command, store\nthe variables with 'playground secrets set') and 'check'
+    (a few seconds,\nread-only: does the stored login still work, and what is missing).\n\n\U0001F4D6
+    All the providers, how they behave, and the guide of each one:\nhttps://kafka-docker-playground.io/#/accounts"
   usage: playground account COMMAND
   options: []
   subcommands:
   - name: ccloud
     description: "\U0001F324️ Set up your own Confluent Cloud clusters for the fully
-      managed examples\n\n  account ccloud setup  a personal environment, one Basic
-      cluster per cloud,\n                        their API keys, stored in a secrets
-      profile\n\nThe examples then run on these clusters with no bootstrap to wait
-      for. To\nsee what is still running, or delete it: 'playground cloud-resources
-      ccloud\nlist' and 'playground cloud-resources cleanup --resource ccloud'.\n\n\U0001F319
-      Then let the playground delete what your examples leave running, every\nnight:
-      'playground cloud-resources nightly-cleanup enable'."
+      managed examples, and check them\n\n  setup   a personal environment, one Basic
+      cluster per cloud, their API\n          keys, stored in a secrets profile\n
+      \ check   verify what the profile holds: environment, clusters, API keys,\n
+      \         Schema Registry, regions, exported variables that hide it\n\nThe examples
+      then run on these clusters with no bootstrap to wait for. To\nsee what is still
+      running, or delete it: 'playground cloud-resources ccloud\nlist' and 'playground
+      cloud-resources cleanup --resource ccloud'.\n\n\U0001F319 Then let the playground
+      delete what your examples leave running, every\nnight: 'playground cloud-resources
+      nightly-cleanup enable'."
     usage: playground account ccloud COMMAND
     options: []
     subcommands:
@@ -614,6 +615,27 @@ subcommands:
         argument: ''
         description: "\U0001F50E Show what would be created and stored, without creating
           nor storing anything"
+    - name: check
+      description: "\U0001FA7A Check the environment, clusters and API keys of the
+        fully managed examples\n\nReads the variables like 'playground run' does (exported
+        in your shell\nfirst, else the secrets profile) and checks, in the organization
+        your\nconfluent CLI is logged into:\n\n  \U0001F310 ENVIRONMENT exists\n  \U0001F3B0
+        each CLUSTER_NAME, AWS_ / GCP_ / AZURE_ / AWS_DATABRICKS_CLUSTER_NAME\n     that
+        is set: the cluster exists in the environment, is UP, is on\n     the right
+        cloud, matches _CLOUD and _REGION\n  \U0001F511 each _CLUSTER_CREDS: the key
+        exists, belongs to that cluster, and\n     lists the topics (REST API)\n  \U0001F511
+        SCHEMA_REGISTRY_CREDS: the key belongs to the Schema Registry of the\n     environment
+        and lists the subjects; warns near the free schemas limit\n  \U0001F5FA️ AWS_REGION
+        / AZURE_REGION versus the region of the cluster\n  ⚠️ exported variables that
+        hide the profile\n\nEach failure says which examples it breaks and the 'setup'
+        command that\nfixes it. Read-only: nothing is created nor stored.\n\nExits
+        with 1 when a check fails (or the confluent CLI is not logged in)."
+      usage: playground account ccloud check [OPTIONS]
+      options:
+      - names:
+        - "--profile"
+        argument: PROFILE
+        description: "\U0001F5C2️ Secrets profile to check (default: the active one)"
   - name: salesforce
     description: "☁️ Set up a Salesforce org for the Salesforce examples, and check
       it\n\n  setup   configure an org: External Client App (JWT bearer), Platform

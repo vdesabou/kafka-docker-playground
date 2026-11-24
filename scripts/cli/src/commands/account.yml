@@ -17,9 +17,8 @@ help: |-
                  a few values each: validated, stored, checked (expired, paused, idle)
 
   Each provider has 'setup' (configure the account in one command, store
-  the variables with 'playground secrets set') and, except ccloud, 'check'
-  (a few seconds, read-only: does the stored login still work, and what is
-  missing).
+  the variables with 'playground secrets set') and 'check' (a few seconds,
+  read-only: does the stored login still work, and what is missing).
 
   📖 All the providers, how they behave, and the guide of each one:
   https://kafka-docker-playground.io/#/accounts

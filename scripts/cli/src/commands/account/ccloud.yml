@@ -1,10 +1,12 @@
 name: ccloud
 expose: always
 help: |-
-  🌤️ Set up your own Confluent Cloud clusters for the fully managed examples
+  🌤️ Set up your own Confluent Cloud clusters for the fully managed examples, and check them
 
-    account ccloud setup  a personal environment, one Basic cluster per cloud,
-                          their API keys, stored in a secrets profile
+    setup   a personal environment, one Basic cluster per cloud, their API
+            keys, stored in a secrets profile
+    check   verify what the profile holds: environment, clusters, API keys,
+            Schema Registry, regions, exported variables that hide it
 
   The examples then run on these clusters with no bootstrap to wait for. To
   see what is still running, or delete it: 'playground cloud-resources ccloud
@@ -107,3 +109,39 @@ commands:
   - playground account ccloud setup --profile emea --cloud aws --cloud azure
   - playground account ccloud setup --cloud gcp --gcp-region europe-west1 --default-cloud gcp
   - playground account ccloud setup --cloud databricks
+- name: check
+  dependencies:
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  help: |-
+    🩺 Check the environment, clusters and API keys of the fully managed examples
+
+    Reads the variables like 'playground run' does (exported in your shell
+    first, else the secrets profile) and checks, in the organization your
+    confluent CLI is logged into:
+
+      🌐 ENVIRONMENT exists
+      🎰 each CLUSTER_NAME, AWS_ / GCP_ / AZURE_ / AWS_DATABRICKS_CLUSTER_NAME
+         that is set: the cluster exists in the environment, is UP, is on
+         the right cloud, matches _CLOUD and _REGION
+      🔑 each _CLUSTER_CREDS: the key exists, belongs to that cluster, and
+         lists the topics (REST API)
+      🔑 SCHEMA_REGISTRY_CREDS: the key belongs to the Schema Registry of the
+         environment and lists the subjects; warns near the free schemas limit
+      🗺️ AWS_REGION / AZURE_REGION versus the region of the cluster
+      ⚠️ exported variables that hide the profile
+
+    Each failure says which examples it breaks and the 'setup' command that
+    fixes it. Read-only: nothing is created nor stored.
+
+    Exits with 1 when a check fails (or the confluent CLI is not logged in).
+  flags:
+  - long: --profile
+    arg: profile
+    completions:
+      dynamic:
+      - playground get-secret-profile-list
+    help: |-
+      🗂️ Secrets profile to check (default: the active one)
+  examples:
+  - playground account ccloud check
+  - playground account ccloud check --profile emea
