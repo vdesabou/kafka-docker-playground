@@ -466,13 +466,13 @@
     },
     {
       "name": "account",
-      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n  azure        an Azure subscription: service principal with its roles, resource providers\n  snowflake    a Snowflake account: account identifier, admin login, roles, edition\n  aws          AWS access keys and region, the IAM role of the assume-role variants\n  servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n  databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n\n  zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty\n               a few values each: validated, stored, checked (expired, paused, idle)\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and, except ccloud, 'check'\n(a few seconds, read-only: does the stored login still work, and what is\nmissing).\n\n📖 All the providers, how they behave, and the guide of each one:\nhttps://kafka-docker-playground.io/#/accounts",
+      "description": "☁️ Set up and check the accounts the examples run against\n\n  ccloud       your Confluent Cloud environment, one cluster per cloud, their API keys\n  salesforce   a Salesforce org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  gcp          a Google Cloud project: APIs, service account with its roles, key\n  azure        an Azure subscription: service principal with its roles, resource providers\n  snowflake    a Snowflake account: account identifier, admin login, roles, edition\n  aws          AWS access keys and region, the IAM role of the assume-role variants\n  servicenow   a ServiceNow developer instance: URL, admin login, hibernation\n  databricks   a Databricks workspace: token, SQL warehouse, S3 staging bucket\n\n  zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty\n               a few values each: validated, stored, checked (expired, paused, idle)\n\nEach provider has 'setup' (configure the account in one command, store\nthe variables with 'playground secrets set') and 'check' (a few seconds,\nread-only: does the stored login still work, and what is missing).\n\n📖 All the providers, how they behave, and the guide of each one:\nhttps://kafka-docker-playground.io/#/accounts",
       "usage": "playground account COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "ccloud",
-          "description": "🌤️ Set up your own Confluent Cloud clusters for the fully managed examples\n\n  account ccloud setup  a personal environment, one Basic cluster per cloud,\n                        their API keys, stored in a secrets profile\n\nThe examples then run on these clusters with no bootstrap to wait for. To\nsee what is still running, or delete it: 'playground cloud-resources ccloud\nlist' and 'playground cloud-resources cleanup --resource ccloud'.\n\n🌙 Then let the playground delete what your examples leave running, every\nnight: 'playground cloud-resources nightly-cleanup enable'.",
+          "description": "🌤️ Set up your own Confluent Cloud clusters for the fully managed examples, and check them\n\n  setup   a personal environment, one Basic cluster per cloud, their API\n          keys, stored in a secrets profile\n  check   verify what the profile holds: environment, clusters, API keys,\n          Schema Registry, regions, exported variables that hide it\n\nThe examples then run on these clusters with no bootstrap to wait for. To\nsee what is still running, or delete it: 'playground cloud-resources ccloud\nlist' and 'playground cloud-resources cleanup --resource ccloud'.\n\n🌙 Then let the playground delete what your examples leave running, every\nnight: 'playground cloud-resources nightly-cleanup enable'.",
           "usage": "playground account ccloud COMMAND",
           "options": [],
           "subcommands": [
@@ -543,6 +543,20 @@
                   ],
                   "argument": "",
                   "description": "🔎 Show what would be created and stored, without creating nor storing anything"
+                }
+              ]
+            },
+            {
+              "name": "check",
+              "description": "🩺 Check the environment, clusters and API keys of the fully managed examples\n\nReads the variables like 'playground run' does (exported in your shell\nfirst, else the secrets profile) and checks, in the organization your\nconfluent CLI is logged into:\n\n  🌐 ENVIRONMENT exists\n  🎰 each CLUSTER_NAME, AWS_ / GCP_ / AZURE_ / AWS_DATABRICKS_CLUSTER_NAME\n     that is set: the cluster exists in the environment, is UP, is on\n     the right cloud, matches _CLOUD and _REGION\n  🔑 each _CLUSTER_CREDS: the key exists, belongs to that cluster, and\n     lists the topics (REST API)\n  🔑 SCHEMA_REGISTRY_CREDS: the key belongs to the Schema Registry of the\n     environment and lists the subjects; warns near the free schemas limit\n  🗺️ AWS_REGION / AZURE_REGION versus the region of the cluster\n  ⚠️ exported variables that hide the profile\n\nEach failure says which examples it breaks and the 'setup' command that\nfixes it. Read-only: nothing is created nor stored.\n\nExits with 1 when a check fails (or the confluent CLI is not logged in).",
+              "usage": "playground account ccloud check [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--profile"
+                  ],
+                  "argument": "PROFILE",
+                  "description": "🗂️ Secrets profile to check (default: the active one)"
                 }
               ]
             }

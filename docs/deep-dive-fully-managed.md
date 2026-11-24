@@ -344,6 +344,7 @@ playground stop                                                              # d
 ```bash
 # once: your own clusters (one per cloud, in your secrets profile), and the nightly deletion of what examples leave
 playground account ccloud setup [--dry-run] [--cloud aws --cloud gcp --cloud azure --cloud databricks]
+playground account ccloud check [--profile <org>]   # read-only: environment, clusters, API keys, Schema Registry, regions
 playground cloud-resources nightly-cleanup enable [--time 02:00] [--resource aws]   # status, disable
 # cluster: reuse yours, or let the playground create one (AWS eu-west-2, basic)
 export ENVIRONMENT=… CLUSTER_NAME=… CLUSTER_CLOUD=… CLUSTER_REGION=… CLUSTER_CREDS="<key>:<secret>"
