@@ -238,6 +238,15 @@ Specify the initial starting point for the connector for replaying events. Use `
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 max.buffered.records
+
+Maximum number of Salesforce events buffered in memory per task. When reached, the connector stops requesting events until buffered events are written to |ak|.
+
+	 - Type: INT
+	 - Default: 4096
+	 - Importance: LOW
+	 - Required: false
+
 🔘 salesforce.cdc.channel
 
 The Salesforce CDC channel to subscribe to.The name should have suffix ``ChangeEvent`` for a single entity channel or ``__chn`` for a custom channel. For example ``LeadChangeEvent`` is a single entity channel and ``SalesEvents__chn`` is a custom channel. The other valid value for this config is the standard channel ``ChangeEvents``. See `Salesforce subscription channel guide <https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_subscribe_channels.htm>`_.

@@ -46,7 +46,7 @@ playground run -f salesforce-sobject-sink.sh
 
 1. Logs in with the sfdx CLI on account #1, (re)creates a PushTopic on `Lead` (name unique to the script and environment, from `MyLeadPushTopics-template.apex`).
 2. Creates a Salesforce PushTopics Source connector writing to topic `sfdc-pushtopic-leads`.
-3. Creates a random Lead on account #1 and verifies it is received in `sfdc-pushtopic-leads`.
+3. Creates a random Lead on account #1 and verifies it is received in `sfdc-pushtopic-leads`. If nothing arrives, the source task is restarted (if FAILED) and the step runs once more with new data: another client of the same Salesforce user can end the session of the task, which then misses the event (#10589).
 4. Creates the Salesforce SObject Sink connector (object `Lead`, `salesforce.sink.object.operation=insert`, `override.event.type=true`) writing to account #2.
 5. Verifies a record in the `success-responses` reporter topic and that `error-responses` is empty.
 6. Logs in with the sfdx CLI on account #2 and queries the Lead to check it was inserted.

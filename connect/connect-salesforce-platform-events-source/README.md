@@ -42,7 +42,7 @@ playground run -f salesforce-platform-events-source.sh
 
 1. Creates the Salesforce Platform Events Source connector on `MyPlatformEvent__e`, writing to topic `sfdc-platform-events` (JSON converter), and waits for the subscription.
 2. Logs in with the sfdx CLI (JWT) and publishes 2 platform events with `event.apex`.
-3. Verifies the 2 events are received with `playground topic consume --topic sfdc-platform-events`.
+3. Verifies the 2 events are received with `playground topic consume --topic sfdc-platform-events`. If nothing arrives, the source task is restarted (if FAILED) and the step runs once more with new data: another client of the same Salesforce user can end the session of the task, which then misses the event (#10589).
 
 ## Find your security token
 

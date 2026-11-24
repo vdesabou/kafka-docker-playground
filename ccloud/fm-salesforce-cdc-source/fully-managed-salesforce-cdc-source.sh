@@ -86,27 +86,31 @@ sleep 5
 log "Login with sfdx CLI"
 salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
-CONTACT_FIRSTNAME=John_$RANDOM
-CONTACT_LASTNAME=Doe_$RANDOM
-log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
-
 # Remove the records this test created, so repeated runs do not accumulate data in a
-# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# shared Salesforce org. Only the exact records created below are matched. An EXIT trap,
 # so cleanup also happens when an assertion fails.
+CONTACTS_TO_CLEANUP=()
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
-    "Contact:FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'"
+  if [ ${#CONTACTS_TO_CLEANUP[@]} -gt 0 ]
+  then
+    salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
+      "${CONTACTS_TO_CLEANUP[@]}"
+  fi
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
 
-sleep 10
+add_contact() {
+  CONTACT_FIRSTNAME=John_$RANDOM
+  CONTACT_LASTNAME=Doe_$RANDOM
+  log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
+  CONTACTS_TO_CLEANUP+=("Contact:FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'")
+  docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
+}
 
-log "Verify we have received the data in sfdc-cdc-contacts topic"
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
-
+log "Add a Contact and verify we have received the change event in sfdc-cdc-contacts topic"
+salesforce_insert_and_verify $connector_name add_contact --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

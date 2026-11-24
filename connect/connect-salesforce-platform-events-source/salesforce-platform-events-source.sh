@@ -81,10 +81,10 @@ salesforce_wait_for_subscription MyPlatformEvent__e
 log "Login with sfdx CLI"
 salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
-log "Send Platform Events"
-salesforce_sfdx_with_retry "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
-
-sleep 10
+send_platform_events() {
+  log "Send Platform Events"
+  salesforce_sfdx_with_retry "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+}
 
 log "Verify we have received the data in sfdc-platform-events topic"
-playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
+salesforce_insert_and_verify salesforce-platform-events-source send_platform_events --topic sfdc-platform-events --min-expected-messages 2 --timeout 60

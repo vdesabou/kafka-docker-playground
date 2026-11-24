@@ -40,8 +40,8 @@ playground run -f fully-managed-salesforce-pushtopic-source.sh
 2. Bootstraps the Confluent Cloud environment, recreates topic `sfdc-pushtopic-leads-pushtopic-source` and starts an `sfdx-cli` container.
 3. Logs in with the sfdx CLI (JWT) and (re)creates the Lead PushTopic.
 4. Creates the fully managed `SalesforcePushTopicSource` connector on object `Lead`.
-5. Creates a random Lead and verifies it with `playground topic consume --topic sfdc-pushtopic-leads-pushtopic-source`.
-6. Deletes the Lead and the PushTopic created by the test on exit, and asks whether to delete the connector.
+5. Creates a random Lead and verifies it with `playground topic consume --topic sfdc-pushtopic-leads-pushtopic-source`. If nothing arrives, it restarts the failed source task and tries once more with new data (another client of the same Salesforce user can end the session of the task, see #10589).
+6. Deletes the Leads and the PushTopic created by the test on exit, and asks whether to delete the connector.
 
 ## Salesforce setup
 

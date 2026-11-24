@@ -83,13 +83,13 @@ wait_for_ccloud_connector_up $connector_name 180
 log "Login with sfdx CLI"
 salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
-log "Send Platform Events"
-docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+send_platform_events() {
+  log "Send Platform Events"
+  docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+}
 
-sleep 10
-
-log "Verifying topic sfdc-platform-events-from-source"
-playground topic consume --topic sfdc-platform-events-from-source --min-expected-messages 2 --timeout 60
+log "Send Platform Events and verify topic sfdc-platform-events-from-source"
+salesforce_insert_and_verify $connector_name send_platform_events --topic sfdc-platform-events-from-source --min-expected-messages 2 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

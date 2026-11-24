@@ -44,7 +44,7 @@ playground run -f fully-managed-salesforce-bulkapi-2-0-sink.sh
 1. Bootstraps the Confluent Cloud environment, recreates topic `sfdc-pushtopic-leads-bulk-sink-v2` and starts an `sfdx-cli` container.
 2. Logs in to account #1 with the sfdx CLI and (re)creates a Lead PushTopic with a name unique to the run.
 3. Creates the fully managed `SalesforcePushTopicSource` connector writing Leads to `sfdc-pushtopic-leads-bulk-sink-v2`.
-4. Creates a random Lead in account #1 and verifies it with `playground topic consume`.
+4. Creates a random Lead in account #1 and verifies it with `playground topic consume`. If nothing arrives, it restarts the failed source task and tries once more with new data (another client of the same Salesforce user can end the session of the task, see #10589).
 5. Creates the fully managed `SalesforceBulkApiV2Sink` connector writing the topic to the `Lead` object of account #2.
 6. Verifies the `success-<connector id>` topic and queries account #2 with the sfdx CLI to find the Lead.
 7. Deletes the created Leads and PushTopic on exit, and asks whether to delete the connectors.
