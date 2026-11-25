@@ -1,0 +1,5 @@
+192.168.112.6	connect
+192.168.112.5	schema-registry
+192.168.112.4	broker
+192.168.112.2	controller
+192.168.112.3	httpserver

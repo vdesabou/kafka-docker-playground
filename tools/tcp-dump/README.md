@@ -12,12 +12,12 @@ Network capture analyzer behind `playground analyze tcp-dump`, also run at the e
 
 | Section | Content |
 | --- | --- |
-| Findings | refused connections (SYN answered with a reset), connections without answer, resets of established connections, retransmissions (5+ and 1%+ of the segments), zero windows, TLS alerts with their likely cause, DNS errors and slow answers, Kafka error codes (authorization ones high, the usual consumer group ones informational), slow Kafka responses, HTTP 5xx / 401 / 403 (high), 429 and other 4xx (medium) with the response body, slow HTTP endpoints, HTTP requests without response, truncated packets, encrypted traffic |
+| Findings | refused connections (SYN answered with a reset), connections without answer, resets of established connections, retransmissions (5+ and 1%+ of the segments), zero windows, TLS alerts with their likely cause, DNS errors and slow answers, Kafka error codes (authorization ones high, the usual consumer group ones informational), slow Kafka responses, HTTP 5xx / 401 / 403 (high), 429 and other 4xx (medium) with the response body, slow HTTP endpoints, HTTP responses that arrived after the client gave up (high: the client closed the connection, FIN or RST, between the request and the response: a client timeout shorter than the response time), HTTP requests without response, truncated packets, encrypted traffic |
 | TCP conversations | client and server (the side of the SYN, or the listening port), status, frames, bytes, handshake time (SYN → SYN/ACK), retransmissions, SYN retries |
 | TLS | Client Hello per server (SNI), alerts per direction |
 | DNS | errors (NXDOMAIN, SERVFAIL, REFUSED…) and answers slower than 1 s |
 | Kafka | requests per API, response time p50 / p95 / max (response − request, as seen from the capture), error codes, client ids |
-| HTTP | requests per server and endpoint (method + path), status codes, response time p50 / p95 / max, requests without response; each error response (per endpoint and status) with its URL and an excerpt of the request and response bodies; a sample successful exchange (what the client sends) |
+| HTTP | requests per server and endpoint (method + path), status codes, response time p50 / p95 / max, requests without response, responses after the client gave up (tshark does not link a response to its request once the client closed the connection: the late packets start a new TCP stream, so they are paired here by client and server ip:port); each error response (per endpoint and status) with its URL and an excerpt of the request and response bodies; a sample successful exchange (what the client sends) |
 | Charts | packets per second, resets and retransmissions per second, top conversations by bytes |
 
 Kafka is decoded on 9092 (tshark default), 9093 (KRaft controller) and the host listeners of the playground
@@ -45,4 +45,5 @@ playground debug tcp-dump -c connect --action start                  # then --ac
 | Sample | Content |
 | --- | --- |
 | `http_errors` | captured on an HTTP client (`playground debug tcp-dump`, 7 s, 373 packets) posting JSON records like the HTTP sink to a server on port 9006: `200` (12 requests), `429` with `Retry-After` (3), `500` (2), `401` (1), `404` (1), a 1.5 s endpoint (3) and a request that never gets a response |
+| `http_client_timeout` | captured on the worker of the HTTP sink of the [Academy](https://kafka-docker-playground.io/#/academy) (`playground debug tcp-dump`, 25 s, 42 packets): `http.request.timeout.ms` 1000 against 1.5 s of network latency (`debug degrade-traffic` on the server side); 3 attempts, each closed by the client (FIN) after 1 s and answered `200` after 1.5 s, then reset |
 | `kafka_and_network_errors` | captured on a client container (`playground debug tcp-dump`, 16 s, 180 packets): a Kafka client creating a topic, producing and consuming 200 records in a consumer group, a connection refused (`sample-broker:9999`), a connection without answer (iptables `DROP` on `sample-firewalled:8080`), a TLS 1.2 handshake rejected by a Kafka client that does not trust a self-signed certificate (`certificate_unknown`) and a DNS `NXDOMAIN` |

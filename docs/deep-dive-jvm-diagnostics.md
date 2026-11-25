@@ -546,7 +546,7 @@ playground analyze heap-dump      -f <.hprof[.gz]> | --sample leak|leak_growth [
 playground debug thread-dump      [-c <c>]… [--jstack]
 playground debug heap-dump        [-c <c>]… [--live] [--histo]
 playground debug flight-recorder  [-c <c>]… --action start|stop|status [--settings playground|profile|default|all] [--trace-method <Class::method>]… [--output-dir <d>] [--no-analyze]
-playground analyze tcp-dump      [-c <c>… [--duration 30] [--port <p>] [--filter <bpf>] | -f <.pcap>… | --sample kafka_and_network_errors|http_errors] [--hosts <file>] [--kafka-port <p>]… [--http-port <p>]… [--json] [--output-dir <d>]
+playground analyze tcp-dump      [-c <c>… [--duration 30] [--port <p>] [--filter <bpf>] | -f <.pcap>… | --sample kafka_and_network_errors|http_errors|http_client_timeout] [--hosts <file>] [--kafka-port <p>]… [--http-port <p>]… [--json] [--output-dir <d>]
 playground debug jscissors        [-c <c>]… --class <class|regex>… [--method <m|regex>]… [--operation VALUES|RETURN_VALUE|STACK|THREADS|HEAP|…]… [--config-file <rules>] [--only-failed] [--slower-than 500ms] [--action start|stop|status] [--duration 60s] [--restart] [--max-calls N] [--output-dir <d>] [--no-analyze]
 playground analyze jscissors      -f <trace folder> | --sample filestream_sink_bad_json [--json] [--top 15] [--output-dir <d>]
 playground debug resources        [-c <c>]… [--cpus 0.5] [--memory 1g] [--fill-disk 95% [--path <folder>]] | --reset

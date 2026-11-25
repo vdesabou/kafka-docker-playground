@@ -251,4 +251,69 @@ SELECT count(*) FROM orders;
 EOF
 lab_expect_contains "10"
 
-log "✅ academy lab: the 4 beginner exercises and the advanced one behave as the page says"
+log "Exercise 7 (advanced): JDBC sink, duplicates in the table after a worker crash"
+run_model connect-connect-jdbc-postgresql-sink postgres-sink-repro-000007-duplicates-after-worker-crash.sh
+lab_run playground connector reconcile --connector postgres-sink
+lab_expect_contains "🛢️ table orders 20 row(s)"
+lab_expect_contains "❌ Duplicated: 10"
+lab_expect_contains "❌ duplicated: the same record is there several times"
+lab_run playground container logs -c connect --grep "offset.flush.interval.ms" --no-follow
+lab_expect_contains "offset.flush.interval.ms = 60000"
+playground connector create-or-update --connector postgres-sink-upsert << 'EOF'
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "table.name.format": "orders_upsert",
+  "auto.create": "true",
+  "insert.mode": "upsert",
+  "pk.mode": "record_value",
+  "pk.fields": "id"
+}
+EOF
+playground db wait-for-rows --table orders_upsert --min-expected-rows 10
+playground container kill --container connect
+playground container restart --container connect
+playground container wait-for-connect-rest-api-ready
+# the task of the upsert connector reads the 10 records again once the member of the killed worker has timed out
+sleep 90
+lab_run playground connector reconcile --connector postgres-sink-upsert
+lab_expect_contains "🔑 key: id (pk.fields, pk.mode record_value)"
+lab_expect_contains "✅ complete: every record is on the other side, with the same values"
+lab_run playground db sql << 'EOF'
+SELECT count(*) AS nb_rows, count(DISTINCT id) AS nb_ids FROM orders_upsert;
+EOF
+lab_expect_contains "10 | 10"
+
+log "Exercise 8 (advanced): HTTP sink timeouts, is it the server or the network?"
+run_model connect-connect-http-sink http-sink-repro-000008-http-sink-timeouts-slow-network.sh
+lab_expect_contains "0:🛑 FAILED"
+lab_expect_contains "java.net.SocketTimeoutException: Read timed out"
+lab_run playground tools http-server requests
+lab_expect_contains "📥 3 request(s) received since the start or the last reset"
+lab_expect_contains "answers: 200 after 0 ms"
+capture_log=$(mktemp)
+pcap_dir=$(mktemp -d)
+(playground debug tcp-dump --container connect --port 9006 --duration 25 --no-open --output-dir "$pcap_dir" > "$capture_log" 2>&1 &)
+sleep 5
+playground connector restart --connector http-sink
+sleep 35
+lab_run cat "$capture_log"
+lab_expect_contains "HTTP response(s) of POST / on httpserver:9006 arrived after the client gave up: the server answered after 150"
+lab_expect_contains "but the client closed the connection after 100"
+lab_expect_contains "handshake (SYN → SYN/ACK): p50 150"
+lab_expect_contains "reset(s) connect → httpserver:9006 on established connection(s)"
+lab_run playground debug degrade-traffic --container httpserver --action status
+lab_expect_contains "delay 1.5s"
+playground debug degrade-traffic --container httpserver --action stop
+playground tools http-server reset
+playground tools http-server set-response --status-code 200
+playground connector restart --connector http-sink
+sleep 20
+lab_run playground connector status --connector http-sink
+lab_expect_contains "0:🟢 RUNNING"
+lab_run playground tools http-server requests --grep '"id":10'
+lab_expect_contains '"id":10'
+
+log "✅ academy lab: the 4 beginner exercises and the 3 advanced ones behave as the page says"

@@ -13754,8 +13754,8 @@ playground_analyze_tcp_dump_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/tcp-dump/samples\n    \n      kafka_and_network_errors   a Kafka client producing and consuming, a\n    refused connection, a connection without answer, a TLS handshake rejected\n    (certificate_unknown) and a DNS NXDOMAIN\n      http_errors                an HTTP client posting JSON records (like the\n    HTTP sink): 200, 429, 500, 401 and 404 responses with their bodies, a slow\n    endpoint and a request without response\n"
-    printf "    %s\n" "Allowed: kafka_and_network_errors, http_errors"
+    printf "    🧪 Sample of tools/tcp-dump/samples\n    \n      kafka_and_network_errors   a Kafka client producing and consuming, a\n    refused connection, a connection without answer, a TLS handshake rejected\n    (certificate_unknown) and a DNS NXDOMAIN\n      http_errors                an HTTP client posting JSON records (like the\n    HTTP sink): 200, 429, 500, 401 and 404 responses with their bodies, a slow\n    endpoint and a request without response\n      http_client_timeout        an HTTP sink with a 1 s timeout behind a 1.5 s\n    network: the responses arrive after the client gave up (Academy)\n"
+    printf "    %s\n" "Allowed: kafka_and_network_errors, http_errors, http_client_timeout"
     echo
 
     # :flag.usage
@@ -144367,8 +144367,8 @@ playground_analyze_tcp_dump_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(kafka_and_network_errors|http_errors)$ ]]; then
-      printf "%s\n" "--sample must be one of: kafka_and_network_errors, http_errors" >&2
+    if [[ ! $i =~ ^(kafka_and_network_errors|http_errors|http_client_timeout)$ ]]; then
+      printf "%s\n" "--sample must be one of: kafka_and_network_errors, http_errors, http_client_timeout" >&2
       exit 1
     fi
   done
@@ -193712,6 +193712,7 @@ playground_analyze_tcp_dump_completion() {
           local -a completion_values=(
             "kafka_and_network_errors"
             "http_errors"
+            "http_client_timeout"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 

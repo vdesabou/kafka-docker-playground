@@ -12,8 +12,7 @@ then
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-# the compose file of the JDBC PostgreSQL sink example (postgres and the JDBC plugin), used as is
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${DIR}/../../connect/connect-jdbc-postgresql-sink/docker-compose.plaintext.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000006-sink-running-but-no-data.yml"
 
 log "Creating table orders"
 playground db sql << 'EOF'
