@@ -1,0 +1,308 @@
+==========================
+Connection
+==========================
+🔘 connection.url
+
+JDBC connection URL.
+For example: ``jdbc:oracle:thin:@localhost:1521:orclpdb1``, ``jdbc:mysql://localhost/db_name``, ``jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=db_name``
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 connection.user
+
+JDBC connection user.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 connection.password
+
+JDBC connection password.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 jdbc.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to database. By default the connector uses ``io.confluent.connect.jdbc.util.DefaultJdbcCredentialsProvider``.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.jdbc.util.DefaultJdbcCredentialsProvider
+	 - Importance: LOW
+	 - Required: false
+
+🔘 dialect.name
+
+The name of the database dialect that should be used for this connector. By default this is empty, and the connector automatically determines the dialect based upon the JDBC connection URL. Use this if you want to override that behavior and use a specific dialect. All properly-packaged dialects in the JDBC connector plugin can be used.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.attempts
+
+Maximum number of attempts to retrieve a valid JDBC connection. Must be a positive integer.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+🔘 connection.backoff.ms
+
+Backoff time in milliseconds between connection attempts.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Writes
+==========================
+🔘 insert.mode
+
+The insertion mode to use. Supported modes are:
+``insert``
+    Use standard SQL ``INSERT`` statements.
+``upsert``
+    Use the appropriate upsert semantics for the target database if it is supported by the connector, e.g. ``INSERT OR IGNORE``.
+``update``
+    Use the appropriate update semantics for the target database if it is supported by the connector, e.g. ``UPDATE``.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 batch.size
+
+Specifies how many records to attempt to batch together for insertion into the destination table, when possible.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delete.enabled
+
+Whether to treat ``null`` record values as deletes. Requires ``pk.mode`` to be ``record_key``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 table.types
+
+The comma-separated types of database tables to which the sink connector can write. By default this is ``TABLE``, but any combination of ``TABLE``, ``PARTITIONED TABLE`` and ``VIEW`` is allowed. Not all databases support writing to views, and when they do the sink connector will fail if the view definition does not match the records' schemas (regardless of ``auto.evolve``).
+
+	 - Type: LIST
+	 - Default: TABLE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 replace.null.with.default
+
+Whether to replace ``null`` value with default value
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Data Mapping
+==========================
+🔘 table.name.format
+
+A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
+
+	 - Type: STRING
+	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 pk.mode
+
+The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+``none``
+    No keys utilized.
+``kafka``
+    Kafka coordinates are used as the PK.
+``record_key``
+    Field(s) from the record key are used, which may be a primitive or a struct.
+``record_value``
+    Field(s) from the record value are used, which must be a struct.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 pk.fields
+
+List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
+``none``
+    Ignored as no fields are used as primary key in this mode.
+``kafka``
+    Must be a trio representing the Kafka coordinates, defaults to ``__connect_topic,__connect_partition,__connect_offset`` if empty.
+``record_key``
+    If empty, all fields from the key struct will be used, otherwise used to extract the desired fields - for primitive key only a single field name must be configured.
+``record_value``
+    If empty, all fields from the value struct will be used, otherwise used to extract the desired fields.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 fields.whitelist
+
+List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
+Note that ``pk.fields`` is applied independently in the context of which field(s) form the primary key columns in the destination database, while this configuration is applicable for the other columns.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 db.timezone
+
+Name of the JDBC timezone that should be used in the connector when inserting time-based values. Defaults to UTC.
+
+	 - Type: STRING
+	 - Default: UTC
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 date.timezone
+
+Name of the JDBC timezone that should be used in the connector when inserting DATE type values. Defaults to DB_TIMEZONE that uses the timezone set for db.timzeone configuration (to maintain backward compatibility). It is recommended to set this to UTC to avoid conversion for DATE type values.
+
+	 - Type: STRING
+	 - Default: DB_TIMEZONE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 timestamp.fields.list
+
+List of comma-separated record value timestamp field names that should be converted to timestamps. These fields will be converted based on precision mode specified in timestamp.precision.mode(microseconds or nanoseconds). The timestamp fields included here should be Long or String type and nested fields are not supported.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.precision.mode
+
+Convert the Timestamp with precision. If set to microseconds, the timestamp will be converted to microsecond precision. If set to nanoseconds the timestamp will be converted to nanoseconds precision.
+
+	 - Type: STRING
+	 - Default: MICROSECONDS
+	 - Importance: LOW
+	 - Required: false
+
+🔘 date.calendar.system
+
+Conversion of time since epoch value in kafka topic record to DATE or TIMESTAMP depends on the calendar used to interpret it. If LEGACY is used, it will use the hybrid Gregorian/Julian calendar which was the default in the older java date time APIs. However, if 'PROLEPTIC_GREGORIAN' is used, then it will use the proleptic gregorian calendar which extends the Gregorian rules backward indefinitely and does not apply the 1582 cutover. This matches the behavior of modern Java date/time APIs (java.time). This is defaulted to LEGACY for backward compatibility. The ideal setting for this depends on whether the values in source topic were populated using old or new java date time APIs. Changing this configuration on an existing connector might lead to a drift in the DATE/TIMESTAMP column's values populated in the sink database.
+
+	 - Type: STRING
+	 - Default: LEGACY
+	 - Importance: LOW
+	 - Required: false
+
+🔘 string.output.value.column.name
+
+When the Kafka record value uses the String schema (e.g. records produced with StringConverter), the connector writes the value into a single column with this name. If the destination table is being auto-created, the column is created with this name. If the table already exists and the column is missing, the column is added via ALTER when 'auto.evolve' is true; otherwise the connector fails with the standard auto-evolution-disabled error. Defaults to 'record_value'.
+
+	 - Type: STRING
+	 - Default: record_value
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+DDL Support
+==========================
+🔘 auto.create
+
+Whether to automatically create the destination table based on record schema if it is found to be missing by issuing ``CREATE``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 auto.evolve
+
+Whether to automatically add columns in the table schema when found to be missing relative to the record schema by issuing ``ALTER``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 quote.sql.identifiers
+
+When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``. Identifiers containing control characters are always rejected. With ``never``, identifiers also may not contain ``;``, SQL comment sequences (including ``#`` on MySQL and MariaDB), whitespace, quote characters, parentheses, or commas, since they cannot be used unquoted.
+
+	 - Type: STRING
+	 - Default: ALWAYS
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+DML Support
+==========================
+🔘 mssql.use.merge.holdlock
+
+Whether to use HOLDLOCK when performing a MERGE INTO upsert statement. Note that it is only applicable to SQL Server.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Retries
+==========================
+🔘 max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 retry.backoff.ms
+
+The time in milliseconds to wait following an error before a retry attempt is made.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 trim.sensitive.log
+
+
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+
