@@ -20,5 +20,8 @@
     "kafka.record.headers": "false",
     "kafka.timestamp.attribute": "",
     "kafka.topic": "",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
