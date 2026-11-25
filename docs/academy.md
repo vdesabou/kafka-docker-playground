@@ -1509,3 +1509,355 @@ A FAILED task is visible to monitoring and to `connector status`; a task waiting
 * Try `playground analyze thread-dump --sample stuck_sink_put`: the 3 dumps of this exercise.
 
 <!-- tabs:end -->
+
+### JDBC sink: duplicates in the table after a worker crash
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+The topic has 10 orders, but after a crash of the Connect worker the table has 20 rows. Is the connector buggy?
+
+💡 What you'll learn:
+
+* Find lost and duplicated records between a topic and a table, without counting rows by hand.
+* Understand when a sink commits its offsets, and why Kafka Connect delivers *at least once*.
+* Make a sink idempotent, so that a redelivery does no harm.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 JDBC sink (PostgreSQL): 10.9.10
+
+Connector config (the defaults of the JDBC sink: `insert.mode` `insert`, `pk.mode` `none`):
+
+```json
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "auto.create": "true"
+}
+```
+
+Reproduction model: [postgres-sink-repro-000007-duplicates-after-worker-crash.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000007-duplicates-after-worker-crash.sh)
+
+#### **📍 Step 1**
+
+Run the example (or type `000007` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000007-duplicates-after-worker-crash.sh
+```
+
+The connector writes the 10 orders, then the worker is killed (like an OOM kill, or a lost node) and restarted. The connector is RUNNING, but:
+
+```log
+ count
+-------
+    20
+(1 row)
+```
+
+❔Questions:
+
+* Which rows are duplicated, and is anything lost?
+* Why did the crash create them?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Which rows are duplicated, and is anything lost?
+
+[playground connector reconcile](/playground%20connector%20reconcile) reads the topic and the table of the connector, and compares them record by record:
+
+```bash
+playground connector reconcile --connector postgres-sink
+```
+
+```log
+🔎 Sink connector: is every record of the topic orders in the table orders?
+
+   📥 topic orders                         10 record(s)
+   🛢️  table orders                         20 row(s)
+   🔑 no key: records and rows compared as multisets of (id, price, product, quantity)
+
+❌ Duplicated: 10
+   record id="1", price="0.77929", product="Brianne", quantity="2": 2 times in the table
+   record id="11", price="0.503262", product="Renee", quantity="12": 2 times in the table
+   ...
+
+✅ 10 matching
+
+❌ duplicated: the same record is there several times
+```
+
+Nothing is lost: every record of the topic is in the table, twice.
+
+> Why did the crash create them?
+
+A sink task commits the offsets of what it wrote every `offset.flush.interval.ms` (60 seconds by default, a setting of the worker), not after each write. The worker was killed a few seconds after writing the 10 rows, before its first commit:
+
+```bash
+playground container logs -c connect --grep "offset.flush.interval.ms" --no-follow
+	offset.flush.interval.ms = 60000
+```
+
+When the worker came back, the task found no committed offset (`Found no committed offset for partition orders-0` in the logs) and read the topic from the beginning: the same 10 records were written a second time. Kafka Connect delivers *at least once*: after a crash, the records since the last commit are delivered again, and the sink must cope with it.
+
+> [!NOTE]
+> A graceful stop (`playground connector restart`, a rolling restart of the workers) commits the offsets first: only a crash redelivers. The task also waits for the member of the dead worker to leave its consumer group (`session.timeout.ms`, 45 seconds by default) before it starts again.
+
+<!-- select:end -->
+
+👉 Change the connector so that a crash no longer creates duplicates, then check it with the same crash.
+
+> [!TIP]
+> With `insert.mode` `insert`, every record is a new `INSERT`. Look at the other modes of the [JDBC sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/sink_config_options.html), and at `pk.mode` / `pk.fields`.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Make the writes idempotent: an upsert on a primary key writes the same row again instead of adding one. The records have an `id` field:
+
+```json
+"insert.mode": "upsert",
+"pk.mode": "record_value",
+"pk.fields": "id"
+```
+
+To check it in the same environment, create a second connector on a new table, then crash the worker again:
+
+```bash
+playground connector create-or-update --connector postgres-sink-upsert << 'EOF'
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "table.name.format": "orders_upsert",
+  "auto.create": "true",
+  "insert.mode": "upsert",
+  "pk.mode": "record_value",
+  "pk.fields": "id"
+}
+EOF
+playground db wait-for-rows --table orders_upsert --min-expected-rows 10
+playground container kill --container connect
+playground container restart --container connect
+```
+
+About a minute later, the task has read the 10 records again (`Found no committed offset` again), but:
+
+```bash
+playground connector reconcile --connector postgres-sink-upsert
+```
+
+```log
+🔎 Sink connector: is every record of the topic orders in the table orders_upsert?
+
+   📥 topic orders                         10 record(s), 10 key(s)
+   🛢️  table orders_upsert                  10 row(s), 10 key(s)
+   🔑 key: id (pk.fields, pk.mode record_value)
+
+✅ 10 matching
+
+✅ complete: every record is on the other side, with the same values
+```
+
+The redelivery happened, and did no harm.
+
+<!-- select:end -->
+🥁 So...is the connector buggy?
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 offsets and lag](/deep-dive-offsets-and-lag.md) deep dive.
+* `pk.mode` `kafka` (topic, partition, offset as the key) also makes the writes idempotent, for records without a natural key.
+* What to tell a customer with duplicates after a crash: it is the expected *at least once* delivery; make the sink idempotent (upsert on a key) or deduplicate downstream. Lowering `offset.flush.interval.ms` reduces the window, it does not close it.
+
+<!-- tabs:end -->
+
+### HTTP sink timeouts: is it the server or the network?
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+An HTTP sink connector fails with `java.net.SocketTimeoutException: Read timed out`. The team that owns the API says its server answers in a few milliseconds.
+
+💡 What you'll learn:
+
+* Tell a slow server from a slow network, with a network capture.
+* Understand what a timeout and a retry do to an HTTP API.
+* Use the HTTP server of the examples to see what the API received.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 HTTP sink: 1.7.15
+
+The connector config of the customer: the API usually answers in a few milliseconds, so 1 second looked like plenty.
+
+```json
+"http.api.url": "http://httpserver:9006",
+"http.request.timeout.ms": "1000",
+"max.retries": "2",
+"retry.backoff.ms": "1000"
+```
+
+Reproduction model: [http-sink-repro-000008-http-sink-timeouts-slow-network.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-http-sink/http-sink-repro-000008-http-sink-timeouts-slow-network.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000008` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-http-sink/http-sink-repro-000008-http-sink-timeouts-slow-network.sh
+```
+
+The task fails after its retries:
+
+```log
+http-sink                      ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+Caused by: Error while processing HTTP request with Url : http://httpserver:9006, Error Message : Exception while processing HTTP request for a batch of 1 records., Exception : java.net.SocketTimeoutException: Read timed out
+```
+
+❔Questions:
+
+* Did the API receive anything?
+* Is the API slow, or is it the network?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Did the API receive anything?
+
+The HTTP server of the examples keeps the requests it received: [playground tools http-server requests](/playground%20tools%20http-server%20requests):
+
+```bash
+playground tools http-server requests
+14:40:50 ℹ️ 🌐 answers: 200 after 0 ms, body {"message":"Hello, World!"}
+14:40:50 ℹ️ 📥 3 request(s) received since the start or the last reset (3 kept)
+#1 14:39:59 POST / → 200  application/json, 69 bytes
+   [{"name":"Gus_Schoen1","id":1,"email":"Leanna.Gottlieb@example.net"}]
+#2 14:40:01 POST / → 200  application/json, 69 bytes
+   [{"name":"Gus_Schoen1","id":1,"email":"Leanna.Gottlieb@example.net"}]
+#3 14:40:04 POST / → 200  application/json, 69 bytes
+   [{"name":"Gus_Schoen1","id":1,"email":"Leanna.Gottlieb@example.net"}]
+```
+
+The server received the **same record 3 times** (the request and its 2 retries) and answered `200` right away each time. For the connector it failed; for the API it succeeded, 3 times. A retry after a timeout sends the request again: the API must be idempotent, or it gets duplicates.
+
+So the server is not slow. Then where do the seconds go?
+
+<!-- select:end -->
+
+👉 Capture the traffic between the worker and the API while the connector retries, and find where the time goes.
+
+> [!TIP]
+> [playground debug tcp-dump](/playground%20debug%20tcp-dump) captures the traffic of a container and analyzes it. Start the capture, then restart the connector so that it sends its requests again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+In one terminal:
+
+```bash
+playground debug tcp-dump --container connect --port 9006 --duration 25
+```
+
+In another one, during the capture:
+
+```bash
+playground connector restart --connector http-sink
+```
+
+```log
+🔎 Findings
+   🟠 HIGH: 3 HTTP response(s) of POST / on httpserver:9006 arrived after the client gave up: the server answered after 1504.28 ms (median), but the client closed the connection after 1005.64 ms (FIN). The client timeout is shorter than the response time seen on the network (an HTTP client timeout, like http.request.timeout.ms of the HTTP sink): the request may have been processed anyway, and a retry sends it again.
+   🟡 MEDIUM: 6 reset(s) connect → httpserver:9006 on established connection(s): a peer closed the connection abruptly (process stopped, idle timeout of a proxy or load balancer, protocol error).
+   🟡 MEDIUM: HTTP POST / on httpserver:9006 is slow: p95 1504.35 ms, max 1504.35 ms.
+
+🔌 TCP: 6 conversation(s), 3 connection(s) opened, 6 reset(s), 0 retransmission(s) (0.0%), 0 zero window(s)
+   handshake (SYN → SYN/ACK): p50 1501.51 ms, p95 1502.93 ms, max 1502.93 ms
+
+🌍 HTTP: 3 request(s), 3 response(s) (200 x3)
+        3  POST / on httpserver:9006   p50 1504.28 ms, p95 1504.35 ms   200 x3, 3 after the client gave up
+```
+
+Read it like this:
+
+* **Each response arrived after the connector gave up.** The connector closed each connection 1 s after its request (its `http.request.timeout.ms`), the `200` came 1.5 s after the request, and the connector answered it with a reset (the resets `connect → httpserver`). That is why the server saw successful requests while the connector saw timeouts.
+* **The TCP handshake takes 1.5 s too.** A SYN/ACK is sent by the kernel of the server, not by the application: when the handshake itself is slow, the time is spent on the network, whatever the application does.
+
+The server answers in 0 ms, the network adds 1.5 s: it is the network.
+
+> [!TIP]
+> The 3 attempts of this exercise are a sample: `playground analyze tcp-dump --sample http_client_timeout`.
+
+<!-- select:end -->
+
+👉 What is wrong with this network, and what are the fixes?
+
+#### **📍 Step 4**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+The model degraded the network on purpose, with [playground debug degrade-traffic](/playground%20debug%20degrade-traffic) (the playground way to add latency, loss or a rate limit to a container):
+
+```bash
+playground debug degrade-traffic --container httpserver --action status
+14:46:03 ℹ️ 🔎 Traffic degradation of container httpserver
+   eth0: qdisc netem 10: parent 1:1 limit 1000 delay 1.5s
+```
+
+The fixes, depending on what you can change:
+
+* **The network**: in real life, the VPN, proxy or link that adds the latency. Here: `playground debug degrade-traffic --container httpserver --action stop`, then `playground connector restart --connector http-sink`.
+* **The timeout**: above the real latency of the path, not of the server alone. With `"http.request.timeout.ms": "10000"`, the 10 records reach the API, slowly:
+
+  ```bash
+  playground tools http-server requests --last 3
+  #18 14:45:28 POST / → 200  application/json, 83 bytes
+     [{"name":"Chris.Thompson-Lind","id":8,"email":"Rodger.Herman-Kling94@example.org"}]
+  #19 14:45:30 POST / → 200  application/json, 68 bytes
+     [{"name":"Jerel_Kris","id":9,"email":"Eldon.McDermott@example.net"}]
+  #20 14:45:31 POST / → 200  application/json, 68 bytes
+     [{"name":"Florian17","id":10,"email":"Aric_Berge-Cole@example.net"}]
+  ```
+
+* **The throughput**: the HTTP sink sends one record per request by default (`batch.max.size` 1). With a slow network, each request pays the latency: batching (`batch.max.size`, with a `request.body.format` the API accepts) pays it once for many records.
+
+<!-- select:end -->
+🥁 So...the server or the network?
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 A slow or broken network, on purpose](/deep-dive-network-traffic.md) deep dive (`degrade-traffic`, `block-traffic`, `tcp-dump`).
+* Try a loss instead of a latency (`--loss 30%`): retransmissions show up in the capture.
+* What to ask a customer in this situation: a capture on the worker while the connector sends (`tcpdump -w`), the response times measured on the API side, and the timeouts and retries of the connector config.
+
+<!-- tabs:end -->

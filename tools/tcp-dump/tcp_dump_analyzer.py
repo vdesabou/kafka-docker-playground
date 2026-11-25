@@ -193,7 +193,8 @@ def analyze(data_dir: str, hosts: Dict[str, str], top: int) -> dict:
         t0 = t if t0 is None else t0
         src, dst = ip_src or ip6_src, ip_dst or ip6_dst
         length_i = to_int(length, 0)
-        frames[n] = {"t": t, "src": src, "dst": dst, "syn": flag(syn)}
+        frames[n] = {"t": t, "src": src, "dst": dst, "syn": flag(syn), "sport": sport, "dport": dport,
+                     "fin": flag(fin), "rst": flag(rst)}
         res["bytes"] += length_i
         if to_int(cap_len, 0) < length_i:
             res["truncated_packets"] += 1
@@ -437,12 +438,14 @@ def analyze_http(data_dir: str, frames: Dict[int, dict], name, t0: Optional[floa
         if method:
             requests[n] = {"method": method.split(",")[0], "uri": uri.split(",")[0], "host": host.split(",")[0],
                            "client": name(f.get("src", "")), "server": name(f.get("dst", "")), "body": body,
-                           "content_type": content_type.split(",")[0], "t": f.get("t")}
+                           "content_type": content_type.split(",")[0], "t": f.get("t"),
+                           "client_ip": f.get("src"), "client_port": f.get("sport"), "server_ip": f.get("dst"),
+                           "server_port": f.get("dport")}
         elif code:
             elapsed = to_float(http_time.split(",")[0])
             responses.append({"request_in": to_int(request_in.split(",")[0]), "code": to_int(code.split(",")[0], 0),
                               "phrase": phrase.split(",")[0], "time_ms": round(elapsed * 1000, 2) if elapsed is not None else None,
-                              "body": body, "content_type": content_type.split(",")[0], "t": f.get("t")})
+                              "body": body, "content_type": content_type.split(",")[0], "t": f.get("t"), "frame": n})
 
     def endpoint(req: dict) -> Tuple[str, str]:
         return (req["host"] or req["server"], f"{req['method']} {req['uri'].split('?')[0]}")
@@ -450,8 +453,44 @@ def analyze_http(data_dir: str, frames: Dict[int, dict], name, t0: Optional[floa
     endpoints: Dict[Tuple[str, str], dict] = OrderedDict()
     for req in requests.values():
         e = endpoints.setdefault(endpoint(req), {"server": endpoint(req)[0], "endpoint": endpoint(req)[1], "requests": 0,
-                                                 "statuses": Counter(), "latencies_ms": [], "no_response": 0})
+                                                 "statuses": Counter(), "latencies_ms": [], "no_response": 0, "late": 0})
         e["requests"] += 1
+    # a response that tshark did not link to its request: when the client closed the connection before the answer (a
+    # client timeout), the late packets of the server start a new tcp.stream and http.request_in is empty. Paired here
+    # with the last unanswered request of the same connection (client and server ip:port) sent before it; when the
+    # client closed that connection (FIN or RST) between the request and the response, the response is "late": it
+    # arrived after the client gave up
+    linked = {resp["request_in"] for resp in responses if resp["request_in"] in requests}
+    closes = [(f["t"], f["src"], f["sport"], f["dst"], f["dport"], "RST" if f["rst"] else "FIN")
+              for f in frames.values() if f.get("fin") or f.get("rst")]
+    late = []
+    for resp in responses:
+        if resp["request_in"] in requests or resp["t"] is None or resp.get("frame") is None:
+            continue
+        rf = frames.get(resp["frame"], {})
+        cands = [(q["t"], m) for m, q in requests.items()
+                 if m not in linked and q["t"] is not None and q["t"] < resp["t"]
+                 and q["client_ip"] == rf.get("dst") and q["client_port"] == rf.get("dport")
+                 and q["server_ip"] == rf.get("src") and q["server_port"] == rf.get("sport")]
+        if not cands:
+            continue
+        q_t, m = max(cands)
+        linked.add(m)
+        resp["request_in"] = m
+        resp["time_ms"] = round((resp["t"] - q_t) * 1000, 2)
+    # late responses, the ones linked by tshark included: the client closed the connection between the request and the response
+    for resp in responses:
+        q = requests.get(resp["request_in"])
+        if not q or q["t"] is None or resp["t"] is None:
+            continue
+        gave_up = min((c for c in closes if q["t"] < c[0] < resp["t"] and c[1] == q["client_ip"] and c[2] == q["client_port"]
+                       and c[3] == q["server_ip"] and c[4] == q["server_port"]), default=None)
+        if gave_up:
+            resp["late"] = True
+            answered_ms = round((resp["t"] - q["t"]) * 1000, 2)
+            late.append({"server": endpoint(q)[0], "endpoint": endpoint(q)[1], "client": q["client"], "code": resp["code"],
+                         "answered_ms": answered_ms, "gave_up_ms": round((gave_up[0] - q["t"]) * 1000, 2), "close": gave_up[5]})
+
     statuses: Counter = Counter()
     error_groups: Dict[Tuple, dict] = OrderedDict()
     answered = set()
@@ -463,6 +502,8 @@ def analyze_http(data_dir: str, frames: Dict[int, dict], name, t0: Optional[floa
         answered.add(resp["request_in"])
         e = endpoints[endpoint(req)]
         e["statuses"][resp["code"]] += 1
+        if resp.get("late"):
+            e["late"] += 1
         if resp["time_ms"] is not None:
             e["latencies_ms"].append(resp["time_ms"])
         if resp["code"] >= 400:
@@ -485,7 +526,7 @@ def analyze_http(data_dir: str, frames: Dict[int, dict], name, t0: Optional[floa
         lat = e["latencies_ms"]
         rows.append({"server": e["server"], "endpoint": e["endpoint"], "requests": e["requests"],
                      "statuses": [{"code": c, "count": k} for c, k in sorted(e["statuses"].items())],
-                     "no_response": e["no_response"],
+                     "no_response": e["no_response"], "late": e["late"],
                      "p50_ms": round(percentile(lat, 50), 2) if lat else None, "p95_ms": round(percentile(lat, 95), 2) if lat else None,
                      "max_ms": round(max(lat), 2) if lat else None})
     # a sample of a successful exchange, to see what the client sends
@@ -500,7 +541,7 @@ def analyze_http(data_dir: str, frames: Dict[int, dict], name, t0: Optional[floa
     return {"requests": len(requests), "responses": len(responses),
             "statuses": [{"code": c, "count": k} for c, k in sorted(statuses.items())],
             "endpoints": rows[:top * 2], "errors": sorted(error_groups.values(), key=lambda g: (-(g["code"] // 100), -g["count"]))[:top * 2],
-            "no_response": sum(e["no_response"] for e in endpoints.values()), "sample": sample}
+            "no_response": sum(e["no_response"] for e in endpoints.values()), "sample": sample, "late": late}
 
 
 def findings(res: dict) -> List[dict]:
@@ -565,6 +606,19 @@ def findings(res: dict) -> List[dict]:
     for e in res["http"]["endpoints"]:
         if e["p95_ms"] is not None and e["p95_ms"] >= 1000:
             add("MEDIUM", f"HTTP {e['endpoint']} on {e['server']} is slow: p95 {e['p95_ms']} ms, max {e['max_ms']} ms.")
+    late = res["http"].get("late") or []
+    if late:
+        by_endpoint: Dict[Tuple[str, str], List[dict]] = OrderedDict()
+        for x in late:
+            by_endpoint.setdefault((x["endpoint"], x["server"]), []).append(x)
+        for (ep, server), xs in by_endpoint.items():
+            answered = sorted(x["answered_ms"] for x in xs)
+            gave_up = sorted(x["gave_up_ms"] for x in xs)
+            add("HIGH", f"{len(xs)} HTTP response(s) of {ep} on {server} arrived after the client gave up: the server answered "
+                        f"after {answered[len(answered) // 2]} ms (median), but the client closed the connection after "
+                        f"{gave_up[len(gave_up) // 2]} ms ({xs[0]['close']}). The client timeout is shorter than the response "
+                        "time seen on the network (an HTTP client timeout, like http.request.timeout.ms of the HTTP sink): "
+                        "the request may have been processed anyway, and a retry sends it again.")
     if res["http"]["no_response"]:
         add("LOW", f"{res['http']['no_response']} HTTP request(s) without a response in the capture (the capture ended "
                    "first, the client timed out, or the connection was reset).")
@@ -643,7 +697,8 @@ def text_report(res: dict, title: str, top: int) -> str:
         for e in res["http"]["endpoints"][:top]:
             st = ", ".join(f"{x['code']} x{x['count']}" for x in e["statuses"])
             lines.append(f"   {e['requests']:>6}  {e['endpoint']} on {e['server']}   p50 {fmt_ms(e['p50_ms'])}, p95 {fmt_ms(e['p95_ms'])}"
-                         + (f"   {st}" if st else "") + (f", {e['no_response']} without response" if e["no_response"] else ""))
+                         + (f"   {st}" if st else "") + (f", {e['no_response']} without response" if e["no_response"] else "")
+                         + (f", {e['late']} after the client gave up" if e.get("late") else ""))
         for g in res["http"]["errors"][:top]:
             lines.append(f"   ❌ {g['code']} {g['phrase']} x{g['count']}: {g['endpoint']} on {g['server']}")
             if g["request_body"]:
@@ -844,7 +899,7 @@ def html_report(res: dict, title: str) -> str:
 
         rows = "".join(f"<tr><td class='mono'>{_e(e['server'])}</td><td class='mono'>{_e(e['endpoint'])}</td><td class='num'>{e['requests']}</td>"
                        f"<td>{' '.join(status(x['code']) + ' ×' + str(x['count']) for x in e['statuses'])}</td>"
-                       f"<td class='num'>{e['no_response'] or ''}</td><td class='num'>{_e(fmt_ms(e['p50_ms']))}</td>"
+                       f"<td class='num'>{e['no_response'] or ''}</td><td class='num'>{e.get('late') or ''}</td><td class='num'>{_e(fmt_ms(e['p50_ms']))}</td>"
                        f"<td class='num'>{_e(fmt_ms(e['p95_ms']))}</td><td class='num'>{_e(fmt_ms(e['max_ms']))}</td></tr>"
                        for e in res["http"]["endpoints"])
         errors = "".join(f"<details{' open' if i == 0 else ''}><summary>{status(g['code'])} {_e(g['phrase'])} ×{g['count']} — <span class='mono'>{_e(g['endpoint'])}</span> on {_e(g['server'])}"
@@ -854,7 +909,7 @@ def html_report(res: dict, title: str) -> str:
         sample_html = (f"<details><summary>{status(sample['code'])} {_e(sample['phrase'])} — sample exchange: <span class='mono'>{_e(sample['endpoint'])}</span> on {_e(sample['server'])}</summary>"
                        f"<p class='mono' style='margin-top:6px'>{_e(sample['uri'])}</p>{exchange(sample)}</details>") if sample else ""
         sections.append("<div class='table-card'><h2>🌍 HTTP requests</h2><table><tr><th>Server</th><th>Endpoint</th><th class='num'>Requests</th>"
-                        "<th>Status codes</th><th class='num'>No response</th><th class='num'>p50</th><th class='num'>p95</th><th class='num'>Max</th></tr>"
+                        "<th>Status codes</th><th class='num'>No response</th><th class='num' title='responses that arrived after the client closed the connection'>After the client gave up</th><th class='num'>p50</th><th class='num'>p95</th><th class='num'>Max</th></tr>"
                         f"{rows}</table>"
                         + (f"<h2 style='margin-top:16px'>❌ Error responses</h2>{errors}" if errors else "")
                         + (f"<h2 style='margin-top:16px'>🔍 What the client sends</h2>{sample_html}" if sample_html else "")
