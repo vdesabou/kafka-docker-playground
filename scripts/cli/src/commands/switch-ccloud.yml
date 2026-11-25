@@ -3,7 +3,7 @@ group: Run
 dependencies:
   confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
 help: |-
-  🌩️  Switch to ccloud environment.
+  🌩️ Switch to ccloud environment.
 
   It will bootstrap ccloud environment based on your previously ran ccloud example.
 

@@ -1,5 +1,4 @@
 name: find-command
-group: Run
 help: |-
   🧭 Find the playground command that answers a question, without reading the docs
 

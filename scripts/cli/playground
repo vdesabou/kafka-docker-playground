@@ -42,7 +42,7 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Show help about a command\n" "$(green "help")                                      "
+  printf "  %s   ❓ Show the help of a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
   printf "  %s   🩺 Check that the container engine is ready for the playground\n" "$(green "doctor")                                    "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for docker ports\n" "$(green "get-docker-ports")                          "
@@ -86,12 +86,16 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "update-docs")                               "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "bashly-reload")                             "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "state")                                     "
-  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   ☁️ Deprecated: use 'playground account salesforce' (same subcommands and flags)\n" "$(green "salesforce")                                "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🌤️ Deprecated: use 'playground account ccloud' (same subcommands and flags)\n" "$(green "ccloud")                                    "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🧹 Deprecated: use 'playground cloud-resources cleanup' (same flags)\n" "$(green "cleanup-cloud-resources")                   "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   💰 Deprecated: use 'playground cloud-resources ccloud costs' (same flags)\n" "$(green "ccloud-costs")                              "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   👛 Deprecated: use 'playground cloud-resources ccloud costs-history' (same flags)\n" "$(green "ccloud-costs-history")                      "
+  printf "  %s   🔎 Find examples matching a free-text query, without the interactive picker\n" "$(green "find-example")                              "
+  printf "  %s   🧭 Find the playground command that answers a question, without reading the docs\n" "$(green "find-command")                              "
+  echo
+  printf "%s\n" "$(bold "Configuration commands:")"
+  printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   echo
   printf "%s\n" "$(bold "Secrets commands:")"
   printf "  %s   🔐 Credentials required by examples\n" "$(green "secrets")                                   "
@@ -143,11 +147,9 @@ playground_usage() {
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                                    "
   printf "  %s   🤖 get CI result for current example\n" "$(green "get-ci-result")                             "
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
-  printf "  %s   🔎 Find examples matching a free-text query, without the interactive picker\n" "$(green "find-example")                              "
-  printf "  %s   🧭 Find the playground command that answers a question, without reading the docs\n" "$(green "find-command")                              "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n" "$(green "start-environment")                         "
-  printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
-  printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
+  printf "  %s   🌩️ Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
+  printf "  %s   💺 Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
   printf "  %s   🦭 Switch the container engine to Podman\n" "$(green "switch-podman")                             "
   printf "  %s   🐳 Switch the container engine back to Docker\n" "$(green "switch-docker")                             "
   printf "  %s   ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n" "$(green "update-version")                            "
@@ -164,14 +166,14 @@ playground_usage() {
   printf "  %s   🧹 Remove the Confluent Platform docker images of the versions you no longer use (a table of the versions installed locally, then a selection)\n" "$(green "remove-cp-docker-images")                   "
   printf "  %s   🧽 Free the disk of the container engine every week, automatically: old Confluent Platform images, dangling images, old build cache\n" "$(green "docker-cleanup")                            "
   printf "  %s   🔔 Get a macOS notification every evening when a local environment was left running with nobody using it. It never stops anything\n" "$(green "forgotten-environment")                     "
-  printf "  %s   🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n" "$(green "cleanup-cloud-details")                     "
+  printf "  %s   🧼 Forget the cached Confluent Cloud details (environment, cluster, endpoints, API keys)\n" "$(green "cleanup-cloud-details")                     "
   echo
   printf "%s\n" "$(bold "Repro commands:")"
   printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                     "
   printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "repro export")                              "
   printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "repro check")                               "
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
-  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
+  printf "  %s   🛠 Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   printf "  %s   🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command\n" "$(green "repro pipeline-builder")                    "
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "repro status")                              "
   printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "repro diff")                                "
@@ -185,19 +187,19 @@ playground_usage() {
   printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                  "
   printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                        "
   printf "  %s   ✍️ Edit and apply runtime container/pod definition\n" "$(green "container update")                          "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
+  printf "  %s   🖥️ Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
   printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "container kill-all")                        "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
+  printf "  %s   🕵️ Tail and follow container logs\n" "$(green "container logs")                            "
   printf "  %s   🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n" "$(green "container display-error-all")               "
   printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
   printf "  %s   🪄 Execute command in a container\n" "$(green "container exec")                            "
   printf "  %s   🪄 Copy files between local filesystem and container\n" "$(green "container cp")                              "
   printf "  %s   🔁 Restart a container\n" "$(green "container restart")                         "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                           "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                          "
+  printf "  %s   ⏸️ Pause a container\n" "$(green "container pause")                           "
+  printf "  %s   ⏯️ Resume a container\n" "$(green "container resume")                          "
   printf "  %s   🔫 Kill a container\n" "$(green "container kill")                            "
-  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "container set-environment-variables")       "
+  printf "  %s   📦 Set environment variable(s) for a container\n" "$(green "container set-environment-variables")       "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🚏 wait-for-connect-rest-api-ready\n" "$(green "container wait-for-connect-rest-api-ready") "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
@@ -409,18 +411,18 @@ playground_usage() {
   printf "  %s   🧪 Single message transforms (SMT)\n" "$(green "connector smt")                             "
   printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")                         "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                         "
-  printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                           "
+  printf "  %s   ⏸️ Pause connector\n" "$(green "connector pause")                           "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "connector versions")                        "
   printf "  %s   🧑‍💻 open source code url for connector(s) used in example\n" "$(green "connector sourcecode")                      "
   printf "  %s   ✨ Enable java remote debugging for the connector.\n" "$(green "connector enable-remote-debugging")         "
   printf "  %s   🛑 Disable java remote debugging for the connector.\n" "$(green "connector disable-remote-debugging")        "
-  printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
+  printf "  %s   ♻️ Restart connector\n" "$(green "connector restart")                         "
   printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "connector tasks")                           "
   printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "connector topics")                          "
   printf "  %s   🗺️ Show the flow of the running connectors: source → topic → sinks, with the records, the lag and the DLQ\n" "$(green "connector flow")                            "
   printf "  %s   🛑 Stop connector (only available since CP 7.5)\n" "$(green "connector stop")                            "
-  printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
-  printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
+  printf "  %s   ⏯️ Resume connector\n" "$(green "connector resume")                          "
+  printf "  %s   🗑️ Delete connector\n" "$(green "connector delete")                          "
   printf "  %s   🩺 Diagnose a connector in one call: status, errors and progress\n" "$(green "connector diagnose")                        "
   printf "  %s   🕰️ Show the history of a connector: state changes, failures, restarts and config changes\n" "$(green "connector history")                         "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                        "
@@ -434,12 +436,12 @@ playground_usage() {
   printf "  %s   🔌 useful snippets\n" "$(green "connector snippets")                        "
   printf "  %s   🧑‍🎓 Open connector documentation of currently running connector(s)\n" "$(green "connector open-docs")                       "
   printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                       "
-  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                            "
+  printf "  %s   🕵️ Tail and follow connect logs\n" "$(green "connector logs")                            "
   printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "connector open-ccloud-connector-in-browser")"
   printf "  %s   👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n" "$(green "connector display-leader-name")             "
   printf "  %s   💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n" "$(green "connector translate")                       "
   printf "  %s   🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n" "$(green "connector connect-migration-utility")       "
-  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")                "
+  printf "  %s   🧑‍🎨 Create or update connector\n" "$(green "connector create-or-update")                "
   printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "connector update")                          "
   echo
   printf "%s\n" "$(bold "EC2 commands:")"
@@ -477,12 +479,12 @@ playground_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--vvv, -v")"
-    printf "    🐛 set verbose output (set -x)\n    \n    ❗ it can print sensitive information ❗\n"
+    printf "    🐛 Verbose output (set -x)\n    \n    ❗ it can print sensitive information ❗\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--output-level, -o LEVEL")"
-    printf "    ❕Log level used by all commands\n    \n    Default is INFO (all INFO, WARN and ERROR will be printed in command output)\n"
+    printf "    ❕ Log level of all commands\n    \n    Default is INFO (all INFO, WARN and ERROR will be printed in command output)\n"
     printf "    %s\n" "Allowed: INFO, WARN, ERROR"
     echo
 
@@ -514,7 +516,7 @@ playground_usage() {
 
 # :command.usage
 playground_help_usage() {
-  printf "playground help - Show help about a command\n\n"
+  printf "playground help - ❓ Show the help of a command\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground help [COMMAND]\n"
@@ -2013,13 +2015,13 @@ playground_config_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Show the entire playground_config.ini file\n" "$(green "show")                                         "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Read a value from the playground_config.ini file\n" "$(green "get")                                          "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Save a value in the playground_config.ini file\n" "$(green "set")                                          "
-  printf "  %s   editor to use to open files\n" "$(green "editor")                                       "
+  printf "  %s   📝 Editor that every command opens files with\n" "$(green "editor")                                       "
   printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")                            "
-  printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                                    "
-  printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")             "
-  printf "  %s   when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n" "$(green "open-grafana-in-browser")                      "
-  printf "  %s   when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")                "
-  printf "  %s   when running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.\n" "$(green "account-check-before-run")                     "
+  printf "  %s   📋 Copy the connector config to the clipboard (macOS only)\n" "$(green "clipboard")                                    "
+  printf "  %s   🌐 Open the connector in the browser when running a fully managed connector example\n" "$(green "open-ccloud-connector-in-browser")             "
+  printf "  %s   📊 Open Grafana in the browser when running an example with --enable-jmx-grafana\n" "$(green "open-grafana-in-browser")                      "
+  printf "  %s   💀 Kill every container before each run (playground container kill-all). If set to false, only stop the previous example (playground stop).\n" "$(green "container-kill-all-before-run")                "
+  printf "  %s   🩺 When running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.\n" "$(green "account-check-before-run")                     "
   printf "  %s   📄 write a masked log of each 'playground run' (default true)\n" "$(green "run-log")                                      "
   printf "  %s   🗂️ folder of the run logs\n" "$(green "run-log-folder")                               "
   printf "  %s   🩺 open the HTML report when a connector fails (default true)\n" "$(green "open-diagnose-report-on-failure")              "
@@ -2027,7 +2029,7 @@ playground_config_usage() {
   printf "  %s   📅 number of days to look back for display-last-updated-connector-plugins\n" "$(green "display-last-updated-connector-plugins-days")  "
   printf "  %s   🏢 vendor of the connector plugins listed by display-last-updated-connector-plugins\n" "$(green "display-last-updated-connector-plugins-vendor")"
   printf "  %s   🧹 delete the Confluent Cloud resources left by the last ccloud example\n" "$(green "cleanup-ccloud-resources-after-run")           "
-  printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-and-update-repo-version")                "
+  printf "  %s   🔄 Warn when your clone of the repository is more than 3 days old, before running an example\n" "$(green "check-and-update-repo-version")                "
   echo
 
   # :command.long_usage
@@ -2144,7 +2146,7 @@ playground_config_set_usage() {
 
 # :command.usage
 playground_config_editor_usage() {
-  printf "playground config editor - editor to use to open files\n\n"
+  printf "playground config editor - 📝 Editor that every command opens files with\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground config editor EDITOR\n"
@@ -2221,7 +2223,7 @@ playground_config_folder_zip_or_jar_usage() {
 
 # :command.usage
 playground_config_clipboard_usage() {
-  printf "playground config clipboard - copy to clipboard connector config (only working on MacOS)\n\n"
+  printf "playground config clipboard - 📋 Copy the connector config to the clipboard (macOS only)\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground config clipboard [ENABLED]\n"
@@ -2260,9 +2262,9 @@ playground_config_clipboard_usage() {
 playground_config_open_ccloud_connector_in_browser_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config open-ccloud-connector-in-browser\n\n"
-    printf "  when running a fully managed connector example, it opens the connector in\n  browser\n\n"
+    printf "  🌐 Open the connector in the browser when running a fully managed connector\n  example\n\n"
   else
-    printf "playground config open-ccloud-connector-in-browser - when running a fully managed connector example, it opens the connector in browser\n\n"
+    printf "playground config open-ccloud-connector-in-browser - 🌐 Open the connector in the browser when running a fully managed connector example\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -2271,8 +2273,8 @@ playground_config_open_ccloud_connector_in_browser_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   automatically open the connector in browser\n" "$(green "automatically")"
-  printf "  %s   browser to use\n" "$(green "browser")      "
+  printf "  %s   🌐 Open the connector in the browser automatically\n" "$(green "automatically")"
+  printf "  %s   🧭 Browser to use\n" "$(green "browser")      "
   echo
 
   # :command.long_usage
@@ -2290,7 +2292,7 @@ playground_config_open_ccloud_connector_in_browser_usage() {
 
 # :command.usage
 playground_config_open_ccloud_connector_in_browser_automatically_usage() {
-  printf "playground config open-ccloud-connector-in-browser automatically - automatically open the connector in browser\n\n"
+  printf "playground config open-ccloud-connector-in-browser automatically - 🌐 Open the connector in the browser automatically\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground config open-ccloud-connector-in-browser automatically [AUTOMATICALLY]\n"
@@ -2327,7 +2329,7 @@ playground_config_open_ccloud_connector_in_browser_automatically_usage() {
 
 # :command.usage
 playground_config_open_ccloud_connector_in_browser_browser_usage() {
-  printf "playground config open-ccloud-connector-in-browser browser - browser to use\n\n"
+  printf "playground config open-ccloud-connector-in-browser browser - 🧭 Browser to use\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground config open-ccloud-connector-in-browser browser [BROWSER]\n"
@@ -2365,9 +2367,9 @@ playground_config_open_ccloud_connector_in_browser_browser_usage() {
 playground_config_open_grafana_in_browser_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config open-grafana-in-browser\n\n"
-    printf "  when running an example with --enable-jmx-grafana flag, it opens grafana in\n  browser\n\n"
+    printf "  📊 Open Grafana in the browser when running an example with\n  --enable-jmx-grafana\n\n"
   else
-    printf "playground config open-grafana-in-browser - when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n\n"
+    printf "playground config open-grafana-in-browser - 📊 Open Grafana in the browser when running an example with --enable-jmx-grafana\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -2376,8 +2378,8 @@ playground_config_open_grafana_in_browser_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   automatically open grafana in browser\n" "$(green "automatically")"
-  printf "  %s   browser to use\n" "$(green "browser")      "
+  printf "  %s   📊 Open Grafana in the browser automatically\n" "$(green "automatically")"
+  printf "  %s   🧭 Browser to use\n" "$(green "browser")      "
   echo
 
   # :command.long_usage
@@ -2395,7 +2397,7 @@ playground_config_open_grafana_in_browser_usage() {
 
 # :command.usage
 playground_config_open_grafana_in_browser_automatically_usage() {
-  printf "playground config open-grafana-in-browser automatically - automatically open grafana in browser\n\n"
+  printf "playground config open-grafana-in-browser automatically - 📊 Open Grafana in the browser automatically\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground config open-grafana-in-browser automatically [AUTOMATICALLY]\n"
@@ -2432,7 +2434,7 @@ playground_config_open_grafana_in_browser_automatically_usage() {
 
 # :command.usage
 playground_config_open_grafana_in_browser_browser_usage() {
-  printf "playground config open-grafana-in-browser browser - browser to use\n\n"
+  printf "playground config open-grafana-in-browser browser - 🧭 Browser to use\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground config open-grafana-in-browser browser [BROWSER]\n"
@@ -2470,9 +2472,9 @@ playground_config_open_grafana_in_browser_browser_usage() {
 playground_config_container_kill_all_before_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config container-kill-all-before-run\n\n"
-    printf "  when running an example, always call playground container kill-all first. If\n  set to false, it will call playground stop instead.\n\n"
+    printf "  💀 Kill every container before each run (playground container kill-all). If set\n  to false, only stop the previous example (playground stop).\n\n"
   else
-    printf "playground config container-kill-all-before-run - when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n\n"
+    printf "playground config container-kill-all-before-run - 💀 Kill every container before each run (playground container kill-all). If set to false, only stop the previous example (playground stop).\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -2512,9 +2514,9 @@ playground_config_container_kill_all_before_run_usage() {
 playground_config_account_check_before_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config account-check-before-run\n\n"
-    printf "  when running an example of a provider (gcp, azure, aws, snowflake, salesforce,\n  servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase,\n  mongodb-atlas, pagerduty), call playground account <provider> check first: a\n  login that does not work stops the run in a few seconds instead of failing\n  minutes later. True by default, never done in CI.\n\n"
+    printf "  🩺 When running an example of a provider (gcp, azure, aws, snowflake,\n  salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse,\n  couchbase, mongodb-atlas, pagerduty), call playground account <provider> check\n  first: a login that does not work stops the run in a few seconds instead of\n  failing minutes later. True by default, never done in CI.\n\n"
   else
-    printf "playground config account-check-before-run - when running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.\n\n"
+    printf "playground config account-check-before-run - 🩺 When running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -2848,9 +2850,9 @@ playground_config_cleanup_ccloud_resources_after_run_usage() {
 playground_config_check_and_update_repo_version_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config check-and-update-repo-version\n\n"
-    printf "  when running an example, always check if repo version is older than 3 days, if\n  disabled, it will skip this check.\n\n"
+    printf "  🔄 Warn when your clone of the repository is more than 3 days old, before\n  running an example\n\n"
   else
-    printf "playground config check-and-update-repo-version - when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n\n"
+    printf "playground config check-and-update-repo-version - 🔄 Warn when your clone of the repository is more than 3 days old, before running an example\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -5726,8 +5728,8 @@ playground_cloud_resources_aws_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   📋 List all active resources\n" "$(green "list")         "
-  printf "  %s   💰 Show aws costs\n" "$(green "costs")        "
-  printf "  %s   👛  Retrieve aws costs for each month since last year\n" "$(green "costs-history")"
+  printf "  %s   💰 AWS costs\n" "$(green "costs")        "
+  printf "  %s   👛 AWS costs for each month since last year\n" "$(green "costs-history")"
   echo
 
   # :command.long_usage
@@ -5783,9 +5785,9 @@ playground_cloud_resources_aws_list_usage() {
 playground_cloud_resources_aws_costs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources aws costs\n\n"
-    printf "  💰 Show aws costs\n  \n  Spend over a range of dates, broken down by AWS service, using the\n  Cost Explorer API. Run it after a week of heavy examples to see which\n  service the money actually went to, then use\n  'playground cloud-resources aws list' to find what is still up.\n  \n  Defaults cover the last month, ending 3 days ago because AWS needs a\n  couple of days to consolidate. --start-date cannot go back more than\n  one year.\n\n"
+    printf "  💰 AWS costs\n  \n  Spend over a range of dates, broken down by AWS service, using the\n  Cost Explorer API. Run it after a week of heavy examples to see which\n  service the money actually went to, then use\n  'playground cloud-resources aws list' to find what is still up.\n  \n  Defaults cover the last month, ending 3 days ago because AWS needs a\n  couple of days to consolidate. --start-date cannot go back more than\n  one year.\n\n"
   else
-    printf "playground cloud-resources aws costs - 💰 Show aws costs\n\n"
+    printf "playground cloud-resources aws costs - 💰 AWS costs\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -5851,9 +5853,9 @@ playground_cloud_resources_aws_costs_usage() {
 playground_cloud_resources_aws_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources aws costs-history\n\n"
-    printf "  👛  Retrieve aws costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and usage type, the month x service matrix, the top usage types, and\n  the details of each month.\n  \n  📆 The report also shows the cost per day of the last --days days (default 60):\n  a zoomable chart, the usage types whose cost per day changed (a step up or\n  down, the day it started, before / after per day and the impact per month,\n  also printed in the terminal), and the top usage types per day. It tells\n  whether a change worked a few days after it, which the months cannot (a period\n  mixes the days before and after).\n  \n  🐳 When docker pulls from ECR go out of AWS (laptops, GitHub-hosted runners), a\n  finding gives the volume and how to see who pulls (CloudTrail BatchGetImage\n  events): pulls from EC2 in the same region are free.\n  \n  🪣 When S3 costs something, the report adds the Amazon S3 details: cost and\n  volume (GB, requests) of each kind of S3 usage per month (storage, requests,\n  Standard-IA retrieval, data sent to the Internet or to another region), the S3\n  buckets tagged cflt_managed_id=<user> (region, size per storage class,\n  objects, access logging, lifecycle) and hints. Cost Explorer has no cost per\n  bucket: that needs the resource-level data of the payer account.\n\n"
+    printf "  👛 AWS costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and usage type, the month x service matrix, the top usage types, and\n  the details of each month.\n  \n  📆 The report also shows the cost per day of the last --days days (default 60):\n  a zoomable chart, the usage types whose cost per day changed (a step up or\n  down, the day it started, before / after per day and the impact per month,\n  also printed in the terminal), and the top usage types per day. It tells\n  whether a change worked a few days after it, which the months cannot (a period\n  mixes the days before and after).\n  \n  🐳 When docker pulls from ECR go out of AWS (laptops, GitHub-hosted runners), a\n  finding gives the volume and how to see who pulls (CloudTrail BatchGetImage\n  events): pulls from EC2 in the same region are free.\n  \n  🪣 When S3 costs something, the report adds the Amazon S3 details: cost and\n  volume (GB, requests) of each kind of S3 usage per month (storage, requests,\n  Standard-IA retrieval, data sent to the Internet or to another region), the S3\n  buckets tagged cflt_managed_id=<user> (region, size per storage class,\n  objects, access logging, lifecycle) and hints. Cost Explorer has no cost per\n  bucket: that needs the resource-level data of the payer account.\n\n"
   else
-    printf "playground cloud-resources aws costs-history - 👛  Retrieve aws costs for each month since last year\n\n"
+    printf "playground cloud-resources aws costs-history - 👛 AWS costs for each month since last year\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -5926,8 +5928,8 @@ playground_cloud_resources_azure_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   📋 List all active resources\n" "$(green "list")         "
-  printf "  %s   💰 Show azure costs\n" "$(green "costs")        "
-  printf "  %s   👛  Retrieve azure costs for each month since last year\n" "$(green "costs-history")"
+  printf "  %s   💰 Azure costs\n" "$(green "costs")        "
+  printf "  %s   👛 Azure costs for each month since last year\n" "$(green "costs-history")"
   echo
 
   # :command.long_usage
@@ -5983,9 +5985,9 @@ playground_cloud_resources_azure_list_usage() {
 playground_cloud_resources_azure_costs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources azure costs\n\n"
-    printf "  💰 Show azure costs\n  \n  Spend over a range of dates for your subscription, using the Azure\n  Cost Management API. You need to be logged in with the az CLI.\n  \n  Defaults cover the last month, ending 3 days ago because the data\n  takes a couple of days to consolidate. --start-date cannot go back\n  more than one year.\n\n"
+    printf "  💰 Azure costs\n  \n  Spend over a range of dates for your subscription, using the Azure\n  Cost Management API. You need to be logged in with the az CLI.\n  \n  Defaults cover the last month, ending 3 days ago because the data\n  takes a couple of days to consolidate. --start-date cannot go back\n  more than one year.\n\n"
   else
-    printf "playground cloud-resources azure costs - 💰 Show azure costs\n\n"
+    printf "playground cloud-resources azure costs - 💰 Azure costs\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6043,9 +6045,9 @@ playground_cloud_resources_azure_costs_usage() {
 playground_cloud_resources_azure_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources azure costs-history\n\n"
-    printf "  👛  Retrieve azure costs for each month since last year\n  \n  One line per month over the past year, so you can spot the month that\n  went wrong before digging into it with costs.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and resource group, the month x service matrix, the top resources with\n  the ones still billing, and the details of each month.\n\n"
+    printf "  👛 Azure costs for each month since last year\n  \n  One line per month over the past year, so you can spot the month that\n  went wrong before digging into it with costs.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and resource group, the month x service matrix, the top resources with\n  the ones still billing, and the details of each month.\n\n"
   else
-    printf "playground cloud-resources azure costs-history - 👛  Retrieve azure costs for each month since last year\n\n"
+    printf "playground cloud-resources azure costs-history - 👛 Azure costs for each month since last year\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6099,8 +6101,8 @@ playground_cloud_resources_ccloud_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   📋 List what the playground left running for you in Confluent Cloud, across the whole organization\n" "$(green "list")         "
-  printf "  %s   💰  Retrieve ccloud costs for a range of dates\n" "$(green "costs")        "
-  printf "  %s   👛  Retrieve ccloud costs for each month since last year\n" "$(green "costs-history")"
+  printf "  %s   💰 Confluent Cloud costs for a range of dates\n" "$(green "costs")        "
+  printf "  %s   👛 Confluent Cloud costs for each month since last year\n" "$(green "costs-history")"
   echo
 
   # :command.long_usage
@@ -6166,9 +6168,9 @@ playground_cloud_resources_ccloud_list_usage() {
 playground_cloud_resources_ccloud_costs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources ccloud costs\n\n"
-    printf "  💰  Retrieve ccloud costs for a range of dates\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  Cost data can take up to 72 hours to become available.\n  \n  Start date can reach a maximum of one year into the past\n  \n  One month is the maximum window between start and end dates\n  \n  For accuracy, Confluent recommends using a start_date that is at least 72\n  hours prior to the current date and time.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per day\n  (zoomable, the other tiles follow the selected range), per product and\n  environment, the resources still billing, the top resources, the resources of\n  each product, the product x environment matrix and the cost per line type.\n\n"
+    printf "  💰 Confluent Cloud costs for a range of dates\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  Cost data can take up to 72 hours to become available.\n  \n  Start date can reach a maximum of one year into the past\n  \n  One month is the maximum window between start and end dates\n  \n  For accuracy, Confluent recommends using a start_date that is at least 72\n  hours prior to the current date and time.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per day\n  (zoomable, the other tiles follow the selected range), per product and\n  environment, the resources still billing, the top resources, the resources of\n  each product, the product x environment matrix and the cost per line type.\n\n"
   else
-    printf "playground cloud-resources ccloud costs - 💰  Retrieve ccloud costs for a range of dates\n\n"
+    printf "playground cloud-resources ccloud costs - 💰 Confluent Cloud costs for a range of dates\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6249,9 +6251,9 @@ playground_cloud_resources_ccloud_costs_usage() {
 playground_cloud_resources_ccloud_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources ccloud costs-history\n\n"
-    printf "  👛  Retrieve ccloud costs for each month since last year\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month and per\n  day (zoomable: drag over a range of days, last 7 / 30 / 90 days; the other\n  tiles follow the selected range), per product, environment and line type, the\n  month x product matrix, the top resources with the ones still billing, and the\n  details of each month.\n\n"
+    printf "  👛 Confluent Cloud costs for each month since last year\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month and per\n  day (zoomable: drag over a range of days, last 7 / 30 / 90 days; the other\n  tiles follow the selected range), per product, environment and line type, the\n  month x product matrix, the top resources with the ones still billing, and the\n  details of each month.\n\n"
   else
-    printf "playground cloud-resources ccloud costs-history - 👛  Retrieve ccloud costs for each month since last year\n\n"
+    printf "playground cloud-resources ccloud costs-history - 👛 Confluent Cloud costs for each month since last year\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -7596,9 +7598,9 @@ playground_start_environment_usage() {
 playground_switch_ccloud_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground switch-ccloud\n\n"
-    printf "  🌩️  Switch to ccloud environment.\n  \n  It will bootstrap ccloud environment based on your previously ran ccloud\n  example.\n  \n  Points the CLI at the Confluent Cloud cluster of your last ccloud run, so\n  that 'playground topic', 'playground connector' and 'playground schema'\n  talk to Confluent Cloud instead of the local containers. Nothing is\n  created or destroyed, and no container is started or stopped.\n  \n  ❕ Requires that you ran a ccloud example at least once, so that the\n     environment, cluster and credentials are cached in playground.ini.\n     The environment you were on is remembered for 'playground switch-back'.\n\n"
+    printf "  🌩️ Switch to ccloud environment.\n  \n  It will bootstrap ccloud environment based on your previously ran ccloud\n  example.\n  \n  Points the CLI at the Confluent Cloud cluster of your last ccloud run, so\n  that 'playground topic', 'playground connector' and 'playground schema'\n  talk to Confluent Cloud instead of the local containers. Nothing is\n  created or destroyed, and no container is started or stopped.\n  \n  ❕ Requires that you ran a ccloud example at least once, so that the\n     environment, cluster and credentials are cached in playground.ini.\n     The environment you were on is remembered for 'playground switch-back'.\n\n"
   else
-    printf "playground switch-ccloud - 🌩️  Switch to ccloud environment.\n\n"
+    printf "playground switch-ccloud - 🌩️ Switch to ccloud environment.\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -7623,9 +7625,9 @@ playground_switch_ccloud_usage() {
 playground_switch_back_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground switch-back\n\n"
-    printf "  💺  Switch back from previous environment before switch-ccloud was called.\n  \n  Restores the environment and connector type that were active before\n  'playground switch-ccloud', so the CLI talks to your local containers\n  again.\n\n"
+    printf "  💺 Switch back from previous environment before switch-ccloud was called.\n  \n  Restores the environment and connector type that were active before\n  'playground switch-ccloud', so the CLI talks to your local containers\n  again.\n\n"
   else
-    printf "playground switch-back - 💺  Switch back from previous environment before switch-ccloud was called.\n\n"
+    printf "playground switch-back - 💺 Switch back from previous environment before switch-ccloud was called.\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -8376,9 +8378,9 @@ playground_refresh_cp_docker_images_usage() {
 playground_cleanup_cloud_details_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cleanup-cloud-details\n\n"
-    printf "  🧼 playground is actively caching ccloud details\n  (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n     use this command if you notice that the playground is using unexpected\n  ccloud details\n  \n  Drops the cached environment, cluster, endpoints and API keys (including\n  the configs cached for each cluster used, in .ccloud/clusters/), so the\n  next ccloud example re-discovers them from scratch. Typically needed after you\n  changed of Confluent Cloud organisation, or deleted the cluster from the UI\n  behind the playground's back.\n  \n  ❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n     the cloud resources themselves, see 'playground cloud-resources cleanup'.\n\n"
+    printf "  🧼 Forget the cached Confluent Cloud details (environment, cluster, endpoints,\n  API keys)\n  \n  Use it when the playground uses unexpected Confluent Cloud details\n  (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples).\n  \n  Drops the cached environment, cluster, endpoints and API keys (including\n  the configs cached for each cluster used, in .ccloud/clusters/), so the\n  next ccloud example re-discovers them from scratch. Typically needed after you\n  changed of Confluent Cloud organisation, or deleted the cluster from the UI\n  behind the playground's back.\n  \n  ❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n     the cloud resources themselves, see 'playground cloud-resources cleanup'.\n\n"
   else
-    printf "playground cleanup-cloud-details - 🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%8c%%a4%%ef%%b8%%8f-confluent-cloud-examples)\n\n"
+    printf "playground cleanup-cloud-details - 🧼 Forget the cached Confluent Cloud details (environment, cluster, endpoints, API keys)\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -8631,7 +8633,7 @@ playground_repro_usage() {
   printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "export")          "
   printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "check")           "
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")          "
-  printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")       "
+  printf "  %s   🛠 Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")       "
   printf "  %s   🔗 Open the pipeline builder: pick a source and sink examples, see the flow, copy the bootstrap command\n" "$(green "pipeline-builder")"
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")          "
   printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "diff")            "
@@ -8890,9 +8892,9 @@ playground_repro_import_usage() {
 playground_repro_bootstrap_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro bootstrap\n\n"
-    printf "  🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n  \n  🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground\n  repro bootstrap> !\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%%f0%%9f%%9b%%a0-bootstrap-reproduction-model\n\n"
+    printf "  🛠 Bootstrap reproduction model, just run <playground repro bootstrap> !\n  \n  🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground\n  repro bootstrap> !\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%%f0%%9f%%9b%%a0-bootstrap-reproduction-model\n\n"
   else
-    printf "playground repro bootstrap - 🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n\n"
+    printf "playground repro bootstrap - 🛠 Bootstrap reproduction model, just run <playground repro bootstrap> !\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -12062,7 +12064,7 @@ playground_tools_usage() {
 playground_tools_install_vscode_extension_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools install-vscode-extension\n\n"
-    printf "  🪄 Install a slightly modified version of \"Shell Script Command Completion\"\n  Visual Studio Code extension\n  (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  Gives you the same completion inside VS Code as in your terminal: while\n  editing an example or a reproduction model, playground commands, flags\n  and their allowed values are proposed as you type, with the help text\n  on hover. Worth the two minutes of setup if you write example scripts.\n  \n  It is installed as \"Shell Script Command Completion (kafka-docker-playground)\"\n  (tetradresearch.vscode-h2o-playground), in place of the marketplace one,\n  so that VS Code does not auto-update it with the unpatched version. Run\n  the command again to get a newer upstream version.\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load\n  Command Spec (experimental)\" and then type \"playground\"\n  \n  🔖 The command spec is downloaded from the master branch: commands added in a\n  local branch are only proposed once merged. Run \"Load Command Spec\" again to\n  refresh it.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%aa%%84-setup-shell-script-command-completion-visual-studio-code-extension\n\n"
+    printf "  🪄 Install a slightly modified version of \"Shell Script Command Completion\"\n  Visual Studio Code extension\n  (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  Gives you the same completion inside VS Code as in your terminal: while\n  editing an example or a reproduction model, playground commands, flags\n  and their allowed values are proposed as you type, with the help text\n  on hover. Worth the two minutes of setup if you write example scripts.\n  \n  It is installed as \"Shell Script Command Completion (kafka-docker-playground)\"\n  (tetradresearch.vscode-h2o-playground), in place of the marketplace one,\n  so that VS Code does not auto-update it with the unpatched version. Run\n  the command again to get a newer upstream version.\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load\n  Command Spec (experimental)\" and then type \"playground\"\n  \n  🔖 The command spec is downloaded from the master branch: commands added in a\n  local branch are only proposed once merged. Run \"Load Command Spec\" again to\n  refresh it.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%aa%%84-vs-code-completion\n\n"
   else
     printf "playground tools install-vscode-extension - 🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n\n"
   fi
@@ -12094,7 +12096,7 @@ playground_tools_install_vscode_extension_usage() {
 playground_tools_install_alfred_workflow_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools install-alfred-workflow\n\n"
-    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere (a connector config, a stack trace, a connector class, a config\n  key, a case number), or files and folders in Finder (logs, a support\n  bundle, a thread dump, a GC log, a heap dump, a .jfr, a .pcap, an\n  orclcdc_diag report), and use the Universal Action \"kdp: config, stack\n  trace, logs, connector class, key, case…\" (files: the matching 'playground\n  analyze' command, its HTML report opened right away):\n  \n    kdp how <question>          find-command: the command that answers a\n  question, ⌥ its --help, ⇧ its deep dive\n    kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘\n  copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags (Tab:\n  re-run it)\n    kdp plugin <words> [ver]    pick a plugin, then a version, then info,\n  changelog, source code, jars, CVEs\n    kdp key <words>             pick a config key, then a connector: config-key\n    kdp docs [words]            deep dive pages\n    kdp connector [words]       pick a running connector: diagnose, status,\n  tasks, metrics, history…\n    kdp logs [container] [pat]  pick a container: errors, last lines, grep,\n  follow\n    kdp topic / schema / ci     pick a topic, a subject, a CI test: describe,\n  records, history, CI result\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal (for an example, that stops the running environment),\n  ⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens\n  it in VS Code and ⌘ copies 'playground run -f …'.\n  \n  Read-only commands (plugin, key, status) show their output in the Alfred\n  window, streamed while they run. \"Show output\" and \"Run in the terminal\"\n  are workflow settings: the output can go to the terminal instead, and the\n  terminal is the one set in Alfred (default), a new VS Code integrated\n  terminal, Terminal.app, or copy only.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, to work on it: Alfred does not watch the folder\n  behind the link, so run the command again after an edit (it reloads the\n  workflow in Alfred).\n  Alfred then writes its settings to scripts/alfred-workflow/prefs.plist\n  (ignored by git) and may rewrite info.plist when you edit the workflow in\n  Alfred Preferences: check git diff before committing.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%8e%%a9-alfred-workflow-macos\n\n"
+    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere (a connector config, a stack trace, a connector class, a config\n  key, a case number), or files and folders in Finder (logs, a support\n  bundle, a thread dump, a GC log, a heap dump, a .jfr, a .pcap, an\n  orclcdc_diag report), and use the Universal Action \"kdp: config, stack\n  trace, logs, connector class, key, case…\" (files: the matching 'playground\n  analyze' command, its HTML report opened right away):\n  \n    kdp how <question>          find-command: the command that answers a\n  question, ⌥ its --help, ⇧ its deep dive\n    kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘\n  copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags (Tab:\n  re-run it)\n    kdp plugin <words> [ver]    pick a plugin, then a version, then info,\n  changelog, source code, jars, CVEs\n    kdp key <words>             pick a config key, then a connector: config-key\n    kdp docs [words]            deep dive pages\n    kdp connector [words]       pick a running connector: diagnose, status,\n  tasks, metrics, history…\n    kdp logs [container] [pat]  pick a container: errors, last lines, grep,\n  follow\n    kdp topic / schema / ci     pick a topic, a subject, a CI test: describe,\n  records, history, CI result\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal (for an example, that stops the running environment),\n  ⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens\n  it in VS Code and ⌘ copies 'playground run -f …'.\n  \n  Read-only commands (plugin, key, status) show their output in the Alfred\n  window, streamed while they run. \"Show output\" and \"Run in the terminal\"\n  are workflow settings: the output can go to the terminal instead, and the\n  terminal is the one set in Alfred (default), a new VS Code integrated\n  terminal, Terminal.app, or copy only.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, to work on it: Alfred does not watch the folder\n  behind the link, so run the command again after an edit (it reloads the\n  workflow in Alfred).\n  Alfred then writes its settings to scripts/alfred-workflow/prefs.plist\n  (ignored by git) and may rewrite info.plist when you edit the workflow in\n  Alfred Preferences: check git diff before committing.\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/alfred\n\n"
   else
     printf "playground tools install-alfred-workflow - 🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\n"
   fi
@@ -13415,7 +13417,7 @@ playground_analyze_oracle_xstream_report_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
-    printf "    🗒️  orclcdc_diag HTML report (repeat --file for several reports of the same\n    database)\n    \n    ❕ Provide only one of --file, --container and --sample\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
+    printf "    🗒️ orclcdc_diag HTML report (repeat --file for several reports of the same\n    database)\n    \n    ❕ Provide only one of --file, --container and --sample\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
     echo
 
     # :flag.usage
@@ -13449,7 +13451,7 @@ playground_analyze_oracle_xstream_report_usage() {
     fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON (findings, prerequisites, summary per component, deltas\n    between reports)\n"
+    printf "    🗂️ Output JSON (findings, prerequisites, summary per component, deltas\n    between reports)\n"
     echo
 
     # :flag.usage
@@ -13586,7 +13588,7 @@ playground_analyze_flight_recorder_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
-    printf "    🗒️  .jfr file to analyze (repeat --file for the recordings of several\n    connect workers over the same period)\n    \n    ❕ Provide only one of --file, --container and --sample\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
+    printf "    🗒️ .jfr file to analyze (repeat --file for the recordings of several connect\n    workers over the same period)\n    \n    ❕ Provide only one of --file, --container and --sample\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
     echo
 
     # :flag.usage
@@ -13634,7 +13636,7 @@ playground_analyze_flight_recorder_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
+    printf "    🗂️ Output JSON (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -13701,7 +13703,7 @@ playground_analyze_jscissors_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
+    printf "    🗂️ Output JSON (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -13800,7 +13802,7 @@ playground_analyze_tcp_dump_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
+    printf "    🗂️ Output JSON (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -15234,8 +15236,8 @@ playground_debug_log_level_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Get log levels\n" "$(green "get")"
-  printf "  %s   Set log level for specific logger\n" "$(green "set")"
+  printf "  %s   🔎 Get log levels\n" "$(green "get")"
+  printf "  %s   🧬 Set the log level of a logger\n" "$(green "set")"
   echo
 
   # :command.long_usage
@@ -15263,9 +15265,9 @@ playground_debug_log_level_usage() {
 playground_debug_log_level_get_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug log-level get\n\n"
-    printf "  Get log levels\n  \n  With no --package, every logger with an explicit level is listed.\n\n"
+    printf "  🔎 Get log levels\n  \n  With no --package, every logger with an explicit level is listed.\n\n"
   else
-    printf "playground debug log-level get - Get log levels\n\n"
+    printf "playground debug log-level get - 🔎 Get log levels\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -15296,9 +15298,9 @@ playground_debug_log_level_get_usage() {
 playground_debug_log_level_set_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug log-level set\n\n"
-    printf "  Set log level for specific logger\n  \n  Takes effect immediately and applies to the logger and everything\n  below it in the package hierarchy.\n\n"
+    printf "  🧬 Set the log level of a logger\n  \n  Takes effect immediately and applies to the logger and everything\n  below it in the package hierarchy.\n\n"
   else
-    printf "playground debug log-level set - Set log level for specific logger\n\n"
+    printf "playground debug log-level set - 🧬 Set the log level of a logger\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -15644,19 +15646,19 @@ playground_container_usage() {
   printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")                       "
   printf "  %s   ✍️ Edit and apply runtime container/pod definition\n" "$(green "update")                         "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")               "
+  printf "  %s   🖥️ Get ip address of running containers\n" "$(green "get-ip-addresses")               "
   printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "kill-all")                       "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                           "
+  printf "  %s   🕵️ Tail and follow container logs\n" "$(green "logs")                           "
   printf "  %s   🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n" "$(green "display-error-all")              "
   printf "  %s   🛬 SSH into container\n" "$(green "ssh")                            "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")                     "
   printf "  %s   🪄 Execute command in a container\n" "$(green "exec")                           "
   printf "  %s   🪄 Copy files between local filesystem and container\n" "$(green "cp")                             "
   printf "  %s   🔁 Restart a container\n" "$(green "restart")                        "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "pause")                          "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "resume")                         "
+  printf "  %s   ⏸️ Pause a container\n" "$(green "pause")                          "
+  printf "  %s   ⏯️ Resume a container\n" "$(green "resume")                         "
   printf "  %s   🔫 Kill a container\n" "$(green "kill")                           "
-  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "set-environment-variables")      "
+  printf "  %s   📦 Set environment variable(s) for a container\n" "$(green "set-environment-variables")      "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🚏 wait-for-connect-rest-api-ready\n" "$(green "wait-for-connect-rest-api-ready")"
   echo
 
@@ -15794,9 +15796,9 @@ playground_container_update_usage() {
 playground_container_get_ip_addresses_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container get-ip-addresses\n\n"
-    printf "  🖥️  Get ip address of running containers\n  \n  The address each container has on the docker network, which is what\n  you need when a component must be reached by IP rather than by name,\n  or when you are checking what a client actually connected to.\n\n"
+    printf "  🖥️ Get ip address of running containers\n  \n  The address each container has on the docker network, which is what\n  you need when a component must be reached by IP rather than by name,\n  or when you are checking what a client actually connected to.\n\n"
   else
-    printf "playground container get-ip-addresses - 🖥️  Get ip address of running containers\n\n"
+    printf "playground container get-ip-addresses - 🖥️ Get ip address of running containers\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -15853,9 +15855,9 @@ playground_container_kill_all_usage() {
 playground_container_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container logs\n\n"
-    printf "  🕵️  Tail and follow container logs\n  \n  Three ways to use it:\n  \n    --grep \"ERROR\"                    keep only the lines that matter\n    --open                            read the whole log in your editor\n    --wait-for-log \"Started\" -m 120   block until the line shows up\n  \n  The last one is what example scripts use to synchronise on a component\n  being ready, instead of sleeping and hoping.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🕵️ Tail and follow container logs\n  \n  Three ways to use it:\n  \n    --grep \"ERROR\"                    keep only the lines that matter\n    --open                            read the whole log in your editor\n    --wait-for-log \"Started\" -m 120   block until the line shows up\n  \n  The last one is what example scripts use to synchronise on a component\n  being ready, instead of sleeping and hoping.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
-    printf "playground container logs - 🕵️  Tail and follow container logs\n\n"
+    printf "playground container logs - 🕵️ Tail and follow container logs\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -16272,9 +16274,9 @@ playground_container_restart_usage() {
 playground_container_pause_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container pause\n\n"
-    printf "  ⏸️  Pause a container\n  \n  Freezes the processes without stopping the container: it keeps its\n  connections but stops responding. A good way to simulate a hung\n  broker, an unresponsive database or a GC pause, and to see how the\n  rest of the system reacts.\n\n"
+    printf "  ⏸️ Pause a container\n  \n  Freezes the processes without stopping the container: it keeps its\n  connections but stops responding. A good way to simulate a hung\n  broker, an unresponsive database or a GC pause, and to see how the\n  rest of the system reacts.\n\n"
   else
-    printf "playground container pause - ⏸️  Pause a container\n\n"
+    printf "playground container pause - ⏸️ Pause a container\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -16306,9 +16308,9 @@ playground_container_pause_usage() {
 playground_container_resume_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container resume\n\n"
-    printf "  ⏯️  Resume a container\n  \n  Unfreezes a container paused with 'playground container pause'.\n\n"
+    printf "  ⏯️ Resume a container\n  \n  Unfreezes a container paused with 'playground container pause'.\n\n"
   else
-    printf "playground container resume - ⏯️  Resume a container\n\n"
+    printf "playground container resume - ⏯️ Resume a container\n\n"
   fi
   printf "Alias: unpause\n"
   echo
@@ -16384,9 +16386,9 @@ playground_container_kill_usage() {
 playground_container_set_environment_variables_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container set-environment-variables\n\n"
-    printf "  📦  Set environment variable(s) for a container\n  \n  🎓 Tip: you can pass multiple environment variables by specifying --env\n  multiple times\n  \n  Example: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS:\n  org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n\n"
+    printf "  📦 Set environment variable(s) for a container\n  \n  🎓 Tip: you can pass multiple environment variables by specifying --env\n  multiple times\n  \n  Example: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS:\n  org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n\n"
   else
-    printf "playground container set-environment-variables - 📦  Set environment variable(s) for a container\n\n"
+    printf "playground container set-environment-variables - 📦 Set environment variable(s) for a container\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -23482,18 +23484,18 @@ playground_connector_usage() {
   printf "  %s   🧪 Single message transforms (SMT)\n" "$(green "smt")                             "
   printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "offsets")                         "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")                         "
-  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                           "
+  printf "  %s   ⏸️ Pause connector\n" "$(green "pause")                           "
   printf "  %s   🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n" "$(green "versions")                        "
   printf "  %s   🧑‍💻 open source code url for connector(s) used in example\n" "$(green "sourcecode")                      "
   printf "  %s   ✨ Enable java remote debugging for the connector.\n" "$(green "enable-remote-debugging")         "
   printf "  %s   🛑 Disable java remote debugging for the connector.\n" "$(green "disable-remote-debugging")        "
-  printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
+  printf "  %s   ♻️ Restart connector\n" "$(green "restart")                         "
   printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "tasks")                           "
   printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "topics")                          "
   printf "  %s   🗺️ Show the flow of the running connectors: source → topic → sinks, with the records, the lag and the DLQ\n" "$(green "flow")                            "
   printf "  %s   🛑 Stop connector (only available since CP 7.5)\n" "$(green "stop")                            "
-  printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
-  printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
+  printf "  %s   ⏯️ Resume connector\n" "$(green "resume")                          "
+  printf "  %s   🗑️ Delete connector\n" "$(green "delete")                          "
   printf "  %s   🩺 Diagnose a connector in one call: status, errors and progress\n" "$(green "diagnose")                        "
   printf "  %s   🕰️ Show the history of a connector: state changes, failures, restarts and config changes\n" "$(green "history")                         "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")                        "
@@ -23507,12 +23509,12 @@ playground_connector_usage() {
   printf "  %s   🔌 useful snippets\n" "$(green "snippets")                        "
   printf "  %s   🧑‍🎓 Open connector documentation of currently running connector(s)\n" "$(green "open-docs")                       "
   printf "  %s   🧬 Set connect log level\n" "$(green "log-level")                       "
-  printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "logs")                            "
+  printf "  %s   🕵️ Tail and follow connect logs\n" "$(green "logs")                            "
   printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "open-ccloud-connector-in-browser")"
   printf "  %s   👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n" "$(green "display-leader-name")             "
   printf "  %s   💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n" "$(green "translate")                       "
   printf "  %s   🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n" "$(green "connect-migration-utility")       "
-  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")                "
+  printf "  %s   🧑‍🎨 Create or update connector\n" "$(green "create-or-update")                "
   printf "  %s   🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n" "$(green "update")                          "
   echo
 
@@ -24629,9 +24631,9 @@ playground_connector_plugins_usage() {
 playground_connector_pause_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector pause\n\n"
-    printf "  ⏸️  Pause connector\n  \n  Tasks stop processing but stay assigned, and the configuration is kept.\n  Handy to let a backlog build up, or to freeze a connector while you\n  change the system it talks to. Resume with 'playground connector resume'.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n\n"
+    printf "  ⏸️ Pause connector\n  \n  Tasks stop processing but stay assigned, and the configuration is kept.\n  Handy to let a backlog build up, or to freeze a connector while you\n  change the system it talks to. Resume with 'playground connector resume'.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n\n"
   else
-    printf "playground connector pause - ⏸️  Pause connector\n\n"
+    printf "playground connector pause - ⏸️ Pause connector\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -24862,9 +24864,9 @@ playground_connector_disable_remote_debugging_usage() {
 playground_connector_restart_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector restart\n\n"
-    printf "  ♻️  Restart connector\n  \n  The usual way to recover a connector whose tasks are FAILED after you\n  fixed the cause. Use --task-id to restart a single failed task and leave\n  the healthy ones alone, or --only-failed to restart only what is FAILED,\n  in every connector when --connector is not set.\n  \n  ☁️ Fully managed: supported (custom connectors: not supported)\n\n"
+    printf "  ♻️ Restart connector\n  \n  The usual way to recover a connector whose tasks are FAILED after you\n  fixed the cause. Use --task-id to restart a single failed task and leave\n  the healthy ones alone, or --only-failed to restart only what is FAILED,\n  in every connector when --connector is not set.\n  \n  ☁️ Fully managed: supported (custom connectors: not supported)\n\n"
   else
-    printf "playground connector restart - ♻️  Restart connector\n\n"
+    printf "playground connector restart - ♻️ Restart connector\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -25149,9 +25151,9 @@ playground_connector_stop_usage() {
 playground_connector_resume_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector resume\n\n"
-    printf "  ⏯️  Resume connector\n  \n  Restarts processing after a pause or a stop, from the offsets where the\n  connector left off.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n\n"
+    printf "  ⏯️ Resume connector\n  \n  Restarts processing after a pause or a stop, from the offsets where the\n  connector left off.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n\n"
   else
-    printf "playground connector resume - ⏯️  Resume connector\n\n"
+    printf "playground connector resume - ⏯️ Resume connector\n\n"
   fi
   printf "Alias: unpause\n"
   echo
@@ -25200,9 +25202,9 @@ playground_connector_resume_usage() {
 playground_connector_delete_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector delete\n\n"
-    printf "  🗑️  Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n  \n  For a fully managed or custom connector, the topics the connector\n  created on its own are deleted as well: dead letter queue and, for\n  connectors with a reporter, success and error topics (dlq-lcc-xxxx,\n  success-lcc-xxxx, error-lcc-xxxx, or the names set in the config with\n  errors.deadletterqueue.topic.name, reporter.error.topic.name and\n  reporter.result.topic.name). Keep them with --keep-related-topics.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n\n"
+    printf "  🗑️ Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n  \n  For a fully managed or custom connector, the topics the connector\n  created on its own are deleted as well: dead letter queue and, for\n  connectors with a reporter, success and error topics (dlq-lcc-xxxx,\n  success-lcc-xxxx, error-lcc-xxxx, or the names set in the config with\n  errors.deadletterqueue.topic.name, reporter.error.topic.name and\n  reporter.result.topic.name). Keep them with --keep-related-topics.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n\n"
   else
-    printf "playground connector delete - 🗑️  Delete connector\n\n"
+    printf "playground connector delete - 🗑️ Delete connector\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -26163,9 +26165,9 @@ playground_connector_log_level_usage() {
 playground_connector_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector logs\n\n"
-    printf "  🕵️  Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For self managed connectors, this is a shortcut for \"playground container logs\n  --container connect\"\n  (connect-us / connect-europe in mdc environments): --no-follow, --errors,\n  --since, --tail and --grep are passed through.\n  When --connector is set (and none of --grep, --errors, --wait-for-log,\n  --open), only the lines mentioning the\n  connector are kept.\n  \n  For Fully Managed connectors, the logs come from the confluent CLI ('confluent\n  connect logs', last 71 hours),\n  limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n  --errors keeps the ERROR level, --grep is a search text, and --wait-for-log\n  polls until the text is found or --max-wait.\n  Every page is fetched (--output-file of the CLI, JSON lines, kept in\n  /tmp/playground-connector-logs-<connector>-<date>.jsonl)\n  and shown as log lines with the [connector|task-0] context of a Connect worker\n  (the .log next to it).\n  \n  🔥 --analyze gives the full report of 'playground analyze logs' instead (known\n  causes, timeline, connector card,\n  restarts, configs): the logs of the Connect worker (--from-containers, kept to\n  --connector when it is given) for a\n  self managed connector, the log lines above for a fully managed one.\n  \n  🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or\n  --wait-for-log, otherwise the command never returns for a self managed\n  connector.\n  \n  ☁️ Fully managed: supported, with the confluent CLI (see above)\n\n"
+    printf "  🕵️ Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For self managed connectors, this is a shortcut for \"playground container logs\n  --container connect\"\n  (connect-us / connect-europe in mdc environments): --no-follow, --errors,\n  --since, --tail and --grep are passed through.\n  When --connector is set (and none of --grep, --errors, --wait-for-log,\n  --open), only the lines mentioning the\n  connector are kept.\n  \n  For Fully Managed connectors, the logs come from the confluent CLI ('confluent\n  connect logs', last 71 hours),\n  limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n  --errors keeps the ERROR level, --grep is a search text, and --wait-for-log\n  polls until the text is found or --max-wait.\n  Every page is fetched (--output-file of the CLI, JSON lines, kept in\n  /tmp/playground-connector-logs-<connector>-<date>.jsonl)\n  and shown as log lines with the [connector|task-0] context of a Connect worker\n  (the .log next to it).\n  \n  🔥 --analyze gives the full report of 'playground analyze logs' instead (known\n  causes, timeline, connector card,\n  restarts, configs): the logs of the Connect worker (--from-containers, kept to\n  --connector when it is given) for a\n  self managed connector, the log lines above for a fully managed one.\n  \n  🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or\n  --wait-for-log, otherwise the command never returns for a self managed\n  connector.\n  \n  ☁️ Fully managed: supported, with the confluent CLI (see above)\n\n"
   else
-    printf "playground connector logs - 🕵️  Tail and follow connect logs\n\n"
+    printf "playground connector logs - 🕵️ Tail and follow connect logs\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -26535,9 +26537,9 @@ playground_connector_connect_migration_utility_migrate_usage() {
 playground_connector_create_or_update_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector create-or-update\n\n"
-    printf "  🧑‍🎨  Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command then waits for the connector and all its tasks to be\n  RUNNING, displays the connector status, and fails with the error if\n  they are not, so a broken config stops the example immediately instead\n  of failing silently later. A FAILED connector or task is reported with\n  'playground connector diagnose' (trace, error digest, offsets, next\n  steps and HTML report, opened in the browser unless 'playground config\n  open-diagnose-report-on-failure false'). When the script that runs is a\n  reproduction\n  model, a connector that is not RUNNING is only reported as a warning,\n  since a reproduction model often creates a failing connector on\n  purpose. Use --wait to fail there too, --no-wait to skip the wait.\n  \n  Fully managed connectors are only waited for with --wait.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n  \n  An update shows the keys added, removed and changed compared to the\n  running config (secrets masked).\n  \n  The config can also be given as the path of a file, and in the\n  formats customers send (detected, see 'playground connector\n  convert'): the REST API format ({\"name\": ..., \"config\": {...}}), a\n  dump of GET /connectors?expand=info, a CFK Connector or Strimzi\n  KafkaConnector custom resource, a terraform confluent_connector\n  resource, or a connect-standalone .properties file. When the file\n  holds several connectors, the one named --connector is used.\n  \n  A config that comes from elsewhere (a file, or one of these formats)\n  is adapted to the playground (--no-adapt to keep it as is, --adapt\n  to adapt a plain json heredoc too): bootstrap servers and schema\n  registry urls whose hosts are not containers of the playground,\n  the credentials of that schema registry, a license, replication\n  factors above the number of brokers, and on plaintext the security of\n  the clients whose bootstrap servers were rewritten. Masked secrets,\n  config providers of the customer environment (${file:...}),\n  terraform references and the keys still pointing to external systems\n  are listed. The heredocs of the examples are never changed.\n  \n  ☁️ Fully managed: supported (custom connectors too), waited for with --wait\n  only\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%8F%%97%%EF%%B8%%8F-deploy-a-fully-managed-connector-with-terraform\n\n"
+    printf "  🧑‍🎨 Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command then waits for the connector and all its tasks to be\n  RUNNING, displays the connector status, and fails with the error if\n  they are not, so a broken config stops the example immediately instead\n  of failing silently later. A FAILED connector or task is reported with\n  'playground connector diagnose' (trace, error digest, offsets, next\n  steps and HTML report, opened in the browser unless 'playground config\n  open-diagnose-report-on-failure false'). When the script that runs is a\n  reproduction\n  model, a connector that is not RUNNING is only reported as a warning,\n  since a reproduction model often creates a failing connector on\n  purpose. Use --wait to fail there too, --no-wait to skip the wait.\n  \n  Fully managed connectors are only waited for with --wait.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n  \n  An update shows the keys added, removed and changed compared to the\n  running config (secrets masked).\n  \n  The config can also be given as the path of a file, and in the\n  formats customers send (detected, see 'playground connector\n  convert'): the REST API format ({\"name\": ..., \"config\": {...}}), a\n  dump of GET /connectors?expand=info, a CFK Connector or Strimzi\n  KafkaConnector custom resource, a terraform confluent_connector\n  resource, or a connect-standalone .properties file. When the file\n  holds several connectors, the one named --connector is used.\n  \n  A config that comes from elsewhere (a file, or one of these formats)\n  is adapted to the playground (--no-adapt to keep it as is, --adapt\n  to adapt a plain json heredoc too): bootstrap servers and schema\n  registry urls whose hosts are not containers of the playground,\n  the credentials of that schema registry, a license, replication\n  factors above the number of brokers, and on plaintext the security of\n  the clients whose bootstrap servers were rewritten. Masked secrets,\n  config providers of the customer environment (${file:...}),\n  terraform references and the keys still pointing to external systems\n  are listed. The heredocs of the examples are never changed.\n  \n  ☁️ Fully managed: supported (custom connectors too), waited for with --wait\n  only\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%8F%%97%%EF%%B8%%8F-deploy-a-fully-managed-connector-with-terraform\n\n"
   else
-    printf "playground connector create-or-update - 🧑‍🎨  Create or update connector\n\n"
+    printf "playground connector create-or-update - 🧑‍🎨 Create or update connector\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -70153,7 +70155,7 @@ EOF
 # 🧠 below is a list of cli commands that are helpful at the end of an example
 # 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !
 
-# 🕵️ to check logs (see https://kafka-docker-playground.io/#/cli?id=%f0%9f%95%b5%ef%b8%8f-logs)
+# 🕵️ to check logs (see https://kafka-docker-playground.io/#/playground%20container%20logs)
 # playground container logs --container connect
 # playground container logs --container connect --open
 # playground container logs --container connect --errors                # de-duplicated ERRORs + Caused by chain

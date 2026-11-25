@@ -977,7 +977,7 @@ commands:
   commands:
   - name: get
     help: |-
-      Get log levels
+      🔎 Get log levels
 
       With no --package, every logger with an explicit level is listed.
     flags:
@@ -992,7 +992,7 @@ commands:
 
   - name: set
     help: |-
-      Set log level for specific logger
+      🧬 Set the log level of a logger
 
       Takes effect immediately and applies to the logger and everything
       below it in the package hierarchy.

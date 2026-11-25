@@ -4,6 +4,7 @@
   - [📋 Full list](/content.md)
 - [🚀 How to Use](/how-to-use.md)
 - [🧠 CLI](/cli.md)
+  - [🎩 Alfred workflow](/alfred.md)
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)
 - [🧭 Which command do I need?](/which-command.md)

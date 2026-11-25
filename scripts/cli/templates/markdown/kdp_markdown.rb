@@ -138,6 +138,26 @@ module KdpMarkdown
     line.start_with?('$ ') || (line =~ COMMAND && line =~ / -|[=|<]/)
   end
 
+  # the same code spans as inline, as HTML: for the text inside the <details> blocks of the CLI page, where
+  # Markdown is not rendered
+  def html_escape(text)
+    text.gsub('&', '&amp;').gsub('<', '&lt;').gsub('>', '&gt;')
+  end
+
+  def inline_html(text)
+    return "" if text.nil?
+
+    out = +""
+    pos = 0
+    text.to_enum(:scan, INLINE).each do
+      m = Regexp.last_match
+      out << html_escape(text[pos...m.begin(0)])
+      out << "<code>#{html_escape(m[:pq] || m[:sq] || m[:qf] || m[0])}</code>"
+      pos = m.end(0)
+    end
+    out << html_escape(text[pos..-1])
+  end
+
   def values(list)
     Array(list).map { |v| code(v) }.join(', ')
   end
