@@ -170,7 +170,7 @@ figure.thumbnails img {
 }
 
 @media (min-width: 80em) {
-    body.has-page-toc:not(.page-toc-hidden) .page-toc {
+    body.has-page-toc .page-toc {
         display: block;
         position: fixed;
         top: 0;
@@ -234,4 +234,297 @@ figure.thumbnails img {
     background: none;
     font-size: 0.95em;
     white-space: normal;
+}
+
+/* resizable sidebar (plugin in index.html): a thin handle on its right edge */
+.sidebar-resizer {
+    display: none;
+}
+
+@media (min-width: 48em) {
+    .sidebar-resizer {
+        display: block;
+        position: fixed;
+        z-index: 20;
+        top: 0;
+        bottom: 0;
+        left: calc(var(--sidebar-width) - 3px);
+        width: 6px;
+        cursor: col-resize;
+        touch-action: none;
+    }
+
+    .sidebar-resizer::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 2px;
+        width: 2px;
+        background: transparent;
+        transition: background 0.15s;
+    }
+
+    .sidebar-resizer:hover::after,
+    body.sidebar-resizing .sidebar-resizer::after {
+        background: rgba(215, 239, 246, 0.5);
+    }
+
+    body.close .sidebar-resizer {
+        display: none;
+    }
+
+    /* no transition and no text selection while dragging */
+    body.sidebar-resizing,
+    body.sidebar-resizing * {
+        cursor: col-resize !important;
+        user-select: none;
+        transition: none !important;
+    }
+}
+
+/* sidebar title (set by a plugin in index.html), on one line */
+.sidebar .app-name-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.sidebar .app-name-link .kdp-logo {
+    flex: none;
+    font-size: 1.4rem;
+}
+
+.sidebar .app-name-link .kdp-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #ffffff;
+}
+
+.sidebar .app-name-link .kdp-name i {
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.sidebar .app-name-link .kdp-name em {
+    font-style: normal;
+    background: linear-gradient(90deg, #d7eff6, #ffc45c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* home page (introduction.md): the brand title, an html h1 so that its words can be styled */
+.markdown-section h1.home-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    margin: 0.4rem 0 1.4rem;
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.home-title .home-logo {
+    flex: none;
+    font-size: 2.4rem;
+}
+
+.home-title .home-name {
+    color: #ffffff;
+}
+
+.home-title .home-name i {
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.home-title .home-name em {
+    font-style: normal;
+    background: linear-gradient(90deg, #d7eff6, #ffc45c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* home page (introduction.md): centered hero with the tagline, the 4 entry points, a terminal and the numbers
+   (replaces the former cover page) */
+.home-hero {
+    box-sizing: border-box;
+    max-width: 100%;
+    margin: 0.5rem 0 2.5rem;
+    padding: 3rem 1rem 2.4rem;
+    background: radial-gradient(ellipse at 50% 0%, rgba(215, 239, 246, 0.14), transparent 65%);
+    text-align: center;
+}
+
+.markdown-section .home-hero p.home-hero-title {
+    margin: 0 0 0.6rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+}
+
+.markdown-section .home-hero p.home-hero-title span {
+    white-space: nowrap;
+    background: linear-gradient(90deg, #d7eff6, #ffc45c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.markdown-section .home-hero p.home-hero-subtitle {
+    max-width: 40rem;
+    margin: 0 auto 1.6rem;
+    font-size: 1.15rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.home-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.markdown-section a.home-button {
+    padding: 0.6rem 1.15rem;
+    border: 1px solid rgba(215, 239, 246, 0.45);
+    border-radius: 8px;
+    color: #d7eff6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.markdown-section a.home-button:hover {
+    border-color: #d7eff6;
+    background: rgba(215, 239, 246, 0.1);
+}
+
+.markdown-section a.home-button.primary {
+    border-color: transparent;
+    background: linear-gradient(90deg, #d7eff6, #ffe2a8);
+    color: #1e2a33;
+    font-weight: 600;
+}
+
+.markdown-section a.home-button.primary:hover {
+    filter: brightness(1.06);
+}
+
+.home-player {
+    max-width: 100%;
+    margin: 2.2rem auto 0;
+    border: 1px solid rgba(215, 239, 246, 0.16);
+    border-radius: 10px;
+    background: #12191e;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    text-align: left;
+}
+
+.home-player-bar {
+    padding: 0.45rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.home-player-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.1rem;
+}
+
+.home-player-tabs button {
+    flex: none;
+    padding: 0.3rem 0.45rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.home-player-tabs button:hover {
+    color: #ffffff;
+}
+
+.home-player-tabs button.active {
+    background: rgba(215, 239, 246, 0.14);
+    color: #ffffff;
+}
+
+.markdown-section .home-player video {
+    display: block;
+    width: 100%;
+    margin: 0;
+    background: #000000;
+}
+
+.markdown-section .home-player p.home-player-caption {
+    margin: 0;
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.home-numbers {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2.2rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid rgba(215, 239, 246, 0.1);
+}
+
+.markdown-section .home-numbers a {
+    display: flex;
+    flex-direction: column;
+    padding: 0 1.1rem;
+    border-left: 1px solid rgba(215, 239, 246, 0.12);
+    text-decoration: none;
+}
+
+.markdown-section .home-numbers a:first-child {
+    border-left: none;
+}
+
+.home-numbers b {
+    font-size: 1.7rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #d7eff6, #ffc45c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.home-numbers span {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 40em) {
+    .markdown-section h1.home-title {
+        font-size: 1.6rem;
+    }
+
+    .markdown-section .home-hero p.home-hero-title {
+        font-size: 1.8rem;
+    }
+
+    .markdown-section .home-numbers a {
+        padding: 0.4rem 0.8rem;
+    }
 }

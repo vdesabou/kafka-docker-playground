@@ -1,45 +1,41 @@
 # 🐳 kafka-docker-playground
 
-✨ Fully automated Apache Kafka® and Confluent® Docker (and CFK) based examples
+**Reproduce any Kafka issue in minutes.** Ready-to-run Apache Kafka® and Confluent examples (170+ connectors, 110+ fully managed, 15+ secured environments, CFK), at any version, and a CLI that tells you what is wrong.
 
-👷‍♂️ Easily build examples or reproduction models
+📚 **Documentation: [kafka-docker-playground.io](https://kafka-docker-playground.io/)**
 
 ## 🍿 See it in action
 
 <a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/find-example.gif" alt="playground find-example" width="49%"></a>
 <a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/diagnose.gif" alt="playground connector diagnose" width="49%"></a>
 
-More clips (run menu, topics, logs, source code, repro model, benchmark, Claude Code, analyze, Alfred workflow...) on the [website](https://kafka-docker-playground.io/#/introduction), and 2–3 minute narrated walkthroughs, from the symptom to the HTML report, in the [🎬 Bite size sessions](https://kafka-docker-playground.io/#/sessions).
+More clips on the [website](https://kafka-docker-playground.io/#/introduction), and 2–3 minute narrated walkthroughs, from the symptom to the HTML report, in the [🎬 Bite size sessions](https://kafka-docker-playground.io/#/sessions).
 
-## 📚 Documentation
+## 🏁 Getting started
 
-Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to learn how to use the playground, how it works and how to build your own reproduction models ! 
+```bash
+# 1. install the playground (macOS, Linux, WSL)
+curl -fsSL https://kafka-docker-playground.io/install.sh | bash
 
-## ✨ Features
+# 2. find the example closest to your case
+playground find-example "s3 sink"
 
-- 🔗 170+ onprem (or self-managed) connectors [examples](https://kafka-docker-playground.io/#/content?id=🔗-connectors)
-- 🌤️ 100+ fully-managed connectors [examples](https://kafka-docker-playground.io/#/content?id=%f0%9f%a4%96-fully-managed-connectors)
-- 🗺️ Start from your area: [Connect](https://kafka-docker-playground.io/#/area-connect), and not only connectors: [brokers, clients and observability](https://kafka-docker-playground.io/#/area-core-observability), [streams, schemas and non-Java clients](https://kafka-docker-playground.io/#/area-streams-schema-registry), [platform, security and Cloud infra](https://kafka-docker-playground.io/#/area-platform-security)
-- 🔐 10+ secured [environments](https://kafka-docker-playground.io/#/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
-- ☁️ Confluent Cloud [examples](https://kafka-docker-playground.io/#/content?id=☁%EF%B8%8F-confluent-cloud)
-- 💸 Confluent commercial [features](https://kafka-docker-playground.io/#/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
-- ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
-- 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
-- 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
-- 🎩 One keystroke away on macOS with the kdp [Alfred workflow](https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos): find and run examples, pick a connector plugin version or a config key, act on the running connectors, output streamed right in Alfred
-- 📈 [Benchmark](https://kafka-docker-playground.io/#/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
-- 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, network captures, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
-- 🎬 Learn with [bite size sessions](https://kafka-docker-playground.io/#/sessions): short narrated videos, each about one thing the playground does for you, with the commands to copy
-- 🍪 Master a family of commands with the [deep dives](https://kafka-docker-playground.io/#/deep-dives): mental model, what runs under the hood, gotchas, a hands-on lab replayed nightly by CI, and recipes for support repros
-- 🤖 Use it with [Claude Code](https://kafka-docker-playground.io/#/claude-code): project guide, skills to add examples, review PRs, change the CLI or analyze Oracle XStream reports
-- 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
-- 🧰 Build your own examples or reproduction models with the [reproduction toolkit](https://kafka-docker-playground.io/#/reusables)
-- 🌐 Try it in your browser, nothing to install, with [GitHub Codespaces](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces), or manage them from the terminal with [playground codespace](https://kafka-docker-playground.io/#/playground%20codespace)
-- ✨ Work remotely with VS Code using [playground ec2](https://kafka-docker-playground.io/#/playground%20ec2) CLI command
-- 🦭 Run examples with [Podman](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) through its Docker-compatible API
-- 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
-- ☸️ Run any onprem connector example using Confluent For Kubernetes (CFK) completely transparently using `--environment cfk` CLI option
-- 👾 And even more [playgrounds](https://kafka-docker-playground.io/#/content?id=👾-other-playgrounds)...
+# 3. run it, with the Confluent Platform version you need
+playground run -f connect/connect-aws-s3-sink/s3-sink.sh --tag 8.4.1
+```
+
+Nothing installed yet? Try it in your browser, Docker and the CLI are already set up:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1)
+
+## ✨ What you can do
+
+- ▶️ **Run** 177 self-managed and 112 fully managed [connector examples](https://kafka-docker-playground.io/#/examples), in 19 secured [environments](https://kafka-docker-playground.io/#/content?id=🔐-environments) or on Kubernetes (`--environment cfk`), with any Confluent Platform or connector version
+- 🩺 **Diagnose** with about 300 commands that each answer a support question in one call ([which command do I need?](https://kafka-docker-playground.io/#/which-command)), and shareable [reports](https://kafka-docker-playground.io/#/reports) for logs, dumps, flight recordings and network captures
+- 👷 **Reproduce** a customer issue as a [reproduction model](https://kafka-docker-playground.io/#/toolkit-reproduction-models), starting from their config, and find the version where a behaviour changed
+- 🎓 **Learn** with [bite size sessions](https://kafka-docker-playground.io/#/sessions), [deep dives](https://kafka-docker-playground.io/#/deep-dives), the [academy](https://kafka-docker-playground.io/#/academy), and [Claude Code](https://kafka-docker-playground.io/#/claude-code)
+
+The full list is on the [website](https://kafka-docker-playground.io/#/introduction?id=✨-what-you-can-do).
 
 ## 📊 See what it finds
 
@@ -49,17 +45,9 @@ Real reports, generated from the samples shipped in the repository: browse them 
 <a href="https://kafka-docker-playground.io/#/reports"><img src="https://kafka-docker-playground.io/images/reports/benchmark.png" alt="connector benchmark report" width="32%"></a>
 <a href="https://kafka-docker-playground.io/#/reports"><img src="https://kafka-docker-playground.io/images/reports/oracle-xstream-report.png" alt="Oracle XStream report" width="32%"></a>
 
-## 🏁 Getting Started
+## 💡 Philosophy
 
-Check out the **[How to Use](https://kafka-docker-playground.io/#/how-to-use.md)** section, then select an example in the **[Content](https://kafka-docker-playground.io/#/content)** section and run it !
-
-Nothing installed yet? Try it in your browser, Docker and the CLI are already set up:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1)
-
-## 💡 Ideology
-
-Most of the examples in the playground are very basic, but it allows to quickly test components in an automated way (and with any [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)) and most importantly to easily [build](https://kafka-docker-playground.io/#/toolkit-reproduction-models) your own reproduction models !
+Most examples are deliberately minimal: they let you test components quickly, automatically and with any [version](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions), and above all [build](https://kafka-docker-playground.io/#/toolkit-reproduction-models) your own reproduction models.
 
 ## 🙏 Support my work
 

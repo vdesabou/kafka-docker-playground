@@ -1,28 +1,51 @@
-## ✨ Features
+## 🏁 Getting started
 
-- 🔗 170+ onprem (or self-managed) connectors [examples](https://kafka-docker-playground.io/#/content?id=🔗-connectors)
-- 🌤️ 100+ fully-managed connectors [examples](https://kafka-docker-playground.io/#/content?id=%f0%9f%a4%96-fully-managed-connectors)
-- 🔐 10+ secured [environments](https://kafka-docker-playground.io/#/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
-- ☁️ Confluent Cloud [examples](https://kafka-docker-playground.io/#/content?id=☁%EF%B8%8F-confluent-cloud)
-- 💸 Confluent commercial [features](https://kafka-docker-playground.io/#/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
-- ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
-- 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
-- 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
-- 🎩 One keystroke away on macOS with the kdp [Alfred workflow](https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos): find the command that answers a question, find and run examples, pick a connector plugin version or a config key, act on the running connectors, output streamed right in Alfred
-- 📈 [Benchmark](https://kafka-docker-playground.io/#/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
-- 🐳 Share the log analyzer with anyone, a customer included: [`playground analyze logs` with nothing installed but Docker](https://kafka-docker-playground.io/#/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker), offline (`--network none`), on macOS, Linux and Windows
-- 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, network captures, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
-- 🎬 Learn with [bite size sessions](https://kafka-docker-playground.io/#/sessions): short narrated videos, each about one thing the playground does for you, with the commands to copy
-- 🍪 Master a family of commands with the [deep dives](https://kafka-docker-playground.io/#/deep-dives): mental model, what runs under the hood, gotchas, a hands-on lab replayed nightly by CI, and recipes for support repros
-- 🤖 Use it with [Claude Code](https://kafka-docker-playground.io/#/claude-code): project guide, skills to add examples, review PRs, change the CLI or analyze Oracle XStream reports
-- 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
-- 🧰 Build your own examples or reproduction models with the [reproduction toolkit](https://kafka-docker-playground.io/#/reusables)
-- 🌐 Try it in your browser, nothing to install, with [GitHub Codespaces](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces), or manage them from the terminal with [playground codespace](https://kafka-docker-playground.io/#/playground%20codespace)
-- ✨ Work remotely with VS Code using [playground ec2](https://kafka-docker-playground.io/#/playground%20ec2) CLI command
-- 🦭 Run examples with [Podman](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) through its Docker-compatible API
-- 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
-- ☸️ Run any onprem connector example using Confluent For Kubernetes (CFK) completely transparently using `--environment cfk` CLI option
-- 👾 And even more [playgrounds](https://kafka-docker-playground.io/#/content?id=👾-other-playgrounds)...
+```bash
+# 1. install the playground (macOS, Linux, WSL)
+curl -fsSL https://kafka-docker-playground.io/install.sh | bash
+
+# 2. find the example closest to your case
+playground find-example "s3 sink"
+
+# 3. run it, with the Confluent Platform version you need
+playground run -f connect/connect-aws-s3-sink/s3-sink.sh --tag 8.4.1
+```
+
+Prefer menus? `playground run` alone lets you pick the example and its options. All the ways to run (Codespaces, EC2, Podman) and the prerequisites are in **[🚀 How to Use](/how-to-use.md)**; every example, with its README and CI status, is in the **[👾 Examples](/examples.md)** page.
+
+🎬 Want the explanation too? The **[Bite size sessions](/sessions.md)** are 2–3 minute narrated walkthroughs of one command, from the symptom to the HTML report.
+
+## ✨ What you can do
+
+### ▶️ Run
+
+- 🔗 177 self-managed [connector examples](/content?id=🔗-connectors) and 112 [fully managed ones](/content?id=🤖-fully-managed-connectors), plus [Confluent Cloud](/content?id=☁️-confluent-cloud), [commercial features](/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, audit logs…), [Cluster Linking, Replicator and MirrorMaker 2](/content?id=🌍-multi-data-center-deployments) and [other playgrounds](/content?id=👾-other-playgrounds) (ksqlDB, Flink, Schema Registry…)
+- 🔐 19 [environments](/content?id=🔐-environments) (SASL, SSL, Kerberos, LDAP, RBAC, OAuth, multi-DC, Ansible), and any self-managed connector example on Kubernetes with `--environment cfk`
+- 🎯 Any Confluent Platform or connector [version](/how-to-use?id=🪄-specify-versions), with the third-party accounts of the examples set up and checked for you ([accounts](/how-to-use?id=☁️-accounts-of-the-examples))
+- 🌐 Locally with Docker or [Podman](/how-to-use?id=🦭-using-podman-instead-of-docker), in your browser with [GitHub Codespaces](/how-to-use?id=🌐-in-your-browser-github-codespaces), or remotely on [EC2](/playground%20ec2)
+- 🗺️ [Start from your area](/areas.md): Connect, brokers and observability, streams and schemas, platform and security
+
+### 🚑 Diagnose
+
+- 🧭 About 300 commands that each answer a support question in one call: [find the right one](/which-command.md) from your own words with `playground find-command`
+- 🔌 A connector that fails, is stuck or lags: [connector diagnose](/playground%20connector%20diagnose), [show-lag](/playground%20connector%20show-lag), [flow](/playground%20connector%20flow) (source → topic → sinks), [reconcile](/playground%20connector%20reconcile) (topic vs table)
+- 📊 Shareable [reports](/reports.md) for logs, thread and heap dumps, GC logs, flight recordings, network captures, CFK bundles and Oracle XStream reports
+- 🐳 [`playground analyze logs` with nothing installed but Docker](/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker), offline: anyone can run it on their own logs, a customer included
+
+### 👷 Reproduce
+
+- 🛠 Turn an example into your own [reproduction model](/toolkit-reproduction-models.md), or chain a source and sinks with the [🔗 pipeline builder](pipeline-builder.html ':ignore')
+- 📥 Start from the customer's config as is: [connector create-or-update](/playground%20connector%20create-or-update) reads CFK, Strimzi, terraform and `.properties` files
+- 🔀 Find the connector version where a behaviour changed with [repro bisect](/playground%20repro%20bisect), and read the [source code](/playground%20connector-plugin%20sourcecode) or the changelog at the exact version
+- 📈 [Benchmark](/toolkit-performance?id=⏱️-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes
+- 🗄️ Query the databases of the examples with [db sql](/playground%20db%20sql), and check their CDC prerequisites with [db cdc-check](/playground%20db%20cdc-check)
+
+### 🎓 Learn
+
+- 🎬 [Bite size sessions](/sessions.md) (short narrated videos) and 🍪 [deep dives](/deep-dives.md) (mental model, gotchas, a lab replayed nightly by CI, recipes for support repros)
+- 🧑‍🎓 [Academy](/academy.md) and 🎓 [how the playground works](/how-it-works.md), CI included
+- 🤖 Use it with [Claude Code](/claude-code.md): it picks the right playground commands to find the root cause
+- 🎩 On macOS, the kdp [Alfred workflow](/cli?id=🎩-alfred-workflow-macos) puts examples, plugin versions and running connectors one keystroke away
 
 ## 📊 See what it finds
 
@@ -32,123 +55,9 @@ Real reports, generated from the samples shipped in the repository: browse them 
 <a href="#/reports"><img src="images/reports/benchmark.png" alt="connector benchmark report" width="32%"></a>
 <a href="#/reports"><img src="images/reports/oracle-xstream-report.png" alt="Oracle XStream report" width="32%"></a>
 
-## 🐳 Analyze logs with nothing installed but Docker
+## 💡 Philosophy
 
-Someone without the playground (a customer, a colleague, a partner) can run `playground analyze logs` on their own logs, from the folder that holds them:
-
-```bash
-docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip --sanitize
-```
-
-The report and the summary for a ticket land in `./log-analysis-output/`. `--network none`: the logs never leave the machine. Windows PowerShell, a message ready to send to a customer, and the details: [🐳 with nothing installed but Docker](/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker).
-
-## 🍿 See it in action
-
-<!-- tabs:start -->
-
-#### **🔎 Find & run**
-
-Find the example closest to your case, then run it with the Confluent Platform and connector versions you need.
-
-<video src="videos/find-example.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🕹️ Run menu**
-
-Prefer menus to flags? `playground run` lets you pick an example and its options (versions, environment, connector zip...), and shows the matching command.
-
-<video src="videos/run-menu.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🔐 Secrets**
-
-[Check](/playground%20secrets%20check) which credentials an example needs, and [store](/playground%20secrets%20set) them once for all your runs.
-
-<video src="videos/secrets.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **📨 Topics**
-
-[Produce](/playground%20topic%20produce) realistic records from a schema (Avro, JSON Schema, Protobuf or plain JSON) and [consume](/playground%20topic%20consume) them back.
-
-<video src="videos/topic.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🩺 Diagnose**
-
-A connector stopped working: status, error digest with the root cause, progress and next steps, in one command.
-
-<video src="videos/diagnose.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🐢 Show lag**
-
-Is the sink catching up, standing still or falling behind? [Watch](/playground%20connector%20show-lag) its consumer lag until it reaches 0.
-
-<video src="videos/show-lag.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **📜 Logs**
-
-Turn on [DEBUG](/playground%20connector%20log-level) for a connector, then [wait for](/playground%20connector%20logs) the log line you are looking for (here the SQL the JDBC sink runs).
-
-<video src="videos/logs.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🧑‍💻 Source code**
-
-Read the [source code](/playground%20connector-plugin%20sourcecode) of a connector at the exact version you run, compare two versions, or check it out locally.
-
-<video src="videos/sourcecode.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **✅ Validate & diff**
-
-A customer sent their config: validate it without creating anything, then see how it differs from the connector of the example.
-
-<video src="videos/validate-diff.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **👷 Repro model**
-
-Turn an example into a reproduction model of your own issue, ready to edit and run.
-
-<video src="videos/repro-bootstrap.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🔗 Pipeline**
-
-Chain a source example and sink examples in a single [reproduction model](/toolkit-reproduction-models?id=with-pipeline-pipeline): the records of the source go through the sinks (producers removed, same topic and converters, ExtractNewRecordState for a Debezium envelope…). Pick the examples in the [🔗 pipeline builder](pipeline-builder.html ':ignore') and copy the command, then follow the records with `playground connector flow`.
-
-[![pipeline builder](images/pipeline-builder.jpg)](pipeline-builder.html ':ignore')
-
-<video src="videos/repro-pipeline.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **📈 Benchmark**
-
-[Benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) the throughput of a connector (and compare versions), with a flight recording that says where the time went.
-
-<video src="videos/benchmark.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🔬 Analyze**
-
-Digest thread dumps, GC logs, heap dumps, flight recordings, CFK bundles or Oracle XStream reports (here a thread dump sample).
-
-<video src="videos/analyze.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🤖 Claude Code**
-
-Ask [Claude Code](/claude-code) in plain language: it checks the connector with the playground CLI and explains the root cause and the fix.
-
-<video src="videos/claude-code.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🎩 Alfred**
-
-On macOS, the [kdp Alfred workflow](/cli?id=%f0%9f%8e%a9-alfred-workflow-macos) puts the playground one keystroke away: pick a connector plugin, a version and read its changelog, then follow a running connector with `watch`, without opening a terminal.
-
-<video src="videos/kdp-alfred-workflow.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-<!-- tabs:end -->
-
-🎬 Want the explanation too? The **[Bite size sessions](/sessions.md)** are 2–3 minute narrated walkthroughs of one command, from the symptom to the HTML report.
-
-## 🏁 Getting Started
-
-Check out the **[How to Use](/how-to-use.md)** section, then select an example in the **[👾 Examples](/examples.md)** page (or the [📋 full list](/content.md)) and run it !
-
-## 💡 Ideology
-
-Most of the examples in the playground are very basic, but it allows to quickly test components in an automated way (and with any [versions](/how-to-use?id=🪄-specify-versions)) and most importantly to easily [build](/toolkit-reproduction-models) your own reproduction models !
+Most examples are deliberately minimal: they let you test components quickly, automatically and with any [version](/how-to-use?id=🪄-specify-versions), and above all [build](/toolkit-reproduction-models.md) your own reproduction models.
 
 ## ⭐️ Support my work
 

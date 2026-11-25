@@ -94,7 +94,7 @@
     window.$docsify = {
       name: 'kafka-docker-playground',
       repo: 'vdesabou/kafka-docker-playground',
-      coverpage: true,
+      coverpage: false,
       themeColor: "#d7eff6",
       homepage   : 'introduction.md',
       loadSidebar: 'sidebar.md',
@@ -143,6 +143,97 @@
         tabHeadings: true       // default
       },
       plugins: [
+        // resizable sidebar: drag its right edge (wide screens only), the width is kept in localStorage, double-click resets it.
+        // Everything in the theme follows --sidebar-width (sidebar, content margin, toggle button)
+        function (hook) {
+          var KEY = 'kdp-sidebar-width', MIN = 200, MAX = 600;
+          var root = document.documentElement;
+          function apply(px) {
+            root.style.setProperty('--sidebar-width', Math.min(MAX, Math.max(MIN, px)) + 'px');
+          }
+          var saved = parseInt(localStorage.getItem(KEY), 10);
+          if (saved) {
+            apply(saved);
+          }
+          hook.mounted(function () {
+            var handle = document.createElement('div');
+            handle.className = 'sidebar-resizer';
+            handle.title = 'Drag to resize, double-click to reset';
+            document.body.appendChild(handle);
+            handle.addEventListener('pointerdown', function (event) {
+              event.preventDefault();
+              handle.setPointerCapture(event.pointerId);
+              document.body.classList.add('sidebar-resizing');
+              function move(e) {
+                apply(e.clientX);
+              }
+              function up(e) {
+                handle.releasePointerCapture(e.pointerId);
+                handle.removeEventListener('pointermove', move);
+                handle.removeEventListener('pointerup', up);
+                document.body.classList.remove('sidebar-resizing');
+                localStorage.setItem(KEY, parseInt(getComputedStyle(root).getPropertyValue('--sidebar-width'), 10));
+              }
+              handle.addEventListener('pointermove', move);
+              handle.addEventListener('pointerup', up);
+            });
+            handle.addEventListener('dblclick', function () {
+              root.style.removeProperty('--sidebar-width');
+              localStorage.removeItem(KEY);
+            });
+          });
+        },
+        // home page player (introduction-header.md): the tabs switch the clip, and the next tab starts when a clip ends
+        // (only while the player is on screen, never with "reduce motion"). The clip itself is handled like the other
+        // autoplay videos (plugin below: played while on screen)
+        function (hook) {
+          var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          hook.doneEach(function () {
+            var player = document.querySelector('.home-player');
+            if (!player) {
+              return;
+            }
+            var tabs = Array.prototype.slice.call(player.querySelectorAll('.home-player-tabs button'));
+            var video = player.querySelector('video');
+            var caption = player.querySelector('.home-player-caption');
+            var current = 0;
+            function onScreen() {
+              var rect = player.getBoundingClientRect();
+              return rect.bottom > 0 && rect.top < window.innerHeight;
+            }
+            function show(index, play) {
+              current = index;
+              tabs.forEach(function (tab, i) {
+                tab.classList.toggle('active', i === index);
+              });
+              video.src = tabs[index].getAttribute('data-src');
+              caption.textContent = tabs[index].getAttribute('data-caption');
+              if (play) {
+                video.play().catch(function () {});
+              }
+            }
+            tabs.forEach(function (tab, i) {
+              tab.addEventListener('click', function () {
+                show(i, true);
+              });
+            });
+            video.addEventListener('ended', function () {
+              if (!reduceMotion && onScreen()) {
+                show((current + 1) % tabs.length, true);
+              }
+            });
+          });
+        },
+        // sidebar title: same look as the title of the home page (logo tile, dimmed dashes, gradient on "playground").
+        // Set here rather than in "name", which also ends up in places that expect plain text
+        function (hook) {
+          hook.mounted(function () {
+            var link = document.querySelector('.sidebar .app-name-link');
+            if (link) {
+              link.innerHTML = '<span class="kdp-logo">🐳</span><span class="kdp-name">kafka<i>-</i>docker<i>-</i><em>playground</em></span>';
+            }
+          });
+        },
         // the Examples page (examples.md) embeds the examples explorer in an iframe: the selection of the explorer is
         // written in the URL of the page (#/examples?ex=…&tab=…, without reloading it), a link with a selection opens
         // the explorer on it (the iframe of examples.md has no src: set here only, with the selection, one navigation and
@@ -305,9 +396,6 @@
 
           function update() {
             scheduled = false;
-            // hidden while the cover page is on screen (homepage)
-            var cover = document.querySelector('section.cover.show');
-            document.body.classList.toggle('page-toc-hidden', !!cover && cover.getBoundingClientRect().bottom > 0);
             var current = null;
             for (var i = 0; i < entries.length && entries[i].heading.getBoundingClientRect().top <= 120; i++) {
               current = entries[i];
