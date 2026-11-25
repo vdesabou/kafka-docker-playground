@@ -72,7 +72,7 @@ Report each failed check with `file:line`, the rule, and the fix. Skip checks th
 ### Never committed
 
 `reproduction-models` submodule pointer, `playground.ini`, `playground-run-history`, `.ccloud/`,
-`secrets.properties`, `*.pem` / `*.key`, `docs/content.md` / `docs/badges.md` / `docs/cli.md` hand edits,
+`secrets.properties`, `*.pem` / `*.key`, `docs/content.md` / `docs/cli.md` hand edits,
 the CLI reference pages written by `update-docs` (`docs/playground *.md`, `docs/cli-pages.js`), and
 anything with customer data.
 

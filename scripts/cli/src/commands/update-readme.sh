@@ -48,15 +48,11 @@ cd ${root_folder}
 content_template_file=./docs/content-template.md
 content_file=./docs/content.md
 content_tmp_file=$tmp_dir/content.md
-badges_template_file=./docs/badges-template.md
-badges_file=./docs/badges.md
-badges_tmp_file=$tmp_dir/badges.md
 gh_msg_file=$tmp_dir/gh.txt
 gh_msg_file_intro=$tmp_dir/gh_intro.txt
 gh_msg_file_final=$tmp_dir/gh_final.txt
 
 cp $content_template_file $content_file
-cp $badges_template_file $badges_file
 
 curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o $tmp_dir/README.txt
 
@@ -109,7 +105,6 @@ fi
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
 nb_total_tests=0
-nb_connector_tests=0
 nb_total_fail=0
 nb_total_success=0
 
@@ -613,7 +608,6 @@ do
 
     if [ "$environment_suffix" = "" ]
     then
-      let "nb_connector_tests++"
       sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $arm64 $ci ${cfk_placeholder} |g" \
           $content_file > $content_tmp_file
       cp $content_tmp_file $content_file
@@ -667,44 +661,12 @@ then
   exit 0
 fi
 
-cp_version_tested=""
-for image_version in $tags
-do
-  cp_version_tested="$cp_version_tested%20$image_version"
-done
-cp_version_tested="${cp_version_tested#%20}"
-
-tests_color="green"
-if [ $nb_total_fail -gt 0 ]; then
-  tests_color="red"
-fi
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  last_run=$(date "+%Y-%m-%d %H:%M")
-else
-  last_run=$(date "+%Y-%m-%d %H:%M")
-fi
-last_run=${last_run// /%20}
-last_run=${last_run//-/--}
-
 # remove placeholders of tests that have no CI result (not in the CI matrix), otherwise they are displayed as is
 sed -E -e 's#:(ccloud|connect|environment|multi-data-center|other)/[A-Za-z0-9_./-]+:#\&nbsp;#g' $content_file > $content_file.tmp
 mv $content_file.tmp $content_file
 
-# handle shields badges
-sed -e "s|:nb_total_success:|$nb_total_success|g" \
-    -e "s|:nb_total_tests:|$nb_total_tests|g" \
-    -e "s|:nb_connector_tests:|$nb_connector_tests|g" \
-    -e "s|:cp_version_tested:|$cp_version_tested|g" \
-    -e "s|:tests_color:|$tests_color|g" \
-    -e "s|:last_run:|$last_run|g" \
-    $badges_file > $badges_tmp_file
-cp $badges_tmp_file $badges_file
-
 # Create docs/introduction.md
 cat ./docs/introduction-header.md > ./docs/introduction.md
-cat $badges_file >> ./docs/introduction.md
-echo "" >> ./docs/introduction.md
 cat ./docs/introduction-footer.md >> ./docs/introduction.md
 
 log "It's over Michael!"
