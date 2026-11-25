@@ -12,15 +12,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -31,6 +22,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
