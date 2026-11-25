@@ -184,6 +184,14 @@ A customer sends a support bundle, a CFK bundle, a CloudWatch / Kibana / Splunk 
       <p><code>playground analyze thread-dump -c connect</code></p>
       <p>Try it: <code>playground analyze thread-dump --sample deadlock_jdk21</code></p>
     </div>
+  <div class="report-card">
+    <a href="reports/thread-dump-stuck-sink.html" target="_blank" rel="noopener"><img src="images/reports/thread-dump-stuck-sink.png" alt="🧵 Thread dumps report: a sink stuck in put()" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/academy?id=jdbc-sink-running-but-no-data-in-the-table">🧵 A sink stuck in put()</a></h3>
+      <p>RUNNING, no error, no progress: the task thread of a JDBC sink waits in <code>JdbcSinkTask.put</code> for a table locked by another session, the same frames in the 3 dumps. From the advanced exercise of the Academy.</p>
+      <p>Try it: <code>playground analyze thread-dump --sample stuck_sink_put</code></p>
+    </div>
+  </div>
   </div>
   <div class="report-card">
     <a href="reports/gc-logs.html" target="_blank" rel="noopener"><img src="images/reports/gc-logs.png" alt="♻️ GC logs report" loading="lazy"></a>
@@ -262,6 +270,14 @@ A customer sends a support bundle, a CFK bundle, a CloudWatch / Kibana / Splunk 
       <p><code>playground debug tcp-dump -c connect --port 9092 --duration 30s</code></p>
       <p>Try it: <code>playground analyze tcp-dump --sample kafka_and_network_errors</code> (or <code>--sample http_errors</code>)</p>
     </div>
+  <div class="report-card">
+    <a href="reports/tcp-dump-http-client-timeout.html" target="_blank" rel="noopener"><img src="images/reports/tcp-dump-http-client-timeout.png" alt="🦈 Network capture report: HTTP responses after the client gave up" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/academy?id=http-sink-timeouts-is-it-the-server-or-the-network">🦈 Responses after the client gave up</a></h3>
+      <p>An HTTP sink with a 1 s timeout behind a 1.5 s network: each response arrives after the connector closed the connection, the server saw 200, the connector saw a timeout. From the advanced exercise of the Academy.</p>
+      <p>Try it: <code>playground analyze tcp-dump --sample http_client_timeout</code></p>
+    </div>
+  </div>
   </div>
   <div class="report-card">
     <a href="reports/cloud-costs.html" target="_blank" rel="noopener"><img src="images/reports/cloud-costs.png" alt="💰 Cloud costs report" loading="lazy"></a>

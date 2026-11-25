@@ -6,7 +6,7 @@ source ${DIR}/lab-utils.bash
 
 # lab of https://kafka-docker-playground.io/#/academy: runs the reproduction models of the beginner and advanced exercises
 # (academy/) and asserts the failure each exercise is about, then the fix the page gives. The intermediate exercise (S3
-# sink, StackOverflowError) needs an AWS account: not replayed here
+# sink, StackOverflowError) needs an AWS account: replayed only when AWS credentials are available
 lab_require_plaintext
 academy="${DIR}/../../academy"
 
@@ -316,4 +316,88 @@ lab_expect_contains "0:🟢 RUNNING"
 lab_run playground tools http-server requests --grep '"id":10'
 lab_expect_contains '"id":10'
 
-log "✅ academy lab: the 4 beginner exercises and the 3 advanced ones behave as the page says"
+log "Exercise 5 (intermediate): StackOverflowError with S3 sink connector"
+if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_PROFILE" ] && [ ! -f "$HOME/.aws/credentials" ]
+then
+    logwarn "no AWS credentials (AWS_ACCESS_KEY_ID, AWS_PROFILE or ~/.aws/credentials): exercise 5 (S3 sink) is not replayed"
+else
+    run_model connect-connect-aws-s3-sink s3-sink-repro-000001-stackoverflowerror-with-s3-sink-connector.sh
+    lab_run playground connector status --connector s3-sink
+    lab_expect_contains "0:🛑 FAILED"
+    lab_expect_contains "Caused by: java.lang.StackOverflowError"
+    lab_expect_contains "at org.apache.parquet.avro.AvroSchemaConverter.convertUnion"
+fi
+
+log "Exercise 9 (advanced): Debezium PostgreSQL, the replication slot keeps growing"
+run_model connect-connect-debezium-postgresql-source debezium-postgres-source-repro-000009-replication-slot-keeps-growing.sh
+lab_expect_contains "debezium-postgres-source       ✅ RUNNING  0:🟢 RUNNING"
+lab_run playground db cdc-check
+lab_expect_contains "slot debezium (pgoutput) active,"
+lab_expect_contains "MB behind"
+lab_run playground db sql << 'EOF'
+SELECT CASE WHEN pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn) > 100000000 THEN 'more than 100 MB retained' ELSE 'less than 100 MB retained' END AS slot FROM pg_replication_slots WHERE slot_name = 'debezium';
+EOF
+lab_expect_contains "more than 100 MB retained"
+playground db sql << 'EOF'
+CREATE TABLE debezium_heartbeat (id INT PRIMARY KEY, ts TIMESTAMP);
+EOF
+playground connector create-or-update --connector debezium-postgres-source << 'EOF'
+{
+     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+     "tasks.max": "1",
+     "database.hostname": "postgres",
+     "database.port": "5432",
+     "database.user": "myuser",
+     "database.password": "mypassword",
+     "database.dbname" : "postgres",
+     "topic.prefix": "asgard",
+     "plugin.name": "pgoutput",
+     "slot.name": "debezium",
+     "publication.autocreate.mode": "filtered",
+     "table.include.list": "public.customers,public.debezium_heartbeat",
+     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "key.converter.schemas.enable": "false",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false",
+     "heartbeat.interval.ms": "10000",
+     "heartbeat.action.query": "INSERT INTO debezium_heartbeat (id, ts) VALUES (1, now()) ON CONFLICT (id) DO UPDATE SET ts = now()"
+}
+EOF
+sleep 90
+lab_run playground db sql << 'EOF'
+SELECT CASE WHEN pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn) < 1000000 THEN 'slot caught up' ELSE 'slot still behind' END AS slot FROM pg_replication_slots WHERE slot_name = 'debezium';
+EOF
+lab_expect_contains "slot caught up"
+
+log "Exercise 10 (advanced): JDBC sink, an incompatible schema breaks the connector"
+run_model connect-connect-jdbc-postgresql-sink postgres-sink-repro-000010-incompatible-schema-breaks-sink.sh
+lab_expect_contains "0:🛑 FAILED"
+lab_expect_contains 'ERROR: column "quantity" is of type integer but expression is of type character varying'
+lab_run playground schema history --subject orders-value
+lab_expect_contains "orders-value: registered v1 (id 1, AVRO)"
+lab_expect_contains "orders-value: compatibility NONE"
+lab_expect_contains "orders-value: registered v2 (id 2, AVRO)"
+lab_run playground schema diff --subject orders-value --from 1 --to 2
+lab_expect_contains "quantity type: int → string"
+lab_expect_contains "❌ BACKWARD"
+cat > "$chain_file" << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product","type":"string"},{"name":"quantity","type":"int"},{"name":"price","type":"float"},{"name":"quantity_label","type":["null","string"],"default":null}]}
+EOF
+playground schema set-compatibility --subject orders-value --compatibility BACKWARD
+lab_run playground schema check-compatibility --subject orders-value --schema @"$chain_file"
+lab_expect_contains "register would refuse it (40901)" "the corrected schema refused while the bad v2 is the latest version"
+playground schema delete --subject orders-value --version 2
+lab_run playground schema check-compatibility --subject orders-value --schema @"$chain_file"
+lab_expect_contains "register would accept it" "the corrected schema accepted once v2 is soft deleted"
+
+log "Exercise 11 (advanced): which version of the HTTP sink brought its HTTP logs?"
+lab_run bash -c "cd '$academy/connect-connect-http-sink' && CONNECTOR_TAG=1.7.13 bash http-sink-repro-000011-which-version-brought-http-logs.sh"
+lab_expect_contains "🐞 REPRODUCED"
+lab_expect_contains "connector 1.7.13)"
+lab_run bash -c "cd '$academy/connect-connect-http-sink' && CONNECTOR_TAG=1.7.14 bash http-sink-repro-000011-which-version-brought-http-logs.sh"
+lab_expect_contains "✅ NOT REPRODUCED"
+lab_expect_contains "connector 1.7.14)"
+lab_run playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-http --from 1.7.13 --to 1.7.14
+lab_expect_contains "CC-45231"
+
+log "✅ academy lab: the exercises behave as the page says"
