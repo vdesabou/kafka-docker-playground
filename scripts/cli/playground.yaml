@@ -7881,9 +7881,11 @@ subcommands:
     options: []
   - name: kill-all
     description: "\U0001F480 Kill all containers and prune all volumes\n\nKills every
-      container on your machine, playground or not, and prunes\nthe volumes. Used
-      automatically before each 'playground run' to\nguarantee a clean slate; disable
-      that with\n'playground config container-kill-all-before-run false'."
+      container on your machine, playground or not, and prunes\nthe volumes. It first
+      lists each container it kills (name, image,\nstatus), or each pod with the cfk
+      environment. Used automatically\nbefore each 'playground run' to guarantee a
+      clean slate; disable that with\n'playground config container-kill-all-before-run
+      false'."
     usage: playground container kill-all
     options: []
   - name: logs
