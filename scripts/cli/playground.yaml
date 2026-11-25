@@ -5752,8 +5752,9 @@ subcommands:
         \    3 jstack -l dumps of one JDK 21 JVM, 3 s apart: deadlock, blocked threads,
         CPU-hot thread, stuck task, leaking pool\n  deadlock_jdk8      the same scenario,
         one dump, JDK 8\n  healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2
-        Connect worker, from its container logs\n\nRepeatable: ✓ Yes\nAllowed values:
-        deadlock_jdk21, deadlock_jdk8, healthy_connect"
+        Connect worker, from its container logs\n  stuck_sink_put     3 dumps of a
+        CP 8.4.1 worker whose JDBC sink task waits in put() for a locked table (Academy)\n\nRepeatable:
+        ✓ Yes\nAllowed values: deadlock_jdk21, deadlock_jdk8, healthy_connect, stuck_sink_put"
     - names:
       - "--container"
       - "-c"

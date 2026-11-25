@@ -539,7 +539,7 @@ playground analyze gc-logs -c connect --output-dir /tmp/repro-gc
 ## 10. Cheat sheet
 
 ```bash
-playground analyze thread-dump    [-c <c> [--count 3] [--interval 5] | -f <dump>… | --sample deadlock_jdk21|deadlock_jdk8|healthy_connect] [--json] [--top 10] [--output-dir <d>]
+playground analyze thread-dump    [-c <c> [--count 3] [--interval 5] | -f <dump>… | --sample deadlock_jdk21|deadlock_jdk8|healthy_connect|stuck_sink_put] [--json] [--top 10] [--output-dir <d>]
 playground analyze gc-logs        [-c <c> | -f <log|folder>… | --sample <name>] [--run <n>] [--json] [--top-pauses 10] [--output-dir <d>]
 playground analyze flight-recorder [-c <c> [--duration 60s] [--trace-method <Class::method>]… | -f <.jfr|.digest.json>… | --sample jdbc_postgres_sink] [--connector <c>] [--threads <regex>] [--json] [--output-dir <d>]
 playground analyze heap-dump      -f <.hprof[.gz]> | --sample leak|leak_growth [--compare <.hprof>] [--report-type all|leaks|overview|top-components] [--max-memory 8g] [--json] [--output-dir <d>]

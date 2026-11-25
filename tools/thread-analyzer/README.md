@@ -23,11 +23,11 @@ is analyzed apart, its dumps compared with each other: the dumps of 2 Connect wo
 | Findings | deadlocks, contended locks, lock stalls, threads stuck in a socket write, stuck threads, CPU-hungry threads, growing pools, saturated broker request handlers. Each one is a sentence (`text`, the terminal and `--json`); its title is the words before the first `: `, and a lock stall also has `details` (the waiting thread, the holder, why neither progresses), shown one per line in the HTML reports |
 | Deadlocks | cycles in the wait-for graph (monitors and `java.util.concurrent` locks), plus the JVM's own report |
 | Lock contention | each lock with its waiters and its owner (state and top application frame) |
-| Same frames in all dumps | non-idle threads (BLOCKED, or RUNNABLE outside a poll / accept / select) on the same top 5 frames |
+| Same frames in all dumps | non-idle threads (BLOCKED, or RUNNABLE outside a poll / accept / select) on the same top 5 frames. A Connect sink task inside `SinkTask.put()` (called by `WorkerSinkTask.deliverMessages`) is never idle, even in a socket read: it waits for its external system (HIGH, with the `put` method and the socket read in the finding) |
 | Lock stalls (`stalls`) | a thread waiting for a lock (monitor, or a `ReentrantLock` / `ReentrantReadWriteLock` it parks to acquire) on the same frames in every dump, whose holder is the same thread on the same frames in every dump: `Lock stall, the same in all N dumps`, even with a single waiter (a lock with 2+ waiters stays a contended lock). Without lock owners in the dump (`jstack` without `-l`), the holder of a `java.util.concurrent` lock is inferred: the thread stuck in socket I/O, using no CPU, in the class that called `lock()`, the closest name first (`most likely held by`); none found: nothing reported (a consumer heartbeat thread waits like that for the lock its `poll()` holds) |
 | Stuck in socket I/O (`stuck_io`) | a thread RUNNABLE in a blocking socket write (`socketWrite0`, `NioSocketImpl` / `FileDispatcherImpl.write0`, plain or TLS) on the same frames in every dump with under 5% of a CPU between them (MEDIUM: the peer does not read, or the connection is dead without a reset). A socket read is only reported as the holder of a stalled lock: an idle connection waits in a read too; `epollWait` / `select` threads are idle |
 | CPU | per-thread CPU between the first and last dump (`cpu=` / `elapsed=`, JDK 11+), or since thread start |
-| Kafka Connect | `task-thread-<connector>-<n>` threads (idle / busy / stuck) and the `DistributedHerder` thread |
+| Kafka Connect | `task-thread-<connector>-<n>` threads (idle / in put / busy / stuck) and the `DistributedHerder` thread. With a single dump, a sink task in a socket read inside `put()` is an INFO finding (take 3 dumps to tell a slow write from a stuck one) |
 | Kafka broker | busy `data-plane-kafka-request-handler-*` threads per dump |
 | Pools | threads grouped by name with digits replaced by `#`, and their count across dumps |
 | Most common stacks | identical stacks (state + top 8 frames) |
@@ -62,6 +62,7 @@ does not reach the logs.
 | `deadlock_jdk21` | `jdk21-scenario-{1,2,3}.txt` | 3 `jstack -l` dumps of `TdLoad` on JDK 21, 3 s apart: deadlock, 8 threads blocked on one monitor, a CPU-hot thread, a Connect-like task stuck on a socket read, a leaking pool |
 | `deadlock_jdk8` | `jdk8-scenario.txt` | the same scenario on JDK 8 (hex `nid`, no `cpu=`) |
 | `healthy_connect` | `cp-8.3.2-connect-kill-3-logs.txt` | 3 `kill -3` dumps of a healthy CP 8.3.2 Connect worker, read from its container logs |
+| `stuck_sink_put` | `cp-8.4.1-connect-jdbc-sink-stuck-in-put.txt` | 3 dumps, 11 s apart, of a CP 8.4.1 worker whose JDBC sink task waits in `JdbcSinkTask.put` for a PostgreSQL table locked by another session (the advanced exercise of the [Academy](https://kafka-docker-playground.io/#/academy)) |
 | | `TdLoad.java` | the scenario program |
 
 ```bash

@@ -34,6 +34,7 @@ do
         deadlock_jdk21) file_array+=("$samples_dir/jdk21-scenario-1.txt" "$samples_dir/jdk21-scenario-2.txt" "$samples_dir/jdk21-scenario-3.txt") ;;
         deadlock_jdk8) file_array+=("$samples_dir/jdk8-scenario.txt") ;;
         healthy_connect) file_array+=("$samples_dir/cp-8.3.2-connect-kill-3-logs.txt") ;;
+        stuck_sink_put) file_array+=("$samples_dir/cp-8.4.1-connect-jdbc-sink-stuck-in-put.txt") ;;
     esac
 done
 
