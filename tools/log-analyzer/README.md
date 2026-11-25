@@ -30,14 +30,16 @@ pictures (`open` them; transcribe the lines to a `.log`), 📄 PDF (`pdftotext -
 (save as `.docx` / `.xlsx`). No OCR: tried with the Vision framework of macOS, it reads monospace log lines with errors
 that matter (`org.apache` read `orq.apache`, `json` read `ison`, a highlighted or wrapped line split in two).
 
-## Lines logged twice, Grafana / Loki text exports, newest-first files
+## Lines logged twice, Grafana / Loki text exports, CRI node logs, newest-first files
 
 The digest collapses a line identical to the line before it when it has a timestamp to the millisecond (two appenders
 writing the same file: every count and event was doubled), and a multi-line record (a stack trace) identical to the record
 before it, by pairs (a WARN logged 4 times in the same millisecond through two appenders is 2 events). The count is the
 8th field of `@@PGFILE@@` (`.duplicated_lines` of `--json` and ⚠️ in the summary from 10 % of the lines of a file). A
 Grafana / Loki text export (Explore, Download as txt) has a header (`Common labels: {…"level":"ERROR"…}`, not a record)
-and an `<epoch ms or ns>\t<UTC time>Z\t` prefix before each line (looked for in the first 20 lines), removed. A file whose
+and an `<epoch ms or ns>\t<UTC time>Z\t` prefix before each line (looked for in the first 20 lines), removed. So is the prefix of the node log of a Kubernetes
+container (CRI format of containerd / CRI-O, `2026-11-23T14:24:56.004858222+08:00 stdout F ` before every line, the
+frames of a stack trace included), and a line split in partial (`P`) lines up to the final (`F`) one is joined. A file whose
 times go down from line to line (newest first, 4 times more descents than rises) has `newest_first` in the 9th field of
 `@@PGFILE@@`: first / last seen (lines and times), the order of the records and their times are put back in the order of
 time (`.newest_first_files`, ⚠️ in the summary). The text and the context of a record stay the ones of the first

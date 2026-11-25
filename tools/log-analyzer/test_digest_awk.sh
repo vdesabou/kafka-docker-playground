@@ -116,6 +116,16 @@ samples+=("$tmp/config-changes.log")
     printf '1793959202000\t2026-11-07T10:00:02.000Z\t[2026-11-07 11:00:02,000] ERROR Failed to produce event log message: {"id":"0b2d4f6a-8c0e-4a1b-9c2d-3e4f5a6b7c8d","type":"x"} (a.B)\n'
     printf '1793959201000\t2026-11-07T10:00:01.000Z\t[2026-11-07 11:00:01,000] ERROR [orders-sink|task-0] task failed (x.Y:2)\njava.lang.IllegalStateException: bad\n\tat a.b(C.java:1)\n'
 } > "$tmp/loki.log"
+# the node log of a Kubernetes container (CRI format of containerd / CRI-O): time, stream and P / F tag before every line,
+# the frames of a trace included, a long line split in partial (P) lines up to the final (F) one
+{
+    printf '%s\n' '2026-11-23T14:24:56.004858222+08:00 stdout F [2026-11-23 14:24:56,004] INFO started (x.Y:1)' \
+        '2026-11-23T14:24:57.000000000+08:00 stdout F [2026-11-23 14:24:57,000] ERROR [orders-sink|task-0] task failed (x.Y:2)' \
+        '2026-11-23T14:24:57.000000001+08:00 stdout F java.lang.IllegalStateException: bad' \
+        $'2026-11-23T14:24:57.000000002+08:00 stdout F \tat a.b(C.java:1)' \
+        '2026-11-23T14:24:58.000000000Z stderr P [2026-11-23 14:24:58,000] ERROR Failed to ' \
+        '2026-11-23T14:24:58.000000001Z stderr F process record (x.Y:3)'
+} > "$tmp/cri.log"
 # the broker side of an authentication incident (INFO lines of kafka.network.Selector, three formats), the client side
 # (not an event of the broker), and an HDFS sink that rotates with empty offsets and never commits next to one that commits
 {
@@ -334,6 +344,16 @@ do
     if [ "$got" != "newest_first,x1 8-8 2026-11-07T11:00:01 2026-11-07T11:00:01,[2026-11-07T11:00:01],x2 7-6 2026-11-07T11:00:02 2026-11-07T11:00:03,[2026-11-07T11:00:02 2026-11-07T11:00:03],0" ]
     then
         echo "❌ $awk_cmd: Grafana / Loki export loki.log: $got"
+        failed=1
+    fi
+    # the CRI node log of a pod: the prefix removed (no "stdout F" in a record), the frames kept in their record, the
+    # partial lines joined
+    PATH="$bin:$PATH" bash -c 'source "$1"; PG_LOG_DIGEST_RECORDS_FILE="$2" summarize_log_errors 40 1 < "$3"' _ "$tmp/digest.sh" "$out.cri" "$tmp/cri.log" > "$out.cri.digest" 2>&1
+    got=$(awk -F '\t' '$1 == "@@PGREC@@" {printf "x%s %s %s,", $3, $4, $6}' "$out.cri"; grep -c 'stdout F\|stderr [PF]' "$out.cri.digest"; grep -c 'IllegalStateException: bad' "$out.cri.digest"; grep -c 'ERROR Failed to process record' "$out.cri.digest")
+    got=$(printf '%s' "$got" | tr '\n' ',')
+    if [ "$got" != "x1 2 2026-11-23T14:24:57,x1 6 2026-11-23T14:24:58,0,1,1" ]
+    then
+        echo "❌ $awk_cmd: CRI node log cri.log: $got"
         failed=1
     fi
     # the broker side of an authentication incident: an event of the broker, counted per broker and per client IP and error

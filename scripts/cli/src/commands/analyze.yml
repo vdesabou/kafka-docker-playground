@@ -188,7 +188,8 @@ commands:
     broker with their storms, and their bursts are on the incident timeline.
     🔂 A sink of files that rotates with empty offsets and never commits is a
     livelock. Lines logged twice in a row (two appenders) are collapsed, a
-    Grafana / Loki text export is read (header and prefix removed), and a
+    Grafana / Loki text export is read (header and prefix removed), so is
+    the CRI node log of a pod (time stdout F prefix removed), and a
     newest-first file is put back in the order of time (⚠️ in the summary).
     Only files with findings are
     shown. 🔭 When no file has findings, an overview says what the logs

@@ -7733,6 +7733,17 @@ function summarize_log_errors() {
         if (NR <= 10 && ($0 ~ /^Common labels: \{/ || $0 ~ /^Total bytes processed: / || $0 ~ /^"[0-9]+ lines shown/)) next
         # (looked for in the first 20 lines only, then on each line of an export: not a cost on the other logs)
         if ((NR <= 20 || loki) && match($0, /^[0-9]+\t[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9:.]+Z?\t/)) { loki = 1; $0 = substr($0, RLENGTH + 1) }
+        # the node log of a Kubernetes container (CRI format of containerd / CRI-O, /var/log/pods/…/0.log, copied from the
+        # node): "2026-11-23T14:24:56.004858222+08:00 stdout F [2026-11-23 14:24:56,004] ERROR …" on every line, the frames
+        # of a stack trace included. The prefix is removed (else "stdout F" was the start of each record), and a line longer
+        # than the runtime buffer, split in partial lines (P) up to the final one (F), is joined again
+        if ((NR <= 20 || cri) && match($0, /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9:.]+(Z|[+-][0-9][0-9]:?[0-9][0-9]) (stdout|stderr) [PF] /)) {
+            cri = 1
+            cri_tag = substr($0, RLENGTH - 1, 1)
+            $0 = cri_part substr($0, RLENGTH + 1)
+            if (cri_tag == "P") { cri_part = $0; next }
+            cri_part = ""
+        }
         # the same line twice in a row, to the millisecond: two appenders write each line (every count and event doubled).
         # By pairs: a WARN logged 4 times in the same millisecond (once per column) through two appenders is 8 lines, 4 events
         if ($0 == dup_last && !dup_was && $0 != "" && has_ms($0)) { dup_lines++; dup_was = 1; next }
