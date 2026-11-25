@@ -3,14 +3,20 @@ set -e
 
 if [ -z "$CONNECTOR_TAG" ]
 then
-    # latest GitHub release (follow the releases/latest redirect, no API rate limit), 2.15.0 if GitHub can't be reached
-    CONNECTOR_TAG=$(curl -sI -o /dev/null -w '%{redirect_url}' https://github.com/streamthoughts/kafka-connect-file-pulse/releases/latest | sed -n 's|.*/tag/v||p')
-    CONNECTOR_TAG=${CONNECTOR_TAG:-2.15.0}
+    # latest GitHub release (follow the releases/latest redirect, no API rate limit)
+    CONNECTOR_TAG=$(curl -sI --retry 3 -o /dev/null -w '%{redirect_url}' https://github.com/streamthoughts/kafka-connect-file-pulse/releases/latest | sed -n 's|.*/tag/v||p')
+    if [ -z "$CONNECTOR_TAG" ]
+    then
+        # GitHub can't be reached: newest zip already downloaded, 2.15.0 if there is none
+        CONNECTOR_TAG=$(ls streamthoughts-kafka-connect-file-pulse-*.zip 2>/dev/null | sed -n 's|^streamthoughts-kafka-connect-file-pulse-\(.*\)\.zip$|\1|p' | sort -V | tail -1)
+        CONNECTOR_TAG=${CONNECTOR_TAG:-2.15.0}
+    fi
 fi
 
-if [ ! -f streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip ]
+if [ ! -s streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip ]
 then
-    curl -L -o streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v${CONNECTOR_TAG}/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip
+    # -f: never save an HTTP error page as the zip, and never keep a failed download
+    curl -fsSL --retry 3 -o streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v${CONNECTOR_TAG}/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip || { rm -f streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip; echo "ERROR: could not download streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip from GitHub"; exit 1; }
 fi
 
 export CONNECTOR_ZIP=$PWD/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip
