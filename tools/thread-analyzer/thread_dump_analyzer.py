@@ -157,8 +157,22 @@ class ThreadInfo:
                 return f
         return self.frames[0] if self.frames else ""
 
+    def sink_put_frame(self) -> str:
+        """the SinkTask.put() frame of a Connect sink task thread that is delivering records (called by
+        WorkerSinkTask.deliverMessages), "" otherwise"""
+        if not _RE_CONNECT_TASK.match(self.name):
+            return ""
+        for i, f in enumerate(self.frames):
+            if "WorkerSinkTask.deliverMessages" in f:
+                return self.frames[i - 1] if i > 0 else f
+        return ""
+
     def is_idle(self) -> bool:
-        """Waiting for work: parked / waiting / sleeping, or RUNNABLE in a native poll / accept"""
+        """Waiting for work: parked / waiting / sleeping, or RUNNABLE in a native poll / accept.
+        A sink task inside put() is not idle, even in a socket read: it waits for its external system (a database
+        lock, a slow query, a dead connection); an idle sink task waits in KafkaConsumer.poll"""
+        if self.sink_put_frame():
+            return False
         if self.state in ("WAITING", "TIMED_WAITING"):
             return True
         if self.state == "RUNNABLE" and self.frames and _IDLE_RUNNABLE.search(" ".join(self.frames[:3])):
@@ -667,8 +681,11 @@ def analyze(dumps: List[Dump], top: int) -> dict:
                 continue
             if all(key in m and m[key].state == t.state and m[key].frames[:5] == t.frames[:5] for m in maps):
                 busy = next((c for c in res["cpu_interval"] if c["name"] == t.name), None)
+                io = socket_io(t)
                 res["stuck"].append({"name": t.name, "state": t.state, "frame": t.top_app_frame(),
-                                     "frames": t.frames[:8], "cpu_pct": busy["cpu_pct"] if busy else 0.0})
+                                     "frames": t.frames[:8], "cpu_pct": busy["cpu_pct"] if busy else 0.0,
+                                     "sink_put": _method(t.sink_put_frame()) if t.sink_put_frame() else "",
+                                     "io": io[0] if io else ""})
         res["stalls"], res["stuck_io"] = stalls(chain, secs)
     else:
         res["stalls"], res["stuck_io"] = [], []
@@ -679,8 +696,11 @@ def analyze(dumps: List[Dump], top: int) -> dict:
     for t in last.threads:
         m = _RE_CONNECT_TASK.match(t.name)
         if m:
+            io = socket_io(t)
             tasks.append({"connector": m.group("connector"), "task": int(m.group("task")), "name": t.name,
-                          "state": t.state, "idle": t.is_idle(), "frame": t.top_app_frame(), "stuck": t.name in stuck_names})
+                          "state": t.state, "idle": t.is_idle(), "frame": t.top_app_frame(), "stuck": t.name in stuck_names,
+                          "sink_put": _method(t.sink_put_frame()) if t.sink_put_frame() else "",
+                          "io": io[0] if io else ""})
     res["connect_tasks"] = sorted(tasks, key=lambda x: (x["connector"], x["task"]))
     res["herder"] = [{"name": t.name, "state": t.state, "frame": t.top_app_frame(), "stuck": t.name in stuck_names}
                      for t in last.threads if _RE_CONNECT_HERDER.match(t.name) and t.is_java]
@@ -787,7 +807,11 @@ def findings(res: dict, dumps: List[Dump]) -> List[dict]:
                 continue  # busy RUNNABLE threads are reported by the CPU finding, not as stuck
             add(sev, f"{what} \"{s['name']}\" is {s['state']} on the same frames in all {n} dumps "
                      f"({res.get('interval_s', '?')}s apart), in {s['frame']}"
-                     + (f", using {s['cpu_pct']}% of a CPU" if s["cpu_pct"] else ", using no CPU") + ".")
+                     + (f", using {s['cpu_pct']}% of a CPU" if s["cpu_pct"] else ", using no CPU") + "."
+                     + (f" It is inside {s['sink_put']}, in a socket {s['io']}: the sink waits for its external system "
+                        "(a lock, a slow query, a dead connection on the other side), look there."
+                        if s.get("sink_put") and s.get("io") else
+                        f" It is inside {s['sink_put']}." if s.get("sink_put") else ""))
         if other_blocked:
             add("MEDIUM", f"{len(other_blocked)} thread(s) BLOCKED on the same frames in all {n} dumps: "
                           + "; ".join(f"\"{s['name']}\" in {s['frame']}" for s in other_blocked[:5])
@@ -813,6 +837,10 @@ def findings(res: dict, dumps: List[Dump]) -> List[dict]:
     for t in res["connect_tasks"]:
         if t["state"] == "BLOCKED" and not t["stuck"]:
             add("MEDIUM", f"Connect task thread \"{t['name']}\" is BLOCKED in {t['frame']}.")
+        if len(res["dumps"]) < 2 and t["sink_put"] and t["io"]:
+            add("INFO", f"Connect task thread \"{t['name']}\" is in a socket {t['io']} inside {t['sink_put']}: the sink is "
+                        "waiting for its external system. If it stays there in 3 dumps a few seconds apart, it is stuck "
+                        "(playground analyze thread-dump --container <c>).")
     total = res["dumps"][-1]["threads"]
     if total > 2000:
         add("MEDIUM", f"{total} threads in the JVM: check the biggest pools below.")
@@ -878,7 +906,7 @@ def text_report(res: dict, top: int) -> str:
         for t in res["herder"]:
             L.append(f"  herder  {t['name'][:40]:<40} {t['state']:<13} {t['frame'][:70]}")
         for t in res["connect_tasks"]:
-            flag = " STUCK" if t["stuck"] else (" idle" if t["idle"] else "")
+            flag = " STUCK" if t["stuck"] else (" in put" if t["sink_put"] else " idle" if t["idle"] else "")
             L.append(f"  task    {t['connector'][:30]:<30} #{t['task']:<3} {t['state']:<13}{flag:<7} {t['frame'][:70]}")
     rh = res.get("request_handlers")
     if rh:
@@ -1024,7 +1052,7 @@ def html_report(res: dict, title: str) -> str:
     if res["connect_tasks"] or res["herder"]:
         rows = "".join(f"<tr><td>herder</td><td>{_e(t['name'])}</td><td>{st(t['state'])}{' <b>stuck</b>' if t['stuck'] else ''}</td><td class='mono'>{_e(t['frame'])}</td></tr>" for t in res["herder"])
         rows += "".join(f"<tr><td>{_e(t['connector'])} #{t['task']}</td><td>{_e(t['name'])}</td><td>{st(t['state'])}"
-                        f"{' <b>stuck</b>' if t['stuck'] else ' idle' if t['idle'] else ''}</td><td class='mono'>{_e(t['frame'])}</td></tr>"
+                        f"{' <b>stuck</b>' if t['stuck'] else ' in put()' if t['sink_put'] else ' idle' if t['idle'] else ''}</td><td class='mono'>{_e(t['frame'])}</td></tr>"
                         for t in res["connect_tasks"])
         sections.append(f"<div class='table-card'><h2>🔌 Kafka Connect</h2><table><tr><th>Connector / task</th><th>Thread</th><th>State</th><th>Top application frame</th></tr>{rows}</table></div>")
     if res["identical_stacks"]:

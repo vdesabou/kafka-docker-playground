@@ -4,9 +4,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
-# lab of https://kafka-docker-playground.io/#/academy: runs the reproduction models of the beginner exercises (academy/)
-# and asserts the failure each exercise is about, then the fix the page gives. The intermediate exercise (S3 sink,
-# StackOverflowError) needs an AWS account: not replayed here
+# lab of https://kafka-docker-playground.io/#/academy: runs the reproduction models of the beginner and advanced exercises
+# (academy/) and asserts the failure each exercise is about, then the fix the page gives. The intermediate exercise (S3
+# sink, StackOverflowError) needs an AWS account: not replayed here
 lab_require_plaintext
 academy="${DIR}/../../academy"
 
@@ -221,4 +221,34 @@ lab_expect_contains "0:🟢 RUNNING"
 lab_run playground topic consume --topic mysql-team --max-messages 2
 lab_expect_contains '"__kafka_topic":{"string":"mysql-team"},"__kafka_partition":null,"__kafka_ts":null'
 
-log "✅ academy lab: the 4 beginner exercises behave as the page says"
+log "Exercise 6 (advanced): JDBC sink RUNNING, but no data in the table"
+run_model connect-connect-jdbc-postgresql-sink postgres-sink-repro-000006-sink-running-but-no-data.sh
+lab_expect_contains "postgres-sink                  ✅ RUNNING  0:🟢 RUNNING"
+lab_run playground connector diagnose --connector postgres-sink --no-open
+lab_expect_contains "✅ no ERROR/FATAL record found"
+lab_expect_contains "🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move"
+lab_run playground connector show-lag --connector postgres-sink --once
+lab_expect_contains "is not available (no offset committed yet)"
+lab_run playground analyze thread-dump --container connect --output-dir /tmp/academy-lab-thread-dump
+lab_expect_contains 'Connect task thread "task-thread-postgres-sink-0" is RUNNABLE on the same frames in all 3 dumps'
+lab_expect_contains "It is inside io.confluent.connect.jdbc.sink.JdbcSinkTask.put, in a socket read: the sink waits for its external system"
+lab_run playground db sql << 'EOF'
+SELECT application_name, state, wait_event_type, cardinality(pg_blocking_pids(pid)) AS nb_blockers
+FROM pg_stat_activity
+WHERE datname = 'postgres' AND pid <> pg_backend_pid()
+ORDER BY xact_start;
+EOF
+lab_expect_contains "nightly-batch | idle in transaction"
+lab_expect_contains "PostgreSQL JDBC Driver | active | Lock | 1"
+lab_run playground db sql << 'EOF'
+SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = 'nightly-batch';
+EOF
+sleep 20
+lab_run playground connector show-lag --connector postgres-sink --once
+lab_expect_contains "consumer lag for 🌎onprem connector postgres-sink is 0"
+lab_run playground db sql << 'EOF'
+SELECT count(*) FROM orders;
+EOF
+lab_expect_contains "10"
+
+log "✅ academy lab: the 4 beginner exercises and the advanced one behave as the page says"

@@ -2,7 +2,7 @@
 
 Below is a collection of real issues, each with a reproduction model that you run with the playground. The goal is to let you do the reproduction and the troubleshooting by yourself: this is the only way to learn!
 
-Each exercise (⭐ beginner, ⭐⭐ intermediate) is composed of:
+Each exercise (⭐ beginner, ⭐⭐ intermediate, ⭐⭐⭐ advanced) is composed of:
 
 * 🔥 A short description of the issue.
 * 🤯 The details: versions, configuration, stack trace, and a link to the reproduction model.
@@ -1217,5 +1217,295 @@ Caused by: java.lang.StackOverflowError
 What to tell the customer: Parquet cannot store this schema. Either use another `format.class` (`AvroFormat` or `JsonFormat`), or change the schema so that it is not recursive (for example a fixed number of levels).
 
 * The full reproduction model is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-aws-s3-sink/s3-sink-repro-000001-stackoverflowerror-with-s3-sink-connector.sh).
+
+<!-- tabs:end -->
+
+
+## ⭐⭐⭐ Advanced
+
+### JDBC sink RUNNING, but no data in the table
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A JDBC sink connector is RUNNING, its task is RUNNING, there is no error in the logs... but no data arrives in the PostgreSQL table.
+
+💡 What you'll learn:
+
+* Troubleshoot a connector that is RUNNING but does nothing: no error to read, so you have to choose the right tools.
+* Follow the lag, take and analyze thread dumps, and look at the sessions and locks of the database.
+* Turn a silent wait into a visible error.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 JDBC sink (PostgreSQL): 10.9.10
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "auto.create": "true"
+}
+```
+
+Reproduction model: [postgres-sink-repro-000006-sink-running-but-no-data.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000006-sink-running-but-no-data.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000006` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000006-sink-running-but-no-data.sh
+```
+
+10 records are produced to topic `orders`, and the connector is RUNNING:
+
+```log
+postgres-sink                  ✅ RUNNING  0:🟢 RUNNING                 -
+```
+
+But the table is empty:
+
+```log
+ count
+-------
+     0
+(1 row)
+```
+
+❔Questions:
+
+* Is the connector doing anything?
+* What is the first command you run?
+
+> [!TIP]
+> Be quick: after 5 minutes (`max.poll.interval.ms`), the consumer of the task leaves its group and the picture changes. `playground re-run` starts over.
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+[playground connector diagnose](/playground%20connector%20diagnose) finds no error, and no progress:
+
+```bash
+playground connector diagnose --connector postgres-sink
+```
+
+```log
+13:48:53 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)
+✅ no ERROR/FATAL record found in 4344 lines
+
+13:48:53 ℹ️ 🐢 3/4 progress: consumer lag of sink postgres-sink
+13:48:56 ❗ 🐢 consumer lag for 🌎onprem connector postgres-sink is not available (no offset committed yet), check the connector status if this persists
+topic: orders     partition: 0   current-offset: -          end-offset: 10         lag: -          []   0%
+
+13:49:00 ℹ️ 👉 4/4 next steps
+   🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move
+```
+
+Run [playground connector show-lag](/playground%20connector%20show-lag) `--once` a few times: the connector has not committed a single offset, and nothing moves.
+
+```bash
+playground connector show-lag --connector postgres-sink --once
+13:49:03 ℹ️ 🐢 consumer lag for 🌎onprem connector postgres-sink is not available (no offset committed yet)
+topic: orders     partition: 0   current-offset: -          end-offset: 10         lag: -          []   0%
+```
+
+A task that is RUNNING, with no error and no progress, is waiting for something. What is its thread doing?
+
+<!-- select:end -->
+
+👉 Take thread dumps of the `connect` worker and analyze them: what is the task thread of `postgres-sink` doing?
+
+> [!TIP]
+> One dump says what a thread does at that moment; 3 dumps a few seconds apart say whether it is stuck. [playground analyze thread-dump](/playground%20analyze%20thread-dump) `--container connect` takes 3 and analyzes them.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground analyze thread-dump --container connect
+```
+
+```log
+── Findings ──────────────────────────────────────────────────────────────────
+  [HIGH] Connect task thread "task-thread-postgres-sink-0" is RUNNABLE on the same frames in all 3 dumps (11.2s apart), in org.postgresql.core.VisibleBufferedInputStream.readMore(VisibleBufferedInputStream.java:192), using no CPU. It is inside io.confluent.connect.jdbc.sink.JdbcSinkTask.put, in a socket read: the sink waits for its external system (a lock, a slow query, a dead connection on the other side), look there.
+
+── Kafka Connect ─────────────────────────────────────────────────────────────
+  task    postgres-sink                  #0   RUNNABLE      STUCK  org.postgresql.core.VisibleBufferedInputStream.readMore(VisibleBuffere
+```
+
+The stack of the task thread, in the dump:
+
+```log
+"task-thread-postgres-sink-0" #235 [433] prio=5 os_prio=0 cpu=170.40ms elapsed=68.32s tid=0x0000fffe800ec360 nid=433 runnable  [0x0000fffe6ab70000]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.Net.poll(java.base@25.0.5/Native Method)
+	...
+	at org.postgresql.core.VisibleBufferedInputStream.readMore(VisibleBufferedInputStream.java:192)
+	...
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:674)
+	at org.postgresql.jdbc.PgStatement.executeBatch(PgStatement.java:924)
+	at org.postgresql.jdbc.PgPreparedStatement.executeBatch(PgPreparedStatement.java:1778)
+	at io.confluent.connect.jdbc.sink.BufferedRecords.executeUpdates(BufferedRecords.java:199)
+	at io.confluent.connect.jdbc.sink.BufferedRecords.flush(BufferedRecords.java:189)
+	at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:86)
+	at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:87)
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:708)
+```
+
+Read it from the bottom: the worker delivers the records to `JdbcSinkTask.put()`, which sends the batch of INSERTs (`executeBatch`), and the driver waits for the answer of PostgreSQL in a socket read. The task is not idle: it is waiting for the database, and the database does not answer.
+
+> [!NOTE]
+> An idle sink task waits in `KafkaConsumer.poll()` for new records. A sink task in a socket read inside `put()` is waiting for its external system.
+
+<!-- select:end -->
+
+👉 Find out why PostgreSQL does not answer the INSERT.
+
+> [!TIP]
+> [playground db sql](/playground%20db%20sql) runs SQL in the database of the example. PostgreSQL shows its sessions in `pg_stat_activity`, and `pg_blocking_pids(pid)` tells which sessions block one.
+
+#### **📍 Step 4**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+The sessions of the database:
+
+```bash
+playground db sql << 'EOF'
+SELECT pid, application_name, state, wait_event_type, wait_event, pg_blocking_pids(pid) AS blocked_by, now() - xact_start AS xact_age, left(query, 60) AS query
+FROM pg_stat_activity
+WHERE datname = 'postgres' AND pid <> pg_backend_pid()
+ORDER BY xact_start;
+EOF
+```
+
+```log
+ pid |    application_name    |        state        | wait_event_type | wait_event | blocked_by |    xact_age     |                            query
+-----+------------------------+---------------------+-----------------+------------+------------+-----------------+--------------------------------------------------------------
+  81 | nightly-batch          | idle in transaction | Client          | ClientRead | {}         | 00:04:57.121641 | LOCK TABLE orders IN SHARE MODE;
+  85 | PostgreSQL JDBC Driver | active              | Lock            | relation   | {81}       | 00:04:40.432392 | INSERT INTO "postgres"."public"."orders" ("id","product","qu
+```
+
+* The INSERT of the connector (`PostgreSQL JDBC Driver`) waits for a lock (`wait_event_type` `Lock`), blocked by session `81`.
+* Session `81`, `nightly-batch`, is `idle in transaction`: it started a transaction 5 minutes ago, locked the table, and is doing nothing. Its transaction stays open until it commits, rolls back, or is ended.
+
+The locks on the table confirm it:
+
+```bash
+playground db sql << 'EOF'
+SELECT l.pid, a.application_name, l.mode, l.granted, c.relname
+FROM pg_locks l JOIN pg_class c ON c.oid = l.relation JOIN pg_stat_activity a ON a.pid = l.pid
+WHERE c.relname = 'orders';
+EOF
+```
+
+```log
+ pid |    application_name    |       mode       | granted | relname
+-----+------------------------+------------------+---------+---------
+  81 | nightly-batch          | ShareLock        | t       | orders
+  85 | PostgreSQL JDBC Driver | RowExclusiveLock | f       | orders
+```
+
+A `SHARE` lock lets `SELECT` run (that is why `count(*)` answered 0), but blocks every `INSERT`, `UPDATE` and `DELETE` until its transaction ends.
+
+<!-- select:end -->
+
+👉 Unblock the connector, and check that the data arrives.
+
+#### **📍 Step 5**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+In real life, find who owns the `nightly-batch` session and have it commit or roll back. Here, end it:
+
+```bash
+playground db sql << 'EOF'
+SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = 'nightly-batch';
+EOF
+```
+
+The INSERT gets its lock right away, and the connector catches up:
+
+```bash
+playground connector show-lag --connector postgres-sink --once
+13:53:28 ℹ️ 🐢 consumer lag for 🌎onprem connector postgres-sink is 0
+topic: orders     partition: 0   current-offset: 10         end-offset: 10         lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100% 🏁
+```
+
+```bash
+playground db sql << 'EOF'
+SELECT count(*) FROM orders;
+EOF
+```
+
+```log
+ count
+-------
+    10
+(1 row)
+```
+
+No error at any time: from the outside, the connector was just "slow".
+
+<!-- select:end -->
+
+👉 How could the connector have reported the problem instead of waiting silently?
+
+#### **📍 Step 6**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Bound the wait on the database side: a `lock_timeout` on the sessions of the connector. With the PostgreSQL driver, set it in the connection URL (`options=-c lock_timeout=10s`, URL-encoded), and keep the retries of the connector short:
+
+```json
+"connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false&options=-c%20lock_timeout%3D10s",
+"max.retries": "2",
+"retry.backoff.ms": "5000"
+```
+
+Start a `nightly-batch` session again, produce one record, and the task now fails with an explicit error after its retries:
+
+```log
+postgres-sink                  ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+Caused by: org.apache.kafka.connect.errors.ConnectException: java.sql.SQLException: Exception chain:
+java.sql.BatchUpdateException: Batch entry 0 INSERT INTO "postgres"."public"."orders" ("id","product","quantity","price") VALUES (('1000'::int4),('after the fix'),('1'::int4),('1.0'::real)) was aborted: ERROR: canceling statement due to lock timeout
+org.postgresql.util.PSQLException: ERROR: canceling statement due to lock timeout
+```
+
+A FAILED task is visible to monitoring and to `connector status`; a task waiting forever is not. The same setting can be set on the database user (`ALTER ROLE myuser SET lock_timeout = '10s'`), which also covers the sessions opened by other tools.
+
+<!-- select:end -->
+🥁 So...could you find why a RUNNING connector did nothing?
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 JVM diagnostics](/deep-dive-jvm-diagnostics.md) deep dive (thread dumps, flight recordings) and the [🍪 offsets and lag](/deep-dive-offsets-and-lag.md) one.
+* Try the same with a slow query instead of a lock: `ALTER ROLE myuser SET statement_timeout = '10s'` bounds it the same way.
+* What to ask a customer in this situation: 3 thread dumps of the worker a few seconds apart, `show-lag` (or the consumer group offsets) over a few minutes, and the sessions of the database (`pg_stat_activity` with `pg_blocking_pids`) while the connector is stuck.
+* Try `playground analyze thread-dump --sample stuck_sink_put`: the 3 dumps of this exercise.
 
 <!-- tabs:end -->

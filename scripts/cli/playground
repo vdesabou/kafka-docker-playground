@@ -12835,8 +12835,8 @@ playground_analyze_thread_dump_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/thread-analyzer/samples\n    \n      deadlock_jdk21     3 jstack -l dumps of one JDK 21 JVM, 3 s apart:\n    deadlock, blocked threads, CPU-hot thread, stuck task, leaking pool\n      deadlock_jdk8      the same scenario, one dump, JDK 8\n      healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2 Connect worker,\n    from its container logs\n"
-    printf "    %s\n" "Allowed: deadlock_jdk21, deadlock_jdk8, healthy_connect"
+    printf "    🧪 Sample of tools/thread-analyzer/samples\n    \n      deadlock_jdk21     3 jstack -l dumps of one JDK 21 JVM, 3 s apart:\n    deadlock, blocked threads, CPU-hot thread, stuck task, leaking pool\n      deadlock_jdk8      the same scenario, one dump, JDK 8\n      healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2 Connect worker,\n    from its container logs\n      stuck_sink_put     3 dumps of a CP 8.4.1 worker whose JDBC sink task waits\n    in put() for a locked table (Academy)\n"
+    printf "    %s\n" "Allowed: deadlock_jdk21, deadlock_jdk8, healthy_connect, stuck_sink_put"
     echo
 
     # :flag.usage
@@ -14126,8 +14126,8 @@ playground_debug_thread_analyze_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/thread-analyzer/samples\n    \n      deadlock_jdk21     3 jstack -l dumps of one JDK 21 JVM, 3 s apart:\n    deadlock, blocked threads, CPU-hot thread, stuck task, leaking pool\n      deadlock_jdk8      the same scenario, one dump, JDK 8\n      healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2 Connect worker,\n    from its container logs\n"
-    printf "    %s\n" "Allowed: deadlock_jdk21, deadlock_jdk8, healthy_connect"
+    printf "    🧪 Sample of tools/thread-analyzer/samples\n    \n      deadlock_jdk21     3 jstack -l dumps of one JDK 21 JVM, 3 s apart:\n    deadlock, blocked threads, CPU-hot thread, stuck task, leaking pool\n      deadlock_jdk8      the same scenario, one dump, JDK 8\n      healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2 Connect worker,\n    from its container logs\n      stuck_sink_put     3 dumps of a CP 8.4.1 worker whose JDBC sink task waits\n    in put() for a locked table (Academy)\n"
+    printf "    %s\n" "Allowed: deadlock_jdk21, deadlock_jdk8, healthy_connect, stuck_sink_put"
     echo
 
     # :flag.usage
@@ -75808,6 +75808,7 @@ playground_analyze_thread_dump_command() {
           deadlock_jdk21) file_array+=("$samples_dir/jdk21-scenario-1.txt" "$samples_dir/jdk21-scenario-2.txt" "$samples_dir/jdk21-scenario-3.txt") ;;
           deadlock_jdk8) file_array+=("$samples_dir/jdk8-scenario.txt") ;;
           healthy_connect) file_array+=("$samples_dir/cp-8.3.2-connect-kill-3-logs.txt") ;;
+          stuck_sink_put) file_array+=("$samples_dir/cp-8.4.1-connect-jdbc-sink-stuck-in-put.txt") ;;
       esac
   done
 
@@ -79800,6 +79801,7 @@ playground_debug_thread_analyze_command() {
           deadlock_jdk21) file_array+=("$samples_dir/jdk21-scenario-1.txt" "$samples_dir/jdk21-scenario-2.txt" "$samples_dir/jdk21-scenario-3.txt") ;;
           deadlock_jdk8) file_array+=("$samples_dir/jdk8-scenario.txt") ;;
           healthy_connect) file_array+=("$samples_dir/cp-8.3.2-connect-kill-3-logs.txt") ;;
+          stuck_sink_put) file_array+=("$samples_dir/cp-8.4.1-connect-jdbc-sink-stuck-in-put.txt") ;;
       esac
   done
 
@@ -142033,8 +142035,8 @@ playground_analyze_thread_dump_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(deadlock_jdk21|deadlock_jdk8|healthy_connect)$ ]]; then
-      printf "%s\n" "--sample must be one of: deadlock_jdk21, deadlock_jdk8, healthy_connect" >&2
+    if [[ ! $i =~ ^(deadlock_jdk21|deadlock_jdk8|healthy_connect|stuck_sink_put)$ ]]; then
+      printf "%s\n" "--sample must be one of: deadlock_jdk21, deadlock_jdk8, healthy_connect, stuck_sink_put" >&2
       exit 1
     fi
   done
@@ -145240,8 +145242,8 @@ playground_debug_thread_analyze_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(deadlock_jdk21|deadlock_jdk8|healthy_connect)$ ]]; then
-      printf "%s\n" "--sample must be one of: deadlock_jdk21, deadlock_jdk8, healthy_connect" >&2
+    if [[ ! $i =~ ^(deadlock_jdk21|deadlock_jdk8|healthy_connect|stuck_sink_put)$ ]]; then
+      printf "%s\n" "--sample must be one of: deadlock_jdk21, deadlock_jdk8, healthy_connect, stuck_sink_put" >&2
       exit 1
     fi
   done
@@ -192507,6 +192509,7 @@ playground_analyze_thread_dump_completion() {
             "deadlock_jdk21"
             "deadlock_jdk8"
             "healthy_connect"
+            "stuck_sink_put"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
@@ -194159,6 +194162,7 @@ playground_debug_thread_analyze_completion() {
             "deadlock_jdk21"
             "deadlock_jdk8"
             "healthy_connect"
+            "stuck_sink_put"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
