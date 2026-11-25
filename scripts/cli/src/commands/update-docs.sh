@@ -2,6 +2,10 @@ cd ${root_folder}/scripts/cli
 
 docker run --rm -i --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/markdown docs
 
+# the home page: its two templates, nothing generated from the CI results (playground update-readme writes the same
+# file, for the nightly CI), so that a change of the home page is published without running update-readme
+cat ${root_folder}/docs/introduction-header.md ${root_folder}/docs/introduction-footer.md > ${root_folder}/docs/introduction.md
+
 cat ${root_folder}/scripts/cli/docs-template/cli-template.md > ${root_folder}/docs/cli.md
 cat ${root_folder}/scripts/cli/docs/index.md >> ${root_folder}/docs/cli.md
 

@@ -3,7 +3,7 @@ name: Update Docs
 on:
   workflow_dispatch:
   # publish a merged change to the hand-written pages or to the CLI help right away, instead of waiting for the nightly CI
-  # (Run workflow also regenerates content.md and introduction.md from the last CI results)
+  # (Run workflow also regenerates content.md from the last CI results)
   push:
     branches:
       - master
@@ -17,7 +17,7 @@ on:
       - 'scripts/publish-docs.sh'
       # the pipeline builder page (docs/pipeline-builder.html, written by playground update-docs)
       - 'tools/pipeline-builder/**'
-      # the generator of content.md and introduction.md (playground update-readme; their templates are in docs/)
+      # the generator of content.md (playground update-readme; its template is docs/content-template.md)
       - 'scripts/cli/src/commands/update-readme.sh'
 
 # a later merge publishes everything a pending run would have published
@@ -49,8 +49,8 @@ jobs:
           cd ./scripts/cli
           ./playground update-docs
 
-      # content.md and introduction.md, from the results of the last CI runs (S3): on workflow_dispatch, or when
-      # a template changed. Otherwise they are left as published by the nightly CI (publish-docs.sh never deletes a generated page)
+      # content.md, from the results of the last CI runs (S3): on workflow_dispatch, or when its template or its generator
+      # changed (introduction.md, the home page, is built by 'playground update-docs' above: no CI results needed). Otherwise they are left as published by the nightly CI (publish-docs.sh never deletes a generated page)
       # "changed" since the commit of the last successful run of this workflow, not only in this push: a run cancelled by a
       # later merge (concurrency) did not publish its templates, and the diff of the later push alone does not have them
       # (the home page change of #10293 was skipped that way). No successful run found: the before of this push. A diff
@@ -81,7 +81,7 @@ jobs:
           then
             echo "no diff with $base: generated"
             echo "run=true" >> "$GITHUB_OUTPUT"
-          elif grep -qE '^docs/(content-template|introduction-header|introduction-footer)\.md$|^scripts/cli/src/commands/update-readme\.sh$' <<< "$changed"
+          elif grep -qE '^docs/content-template\.md$|^scripts/cli/src/commands/update-readme\.sh$' <<< "$changed"
           then
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi

@@ -118,6 +118,13 @@ fi
 # passes only manage GH issues: badges, README and the totals stay docker only
 for environment_suffix in "" "-cfk" "-podman" "-cfk-podman"
 do
+  # the podman passes only manage GH issues (badges, content.md and the totals come from the docker passes): with
+  # --skip-gh-issues (update-docs.yml) they would take minutes for nothing
+  if [ -n "$skip_gh_issues" ] && [[ "$environment_suffix" == *podman ]]
+  then
+    log "⏭️ --skip-gh-issues: skipping the ${environment_suffix#-} pass (it only manages GitHub issues)"
+    continue
+  fi
   environment_label="ci"
   issue_title_suffix=""
   extra_labels=()
@@ -284,15 +291,33 @@ do
         
         if [ ! -f $tmp_dir/${gh_run_id}_1.json ]
         then
+          # the jobs of the run, 100 per page (the API maximum), until a page that is not full: 1 to 3 calls for a
+          # nightly run, instead of always 10 calls of 50 (about 11 s per run id, minutes in total)
           for i in {1..10}
-          do  
-              # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#get-a-workflow-run
-              curl_output=$(curl -s -o $tmp_dir/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}")
-              if [ $curl_output -ne 200 ]
+          do
+              # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#list-jobs-for-a-workflow-run
+              jobs_url="https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=${i}"
+              curl_output=""
+              for attempt in 1 2 3
+              do
+                  curl_output=$(curl -s -o $tmp_dir/${gh_run_id}_${i}.json -w %{http_code} -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28"  -H "Authorization: Bearer $GH_TOKEN" "$jobs_url")
+                  if [ "$curl_output" = "200" ]
+                  then
+                      break
+                  fi
+                  sleep 2
+              done
+              if [ "$curl_output" != "200" ]
               then
-                  logerror "❌ curl request <https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=50&page=${i}> failed with error code $curl_output!"
-                  cat "/tmp/${gh_run_id}_${i}.json"
-                  continue
+                  logerror "❌ curl request <$jobs_url> failed with error code $curl_output!"
+                  cat "$tmp_dir/${gh_run_id}_${i}.json"
+                  rm -f "$tmp_dir/${gh_run_id}_${i}.json"
+                  break
+              fi
+              nb_jobs=$(jq '.jobs | length' "$tmp_dir/${gh_run_id}_${i}.json" 2>/dev/null)
+              if [ "${nb_jobs:-0}" -lt 100 ]
+              then
+                  break
               fi
           done
         fi
@@ -300,16 +325,22 @@ do
         v=$(echo $image_version | sed -e 's/\./[.]/g')
         html_url=""
         # last regex without the CP version: run-tests.sh reuses the result of a fully managed connector test written with another CP version
-        for job_name_regex in "${v}.*${test}.*${job_name_end_regex}" "${v}.*${test}" "${test}.*${job_name_end_regex}"
+        # one jq call over the pages of the run: the first regex that matches a job wins (it was up to 30 jq calls per script)
+        job_pages=()
+        for i in {1..10}
         do
-          for i in {1..10}
-          do
-            html_url=$(jq -r --arg re "$job_name_regex" '[.jobs[]? | select(.name | test($re)) | .html_url][0]' "$tmp_dir/${gh_run_id}_${i}.json" 2>/dev/null)
-            if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
-                break 2
-            fi
-          done
+          if [ -f "$tmp_dir/${gh_run_id}_${i}.json" ]
+          then
+            job_pages+=("$tmp_dir/${gh_run_id}_${i}.json")
+          fi
         done
+        if [ ${#job_pages[@]} -gt 0 ]
+        then
+          html_url=$(jq -rn --arg r1 "${v}.*${test}.*${job_name_end_regex}" --arg r2 "${v}.*${test}" --arg r3 "${test}.*${job_name_end_regex}" '
+            [inputs | .jobs[]?] as $jobs
+            | [$r1, $r2, $r3] | map(. as $re | [$jobs[] | select(.name | test($re)) | .html_url][0]) | map(select(. != null)) | .[0] // ""
+          ' "${job_pages[@]}" 2>/dev/null)
+        fi
 
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
