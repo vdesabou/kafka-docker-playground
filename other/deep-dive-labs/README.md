@@ -39,7 +39,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `tcp-proxy.sh` | [TCP proxy (Zazkia)](https://kafka-docker-playground.io/#/deep-dive-tcp-proxy) (runs the JDBC PostgreSQL source example itself) |
 | `java-debugging.sh` | [Debugging the JVM](https://kafka-docker-playground.io/#/deep-dive-java-debugging) (`testssl` and `generate-diagnostics` not replayed) |
 | `ec2.sh` | [AWS EC2 instances](https://kafka-docker-playground.io/#/deep-dive-ec2) (read-only steps, skipped without AWS credentials; creates a billed instance only with `PLAYGROUND_LAB_EC2_CREATE=1`) |
-| `academy.sh` | [Playground Academy](https://kafka-docker-playground.io/#/academy) (runs the reproduction models of the 4 beginner exercises and the 3 advanced ones in `academy/`, their failure then the fix the page gives; the S3 exercise, which needs AWS, is not replayed) |
+| `academy.sh` | [Playground Academy](https://kafka-docker-playground.io/#/academy) (runs the reproduction models of the exercises in `academy/`, the failure each one is about then the fix the page gives; the S3 exercise only with AWS credentials) |
 | `secrets.sh` | [Credentials and the 1Password setup](https://kafka-docker-playground.io/#/deep-dive-secrets) (no container, a throwaway store with the `file` backend; the 1Password steps are not replayed) |
 
 The helpers shared by the scripts are in `lab-utils.bash` (`lab_run`, `lab_expect_contains`, `lab_expect_exit`…).

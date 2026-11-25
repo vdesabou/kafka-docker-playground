@@ -21,6 +21,22 @@ playground find-example --category academy
 > [!TIP]
 > When a connector fails, the first command to run is [playground connector diagnose](/playground%20connector%20diagnose): status, error digest with the root cause, progress and next steps, in one call. `playground run` already runs it when a connector of the example fails.
 
+## 🗂️ Exercises
+
+| Level | Exercise | What you learn | Main commands |
+| --- | --- | --- | --- |
+| ⭐ | [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte) | a converter error, skip a record, dead letter queue | `connector diagnose`, `connector offsets alter`, `topic dlq inspect` |
+| ⭐ | [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector) | an SMT error, converters vs SMTs | `connector smt test`, `connector update` |
+| ⭐ | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
+| ⭐ | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
+| ⭐⭐ | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
+| ⭐⭐⭐ | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
+| ⭐⭐⭐ | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
+| ⭐⭐⭐ | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
+| ⭐⭐⭐ | [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up) | replication slots, heartbeats | `db cdc-check`, `connector offsets get`, `db sql` |
+| ⭐⭐⭐ | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
+| ⭐⭐⭐ | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
+
 ## ⭐ Beginner
 
 ### Avro Converter: Unknown magic byte
@@ -1859,5 +1875,435 @@ The fixes, depending on what you can change:
 * Read the [🍪 A slow or broken network, on purpose](/deep-dive-network-traffic.md) deep dive (`degrade-traffic`, `block-traffic`, `tcp-dump`).
 * Try a loss instead of a latency (`--loss 30%`): retransmissions show up in the capture.
 * What to ask a customer in this situation: a capture on the worker while the connector sends (`tcpdump -w`), the response times measured on the API side, and the timeouts and retries of the connector config.
+
+<!-- tabs:end -->
+
+### Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A Debezium PostgreSQL source connector is RUNNING, without any error. But the disk of the database keeps filling up, and the DBA points at the replication slot of the connector.
+
+💡 What you'll learn:
+
+* How a replication slot holds the WAL until the connector confirms it.
+* Why a connector that captures quiet tables in a busy database never confirms anything.
+* Fix it with a heartbeat query, and check it.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 Debezium PostgreSQL source: 3.2.6
+
+* 🐘 PostgreSQL: 15
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "database.hostname": "postgres",
+  "database.dbname": "postgres",
+  "topic.prefix": "asgard",
+  "plugin.name": "pgoutput",
+  "slot.name": "debezium",
+  "publication.autocreate.mode": "filtered",
+  "table.include.list": "public.customers"
+}
+```
+
+Reproduction model: [debezium-postgres-source-repro-000009-replication-slot-keeps-growing.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-debezium-postgresql-source/debezium-postgres-source-repro-000009-replication-slot-keeps-growing.sh)
+
+#### **📍 Step 1**
+
+Run the example (or type `000009` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-debezium-postgresql-source/debezium-postgres-source-repro-000009-replication-slot-keeps-growing.sh
+```
+
+The connector snapshots table `customers`, then another application writes a lot in table `audit_log`. The connector is RUNNING:
+
+```log
+debezium-postgres-source       ✅ RUNNING  0:🟢 RUNNING                 -
+```
+
+But:
+
+```log
+ slot_name | active | retained_wal
+-----------+--------+--------------
+ debezium  | t      | 153 MB
+(1 row)
+```
+
+❔Questions:
+
+* Is the connector working?
+* Why does the slot keep 153 MB of WAL, and when will it release it?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+[playground db cdc-check](/playground%20db%20cdc-check) checks the CDC prerequisites of the database, and shows the slots:
+
+```bash
+playground db cdc-check
+   ℹ️  PostgreSQL version           15.8
+   ✅ wal_level                    logical
+   ✅ max_wal_senders              4
+   ✅ replication slots            1 used of 4
+   ℹ️  slot debezium (pgoutput)     active, 152 MB behind, wal_status reserved
+   ℹ️  publication dbz_publication  1 table(s)
+```
+
+The slot is active (the connector is connected) but 152 MB behind. Compare the position the slot confirmed with the offset of the connector:
+
+```bash
+playground db sql << 'EOF'
+SELECT slot_name, active, pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)) AS retained_wal, confirmed_flush_lsn, pg_current_wal_lsn() FROM pg_replication_slots;
+EOF
+```
+
+```log
+ slot_name | active | retained_wal | confirmed_flush_lsn | pg_current_wal_lsn
+-----------+--------+--------------+---------------------+--------------------
+ debezium  | t      | 153 MB       | 0/15FEB00           | 0/AED0278
+```
+
+```bash
+playground connector offsets get --connector debezium-postgres-source
+```
+
+```log
+      "offset": {
+        "last_snapshot_record": true,
+        "lsn": 23063296,
+        ...
+        "snapshot_completed": true
+      }
+```
+
+`23063296` is `0x15FEB00`: the connector is still at the position of its snapshot, and a minute later nothing has moved. `connector diagnose` finds no error either.
+
+Why? The publication of the connector only has table `customers` (`publication.autocreate.mode` `filtered`), and nobody changes it. PostgreSQL 15 does not even send the empty transactions of the other tables: the connector receives nothing, so it never confirms a newer position, and PostgreSQL keeps all the WAL written since then, for the slot.
+
+<!-- select:end -->
+
+👉 How can the connector confirm a newer position when its tables do not change?
+
+> [!TIP]
+> Look at the `heartbeat.*` settings of the [Debezium PostgreSQL connector](https://debezium.io/documentation/reference/stable/connectors/postgresql.html#postgresql-property-heartbeat-interval-ms).
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+`heartbeat.interval.ms` alone is not enough here: the heartbeats carry the offset the connector already has. After adding `"heartbeat.interval.ms": "10000"` and waiting 90 seconds:
+
+```log
+ slot_name | active | retained_wal
+-----------+--------+--------------
+ debezium  | t      | 153 MB
+```
+
+The connector has to receive a change: a `heartbeat.action.query` writes in a small table of its own, captured by the connector:
+
+```bash
+playground db sql << 'EOF'
+CREATE TABLE debezium_heartbeat (id INT PRIMARY KEY, ts TIMESTAMP);
+EOF
+```
+
+```json
+"table.include.list": "public.customers,public.debezium_heartbeat",
+"heartbeat.interval.ms": "10000",
+"heartbeat.action.query": "INSERT INTO debezium_heartbeat (id, ts) VALUES (1, now()) ON CONFLICT (id) DO UPDATE SET ts = now()"
+```
+
+Debezium adds the table to its publication (`filtered` mode), and 90 seconds later:
+
+```log
+ slot_name | active | retained_wal
+-----------+--------+--------------
+ debezium  | t      | 1128 bytes
+(1 row)
+```
+
+<!-- select:end -->
+🥁 So...was the connector working?
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 Oracle CDC](/deep-dive-oracle-cdc.md) deep dive for the same kind of question with LogMiner and XStream.
+* What a stopped connector does to the slot: `playground connector stop --connector debezium-postgres-source`, write in `customers`, and watch `retained_wal` grow; a slot that is never used again must be dropped (`pg_drop_replication_slot`), or it fills the disk.
+* `max_slot_wal_keep_size` (PostgreSQL 13+) caps the WAL a slot keeps: the database is protected, and the slot is invalidated (the connector must snapshot again).
+
+<!-- tabs:end -->
+
+### JDBC sink: an incompatible schema breaks the connector
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A JDBC sink connector that had been running for months fails with `column "quantity" is of type integer but expression is of type character varying`. Nobody changed the connector.
+
+💡 What you'll learn:
+
+* Find who changed what in Schema Registry, and when.
+* Understand what a compatibility rule protects, and what happens after a bad version got in.
+* Fix the subject, the producer and the sink, in that order.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 JDBC sink (PostgreSQL): 10.9.10
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "auto.create": "true",
+  "auto.evolve": "true"
+}
+```
+
+Reproduction model: [postgres-sink-repro-000010-incompatible-schema-breaks-sink.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000010-incompatible-schema-breaks-sink.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000010` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000010-incompatible-schema-breaks-sink.sh
+```
+
+5 orders are written, then 5 more arrive, and the task fails after its retries:
+
+```log
+postgres-sink                  ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+java.sql.BatchUpdateException: Batch entry 0 INSERT INTO "postgres"."public"."orders" ("id","product","quantity","price") VALUES (('1'::int4),('Clay'),('Zackary'),('0.57448107'::real)) was aborted: ERROR: column "quantity" is of type integer but expression is of type character varying
+```
+
+❔Questions:
+
+* What changed, and when?
+* How did it get through Schema Registry?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What changed, and when?
+
+[playground schema history](/playground%20schema%20history) reads the history of Schema Registry (its `_schemas` topic):
+
+```bash
+playground schema history --subject orders-value
+📅 2026-11-25
+   16:07:58  ⏺️ orders-value: registered v1 (id 1, AVRO)
+   16:08:00  🛡️ orders-value: compatibility NONE
+   16:08:04  ⏺️ orders-value: registered v2 (id 2, AVRO)
+```
+
+Someone set the compatibility of the subject to `NONE`, and a new version was registered right after. What changed in it, with [playground schema diff](/playground%20schema%20diff):
+
+```bash
+playground schema diff --subject orders-value --from 1 --to 2
+🔀 orders-value v1 (id 1)  →  orders-value v2 (id 2)  (AVRO)
+   ✏️  quantity type: int → string
+      💡 incompatible type change for both directions unless the rule is NONE
+
+🛡️  Verdict of the Schema Registry for orders-value v2 (id 2) after orders-value v1 (id 1):
+   ❌ BACKWARD
+      TYPE_MISMATCH: The type (path '/fields/2/type') of a field in the new schema does not match with the old schema
+   ❌ FORWARD
+   ❌ FULL
+   ✅ NONE
+```
+
+> How did it get through Schema Registry?
+
+With the default rule (`BACKWARD`), Schema Registry would have refused it:
+
+```bash
+playground schema get-compatibility --subject orders-value
+NONE
+```
+
+```bash
+playground schema check-compatibility --subject orders-value --version 1 --compatibility BACKWARD << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product","type":"string"},{"name":"quantity","type":"string"},{"name":"price","type":"float"}]}
+EOF
+❌ the schema is not compatible with version 1 of orders-value under BACKWARD (--compatibility rule): register would refuse it (40901)
+   TYPE_MISMATCH: The type (path '/fields/2/type') of a field in the new schema does not match with the old schema
+```
+
+The table was created from version 1 (`quantity integer`): the records of version 2 cannot be written in it.
+
+<!-- select:end -->
+
+👉 Put the compatibility back, and check that the corrected producer (`quantity` back to an `int`, plus a new optional field `quantity_label`) would be accepted.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground schema set-compatibility --subject orders-value --compatibility BACKWARD
+```
+
+Surprise: the corrected schema is refused.
+
+```bash
+playground schema check-compatibility --subject orders-value << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product","type":"string"},{"name":"quantity","type":"int"},{"name":"price","type":"float"},{"name":"quantity_label","type":["null","string"],"default":null}]}
+EOF
+❌ the schema is not compatible with the versions the rule checks of orders-value under BACKWARD (subject rule): register would refuse it (40901)
+   TYPE_MISMATCH: The type (path '/fields/2/type') of a field in the new schema does not match with the old schema
+```
+
+`BACKWARD` only compares a new schema with the **latest** version, and the latest is now the bad v2 (`quantity` string). The bad v2 itself even passes the check. Putting the rule back does not undo what got in while it was `NONE`: remove the bad version first (a soft delete, the records written with it can still be read by id):
+
+```bash
+playground schema delete --subject orders-value --version 2
+```
+
+```bash
+playground schema check-compatibility --subject orders-value << 'EOF'
+{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product","type":"string"},{"name":"quantity","type":"int"},{"name":"price","type":"float"},{"name":"quantity_label","type":["null","string"],"default":null}]}
+EOF
+✅ the schema is compatible with the versions the rule checks of orders-value under BACKWARD (subject rule): register would accept it
+```
+
+Last, the sink: the 5 records of version 2 are still in the topic, and the table cannot take them. Skip them (they are bad data; the producer sends them again with the corrected schema) with [playground connector offsets alter](/playground%20connector%20offsets%20alter): set the offset of `orders` partition `0` from `5` to `10`, then restart the connector. It is RUNNING again.
+
+<!-- select:end -->
+🥁 So...who broke the connector?
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 Schema Registry](/deep-dive-schema.md) deep dive.
+* `BACKWARD_TRANSITIVE` compares a new schema with **every** version, not only the latest one: try `playground schema check-compatibility --compatibility BACKWARD_TRANSITIVE` with the schemas of this exercise.
+* Lock the rule: `playground schema set-mode` and RBAC on the subject keep a producer team from relaxing the compatibility to get a change through.
+
+<!-- tabs:end -->
+
+### Which version of the HTTP sink brought its HTTP logs?
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A customer runs an older HTTP sink connector. To see the requests it sends, they set the `org.apache.http` logger to `TRACE`... and no HTTP log shows up. On a recent version, a colleague sees every request and header. Which version changed this, and what can the customer do without upgrading?
+
+💡 What you'll learn:
+
+* Turn a question about versions into a reproduction model with a verdict (`playground repro assert`).
+* Find the version where a behaviour changed with `playground repro bisect`, and read the changelog in between.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 HTTP sink: 1.7.10 to 1.7.15 (the versions supported with CP 8)
+
+Reproduction model: [http-sink-repro-000011-which-version-brought-http-logs.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-http-sink/http-sink-repro-000011-which-version-brought-http-logs.sh): the HTTP sink sends 3 records with `TRACE` on `org.apache.http`, and the model ends with its verdict:
+
+```bash
+# the problem is reproduced when the logs of connect have no line of the HttpClient wire log
+playground repro assert --reproduced-if-command "! docker logs connect 2>&1 | grep -q 'http-outgoing-'"
+```
+
+#### **📍 Step 1**
+
+Run the model with the version of the customer, then with the latest one, and compare the verdicts:
+
+```bash
+playground run -f academy/connect-connect-http-sink/http-sink-repro-000011-which-version-brought-http-logs.sh --connector-tag 1.7.10
+playground run -f academy/connect-connect-http-sink/http-sink-repro-000011-which-version-brought-http-logs.sh --connector-tag 1.7.15
+```
+
+❔Questions:
+
+* Between 1.7.10 and 1.7.15, which version changed the behaviour?
+* Is there a way to get the HTTP logs on the old versions?
+
+> [!TIP]
+> [playground repro bisect](/playground%20repro%20bisect) runs a model on several versions and reads the verdict of `repro assert` after each run.
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+A binary search over the Confluent Hub versions between 1.7.10 and 1.7.15 (5 runs, about 8 minutes):
+
+```bash
+playground repro bisect -f academy/connect-connect-http-sink/http-sink-repro-000011-which-version-brought-http-logs.sh --from 1.7.10 --to 1.7.15
+```
+
+```log
+📊 verdicts of http-sink-repro-000011-which-version-brought-http-logs.sh:
+   1.7.10         🐞 reproduced      1m30s    the command succeeded: ! docker logs connect 2>&1 | grep -q 'http-outgoing-'
+   1.7.12         🐞 reproduced      1m27s    the command succeeded: ! docker logs connect 2>&1 | grep -q 'http-outgoing-'
+   1.7.13         🐞 reproduced      1m29s    the command succeeded: ! docker logs connect 2>&1 | grep -q 'http-outgoing-'
+   1.7.14         ✅ not reproduced   1m31s    the command failed: ! docker logs connect 2>&1 | grep -q 'http-outgoing-'
+   1.7.15         ✅ not reproduced   1m31s    the command failed: ! docker logs connect 2>&1 | grep -q 'http-outgoing-'
+🔀 the verdict changes between 1.7.13 (reproduced) → 1.7.14 (not reproduced)
+📰 what changed between 1.7.13 and 1.7.14:
+   📜 Release notes of confluentinc/kafka-connect-http after 1.7.13 up to 1.7.14: 1 version(s)
+   🔢 v1.7.14 - 📅 release date: 2026-10-01
+      • CC-45231: Route HttpClient logging through slf4j instead of unconfigured reload4j
+```
+
+Before 1.7.14, the Apache HttpClient of the connector logged through commons-logging to a reload4j that nothing configures: the `TRACE` level set on `org.apache.http` had no effect. Since 1.7.14, those logs go through slf4j like the rest of the worker:
+
+```log
+DEBUG [http-sink|task-0] http-outgoing-0 >> POST / HTTP/1.1 (org.apache.http.headers:133)
+DEBUG [http-sink|task-0] http-outgoing-0 >> Content-Type: application/json (org.apache.http.headers:136)
+```
+
+> Is there a way to get the HTTP logs on the old versions?
+
+Yes: add the `jcl-over-slf4j` bridge to the lib folder of the plugin, which is what 1.7.14 ships. The [HTTP sink example](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/http_no_auth.sh) does it for the versions before 1.7.14:
+
+```bash
+wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+cp jcl-over-slf4j-2.0.7.jar confluent-hub/confluentinc-kafka-connect-http/lib/
+```
+
+<!-- select:end -->
+🥁 So...upgrade, or add a jar?
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 Reproduction models](/deep-dive-reproduction-models.md) deep dive: `repro assert`, `repro bisect`, `repro status`.
+* `--all` runs every version of the range instead of a binary search: useful when the behaviour may change more than once.
+* `--tag A --tag B` does the same with Confluent Platform versions.
 
 <!-- tabs:end -->
