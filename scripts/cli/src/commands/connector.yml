@@ -991,7 +991,7 @@ commands:
 
 - name: pause
   help: |-
-    ⏸️  Pause connector
+    ⏸️ Pause connector
 
     Tasks stop processing but stay assigned, and the configuration is kept.
     Handy to let a backlog build up, or to freeze a connector while you
@@ -1156,7 +1156,7 @@ commands:
 
 - name: restart
   help: |-
-    ♻️  Restart connector
+    ♻️ Restart connector
 
     The usual way to recover a connector whose tasks are FAILED after you
     fixed the cause. Use --task-id to restart a single failed task and leave
@@ -1314,7 +1314,7 @@ commands:
 - name: resume
   alias: unpause
   help: |-
-    ⏯️  Resume connector
+    ⏯️ Resume connector
 
     Restarts processing after a pause or a stop, from the offsets where the
     connector left off.
@@ -1329,7 +1329,7 @@ commands:
 
 - name: delete
   help: |-
-    🗑️  Delete connector
+    🗑️ Delete connector
 
     Removes the connector and its configuration. Its offsets survive in the
     Kafka internal topics, so re-creating it under the same name resumes
@@ -2239,7 +2239,7 @@ commands:
 
 - name: logs
   help: |-
-    🕵️  Tail and follow connect logs
+    🕵️ Tail and follow connect logs
 
     The logs of the worker running your connector. Combine it with
     'playground connector log-level' to get more than the stack trace, and
@@ -2483,7 +2483,7 @@ commands:
 
 - name: create-or-update
   help: |-
-    🧑‍🎨  Create or update connector
+    🧑‍🎨 Create or update connector
 
     The command every example uses to deploy its connector. The json config
     is read from stdin, usually as a heredoc, so it stays readable in the

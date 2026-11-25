@@ -1449,7 +1449,7 @@ cat >> $tmp_dir/tmp_file << 'EOF'
 # 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !
 #################################################################################################
 
-# 🕵️ to check logs (see https://kafka-docker-playground.io/#/cli?id=%f0%9f%95%b5%ef%b8%8f-logs)
+# 🕵️ to check logs (see https://kafka-docker-playground.io/#/playground%20container%20logs)
 # playground container logs --container connect
 # playground container logs --container connect --open
 # playground container logs --container connect --errors                # de-duplicated ERRORs + Caused by chain

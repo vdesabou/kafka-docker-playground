@@ -9,7 +9,7 @@
         "-v"
       ],
       "argument": "",
-      "description": "🐛 set verbose output (set -x)\n\n❗ it can print sensitive information ❗"
+      "description": "🐛 Verbose output (set -x)\n\n❗ it can print sensitive information ❗"
     },
     {
       "names": [
@@ -17,13 +17,13 @@
         "-o"
       ],
       "argument": "LEVEL",
-      "description": "❕Log level used by all commands\n\nDefault is INFO (all INFO, WARN and ERROR will be printed in command output)\n\nAllowed values: INFO, WARN, ERROR"
+      "description": "❕ Log level of all commands\n\nDefault is INFO (all INFO, WARN and ERROR will be printed in command output)\n\nAllowed values: INFO, WARN, ERROR"
     }
   ],
   "subcommands": [
     {
       "name": "help",
-      "description": "Show help about a command",
+      "description": "❓ Show the help of a command",
       "usage": "playground help [COMMAND]",
       "options": []
     },
@@ -47,7 +47,7 @@
       "subcommands": [
         {
           "name": "editor",
-          "description": "editor to use to open files",
+          "description": "📝 Editor that every command opens files with",
           "usage": "playground config editor EDITOR",
           "options": []
         },
@@ -59,25 +59,25 @@
         },
         {
           "name": "clipboard",
-          "description": "copy to clipboard connector config (only working on MacOS)",
+          "description": "📋 Copy the connector config to the clipboard (macOS only)",
           "usage": "playground config clipboard [ENABLED]",
           "options": []
         },
         {
           "name": "open-ccloud-connector-in-browser",
-          "description": "when running a fully managed connector example, it opens the connector in browser",
+          "description": "🌐 Open the connector in the browser when running a fully managed connector example",
           "usage": "playground config open-ccloud-connector-in-browser COMMAND",
           "options": [],
           "subcommands": [
             {
               "name": "automatically",
-              "description": "automatically open the connector in browser",
+              "description": "🌐 Open the connector in the browser automatically",
               "usage": "playground config open-ccloud-connector-in-browser automatically [AUTOMATICALLY]",
               "options": []
             },
             {
               "name": "browser",
-              "description": "browser to use",
+              "description": "🧭 Browser to use",
               "usage": "playground config open-ccloud-connector-in-browser browser [BROWSER]",
               "options": []
             }
@@ -85,19 +85,19 @@
         },
         {
           "name": "open-grafana-in-browser",
-          "description": "when running an example with --enable-jmx-grafana flag, it opens grafana in browser",
+          "description": "📊 Open Grafana in the browser when running an example with --enable-jmx-grafana",
           "usage": "playground config open-grafana-in-browser COMMAND",
           "options": [],
           "subcommands": [
             {
               "name": "automatically",
-              "description": "automatically open grafana in browser",
+              "description": "📊 Open Grafana in the browser automatically",
               "usage": "playground config open-grafana-in-browser automatically [AUTOMATICALLY]",
               "options": []
             },
             {
               "name": "browser",
-              "description": "browser to use",
+              "description": "🧭 Browser to use",
               "usage": "playground config open-grafana-in-browser browser [BROWSER]",
               "options": []
             }
@@ -105,13 +105,13 @@
         },
         {
           "name": "container-kill-all-before-run",
-          "description": "when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.",
+          "description": "💀 Kill every container before each run (playground container kill-all). If set to false, only stop the previous example (playground stop).",
           "usage": "playground config container-kill-all-before-run [ENABLED]",
           "options": []
         },
         {
           "name": "account-check-before-run",
-          "description": "when running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.",
+          "description": "🩺 When running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.",
           "usage": "playground config account-check-before-run [ENABLED]",
           "options": []
         },
@@ -159,7 +159,7 @@
         },
         {
           "name": "check-and-update-repo-version",
-          "description": "when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.",
+          "description": "🔄 Warn when your clone of the repository is more than 3 days old, before running an example",
           "usage": "playground config check-and-update-repo-version [ENABLED]",
           "options": []
         }
@@ -1314,7 +1314,7 @@
             },
             {
               "name": "costs",
-              "description": "💰 Show aws costs\n\nSpend over a range of dates, broken down by AWS service, using the\nCost Explorer API. Run it after a week of heavy examples to see which\nservice the money actually went to, then use\n'playground cloud-resources aws list' to find what is still up.\n\nDefaults cover the last month, ending 3 days ago because AWS needs a\ncouple of days to consolidate. --start-date cannot go back more than\none year.",
+              "description": "💰 AWS costs\n\nSpend over a range of dates, broken down by AWS service, using the\nCost Explorer API. Run it after a week of heavy examples to see which\nservice the money actually went to, then use\n'playground cloud-resources aws list' to find what is still up.\n\nDefaults cover the last month, ending 3 days ago because AWS needs a\ncouple of days to consolidate. --start-date cannot go back more than\none year.",
               "usage": "playground cloud-resources aws costs [OPTIONS]",
               "options": [
                 {
@@ -1335,7 +1335,7 @@
             },
             {
               "name": "costs-history",
-              "description": "👛  Retrieve aws costs for each month since last year\n\nOne line per month over the past year, drawn as a histogram, which\nmakes a month that went wrong obvious at a glance. Use costs when you\nthen want to know which service it was.\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and usage type, the month x service matrix, the top usage types, and the details of each month.\n\n📆 The report also shows the cost per day of the last --days days (default 60): a zoomable chart, the usage types whose cost per day changed (a step up or down, the day it started, before / after per day and the impact per month, also printed in the terminal), and the top usage types per day. It tells whether a change worked a few days after it, which the months cannot (a period mixes the days before and after).\n\n🐳 When docker pulls from ECR go out of AWS (laptops, GitHub-hosted runners), a finding gives the volume and how to see who pulls (CloudTrail BatchGetImage events): pulls from EC2 in the same region are free.\n\n🪣 When S3 costs something, the report adds the Amazon S3 details: cost and volume (GB, requests) of each kind of S3 usage per month (storage, requests, Standard-IA retrieval, data sent to the Internet or to another region), the S3 buckets tagged cflt_managed_id=<user> (region, size per storage class, objects, access logging, lifecycle) and hints. Cost Explorer has no cost per bucket: that needs the resource-level data of the payer account.",
+              "description": "👛 AWS costs for each month since last year\n\nOne line per month over the past year, drawn as a histogram, which\nmakes a month that went wrong obvious at a glance. Use costs when you\nthen want to know which service it was.\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and usage type, the month x service matrix, the top usage types, and the details of each month.\n\n📆 The report also shows the cost per day of the last --days days (default 60): a zoomable chart, the usage types whose cost per day changed (a step up or down, the day it started, before / after per day and the impact per month, also printed in the terminal), and the top usage types per day. It tells whether a change worked a few days after it, which the months cannot (a period mixes the days before and after).\n\n🐳 When docker pulls from ECR go out of AWS (laptops, GitHub-hosted runners), a finding gives the volume and how to see who pulls (CloudTrail BatchGetImage events): pulls from EC2 in the same region are free.\n\n🪣 When S3 costs something, the report adds the Amazon S3 details: cost and volume (GB, requests) of each kind of S3 usage per month (storage, requests, Standard-IA retrieval, data sent to the Internet or to another region), the S3 buckets tagged cflt_managed_id=<user> (region, size per storage class, objects, access logging, lifecycle) and hints. Cost Explorer has no cost per bucket: that needs the resource-level data of the payer account.",
               "usage": "playground cloud-resources aws costs-history [OPTIONS]",
               "options": [
                 {
@@ -1393,7 +1393,7 @@
             },
             {
               "name": "costs",
-              "description": "💰 Show azure costs\n\nSpend over a range of dates for your subscription, using the Azure\nCost Management API. You need to be logged in with the az CLI.\n\nDefaults cover the last month, ending 3 days ago because the data\ntakes a couple of days to consolidate. --start-date cannot go back\nmore than one year.",
+              "description": "💰 Azure costs\n\nSpend over a range of dates for your subscription, using the Azure\nCost Management API. You need to be logged in with the az CLI.\n\nDefaults cover the last month, ending 3 days ago because the data\ntakes a couple of days to consolidate. --start-date cannot go back\nmore than one year.",
               "usage": "playground cloud-resources azure costs [OPTIONS]",
               "options": [
                 {
@@ -1414,7 +1414,7 @@
             },
             {
               "name": "costs-history",
-              "description": "👛  Retrieve azure costs for each month since last year\n\nOne line per month over the past year, so you can spot the month that\nwent wrong before digging into it with costs.\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and resource group, the month x service matrix, the top resources with the ones still billing, and the details of each month.",
+              "description": "👛 Azure costs for each month since last year\n\nOne line per month over the past year, so you can spot the month that\nwent wrong before digging into it with costs.\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and resource group, the month x service matrix, the top resources with the ones still billing, and the details of each month.",
               "usage": "playground cloud-resources azure costs-history [OPTIONS]",
               "options": [
                 {
@@ -1465,7 +1465,7 @@
             },
             {
               "name": "costs",
-              "description": "💰  Retrieve ccloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable, the other tiles follow the selected range), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.",
+              "description": "💰 Confluent Cloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable, the other tiles follow the selected range), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.",
               "usage": "playground cloud-resources ccloud costs [OPTIONS]",
               "options": [
                 {
@@ -1509,7 +1509,7 @@
             },
             {
               "name": "costs-history",
-              "description": "👛  Retrieve ccloud costs for each month since last year\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days; the other tiles follow the selected range), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.",
+              "description": "👛 Confluent Cloud costs for each month since last year\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days; the other tiles follow the selected range), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.",
               "usage": "playground cloud-resources ccloud costs-history [OPTIONS]",
               "options": [
                 {
@@ -2233,13 +2233,13 @@
     },
     {
       "name": "switch-ccloud",
-      "description": "🌩️  Switch to ccloud environment.\n\nIt will bootstrap ccloud environment based on your previously ran ccloud example.\n\nPoints the CLI at the Confluent Cloud cluster of your last ccloud run, so\nthat 'playground topic', 'playground connector' and 'playground schema'\ntalk to Confluent Cloud instead of the local containers. Nothing is\ncreated or destroyed, and no container is started or stopped.\n\n❕ Requires that you ran a ccloud example at least once, so that the\n   environment, cluster and credentials are cached in playground.ini.\n   The environment you were on is remembered for 'playground switch-back'.",
+      "description": "🌩️ Switch to ccloud environment.\n\nIt will bootstrap ccloud environment based on your previously ran ccloud example.\n\nPoints the CLI at the Confluent Cloud cluster of your last ccloud run, so\nthat 'playground topic', 'playground connector' and 'playground schema'\ntalk to Confluent Cloud instead of the local containers. Nothing is\ncreated or destroyed, and no container is started or stopped.\n\n❕ Requires that you ran a ccloud example at least once, so that the\n   environment, cluster and credentials are cached in playground.ini.\n   The environment you were on is remembered for 'playground switch-back'.",
       "usage": "playground switch-ccloud",
       "options": []
     },
     {
       "name": "switch-back",
-      "description": "💺  Switch back from previous environment before switch-ccloud was called.\n\nRestores the environment and connector type that were active before\n'playground switch-ccloud', so the CLI talks to your local containers\nagain.",
+      "description": "💺 Switch back from previous environment before switch-ccloud was called.\n\nRestores the environment and connector type that were active before\n'playground switch-ccloud', so the CLI talks to your local containers\nagain.",
       "usage": "playground switch-back",
       "options": []
     },
@@ -2558,7 +2558,7 @@
     },
     {
       "name": "cleanup-cloud-details",
-      "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n\nDrops the cached environment, cluster, endpoints and API keys (including\nthe configs cached for each cluster used, in .ccloud/clusters/), so the\nnext ccloud example re-discovers them from scratch. Typically needed after you\nchanged of Confluent Cloud organisation, or deleted the cluster from the UI\nbehind the playground's back.\n\n❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n   the cloud resources themselves, see 'playground cloud-resources cleanup'.",
+      "description": "🧼 Forget the cached Confluent Cloud details (environment, cluster, endpoints, API keys)\n\nUse it when the playground uses unexpected Confluent Cloud details\n(https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).\n\nDrops the cached environment, cluster, endpoints and API keys (including\nthe configs cached for each cluster used, in .ccloud/clusters/), so the\nnext ccloud example re-discovers them from scratch. Typically needed after you\nchanged of Confluent Cloud organisation, or deleted the cluster from the UI\nbehind the playground's back.\n\n❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n   the cloud resources themselves, see 'playground cloud-resources cleanup'.",
       "usage": "playground cleanup-cloud-details",
       "options": []
     },
@@ -2876,7 +2876,7 @@
         },
         {
           "name": "bootstrap",
-          "description": "🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n\n🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !\n\n👉 Check documentation https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%f0%9f%9b%a0-bootstrap-reproduction-model",
+          "description": "🛠 Bootstrap reproduction model, just run <playground repro bootstrap> !\n\n🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !\n\n👉 Check documentation https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%f0%9f%9b%a0-bootstrap-reproduction-model",
           "usage": "playground repro bootstrap [OPTIONS]",
           "options": [
             {
@@ -5041,13 +5041,13 @@
       "subcommands": [
         {
           "name": "install-vscode-extension",
-          "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n\nGives you the same completion inside VS Code as in your terminal: while\nediting an example or a reproduction model, playground commands, flags\nand their allowed values are proposed as you type, with the help text\non hover. Worth the two minutes of setup if you write example scripts.\n\nIt is installed as \"Shell Script Command Completion (kafka-docker-playground)\"\n(tetradresearch.vscode-h2o-playground), in place of the marketplace one,\nso that VS Code does not auto-update it with the unpatched version. Run\nthe command again to get a newer upstream version.\n\nAfter installation, install \"playground\" command:\n\n* Go on a .sh file\n\n* Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\" and then type \"playground\"\n\n🔖 The command spec is downloaded from the master branch: commands added in a local branch are only proposed once merged. Run \"Load Command Spec\" again to refresh it.\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension",
+          "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n\nGives you the same completion inside VS Code as in your terminal: while\nediting an example or a reproduction model, playground commands, flags\nand their allowed values are proposed as you type, with the help text\non hover. Worth the two minutes of setup if you write example scripts.\n\nIt is installed as \"Shell Script Command Completion (kafka-docker-playground)\"\n(tetradresearch.vscode-h2o-playground), in place of the marketplace one,\nso that VS Code does not auto-update it with the unpatched version. Run\nthe command again to get a newer upstream version.\n\nAfter installation, install \"playground\" command:\n\n* Go on a .sh file\n\n* Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\" and then type \"playground\"\n\n🔖 The command spec is downloaded from the master branch: commands added in a local branch are only proposed once merged. Run \"Load Command Spec\" again to refresh it.\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-vs-code-completion",
           "usage": "playground tools install-vscode-extension",
           "options": []
         },
         {
           "name": "install-alfred-workflow",
-          "description": "🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground CLI: type 'kdp' in Alfred, or select text\nanywhere (a connector config, a stack trace, a connector class, a config\nkey, a case number), or files and folders in Finder (logs, a support\nbundle, a thread dump, a GC log, a heap dump, a .jfr, a .pcap, an\norclcdc_diag report), and use the Universal Action \"kdp: config, stack\ntrace, logs, connector class, key, case…\" (files: the matching 'playground\nanalyze' command, its HTML report opened right away):\n\n  kdp how <question>          find-command: the command that answers a question, ⌥ its --help, ⇧ its deep dive\n  kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘ copies 'playground run -f …'\n  kdp history [words]         replay a past run with its exact flags (Tab: re-run it)\n  kdp plugin <words> [ver]    pick a plugin, then a version, then info, changelog, source code, jars, CVEs\n  kdp key <words>             pick a config key, then a connector: config-key\n  kdp docs [words]            deep dive pages\n  kdp connector [words]       pick a running connector: diagnose, status, tasks, metrics, history…\n  kdp logs [container] [pat]  pick a container: errors, last lines, grep, follow\n  kdp topic / schema / ci     pick a topic, a subject, a CI test: describe, records, history, CI result\n  kdp status                  status, connector status / diagnose, connect errors\n  kdp repro / notes / case    reproduction models, notes, support cases (when present)\n\nOn a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\nit in the terminal (for an example, that stops the running environment),\n⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens\nit in VS Code and ⌘ copies 'playground run -f …'.\n\nRead-only commands (plugin, key, status) show their output in the Alfred\nwindow, streamed while they run. \"Show output\" and \"Run in the terminal\"\nare workflow settings: the output can go to the terminal instead, and the\nterminal is the one set in Alfred (default), a new VS Code integrated\nterminal, Terminal.app, or copy only.\n\nBy default, builds the workflow from scripts/alfred-workflow/ and opens it\nin Alfred, which asks to import it: run the command again after a pull to\nupdate it. With --link, the folder is symlinked into your Alfred\npreferences instead, to work on it: Alfred does not watch the folder\nbehind the link, so run the command again after an edit (it reloads the\nworkflow in Alfred).\nAlfred then writes its settings to scripts/alfred-workflow/prefs.plist\n(ignored by git) and may rewrite info.plist when you edit the workflow in\nAlfred Preferences: check git diff before committing.\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos",
+          "description": "🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground CLI: type 'kdp' in Alfred, or select text\nanywhere (a connector config, a stack trace, a connector class, a config\nkey, a case number), or files and folders in Finder (logs, a support\nbundle, a thread dump, a GC log, a heap dump, a .jfr, a .pcap, an\norclcdc_diag report), and use the Universal Action \"kdp: config, stack\ntrace, logs, connector class, key, case…\" (files: the matching 'playground\nanalyze' command, its HTML report opened right away):\n\n  kdp how <question>          find-command: the command that answers a question, ⌥ its --help, ⇧ its deep dive\n  kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘ copies 'playground run -f …'\n  kdp history [words]         replay a past run with its exact flags (Tab: re-run it)\n  kdp plugin <words> [ver]    pick a plugin, then a version, then info, changelog, source code, jars, CVEs\n  kdp key <words>             pick a config key, then a connector: config-key\n  kdp docs [words]            deep dive pages\n  kdp connector [words]       pick a running connector: diagnose, status, tasks, metrics, history…\n  kdp logs [container] [pat]  pick a container: errors, last lines, grep, follow\n  kdp topic / schema / ci     pick a topic, a subject, a CI test: describe, records, history, CI result\n  kdp status                  status, connector status / diagnose, connect errors\n  kdp repro / notes / case    reproduction models, notes, support cases (when present)\n\nOn a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\nit in the terminal (for an example, that stops the running environment),\n⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens\nit in VS Code and ⌘ copies 'playground run -f …'.\n\nRead-only commands (plugin, key, status) show their output in the Alfred\nwindow, streamed while they run. \"Show output\" and \"Run in the terminal\"\nare workflow settings: the output can go to the terminal instead, and the\nterminal is the one set in Alfred (default), a new VS Code integrated\nterminal, Terminal.app, or copy only.\n\nBy default, builds the workflow from scripts/alfred-workflow/ and opens it\nin Alfred, which asks to import it: run the command again after a pull to\nupdate it. With --link, the folder is symlinked into your Alfred\npreferences instead, to work on it: Alfred does not watch the folder\nbehind the link, so run the command again after an edit (it reloads the\nworkflow in Alfred).\nAlfred then writes its settings to scripts/alfred-workflow/prefs.plist\n(ignored by git) and may rewrite info.plist when you edit the workflow in\nAlfred Preferences: check git diff before committing.\n\n👉 Check documentation https://kafka-docker-playground.io/#/alfred",
           "usage": "playground tools install-alfred-workflow [OPTIONS]",
           "options": [
             {
@@ -5941,7 +5941,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🗒️  orclcdc_diag HTML report (repeat --file for several reports of the same database)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
+              "description": "🗒️ orclcdc_diag HTML report (repeat --file for several reports of the same database)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
             },
             {
               "names": [
@@ -5980,7 +5980,7 @@
                 "--json"
               ],
               "argument": "",
-              "description": "🗂️  Output JSON (findings, prerequisites, summary per component, deltas between reports)"
+              "description": "🗂️ Output JSON (findings, prerequisites, summary per component, deltas between reports)"
             },
             {
               "names": [
@@ -6002,7 +6002,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🗒️  .jfr file to analyze (repeat --file for the recordings of several connect workers over the same period)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
+              "description": "🗒️ .jfr file to analyze (repeat --file for the recordings of several connect workers over the same period)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
             },
             {
               "names": [
@@ -6068,7 +6068,7 @@
                 "--json"
               ],
               "argument": "",
-              "description": "🗂️  Output JSON (no text report, no HTML report)"
+              "description": "🗂️ Output JSON (no text report, no HTML report)"
             },
             {
               "names": [
@@ -6113,7 +6113,7 @@
                 "--json"
               ],
               "argument": "",
-              "description": "🗂️  Output JSON (no text report, no HTML report)"
+              "description": "🗂️ Output JSON (no text report, no HTML report)"
             },
             {
               "names": [
@@ -6210,7 +6210,7 @@
                 "--json"
               ],
               "argument": "",
-              "description": "🗂️  Output JSON (no text report, no HTML report)"
+              "description": "🗂️ Output JSON (no text report, no HTML report)"
             },
             {
               "names": [
@@ -6904,7 +6904,7 @@
           "subcommands": [
             {
               "name": "get",
-              "description": "Get log levels\n\nWith no --package, every logger with an explicit level is listed.",
+              "description": "🔎 Get log levels\n\nWith no --package, every logger with an explicit level is listed.",
               "usage": "playground debug log-level get [OPTIONS]",
               "options": [
                 {
@@ -6919,7 +6919,7 @@
             },
             {
               "name": "set",
-              "description": "Set log level for specific logger\n\nTakes effect immediately and applies to the logger and everything\nbelow it in the package hierarchy.",
+              "description": "🧬 Set the log level of a logger\n\nTakes effect immediately and applies to the logger and everything\nbelow it in the package hierarchy.",
               "usage": "playground debug log-level set [OPTIONS]",
               "options": [
                 {
@@ -7134,7 +7134,7 @@
         },
         {
           "name": "get-ip-addresses",
-          "description": "🖥️  Get ip address of running containers\n\nThe address each container has on the docker network, which is what\nyou need when a component must be reached by IP rather than by name,\nor when you are checking what a client actually connected to.",
+          "description": "🖥️ Get ip address of running containers\n\nThe address each container has on the docker network, which is what\nyou need when a component must be reached by IP rather than by name,\nor when you are checking what a client actually connected to.",
           "usage": "playground container get-ip-addresses",
           "options": []
         },
@@ -7146,7 +7146,7 @@
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow container logs\n\nThree ways to use it:\n\n  --grep \"ERROR\"                    keep only the lines that matter\n  --open                            read the whole log in your editor\n  --wait-for-log \"Started\" -m 120   block until the line shows up\n\nThe last one is what example scripts use to synchronise on a component\nbeing ready, instead of sleeping and hoping.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle",
+          "description": "🕵️ Tail and follow container logs\n\nThree ways to use it:\n\n  --grep \"ERROR\"                    keep only the lines that matter\n  --open                            read the whole log in your editor\n  --wait-for-log \"Started\" -m 120   block until the line shows up\n\nThe last one is what example scripts use to synchronise on a component\nbeing ready, instead of sleeping and hoping.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle",
           "usage": "playground container logs [OPTIONS]",
           "options": [
             {
@@ -7410,7 +7410,7 @@
         },
         {
           "name": "pause",
-          "description": "⏸️  Pause a container\n\nFreezes the processes without stopping the container: it keeps its\nconnections but stops responding. A good way to simulate a hung\nbroker, an unresponsive database or a GC pause, and to see how the\nrest of the system reacts.",
+          "description": "⏸️ Pause a container\n\nFreezes the processes without stopping the container: it keeps its\nconnections but stops responding. A good way to simulate a hung\nbroker, an unresponsive database or a GC pause, and to see how the\nrest of the system reacts.",
           "usage": "playground container pause [OPTIONS]",
           "options": [
             {
@@ -7427,7 +7427,7 @@
         },
         {
           "name": "resume",
-          "description": "⏯️  Resume a container\n\nUnfreezes a container paused with 'playground container pause'.",
+          "description": "⏯️ Resume a container\n\nUnfreezes a container paused with 'playground container pause'.",
           "usage": "playground container resume [OPTIONS]",
           "options": [
             {
@@ -7464,7 +7464,7 @@
         },
         {
           "name": "set-environment-variables",
-          "description": "📦  Set environment variable(s) for a container\n\n🎓 Tip: you can pass multiple environment variables by specifying --env multiple times\n\nExample: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"",
+          "description": "📦 Set environment variable(s) for a container\n\n🎓 Tip: you can pass multiple environment variables by specifying --env multiple times\n\nExample: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"",
           "usage": "playground container set-environment-variables [OPTIONS]",
           "options": [
             {
@@ -12942,7 +12942,7 @@
         },
         {
           "name": "pause",
-          "description": "⏸️  Pause connector\n\nTasks stop processing but stay assigned, and the configuration is kept.\nHandy to let a backlog build up, or to freeze a connector while you\nchange the system it talks to. Resume with 'playground connector resume'.\n\n☁️ Fully managed: supported (custom connectors too)",
+          "description": "⏸️ Pause connector\n\nTasks stop processing but stay assigned, and the configuration is kept.\nHandy to let a backlog build up, or to freeze a connector while you\nchange the system it talks to. Resume with 'playground connector resume'.\n\n☁️ Fully managed: supported (custom connectors too)",
           "usage": "playground connector pause [OPTIONS]",
           "options": [
             {
@@ -13025,7 +13025,7 @@
         },
         {
           "name": "restart",
-          "description": "♻️  Restart connector\n\nThe usual way to recover a connector whose tasks are FAILED after you\nfixed the cause. Use --task-id to restart a single failed task and leave\nthe healthy ones alone, or --only-failed to restart only what is FAILED,\nin every connector when --connector is not set.\n\n☁️ Fully managed: supported (custom connectors: not supported)",
+          "description": "♻️ Restart connector\n\nThe usual way to recover a connector whose tasks are FAILED after you\nfixed the cause. Use --task-id to restart a single failed task and leave\nthe healthy ones alone, or --only-failed to restart only what is FAILED,\nin every connector when --connector is not set.\n\n☁️ Fully managed: supported (custom connectors: not supported)",
           "usage": "playground connector restart [OPTIONS]",
           "options": [
             {
@@ -13216,7 +13216,7 @@
         },
         {
           "name": "resume",
-          "description": "⏯️  Resume connector\n\nRestarts processing after a pause or a stop, from the offsets where the\nconnector left off.\n\n☁️ Fully managed: supported (custom connectors too)",
+          "description": "⏯️ Resume connector\n\nRestarts processing after a pause or a stop, from the offsets where the\nconnector left off.\n\n☁️ Fully managed: supported (custom connectors too)",
           "usage": "playground connector resume [OPTIONS]",
           "options": [
             {
@@ -13249,7 +13249,7 @@
         },
         {
           "name": "delete",
-          "description": "🗑️  Delete connector\n\nRemoves the connector and its configuration. Its offsets survive in the\nKafka internal topics, so re-creating it under the same name resumes\nwhere it stopped rather than starting over.\n\nFor a fully managed or custom connector, the topics the connector\ncreated on its own are deleted as well: dead letter queue and, for\nconnectors with a reporter, success and error topics (dlq-lcc-xxxx,\nsuccess-lcc-xxxx, error-lcc-xxxx, or the names set in the config with\nerrors.deadletterqueue.topic.name, reporter.error.topic.name and\nreporter.result.topic.name). Keep them with --keep-related-topics.\n\n☁️ Fully managed: supported (custom connectors too)",
+          "description": "🗑️ Delete connector\n\nRemoves the connector and its configuration. Its offsets survive in the\nKafka internal topics, so re-creating it under the same name resumes\nwhere it stopped rather than starting over.\n\nFor a fully managed or custom connector, the topics the connector\ncreated on its own are deleted as well: dead letter queue and, for\nconnectors with a reporter, success and error topics (dlq-lcc-xxxx,\nsuccess-lcc-xxxx, error-lcc-xxxx, or the names set in the config with\nerrors.deadletterqueue.topic.name, reporter.error.topic.name and\nreporter.result.topic.name). Keep them with --keep-related-topics.\n\n☁️ Fully managed: supported (custom connectors too)",
           "usage": "playground connector delete [OPTIONS]",
           "options": [
             {
@@ -13918,7 +13918,7 @@
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow connect logs\n\nThe logs of the worker running your connector. Combine it with\n'playground connector log-level' to get more than the stack trace, and\nwith --wait-for-log to block until a given line appears, which is how\nexamples assert that something happened.\n\nFor self managed connectors, this is a shortcut for \"playground container logs --container connect\"\n(connect-us / connect-europe in mdc environments): --no-follow, --errors, --since, --tail and --grep are passed through.\nWhen --connector is set (and none of --grep, --errors, --wait-for-log, --open), only the lines mentioning the\nconnector are kept.\n\nFor Fully Managed connectors, the logs come from the confluent CLI ('confluent connect logs', last 71 hours),\nlimitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n--errors keeps the ERROR level, --grep is a search text, and --wait-for-log polls until the text is found or --max-wait.\nEvery page is fetched (--output-file of the CLI, JSON lines, kept in /tmp/playground-connector-logs-<connector>-<date>.jsonl)\nand shown as log lines with the [connector|task-0] context of a Connect worker (the .log next to it).\n\n🔥 --analyze gives the full report of 'playground analyze logs' instead (known causes, timeline, connector card,\nrestarts, configs): the logs of the Connect worker (--from-containers, kept to --connector when it is given) for a\nself managed connector, the log lines above for a fully managed one.\n\n🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or --wait-for-log, otherwise the command never returns for a self managed connector.\n\n☁️ Fully managed: supported, with the confluent CLI (see above)",
+          "description": "🕵️ Tail and follow connect logs\n\nThe logs of the worker running your connector. Combine it with\n'playground connector log-level' to get more than the stack trace, and\nwith --wait-for-log to block until a given line appears, which is how\nexamples assert that something happened.\n\nFor self managed connectors, this is a shortcut for \"playground container logs --container connect\"\n(connect-us / connect-europe in mdc environments): --no-follow, --errors, --since, --tail and --grep are passed through.\nWhen --connector is set (and none of --grep, --errors, --wait-for-log, --open), only the lines mentioning the\nconnector are kept.\n\nFor Fully Managed connectors, the logs come from the confluent CLI ('confluent connect logs', last 71 hours),\nlimitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n--errors keeps the ERROR level, --grep is a search text, and --wait-for-log polls until the text is found or --max-wait.\nEvery page is fetched (--output-file of the CLI, JSON lines, kept in /tmp/playground-connector-logs-<connector>-<date>.jsonl)\nand shown as log lines with the [connector|task-0] context of a Connect worker (the .log next to it).\n\n🔥 --analyze gives the full report of 'playground analyze logs' instead (known causes, timeline, connector card,\nrestarts, configs): the logs of the Connect worker (--from-containers, kept to --connector when it is given) for a\nself managed connector, the log lines above for a fully managed one.\n\n🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or --wait-for-log, otherwise the command never returns for a self managed connector.\n\n☁️ Fully managed: supported, with the confluent CLI (see above)",
           "usage": "playground connector logs [OPTIONS]",
           "options": [
             {
@@ -14144,7 +14144,7 @@
         },
         {
           "name": "create-or-update",
-          "description": "🧑‍🎨  Create or update connector\n\nThe command every example uses to deploy its connector. The json config\nis read from stdin, usually as a heredoc, so it stays readable in the\nscript. If the connector already exists it is updated in place, which\nmakes the command safe to re-run while you iterate on a configuration.\n\nThe command then waits for the connector and all its tasks to be\nRUNNING, displays the connector status, and fails with the error if\nthey are not, so a broken config stops the example immediately instead\nof failing silently later. A FAILED connector or task is reported with\n'playground connector diagnose' (trace, error digest, offsets, next\nsteps and HTML report, opened in the browser unless 'playground config\nopen-diagnose-report-on-failure false'). When the script that runs is a reproduction\nmodel, a connector that is not RUNNING is only reported as a warning,\nsince a reproduction model often creates a failing connector on\npurpose. Use --wait to fail there too, --no-wait to skip the wait.\n\nFully managed connectors are only waited for with --wait.\n\n🎓 Tip: add --validate to have the config checked by the plugin before\nit is deployed, which reports every invalid property at once.\n\nAn update shows the keys added, removed and changed compared to the\nrunning config (secrets masked).\n\nThe config can also be given as the path of a file, and in the\nformats customers send (detected, see 'playground connector\nconvert'): the REST API format ({\"name\": ..., \"config\": {...}}), a\ndump of GET /connectors?expand=info, a CFK Connector or Strimzi\nKafkaConnector custom resource, a terraform confluent_connector\nresource, or a connect-standalone .properties file. When the file\nholds several connectors, the one named --connector is used.\n\nA config that comes from elsewhere (a file, or one of these formats)\nis adapted to the playground (--no-adapt to keep it as is, --adapt\nto adapt a plain json heredoc too): bootstrap servers and schema\nregistry urls whose hosts are not containers of the playground,\nthe credentials of that schema registry, a license, replication\nfactors above the number of brokers, and on plaintext the security of\nthe clients whose bootstrap servers were rewritten. Masked secrets,\nconfig providers of the customer environment (${file:...}),\nterraform references and the keys still pointing to external systems\nare listed. The heredocs of the examples are never changed.\n\n☁️ Fully managed: supported (custom connectors too), waited for with --wait only\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform",
+          "description": "🧑‍🎨 Create or update connector\n\nThe command every example uses to deploy its connector. The json config\nis read from stdin, usually as a heredoc, so it stays readable in the\nscript. If the connector already exists it is updated in place, which\nmakes the command safe to re-run while you iterate on a configuration.\n\nThe command then waits for the connector and all its tasks to be\nRUNNING, displays the connector status, and fails with the error if\nthey are not, so a broken config stops the example immediately instead\nof failing silently later. A FAILED connector or task is reported with\n'playground connector diagnose' (trace, error digest, offsets, next\nsteps and HTML report, opened in the browser unless 'playground config\nopen-diagnose-report-on-failure false'). When the script that runs is a reproduction\nmodel, a connector that is not RUNNING is only reported as a warning,\nsince a reproduction model often creates a failing connector on\npurpose. Use --wait to fail there too, --no-wait to skip the wait.\n\nFully managed connectors are only waited for with --wait.\n\n🎓 Tip: add --validate to have the config checked by the plugin before\nit is deployed, which reports every invalid property at once.\n\nAn update shows the keys added, removed and changed compared to the\nrunning config (secrets masked).\n\nThe config can also be given as the path of a file, and in the\nformats customers send (detected, see 'playground connector\nconvert'): the REST API format ({\"name\": ..., \"config\": {...}}), a\ndump of GET /connectors?expand=info, a CFK Connector or Strimzi\nKafkaConnector custom resource, a terraform confluent_connector\nresource, or a connect-standalone .properties file. When the file\nholds several connectors, the one named --connector is used.\n\nA config that comes from elsewhere (a file, or one of these formats)\nis adapted to the playground (--no-adapt to keep it as is, --adapt\nto adapt a plain json heredoc too): bootstrap servers and schema\nregistry urls whose hosts are not containers of the playground,\nthe credentials of that schema registry, a license, replication\nfactors above the number of brokers, and on plaintext the security of\nthe clients whose bootstrap servers were rewritten. Masked secrets,\nconfig providers of the customer environment (${file:...}),\nterraform references and the keys still pointing to external systems\nare listed. The heredocs of the examples are never changed.\n\n☁️ Fully managed: supported (custom connectors too), waited for with --wait only\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform",
           "usage": "playground connector create-or-update [JSON] [OPTIONS]",
           "options": [
             {

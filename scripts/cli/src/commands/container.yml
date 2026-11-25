@@ -107,7 +107,7 @@ commands:
   - name: get-ip-addresses
     group: Container
     help: |-
-      🖥️  Get ip address of running containers
+      🖥️ Get ip address of running containers
 
       The address each container has on the docker network, which is what
       you need when a component must be reached by IP rather than by name,
@@ -136,7 +136,7 @@ commands:
   - name: logs
     group: Container
     help: |-
-      🕵️  Tail and follow container logs
+      🕵️ Tail and follow container logs
 
       Three ways to use it:
 
@@ -478,7 +478,7 @@ commands:
   - name: pause
     group: Container
     help: |-
-      ⏸️  Pause a container
+      ⏸️ Pause a container
 
       Freezes the processes without stopping the container: it keeps its
       connections but stops responding. A good way to simulate a hung
@@ -492,7 +492,7 @@ commands:
     alias: unpause
     group: Container
     help: |-
-      ⏯️  Resume a container
+      ⏯️ Resume a container
 
       Unfreezes a container paused with 'playground container pause'.
 
@@ -521,7 +521,7 @@ commands:
     filters:
     - not_ansible_environment
     help: |-
-      📦  Set environment variable(s) for a container
+      📦 Set environment variable(s) for a container
 
       🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
 

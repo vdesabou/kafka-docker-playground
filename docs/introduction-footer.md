@@ -45,7 +45,7 @@ Prefer menus? `playground run` alone lets you pick the example and its options. 
 - 🎬 [Bite size sessions](/sessions.md) (short narrated videos) and 🍪 [deep dives](/deep-dives.md) (mental model, gotchas, a lab replayed nightly by CI, recipes for support repros)
 - 🧑‍🎓 [Academy](/academy.md) and 🎓 [how the playground works](/how-it-works.md), CI included
 - 🤖 Use it with [Claude Code](/claude-code.md): it picks the right playground commands to find the root cause
-- 🎩 On macOS, the kdp [Alfred workflow](/cli?id=🎩-alfred-workflow-macos) puts examples, plugin versions and running connectors one keystroke away
+- 🎩 On macOS, the kdp [Alfred workflow](/alfred.md) puts examples, plugin versions and running connectors one keystroke away
 
 ## 📊 See what it finds
 

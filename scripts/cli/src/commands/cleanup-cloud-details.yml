@@ -1,8 +1,10 @@
 name: cleanup-cloud-details
 group: Cleanup
 help: |-
-  🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
-     use this command if you notice that the playground is using unexpected ccloud details
+  🧼 Forget the cached Confluent Cloud details (environment, cluster, endpoints, API keys)
+
+  Use it when the playground uses unexpected Confluent Cloud details
+  (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
   Drops the cached environment, cluster, endpoints and API keys (including
   the configs cached for each cluster used, in .ccloud/clusters/), so the

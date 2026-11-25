@@ -800,6 +800,6 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 	<key>version</key>
 	<string>1.6.0</string>
 	<key>webaddress</key>
-	<string>https://kafka-docker-playground.io/#/cli?id=%F0%9F%8E%A9-alfred-workflow-macos</string>
+	<string>https://kafka-docker-playground.io/#/alfred</string>
 </dict>
 </plist>

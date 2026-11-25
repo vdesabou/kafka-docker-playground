@@ -55,7 +55,7 @@ commands:
         ☢️ force user
   - name: costs
     help: |
-      💰 Show aws costs
+      💰 AWS costs
 
       Spend over a range of dates, broken down by AWS service, using the
       Cost Explorer API. Run it after a week of heavy examples to see which
@@ -101,7 +101,7 @@ commands:
         🗓️ granularity of the cost API (DAILY: the cost per day of costs-history)
   - name: costs-history
     help: |-
-      👛  Retrieve aws costs for each month since last year
+      👛 AWS costs for each month since last year
 
       One line per month over the past year, drawn as a histogram, which
       makes a month that went wrong obvious at a glance. Use costs when you
@@ -178,7 +178,7 @@ commands:
         ☢️ force user
   - name: costs
     help: |
-      💰 Show azure costs
+      💰 Azure costs
 
       Spend over a range of dates for your subscription, using the Azure
       Cost Management API. You need to be logged in with the az CLI.
@@ -211,7 +211,7 @@ commands:
     - *raw-output-file
   - name: costs-history
     help: |-
-      👛  Retrieve azure costs for each month since last year
+      👛 Azure costs for each month since last year
 
       One line per month over the past year, so you can spot the month that
       went wrong before digging into it with costs.
@@ -286,7 +286,7 @@ commands:
     dependencies:
       confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
     help: |-
-      💰  Retrieve ccloud costs for a range of dates
+      💰 Confluent Cloud costs for a range of dates
 
       All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
 
@@ -345,7 +345,7 @@ commands:
     dependencies:
       confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
     help: |-
-      👛  Retrieve ccloud costs for each month since last year
+      👛 Confluent Cloud costs for each month since last year
 
       All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
 

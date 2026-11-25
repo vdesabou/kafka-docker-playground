@@ -494,7 +494,7 @@ commands:
         dynamic:
         - playground get-specific-file-extension "$completion_current" --extension "html"
       help: |-
-        🗒️  orclcdc_diag HTML report (repeat --file for several reports of the same database)
+        🗒️ orclcdc_diag HTML report (repeat --file for several reports of the same database)
 
         ❕ Provide only one of --file, --container and --sample
 
@@ -544,7 +544,7 @@ commands:
     - long: --json
       required: false
       help: |-
-        🗂️  Output JSON (findings, prerequisites, summary per component, deltas between reports)
+        🗂️ Output JSON (findings, prerequisites, summary per component, deltas between reports)
     - long: --top
       arg: top
       required: false
@@ -599,7 +599,7 @@ commands:
         dynamic:
         - playground get-specific-file-extension "$completion_current" --extension "jfr"
       help: |-
-        🗒️  .jfr file to analyze (repeat --file for the recordings of several connect workers over the same period)
+        🗒️ .jfr file to analyze (repeat --file for the recordings of several connect workers over the same period)
 
         ❕ Provide only one of --file, --container and --sample
 
@@ -666,7 +666,7 @@ commands:
     - long: --json
       required: false
       help: |-
-        🗂️  Output JSON (no text report, no HTML report)
+        🗂️ Output JSON (no text report, no HTML report)
     - long: --top
       arg: top
       required: false
@@ -729,7 +729,7 @@ commands:
     - long: --json
       required: false
       help: |-
-        🗂️  Output JSON (no text report, no HTML report)
+        🗂️ Output JSON (no text report, no HTML report)
     - long: --top
       arg: top
       required: false
@@ -850,7 +850,7 @@ commands:
     - long: --json
       required: false
       help: |-
-        🗂️  Output JSON (no text report, no HTML report)
+        🗂️ Output JSON (no text report, no HTML report)
     - long: --top
       arg: top
       required: false

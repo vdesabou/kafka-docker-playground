@@ -1,4 +1,5 @@
 name: config
+group: Configuration
 help: |-
   ⚙️ Configure CLI
 
@@ -68,7 +69,7 @@ commands:
   - playground config set user.email me@example.com
 
 - name: editor
-  help: editor to use to open files
+  help: 📝 Editor that every command opens files with
   args:
   - name: editor
     required: true
@@ -96,7 +97,7 @@ commands:
   - playground config folder_zip_or_jar ~/Downloads
 
 - name: clipboard
-  help: copy to clipboard connector config (only working on MacOS)
+  help: 📋 Copy the connector config to the clipboard (macOS only)
   args:
   - name: enabled
     required: false
@@ -107,10 +108,10 @@ commands:
 
 - name: open-ccloud-connector-in-browser
   help: |
-    when running a fully managed connector example, it opens the connector in browser
+    🌐 Open the connector in the browser when running a fully managed connector example
   commands:
     - name: automatically
-      help: automatically open the connector in browser
+      help: 🌐 Open the connector in the browser automatically
       args:
       - name: automatically
         required: false
@@ -119,7 +120,7 @@ commands:
       - playground config open-ccloud-connector-in-browser automatically false
       - playground config open-ccloud-connector-in-browser automatically true
     - name: browser
-      help: browser to use
+      help: 🧭 Browser to use
       args:
       - name: browser
         required: false
@@ -129,10 +130,10 @@ commands:
 
 - name: open-grafana-in-browser
   help: |
-    when running an example with --enable-jmx-grafana flag, it opens grafana in browser
+    📊 Open Grafana in the browser when running an example with --enable-jmx-grafana
   commands:
     - name: automatically
-      help: automatically open grafana in browser
+      help: 📊 Open Grafana in the browser automatically
       args:
       - name: automatically
         required: false
@@ -141,7 +142,7 @@ commands:
       - playground config open-grafana-in-browser automatically false
       - playground config open-grafana-in-browser automatically true
     - name: browser
-      help: browser to use
+      help: 🧭 Browser to use
       args:
       - name: browser
         required: false
@@ -151,7 +152,7 @@ commands:
 
 - name: container-kill-all-before-run
   help: |
-    when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.
+    💀 Kill every container before each run (playground container kill-all). If set to false, only stop the previous example (playground stop).
   args:
   - name: enabled
     required: false
@@ -162,7 +163,7 @@ commands:
 
 - name: account-check-before-run
   help: |
-    when running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.
+    🩺 When running an example of a provider (gcp, azure, aws, snowflake, salesforce, servicenow, databricks, zendesk, jira, marketo, clickhouse, couchbase, mongodb-atlas, pagerduty), call playground account <provider> check first: a login that does not work stops the run in a few seconds instead of failing minutes later. True by default, never done in CI.
   args:
   - name: enabled
     required: false
@@ -296,7 +297,7 @@ commands:
 
 - name: check-and-update-repo-version
   help: |
-    when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.
+    🔄 Warn when your clone of the repository is more than 3 days old, before running an example
   args:
   - name: enabled
     required: false

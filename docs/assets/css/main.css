@@ -528,3 +528,25 @@ figure.thumbnails img {
         padding: 0.4rem 0.8rem;
     }
 }
+
+/* CLI page (cli.md, scripts/cli/templates/markdown/index.gtx): the subcommands of each command, folded */
+.markdown-section details.cli-subcommands {
+    margin: 0.2rem 0 0.6rem;
+}
+
+.markdown-section details.cli-subcommands summary {
+    width: fit-content;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+}
+
+.markdown-section details.cli-subcommands summary:hover {
+    color: #d7eff6;
+}
+
+.markdown-section details.cli-subcommands ul {
+    margin: 0.4rem 0 0.4rem 0.2rem;
+    padding-left: 1rem;
+    font-size: 0.92rem;
+}

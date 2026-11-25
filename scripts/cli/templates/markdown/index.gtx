@@ -1,29 +1,6 @@
 # === Header
-
-> **{{ full_name }}**
->
-> {{ help.for_kdp_markdown }}
->
-
-attributes = version || alt.any? || default || extensible
-
-if attributes
-  > | Attributes       | &nbsp;
-  > |------------------|-------------
-  if version
-    > | Version:         | {{ version }}
-  end
-  if alt.any?
-    > | Alias:           | {{ alt.join ', ' }}
-  end
-  if default
-    > | Default Command: | ✓ Yes
-  end
-  if extensible
-    > | Extensible:      | {{ extensible.is_a?(String) ? extensible : "✓ Yes" }}
-  end
-  >
-end
+# no header on the CLI page: the hand-written part above (docs-template/cli-template.md) introduces the CLI, and the
+# "Version: 1.0.0" attribute meant nothing
 
 # === Usage
 
@@ -90,24 +67,41 @@ end
 # === Commands
 
 if commands.any?
-  # groups in alphabetical order (the ungrouped "Commands" first), not in declaration order
+  # groups in the order a reader needs them (essentials first, then by how often they are used), unknown groups at the
+  # end in alphabetical order. The group of a command is its "group:" in src/commands/<command>.yml
   group_label = ->(g) { g.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }
-  sorted_groups = grouped_commands.sort_by { |g, _| [group_label.(g) == 'Commands' ? 0 : 1, group_label.(g).downcase] }
+  group_order = ['Essentials', 'Run', 'Connector', 'Connector-Plugin', 'Topic', 'Kafka', 'Schema', 'Container', 'Debug',
+                 'Analyze', 'Repro', 'Database', 'ksqlDB', 'Flink', 'Kafka Streams', 'Accounts', 'Secrets',
+                 'Cloud Resources', 'Cleanup', 'TCP Proxy', 'RBAC', 'CFK', 'Ansible', 'Codespace', 'EC2', 'Tools',
+                 'Configuration']
+  # the commands without a group (help, status, doctor, find-command, find-example) are listed first, as "Essentials"
+  group_key = ->(g) { group_label.(g) == 'Commands' ? 'Essentials' : group_label.(g).sub(/\s+commands\z/i, '') }
+  sorted_groups = grouped_commands.sort_by do |g, _|
+    index = group_order.index(group_key.(g))
+    [index || group_order.size, group_key.(g).downcase]
+  end
   sorted_groups.each do |group, commands|
     # private commands have no page (see render.rb): don't link to them
-    # bashly also lists the subcommands of an exposed command (expose: true) in its group, one level deep only:
-    # keep the direct subcommands and list every public descendant of each, nested by depth
-    # commands are listed in alphabetical order at each level, not in declaration order
+    # bashly also lists the subcommands of an exposed command (expose: true) in its group: keep the direct ones only
+    # each command on one line, its public subcommands (at any depth) folded in a <details> block: the page stays
+    # short, and the browser search still finds them (it opens the block)
     depth = full_name.split.size
     commands = commands.reject(&:private).select { |c| c.full_name.split.size == depth + 1 }.sort_by { |c| c.name.downcase }
-    tree = ->(c) { [c] + c.commands.reject(&:private).sort_by { |s| s.name.downcase }.flat_map { |s| tree.(s) } }
-    commands = commands.flat_map { |c| tree.(c) }
     next if commands.empty?
-    > ### {{ group_label.(group) }}
+    tree = ->(c) { c.commands.reject(&:private).sort_by { |s| s.name.downcase }.flat_map { |s| [s] + tree.(s) } }
+    > ### {{ group_key.(group) }}
     >
-    commands.each do |subcommand|
-      indent = "  " * (subcommand.full_name.split.size - depth - 1)
-      > {{ indent }}- [{{ subcommand.name }}]({{ subcommand.full_name.gsub(' ', '%20') }}) - {{ subcommand.summary.for_kdp_inline }}
+    commands.each do |command|
+      > - [{{ command.name }}]({{ command.full_name.gsub(' ', '%20') }}) - {{ command.summary.for_kdp_inline }}
+      descendants = tree.(command)
+      if descendants.any?
+        items = descendants.map do |s|
+          indent = (s.full_name.split.size - depth - 2) * 1.2
+          style = indent > 0 ? " style=\"margin-left:#{indent}em\"" : ""
+          "<li#{style}><a href=\"#/#{s.full_name.gsub(' ', '%20')}\">#{s.full_name.split[depth + 1..-1].join(' ')}</a> - #{KdpMarkdown.inline_html(s.summary)}</li>"
+        end
+        >   <details class="cli-subcommands"><summary>{{ descendants.size }} subcommand{{ descendants.size > 1 ? 's' : '' }}</summary><ul>{{ items.join }}</ul></details>
+      end
     end
     >
   end

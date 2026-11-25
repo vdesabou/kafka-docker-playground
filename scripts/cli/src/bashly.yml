@@ -36,7 +36,7 @@ flags:
 - long: --vvv
   short: -v
   help: |
-    🐛 set verbose output (set -x)
+    🐛 Verbose output (set -x)
 
     ❗ it can print sensitive information ❗
 
@@ -46,7 +46,7 @@ flags:
   allowed: [INFO, WARN, ERROR]
   required: false
   help: |-
-    ❕Log level used by all commands
+    ❕ Log level of all commands
 
     Default is INFO (all INFO, WARN and ERROR will be printed in command output)
 

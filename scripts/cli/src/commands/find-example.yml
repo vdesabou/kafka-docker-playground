@@ -1,5 +1,4 @@
 name: find-example
-group: Run
 help: |-
   🔎 Find examples matching a free-text query, without the interactive picker
 

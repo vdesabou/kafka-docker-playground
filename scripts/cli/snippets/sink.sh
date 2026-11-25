@@ -1,4 +1,4 @@
-# 📥 playground topic produce (https://kafka-docker-playground.io/#/cli?id=%f0%9f%93%a5-produce)
+# 📥 playground topic produce (https://kafka-docker-playground.io/#/playground%20topic%20produce)
 
 # 💫 Magically produce to topic.
 

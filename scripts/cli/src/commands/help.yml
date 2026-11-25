@@ -1,5 +1,5 @@
 name: help
-help: Show help about a command
+help: ❓ Show the help of a command
 args:
 - name: command
   help: 🆘 Help command
