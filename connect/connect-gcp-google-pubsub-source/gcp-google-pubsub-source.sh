@@ -4,6 +4,14 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# the Google connector is not on Confluent Hub: the jars copied into confluent-hub/ are mounted by docker, but the CFK
+# environment only builds its Connect image from Confluent Hub plugins (CONNECT_PLUGIN_PATH entries <owner>-<name>)
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
+
 if [ -z "$GCP_PROJECT" ]
 then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
