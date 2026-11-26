@@ -13204,18 +13204,22 @@ subcommands:
       deprecated, breaking..., a major change of a\n                shared library
       (Jackson, Avro, Protobuf, AWS SDK v1 →\n                v2, Netty, Kafka clients...)
       that custom classes\n                (credentials providers, SMTs) depend on\n
-      \ ℹ️ info       versions behind, new keys, CVEs (--with-cve)\n\nA release note
-      line is never breaking: it is printed for a human to\njudge. Release notes exist
-      only for the Confluent self-managed plugins\ndocumented on docs.confluent.io
-      (the output says when there are none).\nThe CP 8 minimum versions come from
-      the guards of the connect/ examples\n(\"minimal supported connector version
-      is X for CP 8.0\").\n\nThe config is read from stdin, in the same formats as
-      'connector\nvalidate' and 'connector lint' (json, CFK, Strimzi, terraform,\n.properties,
-      a dump of GET /connectors?expand=info). Without stdin,\n--connector checks that
-      running connector, and --from is the version of\nits plugin in the worker.\n\nExits
-      with 0 when it is safe, 1 when there is something to review or\na breaking change,
-      2 when it could not check.\n\n☁️ Fully managed: not supported (Confluent upgrades
-      them: playground connector-plugin fm-versions)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin"
+      \ ℹ️ info       versions behind, new keys, CVEs (--with-cve), keys\n                of
+      the config in neither version (obsolete like\n                type.name of the
+      Elasticsearch sink or\n                database.server.name of Debezium 1.x,
+      a typo, or a\n                pass-through property; framework keys and keys\n
+      \               starting with _ are not listed)\n\nA release note line is never
+      breaking: it is printed for a human to\njudge. Release notes exist only for
+      the Confluent self-managed plugins\ndocumented on docs.confluent.io (the output
+      says when there are none).\nThe CP 8 minimum versions come from the guards of
+      the connect/ examples\n(\"minimal supported connector version is X for CP 8.0\").\n\nThe
+      config is read from stdin, in the same formats as 'connector\nvalidate' and
+      'connector lint' (json, CFK, Strimzi, terraform,\n.properties, a dump of GET
+      /connectors?expand=info). Without stdin,\n--connector checks that running connector,
+      and --from is the version of\nits plugin in the worker.\n\nExits with 0 when
+      it is safe, 1 when there is something to review or\na breaking change, 2 when
+      it could not check.\n\n☁️ Fully managed: not supported (Confluent upgrades them:
+      playground connector-plugin fm-versions)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin"
     usage: playground connector upgrade-check [JSON] [OPTIONS]
     options:
     - names:
