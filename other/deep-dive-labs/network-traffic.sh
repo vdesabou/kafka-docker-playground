@@ -80,12 +80,14 @@ lab_run playground connector wait --connector filestream-sink --max-wait 120
 lab_expect_exit 0
 
 log "Step 4b: a partition both ways, that heals by itself"
-lab_run playground debug block-traffic -c connect --destination broker --both-ways --duration 20s --action start
+# shorter than session.timeout.ms of the worker group (10 s): after a longer partition the worker leaves its group,
+# and the connector stayed UNASSIGNED for more than 2 minutes after the partition healed (CI run 45858056869)
+lab_run playground debug block-traffic -c connect --destination broker --both-ways --duration 5s --action start
 lab_expect_exit 0
 lab_expect_contains "🚫 Blocking traffic both ways between containers connect and destination broker"
 lab_expect_contains "-A INPUT -s "
-lab_expect_contains "⏳ the traffic heals by itself in 20s, at"
-sleep 30
+lab_expect_contains "⏳ the traffic heals by itself in 5s, at"
+sleep 15
 lab_run playground debug degrade-traffic -c connect --destination broker --action status
 lab_expect_exit 0
 lab_expect_ms "$(round_trip_ms connect broker)" 0 50 "ping round trip after the timer healed the partition"

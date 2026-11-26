@@ -133,6 +133,10 @@ datagram in each direction, and from `a`: DNS, its own name, the gateway, the in
 
 Gotchas:
 
+- **A two-way partition longer than the session timeout of the Connect worker group** (`session.timeout.ms`, 10 s by
+  default) makes the worker leave its group. In the lab, after a 20 s `--both-ways` cut of `connect` from the broker, the
+  connector stayed `UNASSIGNED` (its task `RUNNING`) for more than 2 minutes after the partition healed. Check
+  `playground connector status` after a long partition, and keep it under 10 s when the connector must keep running.
 - **`--action stop` removes the `--both-ways` rules without the flag** (each one is checked with `iptables -C` first),
   so the stop of a timer that fires after a manual stop is harmless. With cfk, each check is a `kubectl debug` call:
   pass `--both-ways` to the stop there.
