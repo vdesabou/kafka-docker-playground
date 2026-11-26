@@ -45,7 +45,7 @@ playground run -f fully-managed-mqtt-sink.sh
 2. Starts Mosquitto and ngrok locally (the mTLS variant first generates certificates in `security/`).
 3. Produces 3 messages `"This is my message"` to `mqtt_sink_messages`.
 4. Creates the fully managed `MqttSink` connector pointing to the ngrok endpoint.
-5. Verifies the message is received in Mosquitto with `mosquitto_sub` on topic `mqtt_sink_messages`.
+5. Verifies the message is received in Mosquitto with `playground mq get --topic mqtt_sink_messages` (`mosquitto_sub`).
 6. Asks whether to delete the connector.
 
 ## Known issues

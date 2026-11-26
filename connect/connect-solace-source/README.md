@@ -25,7 +25,7 @@ Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) (`admin`/`admi
 4. Publishes 3 messages to the queue with the Solace REST endpoint (`http://localhost:9000/Queue/connector-quickstart`).
 5. Creates the Solace Source connector reading the queue and writing to `from-solace-messages`.
 6. Verifies 3 records with `playground topic consume --topic from-solace-messages`.
-7. Checks with the SEMP v2 monitoring API that the queue is empty, i.e. messages were acknowledged and deleted by the connector.
+7. Checks with `playground mq wait --max-expected-messages 0` (SEMP v2 monitoring API) that the queue is empty, i.e. messages were acknowledged and deleted by the connector.
 
 The Solace CLI commands in `create_queue_cmd` are:
 

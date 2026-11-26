@@ -20,6 +20,7 @@ cases=(
     "customer support bundle cfk|analyze logs|1"
     "which version fixes this CVE|connector-plugin cve-scan|1"
     "docker logs|container logs|1"
+    "send a message to ibm mq queue|mq put|1"
     "who deleted the schema|schema history|1"
     "slow network latency|debug degrade-traffic|1"
     "cut one broker from the others for 30 seconds|debug block-traffic|1"

@@ -23,7 +23,7 @@ playground run -f lenses-active-mq-source.sh
 1. Downloads `activemq-all-5.15.4.jar` and the Lenses JMS connector release.
 2. Starts the environment with an ActiveMQ container.
 3. Creates the Lenses JMS source connector `lenses-active-mq-source` with KCQL `INSERT INTO MyKafkaTopicName SELECT * FROM myqueue WITHTYPE QUEUE` and `JsonSimpleConverter`.
-4. Sends a JSON message to JMS queue `myqueue` through the ActiveMQ REST API (`http://localhost:8161/api/message/myqueue`).
+4. Sends a JSON message to JMS queue `myqueue` with `playground mq put` (ActiveMQ REST API).
 5. Verifies that topic `MyKafkaTopicName` receives the message with `playground topic consume`.
 
 ## Benchmark

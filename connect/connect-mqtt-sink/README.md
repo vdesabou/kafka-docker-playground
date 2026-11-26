@@ -24,7 +24,7 @@ playground run -f mqtt-sink.sh
 1. Starts the environment with a Mosquitto container (`mtls` variant: first generates keystores, truststores and certificates for `connect` and `mosquitto` in `security/`).
 2. Produces one message to topic `sink-messages` with `playground topic produce`.
 3. Creates the MQTT sink connector (`sink-mqtt` or `sink-mqtt-mtls`), with `mqtt.qos=2`.
-4. Verifies with `mosquitto_sub` that the message is received in MQTT topic `sink-messages`.
+4. Verifies with `playground mq get --topic sink-messages` (`mosquitto_sub`) that the message is received in MQTT topic `sink-messages` (the `mtls` variant calls `mosquitto_sub` itself, on port 8883).
 
 ## Notes
 

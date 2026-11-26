@@ -25,7 +25,7 @@ Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) (`admin`/`admi
 5. Publishes 3 messages to the queue through the Solace REST endpoint (`http://localhost:9000/Queue/connector-quickstart`).
 6. Creates the JMS source connector `jms-solace-source` (`com.solacesystems.jndi.SolJNDIInitialContextFactory`, `smf://solace:55555`, connection factory `/jms/cf/default`).
 7. Verifies that topic `source-messages` receives 3 messages with `playground topic consume`.
-8. Asserts, with the Solace SEMP v2 monitoring API, that queue `connector-quickstart` is empty, i.e. messages were acknowledged and deleted after being committed.
+8. Asserts with `playground mq wait --max-expected-messages 0` (Solace SEMP v2 monitoring API) that queue `connector-quickstart` is empty, i.e. messages were acknowledged and deleted after being committed.
 
 Example of record:
 

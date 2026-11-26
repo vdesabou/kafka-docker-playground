@@ -33,7 +33,7 @@ playground run -f fully-managed-active-mq-source.sh
 1. Bootstraps the Confluent Cloud environment and deletes topic `MyKafkaTopicName`.
 2. Starts ActiveMQ and ngrok locally, and gets the public ngrok TCP endpoint.
 3. Creates the fully managed connector `ActiveMQSource_<USER>` (Avro output) and waits for it to be running.
-4. Sends a message to the JMS queue `DEV.QUEUE.1` through the ActiveMQ REST API.
+4. Sends a message to the JMS queue `DEV.QUEUE.1` with `playground mq put` (ActiveMQ REST API).
 5. Verifies that topic `MyKafkaTopicName` contains the message with `playground topic consume`.
 6. Asks for confirmation before deleting the connector.
 

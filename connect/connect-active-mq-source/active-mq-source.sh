@@ -32,7 +32,7 @@ EOF
 sleep 5
 
 log "Sending messages to DEV.QUEUE.1 JMS queue:"
-curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
+playground mq put --container activemq --queue DEV.QUEUE.1 --message message
 
 sleep 5
 
@@ -46,14 +46,8 @@ playground connector stop --connector active-mq-source
 
 sleep 5
 
-log "Asserting that ActiveMQ queue DEV.QUEUE.1 is empty after connector processing"
-log "This tests that commitRecord API properly deletes messages from external system"
-QUEUE_SIZE=$(curl -s -u admin:admin "http://localhost:8161/admin/xml/queues.jsp" | grep -A 5 "DEV.QUEUE.1" | grep "size" | sed 's/.*size=\"\([0-9]*\)\".*/\1/')
-
-if [ -z "$QUEUE_SIZE" ]; then
-    logerror "❌ Failed to retrieve queue size from ActiveMQ"
-    exit 1
-fi
+log "Asserting that ActiveMQ queue DEV.QUEUE.1 is empty after connector processing (commitRecord deletes the messages)"
+playground mq wait --container activemq --queue DEV.QUEUE.1 --max-expected-messages 0 --max-wait 60
 
 log "Current queue size for DEV.QUEUE.1: $QUEUE_SIZE"
 

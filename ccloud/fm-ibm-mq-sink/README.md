@@ -49,5 +49,5 @@ playground run -f fully-managed-ibm-mq-sink.sh
 3. For the EOS variant, creates the offsets queue `KAFKA.OFFSETS.QUEUE` with `DEFSOPT(EXCL)` and grants access to user `app`.
 4. Produces one string message to `sink-messages`.
 5. Creates the `IbmMqSink` fully managed connector writing to queue `DEV.QUEUE.1`.
-6. Browses `DEV.QUEUE.1` with `amqsbcg` and checks that the message is there.
+6. Browses `DEV.QUEUE.1` with `playground mq get` (`amqsbcg`) and checks that the message is there.
 7. Asks before deleting the connector.

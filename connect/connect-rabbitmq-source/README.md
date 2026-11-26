@@ -22,10 +22,10 @@ playground run -f rabbitmq-source.sh
 ## What the script does
 
 1. Starts the environment with a RabbitMQ container and Python producer/consumer containers (`ssl` variant: first generates keystores, truststores and certificates for `connect` and `rabbitmq` in `security/`).
-2. Sends 5 messages to RabbitMQ queue `myqueue` with the `rabbitmq-producer` container (`python /producer.py myqueue 5`).
+2. Sends 5 messages to RabbitMQ queue `myqueue` with the `rabbitmq-producer` container (`python /producer.py myqueue 5`), and waits for the 5 messages in the queue with `playground mq wait`.
 3. Creates the RabbitMQ source connector `rabbitmq-source` (queue `myqueue` to topic `rabbitmq`).
 4. Verifies that topic `rabbitmq` receives 5 messages with `playground topic consume`.
-5. Asserts with `rabbitmqctl list_queues` that queue `myqueue` is empty, i.e. all messages were acknowledged and removed.
+5. Asserts with `playground mq wait --queue myqueue --max-expected-messages 0` that queue `myqueue` is empty, i.e. all messages were acknowledged and removed.
 
 Example of records:
 

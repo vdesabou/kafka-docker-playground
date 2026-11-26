@@ -11893,6 +11893,284 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+- name: mq
+  description: "\U0001F4E8 Message broker commands\n\nSend messages to the broker
+    of a source example, read what a sink wrote,\nand wait for a queue to fill up
+    or to be drained by a connector, without\ndocker exec and the client command line
+    of each broker.\n\n  put    send messages to a queue or a topic (--message, --file
+    or stdin)\n  get    show the messages of a queue without removing them\n  wait
+    \  wait until a queue contains at least (or at most) N messages\n\nSupported:
+    IBM MQ (amqsput, amqsbcg, runmqsc in its container), RabbitMQ\n(rabbitmqctl, and
+    rabbitmqadmin of the -management images, else the HTTP\nAPI of rabbitmq_management,
+    enabled on the fly), MQTT with mosquitto\n(mosquitto_pub, mosquitto_sub), ActiveMQ
+    classic (REST API and Jolokia)\nand Solace (REST messaging and SEMP). The HTTP
+    APIs are called from a\ncurl container that joins the network of the broker (curlimages/curl):\nnothing
+    to install, no published port needed.\n\nThe broker is the only running container
+    whose image is one of them\n(icr.io/ibm-messaging/mq, rabbitmq, eclipse-mosquitto,
+    rmohr/activemq,\nsolace/solace-pubsub-standard in the examples): pass --container
+    when\nthere are several, and --broker when the image name does not tell which\nbroker
+    it is.\n\nThe users and passwords come from the container environment\n(RABBITMQ_DEFAULT_USER,
+    MQ_QMGR_NAME, username_admin_password...) and the\ndefaults of the examples (myuser
+    / mypassword for mosquitto, admin /\nadmin for ActiveMQ): pass --user and --password
+    for others.\n\n\U0001F393 Tip: in a source example, 'mq put' then 'topic consume\n--min-expected-messages',
+    and 'mq wait --max-expected-messages 0' to\ncheck that the connector removed the
+    messages from the queue.\n\n☸️ cfk: everything runs in the broker pod with kubectl
+    exec (the curl of\nthe ActiveMQ and Solace images, rabbitmqadmin of the RabbitMQ
+    -management\nimages); RabbitMQ put / get with an image that has no rabbitmqadmin
+    (the\n-alpine one) is not supported"
+  usage: playground mq COMMAND
+  options: []
+  subcommands:
+  - name: put
+    description: "\U0001F4E4 Send messages to a queue or a topic\n\nOne message per
+      line, from --message (with --nb-messages, %g is\nreplaced by 1, 2, 3...), --file
+      or stdin (a heredoc). Empty lines are\nskipped.\n\n  IBM MQ     amqsput to a
+      queue, amqspub to a topic (local bindings:\n             no channel, no user);
+      --header is not supported\n  RabbitMQ   published to the queue through the default
+      exchange\n             (rabbitmqadmin publish, or the HTTP API); a queue that\n
+      \            does not exist is declared first (durable false, like\n             the
+      producer of the examples); --header sets AMQP\n             headers\n  MQTT
+      \      mosquitto_pub -l to a topic; --header sends MQTT 5 user\n             properties\n
+      \ ActiveMQ   REST API (POST /api/message), to a queue or a topic;\n             --header
+      sets JMS string properties\n  Solace     REST messaging (port 9000, default
+      message VPN), to a\n             queue (it must exist) or a topic; --header
+      is not\n             supported\n\nExits with 1 when the broker refused a message,
+      with 2 when it could\nnot send (no broker, no destination, no message)."
+    usage: playground mq put [OPTIONS]
+    options:
+    - names:
+      - "--container"
+      - "-c"
+      argument: CONTAINER
+      description: "\U0001F433 Container of the broker\n\nℹ️ If not set, the only
+        running container whose image is a supported broker"
+    - names:
+      - "--broker"
+      argument: BROKER
+      description: "\U0001F4E8 Broker of --container, when the image name does not
+        tell it\n\nAllowed values: ibmmq, rabbitmq, mqtt, activemq, solace"
+    - names:
+      - "--user"
+      - "-u"
+      argument: USER
+      description: "\U0001F464 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)\n\nℹ️
+        If not set, from the container environment, else the user of the examples"
+    - names:
+      - "--password"
+      argument: PASSWORD
+      description: "\U0001F511 Password of --user"
+    - names:
+      - "--vhost"
+      argument: VHOST
+      description: "\U0001F3E0 RabbitMQ virtual host (default is /)\n\nDefault value:
+        /"
+    - names:
+      - "--vpn"
+      argument: VPN
+      description: "\U0001F3E0 Solace message VPN (default is default)\n\nDefault
+        value: default"
+    - names:
+      - "--queue"
+      - "-q"
+      argument: QUEUE
+      description: "\U0001F4E5 Queue\n\nConflicts with: --topic"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F4E2 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)\n\nConflicts
+        with: --queue"
+    - names:
+      - "--message"
+      - "-m"
+      argument: MESSAGE
+      description: |-
+        ✍️ Message to send (a template with %g when --nb-messages is set)
+
+        Conflicts with: --file
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F4C4 File with the messages, one per line\n\nConflicts with:
+        --message"
+    - names:
+      - "--nb-messages"
+      - "-n"
+      argument: NB_MESSAGES
+      description: "\U0001F522 Send the message N times, %g replaced by 1..N"
+    - names:
+      - "--header"
+      argument: HEADER
+      description: "\U0001F3F7️ Property of the messages, key=value (repeat it for
+        several)\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: get
+    description: "\U0001F50E Show the messages of a queue, without removing them\n\nA
+      source connector reads the same queue: 'mq get' never takes its\nmessages away.\n\n
+      \ IBM MQ     amqsbcg browses the queue (body, MsgId, Format,\n             properties)\n
+      \ RabbitMQ   rabbitmqadmin get (or the HTTP API) reads the messages\n             and
+      puts them back (ackmode ack_requeue_true): they\n             stay in the queue,
+      marked redelivered; the exchange\n             and routing key are shown\n  ActiveMQ
+      \  Jolokia browse() of the queue (body, JMSMessageID,\n             properties)\n
+      \ Solace     SEMP lists the spooled messages: their id, size and\n             time,
+      not their body (SEMP does not return it)\n  MQTT       no queue: subscribes
+      to --topic for --timeout seconds\n             and prints what arrives (and
+      the retained message)\n\n--json prints a json array of {\"id\", \"body\", \"headers\"}."
+    usage: playground mq get [OPTIONS]
+    options:
+    - names:
+      - "--container"
+      - "-c"
+      argument: CONTAINER
+      description: "\U0001F433 Container of the broker\n\nℹ️ If not set, the only
+        running container whose image is a supported broker"
+    - names:
+      - "--broker"
+      argument: BROKER
+      description: "\U0001F4E8 Broker of --container, when the image name does not
+        tell it\n\nAllowed values: ibmmq, rabbitmq, mqtt, activemq, solace"
+    - names:
+      - "--user"
+      - "-u"
+      argument: USER
+      description: "\U0001F464 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)\n\nℹ️
+        If not set, from the container environment, else the user of the examples"
+    - names:
+      - "--password"
+      argument: PASSWORD
+      description: "\U0001F511 Password of --user"
+    - names:
+      - "--vhost"
+      argument: VHOST
+      description: "\U0001F3E0 RabbitMQ virtual host (default is /)\n\nDefault value:
+        /"
+    - names:
+      - "--vpn"
+      argument: VPN
+      description: "\U0001F3E0 Solace message VPN (default is default)\n\nDefault
+        value: default"
+    - names:
+      - "--queue"
+      - "-q"
+      argument: QUEUE
+      description: "\U0001F4E5 Queue\n\nConflicts with: --topic"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F4E2 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)\n\nConflicts
+        with: --queue"
+    - names:
+      - "--max-messages"
+      argument: MAX_MESSAGES
+      description: "\U0001F522 Maximum number of messages to show (default is 100)\n\nDefault
+        value: 100"
+    - names:
+      - "--timeout"
+      argument: TIMEOUT
+      description: |-
+        ⏳ MQTT: seconds to stay subscribed (default is 10)
+
+        Default value: 10
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the messages as a json array"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: wait
+    description: |-
+      ⏳ Wait for a queue to contain at least (or at most) N messages
+
+      Counts the messages of --queue every --interval seconds until there
+      are at least --min-expected-messages, or at most
+      --max-expected-messages (0: a source connector consumed them all),
+      and fails after --max-wait seconds. A queue that does not exist yet
+      counts as empty.
+
+      Counted with runmqsc (IBM MQ CURDEPTH), rabbitmqctl list_queues,
+      the ActiveMQ admin queue list, Solace SEMP (up to 1000 spooled
+      messages). MQTT keeps no queue: with --topic, the messages received
+      while subscribed are counted, from now on.
+    usage: playground mq wait [OPTIONS]
+    options:
+    - names:
+      - "--container"
+      - "-c"
+      argument: CONTAINER
+      description: "\U0001F433 Container of the broker\n\nℹ️ If not set, the only
+        running container whose image is a supported broker"
+    - names:
+      - "--broker"
+      argument: BROKER
+      description: "\U0001F4E8 Broker of --container, when the image name does not
+        tell it\n\nAllowed values: ibmmq, rabbitmq, mqtt, activemq, solace"
+    - names:
+      - "--user"
+      - "-u"
+      argument: USER
+      description: "\U0001F464 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)\n\nℹ️
+        If not set, from the container environment, else the user of the examples"
+    - names:
+      - "--password"
+      argument: PASSWORD
+      description: "\U0001F511 Password of --user"
+    - names:
+      - "--vhost"
+      argument: VHOST
+      description: "\U0001F3E0 RabbitMQ virtual host (default is /)\n\nDefault value:
+        /"
+    - names:
+      - "--vpn"
+      argument: VPN
+      description: "\U0001F3E0 Solace message VPN (default is default)\n\nDefault
+        value: default"
+    - names:
+      - "--queue"
+      - "-q"
+      argument: QUEUE
+      description: "\U0001F4E5 Queue\n\nConflicts with: --topic"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F4E2 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)\n\nConflicts
+        with: --queue"
+    - names:
+      - "--min-expected-messages"
+      argument: MIN_EXPECTED_MESSAGES
+      description: "\U0001F522 Minimum number of messages to wait for (default is
+        1)\n\nDefault value: 1"
+    - names:
+      - "--max-expected-messages"
+      argument: MAX_EXPECTED_MESSAGES
+      description: "\U0001F522 Wait until the queue has at most N messages (0: drained
+        by a source connector)"
+    - names:
+      - "--max-wait"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Max time in seconds to wait (default is 120)
+
+        Default value: 120
+    - names:
+      - "--interval"
+      argument: INTERVAL
+      description: "\U0001F501 Interval in seconds between checks (default is 5)\n\nDefault
+        value: 5"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
 - name: rbac
   description: "\U0001F6E1️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac
     environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running

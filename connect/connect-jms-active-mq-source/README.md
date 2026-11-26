@@ -25,7 +25,7 @@ The ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161) (
 1. Downloads `activemq-all-5.15.4.jar` if needed and copies it into the JMS connector `lib` folder.
 2. Starts ActiveMQ alongside the plaintext environment.
 3. Creates the `jms-active-mq-source` connector (`java.naming.provider.url=tcp://activemq:61616`, queue `DEV.QUEUE.1`, `kafka.topic=MyKafkaTopicName`).
-4. Sends a message to queue `DEV.QUEUE.1` through the ActiveMQ REST API.
+4. Sends a message to queue `DEV.QUEUE.1` with `playground mq put` (ActiveMQ REST API).
 5. Verifies that the record lands in topic `MyKafkaTopicName` with `playground topic consume`.
 6. Checks through the ActiveMQ admin API that queue `DEV.QUEUE.1` is empty, i.e. the connector acknowledged and removed the message (`commitRecord`).
 

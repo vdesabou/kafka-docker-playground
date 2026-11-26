@@ -37,7 +37,7 @@ EOF
 sleep 5
 
 log "Sending messages to DEV.QUEUE.1 JMS queue:"
-curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
+playground mq put --container activemq --queue DEV.QUEUE.1 --message message
 
 sleep 5
 

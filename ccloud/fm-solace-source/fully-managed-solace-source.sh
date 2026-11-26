@@ -95,14 +95,8 @@ playground topic consume --topic from-solace-messages --min-expected-messages 3 
 
 sleep 5
 
-log "Asserting that Solace queue connector-quickstart is empty after connector processing"
-log "This tests that commitRecord API properly deletes messages from external system"
-QUEUE_MSG_COUNT=$(curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq -r '.data.msgSpoolUsage // empty')
-
-if [ -z "$QUEUE_MSG_COUNT" ]; then
-    logerror "❌ Failed to retrieve queue message count from Solace"
-    exit 1
-fi
+log "Asserting that Solace queue connector-quickstart is empty after connector processing (commitRecord deletes the messages)"
+playground mq wait --container solace --queue connector-quickstart --max-expected-messages 0 --max-wait 60
 
 log "Current message spool usage for connector-quickstart: $QUEUE_MSG_COUNT bytes"
 

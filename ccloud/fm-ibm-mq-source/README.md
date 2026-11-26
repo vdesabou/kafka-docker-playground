@@ -48,7 +48,7 @@ playground run -f fully-managed-ibm-mq-source.sh
 2. Starts IBM MQ (queue manager `QM1`) and Ngrok; for TLS variants, generates certificates first and configures the `DEV.APP.SVRCONN` channel.
 3. For the EOS variant, defines MQ topic `MY.MQ.STATE.TOPIC` and grants the required permissions to user `app`.
 4. Creates the `IbmMQSource` fully managed connector reading queue `DEV.QUEUE.1` (Avro output).
-5. Puts 2 messages in `DEV.QUEUE.1` with `amqsput`.
+5. Puts 2 messages in `DEV.QUEUE.1` with `playground mq put` (`amqsput`).
 6. Verifies that 2 records are in `MyKafkaTopicName` (`playground topic consume`).
 7. Asks before deleting the connector.
 

@@ -19,9 +19,7 @@ sleep 5
 log "Send message to RabbitMQ in myqueue"
 playground container exec --container rabbitmq-producer --command "bash -c \"python /producer.py myqueue 5\""
 
-# Get the number of messages remaining in the queue
-num_messages=$(playground container exec --container rabbitmq --command "rabbitmqctl -q -p \"/\" list_queues name messages" | awk -v q="myqueue" '$1==q{print $2}')
-log "Number of messages in myqueue before connector processing: $num_messages"
+playground mq wait --container rabbitmq --queue myqueue --min-expected-messages 5
 
 log "Creating RabbitMQ Source connector"
 playground connector create-or-update --connector rabbitmq-source  << EOF
@@ -44,23 +42,8 @@ sleep 5
 log "Verify we have received the data in rabbitmq topic"
 playground topic consume --topic rabbitmq --min-expected-messages 5 --timeout 60
 
-log "Asserting that RabbitMQ queue is empty after connector processing"
-QUEUE_NAME="myqueue"
-VHOST="/"
-# Get the number of messages remaining in the queue
-num_messages=$(playground container exec --container rabbitmq --command "rabbitmqctl -q -p \"$VHOST\" list_queues name messages" | awk -v q="$QUEUE_NAME" '$1==q{print $2}')
-
-if [ -z "$num_messages" ]; then
-logerror "failed to inspect queue $QUEUE_NAME in vhost $VHOST"
-exit 1
-fi
-
-if [ "$num_messages" -gt 0 ]; then
-logerror "queue $QUEUE_NAME still contains $num_messages messages, expected 0 after connector processing (all messages should be acked and removed)"
-exit 1
-fi
-
-log "verified queue $QUEUE_NAME is empty - all messages were successfully consumed and deleted"
+log "Asserting that RabbitMQ queue is empty after connector processing (all messages acked and removed)"
+playground mq wait --container rabbitmq --queue myqueue --max-expected-messages 0 --max-wait 60
 
 #log "Consume messages in RabbitMQ"
 #playground container exec -i rabbitmq-consumer bash -c "python /consumer.py myqueue"

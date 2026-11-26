@@ -23,7 +23,7 @@ playground run -f mqtt-source.sh
 
 1. Starts the environment with a Mosquitto container (`mtls` variant: first generates keystores, truststores and certificates for `connect` and `mosquitto` in `security/`).
 2. Creates the MQTT source connector `source-mqtt` (MQTT topic `my-mqtt-topic` to Kafka topic `mqtt-source-1`, `mqtt.qos=2`).
-3. Publishes message `sample-msg-1` to MQTT topic `my-mqtt-topic` with `mosquitto_pub`.
+3. Publishes message `sample-msg-1` to MQTT topic `my-mqtt-topic` with `playground mq put` (`mosquitto_pub` in the mosquitto container; the `mtls` variant calls `mosquitto_pub` itself, on port 8883 with the client certificate).
 4. Verifies that topic `mqtt-source-1` receives the message with `playground topic consume`.
 
 ## Notes

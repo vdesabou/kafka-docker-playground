@@ -48,5 +48,5 @@ playground run -f fully-managed-rabbitmq-sink.sh
 3. Declares exchange `exchange1`, queue `queue1` and a binding with routing key `rkey1` using `rabbitmqadmin`.
 4. Produces 10 messages to topic `rabbitmq-messages`.
 5. Creates the fully managed `RabbitMQSink` connector publishing to `exchange1` with routing key `rkey1`.
-6. Verifies the messages landed in `queue1` with `rabbitmqadmin get`.
+6. Verifies the messages landed in `queue1` with `playground mq get` (browsed and requeued).
 7. Asks whether to delete the connector.

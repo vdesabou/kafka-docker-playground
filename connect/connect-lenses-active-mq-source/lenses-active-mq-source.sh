@@ -50,7 +50,7 @@ EOF
 sleep 5
 
 log "Sending messages to myqueue JMS queue:"
-curl -XPOST -u admin:admin -d 'body={"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}' http://localhost:8161/api/message/myqueue?type=queue
+playground mq put --container activemq --queue myqueue --message '{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}'
 
 sleep 5
 

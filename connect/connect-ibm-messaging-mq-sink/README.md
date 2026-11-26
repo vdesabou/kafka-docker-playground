@@ -36,4 +36,4 @@ To test a jar that you built locally, package it the same way (jar in the `lib/`
 2. Starts the environment with an IBM MQ container (`ibmmq`).
 3. Produces 3 messages to topic `sink-messages`.
 4. Creates the `ibm-messaging-mq-sink` connector to queue `DEV.QUEUE.1` (channel `DEV.APP.SVRCONN`, user `app`).
-5. Verifies the 3 messages are in the queue with `amqsbcg`.
+5. Waits for the 3 messages in the queue with `playground mq wait`, then shows them with `playground mq get` (`amqsbcg`).

@@ -81,7 +81,7 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 5
 
 log "Check messages received in RabbitMQ"
-docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10 > /tmp/result.log  2>&1
+playground mq get --container rabbitmq --queue queue1 --max-messages 10 > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "rkey1" /tmp/result.log
 
