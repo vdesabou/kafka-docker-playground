@@ -48,6 +48,25 @@ diagnose_report=$(echo "$LAB_OUTPUT" | sed -n 's/.*HTML report saved: //p' | tai
 lab_expect_equals "$(grep -o 'Task 0 FAILED on' "$diagnose_report" | head -1)" "Task 0 FAILED on" "failed task in the HTML report"
 playground connector delete --connector strict-sink
 
+log "Before step 2: lint the config (the DLQ replication factor is left to its default)"
+lab_run playground connector lint --connector orders-sink << 'EOF'
+{
+  "tasks.max": "1",
+  "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+  "topics": "orders",
+  "file": "/tmp/orders.txt",
+  "value.converter": "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "http://schema-registry:8081",
+  "errors.tolerance": "all",
+  "errors.deadletterqueue.topic.name": "dlq"
+}
+EOF
+lab_expect_exit 1
+lab_expect_contains "🔴 HIGH   errors.deadletterqueue.topic.replication.factor = 3 (default)"
+lab_expect_contains "the dead letter queue needs 3 replicas but the cluster has 1 broker(s)"
+lab_expect_contains "fix: set errors.deadletterqueue.topic.replication.factor=1"
+lab_expect_contains "❌ 1 warning(s), 0 note(s)"
+
 log "Step 2: errors.tolerance=all, a silent one"
 playground connector create-or-update --connector orders-sink << 'EOF'
 {

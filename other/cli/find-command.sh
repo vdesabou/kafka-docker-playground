@@ -32,6 +32,7 @@ cases=(
     "produce avro records with a schema|topic produce|1"
     "connector is slow|connector benchmark|1"
     "which task does all the work|connector tasks|1"
+    "is my connector config risky|connector lint|1"
 )
 
 failed=0

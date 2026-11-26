@@ -13057,6 +13057,63 @@ subcommands:
         the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
+  - name: lint
+    description: "\U0001F9EA Best-practice warnings on a connector config (no environment
+      needed)\n\n'connector validate' only prints what the plugin rejects. A config
+      that\nvalidates can still lose records or fail later: lint flags the risky\nor
+      useless settings, each with why and how to fix it.\n\nRules: errors.tolerance=all
+      without a dead letter queue (records lost)\nor without errors.log.enable, a
+      dead letter queue that is never\nwritten (errors.tolerance=none) or set on a
+      source, replication\nfactors above the number of brokers, tasks.max above the
+      number of\npartitions of a sink, client overrides (consumer.override.*,\nproducer.override.*)
+      against connector.client.config.override.policy\nof the worker, consumer.override.max.poll.records
+      too high for\nmax.poll.interval.ms, auto.offset.reset=latest, producer acks
+      not all,\nan Avro / Protobuf / JSON Schema converter set on the connector without\nits
+      schema.registry.url (a converter set on the connector does not\ninherit the
+      converter settings of the worker), JsonConverter with a\nschema.registry.url,
+      JsonConverter expecting the schema / payload\nenvelope on a sink, a single task
+      Debezium connector with tasks.max > 1,\nand secrets in clear text (not ${file:...}
+      / ${secret:...}).\n\nSeverity: \U0001F534 HIGH (fails), \U0001F7E0 MEDIUM (loses
+      records or misbehaves),\n\U0001F7E1 LOW (risky), \U0001F535 INFO (a note, does
+      not count). Exits with 1 when there\nis at least one warning (HIGH, MEDIUM or
+      LOW).\n\nThe config is read from stdin, in the same formats as 'connector\nvalidate':
+      json, a CFK / Strimzi custom resource, terraform, a\n.properties, a dump of
+      GET /connectors?expand=info (--connector picks\none). Without stdin, --connector
+      lints the config of that running\nconnector.\n\nWhen a local environment runs,
+      the number of brokers, the partitions of\nthe topics of a sink and the override
+      policy of the worker are read\nfrom it (--offline to skip). For a customer config,
+      --brokers gives the\nsize of their cluster.\n\n☁️ Fully managed: supported for
+      the generic rules (the converter and secret rules are skipped, a fully managed
+      config holds its secrets)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+    usage: playground connector lint [JSON] [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector name\n\nWith a config on stdin: the name
+        shown, or the connector to pick in\na dump that has several. Without stdin,
+        the running connector whose\nconfig is linted."
+    - names:
+      - "--brokers"
+      argument: BROKERS
+      description: "\U0001F522 Number of brokers of the target cluster (the customer's),
+        to check the replication factors without a running environment"
+    - names:
+      - "--offline"
+      argument: ''
+      description: "✈️ Do not read the running environment (brokers, partitions, worker
+        override policy): the config only"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
   - name: diff
     description: "\U0001F500 Diff the config of a running connector with another config\n\nCompares
       the config of a running connector, key by key, with:\n\n  stdin              a
