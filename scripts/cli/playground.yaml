@@ -12883,12 +12883,14 @@ subcommands:
     Confluent Cloud console\n  benchmark               records per second, vs the
     previous run\n  smt test                what a transform chain does to a record\n\n\U0001F6E0️
     Change it\n  create-or-update        create it, or apply a new config, from stdin\n
-    \ validate                check a config with the plugin, create nothing\n  convert
-    \                a customer config (CFK, terraform...) to another\n                          format\n
-    \ update                  edit the running config in your editor\n  pause / resume
-    / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a
-    connector\n  offsets get-offsets-request-status\n                          did
-    the last fully managed change apply\n\n\U0001F9D1‍\U0001F52C Understand it\n  show-config-parameters
+    \ validate                check a config with the plugin, create nothing\n  lint
+    \                   best-practice warnings on a config\n  upgrade-check           what
+    changes for a config with a newer plugin\n  convert                 a customer
+    config (CFK, terraform...) to another\n                          format\n  update
+    \                 edit the running config in your editor\n  pause / resume / stop
+    / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n
+    \ offsets get-offsets-request-status\n                          did the last fully
+    managed change apply\n\n\U0001F9D1‍\U0001F52C Understand it\n  show-config-parameters
     \ every parameter the plugin accepts\n  select-config           pick parameters
     interactively\n  snippets                converter (or data format) and dlq config\n
     \ plugins                 plugins installed (--all: transforms...)\n  versions
@@ -13186,6 +13188,77 @@ subcommands:
         the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
+  - name: upgrade-check
+    description: "\U0001F53C What changes for this connector config when the plugin
+      is upgraded (no environment needed)\n\n\"Can we upgrade the S3 sink from 10.5.7
+      to the latest (and to CP 8)?\"\nin one call, for the customer's config, with
+      a verdict. The\nconfiguration of the connector class is read in both versions
+      (the\nsame download and cache as 'connector-plugin config-diff'), then\nchecked
+      against the config:\n\n  ❌ breaking   a key the config sets is removed, its
+      value is no\n                longer valid (valid values, range), a new required\n
+      \               key without default, the target version is below the\n                minimum
+      supported on --cp-version (CP 8)\n  ⚠️ review     a default changed on a key
+      the config does not set\n                (it runs with the old default without
+      knowing it), a\n                set key whose type or value rule changed, release\n
+      \               notes that name a set key or say default, behavior,\n                removed,
+      deprecated, breaking..., a major change of a\n                shared library
+      (Jackson, Avro, Protobuf, AWS SDK v1 →\n                v2, Netty, Kafka clients...)
+      that custom classes\n                (credentials providers, SMTs) depend on\n
+      \ ℹ️ info       versions behind, new keys, CVEs (--with-cve)\n\nA release note
+      line is never breaking: it is printed for a human to\njudge. Release notes exist
+      only for the Confluent self-managed plugins\ndocumented on docs.confluent.io
+      (the output says when there are none).\nThe CP 8 minimum versions come from
+      the guards of the connect/ examples\n(\"minimal supported connector version
+      is X for CP 8.0\").\n\nThe config is read from stdin, in the same formats as
+      'connector\nvalidate' and 'connector lint' (json, CFK, Strimzi, terraform,\n.properties,
+      a dump of GET /connectors?expand=info). Without stdin,\n--connector checks that
+      running connector, and --from is the version of\nits plugin in the worker.\n\nExits
+      with 0 when it is safe, 1 when there is something to review or\na breaking change,
+      2 when it could not check.\n\n☁️ Fully managed: not supported (Confluent upgrades
+      them: playground connector-plugin fm-versions)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin"
+    usage: playground connector upgrade-check [JSON] [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector name\n\nWith a config on stdin: the name
+        shown, or the connector to pick in a dump that has several. Without stdin,
+        the\nrunning connector to check (its plugin version in the worker is --from)."
+    - names:
+      - "--connector-plugin"
+      argument: CONNECTOR-PLUGIN
+      description: "\U0001F50C Connector plugin (owner/name)\n\nDefault: the plugin
+        of the connector.class of the config, found in the examples"
+    - names:
+      - "--from"
+      argument: FROM
+      description: "\U0001F522 Version in use (the customer's)\n\nDefault: the version
+        of the plugin in the worker, for a running connector"
+    - names:
+      - "--to"
+      argument: TO
+      description: "\U0001F3AF Target version (default: the latest on Confluent Hub)"
+    - names:
+      - "--cp-version"
+      argument: CP-VERSION
+      description: "\U0001F3AF Target CP version: checks the minimum plugin version
+        supported on CP 8"
+    - names:
+      - "--with-cve"
+      argument: ''
+      description: "\U0001F6E1️ Also compare the CVEs of both versions (connector-plugin
+        cve-scan, slow the first time)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
   - name: reconcile
     description: "\U0001F9EE Compare the records of the topic with the rows of the
       table: lost, duplicated, different?\n\nAnswers \"the sink lost records\", \"the

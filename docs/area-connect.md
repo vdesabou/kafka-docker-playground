@@ -43,6 +43,7 @@ Every self-managed connector example: `playground find-example "<connector>" --c
 | Did the sink lose or duplicate records? Did the source miss rows? | `playground connector reconcile` (topic against table or bucket objects, record by record) |
 | What does this transform chain do to a record? | `playground connector smt test` (with the customer's `transforms.*` and a record) |
 | Which version fixed it? What changed between two versions? | `playground connector-plugin changelog --connector-plugin <owner>/<name> --from <version> --grep "<symptom>"`, `connector-plugin config-diff --from <a> --to <b>`, `repro bisect --from <a> --to <b>` |
+| Can the customer upgrade the plugin (and to CP 8)? What changes for their config? | `playground connector upgrade-check --from <version> --cp-version 8.0.3 < customer-config` (or `--connector <c>`): ❌ breaking / ⚠️ review / ✅ safe |
 | Run the customer's plugin version | `playground run -f <example> --connector-tag <version>` (`--connector-zip` / `--connector-jar` for a patched build) |
 | What does the code do at the customer's version? | `playground connector-plugin sourcecode --connector-plugin <owner>/<name> --connector-tag <version>` (`--grep`, two `--connector-tag` for the diff), `connector-plugin config-key` for one property |
 | Which jar, dependency, CVE? | `playground connector-plugin dependencies\|search-jar\|cve-scan` |
