@@ -6424,7 +6424,7 @@
         },
         {
           "name": "block-traffic",
-          "description": "🚫 Blocking traffic using iptables\n\nCuts the route from a container to a destination, so you can see how the\nsystem behaves during a network outage: a broker that loses the\ncontroller, a connector that can no longer reach its database, a client\nthat cannot resolve the schema registry.\n\nBlocking with --action start and restoring with --action stop, so the\nfailure is reversible without restarting anything.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose",
+          "description": "🚫 Blocking traffic using iptables\n\nCuts the route from a container to a destination, so you can see how the\nsystem behaves during a network outage: a broker that loses the\ncontroller, a connector that can no longer reach its database, a client\nthat cannot resolve the schema registry.\n\nBlocking with --action start and restoring with --action stop, so the\nfailure is reversible without restarting anything.\n\nBy default only the packets the container sends to the destination are\ndropped (OUTPUT): a TCP connection dies anyway, since the container can\nneither send nor acknowledge.\n\n  --both-ways        also drop what the destination sends to the\n                     container (INPUT): a full partition, nothing gets\n                     through in either direction (UDP and data already\n                     in flight included)\n  --isolate <c>      cut container c from every other container of its\n                     network(s), both ways, without --destination:\n                     loopback, the docker DNS, the gateway (the host,\n                     published ports) and the internet keep working.\n                     --container is ignored. Docker and podman only\n  --duration <d>     with --action start: the traffic heals by itself\n                     after d (30s, 2m, 1h), through a detached timer.\n                     --action stop with the same flags ends it earlier,\n                     'playground stop' ends the timer with the\n                     environment\n\n--action stop removes the --both-ways rules too, without the flag (with\ncfk, pass --both-ways to the stop as well).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose",
           "usage": "playground debug block-traffic [OPTIONS]",
           "options": [
             {
@@ -6442,7 +6442,28 @@
                 "--destination"
               ],
               "argument": "DESTINATION",
-              "description": "Destination: it could be an ip address, a container name or a hostname\n\nRequired: ✓ Yes"
+              "description": "Destination: it could be an ip address, a container name or a hostname\n\nℹ️ Required, unless --isolate is set\n\nConflicts with: --isolate"
+            },
+            {
+              "names": [
+                "--isolate"
+              ],
+              "argument": "CONTAINER",
+              "description": "🏝️ Cut this container from every other container of its network(s), both ways (loopback, docker DNS, host and internet still work)\n\nConflicts with: --destination, --port, --both-ways"
+            },
+            {
+              "names": [
+                "--both-ways"
+              ],
+              "argument": "",
+              "description": "↔️ Also drop the packets the destination sends to the container (a full partition)\n\nConflicts with: --isolate"
+            },
+            {
+              "names": [
+                "--duration"
+              ],
+              "argument": "DURATION",
+              "description": "⏳ With --action start: heal by itself after this time (30s, 2m, 1h)"
             },
             {
               "names": [

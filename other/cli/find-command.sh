@@ -22,6 +22,7 @@ cases=(
     "docker logs|container logs|1"
     "who deleted the schema|schema history|1"
     "slow network latency|debug degrade-traffic|1"
+    "cut one broker from the others for 30 seconds|debug block-traffic|1"
     "dead letter queue|topic dlq inspect|1"
     "read_committed consumer stuck|broker transactions|1"
     "under replicated partitions|broker health|1"

@@ -291,15 +291,59 @@ commands:
     Blocking with --action start and restoring with --action stop, so the
     failure is reversible without restarting anything.
 
+    By default only the packets the container sends to the destination are
+    dropped (OUTPUT): a TCP connection dies anyway, since the container can
+    neither send nor acknowledge.
+
+      --both-ways        also drop what the destination sends to the
+                         container (INPUT): a full partition, nothing gets
+                         through in either direction (UDP and data already
+                         in flight included)
+      --isolate <c>      cut container c from every other container of its
+                         network(s), both ways, without --destination:
+                         loopback, the docker DNS, the gateway (the host,
+                         published ports) and the internet keep working.
+                         --container is ignored. Docker and podman only
+      --duration <d>     with --action start: the traffic heals by itself
+                         after d (30s, 2m, 1h), through a detached timer.
+                         --action stop with the same flags ends it earlier,
+                         'playground stop' ends the timer with the
+                         environment
+
+    --action stop removes the --both-ways rules too, without the flag (with
+    cfk, pass --both-ways to the stop as well).
+
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic
     🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose
   flags:
     - import: src/flags/container.yml
     - long: --destination
       arg: destination
-      required: true
+      required: false
+      conflicts: [--isolate]
       help: |-
         Destination: it could be an ip address, a container name or a hostname
+
+        ℹ️ Required, unless --isolate is set
+    - long: --isolate
+      arg: container
+      required: false
+      conflicts: [--destination, --port, --both-ways]
+      completions:
+        dynamic:
+        - playground get-container-list
+      help: |-
+        🏝️ Cut this container from every other container of its network(s), both ways (loopback, docker DNS, host and internet still work)
+    - long: --both-ways
+      required: false
+      conflicts: [--isolate]
+      help: |-
+        ↔️ Also drop the packets the destination sends to the container (a full partition)
+    - long: --duration
+      arg: duration
+      required: false
+      help: |-
+        ⏳ With --action start: heal by itself after this time (30s, 2m, 1h)
     - long: --port
       arg: port
       validate: integer
@@ -318,10 +362,24 @@ commands:
         🟢 start or stop
   examples:
   - playground debug block-traffic --destination google.com --action start
-  - playground debug block-traffic --container broker --destination zookeeper --action start
-  - playground debug block-traffic -c broker -c connect --destination zookeeper --action start
-  - playground debug block-traffic --container schema-registry --destination broker --port 9092 --action start
-  - playground debug block-traffic -c connect -c ksqldb-server --destination schema-registry --action stop
+  - playground debug block-traffic --container connect --destination broker --both-ways --duration 30s --action start
+  - playground debug block-traffic --isolate broker2 --duration 2m --action start
+  - playground debug block-traffic --isolate broker2 --action stop
+  x_example_outputs:
+  - command: playground debug block-traffic --isolate pg-bt-test-a --duration 2m --action start
+    output: |-
+      15:24:04 ℹ️ 🏝️ Isolating container pg-bt-test-a from the other containers of its network(s): 192.168.144.2/20 (gateway 192.168.144.1)
+      15:24:04 ℹ️    still working: loopback, the docker DNS, the gateway (the host, published ports) and the internet
+      15:24:04 ℹ️ Applying iptables rule to container: pg-bt-test-a
+      15:24:05 ℹ️ Output of command iptables-save for container pg-bt-test-a
+      15:24:05 ℹ️ ⏳ the traffic heals by itself in 2m, at 15:26:05 (timer pid 47698, log /tmp/playground-block-traffic/1031383968.log)
+      15:24:05 ℹ️    --action stop with the same flags ends it now, playground stop ends it with the environment
+  - command: playground debug block-traffic --isolate pg-bt-test-a --action stop
+    output: |-
+      15:24:06 ℹ️ ⏹️ timer of --duration cancelled (--action stop, pid 47698)
+      15:24:06 ℹ️ 🟢 Ending the isolation of container pg-bt-test-a: 192.168.144.2/20 (gateway 192.168.144.1)
+      15:24:06 ℹ️ Applying iptables rule to container: pg-bt-test-a
+      15:24:07 ℹ️ Output of command iptables-save for container pg-bt-test-a
 
 - name: degrade-traffic
   help: |-
