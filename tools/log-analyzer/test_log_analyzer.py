@@ -141,6 +141,45 @@ def test_splunk_time_reversed():
         check("splunk", rc == 0 and text.index("first") < text.index("second"), text)
 
 
+def test_splunk_json_export_of_a_json_layout():
+    """a Splunk JSON export (Export > JSON): one {"preview": false, "result": {...}} per line, newest first, the _raw a
+    log4j2 JsonLayout line with a day first timestamp and the MDC context of Connect in its own "connector" field"""
+    def event(ts, splunk_time, msg, extracted=True, last=False):
+        raw = {"connector": "[sink-a|task-0] ", "level": "ERROR", "loggerName": "org.apache.kafka.connect.runtime.WorkerTask",
+               "message": msg, "thread": "task-thread-sink-a-0", "timestamp": ts}
+        result = {"_raw": json.dumps(raw), "_time": splunk_time, "host": "worker-1", "sourcetype": "connect"}
+        if extracted:
+            result.update(raw)
+        out = {"preview": False, "result": result}
+        if last:
+            out["lastrow"] = True
+        return json.dumps(out)
+    cause = ("WorkerSinkTask{id=sink-a-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will "
+             "not recover until manually restarted:\norg.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error "
+             "handler\n\tat org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:189)"
+             "\nCaused by: org.apache.kafka.connect.errors.DataException: Invalid value: null used for required field: \"field1\", "
+             "schema type: STRING\n\tat org.apache.kafka.connect.data.Struct.put(Struct.java:216)\n")
+    with tempfile.TemporaryDirectory() as d:
+        src, dst = os.path.join(d, "splunk.json"), os.path.join(d, "out.log")
+        with open(src, "w") as fh:
+            fh.write(event("19-11-2026T09:25:56.517Z", "2026-11-19T06:25:56.517-0300", cause) + "\n")
+            # the last row: the fields not extracted by Splunk, read from the JSON of _raw
+            fh.write(event("19-11-2026T09:05:34.269Z", "2026-11-19T06:05:34.269-0300", "first failure", extracted=False, last=True) + "\n")
+        sys.argv = ["x", src, dst]
+        with open(os.devnull, "w") as null:
+            old, sys.stdout = sys.stdout, null
+            try:
+                rc = jle.main()
+            finally:
+                sys.stdout = old
+        text = open(dst).read() if rc == 0 else ""
+    check("converted", rc == 0, rc)
+    check("ISO time, level and MDC context", text.startswith("[2026-11-19T09:05:34.269Z] ERROR [sink-a|task-0] first failure"), text[:200])
+    check("oldest first", text.index("first failure") < text.index("Tolerance exceeded"), text)
+    check("cause chain kept", "\nCaused by: org.apache.kafka.connect.errors.DataException: Invalid value: null used for required field" in text, text)
+    check("no JSON left", '"preview"' not in text and '"_raw"' not in text, text)
+
+
 def test_splunk_csv_long_row_single_quotes():
     # a Splunk export with sourcetype / source columns whose first row is longer than the sniffer sample and full of
     # single quotes (Schema Registry "Authorizing actions" lines): the sniffer guesses ' as the quote character
@@ -2950,6 +2989,22 @@ def test_powershell_wrapped_json_lines():
         with open(src, "w", encoding="utf-8") as fh:
             json.dump({"events": [{"message": "m", "timestamp": 1}]}, fh, indent=2)
         check("pretty JSON", jle.first_object_and_layout(src) == (None, False), jle.first_object_and_layout(src))
+
+
+def test_required_field_null_known_cause():
+    """JsonSchemaConverter builds every property as required by default: a known cause that names
+    use.optional.for.nonrequired and where Connect reads it, not only the generic serialization error"""
+    body = ("[2026-11-19 09:05:34,269] ERROR [sink-a|task-0] WorkerSinkTask{id=sink-a-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n"
+            "    org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler\n"
+            '    org.apache.kafka.connect.errors.DataException: Invalid value: null used for required field: "field1", schema type: STRING')
+    text = ("@@PGFILE@@|connect.log|100|1|1|2026-11-19T09:00:00|2026-11-19T10:00:00\n"
+            f"@@PGREC@@|ERROR|1|10|10|2026-11-19T09:05:34|2026-11-19T09:05:34\n{body}\n@@PGTS@@|2026-11-19T09:05:34\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    titles = [h["title"] for h in res["known_causes"]]
+    check("known cause", "🕳️ Null value for a required field" in titles, titles)
+    hint = next(h for h in res["known_causes"] if h["title"].startswith("🕳️"))
+    check("advice", "use.optional.for.nonrequired=true" in hint["advice"] and "using the worker config" in hint["advice"], hint["advice"])
 
 
 def test_unix_user_without_name():

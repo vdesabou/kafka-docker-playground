@@ -324,6 +324,20 @@ KNOWN_CAUSES = [
      "advice": "the client looks up a subject that doesn't exist: the subject name strategy differs between producer "
                "and consumer, or auto.register.schemas=false / use.latest.version with an unregistered schema. "
                "playground schema list shows the real subject names"},
+    # before serialization_error (the CFK analyzer keeps the first match): a record without a value for a field that the
+    # Connect schema built by the converter says is required. JsonSchemaConverter builds every property as required
+    # unless use.optional.for.nonrequired=true, and Connect reads that key only next to the converter it configures
+    {"name": "required_field_null", "severity": "high", "category": "Serialization Issues",
+     "pattern": r"Invalid value: null used for required field",
+     "title": "🕳️ Null value for a required field",
+     "advice": "a record has no value for a field that the Connect schema says is required. With JsonSchemaConverter "
+               "(JsonSchemaData in the stack trace), every property is required unless use.optional.for.nonrequired=true "
+               "(default false); a property listed in a required array stays required. Connect reads that key only where "
+               "the converter is set: in a connector config, only if the same config sets value.converter (otherwise the "
+               "worker converter runs with the worker value.converter.* keys, see the log line 'Set up the value converter "
+               "… using the worker config'); in the worker config, only for the connectors without their own value.converter. "
+               "With Avro, Protobuf or an SMT, the schema of the producer or of the SMT declares the field required: make it "
+               "optional there"},
     {"name": "serialization_error", "severity": "medium", "category": "Serialization Issues",
      "pattern": r"Converting byte\[\] to Kafka Connect data failed|SerializationException"
                 # (not an SMT that throws: 🪄, nor a tombstone skipped by a sink: 🫥)
@@ -673,7 +687,7 @@ HINT_ORDER = [
     "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎟️ OAuth token cannot be obtained or validated", "🎫 Kerberos ticket cache past its renewable lifetime", "🎫 Kerberos keytab out of date (key changed on the KDC)", "🎫 Kerberos re-login failing", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
     "🗝️ Empty or unreadable truststore", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
-    "🪄 Transformation (SMT) failed", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🪓 Connection terminated during authentication", "🌐 Host name not resolved (DNS)",
+    "🪄 Transformation (SMT) failed", "🕳️ Null value for a required field", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🪓 Connection terminated during authentication", "🌐 Host name not resolved (DNS)",
     "🔌 Connection failure", "🗄️ JDBC sink: table or column missing (auto.create / auto.evolve off)",
     "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost", "📥 Producer buffer full",
     "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system", "🌩️ HTTP 5xx from the external system",
@@ -694,6 +708,7 @@ CCLOUD_PATTERN = r"\.confluent\.cloud\b"
 # kb-links.json (kb_links()), with their variants ("pattern"), fallbacks and Confluent Cloud flags, merged by links()
 LINKS = {
     "🧲 Unknown magic byte": {"docs": "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html"},
+    "🕳️ Null value for a required field": {"docs": "https://docs.confluent.io/platform/current/schema-registry/connect.html#json-schema"},
 }
 
 
