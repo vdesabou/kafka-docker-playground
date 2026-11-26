@@ -404,6 +404,7 @@ playground_usage() {
   printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                          "
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "connector wait")                            "
   printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "connector validate")                        "
+  printf "  %s   🧪 Best-practice warnings on a connector config (no environment needed)\n" "$(green "connector lint")                            "
   printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "connector diff")                            "
   printf "  %s   🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n" "$(green "connector reconcile")                       "
   printf "  %s   🔄 Convert a connector config from the format a customer sent to another one\n" "$(green "connector convert")                         "
@@ -23532,6 +23533,7 @@ playground_connector_usage() {
   printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                          "
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "wait")                            "
   printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "validate")                        "
+  printf "  %s   🧪 Best-practice warnings on a connector config (no environment needed)\n" "$(green "lint")                            "
   printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "diff")                            "
   printf "  %s   🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n" "$(green "reconcile")                       "
   printf "  %s   🔄 Convert a connector config from the format a customer sent to another one\n" "$(green "convert")                         "
@@ -23826,6 +23828,75 @@ playground_connector_validate_usage() {
     printf "  playground connector validate << EOF\n{\n  \"connector.class\": \"FileStreamSink\",\n  \"topics\": \"filestream\",\n  \"file\": \"/tmp/output.json\",\n  \"tasks.max\": \"abc\"\n}\nEOF\n"
 printf "  playground connector validate --connector filestream-sink\n"
 printf "  playground connector validate --connector filestream-sink --json\n"
+echo
+
+fi
+}
+
+# :command.usage
+playground_connector_lint_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector lint\n\n"
+    printf "  🧪 Best-practice warnings on a connector config (no environment needed)\n  \n  'connector validate' only prints what the plugin rejects. A config that\n  validates can still lose records or fail later: lint flags the risky\n  or useless settings, each with why and how to fix it.\n  \n  Rules: errors.tolerance=all without a dead letter queue (records lost)\n  or without errors.log.enable, a dead letter queue that is never\n  written (errors.tolerance=none) or set on a source, replication\n  factors above the number of brokers, tasks.max above the number of\n  partitions of a sink, client overrides (consumer.override.*,\n  producer.override.*) against connector.client.config.override.policy\n  of the worker, consumer.override.max.poll.records too high for\n  max.poll.interval.ms, auto.offset.reset=latest, producer acks not all,\n  an Avro / Protobuf / JSON Schema converter set on the connector without\n  its schema.registry.url (a converter set on the connector does not\n  inherit the converter settings of the worker), JsonConverter with a\n  schema.registry.url, JsonConverter expecting the schema / payload\n  envelope on a sink, a single task Debezium connector with tasks.max > 1,\n  and secrets in clear text (not ${file:...} / ${secret:...}).\n  \n  Severity: 🔴 HIGH (fails), 🟠 MEDIUM (loses records or misbehaves),\n  🟡 LOW (risky), 🔵 INFO (a note, does not count). Exits with 1 when there\n  is at least one warning (HIGH, MEDIUM or LOW).\n  \n  The config is read from stdin, in the same formats as 'connector\n  validate': json, a CFK / Strimzi custom resource, terraform, a\n  .properties, a dump of GET /connectors?expand=info (--connector picks\n  one). Without stdin, --connector lints the config of that running\n  connector.\n  \n  When a local environment runs, the number of brokers, the partitions of\n  the topics of a sink and the override policy of the worker are read\n  from it (--offline to skip). For a customer config, --brokers gives the\n  size of their cluster.\n  \n  ☁️ Fully managed: supported for the generic rules (the converter and secret\n  rules are skipped, a fully managed config holds its secrets)\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
+  else
+    printf "playground connector lint - 🧪 Best-practice warnings on a connector config (no environment needed)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector lint [JSON] [OPTIONS]\n"
+  printf "  playground connector lint --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    With a config on stdin: the name shown, or the connector to pick in\n    a dump that has several. Without stdin, the running connector whose\n    config is linted.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--brokers BROKERS")"
+    printf "    🔢 Number of brokers of the target cluster (the customer's), to check the\n    replication factors without a running environment\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--offline")"
+    printf "    ✈️ Do not read the running environment (brokers, partitions, worker override\n    policy): the config only\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON on stdout, and nothing else (the log lines go to\n    stderr)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "JSON")"
+    printf "    json (reads from stdin if empty)\n"
+    printf "    %s\n" "Default: -"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector lint << EOF\n{\n  \"connector.class\": \"io.confluent.connect.jdbc.JdbcSinkConnector\",\n  \"topics\": \"orders\",\n  \"tasks.max\": \"4\",\n  \"connection.url\": \"jdbc:postgresql://postgres/postgres\",\n  \"connection.password\": \"postgres\",\n  \"errors.tolerance\": \"all\",\n  \"value.converter\": \"io.confluent.connect.avro.AvroConverter\",\n  \"consumer.override.max.poll.records\": \"10000\"\n}\nEOF\n"
+printf "  playground connector lint --brokers 3 < customer-connector-cr.yaml\n"
+printf "  playground connector lint --connector jdbc-sink --json\n"
 echo
 
 fi
@@ -101111,6 +101182,140 @@ playground_connector_validate_command() {
 }
 
 # :command.function
+playground_connector_lint_command() {
+
+  # src/commands/connector/lint.sh
+  connector="${args[--connector]}"
+  json=${args[json]}
+  offline="${args[--offline]}"
+  brokers="${args[--brokers]}"
+  verbose="${args[--verbose]}"
+  output_json="${args[--json]}"
+
+  # --json: the JSON verdict is the only thing on stdout (fd 3), the log lines go to stderr
+  if [[ -n "$output_json" ]]
+  then
+      exec 3>&1 1>&2
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required to lint the connector config"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if [ "$json" = "-" ]
+  then
+      json_content=$(read_stdin_if_any)
+  else
+      json_content=$json
+  fi
+
+  if [[ -z "$json_content" ]]
+  then
+      # no config on stdin: lint the config of the running connector
+      if [[ -z "$connector" ]]
+      then
+          logerror "❌ give the config to lint on stdin, or --connector to lint the config of a running connector"
+          exit 1
+      fi
+      if ! get_connector_config_json "$connector"
+      then
+          logerror "❌ could not get the config of connector $connector"
+          exit 1
+      fi
+      json_content="$curl_output"
+      log "🧪 Linting the config of running connector $connector"
+  else
+      # json, or one of the formats customers send (CFK / Strimzi custom resource, terraform, .properties, REST API dump...)
+      if ! normalize_connector_config "$json_content" "$connector"
+      then
+          logerror "❌ $NORMALIZED_ERROR"
+          exit 1
+      fi
+      if [ "$NORMALIZED_FORMAT" != "JSON" ]
+      then
+          log "📦 detected: $NORMALIZED_FORMAT"
+      fi
+      json_content="$NORMALIZED_CONFIG"
+      connector="${connector:-${NORMALIZED_NAME:-connector}}"
+      log "🧪 Linting connector config of $connector (nothing is created)"
+  fi
+
+  echo "$json_content" > "$tmp_dir/config.json"
+
+  # context of the running environment (best effort, local docker environments only): number of brokers, partitions of
+  # the topics of a sink, connector.client.config.override.policy of the worker. --brokers gives the size of the
+  # customer's cluster instead
+  context="{}"
+  if [[ -n "$brokers" ]]
+  then
+      context=$(jq -n --argjson b "$brokers" '{brokers: $b}')
+  fi
+  environment=$(playground state get run.environment)
+  if [[ -z "$offline" ]] && [[ "$environment" != "ccloud" ]] && [[ "$environment" != cfk* ]] && is_container_running broker
+  then
+      get_connect_container
+      if [[ -z "$brokers" ]]
+      then
+          nb_brokers=$(get_broker_ids | grep -c . || true)
+          if [[ "$nb_brokers" -gt 0 ]]
+          then
+              context=$(echo "$context" | jq --argjson b "$nb_brokers" '. + {brokers: $b}')
+          fi
+      fi
+      topics=$(echo "$json_content" | jq -r '.topics // empty' 2>/dev/null)
+      partitions="{}"
+      IFS=',' read -r -a topic_list <<< "$topics"
+      for topic in "${topic_list[@]}"
+      do
+          topic=$(echo "$topic" | xargs)
+          [[ -z "$topic" ]] && continue
+          nb=$(get_topic_partition_assignment "$topic" | grep -c . || true)
+          partitions=$(echo "$partitions" | jq --arg t "$topic" --argjson n "${nb:-0}" '. + {($t): $n}')
+      done
+      context=$(echo "$context" | jq --argjson p "$partitions" --arg env "$environment" '. + {partitions: $p, environment: $env}')
+      if [[ -n "$connect_container" ]]
+      then
+          # unset = All, the default since Kafka 3.0 (KIP-722)
+          policy=$(docker exec "$connect_container" printenv CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY 2>/dev/null || true)
+          context=$(echo "$context" | jq --arg p "${policy:-All}" '. + {worker_override_policy: $p}')
+      fi
+  fi
+  if [[ "$context" != "{}" ]]
+  then
+      echo "$context" > "$tmp_dir/context.json"
+      lint_args=(--context "$tmp_dir/context.json")
+  else
+      lint_args=()
+  fi
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 context: $(echo "$context" | jq -c .)"
+  fi
+
+  set +e
+  if [[ -n "$output_json" ]]
+  then
+      python3 -I "$root_folder/tools/connector-lint/lint.py" --config "$tmp_dir/config.json" --name "$connector" "${lint_args[@]}" --json >&3
+  else
+      python3 -I "$root_folder/tools/connector-lint/lint.py" --config "$tmp_dir/config.json" --name "$connector" "${lint_args[@]}"
+  fi
+  ret=$?
+  set -e
+  exit $ret
+
+}
+
+# :command.function
 playground_connector_diff_command() {
 
   # src/commands/connector/diff.sh
@@ -168434,6 +168639,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    lint)
+      action="lint"
+      shift
+      playground_connector_lint_parse_requirements "$@"
+      shift $#
+      ;;
+
     diff)
       action="diff"
       shift
@@ -169196,6 +169408,142 @@ playground_connector_validate_parse_requirements() {
   if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
     printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_lint_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_lint_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector lint"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --brokers)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--brokers']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--brokers requires an argument: --brokers BROKERS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --offline)
+
+        # :flag.case_no_arg
+        args['--offline']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['json']+x} ]]; then
+            args['json']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['json']+x} ]]; then
+          args['json']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['json']:-} ]] || args['json']="-"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--brokers'] ]]; then
+    validation_output="$(validate_integer "${args['--brokers']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--brokers BROKERS" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -206589,6 +206937,11 @@ playground_connector_completion() {
         playground_connector_validate_completion "$completion_current" "$@"
         return
         ;;
+      lint)
+        shift
+        playground_connector_lint_completion "$completion_current" "$@"
+        return
+        ;;
       diff)
         shift
         playground_connector_diff_completion "$completion_current" "$@"
@@ -206798,7 +207151,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait validate diff reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics flow stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate lint diff reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics flow stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -207055,6 +207408,78 @@ playground_connector_validate_completion() {
     completion_flag_candidates --skip-automatic-connector-config "$completion_current" --skip-automatic-connector-config
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_lint_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --brokers)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--brokers"]=1
+
+        ;;
+      --offline)
+        completion_blocked_flags["--offline"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --brokers "$completion_current" --brokers
+    completion_flag_candidates --offline "$completion_current" --offline
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -212380,6 +212805,7 @@ run() {
     "connector status") playground_connector_status_command ;;
     "connector wait") playground_connector_wait_command ;;
     "connector validate") playground_connector_validate_command ;;
+    "connector lint") playground_connector_lint_command ;;
     "connector diff") playground_connector_diff_command ;;
     "connector reconcile") playground_connector_reconcile_command ;;
     "connector convert") playground_connector_convert_command ;;

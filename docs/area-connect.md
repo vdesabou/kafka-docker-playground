@@ -39,7 +39,7 @@ Every self-managed connector example: `playground find-example "<connector>" --c
 | Where is a source in its data? Start over, skip records | `playground connector offsets get\|alter\|reset`, `connector create-or-update --offsets '<json>'` (fully managed) |
 | Is the connector slow? Where does the task time go? | `playground connector metrics` (`--watch 10s`), `connector benchmark` (drain or steady mode, several `--connector-tag`), `debug thread-dump` + `analyze thread-dump` |
 | The customer's connector config: CFK `Connector`, Strimzi `KafkaConnector`, Terraform, `.properties`, `expand=info` dump | `playground connector create-or-update` reads them as they are, `connector convert <file>` turns them into a heredoc for an example, `repro bootstrap --config <file>` builds a reproduction model from them |
-| Is this config valid? What differs from the running one? | `playground connector validate`, `connector diff` |
+| Is this config valid? What differs from the running one? Is it risky although it validates? | `playground connector validate`, `connector diff`, `connector lint` |
 | Did the sink lose or duplicate records? Did the source miss rows? | `playground connector reconcile` (topic against table, record by record) |
 | What does this transform chain do to a record? | `playground connector smt test` (with the customer's `transforms.*` and a record) |
 | Which version fixed it? What changed between two versions? | `playground connector-plugin changelog --connector-plugin <owner>/<name> --from <version> --grep "<symptom>"`, `connector-plugin config-diff --from <a> --to <b>`, `repro bisect --from <a> --to <b>` |

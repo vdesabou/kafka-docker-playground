@@ -5,7 +5,7 @@ error digest, progress and next steps in one call. When a sink is `RUNNING` but 
 went to the dead letter queue (DLQ): `topic dlq inspect` groups them by error with the root cause and the original
 offsets, and `topic dlq replay` sends them back once the cause is fixed. Then `connector tasks`, `topics`, `history`,
 `metrics` and `restart --only-failed` answer the follow-up questions: how the work is split, what happened before,
-whether it moves, how to recover. Takes about 20 minutes to read and run.
+whether it moves, how to recover, and `connector lint` catches the risky settings before the connector runs. Takes about 20 minutes to read and run.
 
 > [!TIP]
 > In a hurry? Watch the short video session [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
@@ -27,6 +27,7 @@ whether it moves, how to recover. Takes about 20 minutes to read and run.
 | when it failed, how many restarts, what changed in the config | `playground connector history [--connector <c>]` (`--since 12h`, deleted connectors too) |
 | is it moving? records skipped, retried, sent to the DLQ | `playground connector metrics [--connector <c>]` (`--watch 10s`) |
 | restart only what is FAILED | `playground connector restart --only-failed` |
+| risky settings that validate fine (no DLQ, DLQ replication factor, overrides, converters, secrets) | `playground connector lint [--connector <c>] < config` (`--brokers 3`, `--offline`, `--json`) |
 
 ---
 
@@ -205,7 +206,7 @@ Gotchas:
 
 ---
 
-## 5. Beyond diagnose: `tasks`, `topics`, `history`, `metrics`, `restart --only-failed`
+## 5. Beyond diagnose: `tasks`, `topics`, `history`, `metrics`, `restart --only-failed`, `lint`
 
 `connector diagnose` answers "what is wrong right now". Five narrower commands answer the follow-up questions: how the
 work is split, what the connector touched, what happened before, whether it moves, and how to recover without touching
@@ -218,6 +219,7 @@ the healthy tasks. All of them take `--connector <c>` (every connector without i
 | when did it fail? how many restarts? what changed in the config before? | `connector history` | the `connect-status` and `connect-configs` topics |
 | is it making progress? how many records were skipped, retried, sent to the DLQ? | `connector metrics` | the JMX task metrics of the worker(s) running the tasks, plus the connector's own MBeans |
 | restart only what is broken | `connector restart --only-failed` | `/status`, then `restart?includeTasks=true&onlyFailed=true` |
+| will this config lose records or fail later, although it validates? | `connector lint` | the config only (stdin or the running one), plus the broker count, partitions and worker override policy of the running environment |
 
 ### `connector tasks`: how the work is split
 
@@ -332,6 +334,32 @@ playground connector restart --connector orders-sink --task-id 0  # one task
   can hide a timing problem (or create one). In a repro with several connectors, `--only-failed` is the safe default.
 - **Restart after the fix**, not before: a task that fails on a record fails again on the same record (its offset was not
   committed). `connector history` then shows a `RUNNING → FAILED` per restart.
+
+### `connector lint`: catch the silent settings before it runs
+
+`connector validate` only reports what the plugin rejects. `errors.tolerance=all` without a DLQ, a DLQ that needs 3
+replicas on a single broker, `tasks.max` above the number of partitions, an Avro converter set on the connector without
+its `schema.registry.url`, overrides refused by `connector.client.config.override.policy`, a password in clear text…
+all validate fine. `connector lint` reads the same inputs as `validate` (json, CFK / Strimzi resource, terraform,
+`.properties`, `expand=info` dump; `--connector <c>` alone for the running one) and prints one warning per risky key,
+with why and the fix:
+
+```bash
+playground connector lint --connector orders-sink << 'EOF'
+{ ..., "errors.tolerance": "all", "errors.deadletterqueue.topic.name": "dlq" }
+EOF
+# 🧪 orders-sink (org.apache.kafka.connect.file.FileStreamSinkConnector, sink)
+# 🔴 HIGH   errors.deadletterqueue.topic.replication.factor = 3 (default)
+#           why: the dead letter queue needs 3 replicas but the cluster has 1 broker(s): its creation fails and the task fails at startup
+#           fix: set errors.deadletterqueue.topic.replication.factor=1 (or create the topic beforehand)
+# ❌ 1 warning(s), 0 note(s)
+```
+
+- No environment is needed: the broker count, the partitions of the topics of a sink and the override policy of the
+  worker are read from the running environment when there is one (`--offline` to skip), and `--brokers 3` gives the size
+  of the customer's cluster.
+- Exit code 1 when there is at least one 🔴 HIGH, 🟠 MEDIUM or 🟡 LOW warning; 🔵 INFO notes (a JsonConverter expecting the
+  `schema` / `payload` envelope, a single task Debezium connector with `tasks.max` > 1) do not count. `--json` for scripts.
 
 ---
 
