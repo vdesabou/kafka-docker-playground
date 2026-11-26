@@ -11,7 +11,7 @@ interval="${args[--interval]}"
 storage_resolve "$connector" "$url" "$endpoint" "$prefix" || exit 2
 
 tmp_dir=$(mktemp -d -t pg-storage-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+trap 'storage_remove_tmp_dir "$tmp_dir"' EXIT
 
 what="${storage_label}${topic:+ (topic $topic)}${include:+ (matching $include)}"
 log "⏳ Waiting up to $max_wait seconds for at least $min_expected_objects object(s) in $what"

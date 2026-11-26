@@ -22,7 +22,7 @@ storage_show_target
 tmp_dir=$(mktemp -d -t pg-storage-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
 then
-    trap 'rm -rf $tmp_dir' EXIT
+    trap 'storage_remove_tmp_dir "$tmp_dir"' EXIT
 else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
