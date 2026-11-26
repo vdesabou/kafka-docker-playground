@@ -12507,7 +12507,9 @@ subcommands:
       your editor when used with --open)\n\nYou can compare different sourcecode versions
       by specifying --connector-tag two times, in such case it will open github in
       comparison mode\n\n\U0001F3D7️ Compile code and generate zip file(s) by providing
-      --compile flag\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
+      --compile flag\n\n\U0001F30D Works without a container engine (git and curl
+      only), except --compile which runs maven in a container\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version"
     usage: playground connector-plugin sourcecode [OPTIONS]
     options:

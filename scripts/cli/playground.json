@@ -12105,7 +12105,7 @@
         },
         {
           "name": "sourcecode",
-          "description": "🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n\nYou can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\n🏗️ Compile code and generate zip file(s) by providing --compile flag\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
+          "description": "🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n\nYou can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\n🏗️ Compile code and generate zip file(s) by providing --compile flag\n\n🌍 Works without a container engine (git and curl only), except --compile which runs maven in a container\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
           "usage": "playground connector-plugin sourcecode [OPTIONS]",
           "options": [
             {
