@@ -529,7 +529,7 @@ figure.thumbnails img {
     }
 }
 
-/* CLI page (cli.md, scripts/cli/templates/markdown/index.gtx): the subcommands of each command, folded */
+/* CLI page (cli.md, scripts/cli/templates/markdown/index.gtx): the subcommands of each command, unfolded by default (details open) */
 .markdown-section details.cli-subcommands {
     margin: 0.2rem 0 0.6rem;
 }

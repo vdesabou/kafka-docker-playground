@@ -100,7 +100,7 @@ if commands.any?
           style = indent > 0 ? " style=\"margin-left:#{indent}em\"" : ""
           "<li#{style}><a href=\"#/#{s.full_name.gsub(' ', '%20')}\">#{s.full_name.split[depth + 1..-1].join(' ')}</a> - #{KdpMarkdown.inline_html(s.summary)}</li>"
         end
-        >   <details class="cli-subcommands"><summary>{{ descendants.size }} subcommand{{ descendants.size > 1 ? 's' : '' }}</summary><ul>{{ items.join }}</ul></details>
+        >   <details class="cli-subcommands" open><summary>{{ descendants.size }} subcommand{{ descendants.size > 1 ? 's' : '' }}</summary><ul>{{ items.join }}</ul></details>
       end
     end
     >

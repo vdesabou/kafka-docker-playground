@@ -11,7 +11,7 @@ Ready-to-run Apache Kafka® and Confluent examples, at any version, and a CLI th
 <a href="https://kafka-docker-playground.io/#/which-command"><img src="https://img.shields.io/badge/🧭_Which_command_do_I_need%3F-2b3a42?style=for-the-badge" alt="Which command do I need?"></a>
 <a href="https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1"><img src="https://img.shields.io/badge/🌐_Try_in_your_browser-2b3a42?style=for-the-badge" alt="Try in your browser"></a>
 
-**170+** connector examples &nbsp;·&nbsp; **110+** fully managed &nbsp;·&nbsp; **15+** secured environments &nbsp;·&nbsp; **300** diagnostic commands
+**170+** self-managed connectors &nbsp;·&nbsp; **110+** fully managed connectors &nbsp;·&nbsp; **90+** other examples (ksqlDB, Flink, clients, multi-data-center…) &nbsp;·&nbsp; **15+** secured environments &nbsp;·&nbsp; **300** `playground` CLI commands to troubleshoot
 
 📚 **[kafka-docker-playground.io](https://kafka-docker-playground.io/)**
 

@@ -24,10 +24,11 @@
 <p class="home-player-caption">Find the example closest to your case, then run it with the Confluent Platform and connector versions you need.</p>
 </div>
 <div class="home-numbers">
-<a href="#/content?id=🔗-connectors"><b>170+</b><span>connector examples</span></a>
-<a href="#/content?id=🤖-fully-managed-connectors"><b>110+</b><span>fully managed</span></a>
+<a href="#/content?id=🔗-connectors"><b>170+</b><span>self-managed connectors</span></a>
+<a href="#/content?id=🤖-fully-managed-connectors"><b>110+</b><span>fully managed connectors</span></a>
+<a href="#/examples" title="ksqlDB, Flink, Schema Registry, REST Proxy, clients, multi-data-center, brokers, security"><b>90+</b><span>other examples</span></a>
 <a href="#/content?id=🔐-environments"><b>15+</b><span>secured environments</span></a>
-<a href="#/which-command"><b>300</b><span>diagnostic commands</span></a>
+<a href="#/which-command"><b>300</b><span>CLI commands to troubleshoot</span></a>
 </div>
 </div>
 
