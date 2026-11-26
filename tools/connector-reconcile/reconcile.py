@@ -201,13 +201,21 @@ def same(a, b):
     return False
 
 
+# relative difference accepted between two non-integers: a float (real) column keeps about 6 significant digits of
+# a double, and the shortest text of the same float differs between clients (0.62184 from the topic, 0.621839 from
+# PostgreSQL): comparing the values rounded to 6 digits fails when they fall on both sides of a rounding boundary
+FLOAT_RELATIVE_TOLERANCE = decimal.Decimal('0.00001')
+
+
 def numbers_equal(a, b):
-    """Exact for integers; 6 significant digits otherwise, what a float (real) column keeps of a double"""
+    """Exact for integers; within FLOAT_RELATIVE_TOLERANCE otherwise"""
     if a == b:
         return True
     if a == a.to_integral_value() and b == b.to_integral_value():
         return False
-    return significant(a) == significant(b)
+    if significant(a) == significant(b):
+        return True
+    return abs(a - b) <= FLOAT_RELATIVE_TOLERANCE * max(abs(a), abs(b))
 
 
 def significant(n):
@@ -499,14 +507,26 @@ def compare_as_multisets(records, rows, ignore, args):
     def signature(d):
         return tuple(normalized(d.get(f)) for f in common)
 
-    topic_counts, table_counts, where = {}, {}, {}
+    topic_counts, table_counts, where, topic_values, table_values = {}, {}, {}, {}, {}
     for r in live:
         s = signature(r.fields)
         topic_counts[s] = topic_counts.get(s, 0) + 1
         where.setdefault(s, r.where())
+        topic_values.setdefault(s, r.fields)
     for row in rows:
         s = signature(row)
         table_counts[s] = table_counts.get(s, 0) + 1
+        table_values.setdefault(s, row)
+    # a signature of the table with no exact match in the topic (or the reverse) can still be the same record: a float
+    # whose two texts round differently (0.62184 / 0.621839). Pair them with the comparison of 'same', field by field
+    only_topic = [s for s in topic_counts if s not in table_counts]
+    only_table = [s for s in table_counts if s not in topic_counts]
+    for st in only_table:
+        for tt in only_topic:
+            if tt in topic_counts and all(same(topic_values[tt].get(f), table_values[st].get(f)) for f in common):
+                table_counts[tt] = table_counts.get(tt, 0) + table_counts.pop(st)
+                only_topic.remove(tt)
+                break
     for s in set(topic_counts) | set(table_counts):
         t, d = topic_counts.get(s, 0), table_counts.get(s, 0)
         label = ', '.join('%s=%s' % (f, short(v, 30)) for f, v in zip(common, s))
