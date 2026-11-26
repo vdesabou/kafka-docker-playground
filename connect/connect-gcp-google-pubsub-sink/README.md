@@ -25,7 +25,7 @@ playground run -f gcp-google-pubsub-sink.sh
 
 | Script | Description |
 | --- | --- |
-| `gcp-google-pubsub-sink.sh` | `CloudPubSubSinkConnector` publishing Kafka records (with metadata and headers) to a Pub/Sub topic |
+| `gcp-google-pubsub-sink.sh` | `CloudPubSubSinkConnector` publishing Kafka records (with metadata and headers) to a Pub/Sub topic (not supported with `cfk`: the Google connector is not on Confluent Hub) |
 
 ## What the script does
 

@@ -25,7 +25,7 @@ playground run -f gcp-google-pubsub-source.sh
 
 | Script | Description |
 | --- | --- |
-| `gcp-google-pubsub-source.sh` | `CloudPubSubSourceConnector` reading a Pub/Sub subscription into `pubsub-topic` |
+| `gcp-google-pubsub-source.sh` | `CloudPubSubSourceConnector` reading a Pub/Sub subscription into `pubsub-topic` (not supported with `cfk`: the Google connector is not on Confluent Hub) |
 
 ## What the script does
 
