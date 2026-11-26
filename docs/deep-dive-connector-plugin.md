@@ -332,6 +332,7 @@ playground connector upgrade-check --from 10.7.4 --to 10.7.12 --cp-version 8.0.3
 | ⚠️ `changelog <version>` | a release note line that names a key of the config, or says default, behavior, removed, deprecated, breaking, migrated… (never ❌: read it) |
 | ⚠️ `AWS SDK v1`, `Jackson`, `Avro`… | a removal or a major version change of a library that custom classes (credentials providers, SMTs, converters) are built against |
 | ⚠️ `major version` | a major version change of a plugin without release notes here (partner plugins): read the vendor's upgrade notes |
+| ℹ️ `unknown keys` | keys of the config that neither version knows: obsolete since an older version (`type.name` of the Elasticsearch sink, `database.server.name` of Debezium 1.x), a typo, or a pass-through property the connector hands to a client without declaring it. The framework keys (`topics`, converters, `transforms.*`, `errors.*`, client overrides…) and the keys starting with `_` (commented out) are not listed |
 
 Gotchas:
 

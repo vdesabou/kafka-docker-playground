@@ -32,6 +32,23 @@ class Checks(unittest.TestCase):
         f = self.run_config(defs({'name': 'b'}), defs({'name': 'b'}), {'topics': 't', 'transforms.x.type': 'y'})
         self.assertEqual(f, [])
 
+    def test_unknown_keys_are_info_and_framework_keys_are_not_listed(self):
+        findings = []
+        unknown = uc.check_unknown_keys(uc.definitions(defs({'name': 'b'})), uc.definitions(defs({'name': 'b'})),
+                                        {'b': '1', 'type.name': '_doc', 'topics': 't', 'name': 'n',
+                                         'transforms.x.type': 'y', 'errors.tolerance': 'all',
+                                         'consumer.override.max.poll.records': '10', 'tpyo.key': 'z',
+                                         '_comment': 'commented out', '_transforms': 'unwrap'}, findings)
+        self.assertEqual(unknown, ['tpyo.key', 'type.name'])
+        self.assertEqual([(x[0], x[1]) for x in findings], [('info', 'unknown keys')])
+        self.assertIn('type.name', findings[0][2])
+
+    def test_no_unknown_keys_no_finding(self):
+        findings = []
+        uc.check_unknown_keys(uc.definitions(defs({'name': 'b'})), uc.definitions(defs({'name': 'b'})),
+                              {'b': '1', 'connector.class': 'x', 'tasks.max': '1'}, findings)
+        self.assertEqual(findings, [])
+
     def test_value_no_longer_valid(self):
         f = self.run_config(defs({'name': 'c', 'valid_values': '[none, gzip, lz4]'}),
                             defs({'name': 'c', 'valid_values': '[[none, gzip]]'}), {'c': 'lz4'})

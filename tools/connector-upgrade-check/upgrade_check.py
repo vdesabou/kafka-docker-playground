@@ -45,6 +45,17 @@ RISK_WORDS = re.compile(r'\b(default|behaviou?r|deprecat\w*|remov\w*|breaking|no
 DEPENDENCY_HYGIENE = re.compile(r'\b(CVE-\d+|bump\w*|upgrad\w* (the )?(version|dependenc)|dependenc\w*|librar\w*|'
                                 r'unused|test\w*)\b', re.IGNORECASE)
 SEVERITY_ORDER = {'breaking': 0, 'review': 1, 'info': 2}
+# keys of the Kafka Connect framework (ConnectorConfig, SinkConnectorConfig, SourceConnectorConfig, KIP-891): valid in
+# every connector config, not in the definitions of the connector class
+FRAMEWORK_KEYS = {
+    'name', 'connector.class', 'tasks.max', 'tasks.max.enforce', 'key.converter', 'value.converter', 'header.converter',
+    'config.action.reload', 'transforms', 'predicates', 'topics', 'topics.regex', 'topic.creation.groups',
+    'exactly.once.support', 'transaction.boundary', 'transaction.boundary.interval.ms', 'offsets.storage.topic',
+    'plugin.version', 'key.converter.plugin.version', 'value.converter.plugin.version',
+    'header.converter.plugin.version',
+}
+FRAMEWORK_PREFIXES = ('key.converter.', 'value.converter.', 'header.converter.', 'transforms.', 'predicates.',
+                      'errors.', 'consumer.override.', 'producer.override.', 'admin.override.', 'topic.creation.')
 
 
 def load(path):
@@ -187,6 +198,21 @@ def check_config(old, new, config, findings):
         if n.get('required') and n.get('default_value') is None and key not in config:
             findings.append(('breaking', key, 'new required key without default, not set in the config', 'config'))
     return set_keys, added
+
+
+def check_unknown_keys(old, new, config, findings):
+    """keys the config sets that neither version knows (and that are not framework keys): an obsolete key removed
+    before the version in use (type.name of the Elasticsearch sink), a typo, or a pass-through property that the
+    connector hands to a client without declaring it. Information only: the connector ignores most of them today"""
+    # a key starting with _ is a key commented out (_comment, _transforms...): Kafka Connect ignores it too
+    unknown = sorted(k for k in config
+                     if k not in old and k not in new and k not in FRAMEWORK_KEYS and not k.startswith(FRAMEWORK_PREFIXES)
+                     and not k.startswith('_'))
+    if unknown:
+        findings.append(('info', 'unknown keys', '%d key(s) of the config in neither version (obsolete, a typo, or a '
+                         'pass-through property, check the docs): %s%s' % (
+                             len(unknown), ', '.join(unknown[:8]), ' …' if len(unknown) > 8 else ''), 'config'))
+    return unknown
 
 
 def check_changelog(changelog, config, set_keys, findings, max_lines):
@@ -359,6 +385,7 @@ def main():
 
     findings = []
     set_keys, added = check_config(old, new, config, findings)
+    check_unknown_keys(old, new, config, findings)
     unavailable = []
     changelog = load(a.changelog)
     note = check_changelog(changelog, config, set_keys, findings, a.max_changelog_lines)
