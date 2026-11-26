@@ -254,70 +254,70 @@ function cleanup_gcp () {
         return
     fi
     echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
-    docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
+    docker rm -f -v gcloud-config-cleanup-resources > /dev/null 2>&1
     if ! docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json > /dev/null 2>&1
     then
         logerror "❌ could not authenticate to GCP project $GCP_PROJECT with GCP_KEYFILE_CONTENT, skipping GCP cleanup"
-        docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
+        docker rm -f -v gcloud-config-cleanup-resources > /dev/null 2>&1
         return
     fi
 
     log "Cleanup GCP GCS buckets"
-    for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
+    for bucket in $(docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
     do
         if [[ $bucket = *kafkadockerplaygroundbucket${user_lower}* ]] || [[ $bucket = *kafkadockerplaygroundbucket${user_normalized}* ]]
         then
             log "Removing GCS bucket $bucket"
-            check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil -m rm -r $bucket"
+            check_if_skip "docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil -m rm -r $bucket"
         fi
     done
 
     log "Cleanup GCP BQ datasets"
-    for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
+    for dataset in $(docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
     do
         if name_has_user "$dataset"
         then
             log "Remove GCP BQ dataset $dataset"
-            check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id \"$GCP_PROJECT\" rm -r -f -d \"$dataset\""
+            check_if_skip "docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id \"$GCP_PROJECT\" rm -r -f -d \"$dataset\""
         fi
     done
 
     log "Cleanup Spanner instances"
-    for spanner_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances list --project $GCP_PROJECT --format="value(NAME)")
+    for spanner_instance in $(docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances list --project $GCP_PROJECT --format="value(NAME)")
     do
         if name_has_user "$spanner_instance"
         then
 
-#             for spanner_db in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
+#             for spanner_db in $(docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
 #             do
 #                 log "Remove Spanner database $spanner_db"
-#                 docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases delete $spanner_db --instance $spanner_instance --project $GCP_PROJECT << EOF
+#                 docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases delete $spanner_db --instance $spanner_instance --project $GCP_PROJECT << EOF
 # Y
 # EOF
 #             done
 
-            for spanner_backup in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
+            for spanner_backup in $(docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
             do
                 log "Remove Spanner backup $spanner_backup"
-                check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups delete $spanner_backup --instance $spanner_instance --project $GCP_PROJECT --quiet"
+                check_if_skip "docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups delete $spanner_backup --instance $spanner_instance --project $GCP_PROJECT --quiet"
             done
 
             log "Remove Spanner instance $spanner_instance"
-            check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $spanner_instance --project $GCP_PROJECT --quiet"
+            check_if_skip "docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $spanner_instance --project $GCP_PROJECT --quiet"
         fi
     done
 
     log "Cleanup BigTable instances"
-    for bigtable_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances list --project $GCP_PROJECT --format="value(NAME)")
+    for bigtable_instance in $(docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances list --project $GCP_PROJECT --format="value(NAME)")
     do
         if name_has_user "$bigtable_instance"
         then
             log "Remove BigTable instance $bigtable_instance"
-            check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $bigtable_instance --project $GCP_PROJECT --quiet"
+            check_if_skip "docker run -i --rm --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $bigtable_instance --project $GCP_PROJECT --quiet"
         fi
     done
 
-    docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
+    docker rm -f -v gcloud-config-cleanup-resources > /dev/null 2>&1
 }
 
 function cleanup_ccloud () {
