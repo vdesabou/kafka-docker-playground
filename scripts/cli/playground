@@ -412,6 +412,7 @@ playground_usage() {
   printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "connector validate")                        "
   printf "  %s   🧪 Best-practice warnings on a connector config (no environment needed)\n" "$(green "connector lint")                            "
   printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "connector diff")                            "
+  printf "  %s   🔼 What changes for this connector config when the plugin is upgraded (no environment needed)\n" "$(green "connector upgrade-check")                   "
   printf "  %s   🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n" "$(green "connector reconcile")                       "
   printf "  %s   🔄 Convert a connector config from the format a customer sent to another one\n" "$(green "connector convert")                         "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "connector error-recommendations")           "
@@ -23836,7 +23837,7 @@ playground_connector_plugin_sourcecode_usage() {
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector\n\n"
-    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. Most commands\n  work whether the connector is self managed in the connect container or\n  fully managed in Confluent Cloud: the \"☁️ Fully managed\" line of the help\n  of each command says whether it does.\n  \n  🔍 Look at what is running\n    diagnose                status, errors, lag or offsets, next steps\n    status                  is it RUNNING, and if not, the stack trace\n    wait                    wait until it is RUNNING (or another state)\n    tasks                   state, worker, config, partitions of each task\n    history                 states, failures, restarts, config changes\n    metrics                 throughput, time and errors per task\n    show-lag                consumer lag of a sink (--once: a snapshot)\n    offsets get             where the connector is reading or writing\n    topics                  the topics a connector is using\n    show-config             the configuration actually applied\n    diff                    config vs a file, a connector or the defaults\n    reconcile               did every record reach the table? lost,\n                            duplicated, different rows\n    logs                    connect logs, or the fully managed logs\n    error-recommendations   fixes for a failed fully managed connector\n    display-metrics-api     Telemetry API metrics (fully managed)\n    display-metrics-api-with-grafana\n                            the same, plotted in Grafana\n    display-leader-name     the leader of the connect workers\n    open-ccloud-connector-in-browser\n                            its page in the Confluent Cloud console\n    benchmark               records per second, vs the previous run\n    smt test                what a transform chain does to a record\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    validate                check a config with the plugin, create nothing\n    convert                 a customer config (CFK, terraform...) to another\n                            format\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n    offsets get-offsets-request-status\n                            did the last fully managed change apply\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    snippets                converter (or data format) and dlq config\n    plugins                 plugins installed (--all: transforms...)\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              the source on GitHub, grep it, diff versions\n    open-docs               open the Confluent documentation\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging / disable-remote-debugging\n                            attach a java debugger to the connector code\n    oracle-cdc-xstream      Oracle XStream queries and diagnostics report\n  \n  🚚 Move it to Confluent Cloud\n    translate               self managed config to fully managed config\n    connect-migration-utility\n                            discovery, then migrate with the offsets\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n  \n  🤖 For scripts and AI agents: status, wait, diagnose, validate, tasks,\n  topics, history, metrics, show-lag, offsets get, diff and smt test take\n  --json (only the JSON on stdout, the log lines on stderr), and status\n  and diagnose take --fail-on-error for an exit code.\n\n"
+    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. Most commands\n  work whether the connector is self managed in the connect container or\n  fully managed in Confluent Cloud: the \"☁️ Fully managed\" line of the help\n  of each command says whether it does.\n  \n  🔍 Look at what is running\n    diagnose                status, errors, lag or offsets, next steps\n    status                  is it RUNNING, and if not, the stack trace\n    wait                    wait until it is RUNNING (or another state)\n    tasks                   state, worker, config, partitions of each task\n    history                 states, failures, restarts, config changes\n    metrics                 throughput, time and errors per task\n    show-lag                consumer lag of a sink (--once: a snapshot)\n    offsets get             where the connector is reading or writing\n    topics                  the topics a connector is using\n    show-config             the configuration actually applied\n    diff                    config vs a file, a connector or the defaults\n    reconcile               did every record reach the table? lost,\n                            duplicated, different rows\n    logs                    connect logs, or the fully managed logs\n    error-recommendations   fixes for a failed fully managed connector\n    display-metrics-api     Telemetry API metrics (fully managed)\n    display-metrics-api-with-grafana\n                            the same, plotted in Grafana\n    display-leader-name     the leader of the connect workers\n    open-ccloud-connector-in-browser\n                            its page in the Confluent Cloud console\n    benchmark               records per second, vs the previous run\n    smt test                what a transform chain does to a record\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    validate                check a config with the plugin, create nothing\n    lint                    best-practice warnings on a config\n    upgrade-check           what changes for a config with a newer plugin\n    convert                 a customer config (CFK, terraform...) to another\n                            format\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n    offsets get-offsets-request-status\n                            did the last fully managed change apply\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    snippets                converter (or data format) and dlq config\n    plugins                 plugins installed (--all: transforms...)\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              the source on GitHub, grep it, diff versions\n    open-docs               open the Confluent documentation\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging / disable-remote-debugging\n                            attach a java debugger to the connector code\n    oracle-cdc-xstream      Oracle XStream queries and diagnostics report\n  \n  🚚 Move it to Confluent Cloud\n    translate               self managed config to fully managed config\n    connect-migration-utility\n                            discovery, then migrate with the offsets\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n  \n  🤖 For scripts and AI agents: status, wait, diagnose, validate, tasks,\n  topics, history, metrics, show-lag, offsets get, diff and smt test take\n  --json (only the JSON on stdout, the log lines on stderr), and status\n  and diagnose take --fail-on-error for an exit code.\n\n"
   else
     printf "playground connector - 🔗 Connector commands\n\n"
   fi
@@ -23852,6 +23853,7 @@ playground_connector_usage() {
   printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "validate")                        "
   printf "  %s   🧪 Best-practice warnings on a connector config (no environment needed)\n" "$(green "lint")                            "
   printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "diff")                            "
+  printf "  %s   🔼 What changes for this connector config when the plugin is upgraded (no environment needed)\n" "$(green "upgrade-check")                   "
   printf "  %s   🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n" "$(green "reconcile")                       "
   printf "  %s   🔄 Convert a connector config from the format a customer sent to another one\n" "$(green "convert")                         "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "error-recommendations")           "
@@ -24299,6 +24301,90 @@ playground_connector_diff_usage() {
 echo
 
 fi
+}
+
+# :command.usage
+playground_connector_upgrade_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector upgrade-check\n\n"
+    printf "  🔼 What changes for this connector config when the plugin is upgraded (no\n  environment needed)\n  \n  \"Can we upgrade the S3 sink from 10.5.7 to the latest (and to CP 8)?\"\n  in one call, for the customer's config, with a verdict. The\n  configuration of the connector class is read in both versions (the\n  same download and cache as 'connector-plugin config-diff'), then\n  checked against the config:\n  \n    ❌ breaking   a key the config sets is removed, its value is no\n                  longer valid (valid values, range), a new required\n                  key without default, the target version is below the\n                  minimum supported on --cp-version (CP 8)\n    ⚠️ review     a default changed on a key the config does not set\n                  (it runs with the old default without knowing it), a\n                  set key whose type or value rule changed, release\n                  notes that name a set key or say default, behavior,\n                  removed, deprecated, breaking..., a major change of a\n                  shared library (Jackson, Avro, Protobuf, AWS SDK v1 →\n                  v2, Netty, Kafka clients...) that custom classes\n                  (credentials providers, SMTs) depend on\n    ℹ️ info       versions behind, new keys, CVEs (--with-cve)\n  \n  A release note line is never breaking: it is printed for a human to\n  judge. Release notes exist only for the Confluent self-managed plugins\n  documented on docs.confluent.io (the output says when there are none).\n  The CP 8 minimum versions come from the guards of the connect/ examples\n  (\"minimal supported connector version is X for CP 8.0\").\n  \n  The config is read from stdin, in the same formats as 'connector\n  validate' and 'connector lint' (json, CFK, Strimzi, terraform,\n  .properties, a dump of GET /connectors?expand=info). Without stdin,\n  --connector checks that running connector, and --from is the version of\n  its plugin in the worker.\n  \n  Exits with 0 when it is safe, 1 when there is something to review or\n  a breaking change, 2 when it could not check.\n  \n  ☁️ Fully managed: not supported (Confluent upgrades them: playground\n  connector-plugin fm-versions)\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\n"
+  else
+    printf "playground connector upgrade-check - 🔼 What changes for this connector config when the plugin is upgraded (no environment needed)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector upgrade-check [JSON] [OPTIONS]\n"
+  printf "  playground connector upgrade-check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    With a config on stdin: the name shown, or the connector to pick in a dump\n    that has several. Without stdin, the\n    running connector to check (its plugin version in the worker is --from).\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin CONNECTOR-PLUGIN")"
+    printf "    🔌 Connector plugin (owner/name)\n    \n    Default: the plugin of the connector.class of the config, found in the\n    examples\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from FROM")"
+    printf "    🔢 Version in use (the customer's)\n    \n    Default: the version of the plugin in the worker, for a running connector\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to TO")"
+    printf "    🎯 Target version (default: the latest on Confluent Hub)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cp-version CP-VERSION")"
+    printf "    🎯 Target CP version: checks the minimum plugin version supported on CP 8\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-cve")"
+    printf "    🛡️ Also compare the CVEs of both versions (connector-plugin cve-scan, slow\n    the first time)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON on stdout, and nothing else (the log lines go to\n    stderr)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "JSON")"
+    printf "    json (reads from stdin if empty)\n"
+    printf "    %s\n" "Default: -"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector upgrade-check --connector s3-sink\n"
+    printf "  playground connector upgrade-check --from 10.5.7 --cp-version 8.0.3 <\n  customer-s3-sink.json\n"
+    printf "  playground connector upgrade-check --from 10.7.4 --to 10.8.4 --with-cve <\n  jdbc-sink.properties\n"
+    echo
+
+  fi
 }
 
 # :command.usage
@@ -102620,6 +102706,201 @@ playground_connector_diff_command() {
 }
 
 # :command.function
+playground_connector_upgrade_check_command() {
+
+  # src/commands/connector/upgrade-check.sh
+  connector="${args[--connector]}"
+  json=${args[json]}
+  connector_plugin="${args[--connector-plugin]}"
+  from="${args[--from]}"
+  to="${args[--to]}"
+  cp_version="${args[--cp-version]}"
+  with_cve="${args[--with-cve]}"
+  verbose="${args[--verbose]}"
+  output_json="${args[--json]}"
+
+  # --json: the JSON verdict is the only thing on stdout (fd 3), the log lines go to stderr
+  if [[ -n "$output_json" ]]
+  then
+      exec 3>&1 1>&2
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required to compare the versions"
+      exit 2
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if [ "$json" = "-" ]
+  then
+      json_content=$(read_stdin_if_any)
+  else
+      json_content=$json
+  fi
+
+  running=""
+  if [[ -z "$json_content" ]]
+  then
+      # no config on stdin: the config of the running connector
+      if [[ -z "$connector" ]]
+      then
+          logerror "❌ give the config on stdin, or --connector for the config of a running connector"
+          exit 2
+      fi
+      connector_type=$(playground state get run.connector_type)
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+          logerror "❌ $connector is a fully managed connector: Confluent upgrades it (playground connector-plugin fm-versions shows the version of each cc-connect image)"
+          exit 2
+      fi
+      if ! get_connector_config_json "$connector"
+      then
+          logerror "❌ could not get the config of connector $connector"
+          exit 2
+      fi
+      json_content="$curl_output"
+      running=1
+  else
+      # json, or one of the formats customers send (CFK / Strimzi custom resource, terraform, .properties, REST API dump...)
+      if ! normalize_connector_config "$json_content" "$connector"
+      then
+          logerror "❌ $NORMALIZED_ERROR"
+          exit 2
+      fi
+      if [ "$NORMALIZED_FORMAT" != "JSON" ]
+      then
+          log "📦 detected: $NORMALIZED_FORMAT"
+      fi
+      json_content="$NORMALIZED_CONFIG"
+      connector="${connector:-${NORMALIZED_NAME:-connector}}"
+  fi
+  echo "$json_content" > "$tmp_dir/config.json"
+
+  connector_class=$(jq -r '.["connector.class"] // empty' "$tmp_dir/config.json")
+  if [[ -z "$connector_class" ]]
+  then
+      logerror "❌ the config has no connector.class"
+      exit 2
+  fi
+
+  # the plugin: --connector-plugin, else the plugin of the class in the examples
+  if [[ -z "$connector_plugin" ]]
+  then
+      connector_plugin="$connector_class"
+  fi
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
+  then
+      exit 2
+  fi
+  if [[ "$connector_plugin" != */* ]] || [[ "$connector_plugin" == confluentinc/[A-Z]* ]]
+  then
+      logerror "❌ $connector_plugin is not a plugin of Confluent Hub: fully managed connectors are upgraded by Confluent"
+      exit 2
+  fi
+
+  # the version in use: --from, else the version of the plugin in the running worker
+  if [[ -z "$from" ]]
+  then
+      if [[ -n "$running" ]]
+      then
+          from=$(benchmark_plugin_version "$connector_class" "" 2>/dev/null)
+          if [[ -z "$from" ]] || [ "$from" == "unknown" ] || [ "$from" == "null" ]
+          then
+              # a plugin that reports no version (HTTP source: "unknown"): the manifest of the installed plugin
+              get_connect_container
+              from=$(docker exec "${connect_container:-connect}" cat "/usr/share/confluent-hub-components/${connector_plugin/\//-}/manifest.json" 2>/dev/null | jq -r '.version // empty' 2>/dev/null)
+          fi
+      fi
+      if [[ -z "$from" ]]
+      then
+          logerror "❌ pass --from with the version the customer runs (it is only detected for a running connector)"
+          exit 2
+      fi
+      log "🔎 $connector_class runs version $from in the worker"
+  fi
+  if [[ -z "$to" ]] || [ "$to" == "latest" ]
+  then
+      to=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
+      if [[ -z "$to" ]]
+      then
+          logerror "❌ could not find the latest version of $connector_plugin on Confluent Hub: set --to"
+          exit 2
+      fi
+  fi
+  if [ "$from" == "$to" ]
+  then
+      log "✅ $connector_plugin $from is already the target version"
+      [[ -n "$output_json" ]] && jq -n --arg p "$connector_plugin" --arg v "$from" '{connector_plugin: $p, from: $v, to: $v, verdict: "safe", findings: []}' >&3
+      exit 0
+  fi
+
+  if [ "$connector" == "connector" ]
+  then
+      log "🔼 Checking $connector_plugin $from → $to for this config (nothing is created)"
+  else
+      log "🔼 Checking $connector_plugin $from → $to for connector $connector (nothing is created)"
+  fi
+
+  # the configuration of the connector class in both versions (downloaded and read once, then cached)
+  for version in "$from" "$to"
+  do
+      if ! get_connector_plugin_configs "$connector_plugin" "$version" "$connector_class"
+      then
+          logerror "❌ could not read the configuration of $connector_class in $connector_plugin $version"
+          exit 2
+      fi
+      if [ ! -s "$plugin_configs_dir/config-$connector_class.json" ]
+      then
+          logerror "❌ $connector_class is not in $connector_plugin $version"
+          exit 2
+      fi
+      cp "$plugin_configs_dir/config-$connector_class.json" "$tmp_dir/config-$version.json"
+  done
+
+  # the release notes, the bundled libraries and how far behind (best effort: each part is optional)
+  log "📜 Reading the release notes, the libraries and the versions"
+  playground connector-plugin changelog --connector-plugin "$connector_plugin" --from "$from" --to "$to" --json > "$tmp_dir/changelog.json" 2> "$tmp_dir/changelog.err" || rm -f "$tmp_dir/changelog.json"
+  playground connector-plugin dependencies --connector-plugin "$connector_plugin" --connector-tag "$from" --connector-tag "$to" --json > "$tmp_dir/dependencies.json" 2> "$tmp_dir/dependencies.err" || rm -f "$tmp_dir/dependencies.json"
+  playground connector-plugin info --connector-plugin "$connector_plugin" --from "$from" --json > "$tmp_dir/info.json" 2> /dev/null || rm -f "$tmp_dir/info.json"
+  if [[ -n "$with_cve" ]]
+  then
+      log "🛡️ Scanning both versions for CVEs (the first scan downloads the grype database)"
+      playground connector-plugin cve-scan --connector-plugin "$connector_plugin" --connector-tag "$from" --compare-with "$to" --no-open --json > "$tmp_dir/cve.json" 2> "$tmp_dir/cve.err" || rm -f "$tmp_dir/cve.json"
+  fi
+
+  check_args=(--old "$tmp_dir/config-$from.json" --new "$tmp_dir/config-$to.json" --config "$tmp_dir/config.json"
+      --changelog "$tmp_dir/changelog.json" --dependencies "$tmp_dir/dependencies.json" --info "$tmp_dir/info.json"
+      --repo "$root_folder" --plugin "$connector_plugin" --connector-class "$connector_class"
+      --from "$from" --to "$to" --name "$connector")
+  [[ -n "$cp_version" ]] && check_args+=(--cp-version "$cp_version")
+  [[ -n "$with_cve" ]] && check_args+=(--cve "$tmp_dir/cve.json")
+
+  set +e
+  if [[ -n "$output_json" ]]
+  then
+      python3 -I "$root_folder/tools/connector-upgrade-check/upgrade_check.py" "${check_args[@]}" --json >&3
+  else
+      python3 -I "$root_folder/tools/connector-upgrade-check/upgrade_check.py" "${check_args[@]}"
+  fi
+  ret=$?
+  set -e
+  if [[ $ret -eq 1 ]] && [[ -z "$output_json" ]]
+  then
+      log "🎓 try it: playground run -f <example of $connector_plugin> --connector-tag $to, or playground repro bisect --from $from --to $to on a repro model"
+  fi
+  exit $ret
+
+}
+
+# :command.function
 playground_connector_reconcile_command() {
 
   # src/commands/connector/reconcile.sh
@@ -170544,6 +170825,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    upgrade-check)
+      action="upgrade-check"
+      shift
+      playground_connector_upgrade_check_parse_requirements "$@"
+      shift $#
+      ;;
+
     reconcile)
       action="reconcile"
       shift
@@ -171613,6 +171901,174 @@ playground_connector_diff_parse_requirements() {
     printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_connector_upgrade_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_upgrade_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector upgrade-check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-plugin)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from requires an argument: --from FROM" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to TO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cp-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cp-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cp-version requires an argument: --cp-version CP-VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --with-cve)
+
+        # :flag.case_no_arg
+        args['--with-cve']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['json']+x} ]]; then
+            args['json']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['json']+x} ]]; then
+          args['json']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['json']:-} ]] || args['json']="-"
 
 }
 
@@ -209282,6 +209738,11 @@ playground_connector_completion() {
         playground_connector_diff_completion "$completion_current" "$@"
         return
         ;;
+      upgrade-check)
+        shift
+        playground_connector_upgrade_check_completion "$completion_current" "$@"
+        return
+        ;;
       reconcile)
         shift
         playground_connector_reconcile_completion "$completion_current" "$@"
@@ -209486,7 +209947,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait validate lint diff reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics flow stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate lint diff upgrade-check reconcile convert error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics flow stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -209931,6 +210392,111 @@ playground_connector_diff_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open
     completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_upgrade_check_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --connector-plugin)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-plugin"]=1
+
+        ;;
+      --from)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --cp-version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cp-version"]=1
+
+        ;;
+      --with-cve)
+        completion_blocked_flags["--with-cve"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin
+    completion_flag_candidates --from "$completion_current" --from
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --cp-version "$completion_current" --cp-version
+    completion_flag_candidates --with-cve "$completion_current" --with-cve
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -215146,6 +215712,7 @@ run() {
     "connector validate") playground_connector_validate_command ;;
     "connector lint") playground_connector_lint_command ;;
     "connector diff") playground_connector_diff_command ;;
+    "connector upgrade-check") playground_connector_upgrade_check_command ;;
     "connector reconcile") playground_connector_reconcile_command ;;
     "connector convert") playground_connector_convert_command ;;
     "connector error-recommendations") playground_connector_error_recommendations_command ;;

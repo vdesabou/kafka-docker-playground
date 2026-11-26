@@ -20,6 +20,7 @@ run.
 | what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`, `--with-changelog`, `--json`) |
 | what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`, `--since-version` for the exact version) |
 | the config keys added, removed or changed between two versions (an upgrade) | `playground connector-plugin config-diff -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--file <customer config>`, `--json`) |
+| "can we upgrade X to Y (and to CP 8)?" for one config, with a verdict | `playground connector upgrade-check --from 10.5.7 --cp-version 8.0.3 < customer.json` (`--connector <c>` for a running one, `--to`, `--with-cve`, `--json`) |
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
 | fully managed: the connector version of each cc-connect image, the first image with a fix, the commits between them | `playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink` (`--find-first 3.2.1`, `--cc-connect-version`, `--with-log`; employees) |
@@ -286,6 +287,66 @@ Gotchas:
 - Each version read is also written to `.connector_config/` like `connector show-config-parameters`: `config-key` lists
   it in `🗂️ versions run locally` (dated in the past, so that `connector diff` keeps using the reference of the running
   version).
+
+### "Can we upgrade?" for one config: `connector upgrade-check`
+
+`config-diff`, `changelog`, `dependencies` and `info` each answer part of the question. `playground connector
+upgrade-check` runs them for one connector config and adds what nobody does by hand: the defaults that change for the
+keys the config does **not** set, the release note lines that name a key it sets, whether its values are still valid
+(lists and ranges), and the minimum plugin version of the target CP. Then a verdict.
+
+```bash
+playground connector upgrade-check --from 10.5.7 --cp-version 8.0.3 < s3-sink.json
+# 🔼 confluentinc/kafka-connect-s3 10.5.7 → 12.1.16 on CP 8.0.3, S3SinkConnector
+#    11 key(s) of the plugin set in the config, 60 key(s) in 10.5.7, 68 in 12.1.16
+#
+# ⚠️  REVIEW
+#    s3.credentials.provider.class  not set: default changes com.amazonaws.auth.DefaultAWSCredentialsProviderChain → software.amazon.awssdk.auth.credentials.DefaultCredential…
+#    changelog 12.0.0               CC-37115: Added support for specifying dot-separated path as a partition key in field partitioner. This update may be breaking for customers currently using the FieldPartitioner with top-level fields that contain a literal dot (.) in their name. (breaking)
+#    changelog 11.0.0               CC-35568 - Migrated the connector to use AWS SDK V2 (migrated)
+#    AWS SDK v1                     aws-java-sdk-core 1.12.524 removed, aws-java-sdk-kms 1.12.524 removed, aws-java-sdk-s3 1.12.524 removed …: custom classes built against it (credentials providers, SMTs, converters) must be rebuilt and tested
+#    …
+#
+# ℹ️  INFO
+#    CP 8.0.3  12.1.16 ≥ 10.6.0, the minimum version of confluentinc/kafka-connect-s3 for CP 8
+#    versions  95 version(s) behind the latest (12.1.16, 2026-11-16)
+#    new keys  8 key(s) added (defaults apply): enable.conditional.writes, max.files.scan.limit, …
+#
+# Verdict: ⚠️  review: behaviour changes to check, the config still validates
+
+# a .properties file, a target below the CP 8 minimum
+playground connector upgrade-check --from 10.7.4 --to 10.7.12 --cp-version 8.0.3 < jdbc-sink.properties
+# ❌ BREAKING
+#    CP 8.0.3  10.7.12 is below 10.8.0, the minimum version of confluentinc/kafka-connect-jdbc supported on CP 8
+# …
+# Verdict: ❌ breaking: the config needs changes before the upgrade
+```
+
+| Finding | Meaning |
+| --- | --- |
+| ❌ `set to …, removed in the target version` | a key the config sets is not in the target version |
+| ❌ `value … is not a valid value` / `out of the range` | the value the config sets is refused by the target version |
+| ❌ `new required key without default` | the config does not validate any more |
+| ❌ `CP <v>` below the minimum | the target plugin version is not supported on CP 8 |
+| ⚠️ `not set: default changes A → B` | the config relies on the old default without knowing it: the silent behaviour change |
+| ⚠️ `changelog <version>` | a release note line that names a key of the config, or says default, behavior, removed, deprecated, breaking, migrated… (never ❌: read it) |
+| ⚠️ `AWS SDK v1`, `Jackson`, `Avro`… | a removal or a major version change of a library that custom classes (credentials providers, SMTs, converters) are built against |
+| ⚠️ `major version` | a major version change of a plugin without release notes here (partner plugins): read the vendor's upgrade notes |
+
+Gotchas:
+
+- **The same inputs as `connector lint`**: json, CFK, Strimzi, terraform, `.properties`, a dump of
+  `GET /connectors?expand=info`. Without stdin, `--connector <c>` checks a running connector, and `--from` is the version
+  of its plugin in the worker (`/connector-plugins`, else the `manifest.json` of the installed plugin when the plugin
+  reports `unknown`).
+- **Release notes exist only for the Confluent self-managed plugins** of docs.confluent.io: for Debezium, MongoDB… the
+  output says so, and a major version change becomes a ⚠️.
+- **The CP 8 minimums come from the examples**: the `minimal supported connector version is X for CP 8.0` guards of
+  `connect/*/*.sh`, read at each run (a folder with several plugins counts only when one of them is named like the
+  folder). A plugin without guard has no known minimum (ℹ️).
+- Exit code 0 safe, 1 review or breaking, 2 could not check (no `--from`, a version that is not on Confluent Hub, a
+  fully managed connector: Confluent upgrades those).
+- `--with-cve` adds the `cve-scan --compare-with` counts (slow the first time: the grype database).
 
 ## 4. Source code: `sourcecode`, `fm-versions`
 

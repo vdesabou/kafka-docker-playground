@@ -135,6 +135,27 @@ lab_expect_contains "CVE-2026-42198"
 lab_expect_contains "📜 release notes of 10.9.4"
 lab_expect_contains "what a scanner sees in the jars, not an official Confluent statement"
 
+log "Step 3b: connector upgrade-check, a target below the CP 8 minimum"
+lab_run playground connector upgrade-check --from 10.7.4 --to 10.7.12 --cp-version 8.0.3 << 'EOF'
+name=jdbc-sink
+connector.class=io.confluent.connect.jdbc.JdbcSinkConnector
+tasks.max=1
+topics=orders
+connection.url=jdbc:postgresql://postgres/postgres
+connection.user=myuser
+connection.password=mypassword
+auto.create=true
+insert.mode=upsert
+pk.mode=record_key
+pk.fields=id
+dialect.name=PostgreSqlDatabaseDialect
+EOF
+lab_expect_contains "🔼 confluentinc/kafka-connect-jdbc 10.7.4 → 10.7.12 on CP 8.0.3, connector jdbc-sink, JdbcSinkConnector"
+lab_expect_contains "❌ BREAKING"
+lab_expect_contains "CP 8.0.3 10.7.12 is below 10.8.0, the minimum version of confluentinc/kafka-connect-jdbc supported on CP 8"
+lab_expect_contains "Verdict: ❌ breaking: the config needs changes before the upgrade"
+[ "$LAB_EXIT" -eq 1 ] || { logerror "❌ connector upgrade-check should exit with 1, got $LAB_EXIT"; exit 1; }
+
 # step 6 (fully managed connector) needs GH_TOKEN and the Confluent VPN: not replayed
 
 log "✅ all the outputs of the page are as expected"
