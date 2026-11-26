@@ -3028,6 +3028,76 @@ def test_unix_user_without_name():
         check("advice", "runAsUser: 1000" in hint["advice"] and "HADOOP_USER_NAME" in hint["advice"], hint["advice"])
 
 
+
+def test_cluster_startup_known_causes():
+    """the startup errors of a cluster configured by hand (a copied properties file, a data folder reused, nodes formatted
+    one by one, a ZooKeeper ensemble on one host): each one is the known cause that names the setting to fix, and the
+    ZooKeeper ones are neither a 🗳️ KRaft error nor a 🦓 session error"""
+    def causes_of(body, name="server.log"):
+        text = (f"@@PGFILE@@|{name}|100|1|0|2026-10-19T12:00:00|2026-10-19T14:00:00\n"
+                f"@@PGREC@@|ERROR|1|10|20|2026-10-19T13:00:01|2026-10-19T13:00:01\n{body}\n@@PGTS@@|2026-10-19T13:00:01\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    cases = [
+        ("broker port", "🚪 Port already in use",
+         "[2026-10-19 13:00:01,002] ERROR Unable to start acceptor for PLAINTEXT (kafka.network.DataPlaneAcceptor)\n"
+         "    org.apache.kafka.common.KafkaException: Socket server failed to bind to localhost:9093: Address already in use."),
+        ("REST port 8090", "🚪 Port already in use",
+         "[2026-10-19 13:00:01,152] WARN KafkaHttpServer transitioned from STARTING to FAILED.: Failed to bind to /0.0.0.0:8090. (io.confluent.http.server.KafkaHttpServerImpl)\n"
+         "    java.io.IOException: Failed to bind to /0.0.0.0:8090"),
+        ("ZooKeeper election port", "🚪 Port already in use",
+         "[2026-10-19 13:00:01,195] ERROR Exception while listening to address localhost/127.0.0.1:3888 (org.apache.zookeeper.server.quorum.QuorumCnxManager)\n"
+         "    java.net.BindException: Address already in use"),
+        ("data folder of another node", "🪪 Data folder of another node (node.id / broker.id mismatch)",
+         "[2026-10-19 13:00:01,846] ERROR Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)\n"
+         "    java.lang.RuntimeException: Stored node id 1 doesn't match previous node id 2 in /var/lib/kafka/data/meta.properties. If you moved your data, make sure your configured node id matches."),
+        ("KRaft cluster id", "🆔 Cluster id mismatch",
+         "[2026-10-19 13:00:01,973] ERROR [RaftManager id=1] Unexpected error INCONSISTENT_CLUSTER_ID in FETCH response: InboundResponse(correlationId=0, data=FetchResponseData(errorCode=104)) (org.apache.kafka.raft.KafkaRaftClient)"),
+        ("ZooKeeper cluster id", "🆔 Cluster id mismatch",
+         "[2026-10-19 13:00:01,409] ERROR Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)\n"
+         "    java.lang.RuntimeException: Invalid cluster.id in: /var/lib/kafka/data/meta.properties. Expected 60APs_EiRtWlSdVZ6P1wng, but read VA00mkF7R0-Ww8BYYx_f8Q"),
+        ("ZooKeeper duplicate broker.id", "👯 Two brokers with the same node.id / broker.id",
+         "[2026-10-19 13:00:01,794] ERROR [KafkaServer id=1] Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)\n"
+         "    org.apache.zookeeper.KeeperException$NodeExistsException: KeeperErrorCode = NodeExists\n"
+         "    at org.apache.zookeeper.KeeperException.create(KeeperException.java:126)\n"
+         "[2026-10-19 13:00:01,784] ERROR Error while creating ephemeral at /brokers/ids/1, node already exists and owner '0x2' does not match current session '0x1' (kafka.zk.KafkaZkClient$CheckedEphemeral)"),
+        ("KRaft registration", "📝 Broker could not register with the KRaft controllers",
+         "[2026-10-19 13:00:01,478] ERROR [BrokerLifecycleManager id=1] Shutting down because we were unable to register with the controller quorum. (org.apache.kafka.server.BrokerLifecycleManager)"),
+        ("not formatted", "🧱 KRaft storage not formatted",
+         "[2026-10-19 13:00:01,701] ERROR Exiting Kafka due to fatal exception (kafka.Kafka$)\n"
+         "    java.lang.RuntimeException: No readable meta.properties files found."),
+        ("no quorum config", "🗳️ KRaft quorum not configured",
+         "[2026-10-19 13:00:01,000] ERROR Exiting Kafka due to fatal exception (kafka.Kafka$)\n"
+         "    org.apache.kafka.common.config.ConfigException: If using process.roles, either controller.quorum.bootstrap.servers must contain the set of bootstrap controllers or controller.quorum.voters must contain a parseable set of controllers."),
+        ("advertised listener taken", "📣 Advertised listener already used by another broker",
+         "[2026-10-19 13:00:01,063] ERROR [KafkaServer id=2] Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)\n"
+         "    java.lang.IllegalArgumentException: requirement failed: Configured end points localhost:9092 in advertised listeners are already registered by broker 1"),
+        ("initLimit", "🦓 ZooKeeper configuration invalid",
+         "[2026-10-19 13:00:01,322] ERROR Invalid config, exiting abnormally (org.apache.zookeeper.server.quorum.QuorumPeerMain)\n"
+         "    org.apache.zookeeper.server.quorum.QuorumPeerConfig$ConfigException: Error processing /etc/kafka/zookeeper.properties\n"
+         "    java.lang.IllegalArgumentException: initLimit is not set"),
+        ("myid", "🦓 ZooKeeper configuration invalid",
+         "[2026-10-19 13:00:01,507] ERROR Invalid config, exiting abnormally (org.apache.zookeeper.server.quorum.QuorumPeerMain)\n"
+         "    org.apache.zookeeper.server.quorum.QuorumPeerConfig$ConfigException: Error processing /etc/kafka/zookeeper.properties\n"
+         "    java.lang.IllegalArgumentException: myid file is missing"),
+        ("ZooKeeper unreachable", "🦓 ZooKeeper unreachable",
+         "[2026-10-19 13:00:01,569] ERROR Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)\n"
+         "    kafka.zookeeper.ZooKeeperClientTimeoutException: Timed out waiting for connection while in state: CONNECTING"),
+    ]
+    for label, want, body in cases:
+        got = causes_of(body)
+        check(f"{label}: {want}", want in got, got)
+        if label in ("initLimit", "myid", "ZooKeeper unreachable", "ZooKeeper duplicate broker.id"):
+            check(f"{label}: not a KRaft or ZooKeeper session error",
+                  "🗳️ KRaft quorum error" not in got and "🦓 ZooKeeper session error" not in got, got)
+    # a real session expiry keeps its cause
+    got = causes_of("[2026-10-19 13:00:01,000] ERROR Session expired (kafka.zookeeper.ZooKeeperClient)\n"
+                    "    org.apache.zookeeper.KeeperException$SessionExpiredException: KeeperErrorCode = Session expired for /brokers/ids")
+    check("session expired: 🦓 session error", "🦓 ZooKeeper session error" in got, got)
+    got = causes_of("[2026-10-19 13:00:01,000] ERROR [RaftManager id=4] Unexpected quorum error, no leader elected (org.apache.kafka.raft.KafkaRaftClient)")
+    check("a KRaft quorum error keeps its cause", "🗳️ KRaft quorum error" in got, got)
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

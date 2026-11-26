@@ -214,9 +214,11 @@ Good to know:
    `Unable to submit events without credentials`; Self-Balancing on a KRaft controller node; Jersey `A provider …
    registered in SERVER runtime…`) are left out of the findings and the counts, and listed in a 🙈 Known harmless
    section with why; `--include-harmless` keeps them.
-2. **Known causes first.** About 50 known causes (task killed, `errors.tolerance` exceeded, authentication, TLS, wrong
+2. **Known causes first.** About 80 known causes (task killed, `errors.tolerance` exceeded, authentication, TLS, wrong
    `security.protocol`, unknown magic byte, fenced producer, rebalances, throttling, records not delivered in time, a
-   Connect worker that fails to start, a config provider placeholder `${secret:…}` that reached a connector…)
+   Connect worker that fails to start, a config provider placeholder `${secret:…}` that reached a connector, a broker,
+   controller or ZooKeeper node that does not start: port already in use, cluster id mismatch, data folder of another
+   node, storage not formatted, duplicate `node.id`, KRaft quorum or ZooKeeper ensemble not configured…)
    are recognized and come with **what to do**, often the `playground` command that checks it, and for most of them
    📚 Confluent knowledge-base articles to read or send (in the terminal, the HTML report and the summary for a
    ticket): the article of the variant found in the logs first (ORA-01017, `Login failed for user`, SASL with
