@@ -119,6 +119,7 @@ fi
 
 key_source="auto"
 key_origin="--key-field"
+object_store=""
 primitive_key_field=""
 deletes="true"
 allow_duplicates=""
@@ -144,6 +145,13 @@ then
             logerror "❌ connector $connector uses topics.regex ($(cfg topics.regex)): pass --topic"
             exit 2
         fi
+    fi
+    if storage_is_object_store_sink "$class_lc"
+    then
+        # an object store sink appends every record: no key, no delete, each record once
+        object_store="1"
+        deletes="false"
+        pk_mode=""
     fi
     case "${pk_mode,,}" in
         record_key)
@@ -174,7 +182,7 @@ then
             logwarn "⚠️ pk.mode record_header: the key is in the headers, pass --key-field with the columns to compare on"
         ;;
     esac
-    if [[ -z "$table" ]]
+    if [[ -z "$table" && -z "$object_store" ]]
     then
         if [[ "$class_lc" == *mongo* ]]
         then
@@ -262,7 +270,7 @@ do
 done
 
 # ---- the database: the host of the connection url when it is a running container --------------------------------
-if [[ -z "$rows_file" ]]
+if [[ -z "$rows_file" && -z "$object_store" ]]
 then
     url=$(cfg connection.url connection.uri)
     host=$(cfg database.hostname connection.host)
@@ -337,6 +345,23 @@ then
     cp "$rows_file" "$tmp_dir/rows.json"
     table_label=$(basename "$rows_file")
     table_kind="file"
+elif [[ -n "$object_store" ]]
+then
+    log "🪣 Reading every object of topic $topic written by connector $connector (playground storage cat)"
+    if ! playground storage cat --connector "$connector" --topic "$topic" --records --max-objects 0 > "$tmp_dir/rows.json" 2> "$tmp_dir/storage.log"
+    then
+        logerror "❌ could not read the objects of connector $connector:"
+        grep -v '^\s*$' "$tmp_dir/storage.log" | tail -10
+        exit 2
+    fi
+    table_label=$(grep -o -E '🪣 [^ ]+' "$tmp_dir/storage.log" | head -1 | sed 's/🪣 //')
+    table_label="${table_label:-objects}"
+    table_kind="objects in"
+    flush_size=$(cfg flush.size)
+    if [[ -n "$flush_size" && "$flush_size" != "1" ]]
+    then
+        log "🎓 an object is written every flush.size=$flush_size records (or rotate.interval.ms): up to $((flush_size - 1)) record(s) per partition after the last object are still in the task, not lost"
+    fi
 else
     if [[ -z "$table" ]]
     then

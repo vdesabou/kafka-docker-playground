@@ -40,7 +40,7 @@ Every self-managed connector example: `playground find-example "<connector>" --c
 | Is the connector slow? Where does the task time go? | `playground connector metrics` (`--watch 10s`), `connector benchmark` (drain or steady mode, several `--connector-tag`), `debug thread-dump` + `analyze thread-dump` |
 | The customer's connector config: CFK `Connector`, Strimzi `KafkaConnector`, Terraform, `.properties`, `expand=info` dump | `playground connector create-or-update` reads them as they are, `connector convert <file>` turns them into a heredoc for an example, `repro bootstrap --config <file>` builds a reproduction model from them |
 | Is this config valid? What differs from the running one? Is it risky although it validates? | `playground connector validate`, `connector diff`, `connector lint` |
-| Did the sink lose or duplicate records? Did the source miss rows? | `playground connector reconcile` (topic against table, record by record) |
+| Did the sink lose or duplicate records? Did the source miss rows? | `playground connector reconcile` (topic against table or bucket objects, record by record) |
 | What does this transform chain do to a record? | `playground connector smt test` (with the customer's `transforms.*` and a record) |
 | Which version fixed it? What changed between two versions? | `playground connector-plugin changelog --connector-plugin <owner>/<name> --from <version> --grep "<symptom>"`, `connector-plugin config-diff --from <a> --to <b>`, `repro bisect --from <a> --to <b>` |
 | Run the customer's plugin version | `playground run -f <example> --connector-tag <version>` (`--connector-zip` / `--connector-jar` for a patched build) |
@@ -50,6 +50,7 @@ Every self-managed connector example: `playground find-example "<connector>" --c
 | Move a self-managed connector to fully managed | `playground connector convert`, the session [🚚 Move a self-managed connector to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed) |
 | More logs, without a restart | `playground debug log-level set -p <package> -l TRACE`, `debug log-level get` |
 | Customer log bundle, thread dumps, heap dumps | `playground analyze logs -f <bundle>`, `analyze thread-dump\|heap-dump\|gc-logs\|flight-recorder` (on the customer's files too) · 👀 or [`playground analyze watch`](/deep-dive-analyze-logs?id=%f0%9f%91%80-every-download-analyzed-without-typing-anything): every file downloaded to `~/Downloads` analyzed automatically |
+| A storage sink (S3, GCS, Azure, HDFS, SFTP): files written? what is in them? gaps, duplicates? | `playground storage wait-for-objects`, `storage ls`, `storage cat` (`--summary`: offsets per partition), `connector reconcile` |
 | A connector database: CDC prerequisites, rows landed? | `playground db cdc-check` (archivelog, `wal_level`, binlog, CDC tables…), `db sql << 'EOF' … EOF`, `db wait-for-rows` |
 | An HTTP sink: what did the endpoint receive? | `playground tools http-server requests\|set-response\|reset` with the `connect/connect-http-sink` examples |
 | Oracle CDC (LogMiner, XStream) lags or is idle | `playground analyze oracle-xstream-report`, `connector oracle-cdc-xstream generate-report`, the [🅾️ Oracle CDC](/deep-dive-oracle-cdc.md) deep dive |

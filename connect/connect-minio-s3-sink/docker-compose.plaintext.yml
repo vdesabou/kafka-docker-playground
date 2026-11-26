@@ -31,35 +31,3 @@ services:
         done
         exit 0;
       "
-
-  list-buckets:
-    image: pgsty/mc
-    hostname: list-buckets
-    container_name: list-buckets
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-        /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
-        while ! /usr/bin/mc ls -r myminio/mybucket; do
-          sleep 5
-        done
-        exit 0;
-      "
-
-  copy-files:
-    image: pgsty/mc
-    hostname: copy-files
-    container_name: copy-files
-    depends_on:
-      - minio
-    volumes:
-        - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}:/tmp
-    entrypoint: >
-      /bin/sh -c "
-        /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
-        while ! /usr/bin/mc cp myminio/mybucket/topics/minio-topic/partition\=0/minio-topic+0+0000000000.avro /tmp/; do
-          sleep 5
-        done
-        exit 0;
-      "

@@ -38,6 +38,7 @@ The full catalog is `docs/which-command.md` (🥇 question → command, "Good to
 | schemas | `schema check-compatibility\|diff\|history\|describe\|validate\|import\|export\|test-rules\|exporter\|compare` |
 | Kafka admin | `topic produce\|consume\|wait-for-records\|compare\|reassign\|elect-leader\|dump-log`, `consumer-group`, `quota`, `broker config\|stop\|start\|rolling-restart\|transactions\|metrics`, `ksqldb`, `flink`, `streams status` (Kafka Streams instances: state, rebalances, tasks, restores) |
 | databases of the examples | `db sql` (Oracle, PostgreSQL, MySQL, SQL Server, Db2, MongoDB, credentials found for you), `db wait-for-rows`, `db cdc-check` (CDC prerequisites: archivelog, wal_level, binlog, CDC tables…) |
+| object stores of the sinks | `storage ls\|cat\|wait-for-objects` (S3, MinIO, GCS, Azure Blob, ADLS Gen2, HDFS, SFTP: bucket and credentials from the connector, Avro / Parquet / JSON decoded, offset gaps and duplicates per partition) |
 | third-party accounts of the examples | `account salesforce setup\|check` (org: External Client App with JWT, Platform Event, CDC), `account gcp setup\|check` (project: APIs, service account, key stored as `GCP_KEYFILE_CONTENT`); `check` is read-only and says what is missing, `account azure setup\|check` (subscription: service principal with its roles, resource providers), `account snowflake setup\|check` (account identifier, admin login, roles, edition), `account aws setup\|check` (keys, region, one probe per service, IAM role of the assume-role variants), `account servicenow setup\|check` (developer instance: URL, admin login, hibernation), `account databricks setup\|check` (token, SQL warehouse, S3 staging bucket, grants), `account <zendesk\|jira\|marketo\|clickhouse\|couchbase\|mongodb-atlas\|pagerduty> setup\|check` (SaaS: 3 values each, expired / paused / idle) |
 | Confluent Cloud | `account ccloud setup\|check` (your own environment and clusters, one per cloud, in the secrets profile; `check` is read-only), `cloud-resources ccloud list` (what still runs for you, org-wide), `cloud-resources cleanup --resource ccloud`, `cloud-resources nightly-cleanup enable\|status\|disable` |
 | CI, performance, specific | `tools http-server set-response\|reset\|requests` (the httpserver of the http examples), `tools cert create\|inspect\|convert` (keystores, truststores, certificates, server chains: generate, why TLS fails, JKS / PKCS12 / PEM / Kafka PEM properties), `get-ci-result --logs`, `connector benchmark` (skill `kdp-benchmark`), `analyze oracle-xstream-report` (skill `kdp-xstream-report`), `debug cfk sourcecode` |
@@ -90,7 +91,7 @@ playground connector create-or-update --connector s3-sink << EOF   # waits for R
 { ... }
 EOF
 playground topic produce -t s3-topic --nb-messages 10 ...
-sleep 10   # data lands outside Kafka (a database sink: 'db wait-for-rows'); a source example uses 'topic consume --min-expected-messages' or 'topic wait-for-records'
+sleep 10   # data lands outside Kafka (a database sink: 'db wait-for-rows', a bucket: 'storage wait-for-objects'); a source example uses 'topic consume --min-expected-messages' or 'topic wait-for-records'
 # ... assert the data landed ...
 ```
 
