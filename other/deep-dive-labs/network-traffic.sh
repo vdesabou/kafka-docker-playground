@@ -89,6 +89,11 @@ sleep 30
 lab_run playground debug degrade-traffic -c connect --destination broker --action status
 lab_expect_exit 0
 lab_expect_ms "$(round_trip_ms connect broker)" 0 50 "ping round trip after the timer healed the partition"
+# the worker reconnects to the broker after the partition: step 5 needs its connections open again (a reconnection
+# during the NXDOMAIN fault needs a lookup and fails)
+lab_run playground connector wait --connector filestream-sink --max-wait 120
+lab_expect_exit 0
+sleep 10
 
 log "Step 5: a name that no longer resolves (section 4)"
 lab_run playground debug dns -c connect --host broker
