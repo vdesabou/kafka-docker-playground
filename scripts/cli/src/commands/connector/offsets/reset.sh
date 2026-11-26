@@ -63,7 +63,17 @@ function handle_first_class_offset() {
             logerror "❌ command is available since CP 7.6 only"
             return 1
         fi
-        playground connector stop --connector $connector || return 1
+        get_connect_url_and_security
+        # a connector that was already STOPPED stays STOPPED
+        initial_state=""
+        if handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+        then
+            initial_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2>/dev/null)
+        fi
+        if [ "$initial_state" != "STOPPED" ]
+        then
+            playground connector stop --connector $connector || return 1
+        fi
 
         # always resume the connector, even when the DELETE is refused: otherwise it stays STOPPED
         get_connect_url_and_security
@@ -74,6 +84,16 @@ function handle_first_class_offset() {
             echo "$curl_output" | jq .
         fi
 
+        if [ "$initial_state" == "STOPPED" ]
+        then
+            log "🛑 connector $connector was STOPPED before the reset: left STOPPED (playground connector resume --connector $connector to start it)"
+            if [ $delete_ret -ne 0 ]
+            then
+                logerror "❌ offsets of connector $connector were not reset"
+                return 1
+            fi
+            return 0
+        fi
         playground connector resume --connector $connector || return 1
         if [ $delete_ret -ne 0 ]
         then

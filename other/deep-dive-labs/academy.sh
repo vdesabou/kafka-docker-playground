@@ -6,7 +6,8 @@ source ${DIR}/lab-utils.bash
 
 # lab of https://kafka-docker-playground.io/#/academy: runs the reproduction models of the beginner and advanced exercises
 # (academy/) and asserts the failure each exercise is about, then the fix the page gives. The intermediate exercise (S3
-# sink, StackOverflowError) needs an AWS account: replayed only when AWS credentials are available
+# sink, StackOverflowError) needs an AWS account: replayed only when AWS credentials are available. The other intermediate
+# exercises are in academy-intermediate.sh
 lab_require_plaintext
 academy="${DIR}/../../academy"
 

@@ -17,6 +17,7 @@ work on every environment the playground starts, local or Confluent Cloud. Takes
 | --- | --- |
 | a topic with N partitions and some configs | `playground topic create -t <t> --nb-partitions 3 --config retention.ms=60000` |
 | change a config of a live topic | `playground topic alter -t <t> --add-config max.message.bytes=1000` (`--delete-config <k>` to remove it) |
+| more partitions on a live topic | `playground topic add-partitions -t <t> --nb-partitions 4` (a topic only grows; running clients see the new partitions at their next metadata refresh, `metadata.max.age.ms`, 5 minutes by default) |
 | change a config of the live brokers (the default of every topic, threads, throttles) | `playground broker config set --key log.retention.ms --value 60000` (`--broker <id>` for one broker, `get --key <k>` for the value and its source, `delete --key <k>`) |
 | the health of the cluster, broker failures, rolling restarts, transactions, broker metrics | the [brokers and transactions deep dive](/deep-dive-broker.md) (`playground broker health\|stop\|start\|rolling-restart\|transactions\|describe\|metrics`) |
 | partitions, replicas, ISR and config overrides | `playground topic describe [-t <t>]` |
@@ -410,7 +411,7 @@ playground stop
 | "`RecordTooLargeException` / `MESSAGE_TOO_LARGE`" | `topic alter -t <t> --add-config max.message.bytes=<small>`, then produce bigger records (`topic produce --record-size`); the producer side is `max.request.size` |
 | "the sink lost data: retention" | `topic create … --config retention.ms=60000 --config segment.ms=10000`, produce, wait for the log cleaner, `topic get-offsets`: `EARLIEST` moved |
 | "compacted topic, the sink sees old values" | `topic create … --config cleanup.policy=compact --config segment.ms=10000 --config min.cleanable.dirty.ratio=0.01`, produce the same keys several times, roll a segment, compare `get-offsets` and `consume --count` over time |
-| "records of one key arrive out of order after adding partitions" | a key goes to `hash(key) % partitions`: produce keyed records on 1 partition, re-create with 3 (`topic produce --nb-partitions 3` on an empty topic, or `kafka-topics --alter --partitions` through `container exec`), produce the same keys: they move |
+| "records of one key arrive out of order after adding partitions" | a key goes to `hash(key) % partitions`: produce keyed records on 1 partition, re-create with 3 (`topic produce --nb-partitions 3` on an empty topic, or `topic add-partitions -t <t> --nb-partitions 3`), produce the same keys: they move |
 | "a `read_committed` consumer / sink stops at an offset" | `topic dump-log -t <t> --partition <p> --offset <that offset>`: the producer whose transactional records have no marker after them (⚠️ open since offset …), then `broker transactions find-hanging` |
 | "which producer wrote these records? how big are the batches on disk?" | `topic dump-log -t <t> --offset <o> --records` (producer id / epoch of each batch, codec, size, key and value sizes) |
 | "the count doesn't match what the consumer reads" | `get-number-records` (offsets) vs `topic consume --count` (records): transactions, compaction or retention explain the gap |

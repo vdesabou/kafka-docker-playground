@@ -1,0 +1,18 @@
+---
+# Playground Academy, intermediate exercise: a renamed sink connector writes every row again (https://kafka-docker-playground.io/#/academy)
+services:
+
+  postgres:
+    image: postgres:15
+    hostname: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+
+  connect:
+    depends_on:
+      - postgres
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

@@ -1,0 +1,17 @@
+---
+# Playground Academy, intermediate exercise: HTTP sink, the API answers 400 and the task fails (https://kafka-docker-playground.io/#/academy)
+services:
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+
+  httpserver:
+    build:
+      context: ../../connect/connect-http-sink/httpserver
+    hostname: httpserver
+    container_name: httpserver
+    # always rebuilt: an image cached before a change of server.js would miss its endpoints
+    pull_policy: build
+    ports:
+      - "9006:9006"
