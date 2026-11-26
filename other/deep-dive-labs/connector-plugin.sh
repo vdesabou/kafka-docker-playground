@@ -101,12 +101,25 @@ lab_expect_contains "/tmp/connector-plugin-sourcecode/kafka-connect-jdbc-10.8.4"
 lab_run playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --grep "BATCH_SIZE_DEFAULT ="
 lab_expect_exit 0
 lab_expect_contains "src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java:145:  private static final int BATCH_SIZE_DEFAULT = 3000;"
+# --log and --files read the GitHub compare API: on a shared CI runner the token can be refused by the policy of the
+# confluentinc organization and the anonymous calls rate limited (60 an hour per IP). Only that failure skips the checks
+function github_compare_unavailable () {
+    [ "$LAB_EXIT" -ne 0 ] && grep -qF "could not compare" <<< "$LAB_OUTPUT" && \
+        { logwarn "⚠️ the GitHub compare API is not reachable from this runner (token refused, rate limit): checks of this step skipped"; return 0; }
+    return 1
+}
 lab_run playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.3 --connector-tag 10.9.5 --log --grep "postgres"
-lab_expect_exit 0
-lab_expect_contains "Bump org.postgresql:postgresql to 42.7.11 (CVE-2026-42198)"
+if ! github_compare_unavailable
+then
+    lab_expect_exit 0
+    lab_expect_contains "Bump org.postgresql:postgresql to 42.7.11 (CVE-2026-42198)"
+fi
 lab_run playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.7 --connector-tag 10.9.8 --files --path "*/JdbcSinkConfig.java"
-lab_expect_exit 0
-lab_expect_contains "M src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java +3 -0"
+if ! github_compare_unavailable
+then
+    lab_expect_exit 0
+    lab_expect_contains "M src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java +3 -0"
+fi
 
 log "Step 5: which jar has a class (Docker)"
 lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --class PostgreSqlDatabaseDialect
