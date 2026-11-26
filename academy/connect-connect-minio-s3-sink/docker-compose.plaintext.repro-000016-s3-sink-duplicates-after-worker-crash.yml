@@ -3,7 +3,7 @@
 services:
   connect:
     volumes:
-        - ../../connect/connect-minio-s3-sink/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+        - ../../connect/connect-minio-s3-sink/credentials:${CONNECT_CONTAINER_HOME_DIR:-/home/appuser}/.aws/credentials
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
 
