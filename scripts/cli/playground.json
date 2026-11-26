@@ -2135,28 +2135,35 @@
             "--last"
           ],
           "argument": "",
-          "description": "⏮️ Print the most recent command matching the query (the last run\nwithout query), and nothing else\n\nThe --cluster-creds and --cluster-schema-registry-creds values are\nprinted as '<masked>': use --run to replay the command with them\n\nConflicts with: --list, --json, --run, --stats, --prune"
+          "description": "⏮️ Print the most recent command matching the query (the last run\nwithout query), and nothing else\n\nThe --cluster-creds and --cluster-schema-registry-creds values are\nprinted as '<masked>': use --run to replay the command with them\n\nConflicts with: --list, --json, --run, --stats, --prune, --session"
         },
         {
           "names": [
             "--run"
           ],
           "argument": "",
-          "description": "🚀 Run the most recent command matching the query, without the picker\nnor the edit prompt\n\nConflicts with: --list, --json, --last, --stats, --prune"
+          "description": "🚀 Run the most recent command matching the query, without the picker\nnor the edit prompt\n\nConflicts with: --list, --json, --last, --stats, --prune, --session"
         },
         {
           "names": [
             "--stats"
           ],
           "argument": "",
-          "description": "📊 Print the most run examples, the most used --tag, --connector-tag and\n--environment, and the results, over every run of the history (the query is\nignored)\n\nConflicts with: --list, --json, --last, --run, --prune"
+          "description": "📊 Print the most run examples, the most used --tag, --connector-tag and\n--environment, and the results, over every run of the history (the query is\nignored)\n\nConflicts with: --list, --json, --last, --run, --prune, --session"
+        },
+        {
+          "names": [
+            "--session"
+          ],
+          "argument": "",
+          "description": "🛠️ Print what was done to the running environment since it started: the\nplayground commands that change it (containers killed or restarted,\nfaults injected with debug, connectors created, updated or deleted,\noffsets changed, records produced, topics, brokers, quotas, schemas...),\nwith their time, duration and exit code, oldest first. Read-only\ncommands are not recorded.\n\nThey are kept in playground-session.log (repository root, secrets\nmasked), reset by 'playground run' and 'playground start-environment',\nkept by 'playground stop' until the next start. With --json: an object\nwith started, started_by and the actions (time, epoch, duration_seconds,\nexit_code, command). 'playground connector history --with-logs' shows\nthem next to the states of a connector and the errors of the logs.\n\nℹ️ PLAYGROUND_SESSION_LOG_DISABLED=1 turns the recording off\n\nConflicts with: --last, --run, --stats, --prune"
         },
         {
           "names": [
             "--prune"
           ],
           "argument": "",
-          "description": "🧹 Rewrite playground-run-history with one line per command (its last\nrun) and without the runs whose script no longer exists. The previous\nfile is kept as playground-run-history.bak\n\nConflicts with: --list, --json, --last, --run, --stats"
+          "description": "🧹 Rewrite playground-run-history with one line per command (its last\nrun) and without the runs whose script no longer exists. The previous\nfile is kept as playground-run-history.bak\n\nConflicts with: --list, --json, --last, --run, --stats, --session"
         }
       ]
     },
@@ -13760,7 +13767,7 @@
         },
         {
           "name": "history",
-          "description": "🕰️ Show the history of a connector: state changes, failures, restarts and config changes\n\nAnswers \"when did it fail? how many times was it restarted? on which\nworker? what changed in the config just before?\", hours after the\nfact, when 'playground connector status' only shows the current state.\n\nReads the internal topics of the connect cluster, one timeline per\nconnector:\n\n  connect-status    every state of the connector and of each task\n                    (RUNNING, FAILED with the first line of the trace,\n                    PAUSED, UNASSIGNED...), the worker and generation,\n                    and the first time each topic was used\n  connect-configs   creation, each config change (keys added, removed,\n                    changed), task configs committed, pause / stop /\n                    resume, deletion\n\nEnds with a summary: failures per task, restarts, config changes and\nthe current state with its age. Secrets in the configs are masked.\n\n🎓 Tip: works for deleted connectors too (--connector <name>), and\n--since 1h keeps the recent events.\n\n⚠️ These topics are compacted: on a long-running cluster, old states\nare gone, only the last one of each connector and task is kept for\nsure. Self-managed connectors only (the topic names are read from the\nworker properties, --config-topic and --status-topic to override them).\n\n☁️ Fully managed: not supported\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting",
+          "description": "🕰️ Show the history of a connector: state changes, failures, restarts and config changes\n\nAnswers \"when did it fail? how many times was it restarted? on which\nworker? what changed in the config just before?\", hours after the\nfact, when 'playground connector status' only shows the current state.\n\nReads the internal topics of the connect cluster, one timeline per\nconnector:\n\n  connect-status    every state of the connector and of each task\n                    (RUNNING, FAILED with the first line of the trace,\n                    PAUSED, UNASSIGNED...), the worker and generation,\n                    and the first time each topic was used\n  connect-configs   creation, each config change (keys added, removed,\n                    changed), task configs committed, pause / stop /\n                    resume, deletion\n\nEnds with a summary: failures per task, restarts, config changes and\nthe current state with its age. Secrets in the configs are masked.\n\n🎓 Tip: works for deleted connectors too (--connector <name>), and\n--since 1h keeps the recent events.\n\n📜 --with-logs merges into the same time-ordered list, with the time\nsince the previous event (Δ):\n\n  📋 topics       the events above (states, configs)\n  📜 logs         the incident timeline of 'playground analyze logs\n                  --from-containers': the errors, known causes,\n                  restarts and config changes of this connector, and\n                  the events of the workers, brokers and controllers\n                  without connector (rebalances, members removed by\n                  the coordinator, controller changes, ISR shrinks,\n                  long GC pauses, processes started or stopped)\n  🛠️ playground   the playground commands that changed the environment\n                  since it started (containers killed or restarted,\n                  faults injected with debug, connector updates,\n                  offsets changed, records produced...), from\n                  playground-session.log ('playground history\n                  --session'); the ones aimed at another connector are\n                  left out\n\nIt answers \"what happened first?\": the cut of block-traffic, then the\nrebalance in the broker log, then the task FAILED in connect-status.\nThe container logs are saved and analyzed first (about 10 seconds;\nthe folder is kept, see 'playground analyze logs --from-containers').\nWith --json, each connector gets a \"timeline\" list (ts, time, source,\nwhat, text, details, delta_ms) next to its events and summary.\n\n⚠️ These topics are compacted: on a long-running cluster, old states\nare gone, only the last one of each connector and task is kept for\nsure. Self-managed connectors only (the topic names are read from the\nworker properties, --config-topic and --status-topic to override them).\n\n☁️ Fully managed: not supported\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting",
           "usage": "playground connector history [OPTIONS]",
           "options": [
             {
@@ -13799,6 +13806,13 @@
               ],
               "argument": "STATUS_TOPIC",
               "description": "🗂️ Status topic of the connect cluster (default: status.storage.topic of the worker, connect-status)"
+            },
+            {
+              "names": [
+                "--with-logs"
+              ],
+              "argument": "",
+              "description": "📜 Also show the incident timeline of the container logs and the playground actions of the session, merged with the events of the topics"
             },
             {
               "names": [

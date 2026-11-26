@@ -7322,25 +7322,31 @@ playground_history_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--last")"
     printf "    ⏮️ Print the most recent command matching the query (the last run\n    without query), and nothing else\n    \n    The --cluster-creds and --cluster-schema-registry-creds values are\n    printed as '<masked>': use --run to replay the command with them\n"
-    printf "    %s\n" "Conflicts: --list, --json, --run, --stats, --prune"
+    printf "    %s\n" "Conflicts: --list, --json, --run, --stats, --prune, --session"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--run")"
     printf "    🚀 Run the most recent command matching the query, without the picker\n    nor the edit prompt\n"
-    printf "    %s\n" "Conflicts: --list, --json, --last, --stats, --prune"
+    printf "    %s\n" "Conflicts: --list, --json, --last, --stats, --prune, --session"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--stats")"
     printf "    📊 Print the most run examples, the most used --tag, --connector-tag and\n    --environment, and the results, over every run of the history (the query is\n    ignored)\n"
-    printf "    %s\n" "Conflicts: --list, --json, --last, --run, --prune"
+    printf "    %s\n" "Conflicts: --list, --json, --last, --run, --prune, --session"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--session")"
+    printf "    🛠️ Print what was done to the running environment since it started: the\n    playground commands that change it (containers killed or restarted,\n    faults injected with debug, connectors created, updated or deleted,\n    offsets changed, records produced, topics, brokers, quotas, schemas...),\n    with their time, duration and exit code, oldest first. Read-only\n    commands are not recorded.\n    \n    They are kept in playground-session.log (repository root, secrets\n    masked), reset by 'playground run' and 'playground start-environment',\n    kept by 'playground stop' until the next start. With --json: an object\n    with started, started_by and the actions (time, epoch, duration_seconds,\n    exit_code, command). 'playground connector history --with-logs' shows\n    them next to the states of a connector and the errors of the logs.\n    \n    ℹ️ PLAYGROUND_SESSION_LOG_DISABLED=1 turns the recording off\n"
+    printf "    %s\n" "Conflicts: --last, --run, --stats, --prune"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--prune")"
     printf "    🧹 Rewrite playground-run-history with one line per command (its last\n    run) and without the runs whose script no longer exists. The previous\n    file is kept as playground-run-history.bak\n"
-    printf "    %s\n" "Conflicts: --list, --json, --last, --run, --stats"
+    printf "    %s\n" "Conflicts: --list, --json, --last, --run, --stats, --session"
     echo
 
     # :command.usage_fixed_flags
@@ -7370,6 +7376,8 @@ playground_history_usage() {
     printf "  playground history --json --limit 3 | jq -r '.[] | select(.result ==\n  \"FAILURE\") | .command'\n"
     printf "  playground history --stats\n"
     printf "  playground history --prune\n"
+    printf "  playground history --session\n"
+    printf "  playground history --session --json | jq -r '.actions[] | select(.exit_code !=\n  0) | .command'\n"
     echo
 
   fi
@@ -25876,7 +25884,7 @@ playground_connector_diagnose_usage() {
 playground_connector_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector history\n\n"
-    printf "  🕰️ Show the history of a connector: state changes, failures, restarts and\n  config changes\n  \n  Answers \"when did it fail? how many times was it restarted? on which\n  worker? what changed in the config just before?\", hours after the\n  fact, when 'playground connector status' only shows the current state.\n  \n  Reads the internal topics of the connect cluster, one timeline per\n  connector:\n  \n    connect-status    every state of the connector and of each task\n                      (RUNNING, FAILED with the first line of the trace,\n                      PAUSED, UNASSIGNED...), the worker and generation,\n                      and the first time each topic was used\n    connect-configs   creation, each config change (keys added, removed,\n                      changed), task configs committed, pause / stop /\n                      resume, deletion\n  \n  Ends with a summary: failures per task, restarts, config changes and\n  the current state with its age. Secrets in the configs are masked.\n  \n  🎓 Tip: works for deleted connectors too (--connector <name>), and\n  --since 1h keeps the recent events.\n  \n  ⚠️ These topics are compacted: on a long-running cluster, old states\n  are gone, only the last one of each connector and task is kept for\n  sure. Self-managed connectors only (the topic names are read from the\n  worker properties, --config-topic and --status-topic to override them).\n  \n  ☁️ Fully managed: not supported\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
+    printf "  🕰️ Show the history of a connector: state changes, failures, restarts and\n  config changes\n  \n  Answers \"when did it fail? how many times was it restarted? on which\n  worker? what changed in the config just before?\", hours after the\n  fact, when 'playground connector status' only shows the current state.\n  \n  Reads the internal topics of the connect cluster, one timeline per\n  connector:\n  \n    connect-status    every state of the connector and of each task\n                      (RUNNING, FAILED with the first line of the trace,\n                      PAUSED, UNASSIGNED...), the worker and generation,\n                      and the first time each topic was used\n    connect-configs   creation, each config change (keys added, removed,\n                      changed), task configs committed, pause / stop /\n                      resume, deletion\n  \n  Ends with a summary: failures per task, restarts, config changes and\n  the current state with its age. Secrets in the configs are masked.\n  \n  🎓 Tip: works for deleted connectors too (--connector <name>), and\n  --since 1h keeps the recent events.\n  \n  📜 --with-logs merges into the same time-ordered list, with the time\n  since the previous event (Δ):\n  \n    📋 topics       the events above (states, configs)\n    📜 logs         the incident timeline of 'playground analyze logs\n                    --from-containers': the errors, known causes,\n                    restarts and config changes of this connector, and\n                    the events of the workers, brokers and controllers\n                    without connector (rebalances, members removed by\n                    the coordinator, controller changes, ISR shrinks,\n                    long GC pauses, processes started or stopped)\n    🛠️ playground   the playground commands that changed the environment\n                    since it started (containers killed or restarted,\n                    faults injected with debug, connector updates,\n                    offsets changed, records produced...), from\n                    playground-session.log ('playground history\n                    --session'); the ones aimed at another connector are\n                    left out\n  \n  It answers \"what happened first?\": the cut of block-traffic, then the\n  rebalance in the broker log, then the task FAILED in connect-status.\n  The container logs are saved and analyzed first (about 10 seconds;\n  the folder is kept, see 'playground analyze logs --from-containers').\n  With --json, each connector gets a \"timeline\" list (ts, time, source,\n  what, text, details, delta_ms) next to its events and summary.\n  \n  ⚠️ These topics are compacted: on a long-running cluster, old states\n  are gone, only the last one of each connector and task is kept for\n  sure. Self-managed connectors only (the topic names are read from the\n  worker properties, --config-topic and --status-topic to override them).\n  \n  ☁️ Fully managed: not supported\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
   else
     printf "playground connector history - 🕰️ Show the history of a connector: state changes, failures, restarts and config changes\n\n"
   fi
@@ -25918,6 +25926,11 @@ playground_connector_history_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--with-logs")"
+    printf "    📜 Also show the incident timeline of the container logs and the playground\n    actions of the session, merged with the events of the topics\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🤖 Print the result as JSON on stdout, and nothing else (the log lines go to\n    stderr)\n"
     echo
@@ -25938,6 +25951,7 @@ playground_connector_history_usage() {
     printf "  playground connector history\n"
     printf "  playground connector history --connector jdbc-sink --since 1h\n"
     printf "  playground connector history --connector jdbc-sink --json\n"
+    printf "  playground connector history --connector http-sink --with-logs --since 30m\n"
     echo
 
   fi
@@ -44864,6 +44878,145 @@ function load_secrets_env_vars () {
     fi
   done
   return 0
+}
+
+# src/lib/session_log_function.sh
+# session log: one line per playground command that changes the environment (a container killed, a fault injected, a
+# connector created, records produced...), so that 'playground history --session' and 'playground connector history
+# --with-logs' can place them next to the states of the connector and the errors of the logs.
+#
+# playground-session.log, next to playground.ini (repository root of the CLI that runs, so a worktree has its own):
+#   # session started <time> by <command>
+#   <start, UTC ISO 8601>\t<start, epoch seconds>\t<duration, seconds>\t<exit code>\t<command line, secrets masked>
+# Reset by 'playground start-environment' and 'playground run', kept by 'playground stop' until the next start.
+
+# actions recorded (the $action of bashly): read-only commands never are
+SESSION_LOG_ACTIONS=(
+  "container recreate" "container update" "container kill-all" "container change-jdk" "container restart"
+  "container pause" "container resume" "container kill" "container set-environment-variables"
+  "debug block-traffic" "debug degrade-traffic" "debug clock" "debug dns" "debug resources" "debug log-level set"
+  "debug enable-remote-debugging" "debug disable-remote-debugging"
+  "connector create-or-update" "connector update" "connector delete" "connector pause" "connector resume"
+  "connector stop" "connector restart" "connector offsets reset" "connector offsets alter" "connector log-level"
+  "connector enable-remote-debugging" "connector disable-remote-debugging"
+  "topic produce" "topic create" "topic add-partitions" "topic delete" "topic alter" "topic reassign"
+  "topic elect-leader" "topic set-schema-compatibility" "topic dlq replay"
+  "quota set" "quota delete"
+  "broker config set" "broker config delete" "broker stop" "broker start" "broker rolling-restart"
+  "broker transactions abort"
+  "schema register" "schema delete" "schema set-compatibility" "schema set-mode" "schema set-normalize"
+  "schema import" "schema set-alias" "schema exporter create" "schema exporter pause" "schema exporter resume"
+  "schema exporter reset" "schema exporter delete"
+  "consumer-group reset-offsets" "consumer-group delete"
+  "tcp-proxy start" "tcp-proxy delay" "tcp-proxy break" "tcp-proxy close-connection"
+  "tcp-proxy close-all-connection-with-error" "tcp-proxy toggle-accept-connections" "tcp-proxy toggle-reads-client"
+  "tcp-proxy toggle-reads-service" "tcp-proxy toggle-writes-client" "tcp-proxy toggle-writes-service"
+  "tools http-server set-response" "tools http-server reset"
+  "flink cancel"
+  "cfk patch" "cfk roll" "cfk upgrade" "cfk operator upgrade" "cfk kraft-migration start"
+  "cfk kraft-migration finalize" "cfk kraft-migration release-lock"
+  "ansible playbook" "ansible add-host" "ansible upgrade"
+  "update-version" "stop"
+)
+
+function session_log_file () {
+  if [[ -n "$root_folder" ]]
+  then
+    echo "$root_folder/playground-session.log"
+  fi
+}
+
+function session_log_is_recorded () {
+  local wanted="$1" a
+  for a in "${SESSION_LOG_ACTIONS[@]}"
+  do
+    [[ "$a" == "$wanted" ]] && return 0
+  done
+  return 1
+}
+
+# the command line with the secrets masked: the value of a flag whose name looks like a secret (--password x,
+# --password=x), the value of a key=value word whose key does (sasl.jaas.config=..., aws.secret.access.key=...)
+function session_log_mask () {
+  local secret='(password|passwd|secret|token|credential|jaas|api[._-]?key|access[._-]?key|private[._-]?key|creds)'
+  local out=() mask_next="" word
+  for word in "$@"
+  do
+    if [[ -n "$mask_next" ]]
+    then
+      out+=("********")
+      mask_next=""
+      continue
+    fi
+    if [[ "$word" =~ ^--?[A-Za-z0-9._-]*$ ]] && [[ "${word,,}" =~ $secret ]]
+    then
+      out+=("$word")
+      mask_next=1
+    elif [[ "$word" == *=* ]] && [[ "${word%%=*}" =~ ^-{0,2}[A-Za-z0-9._-]+$ ]] && [[ "${word%%=*}" =~ $secret ]]
+    then
+      out+=("${word%%=*}=********")
+    else
+      out+=("$word")
+    fi
+  done
+  local line="" w
+  for w in "${out[@]}"
+  do
+    if [[ "$w" =~ [[:space:]\"\'\$\`\\\{\}\;\&\|\<\>\(\)] ]] || [[ -z "$w" ]]
+    then
+      # single quotes, ready to copy and paste: {"id": %g} stays readable
+      line+=" '${w//\'/\'\\\'\'}'"
+    else
+      line+=" $w"
+    fi
+  done
+  echo "${line# }"
+}
+
+# truncate the session log at the start of an environment: session_log_reset <command>
+function session_log_reset () {
+  local file
+  file=$(session_log_file)
+  [[ -n "$file" ]] || return 0
+  { echo "# session started $(date -u +%Y-%m-%dT%H:%M:%SZ) by playground $1"; } > "$file" 2> /dev/null || true
+  return 0
+}
+
+# append one line: session_log_append <start epoch> <duration> <exit code> <command line>
+function session_log_append () {
+  local file
+  file=$(session_log_file)
+  [[ -n "$file" ]] || return 0
+  printf '%s\t%s\t%s\t%s\t%s\n' "$(date -u -r "$1" +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -d "@$1" +%Y-%m-%dT%H:%M:%SZ 2> /dev/null)" \
+    "$1" "$2" "$3" "$4" >> "$file" 2> /dev/null || true
+  return 0
+}
+
+# called first by the before hook: a recorded command runs again as a child (PG_SESSION_LOG_ACTIVE exported, so that
+# neither it nor the playground commands it calls are recorded again), then its line is written with its exit code.
+# Running it as a child is what makes the line reliable: a command can exit anywhere and sets its own EXIT trap.
+# Never fails because of the log: a log that cannot be written is skipped.
+function session_log_wrap () {
+  [[ -z "$PG_SESSION_LOG_ACTIVE" ]] || return 0
+  [[ -z "$PLAYGROUND_SESSION_LOG_DISABLED" ]] || return 0
+  session_log_is_recorded "$action" || return 0
+  # 'topic produce --status' only reads the state of the background producers
+  if [[ "$action" == "topic produce" ]] && [[ -n "${args[--status]}" ]]
+  then
+    return 0
+  fi
+  local file
+  file=$(session_log_file)
+  [[ -n "$file" ]] || return 0
+  if ! touch "$file" 2> /dev/null
+  then
+    return 0
+  fi
+  local start=$SECONDS start_epoch rc=0
+  start_epoch=$(date +%s)
+  PG_SESSION_LOG_ACTIVE=1 "$0" "${input[@]}" || rc=$?
+  session_log_append "$start_epoch" "$((SECONDS - start))" "$rc" "$(session_log_mask playground "${input[@]}")"
+  exit $rc
 }
 
 # src/lib/storage_function.sh
@@ -65758,6 +65911,27 @@ playground_history_command() {
   all="${args[--all]}"
   stats="${args[--stats]}"
   prune="${args[--prune]}"
+  session="${args[--session]}"
+
+  # what was done to the running environment since it started (playground-session.log, see session_log_function.sh)
+  if [[ -n "$session" ]]
+  then
+      session_file="$root_folder/playground-session.log"
+      if [[ ! -f "$session_file" ]]
+      then
+          if [[ -n "$json" ]]
+          then
+              echo '{"started": null, "started_by": null, "actions": []}'
+          else
+              logwarn "💤 no session log yet ($session_file): it starts with the next 'playground run' or 'playground start-environment'"
+          fi
+          exit 1
+      fi
+      session_args=(session --file "$session_file")
+      [[ -n "$json" ]] && session_args+=(--json)
+      python3 -I "$root_folder/tools/connector-history/timeline.py" "${session_args[@]}"
+      exit $?
+  fi
 
   if [ ${#other_args[@]} -gt 0 ]
   then
@@ -106301,6 +106475,7 @@ playground_connector_history_command() {
   config_topic="${args[--config-topic]}"
   status_topic="${args[--status-topic]}"
   json="${args[--json]}"
+  with_logs="${args[--with-logs]}"
 
   connector_type=$(playground state get run.connector_type)
 
@@ -106502,6 +106677,29 @@ playground_connector_history_command() {
               }
             })')
 
+  # --with-logs: the incident timeline of the container logs and the playground actions of the session, merged with the
+  # events of the topics (tools/connector-history/timeline.py)
+  if [[ -n "$with_logs" ]]
+  then
+      echo "$history" > "$tmp_dir/history.json"
+      [[ -z "$json" ]] && log "📜 Analyzing the logs of the containers (playground analyze logs --from-containers)"
+      analyze_args=(analyze logs --from-containers --json --json-sections timeline --output-dir "$tmp_dir/analyze")
+      [[ -n "$since" ]] && analyze_args+=(--since "$since")
+      if ! playground "${analyze_args[@]}" > "$tmp_dir/timeline.json" 2> "$tmp_dir/analyze.log" || ! jq -e '.timeline' "$tmp_dir/timeline.json" > /dev/null 2>&1
+      then
+          logwarn "⚠️ could not analyze the logs of the containers, only the topics and the playground actions are merged:"
+          grep -v '^\s*$' "$tmp_dir/analyze.log" | tail -3 >&2
+          echo '{"timeline": []}' > "$tmp_dir/timeline.json"
+      fi
+      merge_args=(merge --history "$tmp_dir/history.json" --timeline "$tmp_dir/timeline.json" --since-ms "$since_ms")
+      [[ -f "$root_folder/playground-session.log" ]] && merge_args+=(--session "$root_folder/playground-session.log")
+      if [[ -n "$json" ]]
+      then
+          python3 -I "$root_folder/tools/connector-history/timeline.py" "${merge_args[@]}" --json
+          exit 0
+      fi
+  fi
+
   if [[ -n "$json" ]]
   then
       echo "$history" | jq .
@@ -106518,11 +106716,14 @@ playground_connector_history_command() {
   do
       c=$(echo "$h" | jq -r '.connector')
       log "🕰️ History of $connector_type connector $c$([[ -n "$since" ]] && echo " (last $since)")"
-      if [ "$(echo "$h" | jq '.events | length')" == "0" ]
+      if [[ -n "$with_logs" ]]
+      then
+          python3 -I "$root_folder/tools/connector-history/timeline.py" "${merge_args[@]}" --only "$c"
+      elif [ "$(echo "$h" | jq '.events | length')" == "0" ]
       then
           log "💤 no event$([[ -n "$since" ]] && echo " in the last $since")"
       fi
-      echo "$h" | jq -r '
+      [[ -z "$with_logs" ]] && echo "$h" | jq -r '
           def icon: if .kind == "created" then "🆕"
               elif .kind == "deleted" then "🗑️ "
               elif .kind == "config" then "⚙️ "
@@ -130135,7 +130336,7 @@ playground_history_parse_requirements() {
       # :flag.case
       --last)
         # :flag.conflicts
-        for conflict in --list --json --run --stats --prune; do
+        for conflict in --list --json --run --stats --prune --session; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -130150,7 +130351,7 @@ playground_history_parse_requirements() {
       # :flag.case
       --run)
         # :flag.conflicts
-        for conflict in --list --json --last --stats --prune; do
+        for conflict in --list --json --last --stats --prune --session; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -130165,7 +130366,7 @@ playground_history_parse_requirements() {
       # :flag.case
       --stats)
         # :flag.conflicts
-        for conflict in --list --json --last --run --prune; do
+        for conflict in --list --json --last --run --prune --session; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -130178,9 +130379,24 @@ playground_history_parse_requirements() {
         ;;
 
       # :flag.case
+      --session)
+        # :flag.conflicts
+        for conflict in --last --run --stats --prune; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--session']=1
+        shift
+        ;;
+
+      # :flag.case
       --prune)
         # :flag.conflicts
-        for conflict in --list --json --last --run --stats; do
+        for conflict in --list --json --last --run --stats --session; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -175392,6 +175608,14 @@ playground_connector_history_parse_requirements() {
         ;;
 
       # :flag.case
+      --with-logs)
+
+        # :flag.case_no_arg
+        args['--with-logs']=1
+        shift
+        ;;
+
+      # :flag.case
       --json)
 
         # :flag.case_no_arg
@@ -188721,6 +188945,7 @@ playground_history_completion() {
         completion_blocked_flags["--run"]=1
         completion_blocked_flags["--stats"]=1
         completion_blocked_flags["--prune"]=1
+        completion_blocked_flags["--session"]=1
 
         shift
         ;;
@@ -188731,6 +188956,7 @@ playground_history_completion() {
         completion_blocked_flags["--last"]=1
         completion_blocked_flags["--stats"]=1
         completion_blocked_flags["--prune"]=1
+        completion_blocked_flags["--session"]=1
 
         shift
         ;;
@@ -188740,6 +188966,16 @@ playground_history_completion() {
         completion_blocked_flags["--json"]=1
         completion_blocked_flags["--last"]=1
         completion_blocked_flags["--run"]=1
+        completion_blocked_flags["--prune"]=1
+        completion_blocked_flags["--session"]=1
+
+        shift
+        ;;
+      --session)
+        completion_blocked_flags["--session"]=1
+        completion_blocked_flags["--last"]=1
+        completion_blocked_flags["--run"]=1
+        completion_blocked_flags["--stats"]=1
         completion_blocked_flags["--prune"]=1
 
         shift
@@ -188751,6 +188987,7 @@ playground_history_completion() {
         completion_blocked_flags["--last"]=1
         completion_blocked_flags["--run"]=1
         completion_blocked_flags["--stats"]=1
+        completion_blocked_flags["--session"]=1
 
         shift
         ;;
@@ -188774,6 +189011,7 @@ playground_history_completion() {
     completion_flag_candidates --last "$completion_current" --last
     completion_flag_candidates --run "$completion_current" --run
     completion_flag_candidates --stats "$completion_current" --stats
+    completion_flag_candidates --session "$completion_current" --session
     completion_flag_candidates --prune "$completion_current" --prune
   fi
 
@@ -212272,6 +212510,11 @@ playground_connector_history_completion() {
         completion_blocked_flags["--status-topic"]=1
 
         ;;
+      --with-logs)
+        completion_blocked_flags["--with-logs"]=1
+
+        shift
+        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -212305,6 +212548,7 @@ playground_connector_history_completion() {
     completion_flag_candidates --since "$completion_current" --since
     completion_flag_candidates --config-topic "$completion_current" --config-topic
     completion_flag_candidates --status-topic "$completion_current" --status-topic
+    completion_flag_candidates --with-logs "$completion_current" --with-logs
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -215183,6 +215427,15 @@ before_hook() {
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   root_folder=$(echo ${dir1%/*})
+
+  # session log (playground-session.log, see session_log_function.sh): a new environment starts a new session (once for
+  # 'playground run' and the start-environment of its example), and a command that changes the environment is recorded
+  if [[ "$action" == "start-environment" || "$action" == "run" ]] && [[ -z "$PG_SESSION_LOG_STARTED" ]]
+  then
+      session_log_reset "$action"
+      export PG_SESSION_LOG_STARTED=1
+  fi
+  session_log_wrap
 
   # a free file descriptor on stderr for the --verbose output of the kafka-* tools (see log_verbose_command): unlike stdout
   # and stderr, $(...) and 2>&1 in the commands don't capture it.

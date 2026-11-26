@@ -2453,26 +2453,41 @@ subcommands:
       The --cluster-creds and --cluster-schema-registry-creds values are
       printed as '<masked>': use --run to replay the command with them
 
-      Conflicts with: --list, --json, --run, --stats, --prune
+      Conflicts with: --list, --json, --run, --stats, --prune, --session
   - names:
     - "--run"
     argument: ''
     description: "\U0001F680 Run the most recent command matching the query, without
       the picker\nnor the edit prompt\n\nConflicts with: --list, --json, --last, --stats,
-      --prune"
+      --prune, --session"
   - names:
     - "--stats"
     argument: ''
     description: "\U0001F4CA Print the most run examples, the most used --tag, --connector-tag
       and\n--environment, and the results, over every run of the history (the query
-      is\nignored)\n\nConflicts with: --list, --json, --last, --run, --prune"
+      is\nignored)\n\nConflicts with: --list, --json, --last, --run, --prune, --session"
+  - names:
+    - "--session"
+    argument: ''
+    description: "\U0001F6E0️ Print what was done to the running environment since
+      it started: the\nplayground commands that change it (containers killed or restarted,\nfaults
+      injected with debug, connectors created, updated or deleted,\noffsets changed,
+      records produced, topics, brokers, quotas, schemas...),\nwith their time, duration
+      and exit code, oldest first. Read-only\ncommands are not recorded.\n\nThey are
+      kept in playground-session.log (repository root, secrets\nmasked), reset by
+      'playground run' and 'playground start-environment',\nkept by 'playground stop'
+      until the next start. With --json: an object\nwith started, started_by and the
+      actions (time, epoch, duration_seconds,\nexit_code, command). 'playground connector
+      history --with-logs' shows\nthem next to the states of a connector and the errors
+      of the logs.\n\nℹ️ PLAYGROUND_SESSION_LOG_DISABLED=1 turns the recording off\n\nConflicts
+      with: --last, --run, --stats, --prune"
   - names:
     - "--prune"
     argument: ''
     description: "\U0001F9F9 Rewrite playground-run-history with one line per command
       (its last\nrun) and without the runs whose script no longer exists. The previous\nfile
       is kept as playground-run-history.bak\n\nConflicts with: --list, --json, --last,
-      --run, --stats"
+      --run, --stats, --session"
 - name: find-example
   description: "\U0001F50E Find examples matching a free-text query, without the interactive
     picker\n\nSearches every runnable example script (connect/, ccloud/, ksqldb/,\nflink/,
@@ -14247,11 +14262,29 @@ subcommands:
       deletion\n\nEnds with a summary: failures per task, restarts, config changes
       and\nthe current state with its age. Secrets in the configs are masked.\n\n\U0001F393
       Tip: works for deleted connectors too (--connector <name>), and\n--since 1h
-      keeps the recent events.\n\n⚠️ These topics are compacted: on a long-running
-      cluster, old states\nare gone, only the last one of each connector and task
-      is kept for\nsure. Self-managed connectors only (the topic names are read from
-      the\nworker properties, --config-topic and --status-topic to override them).\n\n☁️
-      Fully managed: not supported\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+      keeps the recent events.\n\n\U0001F4DC --with-logs merges into the same time-ordered
+      list, with the time\nsince the previous event (Δ):\n\n  \U0001F4CB topics       the
+      events above (states, configs)\n  \U0001F4DC logs         the incident timeline
+      of 'playground analyze logs\n                  --from-containers': the errors,
+      known causes,\n                  restarts and config changes of this connector,
+      and\n                  the events of the workers, brokers and controllers\n
+      \                 without connector (rebalances, members removed by\n                  the
+      coordinator, controller changes, ISR shrinks,\n                  long GC pauses,
+      processes started or stopped)\n  \U0001F6E0️ playground   the playground commands
+      that changed the environment\n                  since it started (containers
+      killed or restarted,\n                  faults injected with debug, connector
+      updates,\n                  offsets changed, records produced...), from\n                  playground-session.log
+      ('playground history\n                  --session'); the ones aimed at another
+      connector are\n                  left out\n\nIt answers \"what happened first?\":
+      the cut of block-traffic, then the\nrebalance in the broker log, then the task
+      FAILED in connect-status.\nThe container logs are saved and analyzed first (about
+      10 seconds;\nthe folder is kept, see 'playground analyze logs --from-containers').\nWith
+      --json, each connector gets a \"timeline\" list (ts, time, source,\nwhat, text,
+      details, delta_ms) next to its events and summary.\n\n⚠️ These topics are compacted:
+      on a long-running cluster, old states\nare gone, only the last one of each connector
+      and task is kept for\nsure. Self-managed connectors only (the topic names are
+      read from the\nworker properties, --config-topic and --status-topic to override
+      them).\n\n☁️ Fully managed: not supported\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
     usage: playground connector history [OPTIONS]
     options:
     - names:
@@ -14280,6 +14313,11 @@ subcommands:
       argument: STATUS_TOPIC
       description: "\U0001F5C2️ Status topic of the connect cluster (default: status.storage.topic
         of the worker, connect-status)"
+    - names:
+      - "--with-logs"
+      argument: ''
+      description: "\U0001F4DC Also show the incident timeline of the container logs
+        and the playground actions of the session, merged with the events of the topics"
     - names:
       - "--json"
       argument: ''

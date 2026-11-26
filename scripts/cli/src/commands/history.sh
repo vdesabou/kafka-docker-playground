@@ -7,6 +7,27 @@ limit="${args[--limit]}"
 all="${args[--all]}"
 stats="${args[--stats]}"
 prune="${args[--prune]}"
+session="${args[--session]}"
+
+# what was done to the running environment since it started (playground-session.log, see session_log_function.sh)
+if [[ -n "$session" ]]
+then
+    session_file="$root_folder/playground-session.log"
+    if [[ ! -f "$session_file" ]]
+    then
+        if [[ -n "$json" ]]
+        then
+            echo '{"started": null, "started_by": null, "actions": []}'
+        else
+            logwarn "💤 no session log yet ($session_file): it starts with the next 'playground run' or 'playground start-environment'"
+        fi
+        exit 1
+    fi
+    session_args=(session --file "$session_file")
+    [[ -n "$json" ]] && session_args+=(--json)
+    python3 -I "$root_folder/tools/connector-history/timeline.py" "${session_args[@]}"
+    exit $?
+fi
 
 if [ ${#other_args[@]} -gt 0 ]
 then

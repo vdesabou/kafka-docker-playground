@@ -155,6 +155,17 @@ lab_expect_contains "↳ org.apache.kafka.connect.errors.ConnectException: Toler
 lab_expect_contains "connector deleted"
 lab_expect_contains "1 failure(s) (task 0: 1)"
 lab_expect_contains "deleted"
+# --with-logs: the same events, the errors of the container logs and the playground commands of this session (the
+# session log is reset by the 'playground run' of this lab), in one time-ordered list
+lab_run playground connector history --connector strict-sink --with-logs
+lab_expect_exit 0
+lab_expect_contains "from the internal topics"
+lab_expect_contains "📋 task 0 🛑 RUNNING → FAILED on connect:8083"
+lab_expect_contains "📜 connect 🛑"
+lab_expect_contains "🛠️ playground playground connector create-or-update --connector strict-sink --no-wait"
+lab_expect_contains "🛠️ playground playground connector delete --connector strict-sink"
+lab_run playground history --session
+lab_expect_contains "playground connector create-or-update --connector strict-sink --no-wait"
 lab_run playground connector tasks --connector orders-sink
 lab_expect_exit 0
 lab_expect_contains "Tasks of 🌎onprem connector orders-sink (sink, connector RUNNING, on connect:8083, tasks.max=1, 1 task(s))"

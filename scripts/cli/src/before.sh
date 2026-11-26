@@ -9,6 +9,15 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 dir1=$(echo ${DIR_CLI%/*})
 root_folder=$(echo ${dir1%/*})
 
+# session log (playground-session.log, see session_log_function.sh): a new environment starts a new session (once for
+# 'playground run' and the start-environment of its example), and a command that changes the environment is recorded
+if [[ "$action" == "start-environment" || "$action" == "run" ]] && [[ -z "$PG_SESSION_LOG_STARTED" ]]
+then
+    session_log_reset "$action"
+    export PG_SESSION_LOG_STARTED=1
+fi
+session_log_wrap
+
 # a free file descriptor on stderr for the --verbose output of the kafka-* tools (see log_verbose_command): unlike stdout
 # and stderr, $(...) and 2>&1 in the commands don't capture it.
 # Only opened with --verbose: every child inherits it, even with '> file 2>&1 &', so a long-lived background process (the
