@@ -190,6 +190,11 @@ do
   then
     continue
   fi
+  # the nightly runs only the smoke list with cfk on podman (see run-tests.sh): result files of the other tests are stale
+  if [ "$environment_suffix" == "-cfk-podman" ] && ! grep -v '^#' "${root_folder}/scripts/tests-cfk-podman-smoke.txt" | grep -qxF "$test"
+  then
+    continue
+  fi
   log "################################"
   log "### 📁 ${test}"
 

@@ -124,6 +124,16 @@ do
         continue
     fi
 
+    # the nightly runs only a smoke list with cfk on podman (CFK_PODMAN_SMOKE_ONLY, set by the execute_test job of
+    # ci.yml): the other failures were duplicates of the cfk (docker) or podman (plaintext) ones
+    if [ "$CFK_PODMAN_SMOKE_ONLY" = "true" ] && [ "$container_engine" = "podman" ] && [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && ! grep -v '^#' ${DIR}/tests-cfk-podman-smoke.txt | grep -qxF "$dir"
+    then
+        log "####################################################"
+        log "⏭ skipping dir $dir, not in scripts/tests-cfk-podman-smoke.txt (cfk on podman)"
+        log "####################################################"
+        continue
+    fi
+
     cd $dir > /dev/null
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203

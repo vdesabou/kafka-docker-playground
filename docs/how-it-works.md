@@ -206,7 +206,7 @@ The exit code of each example decides its result:
 
 After each run (success, failure or timeout), the fully managed connectors and the topics created by the run are deleted.
 
-If a test is failing 🔥, a GitHub issue is automatically opened or updated with the results for each CP version. Issues are kept per environment: `🔥 <test>`, `🔥 <test> (cfk)`, `🔥 <test> (podman)` and `🔥 <test> (cfk, podman)`, labelled `cfk` / `podman`. Podman results only create issues: the badges of the [Content](/content.md) section stay Docker only.
+If a test is failing 🔥, a GitHub issue is automatically opened or updated with the results for each CP version. Issues are kept per environment: `🔥 <test>`, `🔥 <test> (cfk)`, `🔥 <test> (podman)` and `🔥 <test> (cfk, podman)`, labelled `cfk` / `podman`. Podman results only create issues: the badges of the [Content](/content.md) section stay Docker only. With podman, the nightly runs the `cfk` environment only for the test directories of `scripts/tests-cfk-podman-smoke.txt` (the CFK environment itself, a locally built Oracle image, mosquitto): the other `(cfk, podman)` failures always duplicated a `(cfk)` or `(podman)` one.
 
 *Example:*
 

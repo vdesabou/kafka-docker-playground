@@ -1,0 +1,12 @@
+# Test directories run by the podman nightly with the cfk environment (the "cfk 🦭" jobs).
+# Every other cfk failure on podman was also a failure on cfk (docker) or on podman (plaintext): the full list only
+# duplicated issues. These cover what only breaks with k3d on podman:
+#  - the cfk.sh deep dive lab and the CFK day-2 examples: the cfk environment itself (k3d API port, CP images import)
+#  - an Oracle example: locally built images, that podman stores as localhost/<name> (#9126, #9154)
+#  - an mqtt example: the Ubuntu AppArmor profile of mosquitto (#9207)
+# Keep the SKIP_JOB expression of the execute_test job in .github/workflows/ci.yml in sync (a job without any of
+# these directories is skipped there).
+other/deep-dive-labs
+other/cfk-day2
+connect/connect-jdbc-oracle19-source
+connect/connect-mqtt-source

@@ -99,7 +99,10 @@ jobs:
     env:
       # cfk only runs connect/ examples, the cfk.sh deep dive lab and other/cfk-day2 (see run-tests.sh): without any in the list, the job has nothing to do
       # podman skips fully managed connector tests (see run-tests.sh): lists with ccloud/fm- examples only hold those
-      SKIP_JOB: ${{ (startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/') && !contains(matrix.test_list, 'other/deep-dive-labs') && !contains(matrix.test_list, 'other/cfk-day2')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) }}
+      # cfk on podman only runs the directories of scripts/tests-cfk-podman-smoke.txt (keep the list below in sync with it)
+      SKIP_JOB: ${{ (startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/') && !contains(matrix.test_list, 'other/deep-dive-labs') && !contains(matrix.test_list, 'other/cfk-day2')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'other/deep-dive-labs') && !contains(matrix.test_list, 'other/cfk-day2') && !contains(matrix.test_list, 'connect/connect-jdbc-oracle19-source') && !contains(matrix.test_list, 'connect/connect-mqtt-source')) }}
+      # read by run-tests.sh: cfk on podman only runs scripts/tests-cfk-podman-smoke.txt (not set by execute_one_test, a test chosen by hand runs)
+      CFK_PODMAN_SMOKE_ONLY: 'true'
     steps:
 
       # - name: Maximize build space
