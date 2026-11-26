@@ -327,6 +327,7 @@ playground_usage() {
   printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                             "
   printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                             "
   printf "  %s   🆕 Create topic\n" "$(green "topic create")                              "
+  printf "  %s   ➕ Add partitions to an existing topic\n" "$(green "topic add-partitions")                      "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                              "
   printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                               "
   printf "  %s   📬 Dead letter queue commands\n" "$(green "topic dlq")                                 "
@@ -16503,6 +16504,7 @@ playground_topic_usage() {
   printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                 "
   printf "  %s   📤 Produce to a topic\n" "$(green "produce")                 "
   printf "  %s   🆕 Create topic\n" "$(green "create")                  "
+  printf "  %s   ➕ Add partitions to an existing topic\n" "$(green "add-partitions")          "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "delete")                  "
   printf "  %s   🪛 Alter topic config\n" "$(green "alter")                   "
   printf "  %s   📬 Dead letter queue commands\n" "$(green "dlq")                     "
@@ -17862,6 +17864,60 @@ playground_topic_create_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground topic create --topic atopic\n  playground topic create --topic atopic --nb-partitions 8 --config\n  retention.ms=30000 --config cleanup.policy=compact\n  playground topic create --topic atopic --if-not-exists\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_add_partitions_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic add-partitions\n\n"
+    printf "  ➕ Add partitions to an existing topic\n  \n  A topic can only grow: Kafka refuses to remove partitions. The records\n  already in the topic stay where they are, only new records use the new\n  partitions.\n  \n  ⚠️ The partition of a record with a key is hash(key) %% number of\n  partitions: after the change, new records of a key can land in another\n  partition than the older ones, and a consumer no longer sees all the\n  records of a key in order.\n  \n  🎓 Tip: a sink connector runs at most one task per partition that it\n  reads: tasks.max above the number of partitions leaves tasks idle.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\n"
+  else
+    printf "playground topic add-partitions - ➕ Add partitions to an existing topic\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic add-partitions [OPTIONS]\n"
+  printf "  playground topic add-partitions --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS (required)")"
+    printf "    🔢 New total number of partitions (more than the current one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic add-partitions --topic atopic --nb-partitions 4\n"
     echo
 
   fi
@@ -92323,6 +92379,78 @@ playground_topic_create_command() {
 }
 
 # :command.function
+playground_topic_add_partitions_command() {
+
+  # src/commands/topic/add-partitions.sh
+  topic="${args[--topic]}"
+  nb_partitions="${args[--nb-partitions]}"
+  verbose="${args[--verbose]}"
+
+  get_security_broker "--command-config"
+  get_environment_used
+
+  set +e
+  existing_topics=$(playground get-topic-list)
+  set -e
+  if ! echo "$existing_topics" | grep -qFx "$topic"
+  then
+      logerror "❌ topic $topic does not exist (create it with: playground topic create --topic $topic --nb-partitions $nb_partitions)"
+      exit 1
+  fi
+
+  # kafka-topics --describe | --alter, in the broker container (or pod, or a CP image for Confluent Cloud)
+  function run_kafka_topics () {
+      if [[ "$environment" == "ccloud" ]]
+      then
+          get_kafka_docker_playground_dir
+          DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+          if [ -f $DELTA_CONFIGS_ENV ]
+          then
+              source $DELTA_CONFIGS_ENV
+          else
+              logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+              exit 1
+          fi
+          if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+          then
+              logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+              exit 1
+          fi
+          get_connect_image
+          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics "$@" --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+      elif [[ "$environment" == cfk* ]]
+      then
+          kubectl -n confluent exec $container -- kafka-topics "$@" --topic $topic --bootstrap-server $bootstrap_server $security
+      else
+          docker exec $container kafka-topics "$@" --topic $topic --bootstrap-server $bootstrap_server $security
+      fi
+  }
+
+  current=$(run_kafka_topics --describe 2>/dev/null | grep -o 'PartitionCount: *[0-9]*' | head -1 | grep -o '[0-9]*$')
+  if [ -z "$current" ]
+  then
+      logerror "❌ could not get the number of partitions of topic $topic"
+      exit 1
+  fi
+  if [ "$nb_partitions" -le "$current" ]
+  then
+      logerror "❌ topic $topic already has $current partition(s): a topic can only grow (Kafka never removes partitions), give more than $current"
+      exit 1
+  fi
+
+  if [[ -n "$verbose" ]]
+  then
+      log "🐞 CLI command used"
+      echo "kafka-topics --alter --partitions $nb_partitions --topic $topic"
+  fi
+  log "➕ Adding partitions to topic $topic: $current → $nb_partitions"
+  run_kafka_topics --alter --partitions "$nb_partitions"
+  log "✅ topic $topic has $nb_partitions partitions"
+  log "⚠️ records with a key: hash(key) % $nb_partitions now decides their partition, new records of a key can land in another partition than the older ones"
+
+}
+
+# :command.function
 playground_topic_delete_command() {
 
   # src/commands/topic/delete.sh
@@ -102657,7 +102785,17 @@ playground_connector_offsets_reset_command() {
               logerror "❌ command is available since CP 7.6 only"
               return 1
           fi
-          playground connector stop --connector $connector || return 1
+          get_connect_url_and_security
+          # a connector that was already STOPPED stays STOPPED
+          initial_state=""
+          if handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+          then
+              initial_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2>/dev/null)
+          fi
+          if [ "$initial_state" != "STOPPED" ]
+          then
+              playground connector stop --connector $connector || return 1
+          fi
 
           # always resume the connector, even when the DELETE is refused: otherwise it stays STOPPED
           get_connect_url_and_security
@@ -102668,6 +102806,16 @@ playground_connector_offsets_reset_command() {
               echo "$curl_output" | jq .
           fi
 
+          if [ "$initial_state" == "STOPPED" ]
+          then
+              log "🛑 connector $connector was STOPPED before the reset: left STOPPED (playground connector resume --connector $connector to start it)"
+              if [ $delete_ret -ne 0 ]
+              then
+                  logerror "❌ offsets of connector $connector were not reset"
+                  return 1
+              fi
+              return 0
+          fi
           playground connector resume --connector $connector || return 1
           if [ $delete_ret -ne 0 ]
           then
@@ -102855,15 +103003,50 @@ playground_connector_offsets_alter_command() {
           fi
 
           get_connect_url_and_security
+          # a connector created STOPPED (--initial-state STOPPED, to give it offsets before its first record) stays STOPPED
+          initial_state=""
+          if handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+          then
+              initial_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2>/dev/null)
+          fi
           handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
 
           file=$tmp_dir/offsets-$connector.json
           echo "$curl_output" | jq . > $file
 
+          if [ "$(jq '.offsets | length' $file 2>/dev/null)" == "0" ]
+          then
+              # nothing committed yet (new connector): the whole entry has to be written, show its format
+              topics=""
+              offsets_output="$curl_output"
+              if handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1
+              then
+                  topics=$(echo "$curl_output" | jq -r '.topics // empty' 2>/dev/null | cut -d, -f1 | tr -d ' ')
+              fi
+              curl_output="$offsets_output"
+              logwarn "⚠️ connector $connector has no offset yet: write each entry in full, for example"
+              if [ -n "$topics" ]
+              then
+                  echo "   sink:   {\"offsets\": [{\"partition\": {\"kafka_topic\": \"$topics\", \"kafka_partition\": 0}, \"offset\": {\"kafka_offset\": 10}}]}"
+              else
+                  echo "   sink:   {\"offsets\": [{\"partition\": {\"kafka_topic\": \"<topic>\", \"kafka_partition\": 0}, \"offset\": {\"kafka_offset\": 10}}]}"
+                  echo "   source: {\"offsets\": [{\"partition\": <partition of the connector>, \"offset\": <offset of the connector>}]}"
+              fi
+          fi
+
           log "✨ Update the connector offsets as per your needs, save and close the file to continue"
           playground open --file "${file}" --wait || return 1
 
-          playground connector stop --connector $connector || return 1
+          if [ "$(jq '.offsets | length' $file 2>/dev/null)" == "0" ]
+          then
+              logwarn "⚠️ no offset in the file: nothing altered"
+              return 0
+          fi
+
+          if [ "$initial_state" != "STOPPED" ]
+          then
+              playground connector stop --connector $connector || return 1
+          fi
 
           # always resume the connector, even when the PATCH is refused (invalid offsets, 400): otherwise it stays STOPPED
           patch_ret=0
@@ -102873,6 +103056,16 @@ playground_connector_offsets_alter_command() {
               echo "$curl_output" | jq .
           fi
 
+          if [ "$initial_state" == "STOPPED" ]
+          then
+              log "🛑 connector $connector was STOPPED before the change: left STOPPED (playground connector resume --connector $connector to start it)"
+              if [ $patch_ret -ne 0 ]
+              then
+                  logerror "❌ offsets of connector $connector were not altered"
+                  return 1
+              fi
+              return 0
+          fi
           playground connector resume --connector $connector || return 1
           if [ $patch_ret -ne 0 ]
           then
@@ -151116,6 +151309,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    add-partitions)
+      action="add-partitions"
+      shift
+      playground_topic_add_partitions_parse_requirements "$@"
+      shift $#
+      ;;
+
     delete)
       action="delete"
       shift
@@ -154545,6 +154745,141 @@ playground_topic_create_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']="1"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--nb-partitions'] ]]; then
+    validation_output="$(validate_integer "${args['--nb-partitions']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--nb-partitions NB-PARTITIONS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_add_partitions_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_add_partitions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic add-partitions"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --nb-partitions)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--nb-partitions']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--nb-partitions requires an argument: --nb-partitions NB-PARTITIONS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--nb-partitions']+x} ]]; then
+    printf "missing required flag: --nb-partitions NB-PARTITIONS\n" >&2
+    exit 1
+  fi
 
   # :command.validations
   # :flag.validations
@@ -197325,6 +197660,11 @@ playground_topic_completion() {
         playground_topic_create_completion "$completion_current" "$@"
         return
         ;;
+      add-partitions)
+        shift
+        playground_topic_add_partitions_completion "$completion_current" "$@"
+        return
+        ;;
       delete)
         shift
         playground_topic_delete_completion "$completion_current" "$@"
@@ -197354,7 +197694,7 @@ playground_topic_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets compare display-consumer-offsets list get-size describe reassign elect-leader dump-log check-format set-schema-compatibility consume produce create delete alter dlq tag
+  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets compare display-consumer-offsets list get-size describe reassign elect-leader dump-log check-format set-schema-compatibility consume produce create add-partitions delete alter dlq tag
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -199274,6 +199614,76 @@ playground_topic_create_completion() {
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --nb-partitions "$completion_current" --nb-partitions
     completion_flag_candidates --if-not-exists "$completion_current" --if-not-exists
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_add_partitions_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --nb-partitions)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--nb-partitions"]=1
+
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --nb-partitions "$completion_current" --nb-partitions
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -211864,6 +212274,7 @@ run() {
     "topic consume") playground_topic_consume_command ;;
     "topic produce") playground_topic_produce_command ;;
     "topic create") playground_topic_create_command ;;
+    "topic add-partitions") playground_topic_add_partitions_command ;;
     "topic delete") playground_topic_delete_command ;;
     "topic alter") playground_topic_alter_command ;;
     "topic dlq") playground_topic_dlq_command ;;

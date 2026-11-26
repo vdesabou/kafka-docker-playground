@@ -30,6 +30,10 @@ playground find-example --category academy
 | ⭐ | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
 | ⭐ | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
 | ⭐⭐ | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
+| ⭐⭐ | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
+| ⭐⭐ | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
+| ⭐⭐ | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
+| ⭐⭐ | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
 | ⭐⭐⭐ | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
 | ⭐⭐⭐ | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
 | ⭐⭐⭐ | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
@@ -1236,6 +1240,808 @@ What to tell the customer: Parquet cannot store this schema. Either use another 
 
 <!-- tabs:end -->
 
+
+### JDBC source: the updated rows never reach the topic
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A JDBC source connector copies the `CUSTOMERS` table of a MySQL database to Kafka. New customers show up in the topic within a second, but when the status of a customer changes in the database, the topic never gets the change.
+
+💡 What you'll learn:
+
+* The modes of the JDBC source connector, and what each one can see.
+* Read the offset of a source connector: what it remembers from one query to the next.
+* What happens to that offset when you change the mode of a running connector.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 JDBC source (MySQL): 10.9.10
+
+The table: `update_ts` is set by MySQL on every update.
+
+```sql
+CREATE TABLE CUSTOMERS (
+  id          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  first_name  VARCHAR(50),
+  last_name   VARCHAR(50),
+  club_status VARCHAR(20),
+  update_ts   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+);
+```
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "connection.url": "jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false&allowPublicKeyRetrieval=true",
+  "table.whitelist": "CUSTOMERS",
+  "mode": "incrementing",
+  "incrementing.column.name": "id",
+  "poll.interval.ms": "1000",
+  "topic.prefix": "mysql-",
+  "value.converter": "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "http://schema-registry:8081"
+}
+```
+
+Reproduction model: [mysql-repro-000012-jdbc-source-misses-updates.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-jdbc-mysql-source/mysql-repro-000012-jdbc-source-misses-updates.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000012` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-jdbc-mysql-source/mysql-repro-000012-jdbc-source-misses-updates.sh
+```
+
+The table starts with 3 customers. Then Rica is promoted to `gold`, and a new customer, Hashim, signs up. The topic:
+
+```log
+10:27:10 ℹ️ ✨ Display content of topic mysql-CUSTOMERS, it contains 4 messages
+CreateTime:2026-11-26 10:26:50.888|Partition:0|Offset:0|Headers:NO_HEADERS|Key:null|Value:{"id":1,"first_name":{"string":"Rica"},"last_name":{"string":"Blaisdell"},"club_status":{"string":"bronze"},"update_ts":1795685201819}|ValueSchemaId:1
+CreateTime:2026-11-26 10:26:50.889|Partition:0|Offset:1|Headers:NO_HEADERS|Key:null|Value:{"id":2,"first_name":{"string":"Ruthie"},"last_name":{"string":"Brockherst"},"club_status":{"string":"platinum"},"update_ts":1795685201821}|ValueSchemaId:1
+CreateTime:2026-11-26 10:26:50.889|Partition:0|Offset:2|Headers:NO_HEADERS|Key:null|Value:{"id":3,"first_name":{"string":"Mariejeanne"},"last_name":{"string":"Cocci"},"club_status":{"string":"bronze"},"update_ts":1795685201822}|ValueSchemaId:1
+CreateTime:2026-11-26 10:27:00.891|Partition:0|Offset:3|Headers:NO_HEADERS|Key:null|Value:{"id":4,"first_name":{"string":"Hashim"},"last_name":{"string":"Rumke"},"club_status":{"string":"silver"},"update_ts":1795685216450}|ValueSchemaId:1
+```
+
+Hashim is there. Rica is still `bronze`, while the database says:
+
+```bash
+playground db sql --database mydb << 'EOF'
+SELECT id, first_name, club_status, update_ts FROM CUSTOMERS WHERE id = 1;
+EOF
+```
+
+```log
++----+-------------+-------------+-------------------------+
+| id | first_name  | club_status | update_ts               |
++----+-------------+-------------+-------------------------+
+|  1 | Rica        | gold        | 2026-11-26 09:26:56.448 |
++----+-------------+-------------+-------------------------+
+```
+
+The connector is RUNNING, with no error.
+
+❔Questions:
+
+* What does the connector remember from one query to the next?
+* Why does it see a new row, and not an updated one?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What does the connector remember from one query to the next?
+
+Its offset, with [playground connector offsets get](/playground%20connector%20offsets%20get):
+
+```bash
+playground connector offsets get --connector mysql-source
+```
+
+```json
+{
+  "offsets": [
+    {
+      "partition": {
+        "protocol": "1",
+        "table": "mydb.CUSTOMERS"
+      },
+      "offset": {
+        "incrementing": 4
+      }
+    }
+  ]
+}
+```
+
+> [!TIP]
+> A source connector commits its offsets every 60 seconds (`offset.flush.interval.ms`): right after the start, `offsets get` can still return `"offsets": []`.
+
+> Why does it see a new row, and not an updated one?
+
+In `incrementing` mode, the only thing the connector keeps is the highest `id` it has sent, and each query asks for the rows above it: `WHERE id > 4`. A new row gets a new `id`. An `UPDATE` keeps the `id` of the row: the connector never sees it. Deleted rows are never seen either, in any mode.
+
+| `mode` | sees new rows | sees updated rows | needs |
+| --- | --- | --- | --- |
+| `bulk` | yes (the whole table at every poll) | yes (the whole table at every poll) | nothing |
+| `incrementing` | yes | **no** | a column that always grows |
+| `timestamp` | yes | yes | a column updated on each change; rows with the same timestamp can be missed |
+| `timestamp+incrementing` | yes | yes | both: the most reliable mode |
+
+<!-- select:end -->
+
+👉 Switch the connector to `timestamp+incrementing` with `timestamp.column.name` set to `update_ts`: update it in place, with the same name. Then look at the topic again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground connector create-or-update --connector mysql-source << EOF
+{
+     "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+     "tasks.max":"1",
+     "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false&allowPublicKeyRetrieval=true",
+     "table.whitelist":"CUSTOMERS",
+     "mode":"timestamp+incrementing",
+     "timestamp.column.name":"update_ts",
+     "incrementing.column.name":"id",
+     "poll.interval.ms":"1000",
+     "topic.prefix":"mysql-",
+     "value.converter":"io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url":"http://schema-registry:8081"
+}
+EOF
+```
+
+Rica's `gold` is in the topic now... and so are Ruthie, Mariejeanne and Hashim, a second time:
+
+```log
+10:28:32 ℹ️ ✨ Display content of topic mysql-CUSTOMERS, it contains 8 messages
+...
+CreateTime:2026-11-26 10:28:21.011|Partition:0|Offset:4|Headers:NO_HEADERS|Key:null|Value:{"id":2,"first_name":{"string":"Ruthie"},"last_name":{"string":"Brockherst"},"club_status":{"string":"platinum"},"update_ts":1795685201821}|ValueSchemaId:1
+CreateTime:2026-11-26 10:28:21.012|Partition:0|Offset:5|Headers:NO_HEADERS|Key:null|Value:{"id":3,"first_name":{"string":"Mariejeanne"},"last_name":{"string":"Cocci"},"club_status":{"string":"bronze"},"update_ts":1795685201822}|ValueSchemaId:1
+CreateTime:2026-11-26 10:28:21.012|Partition:0|Offset:6|Headers:NO_HEADERS|Key:null|Value:{"id":1,"first_name":{"string":"Rica"},"last_name":{"string":"Blaisdell"},"club_status":{"string":"gold"},"update_ts":1795685216448}|ValueSchemaId:1
+CreateTime:2026-11-26 10:28:21.012|Partition:0|Offset:7|Headers:NO_HEADERS|Key:null|Value:{"id":4,"first_name":{"string":"Hashim"},"last_name":{"string":"Rumke"},"club_status":{"string":"silver"},"update_ts":1795685216450}|ValueSchemaId:1
+```
+
+The connector kept its offset (same name), but `{"incrementing": 4}` has no timestamp: the new mode starts from the beginning of time and sends the whole table again, in `update_ts` order. From now on, the offset has both:
+
+```json
+      "offset": {
+        "timestamp_nanos": 773000000,
+        "incrementing": 3,
+        "timestamp": 1795685324773
+      }
+```
+
+and an update arrives within a second:
+
+```bash
+playground db sql --database mydb << 'EOF'
+UPDATE CUSTOMERS SET club_status = 'platinum' WHERE id = 3;
+EOF
+```
+
+```log
+CreateTime:2026-11-26 10:28:46.027|Partition:0|Offset:8|Headers:NO_HEADERS|Key:null|Value:{"id":3,"first_name":{"string":"Mariejeanne"},"last_name":{"string":"Cocci"},"club_status":{"string":"platinum"},"update_ts":1795685324773}|ValueSchemaId:1
+```
+
+<!-- select:end -->
+
+🥁 So...is a duplicate a problem? Only if the consumers can't tell that two records are the same customer: give the records a key.
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 Offsets and lag](/deep-dive-offsets-and-lag.md) deep dive.
+* Give the records the `id` as key, with the `ValueToKey` and `ExtractField$Key` SMTs: a sink in upsert mode (or a compacted topic) then overwrites a customer instead of adding a row. Test the chain with [playground connector smt test](/playground%20connector%20smt%20test).
+* Deletes: no JDBC source mode sees a deleted row. Capturing them is the job of a CDC connector reading the binlog: compare with the Debezium MySQL example (`playground find-example --category connect debezium mysql`).
+
+<!-- tabs:end -->
+
+### HTTP sink: tasks.max is 4, but only one task works
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+An HTTP sink connector falls behind: its lag keeps growing. The team set `tasks.max` to `4` so that 4 requests go to the API in parallel, and the 4 tasks are RUNNING. Yet the API receives one request at a time.
+
+💡 What you'll learn:
+
+* How the tasks of a sink connector share the partitions of its topics.
+* Why a running connector (and producer) does not see new partitions right away.
+* The second lever: how many records a task sends per request.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 HTTP sink: 1.7.15
+
+The API takes 500 ms to answer each request. The shop sends 6 orders per second, with the order id as key.
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+  "topics": "orders",
+  "tasks.max": "4",
+  "http.api.url": "http://httpserver:9006",
+  "request.body.format": "json",
+  "batch.max.size": "1",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false"
+}
+```
+
+Reproduction model: [http-sink-repro-000013-tasks-max-one-task-works.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-http-sink/http-sink-repro-000013-tasks-max-one-task-works.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000013` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-http-sink/http-sink-repro-000013-tasks-max-one-task-works.sh
+```
+
+The orders keep flowing in the background (for 30 minutes). After a minute:
+
+```log
+10:43:59 ℹ️ 🐢 consumer lag for 🌎onprem connector http-sink is 326
+topic: orders     partition: 0   current-offset: 140        end-offset: 466        lag: 326        [🔹🔹🔹🔹🔹🔹🔹💠💠💠💠💠💠💠💠💠💠💠💠💠]  31%
+```
+
+Run [playground connector show-lag](/playground%20connector%20show-lag) again: the lag grows.
+
+❔Questions:
+
+* What do the 4 tasks do?
+* How many records per second can the connector send to the API?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What do the 4 tasks do?
+
+[playground connector tasks](/playground%20connector%20tasks) shows what each task reads:
+
+```bash
+playground connector tasks --connector http-sink
+```
+
+```log
+10:44:22 ℹ️ 🧵 Tasks of 🌎onprem connector http-sink (sink, connector RUNNING, on connect:8083, tasks.max=4, 4 task(s))
+Task   State            Worker                   Partitions
+-------------------------------------------------------------------------------------------------------------
+0      🟢 RUNNING     connect:8083             orders-0
+1      🟢 RUNNING     connect:8083             - (no partition assigned)
+2      🟢 RUNNING     connect:8083             - (no partition assigned)
+3      🟢 RUNNING     connect:8083             - (no partition assigned)
+-------------------------------------------------------------------------------------------------------------
+10:44:23 ℹ️ 💤 3 task(s) without partition: tasks.max is higher than the number of partitions of the topics, or the consumer group is rebalancing
+```
+
+The topic has a single partition:
+
+```bash
+playground topic describe --topic orders
+```
+
+```log
+Topic: orders	TopicId: R4hg1mXoRxK01tl4LIhB4g	PartitionCount: 1	ReplicationFactor: 1	Configs: min.insync.replicas=1
+```
+
+Each task is a consumer of the group `connect-http-sink`, and a partition is read by one consumer of the group only. With 1 partition, 1 task works and 3 wait.
+
+> How many records per second can the connector send to the API?
+
+One request at a time, one record per request (`batch.max.size` is `1`), 500 ms per request: 2 records per second, for 6 produced.
+
+<!-- select:end -->
+
+👉 Give the topic 4 partitions, with [playground topic add-partitions](/playground%20topic%20add-partitions), then check the tasks again (several times).
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground topic add-partitions --topic orders --nb-partitions 4
+```
+
+```log
+10:44:28 ℹ️ ➕ Adding partitions to topic orders: 1 → 4
+10:44:30 ℹ️ ✅ topic orders has 4 partitions
+10:44:30 ℹ️ ⚠️ records with a key: hash(key) % 4 now decides their partition, new records of a key can land in another partition than the older ones
+```
+
+Surprise: nothing changes for minutes. A running client (the consumers of the tasks, and the producer) learns about new partitions when it refreshes its metadata, every `metadata.max.age.ms` (5 minutes by default). Then the group rebalances, and the rebalance waits for task 0 to come back from its current `put()`: up to 500 records (`max.poll.records`) at 500 ms each. Here, the 4 tasks had a partition 6 minutes later:
+
+```log
+Task   State            Worker                   Partitions
+-------------------------------------------------------------------------------------------------------------
+0      🟢 RUNNING     connect:8083             orders-0
+1      🟢 RUNNING     connect:8083             orders-1
+2      🟢 RUNNING     connect:8083             orders-2
+3      🟢 RUNNING     connect:8083             orders-3
+-------------------------------------------------------------------------------------------------------------
+10:50:53 ℹ️ 🐢 consumer lag for 🌎onprem connector http-sink is not available (no offset committed yet)
+topic: orders     partition: 0   current-offset: 952        end-offset: 2106       lag: 1154       [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹💠💠💠💠💠💠💠💠💠💠]  46%
+topic: orders     partition: 1   current-offset: -          end-offset: 272        lag: -          []   0%
+topic: orders     partition: 2   current-offset: -          end-offset: 279        lag: -          []   0%
+topic: orders     partition: 3   current-offset: -          end-offset: 292        lag: -          []   0%
+```
+
+The new orders are spread over the 4 partitions (the key decides), but the records already in partition 0 stay there: the backlog of 1154 records is still for task 0 alone, at 2 records per second.
+
+<!-- select:end -->
+
+👉 Find the setting that lets a single task send more than 2 records per second, and use it.
+
+#### **📍 Step 4**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+`batch.max.size`: the number of records sent in one request. With `50`, one request of 500 ms carries up to 50 records. Update the connector (same config, `"batch.max.size": "50"`):
+
+```log
+10:51:06 ℹ️ 🔍 changes compared to the running config:
+   ~ batch.max.size: 1 → 50
+10:51:15 ℹ️ ✅ 🌎onprem connector http-sink is RUNNING (4 task(s)) after 5 seconds
+```
+
+The update restarts the tasks (another rebalance, the same wait for task 0). 4 minutes later, the backlog is gone:
+
+```log
+10:55:23 ℹ️ 🐢 consumer lag for 🌎onprem connector http-sink is 54
+topic: orders     partition: 0   current-offset: 2507       end-offset: 2517       lag: 10         [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100%
+topic: orders     partition: 1   current-offset: 680        end-offset: 694        lag: 14         [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹]  98%
+topic: orders     partition: 2   current-offset: 640        end-offset: 653        lag: 13         [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹]  99%
+topic: orders     partition: 3   current-offset: 689        end-offset: 706        lag: 17         [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹]  98%
+```
+
+> [!TIP]
+> The lag is computed from the committed offsets, committed every 60 seconds: between two commits it looks higher than it is.
+
+<!-- select:end -->
+🥁 So...more tasks, or bigger requests? Both, but `tasks.max` above the number of partitions buys nothing.
+
+#### **🎓 Next Steps**
+
+* Stop the background producer: `playground topic produce --topic orders --stop`.
+* Read the [🍪 Offsets and lag](/deep-dive-offsets-and-lag.md) deep dive.
+* Adding partitions to a topic with keys changes the partition of a key: a consumer no longer sees all the records of a key in order. Create the topic with enough partitions from the start.
+* Check that the API accepts a batch: with `request.body.format` `json`, the body is a JSON array of up to `batch.max.size` records (see it with `playground tools http-server requests`).
+
+<!-- tabs:end -->
+
+### HTTP sink: the API answers 400, and errors.tolerance doesn't help
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+The API that receives the records of an HTTP sink connector added a validation rule, and now answers `400 Bad Request`. The connector was configured with `errors.tolerance` `all` and a dead letter queue, "so that a bad record can never stop it". The task FAILED anyway, and the dead letter queue is empty.
+
+💡 What you'll learn:
+
+* What `errors.tolerance` and the dead letter queue cover, and what they don't.
+* How the HTTP sink handles an error response: retries, `behavior.on.error`, the error reporter topic.
+* Send failed records again once the API is fixed.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 HTTP sink: 1.7.15
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+  "topics": "http-messages",
+  "http.api.url": "http://httpserver:9006",
+  "request.body.format": "json",
+  "reporter.bootstrap.servers": "broker:9092",
+  "reporter.error.topic.name": "error-responses",
+  "reporter.result.topic.name": "success-responses",
+  "max.retries": "3",
+  "retry.backoff.ms": "1000",
+  "errors.tolerance": "all",
+  "errors.deadletterqueue.topic.name": "dlq",
+  "errors.deadletterqueue.context.headers.enable": "true"
+}
+```
+
+Reproduction model: [http-sink-repro-000014-http-sink-400-and-dlq.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-http-sink/http-sink-repro-000014-http-sink-400-and-dlq.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000014` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-http-sink/http-sink-repro-000014-http-sink-400-and-dlq.sh
+```
+
+```log
+http-sink                      ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+...
+Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006, Status code : 400, Reason Phrase : Bad Request,
+	at io.confluent.connect.http.writer.HttpWriterImpl.handleException(HttpWriterImpl.java:502)
+	at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:383)
+	at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:190)
+	at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
+```
+
+❔Questions:
+
+* How many requests did the API receive?
+* Where did the failed record go, and where is the answer of the API?
+* Why did `errors.tolerance` not keep the task alive?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> How many requests did the API receive?
+
+[playground tools http-server requests](/playground%20tools%20http-server%20requests) lists what the test server received:
+
+```bash
+playground tools http-server requests
+```
+
+```log
+10:58:07 ℹ️ 🌐 answers: 400 after 0 ms, body {"error":"email: must be a company address"}
+10:58:07 ℹ️ 📥 4 request(s) received since the start or the last reset (4 kept)
+#1 10:57:10 POST / → 400  application/json, 82 bytes
+   [{"name":"Gage.Christiansen11","id":1,"email":"Eloise_Kerluke-Blick@example.net"}]
+#2 10:57:10 POST / → 400  application/json, 82 bytes
+   [{"name":"Gage.Christiansen11","id":1,"email":"Eloise_Kerluke-Blick@example.net"}]
+#3 10:57:11 POST / → 400  application/json, 82 bytes
+   [{"name":"Gage.Christiansen11","id":1,"email":"Eloise_Kerluke-Blick@example.net"}]
+#4 10:57:11 POST / → 400  application/json, 82 bytes
+   [{"name":"Gage.Christiansen11","id":1,"email":"Eloise_Kerluke-Blick@example.net"}]
+```
+
+The same first record, 4 times: the request and its 3 retries (`max.retries`). By default the HTTP sink retries every status code from 400 up (`retry.on.status.codes` is `400-`), even though a `400` answers the same each time. After the last retry, `behavior.on.error` (default `fail`) fails the task. Records 2 and 3 were never sent.
+
+> Where did the failed record go, and where is the answer of the API?
+
+Not in the dead letter queue:
+
+```bash
+playground topic dlq inspect --topic dlq
+```
+
+```log
+10:58:08 ℹ️ ✅ dead letter queue dlq is empty
+```
+
+The HTTP sink writes the failures to its own error reporter topic, `reporter.error.topic.name`, with the answer of the API and the position of the record in the headers:
+
+```bash
+playground topic consume --topic error-responses
+```
+
+```log
+CreateTime:2026-11-26 10:57:11.852|Partition:0|Offset:0|Headers:input_record_offset:0,input_record_timestamp:1795687025610,input_record_partition:0,input_record_topic:http-messages,error_message:null,exception:null,response_content:{"error":"email: must be a company address"},status_code:400,...
+```
+
+> Why did `errors.tolerance` not keep the task alive?
+
+`errors.tolerance` and the dead letter queue cover the steps that Connect runs for the connector: the converter and the SMTs (the [Avro Converter exercise](/academy?id=avro-converter-unknown-magic-byte) uses them). The HTTP call happens inside the connector, in `put()`: its errors are handled by the settings of the connector.
+
+<!-- select:end -->
+
+👉 Change the config so that a `400` is not retried, the connector keeps running, and every refused record is kept.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Two settings of the HTTP sink, added to the config:
+
+```json
+     "retry.on.status.codes": "429,500-",
+     "behavior.on.error": "log"
+```
+
+* `retry.on.status.codes`: retry what can succeed later (`429 Too Many Requests`, the `5xx` of a server in trouble), not a `400`.
+* `behavior.on.error` `log`: write the failure to `error-responses` and go on with the next records (`ignore` would go on without keeping anything).
+
+Update the connector and restart it (its task is FAILED):
+
+```log
+10:58:50 ℹ️ 🔍 changes compared to the running config:
+   + behavior.on.error: log
+   + retry.on.status.codes: 429,500-
+...
+http-sink                      ✅ RUNNING  0:🟢 RUNNING                 -
+```
+
+One request per record, and one error record per refused record (`input_record_offset` 0, 1, 2):
+
+```log
+10:59:25 ℹ️ 📥 3 request(s) received since the start or the last reset (3 kept)
+#1 10:58:54 POST / → 400  application/json, 82 bytes
+   [{"name":"Gage.Christiansen11","id":1,"email":"Eloise_Kerluke-Blick@example.net"}]
+#2 10:58:54 POST / → 400  application/json, 75 bytes
+   [{"name":"Madeline.DuBuque61","id":2,"email":"Lilliana_Kulas@example.net"}]
+#3 10:58:54 POST / → 400  application/json, 64 bytes
+   [{"name":"Kiana.Rolfson","id":3,"email":"Wilmer71@example.net"}]
+```
+
+```log
+10:59:30 ℹ️ ✨ Display content of topic error-responses, it contains 4 messages
+CreateTime:2026-11-26 10:57:11.852|Partition:0|Offset:0|Headers:input_record_offset:0,...
+CreateTime:2026-11-26 10:58:54.052|Partition:0|Offset:1|Headers:input_record_offset:0,...,response_content:{"error":"email: must be a company address"},status_code:400,...
+CreateTime:2026-11-26 10:58:54.055|Partition:0|Offset:2|Headers:input_record_offset:1,...,response_content:{"error":"email: must be a company address"},status_code:400,...
+CreateTime:2026-11-26 10:58:54.057|Partition:0|Offset:3|Headers:input_record_offset:2,...,response_content:{"error":"email: must be a company address"},status_code:400,...
+```
+
+<!-- select:end -->
+
+👉 The API team rolls the rule back (`playground tools http-server set-response --status-code 200`). Send the 3 records again.
+
+#### **📍 Step 4**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+The 3 records were all refused, and they are all the records of the topic: rewind the connector to the start of the topic with [playground connector offsets reset](/playground%20connector%20offsets%20reset) (it stops the connector, deletes its offsets, and resumes it):
+
+```bash
+playground tools http-server set-response --status-code 200
+playground connector offsets reset --connector http-sink
+```
+
+```log
+11:00:28 ℹ️ 📥 3 request(s) received since the start or the last reset (3 kept)
+#1 11:00:12 POST / → 200  application/json, 82 bytes
+   [{"name":"Gage.Christiansen11","id":1,"email":"Eloise_Kerluke-Blick@example.net"}]
+#2 11:00:12 POST / → 200  application/json, 75 bytes
+   [{"name":"Madeline.DuBuque61","id":2,"email":"Lilliana_Kulas@example.net"}]
+#3 11:00:12 POST / → 200  application/json, 64 bytes
+   [{"name":"Kiana.Rolfson","id":3,"email":"Wilmer71@example.net"}]
+```
+
+```log
+11:00:33 ℹ️ ✨ Display content of topic success-responses, it contains 3 messages
+```
+
+> [!WARNING]
+> A reset sends the **whole** topic again. When only some records failed, use the `input_record_partition` / `input_record_offset` headers of `error-responses`: set the offset of the connector there with [playground connector offsets alter](/playground%20connector%20offsets%20alter), or send the records of `error-responses` again with a producer of your own.
+
+<!-- select:end -->
+🥁 So...is a 400 a connector problem? No: the data or the API changed. The connector just has to keep going, and keep what was refused.
+
+#### **🎓 Next Steps**
+
+* `report.errors.as` `http_response` writes the plain answer of the API as the value of the error records.
+* Compare with the [Avro Converter exercise](/academy?id=avro-converter-unknown-magic-byte): an error of the converter goes to the dead letter queue, and `playground topic dlq replay` sends it again.
+* Read the [🍪 Connector troubleshooting](/deep-dive-connector-troubleshooting.md) deep dive.
+
+<!-- tabs:end -->
+
+### Renamed sink connector writes every row again
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A team renames its connectors to follow a new naming convention: the JDBC sink `sink-1` becomes `postgres-orders-sink`. Kafka Connect has no rename, so they deleted `sink-1` and created `postgres-orders-sink` with the same config. Right after, every order is twice in the table.
+
+💡 What you'll learn:
+
+* Where a sink connector keeps its offsets, and why they are tied to its name.
+* Create a connector that starts where another one stopped.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 JDBC sink (PostgreSQL): 10.9.10
+
+Connector config (both names):
+
+```json
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "auto.create": "true"
+}
+```
+
+Reproduction model: [postgres-sink-repro-000015-renamed-connector-rereads-topic.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000015-renamed-connector-rereads-topic.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000015` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-jdbc-postgresql-sink/postgres-sink-repro-000015-renamed-connector-rereads-topic.sh
+```
+
+`sink-1` writes 10 orders, then the "rename":
+
+```log
+11:01:35 ℹ️ ❌ 🌎onprem connector sink-1 has been deleted successfully
+11:01:36 ℹ️ ✅ 🌎onprem connector postgres-orders-sink was successfully created
+```
+
+```log
+ nb_rows | nb_orders
+---------+-----------
+      20 |        10
+(1 row)
+```
+
+❔Questions:
+
+* Where were the offsets of `sink-1`, and where are they now?
+* Why did `postgres-orders-sink` start from the beginning of the topic?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Where were the offsets of `sink-1`, and where are they now?
+
+A sink connector is a consumer group, named `connect-<connector name>`:
+
+```bash
+playground consumer-group list
+```
+
+```log
+11:02:22 ℹ️ 👥 Listing consumer groups
+connect-sink-1
+connect-postgres-orders-sink
+```
+
+The offsets of `sink-1` are still there, with nobody to use them:
+
+```bash
+playground consumer-group describe --group connect-sink-1
+```
+
+```log
+Consumer group 'connect-sink-1' has no active members.
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+connect-sink-1  orders          0          10              10              0               -               -               -
+```
+
+> Why did `postgres-orders-sink` start from the beginning of the topic?
+
+A new name is a new group, with no committed offset. A sink consumer then starts from the earliest record (`auto.offset.reset` is `earliest` for the sink connectors), and the JDBC sink inserts (`insert.mode` `insert`, no primary key): each order once more.
+
+The opposite is also true: [playground connector delete](/playground%20connector%20delete) keeps the offsets, and a connector created again **with the same name** resumes where it stopped.
+
+<!-- select:end -->
+
+👉 Rename it the right way, to `orders-sink`: create it without starting it (`--initial-state STOPPED`), give it the offsets of the old one with [playground connector offsets alter](/playground%20connector%20offsets%20alter), then start it.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground connector delete --connector postgres-orders-sink
+playground connector create-or-update --connector orders-sink --initial-state STOPPED << EOF
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
+  "topics": "orders",
+  "auto.create": "true"
+}
+EOF
+```
+
+```log
+11:06:03 ℹ️ ⛏️ Altering offsets for 🌎onprem connector orders-sink
+11:06:03 ❗ ⚠️ connector orders-sink has no offset yet: write each entry in full, for example
+   sink:   {"offsets": [{"partition": {"kafka_topic": "orders", "kafka_partition": 0}, "offset": {"kafka_offset": 10}}]}
+```
+
+The new connector has no offset: write the offset of `connect-sink-1` (`10`) in the file that opens, save and close it:
+
+```json
+{"offsets": [{"partition": {"kafka_topic": "orders", "kafka_partition": 0}, "offset": {"kafka_offset": 10}}]}
+```
+
+```log
+{
+  "message": "The Connect framework-managed offsets for this connector have been altered successfully. However, if this connector manages offsets externally, they will need to be manually altered in the system that the connector uses."
+}
+11:06:04 ℹ️ 🛑 connector orders-sink was STOPPED before the change: left STOPPED (playground connector resume --connector orders-sink to start it)
+```
+
+Then start it, and send 5 new orders:
+
+```bash
+playground connector resume --connector orders-sink
+```
+
+```log
+orders-sink                    ✅ RUNNING  0:🟢 RUNNING                 -
+```
+
+```bash
+playground db sql << 'EOF'
+SELECT count(*) AS nb_rows FROM orders;
+EOF
+```
+
+```log
+ nb_rows
+---------
+      25
+(1 row)
+```
+
+20 + 5: the new connector went on from offset 10. The 10 duplicates of the first "rename" are still in the table: delete them with SQL, and drop the groups that nobody uses any more with [playground consumer-group delete](/playground%20consumer-group%20delete).
+
+<!-- select:end -->
+🥁 So...what's in a name? The offsets.
+
+#### **🎓 Next Steps**
+
+* Read the [🍪 Offsets and lag](/deep-dive-offsets-and-lag.md) deep dive.
+* Keep the group instead: `"consumer.override.group.id": "connect-sink-1"` in the config of the new connector (the worker must allow it: `connector.client.config.override.policy` `All`, the setting of the playground).
+* Make the sink idempotent: `insert.mode` `upsert` with `pk.mode` `record_value` and `pk.fields` `id` turns a replay into updates of the same rows. Compare with the [duplicates after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) exercise.
+* A source connector has the same issue: its offsets are stored under its name in the `connect-offsets` topic.
+
+<!-- tabs:end -->
 
 ## ⭐⭐⭐ Advanced
 

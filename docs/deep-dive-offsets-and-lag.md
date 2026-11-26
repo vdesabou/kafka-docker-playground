@@ -42,7 +42,8 @@ Takes about 15 minutes to read and run.
 
 2. **Offsets only change while the connector is stopped.** The KIP-875 API refuses to change the offsets of a running
    connector, and Kafka refuses to reset a consumer group that has active members. `connector offsets alter|reset` do
-   `connector stop` → change → `connector resume` for you. `consumer-group reset-offsets|delete` don't: on the group of
+   `connector stop` → change → `connector resume` for you (a connector that was already STOPPED, for example created with
+   `--initial-state STOPPED` to give it offsets before its first record, is left STOPPED). `consumer-group reset-offsets|delete` don't: on the group of
    a running sink they fail, and the error tells you to use `connector offsets` instead.
 
    Versions: `offsets get` needs CP 7.5, `alter` and `reset` CP 7.6. On an older CP, a **sink** falls back to
@@ -127,11 +128,16 @@ What happens behind each subcommand (self-managed, CP 7.6+):
 | Subcommand | REST calls | Around it |
 | --- | --- | --- |
 | `get` | `GET /connectors/<c>/offsets` | nothing: works on a running connector |
-| `alter` | `GET …/offsets`, your edit, `PATCH …/offsets` | `connector stop` before the `PATCH`, `connector resume` after, then `get` |
-| `reset` | `DELETE /connectors/<c>/offsets` | `connector stop` before, `connector resume` after, then `get` |
+| `alter` | `GET …/offsets`, your edit, `PATCH …/offsets` | `connector stop` before the `PATCH`, `connector resume` after, then `get`; a connector already STOPPED stays STOPPED |
+| `reset` | `DELETE /connectors/<c>/offsets` | `connector stop` before, `connector resume` after, then `get`; a connector already STOPPED stays STOPPED |
+
+On a connector without offsets yet (`"offsets": []`, a new connector), `alter` prints the format of an entry to write
+(`{"offsets": [{"partition": {"kafka_topic": "orders", "kafka_partition": 0}, "offset": {"kafka_offset": 10}}]}` for a
+sink), and does nothing when the saved file still has no entry. That is how a renamed sink starts where the old name
+stopped: create it with `--initial-state STOPPED`, `alter` it to the offsets of the old group, `connector resume`.
 
 If the `PATCH` / `DELETE` is refused (for example a `400` on an offsets file with a typo), the connector is still
-resumed, and the command prints `❌ offsets of connector <c> were not altered (the connector has been resumed)` (or
+resumed (unless it was STOPPED before), and the command prints `❌ offsets of connector <c> were not altered (the connector has been resumed)` (or
 `reset`) and exits 1.
 
 Gotchas:

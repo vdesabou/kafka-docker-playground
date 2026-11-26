@@ -9293,6 +9293,39 @@ subcommands:
         the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
+  - name: add-partitions
+    description: "➕ Add partitions to an existing topic\n\nA topic can only grow:
+      Kafka refuses to remove partitions. The records\nalready in the topic stay where
+      they are, only new records use the new\npartitions.\n\n⚠️ The partition of a
+      record with a key is hash(key) % number of\npartitions: after the change, new
+      records of a key can land in another\npartition than the older ones, and a consumer
+      no longer sees all the\nrecords of a key in order.\n\n\U0001F393 Tip: a sink
+      connector runs at most one task per partition that it\nreads: tasks.max above
+      the number of partitions leaves tasks idle.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration"
+    usage: playground topic add-partitions [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic name\n\nRequired: ✓ Yes"
+    - names:
+      - "--nb-partitions"
+      argument: NB-PARTITIONS
+      description: "\U0001F522 New total number of partitions (more than the current
+        one)\n\nRequired: ✓ Yes"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: delete
     description: "❌ Delete topic and associated schema/subject if applicable\n\nAlso
       removes the key and value subjects from the schema registry,\nwhich is what

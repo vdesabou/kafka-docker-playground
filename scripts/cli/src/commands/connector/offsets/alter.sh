@@ -82,15 +82,50 @@ function handle_first_class_offset() {
         fi
 
         get_connect_url_and_security
+        # a connector created STOPPED (--initial-state STOPPED, to give it offsets before its first record) stays STOPPED
+        initial_state=""
+        if handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+        then
+            initial_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2>/dev/null)
+        fi
         handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
 
         file=$tmp_dir/offsets-$connector.json
         echo "$curl_output" | jq . > $file
 
+        if [ "$(jq '.offsets | length' $file 2>/dev/null)" == "0" ]
+        then
+            # nothing committed yet (new connector): the whole entry has to be written, show its format
+            topics=""
+            offsets_output="$curl_output"
+            if handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1
+            then
+                topics=$(echo "$curl_output" | jq -r '.topics // empty' 2>/dev/null | cut -d, -f1 | tr -d ' ')
+            fi
+            curl_output="$offsets_output"
+            logwarn "⚠️ connector $connector has no offset yet: write each entry in full, for example"
+            if [ -n "$topics" ]
+            then
+                echo "   sink:   {\"offsets\": [{\"partition\": {\"kafka_topic\": \"$topics\", \"kafka_partition\": 0}, \"offset\": {\"kafka_offset\": 10}}]}"
+            else
+                echo "   sink:   {\"offsets\": [{\"partition\": {\"kafka_topic\": \"<topic>\", \"kafka_partition\": 0}, \"offset\": {\"kafka_offset\": 10}}]}"
+                echo "   source: {\"offsets\": [{\"partition\": <partition of the connector>, \"offset\": <offset of the connector>}]}"
+            fi
+        fi
+
         log "✨ Update the connector offsets as per your needs, save and close the file to continue"
         playground open --file "${file}" --wait || return 1
 
-        playground connector stop --connector $connector || return 1
+        if [ "$(jq '.offsets | length' $file 2>/dev/null)" == "0" ]
+        then
+            logwarn "⚠️ no offset in the file: nothing altered"
+            return 0
+        fi
+
+        if [ "$initial_state" != "STOPPED" ]
+        then
+            playground connector stop --connector $connector || return 1
+        fi
 
         # always resume the connector, even when the PATCH is refused (invalid offsets, 400): otherwise it stays STOPPED
         patch_ret=0
@@ -100,6 +135,16 @@ function handle_first_class_offset() {
             echo "$curl_output" | jq .
         fi
 
+        if [ "$initial_state" == "STOPPED" ]
+        then
+            log "🛑 connector $connector was STOPPED before the change: left STOPPED (playground connector resume --connector $connector to start it)"
+            if [ $patch_ret -ne 0 ]
+            then
+                logerror "❌ offsets of connector $connector were not altered"
+                return 1
+            fi
+            return 0
+        fi
         playground connector resume --connector $connector || return 1
         if [ $patch_ret -ne 0 ]
         then

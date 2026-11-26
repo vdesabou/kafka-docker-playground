@@ -240,6 +240,7 @@ keeps working across environments where the raw command only works on `plaintext
 | `get-jmx-metrics -c <container>` dumping everything | `get-jmx-metrics -c <container>` lists the domains: `--domain <d>`, `--mbean "<domain>:type=<type>,*"`, or `--all` |
 | `kafka-reassign-partitions`, `kafka-leader-election` | `playground topic reassign` (`--replicas 2,3`, `--brokers 1,2,3`, `--throttle`, `--no-wait` / `--verify-only`) / `playground topic elect-leader` (`--leader <broker>` for a controlled leader move, `--unclean`); needs `--enable-multiple-brokers` |
 | `kafka-topics --create\|--list\|--delete\|--describe` | `playground topic create\|list\|delete\|describe` |
+| `kafka-topics --alter --partitions N` | `playground topic add-partitions -t <t> --nb-partitions N` |
 | `kafka-dump-log --files /var/lib/kafka/data/<t>-<p>/<segment>.log --deep-iteration` | `playground topic dump-log --topic <t> --partition <p> [--offset o]` (finds the broker and the segment, `--raw` for the same output) |
 | comparing a topic with its replica by hand (`GetOffsetShell` on both clusters) | `playground topic compare --topic <t> --from europe --to us` (`--to-topic`, `--wait`, `--json`; two topics of one cluster outside mdc) |
 | `docker exec broker-us kafka-…`, `curl localhost:8283/connectors` in an `mdc-*` environment (two clusters) | `playground topic\|consumer-group\|connector\|schema\|broker\|quota … --cluster us\|europe` (or `export PLAYGROUND_CLUSTER=us`) |

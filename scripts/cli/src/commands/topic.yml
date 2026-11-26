@@ -1962,6 +1962,45 @@ commands:
       playground topic create --topic atopic --nb-partitions 8 --config retention.ms=30000 --config cleanup.policy=compact
       playground topic create --topic atopic --if-not-exists
       
+  - name: add-partitions
+    group: Topic
+    help: |-
+      ➕ Add partitions to an existing topic
+
+      A topic can only grow: Kafka refuses to remove partitions. The records
+      already in the topic stay where they are, only new records use the new
+      partitions.
+
+      ⚠️ The partition of a record with a key is hash(key) % number of
+      partitions: after the change, new records of a key can land in another
+      partition than the older ones, and a consumer no longer sees all the
+      records of a key in order.
+
+      🎓 Tip: a sink connector runs at most one task per partition that it
+      reads: tasks.max above the number of partitions leaves tasks idle.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+    flags:
+    - import: src/flags/verbose.yml
+    - long: --topic
+      short: -t
+      required: true
+      arg: topic
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Topic name
+    - long: --nb-partitions
+      arg: nb-partitions
+      validate: integer
+      required: true
+      help: |-
+        🔢 New total number of partitions (more than the current one)
+    - import: src/flags/cluster.yml
+    examples: |
+      playground topic add-partitions --topic atopic --nb-partitions 4
+
   - name: delete
     group: Topic
     help: |-
