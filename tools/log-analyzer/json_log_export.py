@@ -13,6 +13,9 @@ Exports recognized (a JSON array, JSON lines, or one object wrapping the events;
     "Message", "Exception"}, keys of any case) and -o json ({"timestamp", "level", "task_id", "message", "exception":
     {"stacktrace"}}); with PG_LOG_CONNECTOR_NAME, each line gets the context of the connector logs, [<name>|task-0]
     (its task) or [<name>|worker], so that the report ties it to the connector
+  - Splunk JSON exports (Export > JSON, the search REST API with output_mode=json): one {"preview": false, "result":
+    {"_raw", "_time", <extracted fields>}} per line; the fields Splunk extracted from a JSON log layout ("level",
+    "loggerName", "message", "connector": "[<name>|task-0] ") are used, else the JSON of _raw itself
   - CSV exports (.csv, .csv.gz) with a header row: Kibana / OpenSearch Dashboards Discover ("Share > CSV report",
     "Oct 14, 2026 @ 19:13:28.977" timestamps, "-" for an empty cell), Splunk, Datadog, Grafana / Loki, CloudWatch
     Logs Insights: one event per row, the columns are its fields; a cell holding a JSON object (a "log" or "message"
@@ -213,8 +216,17 @@ def events_of(data: Any) -> Optional[List[dict]]:
 TS_NEAR_START = re.compile(r"^\[?(?:[A-Za-z]+\]?\s+\[?)?\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}")
 
 
+# a day first timestamp of a custom log4j2 JsonLayout pattern ("dd-MM-yyyy'T'HH:mm:ss.SSS'Z'": 19-11-2026T09:25:56.517Z)
+DAY_FIRST_TS = re.compile(r"^(\d{2})-(\d{2})-(\d{4})([ T]\d{2}:\d{2}:\d{2}.*)$")
+
+
 def iso_ts(ts: Any) -> Any:
-    """epoch seconds / milliseconds / nanoseconds of the CloudWatch and Loki exports as ISO 8601 UTC, anything else as it is"""
+    """epoch seconds / milliseconds / nanoseconds of the CloudWatch and Loki exports as ISO 8601 UTC, a day first
+    timestamp as ISO 8601, anything else as it is"""
+    if isinstance(ts, str):
+        m = DAY_FIRST_TS.match(ts)
+        if m and int(m.group(1)) <= 31 and int(m.group(2)) <= 12:
+            return f"{m.group(3)}-{m.group(2)}-{m.group(1)}{m.group(4).replace(' ', 'T', 1)}"
     if isinstance(ts, str) and re.fullmatch(r"\d+(?:\.\d+)?", ts):
         ts = float(ts) if "." in ts else int(ts)
     if isinstance(ts, (int, float)) and not isinstance(ts, bool):
@@ -262,7 +274,26 @@ def level_name(level: Any) -> Any:
     return level
 
 
+def splunk_result(event: dict) -> dict:
+    """the event of a line of a Splunk JSON export ({"preview": false, "result": {...}}, {"lastrow": true, ...} on the
+    last one). Its _raw is the line as it was indexed: a structured JSON log line (log4j2 JsonLayout) whose fields
+    Splunk did not extract gives them (the fields Splunk extracted win)"""
+    result = event.get("result")
+    if not (isinstance(result, dict) and ("preview" in event or "lastrow" in event) and "_raw" in result):
+        return event
+    raw = result.get("_raw")
+    if isinstance(raw, str) and raw.lstrip().startswith("{") and get(result, ("message", "msg", "log")) is None:
+        try:
+            inner = json.loads(raw)
+        except ValueError:
+            inner = None
+        if isinstance(inner, dict):
+            return dict(inner, **{k: v for k, v in result.items() if k != "_raw"})
+    return result
+
+
 def to_lines(event: dict) -> Tuple[Any, List[str]]:
+    event = splunk_result(event)
     message = get(event, MESSAGE_KEYS)
     ts = get(event, TIME_KEYS)
     if message is None:
@@ -307,11 +338,15 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
 def connector_context(event: dict) -> str:
     """the [<connector>|task-0] / [<connector>|worker] context of an event of a fully managed connector, when
     PG_LOG_CONNECTOR_NAME names it (playground connector logs) and the message has none"""
-    name = os.environ.get("PG_LOG_CONNECTOR_NAME", "")
-    if not name:
-        return ""
     message = get(event, MESSAGE_KEYS)
     if isinstance(message, str) and CONTEXT_RE.search(message[:300]):
+        return ""
+    # the MDC context of Connect in its own field of a JSON layout ({"connector": "[<name>|task-0] "}, %X{connector.context})
+    mdc = get(event, ("connector", "connector.context", "connector_context"))
+    if isinstance(mdc, str) and CONTEXT_RE.match(mdc.strip()):
+        return mdc.strip() + " "
+    name = os.environ.get("PG_LOG_CONNECTOR_NAME", "")
+    if not name:
         return ""
     task = get(event, TASK_KEYS)
     if isinstance(task, int) or (isinstance(task, str) and task.isdigit()):

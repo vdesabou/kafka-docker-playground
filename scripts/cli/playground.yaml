@@ -5897,7 +5897,8 @@ subcommands:
       so are the copies of a file or of a\nCFK support bundle already analyzed (an
       archive next to its extracted\nfolder). A JSON export of log events (.json,
       .jsonl, .ndjson, also\ngzipped: AWS CloudWatch Logs Insights @timestamp/@message,
-      CloudWatch\nevents, Elasticsearch / OpenSearch hits, structured JSON logs with\nlevel/logger_name/message/stack_trace)
+      CloudWatch\nevents, Elasticsearch / OpenSearch hits, structured JSON logs with\nlevel/logger_name/message/stack_trace,
+      Splunk JSON exports with one\n{\"preview\":false,\"result\":{...}} per line)
       and a CSV export of log events\n(.csv, also gzipped: Kibana / OpenSearch Dashboards
       Discover, Splunk,\nDatadog, Grafana: one event per row, a cell holding the JSON
       log line of\nthe container is parsed) are converted back to log lines, oldest

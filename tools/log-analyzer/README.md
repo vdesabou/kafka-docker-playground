@@ -64,7 +64,10 @@ time at its start gets the time of the event (`iso_ts()`: epoch seconds / ms / n
 of a multi-line message are indented, except exception lines and `Caused by:`.
 
 Also: the Loki query API (`data.result[].values`, streams merged in time order with their labels), Elasticsearch /
-OpenSearch hits with `fields` instead of `_source`, Splunk `_time` (its newest-first CSV is reversed), numeric levels
+OpenSearch hits with `fields` instead of `_source`, Splunk `_time` (its newest-first CSV is reversed), the Splunk JSON
+export (`{"preview": false, "result": {…}}` per line, `splunk_result()`: the fields Splunk extracted, else the JSON
+of `_raw`), day-first timestamps of a custom JSON layout (`19-11-2026T09:25:56.517Z` becomes ISO 8601), the Connect MDC
+context in its own field (`"connector": "[<name>|task-0] "`, put back in front of the message), numeric levels
 (pino / bunyan `"level":50` is ERROR, syslog / GELF `3` is ERROR), epoch seconds written as a string (`"1697310809.5"`),
 and the `stack_trace` of an event without level. A message is taken as an already formatted log line only when it has
 a level word **and** a time near its start (`"Task failed: WARN threshold"` of an ERROR event keeps its level, logger
