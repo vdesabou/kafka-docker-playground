@@ -13,6 +13,13 @@ path_glob="${args[--path]}"
 grep_regex="${args[--grep]}"
 json="${args[--json]}"
 
+# sourcecode runs without a container engine (git and curl only): only --compile needs one, for its maven container
+if [[ -n "$compile" ]] && ! docker info >/dev/null 2>&1
+then
+    logerror "❌ --compile runs maven in a container: the container engine must be running - run 'playground doctor'"
+    exit 1
+fi
+
 # with --json, everything printed goes to stderr and the JSON document to fd 3 (stdout)
 exec 3>&1
 if [[ -n "$json" ]]

@@ -23342,7 +23342,7 @@ playground_connector_plugin_config_key_usage() {
 playground_connector_plugin_sourcecode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin sourcecode\n\n"
-    printf "  🧑‍💻 Open source code url in your browser (or in your editor when used with\n  --open)\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n  \n  🏗️ Compile code and generate zip file(s) by providing --compile flag\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
+    printf "  🧑‍💻 Open source code url in your browser (or in your editor when used with\n  --open)\n  \n  You can compare different sourcecode versions by specifying --connector-tag\n  two times, in such case it will open github in comparison mode\n  \n  🏗️ Compile code and generate zip file(s) by providing --compile flag\n  \n  🌍 Works without a container engine (git and curl only), except --compile which\n  runs maven in a container\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
   else
     printf "playground connector-plugin sourcecode - 🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n\n"
   fi
@@ -32331,6 +32331,11 @@ function filter_docker_running() {
     # Docker, a colleague who only wants the log report); the parts that need one say it themselves (the CFK analysis
     # of a support bundle is skipped, its pod logs are still read)
     analyze\ logs|analyze\ cfk-bundle|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
+      return 0
+    ;;
+    # sourcecode only clones and reads git repositories (only --compile runs a maven container: it checks the engine
+    # itself), and versions (called by sourcecode for the latest tag) only queries Confluent Hub
+    connector-plugin\ sourcecode|connector-plugin\ versions)
       return 0
     ;;
   esac
@@ -99329,6 +99334,13 @@ playground_connector_plugin_sourcecode_command() {
   path_glob="${args[--path]}"
   grep_regex="${args[--grep]}"
   json="${args[--json]}"
+
+  # sourcecode runs without a container engine (git and curl only): only --compile needs one, for its maven container
+  if [[ -n "$compile" ]] && ! docker info >/dev/null 2>&1
+  then
+      logerror "❌ --compile runs maven in a container: the container engine must be running - run 'playground doctor'"
+      exit 1
+  fi
 
   # with --json, everything printed goes to stderr and the JSON document to fd 3 (stdout)
   exec 3>&1

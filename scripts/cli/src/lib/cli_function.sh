@@ -4382,6 +4382,11 @@ function filter_docker_running() {
     analyze\ logs|analyze\ cfk-bundle|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
       return 0
     ;;
+    # sourcecode only clones and reads git repositories (only --compile runs a maven container: it checks the engine
+    # itself), and versions (called by sourcecode for the latest tag) only queries Confluent Hub
+    connector-plugin\ sourcecode|connector-plugin\ versions)
+      return 0
+    ;;
   esac
   docker info >/dev/null 2>&1 || logerror "container engine must be running - run 'playground doctor'"
 }
