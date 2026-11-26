@@ -73,6 +73,7 @@ github_ssh_key_file
 confluent-hub
 *.jfr
 playground-run-history
+playground-session.log
 playground-run-history.bak
 playground-cp-images-first-seen
 playground-repro-verdicts

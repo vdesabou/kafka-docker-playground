@@ -26,6 +26,7 @@ version where a behaviour changed. Takes about 15 minutes to read and run.
 | DEBUG / TRACE before the connector is created | `--connect-log-level "io.confluent.connect.jdbc=TRACE"` |
 | the last run again, same flags | `playground re-run` (menu), or `playground history --run` (scripts) |
 | what did I run, with which flags, did it pass? | `playground history --list` (`<words>` to filter, `--json`, `--last`, `--stats`) |
+| what did I (or the example) do to the environment since it started? | `playground history --session` (`--json`) |
 | another version, keeping the example running | `playground update-version --tag 8.2.0` / `--connect-tag` / `--connector-tag` / `--connector-zip` |
 | what changed in Confluent Platform since the customer's version | `playground cp-changelog --from 8.1.4 [--component schema-registry] [--grep <symptom> \| --security]` |
 | stop everything, volumes included | `playground stop` |
@@ -173,6 +174,7 @@ playground history 369368 --last       # the most recent command matching the wo
 playground history 369368 --run        # run it, without picker nor edit prompt
 playground history --json --limit 5    # command, script, path, exists, date, result, duration_seconds, branch, runs
 playground history --stats             # most run examples, --tag / --connector-tag / --environment, results
+playground history --session           # what was done to the environment since it started (kills, faults, updates, produce)
 playground history --prune             # one line per command, runs of deleted scripts removed (.bak kept)
 playground state get run.test_file     # the example of the last run
 ```

@@ -4,6 +4,7 @@ since="${args[--since]}"
 config_topic="${args[--config-topic]}"
 status_topic="${args[--status-topic]}"
 json="${args[--json]}"
+with_logs="${args[--with-logs]}"
 
 connector_type=$(playground state get run.connector_type)
 
@@ -205,6 +206,29 @@ history=$( { echo "$config_records" | sed 's/^/config|/'; echo "$status_records"
             }
           })')
 
+# --with-logs: the incident timeline of the container logs and the playground actions of the session, merged with the
+# events of the topics (tools/connector-history/timeline.py)
+if [[ -n "$with_logs" ]]
+then
+    echo "$history" > "$tmp_dir/history.json"
+    [[ -z "$json" ]] && log "📜 Analyzing the logs of the containers (playground analyze logs --from-containers)"
+    analyze_args=(analyze logs --from-containers --json --json-sections timeline --output-dir "$tmp_dir/analyze")
+    [[ -n "$since" ]] && analyze_args+=(--since "$since")
+    if ! playground "${analyze_args[@]}" > "$tmp_dir/timeline.json" 2> "$tmp_dir/analyze.log" || ! jq -e '.timeline' "$tmp_dir/timeline.json" > /dev/null 2>&1
+    then
+        logwarn "⚠️ could not analyze the logs of the containers, only the topics and the playground actions are merged:"
+        grep -v '^\s*$' "$tmp_dir/analyze.log" | tail -3 >&2
+        echo '{"timeline": []}' > "$tmp_dir/timeline.json"
+    fi
+    merge_args=(merge --history "$tmp_dir/history.json" --timeline "$tmp_dir/timeline.json" --since-ms "$since_ms")
+    [[ -f "$root_folder/playground-session.log" ]] && merge_args+=(--session "$root_folder/playground-session.log")
+    if [[ -n "$json" ]]
+    then
+        python3 -I "$root_folder/tools/connector-history/timeline.py" "${merge_args[@]}" --json
+        exit 0
+    fi
+fi
+
 if [[ -n "$json" ]]
 then
     echo "$history" | jq .
@@ -221,11 +245,14 @@ while read -r h
 do
     c=$(echo "$h" | jq -r '.connector')
     log "🕰️ History of $connector_type connector $c$([[ -n "$since" ]] && echo " (last $since)")"
-    if [ "$(echo "$h" | jq '.events | length')" == "0" ]
+    if [[ -n "$with_logs" ]]
+    then
+        python3 -I "$root_folder/tools/connector-history/timeline.py" "${merge_args[@]}" --only "$c"
+    elif [ "$(echo "$h" | jq '.events | length')" == "0" ]
     then
         log "💤 no event$([[ -n "$since" ]] && echo " in the last $since")"
     fi
-    echo "$h" | jq -r '
+    [[ -z "$with_logs" ]] && echo "$h" | jq -r '
         def icon: if .kind == "created" then "🆕"
             elif .kind == "deleted" then "🗑️ "
             elif .kind == "config" then "⚙️ "

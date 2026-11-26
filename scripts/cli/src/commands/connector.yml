@@ -1753,6 +1753,32 @@ commands:
     🎓 Tip: works for deleted connectors too (--connector <name>), and
     --since 1h keeps the recent events.
 
+    📜 --with-logs merges into the same time-ordered list, with the time
+    since the previous event (Δ):
+
+      📋 topics       the events above (states, configs)
+      📜 logs         the incident timeline of 'playground analyze logs
+                      --from-containers': the errors, known causes,
+                      restarts and config changes of this connector, and
+                      the events of the workers, brokers and controllers
+                      without connector (rebalances, members removed by
+                      the coordinator, controller changes, ISR shrinks,
+                      long GC pauses, processes started or stopped)
+      🛠️ playground   the playground commands that changed the environment
+                      since it started (containers killed or restarted,
+                      faults injected with debug, connector updates,
+                      offsets changed, records produced...), from
+                      playground-session.log ('playground history
+                      --session'); the ones aimed at another connector are
+                      left out
+
+    It answers "what happened first?": the cut of block-traffic, then the
+    rebalance in the broker log, then the task FAILED in connect-status.
+    The container logs are saved and analyzed first (about 10 seconds;
+    the folder is kept, see 'playground analyze logs --from-containers').
+    With --json, each connector gets a "timeline" list (ts, time, source,
+    what, text, details, delta_ms) next to its events and summary.
+
     ⚠️ These topics are compacted: on a long-running cluster, old states
     are gone, only the last one of each connector and task is kept for
     sure. Self-managed connectors only (the topic names are read from the
@@ -1790,12 +1816,40 @@ commands:
     required: false
     help: |-
       🗂️ Status topic of the connect cluster (default: status.storage.topic of the worker, connect-status)
+  - long: --with-logs
+    required: false
+    help: |-
+      📜 Also show the incident timeline of the container logs and the playground actions of the session, merged with the events of the topics
   - import: src/flags/json.yml
   - import: src/flags/cluster.yml
   examples:
   - playground connector history
   - playground connector history --connector jdbc-sink --since 1h
   - playground connector history --connector jdbc-sink --json
+  - playground connector history --connector http-sink --with-logs --since 30m
+  x_example_outputs:
+  - command: playground connector history --connector http-source --with-logs
+    output: |-
+      14:51:19 ℹ️ 🕰️ Reading the internal topics connect-configs and connect-status
+      14:51:27 ℹ️ 📜 Analyzing the logs of the containers (playground analyze logs --from-containers)
+      14:51:34 ℹ️ 🕰️ History of 🌎onprem connector http-source
+         19 event(s): 📋 5 from the internal topics, 📜 11 from the logs, 🛠️  3 playground action(s)
+      2026-11-26 12:30:29 UTC          📜 broker 1    ⚙️ broker config changed live, no restart on 2 files: min.insync.replicas → 1 · 🧬 min.insync.replicas changed
+      2026-11-26 12:30:29 UTC     +0s  📜 controller  👑 a new active controller (epoch 1)
+      2026-11-26 12:30:39 UTC     +8s  📜 connect     🔄 Connect worker started (DistributedConfig logged)
+      2026-11-26 12:30:39 UTC     +0s  📜 connect     🔄 rebalance of the worker group connect-cluster
+      2026-11-26 12:31:21 UTC    +42s  📋 config      🆕 created (HttpSourceConnector, tasks.max=1)
+      2026-11-26 12:31:21 UTC     +0s  📜 connect     🔌 connector http-source (re)configured
+      2026-11-26 12:31:24 UTC     +3s  📋 connector   🟢 RUNNING on connect:8083 (generation 2)
+      2026-11-26 12:31:24 UTC     +0s  📋 tasks       🧵 1 task config(s) committed
+      2026-11-26 12:31:24 UTC     +0s  📋 task 0      🟢 RUNNING on connect:8083 (generation 3)
+      2026-11-26 12:31:24 UTC     +0s  📜 connect     🔄 rebalance of the worker group connect-cluster
+      2026-11-26 12:31:29 UTC     +5s  📋 topic       📚 first use of topic http-topic-spaces (task 0)
+      2026-11-26 13:51:03 UTC  +79min  🛠️  playground  playground container pause --container pg-session-log-test-nonexistent ❌ exit code 1
+      2026-11-26 13:51:04 UTC     +1s  🛠️  playground  playground container resume --container pg-session-log-test-nonexistent ❌ exit code 1
+      🧾 0 failure(s), 0 recovery(ies) after a failure, 0 config change(s)
+         connector: RUNNING on connect:8083 for 80min
+         task 0: RUNNING on connect:8083 for 80min
 
 - name: show-lag
   help: |

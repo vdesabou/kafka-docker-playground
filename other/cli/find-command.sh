@@ -35,6 +35,8 @@ cases=(
     "which task does all the work|connector tasks|1"
     "is my connector config risky|connector lint|1"
     "can the customer upgrade the s3 sink connector to the latest version|connector upgrade-check|1"
+    "what happened first fault injected rebalance task failure|connector history|1"
+    "what did I do to the environment since it started|history|1"
 )
 
 failed=0

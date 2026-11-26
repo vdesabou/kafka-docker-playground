@@ -64,7 +64,7 @@ flags:
     🗑️ Also show the runs whose script no longer exists
 - long: --last
   required: false
-  conflicts: [--list, --json, --run, --stats, --prune]
+  conflicts: [--list, --json, --run, --stats, --prune, --session]
   help: |-
     ⏮️ Print the most recent command matching the query (the last run
     without query), and nothing else
@@ -73,20 +73,39 @@ flags:
     printed as '<masked>': use --run to replay the command with them
 - long: --run
   required: false
-  conflicts: [--list, --json, --last, --stats, --prune]
+  conflicts: [--list, --json, --last, --stats, --prune, --session]
   help: |-
     🚀 Run the most recent command matching the query, without the picker
     nor the edit prompt
 - long: --stats
   required: false
-  conflicts: [--list, --json, --last, --run, --prune]
+  conflicts: [--list, --json, --last, --run, --prune, --session]
   help: |-
     📊 Print the most run examples, the most used --tag, --connector-tag and
     --environment, and the results, over every run of the history (the query is
     ignored)
+- long: --session
+  required: false
+  conflicts: [--last, --run, --stats, --prune]
+  help: |-
+    🛠️ Print what was done to the running environment since it started: the
+    playground commands that change it (containers killed or restarted,
+    faults injected with debug, connectors created, updated or deleted,
+    offsets changed, records produced, topics, brokers, quotas, schemas...),
+    with their time, duration and exit code, oldest first. Read-only
+    commands are not recorded.
+
+    They are kept in playground-session.log (repository root, secrets
+    masked), reset by 'playground run' and 'playground start-environment',
+    kept by 'playground stop' until the next start. With --json: an object
+    with started, started_by and the actions (time, epoch, duration_seconds,
+    exit_code, command). 'playground connector history --with-logs' shows
+    them next to the states of a connector and the errors of the logs.
+
+    ℹ️ PLAYGROUND_SESSION_LOG_DISABLED=1 turns the recording off
 - long: --prune
   required: false
-  conflicts: [--list, --json, --last, --run, --stats]
+  conflicts: [--list, --json, --last, --run, --stats, --session]
   help: |-
     🧹 Rewrite playground-run-history with one line per command (its last
     run) and without the runs whose script no longer exists. The previous
@@ -100,5 +119,13 @@ examples:
 - playground history --json --limit 3 | jq -r '.[] | select(.result == "FAILURE") | .command'
 - playground history --stats
 - playground history --prune
+- playground history --session
+- playground history --session --json | jq -r '.actions[] | select(.exit_code != 0) | .command'
+x_example_outputs:
+- command: playground history --session
+  output: |-
+    🛠️  2 action(s) recorded
+    13:51:03 UTC  ❌    1s  playground container pause --container pg-session-log-test-nonexistent   (exit code 1)
+    13:51:04 UTC  ❌    0s  playground container resume --container pg-session-log-test-nonexistent   (exit code 1)
 dependencies:
   fzf: visit https://github.com/junegunn/fzf#installation to install

@@ -35,6 +35,7 @@ Every self-managed connector example: `playground find-example "<connector>" --c
 | A connector or a task is `FAILED`, why? | `playground connector diagnose` (`--connector <name>`), `connector status`, `connector tasks`, `container logs -c connect --errors` |
 | It is `RUNNING` but writes nothing | `playground connector diagnose`, then `topic dlq inspect` when `errors.tolerance=all` sends the records to the dead letter queue; once fixed, `topic dlq replay` (`--dry-run` first) |
 | When did it fail, restart, rebalance? | `playground connector history` (`--since 1h`), `connector restart --only-failed` |
+| What happened first: the fault I injected, the rebalance or the failure? | `playground connector history --connector <c> --with-logs`, `playground history --session` |
 | A sink lags, its lag is stuck | `playground connector show-lag` (`--max-wait`), `connector offsets get`, `consumer-group describe --group connect-<connector>` |
 | Where is a source in its data? Start over, skip records | `playground connector offsets get\|alter\|reset`, `connector create-or-update --offsets '<json>'` (fully managed) |
 | Is the connector slow? Where does the task time go? | `playground connector metrics` (`--watch 10s`), `connector benchmark` (drain or steady mode, several `--connector-tag`), `debug thread-dump` + `analyze thread-dump` |

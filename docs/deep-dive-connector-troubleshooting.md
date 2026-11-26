@@ -25,6 +25,7 @@ whether it moves, how to recover, and `connector lint` catches the risky setting
 | which task got which partitions / tables, on which worker | `playground connector tasks [--connector <c>]` (`--all-keys`) |
 | the topics it really uses | `playground connector topics [--connector <c>]` (`--reset`) |
 | when it failed, how many restarts, what changed in the config | `playground connector history [--connector <c>]` (`--since 12h`, deleted connectors too) |
+| what happened first: the states, the errors of the logs and what was done to the environment, in one list | `playground connector history --connector <c> --with-logs` |
 | is it moving? records skipped, retried, sent to the DLQ | `playground connector metrics [--connector <c>]` (`--watch 10s`) |
 | restart only what is FAILED | `playground connector restart --only-failed` |
 | risky settings that validate fine (no DLQ, DLQ replication factor, overrides, converters, secrets) | `playground connector lint [--connector <c>] < config` (`--brokers 3`, `--offline`, `--json`) |
@@ -293,6 +294,44 @@ What it prints (times and generations vary from run to run):
 - Topic names come from the worker properties (`config.storage.topic`, `status.storage.topic`); `--config-topic` /
   `--status-topic` override them. Self-managed only.
 
+#### `--with-logs`: what happened first?
+
+`--with-logs` merges three sources into one time-ordered list, with the time since the previous event:
+
+| Source | What it adds |
+| --- | --- |
+| 📋 topics | the events above: states with worker and trace, config changes |
+| 📜 logs | the incident timeline of `playground analyze logs --from-containers` (the container logs are saved and analyzed first, about 10 seconds): the errors, known causes, restarts and config changes of this connector, and the events of the workers, brokers and controllers that have no connector (rebalances, members removed by the coordinator, controller changes, ISR shrinks, long GC pauses, processes started or stopped). WARN records without connector and the other components (Control Center, Schema Registry…) are left out |
+| 🛠️ playground | what was done to the environment since it started: the playground commands that change it (`container kill\|restart\|pause`, `debug block-traffic\|degrade-traffic\|clock\|dns\|resources`, `connector create-or-update\|update\|delete\|restart\|pause\|offsets alter`, `topic produce\|create\|delete\|add-partitions`, `broker stop\|start\|rolling-restart`, quotas, schemas…), with their exit code. The commands aimed at another connector are left out |
+
+```bash
+playground connector history --connector http-source --with-logs
+```
+
+```text
+   19 event(s): 📋 5 from the internal topics, 📜 11 from the logs, 🛠️  3 playground action(s)
+2026-11-26 12:30:29 UTC     +0s  📜 controller  👑 a new active controller (epoch 1)
+2026-11-26 12:30:39 UTC     +8s  📜 connect     🔄 Connect worker started (DistributedConfig logged)
+2026-11-26 12:31:21 UTC    +42s  📋 config      🆕 created (HttpSourceConnector, tasks.max=1)
+2026-11-26 12:31:21 UTC     +0s  📜 connect     🔌 connector http-source (re)configured
+2026-11-26 12:31:24 UTC     +3s  📋 connector   🟢 RUNNING on connect:8083 (generation 2)
+2026-11-26 12:31:24 UTC     +0s  📋 task 0      🟢 RUNNING on connect:8083 (generation 3)
+2026-11-26 12:31:24 UTC     +0s  📜 connect     🔄 rebalance of the worker group connect-cluster
+2026-11-26 13:51:03 UTC  +79min  🛠️  playground  playground container pause --container pg-session-log-test-nonexistent ❌ exit code 1
+```
+
+- **The playground actions come from `playground-session.log`** (repository root, next to `playground.ini`, secrets
+  masked). `playground history --session` prints it alone (`--json`). It is reset by `playground run` and
+  `playground start-environment`, and kept by `playground stop` until the next start. Read-only commands are never
+  recorded, nor the `playground` commands that a recorded command runs itself. `PLAYGROUND_SESSION_LOG_DISABLED=1`
+  turns it off.
+- **The log times have no milliseconds** (and are UTC, like the containers): within one second, the order is playground
+  action, then topics, then logs.
+- `--json` adds a `timeline` list to each connector (`ts`, `time`, `source`, `what`, `text`, `details`, `delta_ms`),
+  next to its `events` and `summary`.
+- A repro with fault injection gets its sequence for free: `debug block-traffic` at 10:42:05, the rebalance in the
+  connect log, then `RUNNING → FAILED` in `connect-status`.
+
 ### `connector metrics`: is it moving?
 
 ```bash
@@ -558,6 +597,7 @@ nb=$(playground topic dlq inspect --topic dlq --json | jq '[.groups[] | select(.
 playground connector metrics  [--connector <c>] [--watch 10s | --json]
 playground connector diagnose [--connector <c>] [--since 1h] [--max-findings 15] [--output-dir /tmp/playground-diagnose] [--no-open] [--verbose]
 playground connector history  [--connector <c>] [--since 12h] [--json]
+playground connector history --connector <c> --with-logs  # + the container logs and the playground actions of the session
 playground topic dlq inspect  [--connector <c> | --topic <dlq>] [--grep <java regex>] [--max-messages 10000] [--json] [--output-dir <dir>] [--no-open]
 playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [--grep <java regex>] [--keep-error-headers] [--dry-run]
 playground connector restart  [--connector <c>] [--task-id <n> | --only-failed]
