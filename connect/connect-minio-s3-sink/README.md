@@ -21,8 +21,8 @@ Minio UI is accessible at [http://127.0.0.1:9000](http://127.0.0.1:9000), using 
 1. Starts the environment with a Minio container, and creates bucket `mybucket` (helper container `create-buckets`).
 2. Creates the S3 sink connector `minio-sink` (`store.url=http://minio:9000`, Avro format, `flush.size=3`).
 3. Produces 10 Avro records to topic `minio-topic` with `playground topic produce`.
-4. Lists the objects of bucket `mybucket` (helper container `list-buckets`).
-5. Copies one of the Avro files locally (helper container `copy-files`) and displays its content with `playground tools read-avro-file`.
+4. Waits for the first 3 objects with `playground storage wait-for-objects` (10 records with `flush.size=3`: the 10th stays in the task until 2 more records arrive).
+5. Lists the objects of bucket `mybucket` with `playground storage ls`, and displays their records (Avro decoded) with `playground storage cat`: the bucket, the MinIO endpoint and the credentials come from the config of the connector.
 
 After a few seconds, Minio should contain files in the bucket:
 

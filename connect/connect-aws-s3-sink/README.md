@@ -44,4 +44,4 @@ playground run -f s3-sink.sh
 1. Creates the bucket `pgbucket<user>` in `AWS_REGION` if required, and empties the per-run folder used as `topics.dir`.
 2. Creates the S3 sink connector (`io.confluent.connect.s3.S3SinkConnector`) with `AvroFormat` and `flush.size=3`.
 3. Produces 10 Avro records to topic `s3-topic` with `playground topic produce`.
-4. Downloads `s3-topic/partition=0/s3-topic+0+0000000000.avro` from the bucket and displays it with `playground tools read-avro-file`.
+4. Waits for the first 3 objects with `playground storage wait-for-objects`, lists them with `playground storage ls`, and displays the records of `s3-topic/partition=0/s3-topic+0+0000000000.avro` with `playground storage cat` (bucket, `topics.dir` and credentials come from the config of the connector).

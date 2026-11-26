@@ -1,0 +1,265 @@
+name: storage
+expose: always
+group: Storage
+filters:
+- docker_running
+help: |-
+  🪣 Object store commands
+
+  List, read and wait for the objects that a sink connector writes to an
+  object store, without the command line of each provider (aws s3, gcloud
+  storage, az storage, hdfs dfs, sftp) and without downloading files by
+  hand.
+
+    ls                 objects of the bucket, and a summary per topic-partition
+    cat                records of the objects (Avro, Parquet, JSON, CSV, text decoded)
+    wait-for-objects   wait until N objects are written
+
+  Supported: Amazon S3, MinIO and other S3 compatible stores (store.url),
+  Google Cloud Storage, Azure Blob Storage, ADLS Gen2, HDFS (no Kerberos) and
+  SFTP, through one rclone container (rclone/rclone).
+
+  🔗 With --connector (or the only running connector), the bucket, the
+  folder (topics.dir) and the credentials come from the config of the
+  connector, self-managed or fully managed. A secret masked by the REST API
+  is read from the connect container (a ${file:...} config provider, the
+  ~/.aws/credentials file, the GCS key file of gcs.credentials.path), then
+  from the example script, then from the playground secrets
+  (AWS_ACCESS_KEY_ID, GCP_KEYFILE_CONTENT, AZURE_ACCOUNT_KEY).
+
+  🌐 With --url, any location: s3://bucket/prefix (with --endpoint for
+  MinIO), gs://bucket/prefix, az://account/container/prefix,
+  hdfs://[user@]namenode:9000/path, sftp://user:password@host:22/path.
+
+  🎓 Tip: in an example script, use 'storage wait-for-objects' instead of a
+  fixed sleep, then 'storage cat' instead of a download + 'tools
+  read-avro-file'. 'connector reconcile' compares the records of the
+  objects with the topic (lost, duplicated records).
+commands:
+
+  - name: ls
+    group: Storage
+    help: |-
+      🪣 List the objects written by a sink connector
+
+      Lists every object under the folder of the connector (topics.dir,
+      "topics" by default) with its size and time, then a summary per
+      topic-partition: number of objects, size, first offset and start
+      offset of the last object (from the object names
+      <topic>+<partition>+<start offset>.<format>).
+
+      Temporary files of the HDFS sink (+tmp folders) are left out.
+    flags:
+    - &connector
+      long: --connector
+      short: -c
+      required: false
+      arg: connector
+      conflicts: [--url]
+      completions:
+        dynamic:
+        - playground get-connector-list
+      help: |-
+        🔗 Connector whose bucket to read (default: the only running connector)
+    - &url
+      long: --url
+      required: false
+      arg: url
+      conflicts: [--connector]
+      help: |-
+        🌐 Location to read instead of the one of a connector
+
+        s3://bucket/prefix, gs://bucket/prefix, az://account/container/prefix, hdfs://[user@]namenode:9000/path, sftp://user:password@host:22/path
+    - &endpoint
+      long: --endpoint
+      required: false
+      arg: endpoint
+      help: |-
+        🔌 Endpoint of an S3 compatible store, with an s3:// --url (http://minio:9000)
+    - &prefix
+      long: --prefix
+      required: false
+      arg: prefix
+      help: |-
+        📁 Folder to read instead of topics.dir of the connector ("" for the whole bucket)
+    - &topic
+      long: --topic
+      short: -t
+      required: false
+      arg: topic
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Only the objects of this topic (comma separated list allowed)
+    - &include
+      long: --include
+      required: false
+      arg: include
+      help: |-
+        🔎 Only the objects whose path matches this regex (partition=0/, year=2026, \.avro$)
+    - long: --max-objects
+      arg: max_objects
+      validate: integer
+      default: "100"
+      help: |-
+        🔢 Max number of objects to show (default is 100, 0 for all); the summary counts all of them
+    - long: --json
+      help: |-
+        🤖 Print the objects and the summary as json
+    - import: src/flags/verbose.yml
+    examples:
+    - playground storage ls
+    - playground storage ls --connector s3-sink --topic s3-topic
+    - playground storage ls --url s3://mybucket/topics --endpoint http://minio:9000
+    - playground storage ls --url gs://my-bucket/topics --include "partition=0/"
+    - playground storage ls --url hdfs://namenode:9000/topics
+    x_example_outputs:
+    - command: playground storage ls --url s3://mybucket/topics --endpoint http://minio:9000 --topic t1
+      output: |-
+        12:50:25 ℹ️ 🪣 s3://mybucket/topics, credentials of AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+        object                                     size  modified
+        t1/partition=0/t1+0+0000000000.avro       224 B  2026-11-26 11:40:06
+        t1/partition=0/t1+0+0000000003.avro       224 B  2026-11-26 11:40:07
+        t1/partition=0/t1+0+0000000008.avro       215 B  2026-11-26 11:40:07
+        t1/partition=2/t1+2+0000000000.avro       224 B  2026-11-26 11:40:06
+        t1/partition=2/t1+2+0000000002.avro       224 B  2026-11-26 11:40:08
+
+        topic-partition                            objects     size first off.   last start  last modified
+        t1-0                                             3    663 B          0            8  2026-11-26 11:40:07
+        t1-2                                             2    448 B          0            2  2026-11-26 11:40:08
+
+        🪣 5 object(s) of 7, 1.1 KB
+
+  - name: cat
+    group: Storage
+    help: |-
+      📄 Print the records of the objects written by a sink connector
+
+      Downloads the objects (--max-objects, the first ones in topic,
+      partition and offset order, or the newest with --newest) and prints
+      their records: Avro (avro-tools) and Parquet (parquet-tools) as json,
+      JSON lines, CSV, text and byte array objects as they are, gzip
+      compressed objects uncompressed.
+
+      Then a continuity check per topic-partition: the offsets covered by
+      the objects (start offset of the name + number of records), with the
+      gaps (offsets in no object: records lost, or a compacted topic,
+      transaction markers, a filter SMT) and the overlaps (offsets in two
+      objects: duplicates, after a task restart with a time based
+      partitioner for example).
+
+      --records prints only the records, one json per line, for jq or a
+      script.
+    flags:
+    - *connector
+    - *url
+    - *endpoint
+    - *prefix
+    - *topic
+    - *include
+    - long: --max-objects
+      arg: max_objects
+      validate: integer
+      default: "20"
+      help: |-
+        🔢 Max number of objects to read (default is 20, 0 for all)
+    - long: --newest
+      help: |-
+        🆕 Read the newest objects instead of the first ones
+    - long: --records
+      conflicts: [--json, --summary]
+      help: |-
+        📜 Print only the records, one json per line
+    - long: --summary
+      conflicts: [--json, --records]
+      help: |-
+        📊 Print only the summary per topic-partition (records, offsets, gaps, overlaps)
+    - long: --json
+      conflicts: [--records, --summary]
+      help: |-
+        🤖 Print the objects, their records and the summary as json
+    - import: src/flags/verbose.yml
+    examples:
+    - playground storage cat
+    - playground storage cat --topic s3-topic --include "partition=0/" --max-objects 5
+    - playground storage cat --summary --max-objects 0
+    - playground storage cat --records | jq -r .f1
+    - playground storage cat --url gs://my-bucket/topics --newest --max-objects 3
+    x_example_outputs:
+    - command: playground storage cat --url s3://mybucket/topics --endpoint http://minio:9000 --topic t1 --include partition=0/ --max-objects 2
+      output: |-
+        12:50:27 ℹ️ 🪣 s3://mybucket/topics, credentials of AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+        12:50:27 ❗ 📄 reading 2 of 3 objects (--max-objects 2)
+        📄 t1/partition=0/t1+0+0000000000.avro (avro, 3 record(s))
+           {"id": 0, "f1": "value0"}
+           {"id": 1, "f1": "value1"}
+           {"id": 2, "f1": "value2"}
+        📄 t1/partition=0/t1+0+0000000003.avro (avro, 3 record(s))
+           {"id": 3, "f1": "value3"}
+           {"id": 4, "f1": "value4"}
+           {"id": 5, "f1": "value5"}
+
+        topic-partition                           objects   records                offsets  continuity
+        t1-0                                            2         6                  0 → 5  ✅ contiguous
+        📦 6 record(s) in 2 object(s)
+    - command: playground storage cat --url s3://mybucket/topics --endpoint http://minio:9000 --topic t1 --summary
+      output: |-
+        12:50:29 ℹ️ 🪣 s3://mybucket/topics, credentials of AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+        12:50:30 ℹ️ 📄 reading 5 object(s)
+        topic-partition                           objects   records                offsets  continuity
+        t1-0                                            3         8                  0 → 9  🕳️ 1 gap(s)
+        t1-2                                            2         6                  0 → 4  🔁 1 overlap(s)
+           🕳️ t1-0: offsets 6-7 are in no object (between t1+0+0000000003.avro and t1+0+0000000008.avro)
+           🔁 t1-2: offset 2 is in two objects (t1+2+0000000000.avro and t1+2+0000000002.avro): duplicates
+           🎓 a gap is expected on a compacted topic, with transactions (markers use offsets), after a retention deletion, or when an SMT / errors.tolerance dropped records
+        📦 14 record(s) in 5 object(s)
+
+  - name: wait-for-objects
+    group: Storage
+    help: |-
+      ⏳ Wait for a sink connector to write a minimum number of objects
+
+      Lists the objects every --interval seconds until there are at least
+      --min-expected-objects (of --topic, matching --include), and fails
+      after --max-wait seconds. A bucket folder that does not exist yet
+      counts as empty.
+
+      🎓 Tip: a storage sink writes an object every flush.size records (or
+      rotate.interval.ms): 10 records with flush.size=3 make 3 objects.
+    flags:
+    - *connector
+    - *url
+    - *endpoint
+    - *prefix
+    - *topic
+    - *include
+    - long: --min-expected-objects
+      arg: min_expected_objects
+      validate: integer
+      default: "1"
+      help: |-
+        🔢 Minimum number of objects to wait for (default is 1)
+    - long: --max-wait
+      arg: max_wait
+      validate: integer
+      default: "120"
+      help: |-
+        ⏳ Max time in seconds to wait (default is 120)
+    - long: --interval
+      arg: interval
+      validate: integer
+      default: "5"
+      help: |-
+        🔁 Interval in seconds between checks (default is 5)
+    - import: src/flags/verbose.yml
+    examples:
+    - playground storage wait-for-objects --min-expected-objects 3
+    - playground storage wait-for-objects --connector gcs-sink --topic gcs-topic --max-wait 300
+    - playground storage wait-for-objects --url s3://mybucket/topics --endpoint http://minio:9000 --include "partition=0/"
+    x_example_outputs:
+    - command: playground storage wait-for-objects --url s3://mybucket/topics --endpoint http://minio:9000 --topic t3 --max-wait 4 --interval 2
+      output: |-
+        12:50:34 ℹ️ ⏳ Waiting up to 4 seconds for at least 1 object(s) in s3://mybucket/topics (topic t3)
+        12:50:34 ℹ️ ⌛ 0 object(s) (expected at least 1)
+        12:50:39 🔥 ❌ 0 object(s) in s3://mybucket/topics (topic t3) after 4 seconds, expected at least 1

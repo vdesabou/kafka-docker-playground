@@ -64,14 +64,11 @@ playground topic produce -t minio-topic --nb-messages 10 --forced-value '{"f1":"
 }
 EOF
 
-sleep 10
+log "Waiting for the 3 objects of the 9 first records (flush.size=3)"
+playground storage wait-for-objects --connector minio-sink --min-expected-objects 3
 
 log "Listing objects of bucket mybucket in Minio"
-docker container restart list-buckets
-sleep 3
-docker container logs --tail=4 list-buckets
+playground storage ls --connector minio-sink
 
-log "Getting one of the avro files locally and displaying content with avro-tools"
-docker container restart copy-files
-docker container logs --tail=3 copy-files
-playground  tools read-avro-file --file /tmp/minio-topic+0+0000000000.avro
+log "Displaying the records of the objects (avro)"
+playground storage cat --connector minio-sink

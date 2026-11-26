@@ -379,6 +379,12 @@ playground_usage() {
   printf "  %s   ⏳ Wait for a table to contain a minimum number of rows\n" "$(green "db wait-for-rows")                          "
   printf "  %s   🔍 Check the CDC prerequisites of the database\n" "$(green "db cdc-check")                              "
   echo
+  printf "%s\n" "$(bold "Storage commands:")"
+  printf "  %s   🪣 Object store commands\n" "$(green "storage")                                   "
+  printf "  %s   🪣 List the objects written by a sink connector\n" "$(green "storage ls")                                "
+  printf "  %s   📄 Print the records of the objects written by a sink connector\n" "$(green "storage cat")                               "
+  printf "  %s   ⏳ Wait for a sink connector to write a minimum number of objects\n" "$(green "storage wait-for-objects")                  "
+  echo
   printf "%s\n" "$(bold "RBAC commands:")"
   printf "  %s   🛡️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac environments, plus Confluent Cloud ACLs)\n" "$(green "rbac")                                      "
   printf "  %s   🔐 Role binding commands\n" "$(green "rbac role-binding")                         "
@@ -21980,6 +21986,317 @@ playground_db_cdc_check_usage() {
 }
 
 # :command.usage
+playground_storage_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground storage\n\n"
+    printf "  🪣 Object store commands\n  \n  List, read and wait for the objects that a sink connector writes to an\n  object store, without the command line of each provider (aws s3, gcloud\n  storage, az storage, hdfs dfs, sftp) and without downloading files by\n  hand.\n  \n    ls                 objects of the bucket, and a summary per topic-partition\n    cat                records of the objects (Avro, Parquet, JSON, CSV, text\n  decoded)\n    wait-for-objects   wait until N objects are written\n  \n  Supported: Amazon S3, MinIO and other S3 compatible stores (store.url),\n  Google Cloud Storage, Azure Blob Storage, ADLS Gen2, HDFS (no Kerberos) and\n  SFTP, through one rclone container (rclone/rclone).\n  \n  🔗 With --connector (or the only running connector), the bucket, the\n  folder (topics.dir) and the credentials come from the config of the\n  connector, self-managed or fully managed. A secret masked by the REST API\n  is read from the connect container (a ${file:...} config provider, the\n  ~/.aws/credentials file, the GCS key file of gcs.credentials.path), then\n  from the example script, then from the playground secrets\n  (AWS_ACCESS_KEY_ID, GCP_KEYFILE_CONTENT, AZURE_ACCOUNT_KEY).\n  \n  🌐 With --url, any location: s3://bucket/prefix (with --endpoint for\n  MinIO), gs://bucket/prefix, az://account/container/prefix,\n  hdfs://[user@]namenode:9000/path, sftp://user:password@host:22/path.\n  \n  🎓 Tip: in an example script, use 'storage wait-for-objects' instead of a\n  fixed sleep, then 'storage cat' instead of a download + 'tools\n  read-avro-file'. 'connector reconcile' compares the records of the\n  objects with the topic (lost, duplicated records).\n\n"
+  else
+    printf "playground storage - 🪣 Object store commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground storage COMMAND\n"
+  printf "  playground storage [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Storage commands:")"
+  printf "  %s   🪣 List the objects written by a sink connector\n" "$(green "ls")              "
+  printf "  %s   📄 Print the records of the objects written by a sink connector\n" "$(green "cat")             "
+  printf "  %s   ⏳ Wait for a sink connector to write a minimum number of objects\n" "$(green "wait-for-objects")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_storage_ls_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground storage ls\n\n"
+    printf "  🪣 List the objects written by a sink connector\n  \n  Lists every object under the folder of the connector (topics.dir,\n  \"topics\" by default) with its size and time, then a summary per\n  topic-partition: number of objects, size, first offset and start\n  offset of the last object (from the object names\n  <topic>+<partition>+<start offset>.<format>).\n  \n  Temporary files of the HDFS sink (+tmp folders) are left out.\n\n"
+  else
+    printf "playground storage ls - 🪣 List the objects written by a sink connector\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground storage ls [OPTIONS]\n"
+  printf "  playground storage ls --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose bucket to read (default: the only running connector)\n"
+    printf "    %s\n" "Conflicts: --url"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--url URL")"
+    printf "    🌐 Location to read instead of the one of a connector\n    \n    s3://bucket/prefix, gs://bucket/prefix, az://account/container/prefix,\n    hdfs://[user@]namenode:9000/path, sftp://user:password@host:22/path\n"
+    printf "    %s\n" "Conflicts: --connector"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--endpoint ENDPOINT")"
+    printf "    🔌 Endpoint of an S3 compatible store, with an s3:// --url\n    (http://minio:9000)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--prefix PREFIX")"
+    printf "    📁 Folder to read instead of topics.dir of the connector (\"\" for the whole\n    bucket)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Only the objects of this topic (comma separated list allowed)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include INCLUDE")"
+    printf "    🔎 Only the objects whose path matches this regex (partition=0/, year=2026,\n    \.avro$)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-objects MAX_OBJECTS")"
+    printf "    🔢 Max number of objects to show (default is 100, 0 for all); the summary\n    counts all of them\n"
+    printf "    %s\n" "Default: 100"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the objects and the summary as json\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground storage ls\n"
+    printf "  playground storage ls --connector s3-sink --topic s3-topic\n"
+    printf "  playground storage ls --url s3://mybucket/topics --endpoint http://minio:9000\n"
+    printf "  playground storage ls --url gs://my-bucket/topics --include \"partition=0/\"\n"
+    printf "  playground storage ls --url hdfs://namenode:9000/topics\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_storage_cat_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground storage cat\n\n"
+    printf "  📄 Print the records of the objects written by a sink connector\n  \n  Downloads the objects (--max-objects, the first ones in topic,\n  partition and offset order, or the newest with --newest) and prints\n  their records: Avro (avro-tools) and Parquet (parquet-tools) as json,\n  JSON lines, CSV, text and byte array objects as they are, gzip\n  compressed objects uncompressed.\n  \n  Then a continuity check per topic-partition: the offsets covered by\n  the objects (start offset of the name + number of records), with the\n  gaps (offsets in no object: records lost, or a compacted topic,\n  transaction markers, a filter SMT) and the overlaps (offsets in two\n  objects: duplicates, after a task restart with a time based\n  partitioner for example).\n  \n  --records prints only the records, one json per line, for jq or a\n  script.\n\n"
+  else
+    printf "playground storage cat - 📄 Print the records of the objects written by a sink connector\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground storage cat [OPTIONS]\n"
+  printf "  playground storage cat --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose bucket to read (default: the only running connector)\n"
+    printf "    %s\n" "Conflicts: --url"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--url URL")"
+    printf "    🌐 Location to read instead of the one of a connector\n    \n    s3://bucket/prefix, gs://bucket/prefix, az://account/container/prefix,\n    hdfs://[user@]namenode:9000/path, sftp://user:password@host:22/path\n"
+    printf "    %s\n" "Conflicts: --connector"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--endpoint ENDPOINT")"
+    printf "    🔌 Endpoint of an S3 compatible store, with an s3:// --url\n    (http://minio:9000)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--prefix PREFIX")"
+    printf "    📁 Folder to read instead of topics.dir of the connector (\"\" for the whole\n    bucket)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Only the objects of this topic (comma separated list allowed)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include INCLUDE")"
+    printf "    🔎 Only the objects whose path matches this regex (partition=0/, year=2026,\n    \.avro$)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-objects MAX_OBJECTS")"
+    printf "    🔢 Max number of objects to read (default is 20, 0 for all)\n"
+    printf "    %s\n" "Default: 20"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--newest")"
+    printf "    🆕 Read the newest objects instead of the first ones\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--records")"
+    printf "    📜 Print only the records, one json per line\n"
+    printf "    %s\n" "Conflicts: --json, --summary"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--summary")"
+    printf "    📊 Print only the summary per topic-partition (records, offsets, gaps,\n    overlaps)\n"
+    printf "    %s\n" "Conflicts: --json, --records"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the objects, their records and the summary as json\n"
+    printf "    %s\n" "Conflicts: --records, --summary"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground storage cat\n"
+    printf "  playground storage cat --topic s3-topic --include \"partition=0/\" --max-objects\n  5\n"
+    printf "  playground storage cat --summary --max-objects 0\n"
+    printf "  playground storage cat --records | jq -r .f1\n"
+    printf "  playground storage cat --url gs://my-bucket/topics --newest --max-objects 3\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_storage_wait_for_objects_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground storage wait-for-objects\n\n"
+    printf "  ⏳ Wait for a sink connector to write a minimum number of objects\n  \n  Lists the objects every --interval seconds until there are at least\n  --min-expected-objects (of --topic, matching --include), and fails\n  after --max-wait seconds. A bucket folder that does not exist yet\n  counts as empty.\n  \n  🎓 Tip: a storage sink writes an object every flush.size records (or\n  rotate.interval.ms): 10 records with flush.size=3 make 3 objects.\n\n"
+  else
+    printf "playground storage wait-for-objects - ⏳ Wait for a sink connector to write a minimum number of objects\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground storage wait-for-objects [OPTIONS]\n"
+  printf "  playground storage wait-for-objects --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose bucket to read (default: the only running connector)\n"
+    printf "    %s\n" "Conflicts: --url"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--url URL")"
+    printf "    🌐 Location to read instead of the one of a connector\n    \n    s3://bucket/prefix, gs://bucket/prefix, az://account/container/prefix,\n    hdfs://[user@]namenode:9000/path, sftp://user:password@host:22/path\n"
+    printf "    %s\n" "Conflicts: --connector"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--endpoint ENDPOINT")"
+    printf "    🔌 Endpoint of an S3 compatible store, with an s3:// --url\n    (http://minio:9000)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--prefix PREFIX")"
+    printf "    📁 Folder to read instead of topics.dir of the connector (\"\" for the whole\n    bucket)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Only the objects of this topic (comma separated list allowed)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include INCLUDE")"
+    printf "    🔎 Only the objects whose path matches this regex (partition=0/, year=2026,\n    \.avro$)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--min-expected-objects MIN_EXPECTED_OBJECTS")"
+    printf "    🔢 Minimum number of objects to wait for (default is 1)\n"
+    printf "    %s\n" "Default: 1"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
+    printf "    ⏳ Max time in seconds to wait (default is 120)\n"
+    printf "    %s\n" "Default: 120"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--interval INTERVAL")"
+    printf "    🔁 Interval in seconds between checks (default is 5)\n"
+    printf "    %s\n" "Default: 5"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground storage wait-for-objects --min-expected-objects 3\n"
+    printf "  playground storage wait-for-objects --connector gcs-sink --topic gcs-topic\n  --max-wait 300\n"
+    printf "  playground storage wait-for-objects --url s3://mybucket/topics --endpoint\n  http://minio:9000 --include \"partition=0/\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_rbac_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground rbac\n\n"
@@ -23917,7 +24234,7 @@ fi
 playground_connector_reconcile_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector reconcile\n\n"
-    printf "  🧮 Compare the records of the topic with the rows of the table: lost,\n  duplicated, different?\n  \n  Answers \"the sink lost records\", \"the source missed rows\", \"we have\n  duplicates\" with one verdict instead of counting rows by hand. Reads\n  both sides of the connector, compares them record by record, and\n  lists what does not match:\n  \n    sink     for each key, the last record of the topic against the\n             row of the table (a tombstone or a delete event: the row\n             must be gone, when the connector deletes)\n    source   each row of the table against the last record of its key\n             in the topic (Debezium / CDC envelopes: the \"after\" state)\n  \n    ❌ lost           in the topic (sink) or the table (source), not on\n                     the other side\n    ❌ duplicated     a key twice in the table, or the same record twice\n                     in the topic of a source\n    ❌ different      fields whose values differ (converter, SMT, column\n                     type, truncation...)\n    ❌ not deleted    the last record is a tombstone, the row is still\n                     there\n    ⚠️ extra          only on the other side (rows written before, by\n                     another producer): reported, not a failure\n  \n  The topic, the table, the database container, the key and whether\n  deletes are applied come from the config of the connector, for the\n  JDBC sink and source (Confluent and Debezium), the Debezium sources,\n  the MongoDB sink and their fully managed versions:\n  \n    key              pk.mode / pk.fields (record_key, record_value,\n                     kafka: topic, partition, offset), primary.key.mode\n                     of the Debezium JDBC sink, incrementing.column.name,\n                     else the fields of the record key when it is a\n                     struct, else no key (the records and the rows are\n                     compared as multisets of values)\n    table            table.name.format (${topic} replaced), collection,\n                     table.whitelist / table.include.list\n    database         the host of connection.url / database.hostname\n                     when it is a running container, with the user and\n                     password of the connector\n  \n  Pass --topic, --table, --key-field and --container for anything else,\n  and --rows-file to compare with rows exported from any system (a\n  bucket, a warehouse, a customer dump), one json object per line.\n  \n  Values are compared by meaning, not by text: 1, 1.0 and \"1\"; true and\n  1; epoch milliseconds (or days) and a date or timestamp column;\n  json text and an object; CHAR padding; Avro unions; MongoDB extended\n  json. Column names are compared case-insensitively.\n  \n  Exits with 1 when records are lost, duplicated, different or not\n  deleted, so an example or a repro model can assert on it, and with 2\n  when it could not compare (no connector, topic or table found, the\n  database or the topic could not be read): a failure of the setup, not\n  of the data.\n  \n  Supported databases: the ones of 'playground db sql' except Db2\n  (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n  \n  ☁️ Fully managed: supported when the database runs in a local container,\n  else with --rows-file\n\n"
+    printf "  🧮 Compare the records of the topic with the rows of the table: lost,\n  duplicated, different?\n  \n  Answers \"the sink lost records\", \"the source missed rows\", \"we have\n  duplicates\" with one verdict instead of counting rows by hand. Reads\n  both sides of the connector, compares them record by record, and\n  lists what does not match:\n  \n    sink     for each key, the last record of the topic against the\n             row of the table (a tombstone or a delete event: the row\n             must be gone, when the connector deletes)\n    source   each row of the table against the last record of its key\n             in the topic (Debezium / CDC envelopes: the \"after\" state)\n  \n    ❌ lost           in the topic (sink) or the table (source), not on\n                     the other side\n    ❌ duplicated     a key twice in the table, or the same record twice\n                     in the topic of a source\n    ❌ different      fields whose values differ (converter, SMT, column\n                     type, truncation...)\n    ❌ not deleted    the last record is a tombstone, the row is still\n                     there\n    ⚠️ extra          only on the other side (rows written before, by\n                     another producer): reported, not a failure\n  \n  The topic, the table, the database container, the key and whether\n  deletes are applied come from the config of the connector, for the\n  JDBC sink and source (Confluent and Debezium), the Debezium sources,\n  the MongoDB sink and their fully managed versions:\n  \n    key              pk.mode / pk.fields (record_key, record_value,\n                     kafka: topic, partition, offset), primary.key.mode\n                     of the Debezium JDBC sink, incrementing.column.name,\n                     else the fields of the record key when it is a\n                     struct, else no key (the records and the rows are\n                     compared as multisets of values)\n    table            table.name.format (${topic} replaced), collection,\n                     table.whitelist / table.include.list\n    database         the host of connection.url / database.hostname\n                     when it is a running container, with the user and\n                     password of the connector\n  \n  🪣 Object store sinks (S3, GCS, Azure Blob, ADLS Gen2, HDFS, SFTP,\n  self-managed or fully managed): the records of every object of the\n  topic, read with 'playground storage cat', compared with the topic as\n  multisets of values (no key, no delete: a storage sink appends each\n  record once). Duplicated records are the objects written twice after a\n  task restart; the records after the last object (fewer than\n  flush.size) are still in the task, not lost.\n  \n  Pass --topic, --table, --key-field and --container for anything else,\n  and --rows-file to compare with rows exported from any system (a\n  warehouse, a customer dump), one json object per line.\n  \n  Values are compared by meaning, not by text: 1, 1.0 and \"1\"; true and\n  1; epoch milliseconds (or days) and a date or timestamp column;\n  json text and an object; CHAR padding; Avro unions; MongoDB extended\n  json. Column names are compared case-insensitively.\n  \n  Exits with 1 when records are lost, duplicated, different or not\n  deleted, so an example or a repro model can assert on it, and with 2\n  when it could not compare (no connector, topic or table found, the\n  database or the topic could not be read): a failure of the setup, not\n  of the data.\n  \n  Supported databases: the ones of 'playground db sql' except Db2\n  (PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n  \n  ☁️ Fully managed: supported when the database runs in a local container,\n  else with --rows-file\n\n"
   else
     printf "playground connector reconcile - 🧮 Compare the records of the topic with the rows of the table: lost, duplicated, different?\n\n"
   fi
@@ -24021,7 +24338,8 @@ playground_connector_reconcile_usage() {
     printf "  playground connector reconcile\n"
     printf "  playground connector reconcile --connector jdbc-postgresql-sink --key-field id\n"
     printf "  playground connector reconcile --connector debezium-postgres-source --table\n  public.customers --json\n"
-    printf "  playground connector reconcile --connector s3-sink --rows-file\n  /tmp/objects.json --key-field id\n"
+    printf "  playground connector reconcile --connector s3-sink\n"
+    printf "  playground connector reconcile --connector bigquery-sink --rows-file\n  /tmp/rows.json --key-field id\n"
     echo
 
   fi
@@ -44389,6 +44707,572 @@ function load_secrets_env_vars () {
     fi
   done
   return 0
+}
+
+# src/lib/storage_function.sh
+# helpers of 'playground storage ls|cat|wait-for-objects' (and the object store sinks of 'connector reconcile'):
+# one rclone container reaches the object store of a sink connector (S3, MinIO and other S3 compatible stores, GCS,
+# Azure Blob Storage, ADLS Gen2, HDFS, SFTP), configured with RCLONE_CONFIG_SRC_* environment variables, so no
+# provider command line (aws, gcloud, az, hdfs dfs, sftp) is needed
+
+STORAGE_RCLONE_IMAGE="rclone/rclone:latest"
+
+# value of the first key set in $storage_config (empty values count as not set)
+function storage_cfg () {
+    local key value
+    for key in "$@"
+    do
+        value=$(jq -r --arg k "$key" '.[$k] // empty | tostring' <<< "$storage_config" 2>/dev/null)
+        if [[ -n "$value" ]]
+        then
+            echo "$value"
+            return 0
+        fi
+    done
+}
+
+function storage_is_masked () {
+    [[ -z "$1" || "$1" == *"•"* || "$1" =~ ^\*+$ || "$1" == "[hidden]" ]]
+}
+
+# the literal value of a key in the example script that was run (a secret masked by the REST API)
+function storage_literal_in_test_file () {
+    local key="$1" test_file
+    test_file=$(playground state get run.test_file 2>/dev/null)
+    [[ -f "$test_file" ]] || return 0
+    grep -o -E "\"${key//./\\.}\"[[:space:]]*:[[:space:]]*\"[^\"\$]*\"" "$test_file" | head -1 | sed -E 's/.*:[[:space:]]*"([^"]*)"$/\1/'
+}
+
+# a file of the connect container (key file, credentials, config provider file), empty when there is none
+function storage_connect_file () {
+    local file="$1"
+    [[ -n "$storage_connect_container" ]] || return 0
+    docker exec "$storage_connect_container" cat "$file" 2>/dev/null
+}
+
+# usable value of a connector config key: literal, ${file:<path>:<key>} resolved in the connect container, or the
+# literal of the example script when the REST API masks it; empty when none works
+function storage_secret () {
+    local key value path name
+    for key in "$@"
+    do
+        value=$(storage_cfg "$key")
+        [[ -z "$value" ]] && continue
+        if [[ "$value" =~ ^\$\{file:([^:}]+):([^}]+)\}$ ]]
+        then
+            path="${BASH_REMATCH[1]}"
+            name="${BASH_REMATCH[2]}"
+            value=$(storage_connect_file "$path" | grep -E "^[[:space:]]*${name}[[:space:]]*[=:]" | head -1 | sed -E 's/^[^=:]*[=:][[:space:]]*//' | tr -d '\r')
+        elif [[ "$value" == *'${'* ]]
+        then
+            value=""
+        elif storage_is_masked "$value"
+        then
+            value=$(storage_literal_in_test_file "$key")
+        fi
+        if [[ -n "$value" ]]
+        then
+            echo "$value"
+            return 0
+        fi
+    done
+}
+
+# the docker network to run rclone on: the network of the container named <host> (minio, namenode, sftp-server...),
+# else the network namespace of connect (its view of the names), else the default network (cloud stores)
+function storage_network_for_host () {
+    local host="$1" network=""
+    if [[ -n "$host" ]] && docker inspect "$host" > /dev/null 2>&1
+    then
+        network=$(docker inspect "$host" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' 2>/dev/null | awk '{print $1}')
+    fi
+    if [[ -n "$network" ]]
+    then
+        storage_docker_args+=(--network "$network")
+    elif [[ -n "$storage_connect_container" && -n "$host" && "$host" != *.* ]]
+    then
+        storage_docker_args+=(--network "container:$storage_connect_container")
+    fi
+}
+
+function storage_env () {
+    storage_docker_args+=(-e "RCLONE_CONFIG_SRC_$1=$2")
+}
+
+function storage_aws_credentials () {
+    local access secret token="" creds
+    access=$(storage_secret aws.access.key.id)
+    secret=$(storage_secret aws.secret.access.key)
+    if [[ -z "$access" || -z "$secret" ]]
+    then
+        # default credentials provider chain of the connector: the credentials file of the connect container
+        # (/tmp/aws_credentials of handle_aws_credentials, the MinIO example...)
+        creds=$(storage_connect_file "$(storage_cfg aws.credentials.file)")
+        [[ -z "$creds" ]] && creds=$(storage_connect_file "/tmp/aws_credentials")
+        [[ -z "$creds" ]] && creds=$(docker exec "${storage_connect_container:-none}" sh -c 'cat $HOME/.aws/credentials' 2>/dev/null)
+        if [[ -n "$creds" ]]
+        then
+            access=$(grep -i -m1 '^[[:space:]]*aws_access_key_id' <<< "$creds" | sed -E 's/^[^=]*=[[:space:]]*//' | tr -d '\r ')
+            secret=$(grep -i -m1 '^[[:space:]]*aws_secret_access_key' <<< "$creds" | sed -E 's/^[^=]*=[[:space:]]*//' | tr -d '\r ')
+            token=$(grep -i -m1 '^[[:space:]]*aws_session_token' <<< "$creds" | sed -E 's/^[^=]*=[[:space:]]*//' | tr -d '\r ')
+        fi
+    fi
+    if [[ -z "$access" || -z "$secret" ]]
+    then
+        if [[ -z "$AWS_ACCESS_KEY_ID" ]] && type load_secrets_env_vars > /dev/null 2>&1
+        then
+            load_secrets_env_vars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION > /dev/null 2>&1
+        fi
+        if [[ -z "$AWS_ACCESS_KEY_ID" && -f "$HOME/.aws/credentials" ]]
+        then
+            AWS_ACCESS_KEY_ID=$(grep -m1 "^aws_access_key_id" "$HOME/.aws/credentials" | awk -F'=' '{print $2}' | tr -d ' ')
+            AWS_SECRET_ACCESS_KEY=$(grep -m1 "^aws_secret_access_key" "$HOME/.aws/credentials" | awk -F'=' '{print $2}' | tr -d ' ')
+        fi
+        access="$AWS_ACCESS_KEY_ID"
+        secret="$AWS_SECRET_ACCESS_KEY"
+        token="$AWS_SESSION_TOKEN"
+        storage_credentials_origin="AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY"
+    else
+        storage_credentials_origin="the connector"
+    fi
+    if [[ -z "$access" || -z "$secret" ]]
+    then
+        logerror "❌ no AWS credentials: not in the connector config, nor AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, nor ~/.aws/credentials"
+        return 1
+    fi
+    storage_env ACCESS_KEY_ID "$access"
+    storage_env SECRET_ACCESS_KEY "$secret"
+    [[ -n "$token" ]] && storage_env SESSION_TOKEN "$token"
+    return 0
+}
+
+function storage_gcp_credentials () {
+    local json path
+    json=$(storage_secret gcs.credentials.json gcs.credentials.config)
+    if [[ -z "$json" ]]
+    then
+        path=$(storage_cfg gcs.credentials.path)
+        [[ -n "$path" ]] && json=$(storage_connect_file "$path")
+    fi
+    storage_credentials_origin="the connector"
+    if [[ -z "$json" ]]
+    then
+        if [[ -z "$GCP_KEYFILE_CONTENT" ]] && type load_secrets_env_vars > /dev/null 2>&1
+        then
+            load_secrets_env_vars GCP_KEYFILE_CONTENT > /dev/null 2>&1
+        fi
+        if [[ -n "$GCP_KEYFILE_CONTENT" ]]
+        then
+            json="$GCP_KEYFILE_CONTENT"
+            # the json as is, or as the examples store it (escaped by jq -aRs, without the quotes)
+            if ! jq -e .type > /dev/null 2>&1 <<< "$json"
+            then
+                json=$(echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g')
+            fi
+            storage_credentials_origin="GCP_KEYFILE_CONTENT"
+        elif [[ -n "$GCP_KEYFILE" && -f "$GCP_KEYFILE" ]]
+        then
+            json=$(cat "$GCP_KEYFILE")
+            storage_credentials_origin="GCP_KEYFILE"
+        fi
+    fi
+    if ! jq -e '.type' > /dev/null 2>&1 <<< "$json"
+    then
+        logerror "❌ no GCP service account key: not in the connector config (gcs.credentials.path / json), nor GCP_KEYFILE_CONTENT"
+        return 1
+    fi
+    storage_env SERVICE_ACCOUNT_CREDENTIALS "$(jq -c . <<< "$json")"
+    storage_env BUCKET_POLICY_ONLY "true"
+}
+
+# parse a --url: s3://bucket/prefix, gs://bucket/prefix, az://account/container/prefix, hdfs://[user@]namenode:port/path,
+# sftp://[user[:password]@]host[:port]/path
+function storage_resolve_url () {
+    local url="$1" endpoint="$2" scheme rest userinfo hostport
+    scheme="${url%%://*}"
+    rest="${url#*://}"
+    case "$scheme" in
+        s3|minio)
+            storage_provider="s3"
+            storage_bucket="${rest%%/*}"
+            [[ "$rest" == */* ]] && storage_prefix="${rest#*/}"
+            storage_config='{}'
+            storage_aws_credentials || return 1
+            storage_env TYPE s3
+            if [[ -n "$endpoint" ]]
+            then
+                storage_env PROVIDER Other
+                storage_env ENDPOINT "$endpoint"
+                storage_env FORCE_PATH_STYLE true
+                hostport="${endpoint#*://}"
+                storage_network_for_host "${hostport%%[:/]*}"
+            else
+                storage_env PROVIDER AWS
+                storage_env REGION "${AWS_REGION:-us-east-1}"
+            fi
+        ;;
+        gs|gcs)
+            storage_provider="gcs"
+            storage_bucket="${rest%%/*}"
+            [[ "$rest" == */* ]] && storage_prefix="${rest#*/}"
+            storage_config='{}'
+            storage_gcp_credentials || return 1
+            storage_env TYPE "google cloud storage"
+        ;;
+        az|azure|abfs|abfss)
+            storage_provider="azure"
+            local account="${rest%%/*}"
+            rest="${rest#*/}"
+            storage_bucket="${rest%%/*}"
+            [[ "$rest" == */* ]] && storage_prefix="${rest#*/}"
+            if [[ -z "$AZURE_ACCOUNT_KEY" ]] && type load_secrets_env_vars > /dev/null 2>&1
+            then
+                load_secrets_env_vars AZURE_ACCOUNT_KEY > /dev/null 2>&1
+            fi
+            if [[ -z "$AZURE_ACCOUNT_KEY" ]]
+            then
+                logerror "❌ set AZURE_ACCOUNT_KEY to the key of storage account $account (az storage account keys list)"
+                return 1
+            fi
+            storage_credentials_origin="AZURE_ACCOUNT_KEY"
+            storage_env TYPE azureblob
+            storage_env ACCOUNT "$account"
+            storage_env KEY "$AZURE_ACCOUNT_KEY"
+        ;;
+        hdfs|webhdfs)
+            storage_provider="hdfs"
+            hostport="${rest%%/*}"
+            userinfo="root"
+            if [[ "$hostport" == *@* ]]
+            then
+                userinfo="${hostport%%@*}"
+                hostport="${hostport#*@}"
+            fi
+            storage_bucket=""
+            storage_prefix="/${rest#*/}"
+            [[ "$rest" != */* ]] && storage_prefix="/"
+            storage_env TYPE hdfs
+            storage_env NAMENODE "$hostport"
+            storage_env USERNAME "$userinfo"
+            storage_credentials_origin="user $userinfo"
+            storage_network_for_host "${hostport%%:*}"
+        ;;
+        sftp)
+            storage_provider="sftp"
+            hostport="${rest%%/*}"
+            local user="" password=""
+            if [[ "$hostport" == *@* ]]
+            then
+                userinfo="${hostport%%@*}"
+                hostport="${hostport#*@}"
+                user="${userinfo%%:*}"
+                [[ "$userinfo" == *:* ]] && password="${userinfo#*:}"
+            fi
+            storage_bucket=""
+            storage_prefix="/${rest#*/}"
+            [[ "$rest" != */* ]] && storage_prefix="/"
+            storage_env TYPE sftp
+            storage_env KNOWN_HOSTS_FILE none
+            storage_env HOST "${hostport%%:*}"
+            [[ "$hostport" == *:* ]] && storage_env PORT "${hostport#*:}"
+            [[ -n "$user" ]] && storage_env USER "$user"
+            storage_sftp_password="$password"
+            storage_credentials_origin="user ${user:-?}"
+            storage_network_for_host "${hostport%%:*}"
+        ;;
+        *)
+            logerror "❌ --url $url: use s3://, gs://, az://<account>/<container>, hdfs:// or sftp://"
+            return 1
+        ;;
+    esac
+    # never print a password of the url
+    storage_label=$(sed -E 's#://([^:/@]+):[^@/]*@#://\1:***@#' <<< "$url")
+}
+
+# from the config of a sink (or source) connector of an object store
+function storage_resolve_connector () {
+    local class class_lc topics_dir endpoint host region
+    class=$(storage_cfg connector.class)
+    class_lc="${class,,}"
+    topics_dir=$(storage_cfg topics.dir)
+    case "$class_lc" in
+        *hdfs*)
+            storage_provider="hdfs"
+            local url user
+            url=$(storage_cfg hdfs.url store.url)
+            user=$(storage_cfg hdfs.authentication.kerberos)
+            if [[ "$user" == "true" ]]
+            then
+                logwarn "⚠️ Kerberos is enabled on the connector: rclone connects without Kerberos, which a secured cluster refuses"
+            fi
+            host="${url#*://}"
+            host="${host%%/*}"
+            storage_bucket=""
+            storage_prefix="/${topics_dir:-topics}"
+            storage_prefix="${storage_prefix//\/\//\/}"
+            storage_env TYPE hdfs
+            storage_env NAMENODE "$host"
+            storage_env USERNAME "${HADOOP_USER_NAME:-root}"
+            storage_credentials_origin="user ${HADOOP_USER_NAME:-root}"
+            storage_network_for_host "${host%%:*}"
+        ;;
+        *s3*)
+            storage_provider="s3"
+            storage_bucket=$(storage_cfg s3.bucket.name)
+            storage_prefix="${topics_dir:-topics}"
+            storage_aws_credentials || return 1
+            storage_env TYPE s3
+            endpoint=$(storage_cfg store.url aws.s3.endpoint)
+            region=$(storage_cfg s3.region)
+            if [[ -n "$endpoint" ]]
+            then
+                storage_env PROVIDER Other
+                storage_env ENDPOINT "$endpoint"
+                storage_env FORCE_PATH_STYLE true
+                host="${endpoint#*://}"
+                storage_network_for_host "${host%%[:/]*}"
+            else
+                storage_env PROVIDER AWS
+                storage_env REGION "${region:-${AWS_REGION:-us-east-1}}"
+            fi
+        ;;
+        *gcs*|*googlecloudstorage*)
+            storage_provider="gcs"
+            storage_bucket=$(storage_cfg gcs.bucket.name)
+            storage_prefix="${topics_dir:-topics}"
+            storage_gcp_credentials || return 1
+            storage_env TYPE "google cloud storage"
+        ;;
+        *azure.blob*|*azureblob*|*datalake*|*adls*)
+            storage_provider="azure"
+            local account key client_id client_secret tenant endpoint_url
+            if [[ "$class_lc" == *datalake* || "$class_lc" == *adls* ]]
+            then
+                account=$(storage_secret azure.datalake.gen2.account.name azure.datalake.account.name)
+                key=$(storage_secret azure.datalake.gen2.access.key)
+                client_id=$(storage_secret azure.datalake.gen2.client.id azure.datalake.client.id)
+                client_secret=$(storage_secret azure.datalake.gen2.client.key azure.datalake.client.key)
+                endpoint_url=$(storage_secret azure.datalake.gen2.token.endpoint azure.datalake.token.endpoint)
+                # the ADLS Gen2 sink writes to the file system named after the first folder of topics.dir ("topics"
+                # by default), at its root: topics/<topic>/partition=0/...
+                local dir="${topics_dir:-topics}"
+                dir="${dir#/}"
+                storage_bucket="${dir%%/*}"
+                storage_datalake_prefix=""
+                [[ "$dir" == */* ]] && storage_datalake_prefix="${dir#*/}"
+            else
+                account=$(storage_secret azblob.account.name)
+                key=$(storage_secret azblob.account.key)
+                storage_bucket=$(storage_secret azblob.container.name)
+                storage_bucket="${storage_bucket:-default}"
+            fi
+            storage_prefix="${topics_dir:-topics}"
+            if [[ "$class_lc" == *datalake* || "$class_lc" == *adls* ]]
+            then
+                storage_prefix="$storage_datalake_prefix"
+            fi
+            if [[ -z "$key" && -z "$client_secret" ]]
+            then
+                if [[ -z "$AZURE_ACCOUNT_KEY" ]] && type load_secrets_env_vars > /dev/null 2>&1
+                then
+                    load_secrets_env_vars AZURE_ACCOUNT_KEY > /dev/null 2>&1
+                fi
+                key="$AZURE_ACCOUNT_KEY"
+                storage_credentials_origin="AZURE_ACCOUNT_KEY"
+            else
+                storage_credentials_origin="the connector"
+            fi
+            if [[ -z "$account" ]] || [[ -z "$key" && -z "$client_secret" ]]
+            then
+                logerror "❌ could not get the storage account and its key (or service principal) from the connector config: use --url az://<account>/<container> with AZURE_ACCOUNT_KEY"
+                return 1
+            fi
+            storage_azure_account="$account"
+            storage_env TYPE azureblob
+            storage_env ACCOUNT "$account"
+            if [[ -n "$key" ]]
+            then
+                storage_env KEY "$key"
+            else
+                # https://login.microsoftonline.com/<tenant>/oauth2/token
+                tenant=$(sed -E 's#^https?://[^/]+/([^/]+)/.*#\1#' <<< "$endpoint_url")
+                storage_env TENANT "$tenant"
+                storage_env CLIENT_ID "$client_id"
+                storage_env CLIENT_SECRET "$client_secret"
+            fi
+        ;;
+        *sftp*)
+            storage_provider="sftp"
+            local sftp_host port user password key_path
+            sftp_host=$(storage_cfg sftp.host)
+            port=$(storage_cfg sftp.port)
+            user=$(storage_cfg sftp.username)
+            password=$(storage_secret sftp.password)
+            key_path=$(storage_cfg tls.private.key)
+            storage_bucket=""
+            storage_prefix=$(storage_cfg sftp.working.dir)
+            storage_prefix="${storage_prefix:-/}"
+            storage_env TYPE sftp
+            storage_env KNOWN_HOSTS_FILE none
+            storage_env HOST "$sftp_host"
+            [[ -n "$port" ]] && storage_env PORT "$port"
+            [[ -n "$user" ]] && storage_env USER "$user"
+            if [[ -z "$password" && -n "$key_path" ]]
+            then
+                logwarn "⚠️ the connector authenticates with a private key: pass --url sftp://user:password@host/path if the server also accepts a password"
+            fi
+            storage_sftp_password="$password"
+            storage_credentials_origin="user ${user:-?}"
+            storage_network_for_host "$sftp_host"
+        ;;
+        *)
+            logerror "❌ connector class $class is not an object store connector (S3, GCS, Azure Blob, ADLS Gen2, HDFS, SFTP): use --url"
+            return 1
+        ;;
+    esac
+    if [[ "$storage_provider" =~ ^(s3|gcs|azure)$ && -z "$storage_bucket" ]]
+    then
+        logerror "❌ could not get the bucket / container from the config of connector $storage_connector: use --url"
+        return 1
+    fi
+    case "$storage_provider" in
+        s3) storage_label="s3://$storage_bucket/${storage_prefix#/}" ;;
+        gcs) storage_label="gs://$storage_bucket/${storage_prefix#/}" ;;
+        azure) storage_label="az://$storage_azure_account/$storage_bucket/${storage_prefix#/}" ;;
+        hdfs) storage_label="$(storage_cfg hdfs.url store.url)${storage_prefix}" ;;
+        sftp) storage_label="sftp://$(storage_cfg sftp.host)${storage_prefix}" ;;
+    esac
+    return 0
+}
+
+# is a connector class (lower case) a sink of an object store that 'playground storage' reads?
+function storage_is_object_store_sink () {
+    local class_lc="$1"
+    [[ "$class_lc" == *source* ]] && return 1
+    [[ "$class_lc" == *hdfs* || "$class_lc" == *s3* || "$class_lc" == *gcs* || "$class_lc" == *googlecloudstorage* \
+        || "$class_lc" == *azure.blob* || "$class_lc" == *azureblob* || "$class_lc" == *datalake* || "$class_lc" == *adls* \
+        || "$class_lc" == *sftp* ]]
+}
+
+# set storage_provider, storage_bucket, storage_prefix, storage_label and storage_docker_args (the rclone container) from
+# --url, or from the config of --connector (the only running connector when neither is given):
+#   storage_resolve <connector> <url> <endpoint> <prefix override>
+function storage_resolve () {
+    local connector="$1" url="$2" endpoint="$3" prefix="$4"
+    storage_docker_args=()
+    storage_provider="" storage_bucket="" storage_prefix="" storage_azure_account="" storage_label="" storage_sftp_password=""
+    storage_credentials_origin="" storage_connector="" storage_config='{}'
+    storage_connect_container=""
+    if docker inspect connect > /dev/null 2>&1
+    then
+        storage_connect_container="connect"
+    fi
+
+    if [[ -n "$url" ]]
+    then
+        storage_resolve_url "$url" "$endpoint" || return 1
+    else
+        if [[ -z "$connector" ]]
+        then
+            connector=$(playground get-connector-list 2>/dev/null)
+            if [[ -z "$connector" ]]
+            then
+                logerror "💤 no connector is running: pass --url (s3://bucket/prefix, gs://, az://, hdfs://, sftp://)"
+                return 1
+            fi
+            if [[ $(echo "$connector" | wc -w) -gt 1 ]]
+            then
+                logerror "❌ several connectors are running ($(echo $connector)): pass --connector"
+                return 1
+            fi
+        fi
+        storage_connector="$connector"
+        if ! get_connector_config_json "$connector"
+        then
+            logerror "❌ could not get the config of connector $connector"
+            return 1
+        fi
+        storage_config="$curl_output"
+        local connector_type
+        connector_type=$(playground state get run.connector_type)
+        if [[ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" || "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]]
+        then
+            # the connector runs in Confluent Cloud: nothing to read in a local connect container
+            storage_connect_container=""
+        fi
+        storage_resolve_connector || return 1
+    fi
+    if [[ -n "$prefix" ]]
+    then
+        storage_prefix="$prefix"
+    fi
+    storage_prefix="${storage_prefix%/}"
+}
+
+# rclone path of the base folder
+function storage_remote_path () {
+    local path="$storage_prefix"
+    if [[ -n "$storage_bucket" ]]
+    then
+        echo "src:${storage_bucket}${path:+/${path#/}}"
+    else
+        echo "src:${path:-/}"
+    fi
+}
+
+# run rclone with the configuration of storage_resolve: storage_rclone <rclone args>
+# (STORAGE_RCLONE_VOLUME=<host dir> mounts that folder on /work)
+function storage_rclone () {
+    local extra=()
+    if [[ -n "$STORAGE_RCLONE_VOLUME" ]]
+    then
+        extra=(-v "$(host_path "$STORAGE_RCLONE_VOLUME"):/work")
+    fi
+    # the sftp password must be obscured by rclone itself
+    docker run --quiet --rm -i "${storage_docker_args[@]}" "${extra[@]}" \
+        -e "STORAGE_SFTP_PASSWORD=$storage_sftp_password" -e RCLONE_CONFIG=/dev/null \
+        --entrypoint sh "$STORAGE_RCLONE_IMAGE" \
+        -c 'if [ -n "$STORAGE_SFTP_PASSWORD" ]; then RCLONE_CONFIG_SRC_PASS=$(rclone obscure "$STORAGE_SFTP_PASSWORD"); export RCLONE_CONFIG_SRC_PASS; fi; exec rclone "$@"' \
+        rclone "$@"
+}
+
+# list the objects (files) under the base folder as rclone lsjson: storage_list <output file>
+function storage_list () {
+    local out="$1" err
+    err=$(mktemp -t pg-storage-err-XXXXXXXXXX)
+    if ! storage_rclone lsjson -R --files-only --no-mimetype "$(storage_remote_path)" > "$out" 2> "$err"
+    then
+        # S3, GCS and Azure have no folders: a missing prefix is an empty listing, "directory not found" is a missing
+        # bucket. On HDFS and SFTP, the folder is created by the connector with its first file
+        if grep -q -i "directory not found" "$err"
+        then
+            if [[ "$storage_provider" =~ ^(hdfs|sftp)$ ]]
+            then
+                echo "[]" > "$out"
+                rm -f "$err"
+                return 0
+            fi
+            logerror "❌ bucket / container $storage_bucket does not exist${storage_credentials_origin:+ (or is not visible with the credentials of $storage_credentials_origin)}"
+            rm -f "$err"
+            return 1
+        fi
+        logerror "❌ could not list $storage_label:"
+        grep -v '^\s*$' "$err" | tail -5 >&2
+        if grep -q -i -E "NoSuchBucket|bucket.*(does not exist|not found)|ContainerNotFound" "$err"
+        then
+            logerror "   🪣 the bucket / container does not exist"
+        elif grep -q -i -E "AccessDenied|Forbidden|403|AuthorizationPermissionMismatch|InvalidAccessKeyId|SignatureDoesNotMatch|AuthenticationFailed|unable to authenticate|handshake failed|Permission denied" "$err"
+        then
+            logerror "   🔐 access denied with the credentials of $storage_credentials_origin"
+        fi
+        rm -f "$err"
+        return 1
+    fi
+    rm -f "$err"
+}
+
+function storage_show_target () {
+    log "🪣 ${storage_label}${storage_connector:+ (connector $storage_connector)}${storage_credentials_origin:+, credentials of $storage_credentials_origin}"
 }
 
 # src/lib/utils_function.sh
@@ -96910,6 +97794,189 @@ EOF
 }
 
 # :command.function
+playground_storage_ls_command() {
+
+  # src/commands/storage/ls.sh
+  connector="${args[--connector]}"
+  url="${args[--url]}"
+  endpoint="${args[--endpoint]}"
+  prefix="${args[--prefix]}"
+  topic="${args[--topic]}"
+  include="${args[--include]}"
+  max_objects="${args[--max-objects]}"
+  json="${args[--json]}"
+
+  if [[ -n "$json" ]]
+  then
+      # stdout only gets the json document
+      exec 3>&1 1>&2
+  fi
+
+  storage_resolve "$connector" "$url" "$endpoint" "$prefix" || exit 2
+  storage_show_target
+
+  tmp_dir=$(mktemp -d -t pg-storage-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  storage_list "$tmp_dir/listing.json" || exit 2
+
+  select_args=(select "--listing=$tmp_dir/listing.json" "--topic=$topic" "--include=$include" "--max-objects=$max_objects" "--label=$storage_label")
+  if [[ -n "$json" ]]
+  then
+      python3 -I "$root_folder/tools/storage/storage.py" "${select_args[@]}" --report json >&3
+  else
+      python3 -I "$root_folder/tools/storage/storage.py" "${select_args[@]}" --report table
+  fi
+
+}
+
+# :command.function
+playground_storage_cat_command() {
+
+  # src/commands/storage/cat.sh
+  connector="${args[--connector]}"
+  url="${args[--url]}"
+  endpoint="${args[--endpoint]}"
+  prefix="${args[--prefix]}"
+  topic="${args[--topic]}"
+  include="${args[--include]}"
+  max_objects="${args[--max-objects]}"
+  newest="${args[--newest]}"
+  records="${args[--records]}"
+  summary="${args[--summary]}"
+  json="${args[--json]}"
+
+  if [[ -n "$json" || -n "$records" ]]
+  then
+      # stdout only gets the json document / the json lines
+      exec 3>&1 1>&2
+  fi
+
+  storage_resolve "$connector" "$url" "$endpoint" "$prefix" || exit 2
+  storage_show_target
+
+  tmp_dir=$(mktemp -d -t pg-storage-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+  mkdir -p "$tmp_dir/objects"
+
+  storage_list "$tmp_dir/listing.json" || exit 2
+
+  select_args=(select "--listing=$tmp_dir/listing.json" "--topic=$topic" "--include=$include" "--max-objects=$max_objects" "--selected=$tmp_dir/selected.txt" "--report=count")
+  [[ -n "$newest" ]] && select_args+=(--newest)
+  matched=$(python3 -I "$root_folder/tools/storage/storage.py" "${select_args[@]}") || exit 2
+  selected=$(grep -c . "$tmp_dir/selected.txt")
+  if [[ "$selected" -eq 0 ]]
+  then
+      logwarn "🫙 no object${topic:+ for topic $topic}${include:+ matching $include} under $storage_label"
+      [[ -n "$json" ]] && echo '{"objects": [], "partitions": []}' >&3
+      exit 0
+  fi
+  if [[ "$matched" -gt "$selected" ]]
+  then
+      logwarn "📄 reading $selected of $matched objects (--max-objects $max_objects${newest:+, the newest})"
+  else
+      log "📄 reading $selected object(s)"
+  fi
+
+  if ! STORAGE_RCLONE_VOLUME="$tmp_dir" storage_rclone copy --files-from-raw /work/selected.txt --no-traverse "$(storage_remote_path)" /work/objects 2> "$tmp_dir/copy.log"
+  then
+      logerror "❌ could not download the objects:"
+      grep -v '^\s*$' "$tmp_dir/copy.log" | tail -5
+      exit 2
+  fi
+
+  # avro and parquet objects to json lines, one container for all the objects of a format
+  if grep -q -i '\.avro$' "$tmp_dir/selected.txt"
+  then
+      docker run --quiet --rm -v "$(host_path "$tmp_dir"):/work" --entrypoint bash vdesabou/avro-tools -c \
+          'find /work/objects -type f -name "*.avro" | while read -r f; do java -jar /opt/avro-tools.jar tojson "$f" > "$f.jsonl" 2> "$f.err" || { echo "$f: $(tail -1 "$f.err")" >&2; rm -f "$f.jsonl"; }; done' 2>&1 | sed "s#/work/objects/##" >&2
+  fi
+  if grep -q -i '\.parquet$' "$tmp_dir/selected.txt"
+  then
+      docker run --quiet --rm --platform linux/amd64 -v "$(host_path "$tmp_dir"):/work" --entrypoint sh nathanhowell/parquet-tools -c \
+          'find /work/objects -type f -name "*.parquet" | while read -r f; do java -jar /parquet-tools.jar cat --json "$f" > "$f.jsonl" 2> "$f.err" || { echo "$f: $(tail -1 "$f.err")" >&2; rm -f "$f.jsonl"; }; done' 2>&1 | sed "s#/work/objects/##" >&2
+  fi
+
+  output="objects"
+  [[ -n "$summary" ]] && output="summary"
+  [[ -n "$records" ]] && output="records"
+  [[ -n "$json" ]] && output="json"
+  decode_args=(decode "--dir=$tmp_dir/objects" "--selected=$tmp_dir/selected.txt" "--output=$output")
+  if [[ -n "$json" || -n "$records" ]]
+  then
+      python3 -I "$root_folder/tools/storage/storage.py" "${decode_args[@]}" >&3
+  else
+      python3 -I "$root_folder/tools/storage/storage.py" "${decode_args[@]}"
+  fi
+
+}
+
+# :command.function
+playground_storage_wait_for_objects_command() {
+
+  # src/commands/storage/wait-for-objects.sh
+  connector="${args[--connector]}"
+  url="${args[--url]}"
+  endpoint="${args[--endpoint]}"
+  prefix="${args[--prefix]}"
+  topic="${args[--topic]}"
+  include="${args[--include]}"
+  min_expected_objects="${args[--min-expected-objects]}"
+  max_wait="${args[--max-wait]}"
+  interval="${args[--interval]}"
+
+  storage_resolve "$connector" "$url" "$endpoint" "$prefix" || exit 2
+
+  tmp_dir=$(mktemp -d -t pg-storage-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  what="${storage_label}${topic:+ (topic $topic)}${include:+ (matching $include)}"
+  log "⏳ Waiting up to $max_wait seconds for at least $min_expected_objects object(s) in $what"
+  start_time=$SECONDS
+  last_count=""
+  nb_failures=0
+  while true
+  do
+      if storage_list "$tmp_dir/listing.json" 2> "$tmp_dir/list.err"
+      then
+          nb_failures=0
+          count=$(python3 -I "$root_folder/tools/storage/storage.py" select "--listing=$tmp_dir/listing.json" "--topic=$topic" "--include=$include" --report count)
+      else
+          nb_failures=$((nb_failures + 1))
+          if [ $nb_failures -ge 3 ]
+          then
+              cat "$tmp_dir/list.err" >&2
+              exit 1
+          fi
+          count=0
+      fi
+      elapsed=$((SECONDS - start_time))
+      if [ "$count" -ge "$min_expected_objects" ]
+      then
+          log "✅ $count object(s) in $what (expected at least $min_expected_objects) after $elapsed seconds"
+          break
+      fi
+      if [ "$count" != "$last_count" ]
+      then
+          log "⌛ $count object(s) (expected at least $min_expected_objects)"
+          last_count="$count"
+      fi
+      if [ $elapsed -ge $max_wait ]
+      then
+          logerror "❌ $count object(s) in $what after $max_wait seconds, expected at least $min_expected_objects"
+          exit 1
+      fi
+      sleep $interval
+  done
+
+}
+
+# :command.function
 playground_rbac_role_binding_create_command() {
 
   # src/commands/rbac/role-binding/create.sh
@@ -101457,6 +102524,7 @@ playground_connector_reconcile_command() {
 
   key_source="auto"
   key_origin="--key-field"
+  object_store=""
   primitive_key_field=""
   deletes="true"
   allow_duplicates=""
@@ -101482,6 +102550,13 @@ playground_connector_reconcile_command() {
               logerror "❌ connector $connector uses topics.regex ($(cfg topics.regex)): pass --topic"
               exit 2
           fi
+      fi
+      if storage_is_object_store_sink "$class_lc"
+      then
+          # an object store sink appends every record: no key, no delete, each record once
+          object_store="1"
+          deletes="false"
+          pk_mode=""
       fi
       case "${pk_mode,,}" in
           record_key)
@@ -101512,7 +102587,7 @@ playground_connector_reconcile_command() {
               logwarn "⚠️ pk.mode record_header: the key is in the headers, pass --key-field with the columns to compare on"
           ;;
       esac
-      if [[ -z "$table" ]]
+      if [[ -z "$table" && -z "$object_store" ]]
       then
           if [[ "$class_lc" == *mongo* ]]
           then
@@ -101600,7 +102675,7 @@ playground_connector_reconcile_command() {
   done
 
   # ---- the database: the host of the connection url when it is a running container --------------------------------
-  if [[ -z "$rows_file" ]]
+  if [[ -z "$rows_file" && -z "$object_store" ]]
   then
       url=$(cfg connection.url connection.uri)
       host=$(cfg database.hostname connection.host)
@@ -101675,6 +102750,23 @@ playground_connector_reconcile_command() {
       cp "$rows_file" "$tmp_dir/rows.json"
       table_label=$(basename "$rows_file")
       table_kind="file"
+  elif [[ -n "$object_store" ]]
+  then
+      log "🪣 Reading every object of topic $topic written by connector $connector (playground storage cat)"
+      if ! playground storage cat --connector "$connector" --topic "$topic" --records --max-objects 0 > "$tmp_dir/rows.json" 2> "$tmp_dir/storage.log"
+      then
+          logerror "❌ could not read the objects of connector $connector:"
+          grep -v '^\s*$' "$tmp_dir/storage.log" | tail -10
+          exit 2
+      fi
+      table_label=$(grep -o -E '🪣 [^ ]+' "$tmp_dir/storage.log" | head -1 | sed 's/🪣 //')
+      table_label="${table_label:-objects}"
+      table_kind="objects in"
+      flush_size=$(cfg flush.size)
+      if [[ -n "$flush_size" && "$flush_size" != "1" ]]
+      then
+          log "🎓 an object is written every flush.size=$flush_size records (or rotate.interval.ms): up to $((flush_size - 1)) record(s) per partition after the last object are still in the task, not lost"
+      fi
   else
       if [[ -z "$table" ]]
       then
@@ -112833,6 +113925,13 @@ parse_requirements() {
       action="db"
       shift
       playground_db_parse_requirements "$@"
+      shift $#
+      ;;
+
+    storage)
+      action="storage"
+      shift
+      playground_storage_parse_requirements "$@"
       shift $#
       ;;
 
@@ -164578,6 +165677,783 @@ playground_db_cdc_check_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_storage_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_storage_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    ls)
+      action="ls"
+      shift
+      playground_storage_ls_parse_requirements "$@"
+      shift $#
+      ;;
+
+    cat)
+      action="cat"
+      shift
+      playground_storage_cat_parse_requirements "$@"
+      shift $#
+      ;;
+
+    wait-for-objects)
+      action="wait-for-objects"
+      shift
+      playground_storage_wait_for_objects_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_storage_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_docker_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_storage_ls_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_storage_ls_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="storage ls"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+        # :flag.conflicts
+        if [[ -n "${args['--url']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--url" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --url)
+        # :flag.conflicts
+        if [[ -n "${args['--connector']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--url']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--url requires an argument: --url URL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --endpoint)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--endpoint']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--endpoint requires an argument: --endpoint ENDPOINT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --prefix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--prefix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--prefix requires an argument: --prefix PREFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --include)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--include']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--include requires an argument: --include INCLUDE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-objects)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-objects']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-objects requires an argument: --max-objects MAX_OBJECTS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-objects']:-} ]] || args['--max-objects']="100"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-objects'] ]]; then
+    validation_output="$(validate_integer "${args['--max-objects']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-objects MAX_OBJECTS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_storage_cat_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_storage_cat_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="storage cat"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+        # :flag.conflicts
+        if [[ -n "${args['--url']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--url" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --url)
+        # :flag.conflicts
+        if [[ -n "${args['--connector']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--url']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--url requires an argument: --url URL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --endpoint)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--endpoint']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--endpoint requires an argument: --endpoint ENDPOINT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --prefix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--prefix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--prefix requires an argument: --prefix PREFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --include)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--include']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--include requires an argument: --include INCLUDE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-objects)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-objects']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-objects requires an argument: --max-objects MAX_OBJECTS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --newest)
+
+        # :flag.case_no_arg
+        args['--newest']=1
+        shift
+        ;;
+
+      # :flag.case
+      --records)
+        # :flag.conflicts
+        for conflict in --json --summary; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--records']=1
+        shift
+        ;;
+
+      # :flag.case
+      --summary)
+        # :flag.conflicts
+        for conflict in --json --records; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--summary']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        for conflict in --records --summary; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-objects']:-} ]] || args['--max-objects']="20"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-objects'] ]]; then
+    validation_output="$(validate_integer "${args['--max-objects']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-objects MAX_OBJECTS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_storage_wait_for_objects_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_storage_wait_for_objects_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="storage wait-for-objects"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+        # :flag.conflicts
+        if [[ -n "${args['--url']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--url" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --url)
+        # :flag.conflicts
+        if [[ -n "${args['--connector']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--url']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--url requires an argument: --url URL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --endpoint)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--endpoint']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--endpoint requires an argument: --endpoint ENDPOINT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --prefix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--prefix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--prefix requires an argument: --prefix PREFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --include)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--include']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--include requires an argument: --include INCLUDE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --min-expected-objects)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--min-expected-objects']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--min-expected-objects requires an argument: --min-expected-objects MIN_EXPECTED_OBJECTS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --interval)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--interval']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--interval requires an argument: --interval INTERVAL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--min-expected-objects']:-} ]] || args['--min-expected-objects']="1"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="120"
+  [[ -n ${args['--interval']:-} ]] || args['--interval']="5"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--min-expected-objects'] ]]; then
+    validation_output="$(validate_integer "${args['--min-expected-objects']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--min-expected-objects MIN_EXPECTED_OBJECTS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--interval'] ]]; then
+    validation_output="$(validate_integer "${args['--interval']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--interval INTERVAL" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
 playground_rbac_parse_requirements() {
   local key
 
@@ -178980,6 +180856,11 @@ playground_completion() {
         playground_db_completion "$completion_current" "$@"
         return
         ;;
+      storage)
+        shift
+        playground_storage_completion "$completion_current" "$@"
+        return
+        ;;
       rbac)
         shift
         playground_rbac_completion "$completion_current" "$@"
@@ -179039,7 +180920,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets account cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets account cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db storage rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -204601,6 +206482,445 @@ playground_db_cdc_check_completion() {
 }
 
 # :command.completion_function
+playground_storage_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      ls)
+        shift
+        playground_storage_ls_completion "$completion_current" "$@"
+        return
+        ;;
+      cat)
+        shift
+        playground_storage_cat_completion "$completion_current" "$@"
+        return
+        ;;
+      wait-for-objects)
+        shift
+        playground_storage_wait_for_objects_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" ls cat wait-for-objects
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_storage_ls_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--url"]=1
+
+        ;;
+      --url)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--url"]=1
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --endpoint)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--endpoint"]=1
+
+        ;;
+      --prefix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--prefix"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --include)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--include"]=1
+
+        ;;
+      --max-objects)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-objects"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --url "$completion_current" --url
+    completion_flag_candidates --endpoint "$completion_current" --endpoint
+    completion_flag_candidates --prefix "$completion_current" --prefix
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --include "$completion_current" --include
+    completion_flag_candidates --max-objects "$completion_current" --max-objects
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_storage_cat_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--url"]=1
+
+        ;;
+      --url)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--url"]=1
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --endpoint)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--endpoint"]=1
+
+        ;;
+      --prefix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--prefix"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --include)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--include"]=1
+
+        ;;
+      --max-objects)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-objects"]=1
+
+        ;;
+      --newest)
+        completion_blocked_flags["--newest"]=1
+
+        shift
+        ;;
+      --records)
+        completion_blocked_flags["--records"]=1
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--summary"]=1
+
+        shift
+        ;;
+      --summary)
+        completion_blocked_flags["--summary"]=1
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--records"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--records"]=1
+        completion_blocked_flags["--summary"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --url "$completion_current" --url
+    completion_flag_candidates --endpoint "$completion_current" --endpoint
+    completion_flag_candidates --prefix "$completion_current" --prefix
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --include "$completion_current" --include
+    completion_flag_candidates --max-objects "$completion_current" --max-objects
+    completion_flag_candidates --newest "$completion_current" --newest
+    completion_flag_candidates --records "$completion_current" --records
+    completion_flag_candidates --summary "$completion_current" --summary
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_storage_wait_for_objects_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--url"]=1
+
+        ;;
+      --url)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--url"]=1
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --endpoint)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--endpoint"]=1
+
+        ;;
+      --prefix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--prefix"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --include)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--include"]=1
+
+        ;;
+      --min-expected-objects)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--min-expected-objects"]=1
+
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --interval)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--interval"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --url "$completion_current" --url
+    completion_flag_candidates --endpoint "$completion_current" --endpoint
+    completion_flag_candidates --prefix "$completion_current" --prefix
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --include "$completion_current" --include
+    completion_flag_candidates --min-expected-objects "$completion_current" --min-expected-objects
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --interval "$completion_current" --interval
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
 playground_rbac_completion() {
   local completion_current="$1"
   shift
@@ -212351,6 +214671,10 @@ run() {
     "db sql") playground_db_sql_command ;;
     "db wait-for-rows") playground_db_wait_for_rows_command ;;
     "db cdc-check") playground_db_cdc_check_command ;;
+    "storage") playground_storage_command ;;
+    "storage ls") playground_storage_ls_command ;;
+    "storage cat") playground_storage_cat_command ;;
+    "storage wait-for-objects") playground_storage_wait_for_objects_command ;;
     "rbac") playground_rbac_command ;;
     "rbac role-binding") playground_rbac_role_binding_command ;;
     "rbac role-binding create") playground_rbac_role_binding_create_command ;;

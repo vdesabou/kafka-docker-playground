@@ -71,13 +71,11 @@ playground topic produce -t s3-topic --nb-messages 10 --forced-value '{"f1":"val
 }
 EOF
 
-sleep 10
+log "Waiting for the 3 objects of the 9 first records (flush.size=3)"
+playground storage wait-for-objects --connector s3-sink --min-expected-objects 3
 
-# log "Listing objects of in S3"
-# aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
+log "Listing the objects of bucket $AWS_BUCKET_NAME/$TOPICS_DIR"
+playground storage ls --connector s3-sink
 
-log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TOPICS_DIR/s3-topic/partition=0/s3-topic+0+0000000000.avro s3-topic+0+0000000000.avro
-
-playground tools read-avro-file --file $PWD/s3-topic+0+0000000000.avro
-rm -f s3-topic+0+0000000000.avro
+log "Displaying the records of the first object (avro)"
+playground storage cat --connector s3-sink --include "partition=0/s3-topic\+0\+0000000000\.avro"

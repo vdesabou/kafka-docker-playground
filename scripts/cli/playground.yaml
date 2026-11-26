@@ -11623,6 +11623,226 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+- name: storage
+  description: "\U0001FAA3 Object store commands\n\nList, read and wait for the objects
+    that a sink connector writes to an\nobject store, without the command line of
+    each provider (aws s3, gcloud\nstorage, az storage, hdfs dfs, sftp) and without
+    downloading files by\nhand.\n\n  ls                 objects of the bucket, and
+    a summary per topic-partition\n  cat                records of the objects (Avro,
+    Parquet, JSON, CSV, text decoded)\n  wait-for-objects   wait until N objects are
+    written\n\nSupported: Amazon S3, MinIO and other S3 compatible stores (store.url),\nGoogle
+    Cloud Storage, Azure Blob Storage, ADLS Gen2, HDFS (no Kerberos) and\nSFTP, through
+    one rclone container (rclone/rclone).\n\n\U0001F517 With --connector (or the only
+    running connector), the bucket, the\nfolder (topics.dir) and the credentials come
+    from the config of the\nconnector, self-managed or fully managed. A secret masked
+    by the REST API\nis read from the connect container (a ${file:...} config provider,
+    the\n~/.aws/credentials file, the GCS key file of gcs.credentials.path), then\nfrom
+    the example script, then from the playground secrets\n(AWS_ACCESS_KEY_ID, GCP_KEYFILE_CONTENT,
+    AZURE_ACCOUNT_KEY).\n\n\U0001F310 With --url, any location: s3://bucket/prefix
+    (with --endpoint for\nMinIO), gs://bucket/prefix, az://account/container/prefix,\nhdfs://[user@]namenode:9000/path,
+    sftp://user:password@host:22/path.\n\n\U0001F393 Tip: in an example script, use
+    'storage wait-for-objects' instead of a\nfixed sleep, then 'storage cat' instead
+    of a download + 'tools\nread-avro-file'. 'connector reconcile' compares the records
+    of the\nobjects with the topic (lost, duplicated records)."
+  usage: playground storage COMMAND
+  options: []
+  subcommands:
+  - name: ls
+    description: "\U0001FAA3 List the objects written by a sink connector\n\nLists
+      every object under the folder of the connector (topics.dir,\n\"topics\" by default)
+      with its size and time, then a summary per\ntopic-partition: number of objects,
+      size, first offset and start\noffset of the last object (from the object names\n<topic>+<partition>+<start
+      offset>.<format>).\n\nTemporary files of the HDFS sink (+tmp folders) are left
+      out."
+    usage: playground storage ls [OPTIONS]
+    options:
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector whose bucket to read (default: the only running
+        connector)\n\nConflicts with: --url"
+    - names:
+      - "--url"
+      argument: URL
+      description: "\U0001F310 Location to read instead of the one of a connector\n\ns3://bucket/prefix,
+        gs://bucket/prefix, az://account/container/prefix, hdfs://[user@]namenode:9000/path,
+        sftp://user:password@host:22/path\n\nConflicts with: --connector"
+    - names:
+      - "--endpoint"
+      argument: ENDPOINT
+      description: "\U0001F50C Endpoint of an S3 compatible store, with an s3:// --url
+        (http://minio:9000)"
+    - names:
+      - "--prefix"
+      argument: PREFIX
+      description: "\U0001F4C1 Folder to read instead of topics.dir of the connector
+        (\"\" for the whole bucket)"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Only the objects of this topic (comma separated list
+        allowed)"
+    - names:
+      - "--include"
+      argument: INCLUDE
+      description: "\U0001F50E Only the objects whose path matches this regex (partition=0/,
+        year=2026, \\.avro$)"
+    - names:
+      - "--max-objects"
+      argument: MAX_OBJECTS
+      description: "\U0001F522 Max number of objects to show (default is 100, 0 for
+        all); the summary counts all of them\n\nDefault value: 100"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the objects and the summary as json"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: cat
+    description: "\U0001F4C4 Print the records of the objects written by a sink connector\n\nDownloads
+      the objects (--max-objects, the first ones in topic,\npartition and offset order,
+      or the newest with --newest) and prints\ntheir records: Avro (avro-tools) and
+      Parquet (parquet-tools) as json,\nJSON lines, CSV, text and byte array objects
+      as they are, gzip\ncompressed objects uncompressed.\n\nThen a continuity check
+      per topic-partition: the offsets covered by\nthe objects (start offset of the
+      name + number of records), with the\ngaps (offsets in no object: records lost,
+      or a compacted topic,\ntransaction markers, a filter SMT) and the overlaps (offsets
+      in two\nobjects: duplicates, after a task restart with a time based\npartitioner
+      for example).\n\n--records prints only the records, one json per line, for jq
+      or a\nscript."
+    usage: playground storage cat [OPTIONS]
+    options:
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector whose bucket to read (default: the only running
+        connector)\n\nConflicts with: --url"
+    - names:
+      - "--url"
+      argument: URL
+      description: "\U0001F310 Location to read instead of the one of a connector\n\ns3://bucket/prefix,
+        gs://bucket/prefix, az://account/container/prefix, hdfs://[user@]namenode:9000/path,
+        sftp://user:password@host:22/path\n\nConflicts with: --connector"
+    - names:
+      - "--endpoint"
+      argument: ENDPOINT
+      description: "\U0001F50C Endpoint of an S3 compatible store, with an s3:// --url
+        (http://minio:9000)"
+    - names:
+      - "--prefix"
+      argument: PREFIX
+      description: "\U0001F4C1 Folder to read instead of topics.dir of the connector
+        (\"\" for the whole bucket)"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Only the objects of this topic (comma separated list
+        allowed)"
+    - names:
+      - "--include"
+      argument: INCLUDE
+      description: "\U0001F50E Only the objects whose path matches this regex (partition=0/,
+        year=2026, \\.avro$)"
+    - names:
+      - "--max-objects"
+      argument: MAX_OBJECTS
+      description: "\U0001F522 Max number of objects to read (default is 20, 0 for
+        all)\n\nDefault value: 20"
+    - names:
+      - "--newest"
+      argument: ''
+      description: "\U0001F195 Read the newest objects instead of the first ones"
+    - names:
+      - "--records"
+      argument: ''
+      description: "\U0001F4DC Print only the records, one json per line\n\nConflicts
+        with: --json, --summary"
+    - names:
+      - "--summary"
+      argument: ''
+      description: "\U0001F4CA Print only the summary per topic-partition (records,
+        offsets, gaps, overlaps)\n\nConflicts with: --json, --records"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the objects, their records and the summary as
+        json\n\nConflicts with: --records, --summary"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: wait-for-objects
+    description: "⏳ Wait for a sink connector to write a minimum number of objects\n\nLists
+      the objects every --interval seconds until there are at least\n--min-expected-objects
+      (of --topic, matching --include), and fails\nafter --max-wait seconds. A bucket
+      folder that does not exist yet\ncounts as empty.\n\n\U0001F393 Tip: a storage
+      sink writes an object every flush.size records (or\nrotate.interval.ms): 10
+      records with flush.size=3 make 3 objects."
+    usage: playground storage wait-for-objects [OPTIONS]
+    options:
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector whose bucket to read (default: the only running
+        connector)\n\nConflicts with: --url"
+    - names:
+      - "--url"
+      argument: URL
+      description: "\U0001F310 Location to read instead of the one of a connector\n\ns3://bucket/prefix,
+        gs://bucket/prefix, az://account/container/prefix, hdfs://[user@]namenode:9000/path,
+        sftp://user:password@host:22/path\n\nConflicts with: --connector"
+    - names:
+      - "--endpoint"
+      argument: ENDPOINT
+      description: "\U0001F50C Endpoint of an S3 compatible store, with an s3:// --url
+        (http://minio:9000)"
+    - names:
+      - "--prefix"
+      argument: PREFIX
+      description: "\U0001F4C1 Folder to read instead of topics.dir of the connector
+        (\"\" for the whole bucket)"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Only the objects of this topic (comma separated list
+        allowed)"
+    - names:
+      - "--include"
+      argument: INCLUDE
+      description: "\U0001F50E Only the objects whose path matches this regex (partition=0/,
+        year=2026, \\.avro$)"
+    - names:
+      - "--min-expected-objects"
+      argument: MIN_EXPECTED_OBJECTS
+      description: "\U0001F522 Minimum number of objects to wait for (default is 1)\n\nDefault
+        value: 1"
+    - names:
+      - "--max-wait"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Max time in seconds to wait (default is 120)
+
+        Default value: 120
+    - names:
+      - "--interval"
+      argument: INTERVAL
+      description: "\U0001F501 Interval in seconds between checks (default is 5)\n\nDefault
+        value: 5"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
 - name: rbac
   description: "\U0001F6E1️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac
     environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running
@@ -12936,20 +13156,25 @@ subcommands:
       of values)\n  table            table.name.format (${topic} replaced), collection,\n
       \                  table.whitelist / table.include.list\n  database         the
       host of connection.url / database.hostname\n                   when it is a
-      running container, with the user and\n                   password of the connector\n\nPass
-      --topic, --table, --key-field and --container for anything else,\nand --rows-file
-      to compare with rows exported from any system (a\nbucket, a warehouse, a customer
-      dump), one json object per line.\n\nValues are compared by meaning, not by text:
-      1, 1.0 and \"1\"; true and\n1; epoch milliseconds (or days) and a date or timestamp
-      column;\njson text and an object; CHAR padding; Avro unions; MongoDB extended\njson.
-      Column names are compared case-insensitively.\n\nExits with 1 when records are
-      lost, duplicated, different or not\ndeleted, so an example or a repro model
-      can assert on it, and with 2\nwhen it could not compare (no connector, topic
-      or table found, the\ndatabase or the topic could not be read): a failure of
-      the setup, not\nof the data.\n\nSupported databases: the ones of 'playground
-      db sql' except Db2\n(PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 19c and
-      later, MongoDB).\n\n☁️ Fully managed: supported when the database runs in a
-      local container,\nelse with --rows-file"
+      running container, with the user and\n                   password of the connector\n\n\U0001FAA3
+      Object store sinks (S3, GCS, Azure Blob, ADLS Gen2, HDFS, SFTP,\nself-managed
+      or fully managed): the records of every object of the\ntopic, read with 'playground
+      storage cat', compared with the topic as\nmultisets of values (no key, no delete:
+      a storage sink appends each\nrecord once). Duplicated records are the objects
+      written twice after a\ntask restart; the records after the last object (fewer
+      than\nflush.size) are still in the task, not lost.\n\nPass --topic, --table,
+      --key-field and --container for anything else,\nand --rows-file to compare with
+      rows exported from any system (a\nwarehouse, a customer dump), one json object
+      per line.\n\nValues are compared by meaning, not by text: 1, 1.0 and \"1\";
+      true and\n1; epoch milliseconds (or days) and a date or timestamp column;\njson
+      text and an object; CHAR padding; Avro unions; MongoDB extended\njson. Column
+      names are compared case-insensitively.\n\nExits with 1 when records are lost,
+      duplicated, different or not\ndeleted, so an example or a repro model can assert
+      on it, and with 2\nwhen it could not compare (no connector, topic or table found,
+      the\ndatabase or the topic could not be read): a failure of the setup, not\nof
+      the data.\n\nSupported databases: the ones of 'playground db sql' except Db2\n(PostgreSQL,
+      MySQL, MariaDB, SQL Server, Oracle 19c and later, MongoDB).\n\n☁️ Fully managed:
+      supported when the database runs in a local container,\nelse with --rows-file"
     usage: playground connector reconcile [OPTIONS]
     options:
     - names:
