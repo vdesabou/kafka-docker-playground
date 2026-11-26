@@ -44,7 +44,14 @@ containers=""
     printf 'ID\tENDPOINT\tRACK\tFENCED\tCONTAINER\n'
     echo "$api_output" | sed -E 's/^([^ ]+) \(id: ([0-9]+) rack: ([^ )]+)( isFenced: ([a-z]+))?.*/\2 \1 \3 \5/' | sort -n | while read -r id endpoint rack fenced
     do
-        container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }')
+        # two containers configured with the same node id: one of them is this broker, the other cannot register
+        container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }' | paste -sd, -)
+        [[ "$container" == *,* ]] && container="$container ⚠️ same node id"
+        # another broker advertises the same endpoint: advertised.listeners copied from it
+        if [ "$(echo "$api_output" | awk -v e="$endpoint" '$1 == e && $2 == "(id:"' | wc -l | tr -d ' ')" -gt 1 ]
+        then
+            container="${container:--} ⚠️ same endpoint as another broker"
+        fi
         printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$endpoint" "$rack" "${fenced:--}" "${container:--}"
     done
     # broker containers that are not registered (stopped or starting)

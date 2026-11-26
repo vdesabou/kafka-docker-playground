@@ -29,12 +29,16 @@ playground find-example --category academy
 | ⭐ | [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector) | an SMT error, converters vs SMTs | `connector smt test`, `connector update` |
 | ⭐ | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
 | ⭐ | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
+| ⭐ | [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) | a duplicate `node.id`, what the data folder remembers | `broker health`, `broker describe`, `container logs`, `container recreate --fresh-volumes` |
+| ⭐ | [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers) | the cluster id and `meta.properties` | `broker health`, `container logs --errors`, `analyze logs` |
+| ⭐ | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
 | ⭐⭐ | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
 | ⭐⭐ | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
 | ⭐⭐ | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
 | ⭐⭐ | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
 | ⭐⭐ | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
 | ⭐⭐ | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
+| ⭐⭐ | [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) | `listeners` vs `advertised.listeners`, replication | `broker describe`, `broker health`, `topic get-offsets`, `topic describe` |
 | ⭐⭐⭐ | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
 | ⭐⭐⭐ | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
 | ⭐⭐⭐ | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
@@ -955,6 +959,404 @@ N.B: the `offset` property fails with `Only SinkRecord supported for [field inse
 <!-- select:end -->
 
 🥁 So...did you learn why InsertField does not set some fields with source connectors?
+
+<!-- tabs:end -->
+
+
+### Broker: a broker never joins the cluster
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A customer adds a third broker by copying the configuration of the second one. It starts, logs nothing at ERROR for a
+minute, then exits and is restarted by its service manager, again and again.
+
+💡 What you'll learn:
+
+* Read a broker that does not start: its log, `playground broker health` and `playground broker describe`
+* Why `node.id` must be unique, and what the controllers do with a duplicate
+* Why fixing the configuration is not enough: the data folder remembers the node id
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1 (KRaft: CP 8 or later)
+
+* 🖥️ 3 brokers (ids 1, 2 and 3), 1 controller (id 4)
+
+Reproduction model: [broker-repro-000017-broker-never-joins-duplicate-node-id.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000017-broker-never-joins-duplicate-node-id.sh)
+
+#### **📍 Step 1**
+
+Run the example (or type `000017` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000017-broker-never-joins-duplicate-node-id.sh
+```
+
+The example ends with `playground broker health`:
+
+```bash
+18:23:43 ℹ️ 🩺 Health of the cluster
+18:23:43 ℹ️ 🖥️ registered brokers: 1,2
+18:23:43 🔥 ❌ containers broker2 and broker3 have the same node id 2: only one of them is registered, the other retries then exits (DUPLICATE_BROKER_REGISTRATION or /brokers/ids/2 already exists in its log: playground container logs -c <container> --errors)
+18:23:43 ℹ️ ✅ no under-replicated partition
+18:23:43 ℹ️ ✅ no under min.insync.replicas partition
+18:23:43 ℹ️ ✅ no unavailable (no leader) partition
+18:23:43 ℹ️ 🗳️ KRaft quorum: leader is node 4
+NODE  STATUS    LOG_END_OFFSET  LAG  LAST_CAUGHT_UP
+4     Leader    235             0    0s ago
+2     Observer  235             0    0s ago
+1     Observer  235             0    0s ago
+2     Observer  235             0    0s ago
+18:23:43 🔥 ❌ cluster is not healthy: brokers with the same node id: 2
+```
+
+❔Questions:
+
+* Which container is not part of the cluster, and what does its log say?
+* Why is node `2` listed twice in the KRaft quorum?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Which container is not part of the cluster, and what does its log say?
+
+[playground broker describe](/playground%20broker%20describe) shows that one registered broker 2 is behind two containers:
+
+```bash
+playground broker describe
+18:24:15 ℹ️ 🖥️ Brokers (CP 8.4.1)
+ID  ENDPOINT      RACK  FENCED  CONTAINER
+1   broker:9092   null  false   broker
+2   broker2:9092  null  false   broker2,broker3 ⚠️ same node id
+18:24:16 ℹ️ 🗳️ KRaft
+Cluster id:            MkU3OEVBNTcwNTJENDM2Qk
+Active controller:     4 (epoch 1)
+Voters (controllers):  4
+Observers (brokers):   1,2,2
+```
+
+The compose override of the model sets the node id of `broker3` to `2`, copied from `broker2`:
+
+```yml
+  broker3:
+    # the new broker is added to the running cluster: it starts 30 seconds after the others
+    command: bash -c "sleep 30 && exec /etc/confluent/docker/run"
+    environment:
+      # 💥 copied from broker2 and not changed
+      KAFKA_NODE_ID: 2
+      KAFKA_BROKER_ID: 2
+```
+
+Started at the same time, either `broker2` or `broker3` would be the one left out: the first one to register wins.
+
+The full log of `broker3` (`playground container logs -c broker3 --no-follow`) has the reason, at **INFO** level, every 2 seconds:
+
+```log
+[2026-11-26 17:21:55,751] INFO [BrokerLifecycleManager id=2] Unable to register broker 2 because the controller returned error DUPLICATE_BROKER_REGISTRATION (org.apache.kafka.server.BrokerLifecycleManager)
+[2026-11-26 17:21:57,760] INFO [BrokerLifecycleManager id=2] Unable to register broker 2 because the controller returned error DUPLICATE_BROKER_REGISTRATION (org.apache.kafka.server.BrokerLifecycleManager)
+```
+
+Being INFO, it is not in `playground container logs -c broker3 --errors`, which only shows what happens 60 seconds later
+(`initial.broker.registration.timeout.ms`), when the broker gives up:
+
+```log
+[2026-11-26 17:22:55,544] ERROR [BrokerLifecycleManager id=2] Shutting down because we were unable to register with the controller quorum. (org.apache.kafka.server.BrokerLifecycleManager)
+[2026-11-26 17:22:55,554] ERROR [BrokerServer id=2] Fatal error during broker startup. Prepare to shutdown (kafka.server.BrokerServer)
+    java.lang.RuntimeException: Received a fatal error while waiting for broker metadata to catch up
+```
+
+[playground analyze logs](/playground%20analyze%20logs) on that log names the known cause, and tells you to look at the INFO lines just before:
+
+```log
+[CRITICAL] 📝 Broker could not register with the KRaft controllers
+```
+
+> Why is node `2` listed twice in the KRaft quorum?
+
+Both processes with node id 2 fetch the metadata log from the controller, as observers: the controller sees two
+directories (`DirectoryId`) for the same node id, but registers only the first broker that asked.
+
+<!-- select:end -->
+
+* Fix the node id of `broker3` in the compose override of the model (`docker-compose.plaintext.repro-000017-broker-never-joins-duplicate-node-id.yml`), then apply it with [playground container recreate](/playground%20container%20recreate). Is `broker3` part of the cluster now?
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+With `KAFKA_NODE_ID: 3` and `KAFKA_BROKER_ID: 3`, `playground container recreate` starts a new `broker3` container,
+and it still does not join. Its log:
+
+```log
+Exception in thread "main" java.lang.RuntimeException: Stored node id 2 doesn't match previous node id 3 in /var/lib/kafka/data/meta.properties. If you moved your data, make sure your configured node id matches. If you intend to create a new node, you should remove all data in your data directories.
+```
+
+The first start wrote the node id in `meta.properties`, in the data folder (`log.dirs`). A recreated container keeps
+its volumes, so the data folder is still the one of "node 2". On a real cluster this is what protects you from
+starting a broker on the disk of another one.
+
+The data folder of the new node must be emptied: [playground container recreate](/playground%20container%20recreate) `--fresh-volumes broker3` removes the container and its anonymous volumes first, and the image formats the empty folder again:
+
+```bash
+playground container recreate --fresh-volumes broker3
+18:27:54 ℹ️ 🧽 removing container broker3 and its anonymous volumes (/etc/kafka/secrets /var/lib/kafka/data): it starts with empty data folders
+18:27:54 ℹ️ 💫 Recreate container(s)
+playground broker health --wait-healthy
+18:28:13 ℹ️ ✅ all brokers are registered: 1,2,3
+18:28:13 ℹ️ ✅ cluster is healthy
+```
+
+<!-- select:end -->
+🥁 So...did you learn why every node needs its own `node.id`, and its own data folder?
+
+#### **🎓 Next Steps**
+
+* In ZooKeeper mode (CP 7.x), the same mistake fails at once: `Error while creating ephemeral at /brokers/ids/2, node already exists`.
+* Try the [🍪 brokers and transactions](/deep-dive-broker.md) deep dive: `broker health`, `broker stop` / `start`, `rolling-restart`.
+
+<!-- tabs:end -->
+
+### Broker: one broker is rejected by the controllers
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A broker runs, but never shows up in the cluster. Its log is flooded with `INCONSISTENT_CLUSTER_ID` errors, several per second.
+
+💡 What you'll learn:
+
+* What the cluster id is, where it is stored, and who checks it
+* How a node ends up with another cluster id
+* How to bring it back without touching the other nodes
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1 (KRaft: CP 8 or later)
+
+* 🖥️ 3 brokers (ids 1, 2 and 3), 1 controller (id 4)
+
+Reproduction model: [broker-repro-000018-broker-rejected-inconsistent-cluster-id.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000018-broker-rejected-inconsistent-cluster-id.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000018-broker-rejected-inconsistent-cluster-id.sh
+```
+
+```bash
+18:29:00 ℹ️ 🩺 Health of the cluster
+18:29:00 ℹ️ 🖥️ registered brokers: 1,2
+18:29:00 🔥 ❌ broker 3 (container broker3) is not registered: still starting? (playground container logs -c broker3 --errors)
+18:29:00 ℹ️ 🗳️ KRaft quorum: leader is node 4
+NODE  STATUS    LOG_END_OFFSET  LAG  LAST_CAUGHT_UP
+4     Leader    44              0    0s ago
+2     Observer  44              0    0s ago
+1     Observer  44              0    0s ago
+18:29:00 🔥 ❌ cluster is not healthy: brokers down: 3
+```
+
+❔Questions:
+
+* Why is broker 3 not even an observer of the quorum?
+* Where does each node get its cluster id from?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Why is broker 3 not even an observer of the quorum?
+
+```bash
+playground container logs -c broker3 --errors
+```
+
+```log
+[2026-11-26 17:29:09,687] ERROR [RaftManager id=3] Unexpected error INCONSISTENT_CLUSTER_ID in FETCH response: InboundResponse(correlationId=1037, data=FetchResponseData(throttleTimeMs=0, errorCode=104, sessionId=0, responses=[], …
+```
+
+Every fetch of the metadata log is refused by the controller: the request carries a cluster id that is not the one of
+the controller. [playground analyze logs](/playground%20analyze%20logs) on that log: `[CRITICAL] 🆔 Cluster id mismatch ×1034`.
+
+> Where does each node get its cluster id from?
+
+From its data folder: `kafka-storage format -t <cluster id>` writes it in `meta.properties` before the first start
+(the Confluent images run it with the `CLUSTER_ID` environment variable). All the nodes must be formatted with the
+same id. The compose override of the model formatted `broker3` with its own:
+
+```yml
+  broker3:
+    environment:
+      # 💥 formatted with its own cluster id (kafka-storage random-uuid run again for this node)
+      CLUSTER_ID: 'q1Sh-9_ISia_zwGINzRvyQ'
+```
+
+The usual way to get there on a real cluster: running `kafka-storage random-uuid` once per node instead of once per cluster.
+
+<!-- select:end -->
+
+* Put back the cluster id of the other nodes (`MkU3OEVBNTcwNTJENDM2Qk`, see `playground broker describe`) in the override, and apply it.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+After `playground container recreate`, `broker3` exits at once:
+
+```log
+Exception in thread "main" java.lang.RuntimeException: Invalid cluster.id in: /var/lib/kafka/data/meta.properties. Expected MkU3OEVBNTcwNTJENDM2Qk, but read q1Sh-9_ISia_zwGINzRvyQ
+```
+
+As in the previous exercise, the data folder remembers: it was formatted with the wrong id. This node holds no data
+yet, so it can start from an empty folder:
+
+```bash
+playground container recreate --fresh-volumes broker3
+playground broker health --wait-healthy
+18:31:33 ℹ️ ✅ cluster is healthy
+```
+
+> [!WARNING]
+> On a production cluster, never "fix" a cluster id by formatting a node that holds data: find out which side is
+> right first. The same message in ZooKeeper mode (`Invalid cluster.id … meta.properties`) usually means ZooKeeper was
+> rebuilt or wiped while the brokers kept their data.
+
+<!-- select:end -->
+🥁 So...did you learn where the cluster id lives?
+
+#### **🎓 Next Steps**
+
+* Compare `cluster.id` in the `meta.properties` of each node: `playground container exec -c broker2 --command "cat /var/lib/kafka/data/meta.properties"`.
+
+<!-- tabs:end -->
+
+### Broker: topic creation hangs, but produce works
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+The application team cannot create a topic: `kafka-topics --create` hangs for a minute and times out. Yet the
+existing applications produce and consume without any error.
+
+💡 What you'll learn:
+
+* What the KRaft controllers do, and what still works without them
+* Why a quorum of 3 controllers survives one failure, not two
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1 (KRaft: CP 8 or later)
+
+* 🖥️ 3 brokers (ids 1, 2 and 3), 3 controllers (ids 4, 5 and 6)
+
+Reproduction model: [broker-repro-000020-topic-creation-hangs-produce-works.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000020-topic-creation-hangs-produce-works.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000020-topic-creation-hangs-produce-works.sh
+```
+
+The 5 payments are written:
+
+```bash
+18:43:41 ℹ️ 📍 Earliest and latest offsets per partition of topic payments
+PARTITION  EARLIEST        LATEST          RECORDS
+0          0               0               0
+1          0               0               0
+2          0               5               5
+TOTAL                                      5
+```
+
+But the new topic is not created, a minute later:
+
+```bash
+18:44:46 ℹ️ 🆕 Creating topic refunds
+Error while executing topic command : Call(callName=createTopics, deadlineMs=1795715147372, tries=1, nextAllowedTryMs=1795715147515) timed out at 1795715147408 after 1 attempt(s)
+Caused by: org.apache.kafka.common.errors.DisconnectException: Cancelled createTopics request with correlation id 3 due to node 2 being disconnected
+```
+
+❔Questions:
+
+* What is different between producing to `payments` and creating `refunds`?
+* What does `playground broker health` say?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What does `playground broker health` say?
+
+```bash
+playground broker health
+18:47:50 ℹ️ 🩺 Health of the cluster
+18:47:50 ℹ️ 🖥️ registered brokers: 1,2,3
+18:47:50 🔥 ❌ KRaft quorum lost: 1 of 3 controllers running (controller2, controller3 stopped): no majority, so no active controller
+18:47:50 🔥    metadata changes wait and time out (topic creation, leader election, a broker that restarts cannot register), produce and consume keep working on the current leaders
+```
+
+> What is different between producing to `payments` and creating `refunds`?
+
+Producing only needs the leaders of the partitions, which the brokers already know: the brokers serve the data on
+their own. Creating a topic is a **metadata change**: it is written to the metadata log by the active controller, and
+the controllers elect one only with a majority of the voters (2 of 3). With one controller left, there is no active
+controller, so every metadata change waits and gives up: topic creation, but also a new leader when a broker stops,
+or a broker that restarts and needs to register. The cluster looks fine until one of those happens.
+
+<!-- select:end -->
+
+* Bring the controllers back, and create the topic again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground container restart -c controller2 -c controller3
+playground broker health --wait-healthy
+18:48:17 ℹ️ 🗳️ KRaft quorum: leader is node 4
+NODE  STATUS    LOG_END_OFFSET  LAG  LAST_CAUGHT_UP
+4     Leader    258             0    0s ago
+5     Follower  258             0    0s ago
+6     Follower  258             0    0s ago
+3     Observer  258             0    0s ago
+1     Observer  258             0    0s ago
+2     Observer  258             0    0s ago
+18:48:17 ℹ️ ✅ cluster is healthy
+playground topic create --topic refunds --nb-partitions 3 --replication-factor 3
+Created topic refunds.
+```
+
+<!-- select:end -->
+🥁 So...did you learn what needs the controllers, and what does not?
+
+#### **🎓 Next Steps**
+
+* Stop only one controller: is the cluster still able to create a topic? Stop the active one (`Leader` in the KRaft quorum table): how long does the election take?
+* The same lesson holds for a ZooKeeper ensemble (CP 7.x): without a majority of its nodes, produce keeps working and topic creation fails.
 
 <!-- tabs:end -->
 
@@ -2276,6 +2678,154 @@ playground connector reconcile --connector minio-sink-fixed
 * Records written late (after their folder was closed) are another source of surprise with `Record`: see `timestamp.extractor` and `rotate.interval.ms` in the documentation.
 
 <!-- tabs:end -->
+
+### Broker: some records are lost, always for the same partitions
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+After adding a third broker, a producer loses some records: `TimeoutException: Expiring N record(s)`, always for the
+same partitions, while the others go through. Schema Registry sometimes does not start either.
+
+💡 What you'll learn:
+
+* The difference between `listeners` (where a broker listens) and `advertised.listeners` (where it tells clients and the other brokers to connect)
+* Why the symptom looks random, and what it does to replication
+* How the same mistake shows up on older clients and in ZooKeeper mode
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1 (KRaft: CP 8 or later)
+
+* 🖥️ 3 brokers (ids 1, 2 and 3), 1 controller (id 4)
+
+Reproduction model: [broker-repro-000019-not-leader-or-follower-copied-advertised-listeners.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000019-not-leader-or-follower-copied-advertised-listeners.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000019-not-leader-or-follower-copied-advertised-listeners.sh
+```
+
+It creates a topic `orders` (6 partitions, 3 replicas) and sends 12 records, one per customer key, with the console
+producer. Some of them fail after `delivery.timeout.ms` (20 seconds here):
+
+```log
+[2026-11-26 17:36:30,801] WARN [Producer clientId=console-producer] Received invalid metadata error in produce request on partition orders-1 due to org.apache.kafka.common.errors.NetworkException: Disconnected from node 1 Going to request metadata update now
+[2026-11-26 17:36:50,590] ERROR Error when sending message to topic orders with key: 9 bytes, value: 7 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.errors.TimeoutException: Expiring 1 record(s) for orders-0:20003 ms has passed since batch creation. The request has not been sent, or no server response has been received yet.
+org.apache.kafka.common.errors.TimeoutException: Expiring 1 record(s) for orders-4:20003 ms has passed since batch creation. The request has not been sent, or no server response has been received yet.
+```
+
+```bash
+18:40:02 ℹ️ 📍 Earliest and latest offsets per partition of topic orders
+PARTITION  EARLIEST        LATEST          RECORDS
+1          0               3               3
+2          0               3               3
+3          0               1               1
+5          0               3               3
+TOTAL                                      10
+18:42:05 ❗ ⚠️ no offsets for partition(s) 0 (leader 3), 4 (leader 3): their leader did not answer, so they are not counted in TOTAL (playground broker health)
+```
+
+The partitions that fail change from one run to the other: compare with `playground topic describe --topic orders`.
+
+❔Questions:
+
+* What do the failing partitions have in common?
+* What does `playground broker describe` say about the brokers?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What do the failing partitions have in common?
+
+Their leader is broker 3, and their ISR shrank to the leader alone:
+
+```bash
+	Topic: orders	Partition: 0	Leader: 3	Replicas: 3,1,2	Isr: 3
+	Topic: orders	Partition: 1	Leader: 1	Replicas: 1,2,3	Isr: 1,2,3
+	Topic: orders	Partition: 4	Leader: 3	Replicas: 3,1,2	Isr: 3
+```
+
+> What does `playground broker describe` say about the brokers?
+
+```bash
+playground broker describe
+18:35:05 ℹ️ 🖥️ Brokers (CP 8.4.1)
+ID  ENDPOINT      RACK  FENCED  CONTAINER
+1   broker:9092   null  false   broker
+2   broker2:9092  null  false   broker2 ⚠️ same endpoint as another broker
+3   broker2:9092  null  false   broker3 ⚠️ same endpoint as another broker
+```
+
+and `playground broker health`:
+
+```bash
+18:35:46 🔥 ❌ brokers 2, 3 advertise the same endpoint broker2:9092: advertised.listeners copied from another broker? Clients and followers of one of them are sent to the other (requests time out, NOT_LEADER_OR_FOLLOWER, under-replicated partitions)
+18:35:46 🔥 ❌ 36 under-replicated partitions
+```
+
+`broker3` listens on its own port, but its `advertised.listeners` was copied from `broker2`:
+
+```yml
+  broker3:
+    environment:
+      # 💥 copied from broker2: broker3 listens on its own port, but tells clients to connect to broker2
+      KAFKA_ADVERTISED_LISTENERS: BROKER://broker2:9092,HOST://localhost:29392
+```
+
+A client asks any broker for the metadata, and learns that broker 3 is at `broker2:9092`. Every request for a partition
+led by broker 3 goes to broker 2. The other partitions work, which is why it looks random. On CP 8.4 clients, the broker
+detects the mix-up and asks the client to bootstrap again (`Rebootstrap requested by server due to cluster metadata
+mismatch for cluster … and node 3`, at INFO in the client log), in a loop until `delivery.timeout.ms`. Older clients get
+`NOT_LEADER_OR_FOLLOWER` for those partitions instead.
+
+`BROKER` is also the inter-broker listener: the followers of the partitions led by broker 3 are sent to broker 2 too,
+so they drop out of the ISR. When one of them is `_schemas-0` (Schema Registry) or a partition of `connect-offsets`,
+those components are stuck as well, which is why it depends on the run.
+
+<!-- select:end -->
+
+* Fix `advertised.listeners` of `broker3` in the compose override, apply it, then check `broker health` and `topic get-offsets`.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+With `KAFKA_ADVERTISED_LISTENERS: BROKER://broker3:9092,HOST://localhost:29392`, a plain
+[playground container recreate](/playground%20container%20recreate) is enough: nothing about the listeners is stored in the data folder.
+
+```bash
+playground container recreate
+playground broker health --wait-healthy
+18:42:29 ℹ️ ⏳ cluster not healthy yet (brokers down: 3, 158 under-replicated partitions, 36 under min ISR, 36 unavailable), waiting... (6s/180s)
+18:42:40 ℹ️ ✅ all brokers are registered: 1,2,3
+18:42:40 ℹ️ ✅ no under-replicated partition
+18:42:40 ℹ️ ✅ cluster is healthy
+```
+
+Every partition answers again: `playground topic get-offsets --topic orders` lists the 6 partitions, without a warning.
+
+<!-- select:end -->
+🥁 So...did you learn the difference between `listeners` and `advertised.listeners`?
+
+#### **🎓 Next Steps**
+
+* In ZooKeeper mode (CP 7.x), the same mistake stops the broker at startup: `Configured end points broker2:9092 in advertised listeners are already registered by broker 2`. KRaft accepts it, which makes it much harder to spot.
+* `kafka-broker-api-versions --bootstrap-server broker:9092 | grep '(id:'` shows the same thing as `broker describe`: two ids behind one address.
+
+<!-- tabs:end -->
+
 
 ## ⭐⭐⭐ Advanced
 

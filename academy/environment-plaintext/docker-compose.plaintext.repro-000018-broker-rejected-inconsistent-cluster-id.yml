@@ -1,0 +1,6 @@
+---
+services:
+  broker3:
+    environment:
+      # 💥 formatted with its own cluster id (kafka-storage random-uuid run again for this node)
+      CLUSTER_ID: 'q1Sh-9_ISia_zwGINzRvyQ'

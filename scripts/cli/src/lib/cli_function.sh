@@ -12404,6 +12404,11 @@ function get_cluster_health () {
     return 1
   fi
   [[ -n "$health_fenced" ]] && health_ok=0
+  # brokers that advertise the same endpoint ("<endpoint> <id> <id>…" per line): advertised.listeners copied from
+  # another broker. Clients and the other brokers (replication) are sent to the wrong one: requests to the partitions of
+  # one broker fail or time out, its followers fall out of the ISR
+  health_duplicate_endpoints=$(echo "$api_versions" | awk '$2 == "(id:" { ids[$1] = ids[$1] " " $3; n[$1]++ } END { for (e in n) if (n[e] > 1) print e ids[e] }' | while read -r e rest; do echo "$e $(echo "$rest" | tr ' ' '\n' | sort -n | paste -sd' ' -)"; done | sort)
+  [[ -n "$health_duplicate_endpoints" ]] && health_ok=0
 
   # broker containers (not on cfk) whose broker is down: not registered (stopped, still starting), or stopped but
   # still registered (a killed broker stays registered until its session times out)
@@ -12422,6 +12427,49 @@ function get_cluster_health () {
     done <<< "$(get_broker_containers)"
   fi
   health_not_registered=$(echo -n "$health_not_registered" | sed '/^$/d')
+  # broker containers configured with the same node id ("<id> <container> <container>…" per line): the controllers (or
+  # ZooKeeper) register only one of them, the other retries (DUPLICATE_BROKER_REGISTRATION, or /brokers/ids/<id> node
+  # already exists) and exits, while the id still looks registered
+  health_duplicate_ids=""
+  if [[ "$environment" != cfk* ]]
+  then
+    health_duplicate_ids=$(get_broker_containers | awk '{ c[$1] = c[$1] " " $2; n[$1]++ } END { for (i in n) if (n[i] > 1) print i c[i] }' | sort -n)
+    [[ -n "$health_duplicate_ids" ]] && health_ok=0
+  fi
+
+  # KRaft controller containers that exist but do not run: without a majority of them, the quorum has no leader and
+  # every metadata change (topic creation, leader election, broker registration, kafka-topics --describe of the
+  # partition states) waits and times out, while produce and consume keep working on the existing leaders. Said at once,
+  # instead of a kafka-topics timeout a minute later
+  health_quorum_lost=""
+  if [[ "$environment" != cfk* ]]
+  then
+    local c controllers_total=0 controllers_down=""
+    local candidates="controller controller2 controller3"
+    if is_mdc_environment
+    then
+      get_mdc_cluster
+      candidates="controller-$mdc_cluster"
+    fi
+    for c in $candidates
+    do
+      docker inspect "$c" > /dev/null 2>&1 || continue
+      controllers_total=$((controllers_total + 1))
+      is_container_running "$c" || controllers_down+="$c "
+    done
+    controllers_down="${controllers_down% }"
+    if [ $controllers_total -gt 0 ] && [[ -n "$controllers_down" ]]
+    then
+      local down_count
+      down_count=$(echo "$controllers_down" | wc -w | tr -d ' ')
+      if [ $((down_count * 2)) -ge $controllers_total ]
+      then
+        health_quorum_lost="$((controllers_total - down_count)) of $controllers_total controllers running ($(echo "$controllers_down" | sed 's/ /, /g') stopped): no majority, so no active controller"
+        health_ok=0
+        return 1
+      fi
+    fi
+  fi
 
   health_urp=$(get_partitions_with_status --under-replicated-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
   health_under_min_isr=$(get_partitions_with_status --under-min-isr-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
@@ -12503,11 +12551,14 @@ function cluster_health_one_line () {
   local problems=()
   [[ -n "$health_error" ]] && problems+=("$health_error")
   [[ -n "$health_not_registered" ]] && problems+=("brokers down: $(echo "$health_not_registered" | awk '{print $1}' | paste -sd, -)")
+  [[ -n "$health_duplicate_endpoints" ]] && problems+=("brokers advertising the same endpoint: $(echo "$health_duplicate_endpoints" | awk '{print $1}' | paste -sd, -)")
+  [[ -n "$health_duplicate_ids" ]] && problems+=("brokers with the same node id: $(echo "$health_duplicate_ids" | awk '{print $1}' | paste -sd, -)")
   [[ -n "$health_fenced" ]] && problems+=("brokers fenced: $(echo "$health_fenced" | paste -sd, -)")
   [[ -n "$health_urp" ]] && problems+=("$(echo "$health_urp" | wc -l | tr -d ' ') under-replicated partitions")
   [[ -n "$health_under_min_isr" ]] && problems+=("$(echo "$health_under_min_isr" | wc -l | tr -d ' ') under min ISR")
   [[ -n "$health_unavailable" ]] && problems+=("$(echo "$health_unavailable" | wc -l | tr -d ' ') unavailable")
   [[ -n "$health_quorum_error" ]] && problems+=("KRaft quorum not available")
+  [[ -n "$health_quorum_lost" ]] && problems+=("KRaft quorum lost: $health_quorum_lost")
   local IFS=","
   echo "${problems[*]}" | sed 's/,/, /g'
 }

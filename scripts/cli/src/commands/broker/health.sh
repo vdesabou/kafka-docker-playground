@@ -39,33 +39,44 @@ then
         --argjson registered "$(echo -n "$health_registered" | jq -R -s "$ids_json")" \
         --argjson fenced "$(echo -n "$health_fenced" | jq -R -s "$ids_json")" \
         --argjson not_registered "$(echo -n "$health_not_registered" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), container: .[1]})')" \
+        --argjson duplicate_endpoints "$(echo -n "$health_duplicate_endpoints" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {endpoint: .[0], ids: (.[1:] | map(tonumber))})')" \
+        --argjson duplicate_ids "$(echo -n "$health_duplicate_ids" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), containers: .[1:]})')" \
         --argjson urp "$(echo -n "$health_urp" | jq -R -s "$partitions_json")" \
         --argjson under_min_isr "$(echo -n "$health_under_min_isr" | jq -R -s "$partitions_json")" \
         --argjson rf_below_min_isr "$(echo -n "$health_rf_below_min_isr" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | .[0]) | unique')" \
         --argjson unavailable "$(echo -n "$health_unavailable" | jq -R -s "$partitions_json")" \
         --argjson quorum "$(echo -n "$health_quorum" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), status: .[1], log_end_offset: (.[2] | tonumber), lag: (.[3] | tonumber), seconds_since_caught_up: (.[4] | tonumber)})')" \
         --arg quorum_error "$health_quorum_error" \
+        --arg quorum_lost "$health_quorum_lost" \
         '{
             healthy: $healthy,
             error: (if $error == "" then null else $error end),
-            brokers: { registered: $registered, fenced: $fenced, not_registered: $not_registered },
+            brokers: { registered: $registered, fenced: $fenced, not_registered: $not_registered, same_node_id: $duplicate_ids, same_endpoint: $duplicate_endpoints },
             under_replicated_partitions: $urp,
             under_min_isr_partitions: $under_min_isr,
             topics_with_replication_factor_below_min_isr: $rf_below_min_isr,
             unavailable_partitions: $unavailable,
-            kraft_quorum: (if $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
+            kraft_quorum: (if $quorum_lost != "" then { lost: $quorum_lost } elif $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
         }'
     [ $healthy -eq 1 ] && exit 0 || exit 1
 fi
 
 log "🩺 Health of the cluster"
+if [[ -n "$health_quorum_lost" ]]
+then
+    log "🖥️ registered brokers: $(echo "$health_registered" | paste -sd, -)"
+    logerror "❌ KRaft quorum lost: $health_quorum_lost"
+    logerror "   metadata changes wait and time out (topic creation, leader election, a broker that restarts cannot register), produce and consume keep working on the current leaders"
+    log "   start the stopped controllers again, then playground broker health"
+    exit 1
+fi
 if [[ -n "$health_error" ]]
 then
     logerror "❌ $health_error"
     exit 1
 fi
 
-if [[ -z "$health_not_registered" ]] && [[ -z "$health_fenced" ]]
+if [[ -z "$health_not_registered" ]] && [[ -z "$health_fenced" ]] && [[ -z "$health_duplicate_ids" ]] && [[ -z "$health_duplicate_endpoints" ]]
 then
     log "✅ all brokers are registered: $(echo "$health_registered" | paste -sd, -)"
 else
@@ -87,6 +98,16 @@ else
     do
         logerror "❌ broker $id is fenced: registered, but not caught up with the cluster metadata"
     done
+    while read -r id containers
+    do
+        [[ -z "$id" ]] && continue
+        logerror "❌ containers $(echo "$containers" | sed 's/ / and /g') have the same node id $id: only one of them is registered, the other retries then exits (DUPLICATE_BROKER_REGISTRATION or /brokers/ids/$id already exists in its log: playground container logs -c <container> --errors)"
+    done <<< "$health_duplicate_ids"
+    while read -r endpoint ids
+    do
+        [[ -z "$endpoint" ]] && continue
+        logerror "❌ brokers $(echo "$ids" | sed 's/ /, /g') advertise the same endpoint $endpoint: advertised.listeners copied from another broker? Clients and followers of one of them are sent to the other (requests time out, NOT_LEADER_OR_FOLLOWER, under-replicated partitions)"
+    done <<< "$health_duplicate_endpoints"
 fi
 
 # prints the partitions ($2) found by a kafka-topics check ($1: label), at most 20

@@ -1,0 +1,9 @@
+---
+services:
+  broker3:
+    # the new broker is added to the running cluster: it starts 30 seconds after the others
+    command: bash -c "sleep 30 && exec /etc/confluent/docker/run"
+    environment:
+      # 💥 copied from broker2 and not changed
+      KAFKA_NODE_ID: 2
+      KAFKA_BROKER_ID: 2

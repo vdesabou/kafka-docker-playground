@@ -15760,7 +15760,7 @@ playground_container_get_properties_usage() {
 playground_container_recreate_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container recreate\n\n"
-    printf "  💫 Recreate container(s)\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%99%%bb%%ef%%b8%%8f-re-create-containers\n  \n  Replays the docker compose command of the example, so a container is\n  rebuilt from its current definition. This is what applies a change\n  made with 'playground container set-environment-variables' or\n  'playground container update', and what you use to restart a component\n  from scratch without re-running the whole example.\n\n"
+    printf "  💫 Recreate container(s)\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%e2%%99%%bb%%ef%%b8%%8f-re-create-containers\n  \n  Replays the docker compose command of the example, so a container is\n  rebuilt from its current definition. This is what applies a change\n  made with 'playground container set-environment-variables' or\n  'playground container update', and what you use to restart a component\n  from scratch without re-running the whole example.\n  \n  A recreated container keeps its anonymous volumes (the data folder of a\n  broker or a controller, /var/lib/kafka/data): --fresh-volumes <container>\n  removes that container and its anonymous volumes first, so it starts\n  with an empty data folder (a KRaft node is formatted again by the image).\n  Use it after changing the node id of a broker (\"Stored node id 2 doesn't\n  match previous node id 3\"), its cluster id, or to restart one node from\n  empty disks.\n\n"
   else
     printf "playground container recreate - 💫 Recreate container(s)\n\n"
   fi
@@ -15781,9 +15781,20 @@ playground_container_recreate_usage() {
     printf "    Ignore current confluent platform version\n    \n    By default, the current version is used\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--fresh-volumes CONTAINER (repeatable)")"
+    printf "    🧽 remove this container and its anonymous volumes before recreating it:\n    it starts with empty data folders (its topic data is lost on this node)\n    \n    🎓 Tip: repeat it for several containers\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground container recreate\n"
+    printf "  playground container recreate --fresh-volumes broker3\n"
     echo
 
   fi
@@ -16686,7 +16697,7 @@ playground_topic_wait_for_records_usage() {
 playground_topic_get_offsets_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic get-offsets\n\n"
-    printf "  📍 Get earliest and latest offsets per partition of a topic\n  \n  The low and high watermarks of every partition, and the number of\n  records in between. Useful to see whether retention has already\n  deleted data, which partitions received records, or which offsets a\n  connector should be at.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%AA%%9B-a-producer-gets-recordtoolargeexception\n\n"
+    printf "  📍 Get earliest and latest offsets per partition of a topic\n  \n  The low and high watermarks of every partition, and the number of\n  records in between. Useful to see whether retention has already\n  deleted data, which partitions received records, or which offsets a\n  connector should be at.\n  \n  A partition whose leader does not answer is left out of the table: a\n  ⚠️ line names it with its leader, and its records are not in TOTAL.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%AA%%9B-a-producer-gets-recordtoolargeexception\n\n"
   else
     printf "playground topic get-offsets - 📍 Get earliest and latest offsets per partition of a topic\n\n"
   fi
@@ -19152,7 +19163,7 @@ playground_broker_config_delete_usage() {
 playground_broker_health_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground broker health\n\n"
-    printf "  🩺 Check the health of the cluster\n  \n  One digest of what makes a cluster unhealthy:\n  \n    - broker containers that are not registered (stopped, starting) or fenced\n    - under-replicated partitions (kafka-topics --under-replicated-partitions)\n    - partitions under min.insync.replicas (--under-min-isr-partitions):\n      acks=all producers fail with NotEnoughReplicasException (a topic\n      whose replication factor is below min.insync.replicas is only a ⚠️\n      warning: it is a config problem, not a broker one)\n    - unavailable partitions, without leader (--unavailable-partitions)\n    - the KRaft quorum: leader, lag and last caught up time of each node\n      (kafka-metadata-quorum describe --replication)\n  \n  Exits with 1 when the cluster is not healthy. With --wait-healthy, waits\n  until it is (for example after 'playground broker start' or a\n  'container restart'), up to --max-wait seconds.\n  \n  Works on plaintext, secured environments and cfk.\n\n"
+    printf "  🩺 Check the health of the cluster\n  \n  One digest of what makes a cluster unhealthy:\n  \n    - broker containers that are not registered (stopped, starting) or fenced\n    - two broker containers with the same node id (only one can register:\n      DUPLICATE_BROKER_REGISTRATION in the log of the other)\n    - two brokers that advertise the same endpoint (advertised.listeners\n      copied from another broker: clients and followers go to the wrong one)\n    - a KRaft quorum without a majority of its controllers running (said at\n      once: metadata changes such as topic creation time out, produce and\n      consume keep working)\n    - under-replicated partitions (kafka-topics --under-replicated-partitions)\n    - partitions under min.insync.replicas (--under-min-isr-partitions):\n      acks=all producers fail with NotEnoughReplicasException (a topic\n      whose replication factor is below min.insync.replicas is only a ⚠️\n      warning: it is a config problem, not a broker one)\n    - unavailable partitions, without leader (--unavailable-partitions)\n    - the KRaft quorum: leader, lag and last caught up time of each node\n      (kafka-metadata-quorum describe --replication)\n  \n  Exits with 1 when the cluster is not healthy. With --wait-healthy, waits\n  until it is (for example after 'playground broker start' or a\n  'container restart'), up to --max-wait seconds.\n  \n  Works on plaintext, secured environments and cfk.\n\n"
   else
     printf "playground broker health - 🩺 Check the health of the cluster\n\n"
   fi
@@ -19707,7 +19718,7 @@ playground_broker_transactions_abort_usage() {
 playground_broker_describe_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground broker describe\n\n"
-    printf "  🗺️ Describe the cluster\n  \n  The brokers (id, endpoint, rack, fenced, container, and the broker\n  containers that are not registered), the KRaft quorum (cluster id,\n  active controller, voters and observers, from kafka-metadata-quorum\n  describe --status) and the feature levels (metadata.version... from\n  kafka-features describe).\n  \n  With --api-versions, the API versions supported by a broker (wraps\n  kafka-broker-api-versions): useful when an old client fails with\n  UnsupportedVersionException.\n\n"
+    printf "  🗺️ Describe the cluster\n  \n  The brokers (id, endpoint, rack, fenced, container, and the broker\n  containers that are not registered), the KRaft quorum (cluster id,\n  active controller, voters and observers, from kafka-metadata-quorum\n  describe --status) and the feature levels (metadata.version... from\n  kafka-features describe). A ⚠️ marks two containers with the same node\n  id, and two brokers that advertise the same endpoint.\n  \n  With --api-versions, the API versions supported by a broker (wraps\n  kafka-broker-api-versions): useful when an old client fails with\n  UnsupportedVersionException.\n\n"
   else
     printf "playground broker describe - 🗺️ Describe the cluster\n\n"
   fi
@@ -41307,6 +41318,11 @@ function get_cluster_health () {
     return 1
   fi
   [[ -n "$health_fenced" ]] && health_ok=0
+  # brokers that advertise the same endpoint ("<endpoint> <id> <id>…" per line): advertised.listeners copied from
+  # another broker. Clients and the other brokers (replication) are sent to the wrong one: requests to the partitions of
+  # one broker fail or time out, its followers fall out of the ISR
+  health_duplicate_endpoints=$(echo "$api_versions" | awk '$2 == "(id:" { ids[$1] = ids[$1] " " $3; n[$1]++ } END { for (e in n) if (n[e] > 1) print e ids[e] }' | while read -r e rest; do echo "$e $(echo "$rest" | tr ' ' '\n' | sort -n | paste -sd' ' -)"; done | sort)
+  [[ -n "$health_duplicate_endpoints" ]] && health_ok=0
 
   # broker containers (not on cfk) whose broker is down: not registered (stopped, still starting), or stopped but
   # still registered (a killed broker stays registered until its session times out)
@@ -41325,6 +41341,49 @@ function get_cluster_health () {
     done <<< "$(get_broker_containers)"
   fi
   health_not_registered=$(echo -n "$health_not_registered" | sed '/^$/d')
+  # broker containers configured with the same node id ("<id> <container> <container>…" per line): the controllers (or
+  # ZooKeeper) register only one of them, the other retries (DUPLICATE_BROKER_REGISTRATION, or /brokers/ids/<id> node
+  # already exists) and exits, while the id still looks registered
+  health_duplicate_ids=""
+  if [[ "$environment" != cfk* ]]
+  then
+    health_duplicate_ids=$(get_broker_containers | awk '{ c[$1] = c[$1] " " $2; n[$1]++ } END { for (i in n) if (n[i] > 1) print i c[i] }' | sort -n)
+    [[ -n "$health_duplicate_ids" ]] && health_ok=0
+  fi
+
+  # KRaft controller containers that exist but do not run: without a majority of them, the quorum has no leader and
+  # every metadata change (topic creation, leader election, broker registration, kafka-topics --describe of the
+  # partition states) waits and times out, while produce and consume keep working on the existing leaders. Said at once,
+  # instead of a kafka-topics timeout a minute later
+  health_quorum_lost=""
+  if [[ "$environment" != cfk* ]]
+  then
+    local c controllers_total=0 controllers_down=""
+    local candidates="controller controller2 controller3"
+    if is_mdc_environment
+    then
+      get_mdc_cluster
+      candidates="controller-$mdc_cluster"
+    fi
+    for c in $candidates
+    do
+      docker inspect "$c" > /dev/null 2>&1 || continue
+      controllers_total=$((controllers_total + 1))
+      is_container_running "$c" || controllers_down+="$c "
+    done
+    controllers_down="${controllers_down% }"
+    if [ $controllers_total -gt 0 ] && [[ -n "$controllers_down" ]]
+    then
+      local down_count
+      down_count=$(echo "$controllers_down" | wc -w | tr -d ' ')
+      if [ $((down_count * 2)) -ge $controllers_total ]
+      then
+        health_quorum_lost="$((controllers_total - down_count)) of $controllers_total controllers running ($(echo "$controllers_down" | sed 's/ /, /g') stopped): no majority, so no active controller"
+        health_ok=0
+        return 1
+      fi
+    fi
+  fi
 
   health_urp=$(get_partitions_with_status --under-replicated-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
   health_under_min_isr=$(get_partitions_with_status --under-min-isr-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
@@ -41406,11 +41465,14 @@ function cluster_health_one_line () {
   local problems=()
   [[ -n "$health_error" ]] && problems+=("$health_error")
   [[ -n "$health_not_registered" ]] && problems+=("brokers down: $(echo "$health_not_registered" | awk '{print $1}' | paste -sd, -)")
+  [[ -n "$health_duplicate_endpoints" ]] && problems+=("brokers advertising the same endpoint: $(echo "$health_duplicate_endpoints" | awk '{print $1}' | paste -sd, -)")
+  [[ -n "$health_duplicate_ids" ]] && problems+=("brokers with the same node id: $(echo "$health_duplicate_ids" | awk '{print $1}' | paste -sd, -)")
   [[ -n "$health_fenced" ]] && problems+=("brokers fenced: $(echo "$health_fenced" | paste -sd, -)")
   [[ -n "$health_urp" ]] && problems+=("$(echo "$health_urp" | wc -l | tr -d ' ') under-replicated partitions")
   [[ -n "$health_under_min_isr" ]] && problems+=("$(echo "$health_under_min_isr" | wc -l | tr -d ' ') under min ISR")
   [[ -n "$health_unavailable" ]] && problems+=("$(echo "$health_unavailable" | wc -l | tr -d ' ') unavailable")
   [[ -n "$health_quorum_error" ]] && problems+=("KRaft quorum not available")
+  [[ -n "$health_quorum_lost" ]] && problems+=("KRaft quorum lost: $health_quorum_lost")
   local IFS=","
   echo "${problems[*]}" | sed 's/,/, /g'
 }
@@ -87568,6 +87630,7 @@ playground_container_recreate_command() {
 
   # src/commands/container/recreate.sh
   ignore_current_versions="${args[--ignore-current-versions]}"
+  eval "fresh_volumes_array=(${args[--fresh-volumes]})"
 
   get_environment_used
   if [[ "$environment" == cfk* ]]
@@ -87620,6 +87683,21 @@ playground_container_recreate_command() {
           exit 1
       fi
   fi
+
+  # --fresh-volumes: docker compose up reuses the anonymous volumes of a container it recreates, so its data folder (and
+  # the meta.properties of a KRaft node: node id, cluster id) survives a recreate. Removing the container with its
+  # anonymous volumes (docker rm -v) makes up create it again with empty ones
+  for fresh_container in "${fresh_volumes_array[@]}"
+  do
+      if ! docker inspect "$fresh_container" > /dev/null 2>&1
+      then
+          logerror "❌ container $fresh_container does not exist (playground get-container-list)"
+          exit 1
+      fi
+      fresh_volumes=$(docker inspect -f '{{range .Mounts}}{{if eq .Type "volume"}}{{.Destination}} {{end}}{{end}}' "$fresh_container" 2>/dev/null)
+      log "🧽 removing container $fresh_container and its anonymous volumes (${fresh_volumes% }): it starts with empty data folders"
+      docker rm -f -v "$fresh_container" > /dev/null
+  done
 
   echo "$docker_command" > /tmp/playground-command
   log "💫 Recreate container(s)"
@@ -90060,6 +90138,14 @@ playground_topic_get_offsets_command() {
       fi
       printf "%-10s %-15s %-15s %-15s\n" "PARTITION" "EARLIEST" "LATEST" "RECORDS"
       join $tmp_dir/earliest $tmp_dir/latest | sort -n | awk '{printf "%-10s %-15s %-15s %-15s\n", $1, $2, $3, $3 - $2; total += $3 - $2} END {printf "%-10s %-15s %-15s %-15s\n", "TOTAL", "", "", total}'
+      # partitions GetOffsetShell got no answer for (it leaves them out, without an error): their leader does not answer, or
+      # the clients are sent to another broker (advertised.listeners copied), so the TOTAL above misses their records
+      get_topic_partition_assignment "$topic" | sort -n > $tmp_dir/assignment
+      missing=$(join -v 1 $tmp_dir/assignment <(awk '{print $1}' $tmp_dir/latest | sort) | sort -n | awk '{print $1 " (leader " $2 ")"}' | paste -sd, - | sed 's/,/, /g')
+      if [[ -n "$missing" ]]
+      then
+          logwarn "⚠️ no offsets for partition(s) $missing: their leader did not answer, so they are not counted in TOTAL (playground broker health)"
+      fi
   done
 
 }
@@ -95644,33 +95730,44 @@ playground_broker_health_command() {
           --argjson registered "$(echo -n "$health_registered" | jq -R -s "$ids_json")" \
           --argjson fenced "$(echo -n "$health_fenced" | jq -R -s "$ids_json")" \
           --argjson not_registered "$(echo -n "$health_not_registered" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), container: .[1]})')" \
+          --argjson duplicate_endpoints "$(echo -n "$health_duplicate_endpoints" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {endpoint: .[0], ids: (.[1:] | map(tonumber))})')" \
+          --argjson duplicate_ids "$(echo -n "$health_duplicate_ids" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), containers: .[1:]})')" \
           --argjson urp "$(echo -n "$health_urp" | jq -R -s "$partitions_json")" \
           --argjson under_min_isr "$(echo -n "$health_under_min_isr" | jq -R -s "$partitions_json")" \
           --argjson rf_below_min_isr "$(echo -n "$health_rf_below_min_isr" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | .[0]) | unique')" \
           --argjson unavailable "$(echo -n "$health_unavailable" | jq -R -s "$partitions_json")" \
           --argjson quorum "$(echo -n "$health_quorum" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), status: .[1], log_end_offset: (.[2] | tonumber), lag: (.[3] | tonumber), seconds_since_caught_up: (.[4] | tonumber)})')" \
           --arg quorum_error "$health_quorum_error" \
+          --arg quorum_lost "$health_quorum_lost" \
           '{
               healthy: $healthy,
               error: (if $error == "" then null else $error end),
-              brokers: { registered: $registered, fenced: $fenced, not_registered: $not_registered },
+              brokers: { registered: $registered, fenced: $fenced, not_registered: $not_registered, same_node_id: $duplicate_ids, same_endpoint: $duplicate_endpoints },
               under_replicated_partitions: $urp,
               under_min_isr_partitions: $under_min_isr,
               topics_with_replication_factor_below_min_isr: $rf_below_min_isr,
               unavailable_partitions: $unavailable,
-              kraft_quorum: (if $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
+              kraft_quorum: (if $quorum_lost != "" then { lost: $quorum_lost } elif $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
           }'
       [ $healthy -eq 1 ] && exit 0 || exit 1
   fi
 
   log "🩺 Health of the cluster"
+  if [[ -n "$health_quorum_lost" ]]
+  then
+      log "🖥️ registered brokers: $(echo "$health_registered" | paste -sd, -)"
+      logerror "❌ KRaft quorum lost: $health_quorum_lost"
+      logerror "   metadata changes wait and time out (topic creation, leader election, a broker that restarts cannot register), produce and consume keep working on the current leaders"
+      log "   start the stopped controllers again, then playground broker health"
+      exit 1
+  fi
   if [[ -n "$health_error" ]]
   then
       logerror "❌ $health_error"
       exit 1
   fi
 
-  if [[ -z "$health_not_registered" ]] && [[ -z "$health_fenced" ]]
+  if [[ -z "$health_not_registered" ]] && [[ -z "$health_fenced" ]] && [[ -z "$health_duplicate_ids" ]] && [[ -z "$health_duplicate_endpoints" ]]
   then
       log "✅ all brokers are registered: $(echo "$health_registered" | paste -sd, -)"
   else
@@ -95692,6 +95789,16 @@ playground_broker_health_command() {
       do
           logerror "❌ broker $id is fenced: registered, but not caught up with the cluster metadata"
       done
+      while read -r id containers
+      do
+          [[ -z "$id" ]] && continue
+          logerror "❌ containers $(echo "$containers" | sed 's/ / and /g') have the same node id $id: only one of them is registered, the other retries then exits (DUPLICATE_BROKER_REGISTRATION or /brokers/ids/$id already exists in its log: playground container logs -c <container> --errors)"
+      done <<< "$health_duplicate_ids"
+      while read -r endpoint ids
+      do
+          [[ -z "$endpoint" ]] && continue
+          logerror "❌ brokers $(echo "$ids" | sed 's/ /, /g') advertise the same endpoint $endpoint: advertised.listeners copied from another broker? Clients and followers of one of them are sent to the other (requests time out, NOT_LEADER_OR_FOLLOWER, under-replicated partitions)"
+      done <<< "$health_duplicate_endpoints"
   fi
 
   # prints the partitions ($2) found by a kafka-topics check ($1: label), at most 20
@@ -96210,7 +96317,14 @@ playground_broker_describe_command() {
       printf 'ID\tENDPOINT\tRACK\tFENCED\tCONTAINER\n'
       echo "$api_output" | sed -E 's/^([^ ]+) \(id: ([0-9]+) rack: ([^ )]+)( isFenced: ([a-z]+))?.*/\2 \1 \3 \5/' | sort -n | while read -r id endpoint rack fenced
       do
-          container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }')
+          # two containers configured with the same node id: one of them is this broker, the other cannot register
+          container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }' | paste -sd, -)
+          [[ "$container" == *,* ]] && container="$container ⚠️ same node id"
+          # another broker advertises the same endpoint: advertised.listeners copied from it
+          if [ "$(echo "$api_output" | awk -v e="$endpoint" '$1 == e && $2 == "(id:"' | wc -l | tr -d ' ')" -gt 1 ]
+          then
+              container="${container:--} ⚠️ same endpoint as another broker"
+          fi
           printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$endpoint" "$rack" "${fenced:--}" "${container:--}"
       done
       # broker containers that are not registered (stopped or starting)
@@ -152650,6 +152764,25 @@ playground_container_recreate_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --fresh-volumes)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--fresh-volumes']+x} ]]; then
+            args['--fresh-volumes']="$escaped"
+          else
+            args['--fresh-volumes']="${args['--fresh-volumes']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--fresh-volumes requires an argument: --fresh-volumes CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -202101,6 +202234,18 @@ playground_container_recreate_completion() {
 
         shift
         ;;
+      --fresh-volumes)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
       *)
         return
         ;;
@@ -202110,6 +202255,7 @@ playground_container_recreate_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --ignore-current-versions "$completion_current" --ignore-current-versions
+    completion_flag_candidates --fresh-volumes "$completion_current" --fresh-volumes
   fi
 
 }

@@ -54,4 +54,12 @@ do
     fi
     printf "%-10s %-15s %-15s %-15s\n" "PARTITION" "EARLIEST" "LATEST" "RECORDS"
     join $tmp_dir/earliest $tmp_dir/latest | sort -n | awk '{printf "%-10s %-15s %-15s %-15s\n", $1, $2, $3, $3 - $2; total += $3 - $2} END {printf "%-10s %-15s %-15s %-15s\n", "TOTAL", "", "", total}'
+    # partitions GetOffsetShell got no answer for (it leaves them out, without an error): their leader does not answer, or
+    # the clients are sent to another broker (advertised.listeners copied), so the TOTAL above misses their records
+    get_topic_partition_assignment "$topic" | sort -n > $tmp_dir/assignment
+    missing=$(join -v 1 $tmp_dir/assignment <(awk '{print $1}' $tmp_dir/latest | sort) | sort -n | awk '{print $1 " (leader " $2 ")"}' | paste -sd, - | sed 's/,/, /g')
+    if [[ -n "$missing" ]]
+    then
+        logwarn "⚠️ no offsets for partition(s) $missing: their leader did not answer, so they are not counted in TOTAL (playground broker health)"
+    fi
 done

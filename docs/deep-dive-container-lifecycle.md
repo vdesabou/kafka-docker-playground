@@ -43,7 +43,7 @@ Kubernetes pods with the `cfk` environment (`pod` is an alias of `container`). T
    | Logs (`container logs`) | kept | kept | **lost** (a new container has a new log) |
    | Network rules (`debug block-traffic`, `degrade-traffic`) | **lost** (new network namespace) | **lost** | **lost** |
    | Compose definition (image, env, volumes) | unchanged | unchanged | **the new one** |
-   | Kafka data, connectors, offsets | kept (stored in topics / volumes) | kept | kept, unless the broker's volume is removed |
+   | Kafka data, connectors, offsets | kept (stored in topics / volumes) | kept | kept: the new container gets the anonymous volumes of the old one (the data folder of a broker, its `meta.properties` with the node id and cluster id); `recreate --fresh-volumes <container>` starts it with empty ones |
 
    `recreate` replays the docker compose command that started the example (`run.docker_command` in `playground.ini`)
    with `up -d`, **without `--force-recreate`**: Docker Compose only rebuilds the containers whose definition changed

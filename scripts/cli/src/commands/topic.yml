@@ -145,6 +145,9 @@ commands:
       deleted data, which partitions received records, or which offsets a
       connector should be at.
 
+      A partition whose leader does not answer is left out of the table: a
+      ⚠️ line names it with its leader, and its records are not in TOTAL.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
     flags:

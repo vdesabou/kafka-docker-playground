@@ -7127,7 +7127,7 @@
         },
         {
           "name": "recreate",
-          "description": "💫 Recreate container(s)\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers\n\nReplays the docker compose command of the example, so a container is\nrebuilt from its current definition. This is what applies a change\nmade with 'playground container set-environment-variables' or\n'playground container update', and what you use to restart a component\nfrom scratch without re-running the whole example.",
+          "description": "💫 Recreate container(s)\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers\n\nReplays the docker compose command of the example, so a container is\nrebuilt from its current definition. This is what applies a change\nmade with 'playground container set-environment-variables' or\n'playground container update', and what you use to restart a component\nfrom scratch without re-running the whole example.\n\nA recreated container keeps its anonymous volumes (the data folder of a\nbroker or a controller, /var/lib/kafka/data): --fresh-volumes <container>\nremoves that container and its anonymous volumes first, so it starts\nwith an empty data folder (a KRaft node is formatted again by the image).\nUse it after changing the node id of a broker (\"Stored node id 2 doesn't\nmatch previous node id 3\"), its cluster id, or to restart one node from\nempty disks.",
           "usage": "playground container recreate [OPTIONS]",
           "options": [
             {
@@ -7136,6 +7136,13 @@
               ],
               "argument": "",
               "description": "Ignore current confluent platform version\n\nBy default, the current version is used"
+            },
+            {
+              "names": [
+                "--fresh-volumes"
+              ],
+              "argument": "CONTAINER",
+              "description": "🧽 remove this container and its anonymous volumes before recreating it:\nit starts with empty data folders (its topic data is lost on this node)\n\n🎓 Tip: repeat it for several containers\n\nRepeatable: ✓ Yes"
             }
           ]
         },
@@ -7596,7 +7603,7 @@
         },
         {
           "name": "get-offsets",
-          "description": "📍 Get earliest and latest offsets per partition of a topic\n\nThe low and high watermarks of every partition, and the number of\nrecords in between. Useful to see whether retention has already\ndeleted data, which partitions received records, or which offsets a\nconnector should be at.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception",
+          "description": "📍 Get earliest and latest offsets per partition of a topic\n\nThe low and high watermarks of every partition, and the number of\nrecords in between. Useful to see whether retention has already\ndeleted data, which partitions received records, or which offsets a\nconnector should be at.\n\nA partition whose leader does not answer is left out of the table: a\n⚠️ line names it with its leader, and its records are not in TOTAL.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception",
           "usage": "playground topic get-offsets [OPTIONS]",
           "options": [
             {
@@ -9485,7 +9492,7 @@
         },
         {
           "name": "health",
-          "description": "🩺 Check the health of the cluster\n\nOne digest of what makes a cluster unhealthy:\n\n  - broker containers that are not registered (stopped, starting) or fenced\n  - under-replicated partitions (kafka-topics --under-replicated-partitions)\n  - partitions under min.insync.replicas (--under-min-isr-partitions):\n    acks=all producers fail with NotEnoughReplicasException (a topic\n    whose replication factor is below min.insync.replicas is only a ⚠️\n    warning: it is a config problem, not a broker one)\n  - unavailable partitions, without leader (--unavailable-partitions)\n  - the KRaft quorum: leader, lag and last caught up time of each node\n    (kafka-metadata-quorum describe --replication)\n\nExits with 1 when the cluster is not healthy. With --wait-healthy, waits\nuntil it is (for example after 'playground broker start' or a\n'container restart'), up to --max-wait seconds.\n\nWorks on plaintext, secured environments and cfk.",
+          "description": "🩺 Check the health of the cluster\n\nOne digest of what makes a cluster unhealthy:\n\n  - broker containers that are not registered (stopped, starting) or fenced\n  - two broker containers with the same node id (only one can register:\n    DUPLICATE_BROKER_REGISTRATION in the log of the other)\n  - two brokers that advertise the same endpoint (advertised.listeners\n    copied from another broker: clients and followers go to the wrong one)\n  - a KRaft quorum without a majority of its controllers running (said at\n    once: metadata changes such as topic creation time out, produce and\n    consume keep working)\n  - under-replicated partitions (kafka-topics --under-replicated-partitions)\n  - partitions under min.insync.replicas (--under-min-isr-partitions):\n    acks=all producers fail with NotEnoughReplicasException (a topic\n    whose replication factor is below min.insync.replicas is only a ⚠️\n    warning: it is a config problem, not a broker one)\n  - unavailable partitions, without leader (--unavailable-partitions)\n  - the KRaft quorum: leader, lag and last caught up time of each node\n    (kafka-metadata-quorum describe --replication)\n\nExits with 1 when the cluster is not healthy. With --wait-healthy, waits\nuntil it is (for example after 'playground broker start' or a\n'container restart'), up to --max-wait seconds.\n\nWorks on plaintext, secured environments and cfk.",
           "usage": "playground broker health [OPTIONS]",
           "options": [
             {
@@ -9862,7 +9869,7 @@
         },
         {
           "name": "describe",
-          "description": "🗺️ Describe the cluster\n\nThe brokers (id, endpoint, rack, fenced, container, and the broker\ncontainers that are not registered), the KRaft quorum (cluster id,\nactive controller, voters and observers, from kafka-metadata-quorum\ndescribe --status) and the feature levels (metadata.version... from\nkafka-features describe).\n\nWith --api-versions, the API versions supported by a broker (wraps\nkafka-broker-api-versions): useful when an old client fails with\nUnsupportedVersionException.",
+          "description": "🗺️ Describe the cluster\n\nThe brokers (id, endpoint, rack, fenced, container, and the broker\ncontainers that are not registered), the KRaft quorum (cluster id,\nactive controller, voters and observers, from kafka-metadata-quorum\ndescribe --status) and the feature levels (metadata.version... from\nkafka-features describe). A ⚠️ marks two containers with the same node\nid, and two brokers that advertise the same endpoint.\n\nWith --api-versions, the API versions supported by a broker (wraps\nkafka-broker-api-versions): useful when an old client fails with\nUnsupportedVersionException.",
           "usage": "playground broker describe [OPTIONS]",
           "options": [
             {
