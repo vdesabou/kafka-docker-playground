@@ -59,6 +59,396 @@ Number of records processed per parallel chunk when task.parallel.transform.enab
 	 - Required: false
 
 ==========================
+Transforms: InsertTopic
+==========================
+🔘 transforms.InsertTopic.type
+
+Class for the 'InsertTopic' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.InsertTopic.plugin.version
+
+Version of the 'InsertTopic' transformation.
+
+	 - Type: STRING
+	 - Default: 8.4.1-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.InsertTopic.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.offset.field
+
+Field name for Kafka offset - only applicable to sink connectors.<br/>Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.partition.field
+
+Field name for Kafka partition. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.static.field
+
+Field name for static data field. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.static.value
+
+Static field value, if field name configured.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.timestamp.field
+
+Field name for record timestamp. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTopic.topic.field
+
+Field name for Kafka topic. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Transforms: InsertPartition
+==========================
+🔘 transforms.InsertPartition.type
+
+Class for the 'InsertPartition' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.InsertPartition.plugin.version
+
+Version of the 'InsertPartition' transformation.
+
+	 - Type: STRING
+	 - Default: 8.4.1-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.InsertPartition.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.offset.field
+
+Field name for Kafka offset - only applicable to sink connectors.<br/>Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.partition.field
+
+Field name for Kafka partition. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.static.field
+
+Field name for static data field. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.static.value
+
+Static field value, if field name configured.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.timestamp.field
+
+Field name for record timestamp. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertPartition.topic.field
+
+Field name for Kafka topic. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Transforms: InsertTimestamp
+==========================
+🔘 transforms.InsertTimestamp.type
+
+Class for the 'InsertTimestamp' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.InsertTimestamp.plugin.version
+
+Version of the 'InsertTimestamp' transformation.
+
+	 - Type: STRING
+	 - Default: 8.4.1-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.offset.field
+
+Field name for Kafka offset - only applicable to sink connectors.<br/>Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.partition.field
+
+Field name for Kafka partition. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.static.field
+
+Field name for static data field. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.static.value
+
+Static field value, if field name configured.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.timestamp.field
+
+Field name for record timestamp. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertTimestamp.topic.field
+
+Field name for Kafka topic. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Transforms: TimestampConverter
+==========================
+🔘 transforms.TimestampConverter.type
+
+Class for the 'TimestampConverter' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.TimestampConverter.plugin.version
+
+Version of the 'TimestampConverter' transformation.
+
+	 - Type: STRING
+	 - Default: 8.4.1-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.TimestampConverter.target.type
+
+The desired timestamp representation: string, unix, Date, Time, or Timestamp
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.TimestampConverter.field
+
+The field containing the timestamp, or empty if the entire value is a timestamp
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.TimestampConverter.format
+
+A SimpleDateFormat-compatible format for the timestamp. Used to generate the output when type=string or used to parse the input if the input is a string.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.TimestampConverter.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.TimestampConverter.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.TimestampConverter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.TimestampConverter.unix.precision
+
+The desired Unix precision for the timestamp: seconds, milliseconds, microseconds, or nanoseconds. Used to generate the output when type=unix or used to parse the input if the input is a Long.Note: This SMT will cause precision loss during conversions from, and to, values with sub-millisecond components.
+
+	 - Type: STRING
+	 - Default: milliseconds
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Database
 ==========================
 🔘 connection.url
