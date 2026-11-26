@@ -559,6 +559,21 @@ function storage_list () {
     rm -f "$err"
 }
 
+# remove a temp folder that the rclone / avro-tools / parquet-tools containers wrote to: on Linux their files belong to
+# root (docker) or to a sub uid (rootless podman), so the host rm is refused; a container removes them. Never fails:
+# it runs in the EXIT trap, whose status becomes the exit code of the command
+function storage_remove_tmp_dir () {
+    local dir="$1"
+    [[ -n "$dir" && -d "$dir" ]] || return 0
+    if ! rm -rf "$dir" 2> /dev/null
+    then
+        docker run --quiet --rm -v "$(host_path "$dir"):/work" --entrypoint sh "$STORAGE_RCLONE_IMAGE" \
+            -c 'rm -rf /work/* /work/.[!.]* 2> /dev/null; true' > /dev/null 2>&1
+        rm -rf "$dir" 2> /dev/null
+    fi
+    return 0
+}
+
 function storage_show_target () {
     log "🪣 ${storage_label}${storage_connector:+ (connector $storage_connector)}${storage_credentials_origin:+, credentials of $storage_credentials_origin}"
 }

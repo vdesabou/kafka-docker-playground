@@ -17,7 +17,7 @@ storage_resolve "$connector" "$url" "$endpoint" "$prefix" || exit 2
 storage_show_target
 
 tmp_dir=$(mktemp -d -t pg-storage-XXXXXXXXXX)
-trap 'rm -rf $tmp_dir' EXIT
+trap 'storage_remove_tmp_dir "$tmp_dir"' EXIT
 
 storage_list "$tmp_dir/listing.json" || exit 2
 
