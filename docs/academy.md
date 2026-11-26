@@ -2141,32 +2141,35 @@ playground storage ls --connector minio-sink
 ```
 
 ```log
-object                                                                  size  modified
-orders/date=2026-11-26/time=14-02-10/orders+0+0000000000.avro         269 B  2026-11-26 14:02:12
-orders/date=2026-11-26/time=14-02-10/orders+0+0000000003.avro         269 B  2026-11-26 14:02:12
-orders/date=2026-11-26/time=14-02-10/orders+0+0000000006.avro         269 B  2026-11-26 14:02:12
-orders/date=2026-11-26/time=14-03-10/orders+0+0000000000.avro         269 B  2026-11-26 14:03:13
-orders/date=2026-11-26/time=14-03-10/orders+0+0000000003.avro         269 B  2026-11-26 14:03:13
-orders/date=2026-11-26/time=14-03-10/orders+0+0000000006.avro         269 B  2026-11-26 14:03:13
+14:45:12 ℹ️ 🪣 s3://mybucket/topics (connector minio-sink), credentials of the connector
+object                                                               size  modified
+orders/date=2026-11-26/time=14-44-10/orders+0+0000000000.avro       284 B  2026-11-26 14:44:19
+orders/date=2026-11-26/time=14-45-00/orders+0+0000000000.avro       284 B  2026-11-26 14:45:07
+orders/date=2026-11-26/time=14-44-10/orders+0+0000000003.avro       284 B  2026-11-26 14:44:19
+orders/date=2026-11-26/time=14-45-00/orders+0+0000000003.avro       284 B  2026-11-26 14:45:07
+orders/date=2026-11-26/time=14-44-10/orders+0+0000000006.avro       284 B  2026-11-26 14:44:19
+orders/date=2026-11-26/time=14-45-00/orders+0+0000000006.avro       284 B  2026-11-26 14:45:07
 
 topic-partition                            objects     size first off.   last start  last modified
-orders-0                                         6   1.6 KB          0            6  2026-11-26 14:03:13
+orders-0                                         6   1.7 KB          0            6  2026-11-26 14:45:07
 
-🪣 6 object(s), 1.6 KB
+🪣 6 object(s), 1.7 KB
 ```
 
-The same object names (`orders+0+0000000000.avro`: topic, partition, first offset) are in two folders, about a minute apart. [playground storage cat](/playground%20storage%20cat) reads the records of the objects; `--summary` only prints the offsets each topic-partition covers:
+The same object names (`orders+0+0000000000.avro`: topic, partition, first offset) are in two folders, 50 seconds apart. [playground storage cat](/playground%20storage%20cat) reads the records of the objects; `--summary` only prints the offsets each topic-partition covers:
 
 ```bash
 playground storage cat --connector minio-sink --summary --max-objects 0
 ```
 
 ```log
+14:45:13 ℹ️ 🪣 s3://mybucket/topics (connector minio-sink), credentials of the connector
+14:45:14 ℹ️ 📄 reading 6 object(s)
 topic-partition                           objects   records                offsets  continuity
 orders-0                                        6        18                  0 → 8  🔁 3 overlap(s)
-   🔁 orders-0: offsets 0-2 are in two objects (date=2026-11-26/time=14-02-10/orders+0+0000000000.avro and date=2026-11-26/time=14-03-10/orders+0+0000000000.avro): duplicates
-   🔁 orders-0: offsets 3-5 are in two objects (date=2026-11-26/time=14-02-10/orders+0+0000000003.avro and date=2026-11-26/time=14-03-10/orders+0+0000000003.avro): duplicates
-   🔁 orders-0: offsets 6-8 are in two objects (date=2026-11-26/time=14-02-10/orders+0+0000000006.avro and date=2026-11-26/time=14-03-10/orders+0+0000000006.avro): duplicates
+   🔁 orders-0: offsets 0-2 are in two objects (date=2026-11-26/time=14-44-10/orders+0+0000000000.avro and date=2026-11-26/time=14-45-00/orders+0+0000000000.avro): duplicates
+   🔁 orders-0: offsets 3-5 are in two objects (date=2026-11-26/time=14-44-10/orders+0+0000000003.avro and date=2026-11-26/time=14-45-00/orders+0+0000000003.avro): duplicates
+   🔁 orders-0: offsets 6-8 are in two objects (date=2026-11-26/time=14-44-10/orders+0+0000000006.avro and date=2026-11-26/time=14-45-00/orders+0+0000000006.avro): duplicates
 📦 18 record(s) in 6 object(s)
 ```
 
@@ -2177,6 +2180,10 @@ playground connector reconcile --connector minio-sink
 ```
 
 ```log
+14:45:21 ℹ️ 🪣 Reading every object of topic orders written by connector minio-sink (playground storage cat)
+14:45:28 ℹ️ 🎓 an object is written every flush.size=3 records (or rotate.interval.ms): up to 2 record(s) per partition after the last object are still in the task, not lost
+14:45:28 ℹ️ 📥 Reading every record of topic orders
+14:45:38 ℹ️ 🧮 Comparing (sink connector minio-sink, deletes applied: false)
 🔎 Sink connector: is every record of the topic orders in the objects in s3://mybucket/topics?
 
    📥 topic orders                         9 record(s)
@@ -2185,7 +2192,16 @@ playground connector reconcile --connector minio-sink
 
 ❌ Duplicated: 9
    record id="1", product="product1", quantity="1": 2 times in the bucket
-   ...
+   record id="2", product="product2", quantity="2": 2 times in the bucket
+   record id="3", product="product3", quantity="3": 2 times in the bucket
+   record id="4", product="product4", quantity="4": 2 times in the bucket
+   record id="5", product="product5", quantity="5": 2 times in the bucket
+   record id="6", product="product6", quantity="6": 2 times in the bucket
+   record id="7", product="product7", quantity="7": 2 times in the bucket
+   record id="8", product="product8", quantity="8": 2 times in the bucket
+   record id="9", product="product9", quantity="9": 2 times in the bucket
+
+✅ 9 matching
 
 ❌ duplicated: the same record is there several times
 ```
@@ -2194,7 +2210,7 @@ playground connector reconcile --connector minio-sink
 
 The worker died after uploading the 3 files, but before committing the offsets of the task (every `offset.flush.interval.ms`, 60 seconds by default). After the restart, the task reads the 9 orders again from the last committed offset: at-least-once, like any sink (see [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash)).
 
-The S3 sink is still exactly-once when it writes a record again to the **same object**: same folder, same name, the new upload replaces the old one. Here, the folder comes from `timestamp.extractor=Wallclock`, the time at which the task processes the record: a minute later, it is another folder, and the records are written next to the first copy.
+The S3 sink is still exactly-once when it writes a record again to the **same object**: same folder, same name, the new upload replaces the old one. Here, the folder comes from `timestamp.extractor=Wallclock`, the time at which the task processes the record: 50 seconds later, it is another folder, and the records are written next to the first copy.
 
 <!-- select:end -->
 
@@ -2223,6 +2239,8 @@ playground storage cat --connector minio-sink-fixed --summary --max-objects 0
 ```
 
 ```log
+14:47:24 ℹ️ 🪣 s3://mybucket/topics-fixed (connector minio-sink-fixed), credentials of the connector
+14:47:24 ℹ️ 📄 reading 3 object(s)
 topic-partition                           objects   records                offsets  continuity
 orders-0                                        3         9                  0 → 8  ✅ contiguous
 📦 9 record(s) in 3 object(s)
@@ -2233,6 +2251,16 @@ playground connector reconcile --connector minio-sink-fixed
 ```
 
 ```log
+14:47:29 ℹ️ 🪣 Reading every object of topic orders written by connector minio-sink-fixed (playground storage cat)
+14:47:34 ℹ️ 🎓 an object is written every flush.size=3 records (or rotate.interval.ms): up to 2 record(s) per partition after the last object are still in the task, not lost
+14:47:34 ℹ️ 📥 Reading every record of topic orders
+14:47:43 ℹ️ 🧮 Comparing (sink connector minio-sink-fixed, deletes applied: false)
+🔎 Sink connector: is every record of the topic orders in the objects in s3://mybucket/topics-fixed?
+
+   📥 topic orders                         9 record(s)
+   🪣 objects in s3://mybucket/topics-fixed 9 record(s)
+   🔑 no key: records and rows compared as multisets of (id, product, quantity)
+
 ✅ 9 matching
 
 ✅ complete: every record is on the other side, with the same values
