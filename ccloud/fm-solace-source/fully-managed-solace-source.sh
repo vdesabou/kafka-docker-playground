@@ -29,8 +29,6 @@ display_ngrok_warning
 
 bootstrap_ccloud_environment
 
-
-
 docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
@@ -54,10 +52,8 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-
 log "Create the queue connector-quickstart in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
-
 
 log "Publish messages to the Solace queue using the REST endpoint"
 
@@ -65,8 +61,6 @@ for i in 1000 1001 1002
 do
      curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
 done
-
-
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
@@ -97,17 +91,6 @@ sleep 5
 
 log "Asserting that Solace queue connector-quickstart is empty after connector processing (commitRecord deletes the messages)"
 playground mq wait --container solace --queue connector-quickstart --max-expected-messages 0 --max-wait 60
-
-log "Current message spool usage for connector-quickstart: $QUEUE_MSG_COUNT bytes"
-
-if [ "$QUEUE_MSG_COUNT" -eq 0 ]; then
-    log "✅ SUCCESS: Solace queue connector-quickstart is empty - messages were successfully consumed and deleted"
-else
-    logerror "❌ FAILURE: Messages still remain in Solace queue connector-quickstart (spool usage: $QUEUE_MSG_COUNT bytes) - messages were not deleted"
-    log "Displaying queue statistics:"
-    curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq '.'
-    exit 1
-fi
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

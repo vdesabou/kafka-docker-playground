@@ -41,7 +41,6 @@ then
 fi
 cd -
 
-
 cd ../../connect/connect-solace-source
 
 # Copy JAR files to confluent-hub
@@ -91,19 +90,8 @@ sleep 10
 log "Verifying topic from-solace-messages"
 playground topic consume --topic from-solace-messages --min-expected-messages 3 --timeout 60
 
-
 sleep 5
 
 log "Asserting that Solace queue connector-quickstart is empty after connector processing (commitRecord deletes the messages)"
 playground mq wait --container solace --queue connector-quickstart --max-expected-messages 0 --max-wait 60
 
-log "Current message spool usage for connector-quickstart: $QUEUE_MSG_COUNT bytes"
-
-if [ "$QUEUE_MSG_COUNT" -eq 0 ]; then
-    log "✅ SUCCESS: Solace queue connector-quickstart is empty - messages were successfully consumed and deleted"
-else
-    logerror "❌ FAILURE: Messages still remain in Solace queue connector-quickstart (spool usage: $QUEUE_MSG_COUNT bytes) - messages were not deleted"
-    log "Displaying queue statistics:"
-    curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq '.'
-    exit 1
-fi

@@ -19,7 +19,6 @@ then
 fi
 cd -
 
-
 cd ../../connect/connect-jms-active-mq-source
 
 # Copy JAR files to confluent-hub
@@ -28,7 +27,6 @@ cp ../../connect/connect-jms-active-mq-source/activemq-all-5.15.4.jar ../../conf
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
-
 
 log "Creating JMS ActiveMQ source connector"
 playground connector create-or-update --connector jms-active-mq-source  << EOF
@@ -63,13 +61,3 @@ sleep 5
 log "Asserting that ActiveMQ queue DEV.QUEUE.1 is empty after connector processing (commitRecord deletes the messages)"
 playground mq wait --container activemq --queue DEV.QUEUE.1 --max-expected-messages 0 --max-wait 60
 
-log "Current queue size for DEV.QUEUE.1: $QUEUE_SIZE"
-
-if [ "$QUEUE_SIZE" -eq 0 ]; then
-    log "✅ SUCCESS: ActiveMQ queue DEV.QUEUE.1 is empty - message was successfully consumed and deleted"
-else
-    logerror "❌ FAILURE: Messages still remain in ActiveMQ queue DEV.QUEUE.1 (size: $QUEUE_SIZE) - message was not deleted"
-    log "Displaying queue statistics:"
-    curl -s -u admin:admin "http://localhost:8161/admin/xml/queues.jsp" | grep -A 10 "DEV.QUEUE.1"
-    exit 1
-fi
