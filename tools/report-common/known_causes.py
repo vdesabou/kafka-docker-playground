@@ -183,6 +183,89 @@ KNOWN_CAUSES = [
                 r"|error code:? ?40301|User is denied operation .{0,80} on (?:Subject|subject)",
      "title": "🚫 Authorization failure",
      "advice": "an ACL or an RBAC role binding is missing for the principal of the client"},
+    # 🚀 a broker, controller or ZooKeeper node that does not start: the mistakes of a cluster configured by hand (a
+    # copied properties file, a data folder reused, nodes formatted one by one). Before kraft_error, zookeeper_error and
+    # timeout: the CFK analyzer keeps the first entry that matches, and these say which setting to fix
+    {"name": "port_in_use", "severity": "critical", "category": "Network Issues",
+     "pattern": r"Socket server failed to bind to|Failed to bind to /?[\w.:\[\]-]{0,80}:\d+"
+                r"|BindException: Address already in use|Exception while listening to address",
+     "title": "🚪 Port already in use",
+     "advice": "the process cannot listen on its port: another process has it (another broker, controller or ZooKeeper "
+               "node on the same host, a container publishing the same host port). The address of the record names it: "
+               "a Kafka listener (listeners: one port per node on a host, with advertised.listeners matching), 8090 the "
+               "embedded REST server of Confluent Server on every broker (confluent.http.server.listeners: one port per "
+               "broker on a host), 2181 the clientPort of ZooKeeper, 2888 / 3888 its peer and election ports (server.N "
+               "lines: one pair per node on a host). lsof -nP -iTCP:<port> -sTCP:LISTEN shows who has it"},
+    {"name": "node_id_mismatch", "severity": "critical", "category": "Storage Issues",
+     "pattern": r"Stored node id -?\d+ doesn'?t match previous node id",
+     "title": "🪪 Data folder of another node (node.id / broker.id mismatch)",
+     "advice": "the meta.properties of log.dirs records another node id than node.id / broker.id: two nodes share a data "
+               "folder (a copied log.dirs, the same volume mounted twice), or the id of the node was changed. Give each "
+               "node its own log.dirs; never copy a data folder from one node to another. A node id changed on purpose "
+               "makes it a new node: its data folder must be emptied (and formatted again in KRaft)"},
+    {"name": "cluster_id_mismatch", "severity": "critical", "category": "KRaft Issues",
+     "pattern": r"INCONSISTENT_CLUSTER_ID|InconsistentClusterIdException|Invalid cluster\.id in"
+                r"|doesn'?t match stored clusterId",
+     "title": "🆔 Cluster id mismatch",
+     "advice": "the nodes do not agree on the cluster id. KRaft: they were formatted with different ids (kafka-storage "
+               "random-uuid run once per node, a CLUSTER_ID that differs between nodes): the controllers reject them with "
+               "INCONSISTENT_CLUSTER_ID. ZooKeeper: ZooKeeper was rebuilt or wiped while the brokers kept their data, so "
+               "/cluster/id no longer matches the cluster.id of their meta.properties. Compare cluster.id in the "
+               "meta.properties of every node. On a test cluster, wipe and format every node with one id; in production "
+               "do not wipe data: point the nodes back at the right quorum or ZooKeeper"},
+    {"name": "duplicate_node_id", "severity": "critical", "category": "Kafka Issues",
+     "pattern": r"DUPLICATE_BROKER_REGISTRATION|DuplicateBrokerRegistrationException"
+                r"|Error while creating ephemeral at /brokers/ids/\d+, node already exists",
+     "title": "👯 Two brokers with the same node.id / broker.id",
+     "advice": "the controller (KRaft: DUPLICATE_BROKER_REGISTRATION, logged at INFO and retried until "
+               "initial.broker.registration.timeout.ms, 60 s) or ZooKeeper (/brokers/ids/<id> already exists) has a live "
+               "broker with this id. Make node.id / broker.id unique; a node that already wrote the wrong id in its "
+               "meta.properties needs its data folder re-created. ZooKeeper mode only: a broker restarted at once can "
+               "hit it until the session of its previous run expires (zookeeper.session.timeout.ms)"},
+    {"name": "broker_registration_failed", "severity": "critical", "category": "KRaft Issues",
+     "pattern": r"Shutting down because we were unable to register with the controller quorum"
+                r"|Unable to register broker -?\d+ because the controller returned error",
+     "title": "📝 Broker could not register with the KRaft controllers",
+     "advice": "the broker gave up after initial.broker.registration.timeout.ms (60 s). The INFO lines of "
+               "BrokerLifecycleManager just before say why: DUPLICATE_BROKER_REGISTRATION (another live broker has the "
+               "same node.id), INCONSISTENT_CLUSTER_ID (formatted with another cluster id); none: the controllers are not "
+               "reachable or have no leader (controller.quorum.voters / controller.quorum.bootstrap.servers, the "
+               "CONTROLLER listener, the controllers that are down)"},
+    {"name": "storage_not_formatted", "severity": "critical", "category": "Storage Issues",
+     "pattern": r"No readable meta\.properties files found|No meta\.properties found in",
+     "title": "🧱 KRaft storage not formatted",
+     "advice": "the data folder of this KRaft node was never formatted: run kafka-storage format with the cluster id of "
+               "the other nodes before starting it (the CP images do it from CLUSTER_ID). An empty volume (new disk or "
+               "PVC, log.dirs pointing at another path than the mounted one) gives the same error. Never format a node "
+               "of an existing cluster with a new cluster id"},
+    {"name": "kraft_quorum_not_configured", "severity": "critical", "category": "KRaft Issues",
+     "pattern": r"either controller\.quorum\.bootstrap\.servers must contain"
+                r"|controller\.quorum\.voters is not set on this controller, you must specify",
+     "title": "🗳️ KRaft quorum not configured",
+     "advice": "the node has no way to find the controllers. Static quorum: controller.quorum.voters, id@host:port of "
+               "every controller, identical on every node. Dynamic quorum (KIP-853, the controller.properties sample of "
+               "CP 8): controller.quorum.bootstrap.servers, and the controllers formatted with --standalone or "
+               "--initial-controllers. Do not mix the two: a file that deletes one line without adding the other fails"},
+    {"name": "advertised_listener_taken", "severity": "critical", "category": "Kafka Issues",
+     "pattern": r"in advertised listeners are already registered by broker",
+     "title": "📣 Advertised listener already used by another broker",
+     "advice": "two brokers advertise the same host:port (advertised.listeners copied from another broker). ZooKeeper "
+               "mode refuses it at startup; KRaft accepts it and sends clients to the wrong broker instead "
+               "(NOT_LEADER_OR_FOLLOWER for the partitions of one broker only). Each broker advertises its own address, "
+               "matching its listeners: kafka-broker-api-versions or playground broker describe lists the endpoints"},
+    {"name": "zookeeper_config_invalid", "severity": "critical", "category": "Zookeeper Issues",
+     "pattern": r"QuorumPeerConfig\$ConfigException|(?:initLimit|syncLimit) is not set|myid file is missing",
+     "title": "🦓 ZooKeeper configuration invalid",
+     "advice": "the ZooKeeper node exits at startup, the Caused by names the setting: initLimit and syncLimit are "
+               "required as soon as the file has server.N lines (an ensemble), the myid file in dataDir holds the number "
+               "of the server.N line of this node, and every node lists the same server.N lines"},
+    {"name": "zookeeper_unreachable", "severity": "critical", "category": "Zookeeper Issues",
+     "pattern": r"ZooKeeperClientTimeoutException|Timed out waiting for connection while in state: CONNECTING",
+     "title": "🦓 ZooKeeper unreachable",
+     "advice": "the broker got no ZooKeeper session within zookeeper.connection.timeout.ms. The ensemble is down or has "
+               "no quorum (a lone member does not serve: echo srvr | nc <host> 2181 says \"not currently serving "
+               "requests\"), zookeeper.connect is wrong, or the network / TLS to the client port fails. Start ZooKeeper "
+               "first and check one leader and the followers before starting the brokers"},
     {"name": "replication_error", "severity": "high", "category": "Replication Issues",
      "pattern": r"InvalidReplicationFactorException|NotEnoughReplicas(?:AfterAppend)?Exception"
                 r"|replication factor.{0,60}(?:larger|greater) than|under.?min.?isr|replica fetcher.{0,60}(?:error|failed)"
@@ -191,13 +274,19 @@ KNOWN_CAUSES = [
      "advice": "fewer brokers or in-sync replicas than the replication factor / min.insync.replicas: check the brokers "
                "that are down and the replication factor of the internal topics"},
     {"name": "kraft_error", "severity": "high", "category": "KRaft Issues",
-     "pattern": r"KRaft.{0,80}error|controller.{0,40}election.{0,40}failed|quorum.{0,40}(?:error|timeout|unavailable)"
+     # (not the org.apache.zookeeper.server.quorum package: QuorumPeerConfig$ConfigException: Error processing … is
+     # ZooKeeper, zookeeper_config_invalid)
+     "pattern": r"KRaft.{0,80}error|controller.{0,40}election.{0,40}failed|quorum(?![.]|Peer|Cnx).{0,40}(?:error|timeout|unavailable)"
                 r"|NotControllerException|RaftClient.{0,80}(?:error|exception)|metadata log.{0,40}(?:corrupt|failed|error)",
      "title": "🗳️ KRaft quorum error",
      "advice": "the KRaft controllers have no leader or cannot reach each other: check controller.quorum.voters and "
                "the controllers that are down"},
     {"name": "zookeeper_error", "severity": "high", "category": "Zookeeper Issues",
-     "pattern": r"zookeeper.{0,160}exception|SessionExpiredException|zookeeper.{0,80}session.{0,40}expired|KeeperException"
+     # (not an invalid config, a ZooKeeper unreachable at startup nor a node that already exists: no session issue,
+     # zookeeper_config_invalid, zookeeper_unreachable and duplicate_node_id say what to fix; nor the frames of a stack
+     # trace, at org.apache.zookeeper.KeeperException.create(KeeperException.java:126))
+     "pattern": r"zookeeper.{0,160}exception(?![$\w.])(?<!ConfigException)(?<!ClientTimeoutException)(?<!NodeExistsException)"
+                r"|SessionExpiredException|zookeeper.{0,80}session.{0,40}expired|KeeperException(?![.]|\$NodeExists)"
                 r"|ConnectionLoss",
      "title": "🦓 ZooKeeper session error",
      "advice": "the ZooKeeper session expired or was lost: look for long GC pauses on the client and for ZooKeeper "
@@ -682,6 +771,10 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 # declaration order
 HINT_ORDER = [
     "💥 OutOfMemoryError", "🪞 Secret registry: duplicate URLs, Connect does not start", "🚫 Connect worker failed to start",
+    "🪪 Data folder of another node (node.id / broker.id mismatch)", "👯 Two brokers with the same node.id / broker.id",
+    "🆔 Cluster id mismatch", "🧱 KRaft storage not formatted", "🗳️ KRaft quorum not configured",
+    "📣 Advertised listener already used by another broker", "🦓 ZooKeeper configuration invalid", "🚪 Port already in use",
+    "📝 Broker could not register with the KRaft controllers", "🦓 ZooKeeper unreachable",
     KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🧬 Not enough replicas",
     "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎟️ OAuth token cannot be obtained or validated", "🎫 Kerberos ticket cache past its renewable lifetime", "🎫 Kerberos keytab out of date (key changed on the KDC)", "🎫 Kerberos re-login failing", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
