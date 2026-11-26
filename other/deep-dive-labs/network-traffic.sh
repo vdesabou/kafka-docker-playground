@@ -79,6 +79,17 @@ lab_expect_exit 0
 lab_run playground connector wait --connector filestream-sink --max-wait 120
 lab_expect_exit 0
 
+log "Step 4b: a partition both ways, that heals by itself"
+lab_run playground debug block-traffic -c connect --destination broker --both-ways --duration 20s --action start
+lab_expect_exit 0
+lab_expect_contains "🚫 Blocking traffic both ways between containers connect and destination broker"
+lab_expect_contains "-A INPUT -s "
+lab_expect_contains "⏳ the traffic heals by itself in 20s, at"
+sleep 30
+lab_run playground debug degrade-traffic -c connect --destination broker --action status
+lab_expect_exit 0
+lab_expect_ms "$(round_trip_ms connect broker)" 0 50 "ping round trip after the timer healed the partition"
+
 log "Step 5: a name that no longer resolves (section 4)"
 lab_run playground debug dns -c connect --host broker
 lab_expect_exit 0

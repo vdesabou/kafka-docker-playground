@@ -74,6 +74,20 @@ do
     rm -f /tmp/playground-topic-produce/$background_id.{info,pid,progress,stop,rc}
 done
 
+# the timers of 'playground debug block-traffic --duration' started from this folder (the rules go with the containers)
+for info in /tmp/playground-block-traffic/*.info
+do
+    [ -f "$info" ] || continue
+    [ "$(sed -n 's/^root_folder=//p' "$info" | head -1)" == "$root_folder" ] || continue
+    timer_pid=$(sed -n 's/^pid=//p' "$info" | head -1)
+    if [[ -n "$timer_pid" ]] && kill -0 "$timer_pid" 2> /dev/null
+    then
+        log "⏳ stopping the timer of playground debug block-traffic --duration (pid $timer_pid)"
+        kill_tree "$timer_pid"
+    fi
+    rm -f "$info" "${info%.info}.log"
+done
+
 echo "$docker_command" > $tmp_dir/tmp
 
 sed -e "s|up -d|down -v --remove-orphans|g" \

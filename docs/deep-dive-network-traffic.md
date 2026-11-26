@@ -13,7 +13,7 @@ no longer resolve, without changing the example or restarting anything. Takes ab
 | Simulates | an outage: a firewall dropping packets, a host you can't reach | a bad network: slow, lossy, corrupted or narrow link |
 | Linux tool | `iptables -A OUTPUT … -j DROP` | `tc` + `netem` (+ `prio`/`sfq` when a destination is given) |
 | Runs where | `docker exec --privileged --user root` **inside** the container (installs `iptables` with `yum`/`apt` if it's missing) | a throw-away `nicolaka/netshoot` container joined to the container's network namespace (`--network container:<c>`): nothing gets installed |
-| `--destination` | **required** | optional (default: all the container's traffic) |
+| `--destination` | **required**, unless `--isolate <c>` | optional (default: all the container's traffic) |
 | `--port` | optional, TCP only | optional, TCP only, needs `--destination` |
 | `--action` | `start` / `stop` | `start` / `stop` / `status` |
 | Shows the result | prints `iptables-save` after each call | measures the round trip (ping, or TCP connect time when `--port` is set) |
@@ -33,7 +33,8 @@ For a client that can't reach Confluent Cloud (PrivateLink, peering, private DNS
 
 1. **They only act on traffic the container sends** (egress). `block-traffic -c connect --destination broker`
    stops connect → broker, but broker → connect packets still flow. Since TCP needs both directions, the
-   connection dies anyway. For `degrade-traffic`, though, it means that **`--latency 100ms` adds 100 ms to the
+   connection dies anyway. `block-traffic --both-ways` also drops what the destination sends (a full partition,
+   see below). For `degrade-traffic`, though, it means that **`--latency 100ms` adds 100 ms to the
    round trip, not 200 ms**. For a symmetric delay, degrade both sides.
 2. **`DROP`, not `REJECT`**: the client gets no error back. It hangs until its own timeout
    (`request.timeout.ms`, JDBC socket timeout, HTTP read timeout…). That's what a real firewall or a dead
@@ -88,6 +89,59 @@ IP=$(dig +short bigtableadmin.googleapis.com)
 log "Blocking bigtableadmin.googleapis.com IP $IP to make sure proxy is used"
 playground debug block-traffic --container connect --destination $IP --action start
 ```
+
+### Both ways, a whole container, for a while: `--both-ways`, `--isolate`, `--duration`
+
+```bash
+# a full partition between connect and the broker, healed by itself after 30 seconds
+playground debug block-traffic -c connect --destination broker --both-ways --duration 30s --action start
+
+# cut broker2 from every other container (both ways) for 2 minutes: the controller, the other brokers, the clients
+playground debug block-traffic --isolate broker2 --duration 2m --action start
+playground debug block-traffic --isolate broker2 --action stop      # end it earlier (cancels the timer)
+```
+
+| Flag | Rules (in the container's network namespace) | What changes |
+| --- | --- | --- |
+| *(none)* | `OUTPUT -d <ip> -j DROP` | the container can't send to the destination. Packets from the destination still arrive: a datagram from it is delivered, a TCP connection dies because nothing can be acknowledged |
+| `--both-ways` | + `INPUT -s <ip> -j DROP` (with `--port`: the replies on that port, `--sport`, and the destination's connections to the same port of the container) | a true partition: nothing gets in or out, UDP and data already in flight included |
+| `--isolate <c>` | `ACCEPT` loopback and the gateway, then `DROP` the subnet of each network of `<c>`, `INPUT` and `OUTPUT` (`ip/prefix` and gateway read with `docker inspect`, so podman works too) | `<c>` is cut from every other container of its networks, including the ones started later. Its own name, the docker DNS (`127.0.0.11`), the host (published ports, `host.docker.internal`) and the internet keep working. `--container` and `--port` don't apply. Not with cfk |
+| `--duration <d>` | a detached timer (`/tmp/playground-block-traffic/<id>.info`, its log next to it) that runs the same `--action stop` after `<d>` (`30s`, `2m`, `1h`) | the outage ends by itself, at the time printed. `--action stop` with the same flags ends it earlier and cancels the timer; `playground stop` cancels it with the environment |
+
+What the reachability looks like, measured between three containers `a`, `b`, `c` of one network (ping both ways, a UDP
+datagram in each direction, and from `a`: DNS, its own name, the gateway, the internet):
+
+| | a→b | b→a | a→c | b→c | UDP b→a | DNS, self, gateway, internet |
+| --- | --- | --- | --- | --- | --- | --- |
+| `-c a --destination b` | ❌ | ❌ | ✅ | ✅ | ✅ delivered | ✅ |
+| `-c a --destination b --both-ways` | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+| `--isolate a` | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| after `--duration` expired, or `--action stop` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+```
+🏝️ Isolating container pg-bt-test-a from the other containers of its network(s): 192.168.144.2/20 (gateway 192.168.144.1)
+   still working: loopback, the docker DNS, the gateway (the host, published ports) and the internet
+-A INPUT -i lo -j ACCEPT
+-A INPUT -s 192.168.144.1/32 -j ACCEPT
+-A INPUT -s 192.168.144.0/20 -j DROP
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -d 192.168.144.1/32 -j ACCEPT
+-A OUTPUT -d 192.168.144.0/20 -j DROP
+⏳ the traffic heals by itself in 25s, at 15:19:57 (timer pid 34340, log /tmp/playground-block-traffic/1031383968.log)
+   --action stop with the same flags ends it now, playground stop ends it with the environment
+```
+
+Gotchas:
+
+- **`--action stop` removes the `--both-ways` rules without the flag** (each one is checked with `iptables -C` first),
+  so the stop of a timer that fires after a manual stop is harmless. With cfk, each check is a `kubectl debug` call:
+  pass `--both-ways` to the stop there.
+- **The timer heals a couple of seconds after the printed time**: it starts the CLI to run the stop.
+- **`--isolate` keeps the gateway open**: on Linux, the host reaches a container through the gateway address (published
+  ports), so cutting it would also cut `localhost:9092` from your machine. To cut the internet too, add a
+  `--destination` block for the external IPs, or use `degrade-traffic --loss 100%` without destination.
+- **A container restart clears everything** (the rules live in the network namespace), but not the timer: its stop
+  then finds no rule and changes nothing.
 
 ---
 
