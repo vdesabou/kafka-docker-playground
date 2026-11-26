@@ -100,6 +100,11 @@ lab_expect_contains "1 🟢 RUNNING connect:8083 - (no partition assigned)"
 lab_expect_contains "💤 3 task(s) without partition: tasks.max is higher than the number of partitions of the topics, or the consumer group is rebalancing"
 lab_run playground topic describe --topic orders
 lab_expect_contains "PartitionCount: 1"
+# the tip of Step 2: connector lint finds it from the config and the topic
+lab_run playground connector lint --connector http-sink
+lab_expect_contains "🟡 LOW tasks.max = 4"
+lab_expect_contains "why: 4 tasks for 1 partition(s): 3 task(s) stay idle"
+lab_expect_contains "fix: set tasks.max=1 or add partitions (playground topic add-partitions)"
 lab_run playground topic add-partitions --topic orders --nb-partitions 4
 lab_expect_contains "➕ Adding partitions to topic orders: 1 → 4"
 lab_expect_contains "✅ topic orders has 4 partitions"
@@ -254,5 +259,62 @@ lab_run playground db sql << 'EOF'
 SELECT count(*) AS nb_rows FROM orders;
 EOF
 lab_expect_contains " 25" "20 + 5: nothing read again"
+
+log "Exercise 16 (intermediate): S3 sink, duplicated records in the bucket after a worker crash"
+run_model connect-connect-minio-s3-sink s3-sink-repro-000016-s3-sink-duplicates-after-worker-crash.sh
+lab_expect_contains "🪣 6 object(s)"
+lab_run playground storage ls --connector minio-sink
+lab_expect_contains "orders-0 6"
+lab_expect_contains "🪣 6 object(s)"
+lab_run playground storage cat --connector minio-sink --summary --max-objects 0
+lab_expect_contains "📄 reading 6 object(s)"
+lab_expect_contains "🔁 3 overlap(s)"
+lab_expect_contains "offsets 0-2 are in two objects"
+lab_expect_contains "offsets 3-5 are in two objects"
+lab_expect_contains "offsets 6-8 are in two objects"
+lab_expect_contains "📦 18 record(s) in 6 object(s)"
+lab_run playground connector reconcile --connector minio-sink
+lab_expect_contains "📥 topic orders 9 record(s)"
+lab_expect_contains "18 record(s)"
+lab_expect_contains "❌ Duplicated: 9"
+lab_expect_contains '"product1", quantity="1": 2 times in the bucket'
+lab_expect_contains "❌ duplicated: the same record is there several times"
+[ "$LAB_EXIT" -eq 1 ] || { logerror "❌ connector reconcile should exit with 1, got $LAB_EXIT"; exit 1; }
+
+log "Exercise 16, Step 4: timestamp.extractor=Record, the same crash"
+playground connector delete --connector minio-sink
+playground connector create-or-update --connector minio-sink-fixed << 'END_OF_CONFIG'
+{
+     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+     "tasks.max": "1",
+     "topics": "orders",
+     "topics.dir": "topics-fixed",
+     "s3.bucket.name": "mybucket",
+     "s3.part.size": 5242880,
+     "store.url": "http://minio:9000",
+     "flush.size": "3",
+     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+     "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",
+     "partition.duration.ms": "10000",
+     "path.format": "'date'=YYYY-MM-dd/'time'=HH-mm-ss",
+     "locale": "en-US",
+     "timezone": "UTC",
+     "timestamp.extractor": "Record",
+     "schema.compatibility": "NONE"
+}
+END_OF_CONFIG
+playground storage wait-for-objects --connector minio-sink-fixed --min-expected-objects 3
+playground container kill --container connect
+playground container restart --container connect
+playground container wait-for-connect-rest-api-ready
+# the records are read again once the member of the killed worker has timed out, and their offsets committed after
+wait_for_output 300 "lag: 0" playground connector show-lag --connector minio-sink-fixed --once
+lab_run playground storage cat --connector minio-sink-fixed --summary --max-objects 0
+lab_expect_contains "✅ contiguous"
+lab_expect_contains "📦 9 record(s) in 3 object(s)"
+lab_run playground connector reconcile --connector minio-sink-fixed
+lab_expect_contains "✅ 9 matching"
+lab_expect_contains "✅ complete: every record is on the other side, with the same values"
 
 log "✅ academy intermediate lab: the exercises behave as the page says"

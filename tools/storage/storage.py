@@ -326,6 +326,19 @@ def offsets_summary(results):
     return out
 
 
+def object_names(path1, path2, topic):
+    """the names of two objects for a message: their file names, or their path after the topic folder when both
+    have the same file name (the same offsets written in two folders)"""
+    b1, b2 = path1.rsplit('/', 1)[-1], path2.rsplit('/', 1)[-1]
+    if b1 != b2:
+        return b1, b2
+    def after_topic(p):
+        q = '/' + p
+        i = q.find('/%s/' % topic)
+        return q[i + len(topic) + 2:] if i >= 0 else p
+    return after_topic(path1), after_topic(path2)
+
+
 def offset_range(a, b):
     return ('offset %d is' % a) if a == b else ('offsets %d-%d are' % (a, b))
 
@@ -349,12 +362,10 @@ def print_summary(results, summary):
         for p in summary:
             for g in p['gaps'][:5]:
                 print('   🕳️ %s: %s in no object (between %s and %s)' % (
-                    p['label'], offset_range(g['from'], g['to']), g['after'].rsplit('/', 1)[-1],
-                    g['before'].rsplit('/', 1)[-1]))
+                    (p['label'], offset_range(g['from'], g['to'])) + object_names(g['after'], g['before'], p['topic'])))
             for o in p['overlaps'][:5]:
                 print('   🔁 %s: %s in two objects (%s and %s): duplicates' % (
-                    p['label'], offset_range(o['from'], o['to']), o['object'].rsplit('/', 1)[-1],
-                    o['object2'].rsplit('/', 1)[-1]))
+                    (p['label'], offset_range(o['from'], o['to'])) + object_names(o['object'], o['object2'], p['topic'])))
         if any(p['gaps'] for p in summary):
             print('   🎓 a gap is expected on a compacted topic, with transactions (markers use offsets), after a'
                   ' retention deletion, or when an SMT / errors.tolerance dropped records')

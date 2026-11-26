@@ -1,0 +1,34 @@
+---
+# Playground Academy, intermediate exercise: S3 sink, duplicated records in the bucket after a worker crash (https://kafka-docker-playground.io/#/academy)
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-minio-s3-sink/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
+
+  minio:
+    image: pgsty/minio
+    hostname: minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY
+    command: ["server", "/data"]
+
+  create-buckets:
+    image: pgsty/mc
+    hostname: create-buckets
+    container_name: create-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        while ! /usr/bin/mc mb myminio/mybucket; do
+          sleep 5
+        done
+        exit 0;
+      "
