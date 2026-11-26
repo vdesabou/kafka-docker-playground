@@ -1,0 +1,6 @@
+---
+services:
+  broker3:
+    environment:
+      # 💥 copied from broker2: broker3 listens on its own port, but tells clients to connect to broker2
+      KAFKA_ADVERTISED_LISTENERS: BROKER://broker2:9092,HOST://localhost:29392

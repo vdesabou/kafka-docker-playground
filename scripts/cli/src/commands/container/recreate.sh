@@ -1,4 +1,5 @@
 ignore_current_versions="${args[--ignore-current-versions]}"
+eval "fresh_volumes_array=(${args[--fresh-volumes]})"
 
 get_environment_used
 if [[ "$environment" == cfk* ]]
@@ -51,6 +52,21 @@ then
         exit 1
     fi
 fi
+
+# --fresh-volumes: docker compose up reuses the anonymous volumes of a container it recreates, so its data folder (and
+# the meta.properties of a KRaft node: node id, cluster id) survives a recreate. Removing the container with its
+# anonymous volumes (docker rm -v) makes up create it again with empty ones
+for fresh_container in "${fresh_volumes_array[@]}"
+do
+    if ! docker inspect "$fresh_container" > /dev/null 2>&1
+    then
+        logerror "❌ container $fresh_container does not exist (playground get-container-list)"
+        exit 1
+    fi
+    fresh_volumes=$(docker inspect -f '{{range .Mounts}}{{if eq .Type "volume"}}{{.Destination}} {{end}}{{end}}' "$fresh_container" 2>/dev/null)
+    log "🧽 removing container $fresh_container and its anonymous volumes (${fresh_volumes% }): it starts with empty data folders"
+    docker rm -f -v "$fresh_container" > /dev/null
+done
 
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"

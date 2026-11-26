@@ -13,7 +13,7 @@ run.
 
 | You want | Command |
 | --- | --- |
-| is the cluster healthy? (a broker down, under-replicated, under min ISR or offline partitions, KRaft quorum) | `playground broker health` (`--wait-healthy --max-wait 120`, `--json`; exit 1 when not healthy) |
+| is the cluster healthy? (a broker down, under-replicated, under min ISR or offline partitions, KRaft quorum, two brokers with the same node id or the same advertised endpoint, no controller majority) | `playground broker health` (`--wait-healthy --max-wait 120`, `--json`; exit 1 when not healthy) |
 | brokers, active controller, `metadata.version`, API versions | `playground broker describe` (`--api-versions --broker <id>`) |
 | stop a broker, or crash it | `playground broker stop --broker 2` (`--kill` for a crash) |
 | start it again, and wait for the cluster to be healthy | `playground broker start --broker 2` |
@@ -325,6 +325,9 @@ playground stop
 | "is the broker the bottleneck of the connector?" | `broker metrics` (`--topic <t>`) during `connector benchmark`: request handler / network processor idle below 30% ⚠️, request queue size, produce p99 |
 | "it happens after an upgrade of the brokers" | `broker describe`: `metadata.version` and the feature levels; `playground update-version` to move the CP version of the running environment |
 | "a script must wait until the cluster recovered" | `playground broker health --wait-healthy --max-wait 300` (exit 1 on timeout) |
+| "a new broker never joins the cluster" / "it logs `INCONSISTENT_CLUSTER_ID` in a loop" | a compose override on `broker3` with `KAFKA_NODE_ID` / `KAFKA_BROKER_ID` of another broker, or another `CLUSTER_ID`: `broker health` (❌ same node id, broker not registered), `container logs -c broker3 --errors`; after the fix, `container recreate --fresh-volumes broker3` (the data folder keeps the old node id / cluster id in `meta.properties`). Academy: [a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) |
+| "records time out for some partitions only, always the same ones" | `advertised.listeners` copied from another broker: `broker describe` (⚠️ same endpoint), `broker health`, `topic get-offsets` (⚠️ partitions whose leader does not answer). Academy: [some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) |
+| "topic creation times out, produce still works" | `playground run --enable-multiple-brokers --enable-multiple-controllers`, `container kill -c controller2 -c controller3`: `broker health` says ❌ KRaft quorum lost at once. Academy: [topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) |
 
 ---
 
