@@ -12396,6 +12396,50 @@
           ]
         },
         {
+          "name": "lint",
+          "description": "🧪 Best-practice warnings on a connector config (no environment needed)\n\n'connector validate' only prints what the plugin rejects. A config that\nvalidates can still lose records or fail later: lint flags the risky\nor useless settings, each with why and how to fix it.\n\nRules: errors.tolerance=all without a dead letter queue (records lost)\nor without errors.log.enable, a dead letter queue that is never\nwritten (errors.tolerance=none) or set on a source, replication\nfactors above the number of brokers, tasks.max above the number of\npartitions of a sink, client overrides (consumer.override.*,\nproducer.override.*) against connector.client.config.override.policy\nof the worker, consumer.override.max.poll.records too high for\nmax.poll.interval.ms, auto.offset.reset=latest, producer acks not all,\nan Avro / Protobuf / JSON Schema converter set on the connector without\nits schema.registry.url (a converter set on the connector does not\ninherit the converter settings of the worker), JsonConverter with a\nschema.registry.url, JsonConverter expecting the schema / payload\nenvelope on a sink, a single task Debezium connector with tasks.max > 1,\nand secrets in clear text (not ${file:...} / ${secret:...}).\n\nSeverity: 🔴 HIGH (fails), 🟠 MEDIUM (loses records or misbehaves),\n🟡 LOW (risky), 🔵 INFO (a note, does not count). Exits with 1 when there\nis at least one warning (HIGH, MEDIUM or LOW).\n\nThe config is read from stdin, in the same formats as 'connector\nvalidate': json, a CFK / Strimzi custom resource, terraform, a\n.properties, a dump of GET /connectors?expand=info (--connector picks\none). Without stdin, --connector lints the config of that running\nconnector.\n\nWhen a local environment runs, the number of brokers, the partitions of\nthe topics of a sink and the override policy of the worker are read\nfrom it (--offline to skip). For a customer config, --brokers gives the\nsize of their cluster.\n\n☁️ Fully managed: supported for the generic rules (the converter and secret rules are skipped, a fully managed config holds its secrets)\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting",
+          "usage": "playground connector lint [JSON] [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\nWith a config on stdin: the name shown, or the connector to pick in\na dump that has several. Without stdin, the running connector whose\nconfig is linted."
+            },
+            {
+              "names": [
+                "--brokers"
+              ],
+              "argument": "BROKERS",
+              "description": "🔢 Number of brokers of the target cluster (the customer's), to check the replication factors without a running environment"
+            },
+            {
+              "names": [
+                "--offline"
+              ],
+              "argument": "",
+              "description": "✈️ Do not read the running environment (brokers, partitions, worker override policy): the config only"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON on stdout, and nothing else (the log lines go to stderr)"
+            }
+          ]
+        },
+        {
           "name": "diff",
           "description": "🔀 Diff the config of a running connector with another config\n\nCompares the config of a running connector, key by key, with:\n\n  stdin              a config (plain json, the heredoc printed by\n                     'show-config', or a format customers send: CFK /\n                     Strimzi custom resource, terraform, .properties,\n                     a dump of GET /connectors?expand=info, see\n                     'playground connector convert')\n  --file             the same, from a file, e.g. the config of a\n                     customer\n  --with-connector   another running connector\n  --defaults         the default value of each parameter of the plugin:\n                     shows only what the connector changes, and the\n                     keys set to their default that could be removed\n\nKeys only on one side, and keys with different values, are listed.\nPasswords masked by the REST API are not compared.\n\n🎓 Tip: run it with the config of a customer and the config of the\nexample to see right away what differs.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): the keys side by side with the documentation, type and default of each one (from the configuration reference of the plugin), what the important differences mean (converters, error handling, transforms...), and the secrets masked.\n\n☁️ Fully managed: supported (custom connectors too)\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update",
           "usage": "playground connector diff [OPTIONS]",
