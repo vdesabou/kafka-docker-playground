@@ -560,7 +560,9 @@ def print_report(r, args):
     print('')
     print('   📥 %-36s %d record(s)%s' % ('topic ' + r['topic'], r['records'],
                                                  (', %d key(s)' % r['keys_in_topic']) if 'keys_in_topic' in r else ''))
-    print('   🛢️  %-36s %d row(s)%s' % (kind + ' ' + r['table'], r['rows'],
+    objects = kind.startswith('objects')
+    print('   %s %-36s %d %s%s' % ('🪣' if objects else '🛢️ ', kind + ' ' + r['table'], r['rows'],
+                                 'record(s)' if objects else 'row(s)',
                                                 (', %d key(s)' % r['keys_in_table']) if 'keys_in_table' in r else ''))
     if r['key_fields']:
         print('   🔑 key: %s (%s)' % (', '.join(r['key_fields']), r['key_origin']))
@@ -589,7 +591,7 @@ def print_report(r, args):
     section('❌ Not deleted, the last record is a tombstone or a delete event but the row is still there',
             r['not_deleted'], lambda e: 'key %s (record %s)' % (e['key'], e['record']))
     section('❌ Duplicated', r['duplicated'], lambda e: '%s %s: %d times in the %s%s' % (
-        e.get('what', 'key'), e['key'], e['count'], e['side'], (' (%s)' % ', '.join(e['records'])) if e.get('records') else ''))
+        e.get('what', 'key'), e['key'], e['count'], 'bucket' if objects and e['side'] == 'table' else e['side'], (' (%s)' % ', '.join(e['records'])) if e.get('records') else ''))
 
     def fmt_diff(e):
         parts = ['%s: topic %s, table %s' % (f['field'], with_date(parse_json_text(f['topic']), parse_json_text(f['table'])),

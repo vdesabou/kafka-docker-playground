@@ -34,6 +34,7 @@ playground find-example --category academy
 | ⭐⭐ | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
 | ⭐⭐ | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
 | ⭐⭐ | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
+| ⭐⭐ | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
 | ⭐⭐⭐ | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
 | ⭐⭐⭐ | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
 | ⭐⭐⭐ | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
@@ -1561,6 +1562,23 @@ Each task is a consumer of the group `connect-http-sink`, and a partition is rea
 
 One request at a time, one record per request (`batch.max.size` is `1`), 500 ms per request: 2 records per second, for 6 produced.
 
+> [!TIP]
+> [playground connector lint](/playground%20connector%20lint) finds it from the config, before anyone looks at the lag. On a running environment, it reads the partitions of the topics of a sink:
+>
+> ```bash
+> playground connector lint --connector http-sink
+> ```
+>
+> ```log
+> 🧪 http-sink (io.confluent.connect.http.HttpSinkConnector, sink)
+> 🟡 LOW    tasks.max = 4
+>           why: 4 tasks for 1 partition(s): 3 task(s) stay idle
+>           fix: set tasks.max=1 or add partitions (playground topic add-partitions)
+> ❌ 1 warning(s), 0 note(s)
+> ```
+>
+> Run it on every config a customer sends (stdin works too: CFK, Strimzi, terraform, `.properties`): it also checks the dead letter queue, the replication factors, the client overrides, the converters and the secrets in clear text.
+
 <!-- select:end -->
 
 👉 Give the topic 4 partitions, with [playground topic add-partitions](/playground%20topic%20add-partitions), then check the tasks again (several times).
@@ -2040,6 +2058,194 @@ EOF
 * Keep the group instead: `"consumer.override.group.id": "connect-sink-1"` in the config of the new connector (the worker must allow it: `connector.client.config.override.policy` `All`, the setting of the playground).
 * Make the sink idempotent: `insert.mode` `upsert` with `pk.mode` `record_value` and `pk.fields` `id` turns a replay into updates of the same rows. Compare with the [duplicates after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) exercise.
 * A source connector has the same issue: its offsets are stored under its name in the `connect-offsets` topic.
+
+<!-- tabs:end -->
+
+### S3 sink: duplicated records in the bucket after a worker crash
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+The data team counts the orders of the day in their S3 bucket (Athena on the Avro files): 18 orders, but the shop sent 9. The S3 sink connector is RUNNING, there is no error in the logs. The only event of the day: a connect worker crashed (OOM kill) and was restarted.
+
+"The S3 sink is exactly-once, isn't it?"
+
+💡 What you'll learn:
+
+* Read what a sink wrote in a bucket, without the `aws` command line or downloading files by hand.
+* Find the records written twice, and compare a bucket with its topic.
+* When the S3 sink is exactly-once, and the setting that breaks it.
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 S3 sink: latest
+
+The bucket is in MinIO (an S3 compatible store), so no AWS account is needed. The customer writes one folder per hour of processing time; the exercise uses one folder per 10 seconds, so that it does not take hours.
+
+Connector config:
+
+```json
+{
+  "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+  "topics": "orders",
+  "s3.bucket.name": "mybucket",
+  "store.url": "http://minio:9000",
+  "flush.size": "3",
+  "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+  "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+  "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",
+  "partition.duration.ms": "10000",
+  "path.format": "'date'=YYYY-MM-dd/'time'=HH-mm-ss",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "timestamp.extractor": "Wallclock"
+}
+```
+
+Reproduction model: [s3-sink-repro-000016-s3-sink-duplicates-after-worker-crash.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-minio-s3-sink/s3-sink-repro-000016-s3-sink-duplicates-after-worker-crash.sh)
+
+> [!NOTE]
+> Do not read the model before the exercise: it contains the answer.
+
+#### **📍 Step 1**
+
+Run the example (or type `000016` and use the `fzf` completion of `-f`):
+
+```bash
+playground run -f academy/connect-connect-minio-s3-sink/s3-sink-repro-000016-s3-sink-duplicates-after-worker-crash.sh
+```
+
+It sends 9 orders, waits for the first files, kills the connect worker and restarts it. At the end, the connector is RUNNING and the bucket holds 6 objects.
+
+❔Questions:
+
+* What is in the bucket? Which orders are there twice?
+* Why does the sink write them again after the restart?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What is in the bucket? Which orders are there twice?
+
+[playground storage ls](/playground%20storage%20ls) lists the objects the connector wrote (the bucket, the folder and the credentials come from its config):
+
+```bash
+playground storage ls --connector minio-sink
+```
+
+```log
+object                                                                  size  modified
+orders/date=2026-11-26/time=14-02-10/orders+0+0000000000.avro         269 B  2026-11-26 14:02:12
+orders/date=2026-11-26/time=14-02-10/orders+0+0000000003.avro         269 B  2026-11-26 14:02:12
+orders/date=2026-11-26/time=14-02-10/orders+0+0000000006.avro         269 B  2026-11-26 14:02:12
+orders/date=2026-11-26/time=14-03-10/orders+0+0000000000.avro         269 B  2026-11-26 14:03:13
+orders/date=2026-11-26/time=14-03-10/orders+0+0000000003.avro         269 B  2026-11-26 14:03:13
+orders/date=2026-11-26/time=14-03-10/orders+0+0000000006.avro         269 B  2026-11-26 14:03:13
+
+topic-partition                            objects     size first off.   last start  last modified
+orders-0                                         6   1.6 KB          0            6  2026-11-26 14:03:13
+
+🪣 6 object(s), 1.6 KB
+```
+
+The same object names (`orders+0+0000000000.avro`: topic, partition, first offset) are in two folders, about a minute apart. [playground storage cat](/playground%20storage%20cat) reads the records of the objects; `--summary` only prints the offsets each topic-partition covers:
+
+```bash
+playground storage cat --connector minio-sink --summary --max-objects 0
+```
+
+```log
+topic-partition                           objects   records                offsets  continuity
+orders-0                                        6        18                  0 → 8  🔁 3 overlap(s)
+   🔁 orders-0: offsets 0-2 are in two objects (date=2026-11-26/time=14-02-10/orders+0+0000000000.avro and date=2026-11-26/time=14-03-10/orders+0+0000000000.avro): duplicates
+   🔁 orders-0: offsets 3-5 are in two objects (date=2026-11-26/time=14-02-10/orders+0+0000000003.avro and date=2026-11-26/time=14-03-10/orders+0+0000000003.avro): duplicates
+   🔁 orders-0: offsets 6-8 are in two objects (date=2026-11-26/time=14-02-10/orders+0+0000000006.avro and date=2026-11-26/time=14-03-10/orders+0+0000000006.avro): duplicates
+📦 18 record(s) in 6 object(s)
+```
+
+Every order is there twice. [playground connector reconcile](/playground%20connector%20reconcile) compares the bucket with the topic, record by record:
+
+```bash
+playground connector reconcile --connector minio-sink
+```
+
+```log
+🔎 Sink connector: is every record of the topic orders in the objects in s3://mybucket/topics?
+
+   📥 topic orders                         9 record(s)
+   🪣 objects in s3://mybucket/topics      18 record(s)
+   🔑 no key: records and rows compared as multisets of (id, product, quantity)
+
+❌ Duplicated: 9
+   record id="1", product="product1", quantity="1": 2 times in the bucket
+   ...
+
+❌ duplicated: the same record is there several times
+```
+
+> Why does the sink write them again after the restart?
+
+The worker died after uploading the 3 files, but before committing the offsets of the task (every `offset.flush.interval.ms`, 60 seconds by default). After the restart, the task reads the 9 orders again from the last committed offset: at-least-once, like any sink (see [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash)).
+
+The S3 sink is still exactly-once when it writes a record again to the **same object**: same folder, same name, the new upload replaces the old one. Here, the folder comes from `timestamp.extractor=Wallclock`, the time at which the task processes the record: a minute later, it is another folder, and the records are written next to the first copy.
+
+<!-- select:end -->
+
+👉 Find the `timestamp.extractor` that puts a record in the same folder every time it is written, then run the same crash with it.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+`Record` (the timestamp of the Kafka record) or `RecordField` (a field of the value, with `timestamp.field`): the same record always lands in the same folder. Delete the connector and create `minio-sink-fixed`, with `"timestamp.extractor": "Record"` and `"topics.dir": "topics-fixed"` (a clean folder), then crash the worker again:
+
+```bash
+playground connector delete --connector minio-sink
+# create-or-update with the same config, "timestamp.extractor": "Record", "topics.dir": "topics-fixed"
+playground storage wait-for-objects --connector minio-sink-fixed --min-expected-objects 3
+playground container kill --container connect
+playground container restart --container connect
+```
+
+Once the task has read the orders again (about a minute: the session of the killed worker times out first), the bucket still has 3 objects, rewritten in place:
+
+```bash
+playground storage cat --connector minio-sink-fixed --summary --max-objects 0
+```
+
+```log
+topic-partition                           objects   records                offsets  continuity
+orders-0                                        3         9                  0 → 8  ✅ contiguous
+📦 9 record(s) in 3 object(s)
+```
+
+```bash
+playground connector reconcile --connector minio-sink-fixed
+```
+
+```log
+✅ 9 matching
+
+✅ complete: every record is on the other side, with the same values
+```
+
+<!-- select:end -->
+🥁 So... the S3 sink is exactly-once only with a deterministic partitioner: `DefaultPartitioner`, `FieldPartitioner`, or `TimeBasedPartitioner` with `Record` / `RecordField`, and no `rotate.schedule.interval.ms` (also processing time).
+
+#### **🎓 Next Steps**
+
+* Read the "Exactly-once delivery" section of the [S3 sink documentation](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html).
+* `playground storage cat` decodes Avro, Parquet, JSON, CSV and gzip objects: `--records` prints only the records, one json per line, for `jq`. `--url s3://…`, `gs://…`, `az://…` read any bucket (GCS, Azure Blob, HDFS and SFTP too).
+* Records written late (after their folder was closed) are another source of surprise with `Record`: see `timestamp.extractor` and `rotate.interval.ms` in the documentation.
 
 <!-- tabs:end -->
 
