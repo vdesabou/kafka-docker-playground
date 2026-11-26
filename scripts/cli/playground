@@ -385,6 +385,12 @@ playground_usage() {
   printf "  %s   📄 Print the records of the objects written by a sink connector\n" "$(green "storage cat")                               "
   printf "  %s   ⏳ Wait for a sink connector to write a minimum number of objects\n" "$(green "storage wait-for-objects")                  "
   echo
+  printf "%s\n" "$(bold "Messaging commands:")"
+  printf "  %s   📨 Message broker commands\n" "$(green "mq")                                        "
+  printf "  %s   📤 Send messages to a queue or a topic\n" "$(green "mq put")                                    "
+  printf "  %s   🔎 Show the messages of a queue, without removing them\n" "$(green "mq get")                                    "
+  printf "  %s   ⏳ Wait for a queue to contain at least (or at most) N messages\n" "$(green "mq wait")                                   "
+  echo
   printf "%s\n" "$(bold "RBAC commands:")"
   printf "  %s   🛡️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac environments, plus Confluent Cloud ACLs)\n" "$(green "rbac")                                      "
   printf "  %s   🔐 Role binding commands\n" "$(green "rbac role-binding")                         "
@@ -22324,6 +22330,357 @@ playground_storage_wait_for_objects_usage() {
 }
 
 # :command.usage
+playground_mq_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground mq\n\n"
+    printf "  📨 Message broker commands\n  \n  Send messages to the broker of a source example, read what a sink wrote,\n  and wait for a queue to fill up or to be drained by a connector, without\n  docker exec and the client command line of each broker.\n  \n    put    send messages to a queue or a topic (--message, --file or stdin)\n    get    show the messages of a queue without removing them\n    wait   wait until a queue contains at least (or at most) N messages\n  \n  Supported: IBM MQ (amqsput, amqsbcg, runmqsc in its container), RabbitMQ\n  (rabbitmqctl, and rabbitmqadmin of the -management images, else the HTTP\n  API of rabbitmq_management, enabled on the fly), MQTT with mosquitto\n  (mosquitto_pub, mosquitto_sub), ActiveMQ classic (REST API and Jolokia)\n  and Solace (REST messaging and SEMP). The HTTP APIs are called from a\n  curl container that joins the network of the broker (curlimages/curl):\n  nothing to install, no published port needed.\n  \n  The broker is the only running container whose image is one of them\n  (icr.io/ibm-messaging/mq, rabbitmq, eclipse-mosquitto, rmohr/activemq,\n  solace/solace-pubsub-standard in the examples): pass --container when\n  there are several, and --broker when the image name does not tell which\n  broker it is.\n  \n  The users and passwords come from the container environment\n  (RABBITMQ_DEFAULT_USER, MQ_QMGR_NAME, username_admin_password...) and the\n  defaults of the examples (myuser / mypassword for mosquitto, admin /\n  admin for ActiveMQ): pass --user and --password for others.\n  \n  🎓 Tip: in a source example, 'mq put' then 'topic consume\n  --min-expected-messages', and 'mq wait --max-expected-messages 0' to\n  check that the connector removed the messages from the queue.\n  \n  ☸️ cfk: everything runs in the broker pod with kubectl exec (the curl of\n  the ActiveMQ and Solace images, rabbitmqadmin of the RabbitMQ -management\n  images); RabbitMQ put / get with an image that has no rabbitmqadmin (the\n  -alpine one) is not supported\n\n"
+  else
+    printf "playground mq - 📨 Message broker commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground mq COMMAND\n"
+  printf "  playground mq [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Messaging commands:")"
+  printf "  %s   📤 Send messages to a queue or a topic\n" "$(green "put") "
+  printf "  %s   🔎 Show the messages of a queue, without removing them\n" "$(green "get") "
+  printf "  %s   ⏳ Wait for a queue to contain at least (or at most) N messages\n" "$(green "wait")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_mq_put_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground mq put\n\n"
+    printf "  📤 Send messages to a queue or a topic\n  \n  One message per line, from --message (with --nb-messages, %%g is\n  replaced by 1, 2, 3...), --file or stdin (a heredoc). Empty lines are\n  skipped.\n  \n    IBM MQ     amqsput to a queue, amqspub to a topic (local bindings:\n               no channel, no user); --header is not supported\n    RabbitMQ   published to the queue through the default exchange\n               (rabbitmqadmin publish, or the HTTP API); a queue that\n               does not exist is declared first (durable false, like\n               the producer of the examples); --header sets AMQP\n               headers\n    MQTT       mosquitto_pub -l to a topic; --header sends MQTT 5 user\n               properties\n    ActiveMQ   REST API (POST /api/message), to a queue or a topic;\n               --header sets JMS string properties\n    Solace     REST messaging (port 9000, default message VPN), to a\n               queue (it must exist) or a topic; --header is not\n               supported\n  \n  Exits with 1 when the broker refused a message, with 2 when it could\n  not send (no broker, no destination, no message).\n\n"
+  else
+    printf "playground mq put - 📤 Send messages to a queue or a topic\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground mq put [OPTIONS]\n"
+  printf "  playground mq put --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container of the broker\n    \n    ℹ️ If not set, the only running container whose image is a supported broker\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker BROKER")"
+    printf "    📨 Broker of --container, when the image name does not tell it\n"
+    printf "    %s\n" "Allowed: ibmmq, rabbitmq, mqtt, activemq, solace"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)\n    \n    ℹ️ If not set, from the container environment, else the user of the examples\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔑 Password of --user\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--vhost VHOST")"
+    printf "    🏠 RabbitMQ virtual host (default is /)\n"
+    printf "    %s\n" "Default: /"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--vpn VPN")"
+    printf "    🏠 Solace message VPN (default is default)\n"
+    printf "    %s\n" "Default: default"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--queue, -q QUEUE")"
+    printf "    📥 Queue\n"
+    printf "    %s\n" "Conflicts: --topic"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📢 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)\n"
+    printf "    %s\n" "Conflicts: --queue"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--message, -m MESSAGE")"
+    printf "    ✍️ Message to send (a template with %%g when --nb-messages is set)\n"
+    printf "    %s\n" "Conflicts: --file"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📄 File with the messages, one per line\n"
+    printf "    %s\n" "Conflicts: --message"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--nb-messages, -n NB_MESSAGES")"
+    printf "    🔢 Send the message N times, %%g replaced by 1..N\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--header HEADER (repeatable)")"
+    printf "    🏷️ Property of the messages, key=value (repeat it for several)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground mq put --queue myqueue --message '{\"id\": %%g, \"name\": \"product%%g\"}'\n  --nb-messages 5\n"
+    printf "  playground mq put --queue DEV.QUEUE.1 << 'EOF'\nMessage 1\nMessage 2\nEOF\n"
+printf "  playground mq put --topic my-mqtt-topic --message sample-msg-1\n"
+printf "  playground mq put --queue DEV.QUEUE.1 --message hello --header\n  source=playground --container activemq\n"
+echo
+
+fi
+}
+
+# :command.usage
+playground_mq_get_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground mq get\n\n"
+    printf "  🔎 Show the messages of a queue, without removing them\n  \n  A source connector reads the same queue: 'mq get' never takes its\n  messages away.\n  \n    IBM MQ     amqsbcg browses the queue (body, MsgId, Format,\n               properties)\n    RabbitMQ   rabbitmqadmin get (or the HTTP API) reads the messages\n               and puts them back (ackmode ack_requeue_true): they\n               stay in the queue, marked redelivered; the exchange\n               and routing key are shown\n    ActiveMQ   Jolokia browse() of the queue (body, JMSMessageID,\n               properties)\n    Solace     SEMP lists the spooled messages: their id, size and\n               time, not their body (SEMP does not return it)\n    MQTT       no queue: subscribes to --topic for --timeout seconds\n               and prints what arrives (and the retained message)\n  \n  --json prints a json array of {\"id\", \"body\", \"headers\"}.\n\n"
+  else
+    printf "playground mq get - 🔎 Show the messages of a queue, without removing them\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground mq get [OPTIONS]\n"
+  printf "  playground mq get --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container of the broker\n    \n    ℹ️ If not set, the only running container whose image is a supported broker\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker BROKER")"
+    printf "    📨 Broker of --container, when the image name does not tell it\n"
+    printf "    %s\n" "Allowed: ibmmq, rabbitmq, mqtt, activemq, solace"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)\n    \n    ℹ️ If not set, from the container environment, else the user of the examples\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔑 Password of --user\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--vhost VHOST")"
+    printf "    🏠 RabbitMQ virtual host (default is /)\n"
+    printf "    %s\n" "Default: /"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--vpn VPN")"
+    printf "    🏠 Solace message VPN (default is default)\n"
+    printf "    %s\n" "Default: default"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--queue, -q QUEUE")"
+    printf "    📥 Queue\n"
+    printf "    %s\n" "Conflicts: --topic"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📢 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)\n"
+    printf "    %s\n" "Conflicts: --queue"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX_MESSAGES")"
+    printf "    🔢 Maximum number of messages to show (default is 100)\n"
+    printf "    %s\n" "Default: 100"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--timeout TIMEOUT")"
+    printf "    ⏳ MQTT: seconds to stay subscribed (default is 10)\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the messages as a json array\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground mq get --queue DEV.QUEUE.1\n"
+    printf "  playground mq get --queue myqueue --max-messages 5 --json\n"
+    printf "  playground mq get --topic sink-messages --timeout 30\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_mq_wait_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground mq wait\n\n"
+    printf "  ⏳ Wait for a queue to contain at least (or at most) N messages\n  \n  Counts the messages of --queue every --interval seconds until there\n  are at least --min-expected-messages, or at most\n  --max-expected-messages (0: a source connector consumed them all),\n  and fails after --max-wait seconds. A queue that does not exist yet\n  counts as empty.\n  \n  Counted with runmqsc (IBM MQ CURDEPTH), rabbitmqctl list_queues,\n  the ActiveMQ admin queue list, Solace SEMP (up to 1000 spooled\n  messages). MQTT keeps no queue: with --topic, the messages received\n  while subscribed are counted, from now on.\n\n"
+  else
+    printf "playground mq wait - ⏳ Wait for a queue to contain at least (or at most) N messages\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground mq wait [OPTIONS]\n"
+  printf "  playground mq wait --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container of the broker\n    \n    ℹ️ If not set, the only running container whose image is a supported broker\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker BROKER")"
+    printf "    📨 Broker of --container, when the image name does not tell it\n"
+    printf "    %s\n" "Allowed: ibmmq, rabbitmq, mqtt, activemq, solace"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)\n    \n    ℹ️ If not set, from the container environment, else the user of the examples\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔑 Password of --user\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--vhost VHOST")"
+    printf "    🏠 RabbitMQ virtual host (default is /)\n"
+    printf "    %s\n" "Default: /"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--vpn VPN")"
+    printf "    🏠 Solace message VPN (default is default)\n"
+    printf "    %s\n" "Default: default"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--queue, -q QUEUE")"
+    printf "    📥 Queue\n"
+    printf "    %s\n" "Conflicts: --topic"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📢 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)\n"
+    printf "    %s\n" "Conflicts: --queue"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--min-expected-messages MIN_EXPECTED_MESSAGES")"
+    printf "    🔢 Minimum number of messages to wait for (default is 1)\n"
+    printf "    %s\n" "Default: 1"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-expected-messages MAX_EXPECTED_MESSAGES")"
+    printf "    🔢 Wait until the queue has at most N messages (0: drained by a source\n    connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
+    printf "    ⏳ Max time in seconds to wait (default is 120)\n"
+    printf "    %s\n" "Default: 120"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--interval INTERVAL")"
+    printf "    🔁 Interval in seconds between checks (default is 5)\n"
+    printf "    %s\n" "Default: 5"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground mq wait --queue DEV.QUEUE.1 --min-expected-messages 3\n"
+    printf "  playground mq wait --queue myqueue --max-expected-messages 0 --max-wait 60\n"
+    printf "  playground mq wait --topic sink-messages --min-expected-messages 1\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_rbac_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground rbac\n\n"
@@ -43686,6 +44043,337 @@ ini_keys() {
 
   local keys=("${!ini[@]}")
   for a in "${keys[@]}"; do echo "$a"; done | sort
+}
+
+# src/lib/mq_function.sh
+# helpers of 'playground mq put|get|wait': the message broker of a source (or sink) example, with the client that is
+# already in its container (IBM MQ samples amqsput / amqsbcg / runmqsc, mosquitto_pub / mosquitto_sub, rabbitmqctl) or
+# its HTTP API called from a curl container that joins its network namespace (RabbitMQ management, ActiveMQ REST and
+# Jolokia, Solace REST messaging and SEMP), so no client is installed on the host
+
+MQ_SUPPORTED_BROKERS="ibmmq, rabbitmq, mqtt (mosquitto), activemq (classic), solace"
+MQ_CURL_IMAGE="curlimages/curl:latest"
+
+# broker of an image or container name, empty when it is not one
+function mq_broker_from_name () {
+  local name="${1,,}"
+  case "$name" in
+    *producer*|*consumer*) return 1 ;;
+    *ibm-messaging/mq*|*ibmcom/mq*|*ibmmq*|*ibm-mq*) echo "ibmmq" ;;
+    *rabbitmq*) echo "rabbitmq" ;;
+    *mosquitto*) echo "mqtt" ;;
+    *artemis*) return 1 ;;
+    *activemq*) echo "activemq" ;;
+    *solace*) echo "solace" ;;
+    *) return 1 ;;
+  esac
+}
+
+function mq_list_running () {
+  if [[ "$mq_transport" == "kubectl" ]]
+  then
+    kubectl -n confluent get pods --field-selector=status.phase=Running -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}' 2>/dev/null
+  else
+    docker ps --filter "status=running" --format '{{.Names}}{{"\t"}}{{.Image}}' 2>/dev/null
+  fi
+}
+
+# runs a command in the broker container (docker exec, or kubectl exec in the pod on cfk), stdin passed through
+function mq_exec () {
+  if [[ "$mq_transport" == "kubectl" ]]
+  then
+    kubectl -n confluent exec -i "$mq_container" -- "$@"
+  else
+    docker exec -i "$mq_container" "$@"
+  fi
+}
+
+# value of an environment variable of the container
+function mq_container_env () {
+  if [[ "$mq_transport" == "kubectl" ]]
+  then
+    kubectl -n confluent get pod "$mq_container" -o jsonpath='{range .spec.containers[0].env[*]}{.name}={.value}{"\n"}{end}' 2>/dev/null | sed -n "s/^$1=//p" | head -1
+  else
+    docker inspect "$mq_container" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | sed -n "s/^$1=//p" | head -1
+  fi
+}
+
+# sets mq_container and mq_broker: mq_resolve_container <container> <broker>
+function mq_resolve_container () {
+  local wanted_container="$1" wanted_broker="$2" name image broker
+  mq_container=""
+  mq_broker=""
+  mq_transport="docker"
+  mq_kind="container"
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+    mq_transport="kubectl"
+    mq_kind="pod"
+  fi
+  if [[ -n "$wanted_container" ]]
+  then
+    if [[ "$mq_transport" == "kubectl" ]]
+    then
+      wanted_container=$(resolve_container_name_for_environment "$wanted_container")
+    fi
+    image=$(mq_list_running | awk -F'\t' -v n="$wanted_container" '$1 == n {print $2}')
+    if [[ -z "$image" ]]
+    then
+      logerror "❌ $mq_kind $wanted_container is not running"
+      return 1
+    fi
+    mq_container="$wanted_container"
+    if [[ -n "$wanted_broker" ]]
+    then
+      mq_broker="$wanted_broker"
+      return 0
+    fi
+    mq_broker=$(mq_broker_from_name "$image" || mq_broker_from_name "$mq_container") || {
+      logerror "❌ could not tell the broker of $mq_container (image $image): pass --broker ($MQ_SUPPORTED_BROKERS)"
+      return 1
+    }
+    return 0
+  fi
+  local candidates=()
+  while IFS=$'\t' read -r name image
+  do
+    [[ -z "$name" ]] && continue
+    broker=$(mq_broker_from_name "$image" || mq_broker_from_name "$name") || continue
+    if [[ -n "$wanted_broker" && "$broker" != "$wanted_broker" ]]
+    then
+      continue
+    fi
+    candidates+=("$name:$broker")
+  done < <(mq_list_running)
+  if [[ ${#candidates[@]} -eq 0 ]]
+  then
+    logerror "❌ no running ${wanted_broker:-message broker} $mq_kind found (supported: $MQ_SUPPORTED_BROKERS)"
+    logerror "   🎓 start an example with a broker, or pass --container (and --broker if the image name does not tell it)"
+    return 1
+  fi
+  if [[ ${#candidates[@]} -gt 1 ]]
+  then
+    logerror "❌ several broker ${mq_kind}s are running, pass --container with one of them:"
+    printf '   %s\n' "${candidates[@]}" | sed 's/:/ (/;s/$/)/' >&2
+    return 1
+  fi
+  mq_container="${candidates[0]%%:*}"
+  mq_broker="${candidates[0]##*:}"
+}
+
+# sets mq_user, mq_password and mq_qmgr / mq_vhost / mq_vpn from the container environment and the defaults of the
+# examples, unless given: mq_resolve_credentials <user> <password>
+function mq_resolve_credentials () {
+  local user="$1" password="$2"
+  mq_qmgr="" mq_vhost="${mq_vhost:-/}" mq_vpn="${mq_vpn:-default}"
+  case "$mq_broker" in
+    ibmmq)
+      # local bindings in the container (amqsput, amqsbcg, runmqsc): no user needed
+      mq_qmgr=$(mq_container_env MQ_QMGR_NAME)
+      mq_qmgr="${mq_qmgr:-QM1}"
+      mq_user="${user:-app}"
+      mq_password="${password:-$(mq_container_env MQ_APP_PASSWORD)}"
+    ;;
+    rabbitmq)
+      mq_user="${user:-$(mq_container_env RABBITMQ_DEFAULT_USER)}"
+      mq_password="${password:-$(mq_container_env RABBITMQ_DEFAULT_PASS)}"
+      mq_user="${mq_user:-guest}"
+      mq_password="${mq_password:-guest}"
+    ;;
+    mqtt)
+      # the password file of the MQTT examples
+      mq_user="${user:-myuser}"
+      mq_password="${password:-mypassword}"
+    ;;
+    activemq)
+      mq_user="${user:-$(mq_container_env ACTIVEMQ_ADMIN_LOGIN)}"
+      mq_password="${password:-$(mq_container_env ACTIVEMQ_ADMIN_PASSWORD)}"
+      mq_user="${mq_user:-admin}"
+      mq_password="${mq_password:-admin}"
+    ;;
+    solace)
+      mq_user="${user:-admin}"
+      mq_password="${password:-$(mq_container_env username_admin_password)}"
+      mq_password="${mq_password:-admin}"
+    ;;
+  esac
+}
+
+function mq_describe () {
+  case "$mq_broker" in
+    ibmmq) echo "$mq_container, IBM MQ queue manager $mq_qmgr" ;;
+    rabbitmq) echo "$mq_container, RabbitMQ vhost $mq_vhost, user $mq_user" ;;
+    mqtt) echo "$mq_container, MQTT (mosquitto), user $mq_user" ;;
+    activemq) echo "$mq_container, ActiveMQ, user $mq_user" ;;
+    solace) echo "$mq_container, Solace message VPN $mq_vpn" ;;
+  esac
+}
+
+# MQTT: checks the login before publishing or subscribing (mosquitto_pub -l retries a refused connection forever):
+# a 1 second subscription to $SYS/broker/version, exit code 5 when the broker refuses the user or password
+function mq_mqtt_check_login () {
+  local out rc=0
+  out=$(mq_exec mosquitto_sub -h localhost -p 1883 -u "$mq_user" -P "$mq_password" -t '$SYS/broker/version' -C 1 -W 1 < /dev/null 2>&1) || rc=$?
+  # 27: timeout of -W ($SYS disabled): the login worked
+  if [[ $rc -ne 0 && $rc -ne 27 ]]
+  then
+    logerror "❌ mosquitto refused the connection of user $mq_user: $(tail -1 <<< "$out")"
+    logerror "   🔐 pass --user / --password (myuser / mypassword in the MQTT examples)"
+    return 1
+  fi
+}
+
+# checks the destination flags for the broker: mq_check_destination <queue> <topic> <operation>
+# sets mq_dest_type (queue|topic) and mq_dest
+function mq_check_destination () {
+  local queue="$1" topic="$2" operation="$3"
+  if [[ -n "$queue" ]]
+  then
+    mq_dest_type="queue"
+    mq_dest="$queue"
+  else
+    mq_dest_type="topic"
+    mq_dest="$topic"
+  fi
+  if [[ -z "$mq_dest" ]]
+  then
+    logerror "❌ pass --queue or --topic"
+    return 1
+  fi
+  case "$mq_broker:$mq_dest_type" in
+    mqtt:queue)
+      logerror "❌ MQTT has no queue: pass --topic"
+      return 1
+    ;;
+    rabbitmq:topic)
+      logerror "❌ with RabbitMQ, pass --queue (messages are published to the queue through the default exchange)"
+      return 1
+    ;;
+    ibmmq:topic|activemq:topic|solace:topic)
+      if [[ "$operation" != "put" ]]
+      then
+        logerror "❌ a topic of $mq_broker keeps no message to $operation: pass --queue (or the queue subscribed to the topic)"
+        return 1
+      fi
+    ;;
+  esac
+}
+
+# runs curl in a container that shares the network namespace of the broker: localhost is the broker (docker only)
+# on cfk, the curl of the broker image itself (the ActiveMQ and Solace images have one)
+function mq_curl () {
+  if [[ "$mq_transport" == "kubectl" ]]
+  then
+    if [[ "$mq_broker" == "activemq" || "$mq_broker" == "solace" ]]
+    then
+      kubectl -n confluent exec -i "$mq_container" -- curl -s -S "$@"
+      return $?
+    fi
+    logerror "❌ the HTTP API of $mq_broker is not reachable from playground mq on cfk (its image has no curl)"
+    return 1
+  fi
+  docker run --quiet --rm -i --network "container:$mq_container" "$MQ_CURL_IMAGE" -s -S "$@"
+}
+
+# RabbitMQ: rabbitmqadmin when the image has it (the -management images of the sink examples, docker or cfk), else
+# the HTTP API from a curl container (docker only: the -alpine image has no curl and no rabbitmqadmin)
+function mq_rabbitmq_has_admin () {
+  mq_exec sh -c 'command -v rabbitmqadmin' > /dev/null 2>&1 < /dev/null
+}
+
+function mq_rabbitmq_admin () {
+  mq_exec rabbitmqadmin -u "$mq_user" -p "$mq_password" -V "$mq_vhost" "$@" < /dev/null
+}
+
+# like mq_curl, the body written to the host file <out> and the http code printed: mq_curl_to_file <out> <curl args>
+function mq_curl_to_file () {
+  local out="$1" code
+  shift
+  mq_curl -w '\n%{http_code}' "$@" > "$out.tmp"
+  code=$(tail -n 1 "$out.tmp")
+  sed '$d' "$out.tmp" > "$out"
+  rm -f "$out.tmp"
+  echo "$code"
+}
+
+function mq_urlencode () {
+  jq -rn --arg v "$1" '$v | @uri'
+}
+
+# RabbitMQ: the HTTP API of the management plugin, enabled on the fly when the image does not have it (the
+# rabbitmq:*-alpine image of the source examples): rabbitmq-plugins enable rabbitmq_management
+function mq_rabbitmq_api_ready () {
+  if mq_curl -o /dev/null -f -u "$mq_user:$mq_password" "http://localhost:15672/api/overview" 2>/dev/null
+  then
+    return 0
+  fi
+  log "🔌 enabling the rabbitmq_management plugin in $mq_container (its HTTP API publishes and browses messages)"
+  mq_exec rabbitmq-plugins enable rabbitmq_management > /dev/null 2>&1 < /dev/null || {
+    logerror "❌ could not enable the rabbitmq_management plugin in $mq_container"
+    return 1
+  }
+  local i
+  for i in $(seq 1 30)
+  do
+    if mq_curl -o /dev/null -f -u "$mq_user:$mq_password" "http://localhost:15672/api/overview" 2>/dev/null
+    then
+      return 0
+    fi
+    sleep 1
+  done
+  logerror "❌ the HTTP API of rabbitmq_management did not answer on port 15672 of $mq_container (user $mq_user)"
+  return 1
+}
+
+function mq_rabbitmq_queue_path () {
+  echo "$(mq_urlencode "$mq_vhost")/$(mq_urlencode "$mq_dest")"
+}
+
+# current number of messages of a queue (0 when it does not exist yet), empty when it could not be read
+function mq_depth () {
+  local out
+  case "$mq_broker" in
+    ibmmq)
+      out=$(echo "DISPLAY QLOCAL('$mq_dest') CURDEPTH" | mq_exec runmqsc "$mq_qmgr" 2>&1)
+      if grep -q "AMQ8147E\|not found" <<< "$out"
+      then
+        echo 0
+        return 0
+      fi
+      grep -o 'CURDEPTH([0-9]*)' <<< "$out" | head -1 | tr -dc '0-9'
+    ;;
+    rabbitmq)
+      out=$(mq_exec rabbitmqctl -q list_queues -p "$mq_vhost" name messages 2>/dev/null < /dev/null) || return 0
+      awk -v q="$mq_dest" -F'\t' '$1 == q {print $2; found=1} END {if (!found) print 0}' <<< "$out"
+    ;;
+    activemq)
+      out=$(mq_curl -u "$mq_user:$mq_password" "http://localhost:8161/admin/xml/queues.jsp" 2>/dev/null) || return 0
+      [[ -z "$out" ]] && return 0
+      python3 -I -c 'if True:
+        import re, sys
+        xml, name = sys.stdin.read(), sys.argv[1]
+        for m in re.finditer(r"<queue name=\"([^\"]*)\">(.*?)</queue>", xml, re.S):
+            if m.group(1) == name:
+                s = re.search(r"size=\"(\d+)\"", m.group(2))
+                print(s.group(1) if s else 0)
+                break
+        else:
+            print(0)' "$mq_dest" <<< "$out"
+    ;;
+    solace)
+      out=$(mq_curl -u "$mq_user:$mq_password" "http://localhost:8080/SEMP/v2/monitor/msgVpns/$(mq_urlencode "$mq_vpn")/queues/$(mq_urlencode "$mq_dest")/msgs?count=1000&select=msgId" 2>/dev/null) || return 0
+      if jq -e '.meta.error.code' <<< "$out" > /dev/null 2>&1
+      then
+        if jq -e '(.meta.error.description // "") | test("No queue named")' <<< "$out" > /dev/null 2>&1
+        then
+          echo 0
+        fi
+        return 0
+      fi
+      jq -r '.data | length' <<< "$out" 2>/dev/null
+    ;;
+  esac
 }
 
 # src/lib/secrets_function.sh
@@ -98571,6 +99259,387 @@ playground_storage_wait_for_objects_command() {
 }
 
 # :command.function
+playground_mq_put_command() {
+
+  # src/commands/mq/put.sh
+  container="${args[--container]}"
+  broker="${args[--broker]}"
+  user="${args[--user]}"
+  password="${args[--password]}"
+  mq_vhost="${args[--vhost]:-/}"
+  mq_vpn="${args[--vpn]:-default}"
+  queue="${args[--queue]}"
+  topic="${args[--topic]}"
+  message="${args[--message]}"
+  file="${args[--file]}"
+  nb_messages="${args[--nb-messages]}"
+  eval "headers=(${args[--header]:-})"
+
+  mq_resolve_container "$container" "$broker" || exit 2
+  mq_resolve_credentials "$user" "$password"
+  mq_check_destination "$queue" "$topic" put || exit 2
+  if [[ "$mq_broker" == "mqtt" ]]
+  then
+      mq_mqtt_check_login || exit 2
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-mq-XXXXXXXXXX)
+  trap 'rm -rf "$tmp_dir"' EXIT
+
+  # the messages, one per line: --message (a template with %g when --nb-messages is set), --file, or stdin
+  messages_args=(messages "--nb=${nb_messages:-0}")
+  if [[ -n "$message" ]]
+  then
+      messages_args+=("--template=$message")
+  else
+      if [[ -n "$file" ]]
+      then
+          cp "$file" "$tmp_dir/input.txt"
+      elif [ ! -t 0 ]
+      then
+          cat > "$tmp_dir/input.txt"
+      else
+          logerror "❌ give the messages with --message, --file, or on stdin (one message per line)"
+          exit 2
+      fi
+      messages_args+=("--file=$tmp_dir/input.txt")
+  fi
+  python3 -I "$root_folder/tools/mq/mq.py" "${messages_args[@]}" > "$tmp_dir/messages.txt" || exit 2
+  nb=$(grep -c '' "$tmp_dir/messages.txt" || true)
+  if [[ "$nb" -eq 0 ]]
+  then
+      logerror "❌ no message to send (empty lines are skipped)"
+      exit 2
+  fi
+
+  header_args=()
+  for h in "${headers[@]}"
+  do
+      header_args+=("--header=$h")
+  done
+  if [[ ${#headers[@]} -gt 0 && "$mq_broker" == "ibmmq" ]]
+  then
+      logwarn "⚠️ --header is ignored with IBM MQ: the amqsput / amqspub samples send no message property"
+  elif [[ ${#headers[@]} -gt 0 && "$mq_broker" == "solace" ]]
+  then
+      logwarn "⚠️ --header is ignored with Solace: REST messaging is used without user properties"
+  fi
+
+  log "📤 Sending $nb message(s) to $mq_broker $mq_dest_type $mq_dest ($(mq_describe))"
+  case "$mq_broker" in
+      ibmmq)
+          sample="amqsput"
+          [[ "$mq_dest_type" == "topic" ]] && sample="amqspub"
+          rc=0
+          out=$(mq_exec "/opt/mqm/samp/bin/$sample" "$mq_dest" "$mq_qmgr" < "$tmp_dir/messages.txt" 2>&1) || rc=$?
+          if [[ $rc -ne 0 ]] || grep -q "reason code" <<< "$out"
+          then
+              logerror "❌ $sample failed:"
+              echo "$out" | grep -v "^Sample\|^target" >&2
+              if grep -q "reason code 2085" <<< "$out"
+              then
+                  logerror "   🎓 2085 MQRC_UNKNOWN_OBJECT_NAME: queue $mq_dest does not exist in $mq_qmgr (DEV.QUEUE.1 to 3 exist in the developer config), create it with runmqsc"
+              fi
+              exit 1
+          fi
+      ;;
+      mqtt)
+          mqtt_args=(-h localhost -p 1883 -u "$mq_user" -P "$mq_password" -t "$mq_dest" -l)
+          if [[ ${#headers[@]} -gt 0 ]]
+          then
+              # MQTT 5 user properties
+              mqtt_args+=(-V mqttv5)
+              for h in "${headers[@]}"
+              do
+                  mqtt_args+=(-D publish user-property "${h%%=*}" "${h#*=}")
+              done
+          fi
+          if ! out=$(mq_exec mosquitto_pub "${mqtt_args[@]}" < "$tmp_dir/messages.txt" 2>&1)
+          then
+              logerror "❌ mosquitto_pub failed: $out"
+              exit 1
+          fi
+      ;;
+      rabbitmq)
+          if mq_rabbitmq_has_admin
+          then
+              if ! mq_exec rabbitmqctl -q list_queues -p "$mq_vhost" name < /dev/null 2>/dev/null | grep -qx "$mq_dest"
+              then
+                  log "🆕 declaring queue $mq_dest (durable=false) in vhost $mq_vhost"
+                  mq_rabbitmq_admin declare queue "name=$mq_dest" durable=false > /dev/null || exit 1
+              fi
+              properties="{}"
+              if [[ ${#headers[@]} -gt 0 ]]
+              then
+                  properties=$(printf '%s\n' "${headers[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0) | capture("^(?<k>[^=]*)=(?<v>.*)$")) | {headers: (map({(.k): .v}) | add)}')
+              fi
+              routed=0
+              while IFS= read -r line
+              do
+                  out=$(mq_rabbitmq_admin publish exchange=amq.default "routing_key=$mq_dest" "payload=$line" "properties=$properties" 2>&1 || true)
+                  if [[ "$out" == "Message published" ]]
+                  then
+                      routed=$((routed + 1))
+                  else
+                      logerror "❌ rabbitmqadmin publish: $out"
+                  fi
+              done < "$tmp_dir/messages.txt"
+              if [[ "$routed" -ne "$nb" ]]
+              then
+                  logerror "❌ $routed of $nb message(s) routed to queue $mq_dest"
+                  exit 1
+              fi
+              log "✅ $nb message(s) sent to $mq_dest_type $mq_dest"
+              exit 0
+          fi
+          mq_rabbitmq_api_ready || exit 2
+          queue_path=$(mq_rabbitmq_queue_path)
+          code=$(mq_curl -o /dev/null -w '%{http_code}' -u "$mq_user:$mq_password" "http://localhost:15672/api/queues/$queue_path" || true)
+          if [[ "$code" == "404" ]]
+          then
+              # declared like the producer of the examples: not durable, not auto-deleted
+              log "🆕 declaring queue $mq_dest (durable=false) in vhost $mq_vhost"
+              mq_curl -f -o /dev/null -u "$mq_user:$mq_password" -X PUT -H "Content-Type: application/json" -d '{"durable":false,"auto_delete":false}' "http://localhost:15672/api/queues/$queue_path" || exit 1
+          fi
+          python3 -I "$root_folder/tools/mq/mq.py" curl-config --broker rabbitmq "--dest=$mq_dest" --messages "$tmp_dir/messages.txt" "${header_args[@]}" "--user=$mq_user" "--password=$mq_password" "--vhost=$mq_vhost" > "$tmp_dir/curl.conf" || exit 2
+          out=$(mq_curl -K - < "$tmp_dir/curl.conf" || true)
+          routed=$(grep -o '"routed":true' <<< "$out" | wc -l | tr -d ' ')
+          if [[ "$routed" -ne "$nb" ]]
+          then
+              logerror "❌ $routed of $nb message(s) routed to queue $mq_dest: $(grep -v '"routed":true' <<< "$out" | head -3)"
+              exit 1
+          fi
+      ;;
+      activemq|solace)
+          python3 -I "$root_folder/tools/mq/mq.py" curl-config --broker "$mq_broker" "--dest=$mq_dest" "--dest-type=$mq_dest_type" --messages "$tmp_dir/messages.txt" "${header_args[@]}" "--user=$mq_user" "--password=$mq_password" > "$tmp_dir/curl.conf" || exit 2
+          out=$(mq_curl -K - < "$tmp_dir/curl.conf" || true)
+          ok=$(grep -c '^200$' <<< "$out" || true)
+          if [[ "$ok" -ne "$nb" ]]
+          then
+              logerror "❌ $ok of $nb message(s) accepted by $mq_broker (HTTP codes: $(sort <<< "$out" | uniq -c | tr -s ' \n' ' '))"
+              grep -q '^401$' <<< "$out" && logerror "   🔐 authentication refused for user $mq_user: pass --user / --password"
+              [[ "$mq_broker" == "solace" ]] && grep -q '^400$' <<< "$out" && logerror "   🎓 Solace REST messaging (port 9000 of the default message VPN): the queue must exist, see create_queue_cmd of the Solace examples"
+              exit 1
+          fi
+      ;;
+  esac
+  log "✅ $nb message(s) sent to $mq_dest_type $mq_dest"
+
+}
+
+# :command.function
+playground_mq_get_command() {
+
+  # src/commands/mq/get.sh
+  container="${args[--container]}"
+  broker="${args[--broker]}"
+  user="${args[--user]}"
+  password="${args[--password]}"
+  mq_vhost="${args[--vhost]:-/}"
+  mq_vpn="${args[--vpn]:-default}"
+  queue="${args[--queue]}"
+  topic="${args[--topic]}"
+  max_messages="${args[--max-messages]}"
+  timeout="${args[--timeout]}"
+  json="${args[--json]}"
+
+  if [[ -n "$json" ]]
+  then
+      # stdout only gets the json document
+      exec 3>&1 1>&2
+  fi
+
+  mq_resolve_container "$container" "$broker" || exit 2
+  mq_resolve_credentials "$user" "$password"
+  mq_check_destination "$queue" "$topic" get || exit 2
+  if [[ "$mq_broker" == "mqtt" ]]
+  then
+      mq_mqtt_check_login || exit 2
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-mq-XXXXXXXXXX)
+  trap 'rm -rf "$tmp_dir"' EXIT
+
+  case "$mq_broker" in
+      ibmmq)
+          log "🔎 Browsing queue $mq_dest ($(mq_describe)), the messages stay in the queue"
+          # amqsbcg browses (MQOO_BROWSE): nothing is removed
+          mq_exec /opt/mqm/samp/bin/amqsbcg "$mq_dest" "$mq_qmgr" < /dev/null > "$tmp_dir/raw.txt" 2>&1 || true
+          if grep -q -i "failed with CompCode\|reason code" "$tmp_dir/raw.txt"
+          then
+              logerror "❌ amqsbcg failed: $(grep -i "failed with CompCode\|reason code" "$tmp_dir/raw.txt" | head -1 | sed 's/^ *//')"
+              if grep -q "2085" "$tmp_dir/raw.txt"
+              then
+                  logerror "   🎓 2085 MQRC_UNKNOWN_OBJECT_NAME: queue $mq_dest does not exist in $mq_qmgr"
+              fi
+              exit 2
+          fi
+      ;;
+      rabbitmq)
+          log "🔎 Browsing queue $mq_dest ($(mq_describe)): read and requeued, the messages stay in the queue (marked redelivered)"
+          if mq_rabbitmq_has_admin
+          then
+              if ! mq_exec rabbitmqctl -q list_queues -p "$mq_vhost" name < /dev/null 2>/dev/null | grep -qx "$mq_dest"
+              then
+                  logerror "❌ queue $mq_dest does not exist in vhost $mq_vhost"
+                  exit 2
+              fi
+              mq_rabbitmq_admin -f raw_json get "queue=$mq_dest" "count=$max_messages" ackmode=ack_requeue_true > "$tmp_dir/raw.txt" 2>&1 || true
+              code=200
+          else
+          mq_rabbitmq_api_ready || exit 2
+          code=$(mq_curl_to_file "$tmp_dir/raw.txt" -u "$mq_user:$mq_password" -X POST -H "Content-Type: application/json" \
+              -d "{\"count\":$max_messages,\"ackmode\":\"ack_requeue_true\",\"encoding\":\"auto\",\"truncate\":100000}" \
+              "http://localhost:15672/api/queues/$(mq_rabbitmq_queue_path)/get")
+          fi
+          if [[ "$code" == "404" ]]
+          then
+              logerror "❌ queue $mq_dest does not exist in vhost $mq_vhost"
+              exit 2
+          fi
+      ;;
+      mqtt)
+          log "👂 Subscribing to topic $mq_dest for up to $timeout seconds or $max_messages message(s) ($(mq_describe)): only the retained message and the messages published meanwhile are received"
+          rc=0
+          mq_exec mosquitto_sub -h localhost -p 1883 -u "$mq_user" -P "$mq_password" -t "$mq_dest" -C "$max_messages" -W "$timeout" < /dev/null > "$tmp_dir/raw.txt" 2> "$tmp_dir/err.txt" || rc=$?
+          # 27: timeout of -W, not an error
+          if [[ $rc -ne 0 && $rc -ne 27 ]]
+          then
+              logerror "❌ mosquitto_sub failed: $(cat "$tmp_dir/err.txt")"
+              exit 2
+          fi
+      ;;
+      activemq)
+          log "🔎 Browsing queue $mq_dest ($(mq_describe)) with Jolokia, the messages stay in the queue"
+          search=$(mq_curl -u "$mq_user:$mq_password" "http://localhost:8161/api/jolokia/search/org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=$(mq_urlencode "$mq_dest")" || true)
+          mbean=$(jq -r '.value[0] // empty' <<< "$search" 2>/dev/null)
+          if [[ -z "$mbean" ]]
+          then
+              if jq -e '.status == 200' <<< "$search" > /dev/null 2>&1
+              then
+                  logerror "❌ queue $mq_dest does not exist in $mq_container"
+              else
+                  logerror "❌ could not reach the Jolokia API of $mq_container (port 8161, user $mq_user): $(head -c 200 <<< "$search")"
+              fi
+              exit 2
+          fi
+          jq -n --arg m "$mbean" '{"type":"exec","mbean":$m,"operation":"browse()"}' > "$tmp_dir/req.json"
+          mq_curl -u "$mq_user:$mq_password" -H "Content-Type: application/json" -H "Origin: http://localhost" -d @- "http://localhost:8161/api/jolokia/" < "$tmp_dir/req.json" > "$tmp_dir/raw.txt" || true
+      ;;
+      solace)
+          log "🔎 Listing the messages spooled in queue $mq_dest ($(mq_describe)) with SEMP: their metadata only, SEMP does not return the bodies"
+          mq_curl -u "$mq_user:$mq_password" "http://localhost:8080/SEMP/v2/monitor/msgVpns/$(mq_urlencode "$mq_vpn")/queues/$(mq_urlencode "$mq_dest")/msgs?count=$max_messages" > "$tmp_dir/raw.txt" || true
+      ;;
+  esac
+
+  if ! python3 -I "$root_folder/tools/mq/mq.py" parse --broker "$mq_broker" "--max=$max_messages" < "$tmp_dir/raw.txt" > "$tmp_dir/messages.jsonl"
+  then
+      exit 2
+  fi
+  if [[ -n "$json" ]]
+  then
+      python3 -I "$root_folder/tools/mq/mq.py" show --json "--dest=$mq_dest_type $mq_dest" < "$tmp_dir/messages.jsonl" >&3
+  else
+      python3 -I "$root_folder/tools/mq/mq.py" show "--dest=$mq_dest_type $mq_dest" < "$tmp_dir/messages.jsonl"
+  fi
+
+}
+
+# :command.function
+playground_mq_wait_command() {
+
+  # src/commands/mq/wait.sh
+  container="${args[--container]}"
+  broker="${args[--broker]}"
+  user="${args[--user]}"
+  password="${args[--password]}"
+  mq_vhost="${args[--vhost]:-/}"
+  mq_vpn="${args[--vpn]:-default}"
+  queue="${args[--queue]}"
+  topic="${args[--topic]}"
+  min_expected="${args[--min-expected-messages]}"
+  max_expected="${args[--max-expected-messages]}"
+  max_wait="${args[--max-wait]}"
+  interval="${args[--interval]}"
+
+  mq_resolve_container "$container" "$broker" || exit 2
+  mq_resolve_credentials "$user" "$password"
+  mq_check_destination "$queue" "$topic" wait || exit 2
+  if [[ "$mq_broker" == "mqtt" ]]
+  then
+      mq_mqtt_check_login || exit 2
+  fi
+
+  if [[ "$mq_broker" == "mqtt" ]]
+  then
+      # MQTT keeps no queue to count: count the messages received while subscribed
+      log "👂 Waiting up to $max_wait seconds for $min_expected message(s) on topic $mq_dest ($(mq_describe)): counted while subscribed, from now on"
+      count=$(mq_exec mosquitto_sub -h localhost -p 1883 -u "$mq_user" -P "$mq_password" -t "$mq_dest" -C "$min_expected" -W "$max_wait" < /dev/null 2>/dev/null | grep -c '' || true)
+      if [[ "$count" -ge "$min_expected" ]]
+      then
+          log "✅ $count message(s) received on topic $mq_dest (expected at least $min_expected)"
+          exit 0
+      fi
+      logerror "❌ $count message(s) received on topic $mq_dest after $max_wait seconds, expected at least $min_expected"
+      exit 1
+  fi
+
+  what="queue $mq_dest"
+  if [[ -n "$max_expected" ]]
+  then
+      log "⏳ Waiting up to $max_wait seconds for $what to contain at most $max_expected message(s) ($(mq_describe))"
+  else
+      log "⏳ Waiting up to $max_wait seconds for $what to contain at least $min_expected message(s) ($(mq_describe))"
+  fi
+  start_time=$SECONDS
+  last_state=""
+  nb_failures=0
+  while true
+  do
+      depth=$(mq_depth)
+      elapsed=$((SECONDS - start_time))
+      if [[ -z "$depth" ]]
+      then
+          nb_failures=$((nb_failures + 1))
+          if [ $nb_failures -ge 3 ]
+          then
+              logerror "❌ could not read the number of messages of $what in $mq_container"
+              exit 2
+          fi
+          state="could not be read"
+          depth=-1
+      else
+          nb_failures=0
+          state="contains $depth message(s)"
+      fi
+      if [[ -n "$max_expected" ]]
+      then
+          if [[ "$depth" -ge 0 && "$depth" -le "$max_expected" ]]
+          then
+              log "✅ $what $state (expected at most $max_expected) after $elapsed seconds"
+              exit 0
+          fi
+      elif [[ "$depth" -ge "$min_expected" ]]
+      then
+          log "✅ $what $state (expected at least $min_expected) after $elapsed seconds"
+          exit 0
+      fi
+      if [[ "$state" != "$last_state" ]]
+      then
+          log "⌛ $what $state"
+          last_state="$state"
+      fi
+      if [ $elapsed -ge $max_wait ]
+      then
+          logerror "❌ $what $state after $max_wait seconds, expected $([[ -n "$max_expected" ]] && echo "at most $max_expected" || echo "at least $min_expected")"
+          exit 1
+      fi
+      sleep $interval
+  done
+
+}
+
+# :command.function
 playground_rbac_role_binding_create_command() {
 
   # src/commands/rbac/role-binding/create.sh
@@ -114882,6 +115951,13 @@ parse_requirements() {
       action="storage"
       shift
       playground_storage_parse_requirements "$@"
+      shift $#
+      ;;
+
+    mq)
+      action="mq"
+      shift
+      playground_mq_parse_requirements "$@"
       shift $#
       ;;
 
@@ -167468,6 +168544,950 @@ playground_storage_wait_for_objects_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_mq_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_mq_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    put)
+      action="put"
+      shift
+      playground_mq_put_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get)
+      action="get"
+      shift
+      playground_mq_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    wait)
+      action="wait"
+      shift
+      playground_mq_wait_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_mq_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_docker_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_mq_put_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_mq_put_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="mq put"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --broker)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --user | -u)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --vhost)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--vhost']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--vhost requires an argument: --vhost VHOST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --vpn)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--vpn']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--vpn requires an argument: --vpn VPN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --queue | -q)
+        # :flag.conflicts
+        if [[ -n "${args['--topic']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--topic" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--queue']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--queue requires an argument: --queue, -q QUEUE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+        # :flag.conflicts
+        if [[ -n "${args['--queue']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--queue" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --message | -m)
+        # :flag.conflicts
+        if [[ -n "${args['--file']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--file" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--message']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--message requires an argument: --message, -m MESSAGE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --file | -f)
+        # :flag.conflicts
+        if [[ -n "${args['--message']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--message" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --nb-messages | -n)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--nb-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--nb-messages requires an argument: --nb-messages, -n NB_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --header)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--header']+x} ]]; then
+            args['--header']="$escaped"
+          else
+            args['--header']="${args['--header']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--header requires an argument: --header HEADER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--vhost']:-} ]] || args['--vhost']="/"
+  [[ -n ${args['--vpn']:-} ]] || args['--vpn']="default"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--nb-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--nb-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--nb-messages, -n NB_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--broker']:-} ]] && [[ ! ${args['--broker']:-} =~ ^(ibmmq|rabbitmq|mqtt|activemq|solace)$ ]]; then
+    printf "%s\n" "--broker must be one of: ibmmq, rabbitmq, mqtt, activemq, solace" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_mq_get_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_mq_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="mq get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --broker)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --user | -u)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --vhost)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--vhost']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--vhost requires an argument: --vhost VHOST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --vpn)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--vpn']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--vpn requires an argument: --vpn VPN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --queue | -q)
+        # :flag.conflicts
+        if [[ -n "${args['--topic']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--topic" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--queue']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--queue requires an argument: --queue, -q QUEUE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+        # :flag.conflicts
+        if [[ -n "${args['--queue']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--queue" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--timeout requires an argument: --timeout TIMEOUT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--vhost']:-} ]] || args['--vhost']="/"
+  [[ -n ${args['--vpn']:-} ]] || args['--vpn']="default"
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="100"
+  [[ -n ${args['--timeout']:-} ]] || args['--timeout']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--timeout TIMEOUT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--broker']:-} ]] && [[ ! ${args['--broker']:-} =~ ^(ibmmq|rabbitmq|mqtt|activemq|solace)$ ]]; then
+    printf "%s\n" "--broker must be one of: ibmmq, rabbitmq, mqtt, activemq, solace" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_mq_wait_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_mq_wait_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="mq wait"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --broker)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --user | -u)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --vhost)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--vhost']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--vhost requires an argument: --vhost VHOST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --vpn)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--vpn']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--vpn requires an argument: --vpn VPN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --queue | -q)
+        # :flag.conflicts
+        if [[ -n "${args['--topic']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--topic" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--queue']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--queue requires an argument: --queue, -q QUEUE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+        # :flag.conflicts
+        if [[ -n "${args['--queue']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--queue" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --min-expected-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--min-expected-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--min-expected-messages requires an argument: --min-expected-messages MIN_EXPECTED_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-expected-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-expected-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-expected-messages requires an argument: --max-expected-messages MAX_EXPECTED_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --interval)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--interval']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--interval requires an argument: --interval INTERVAL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--vhost']:-} ]] || args['--vhost']="/"
+  [[ -n ${args['--vpn']:-} ]] || args['--vpn']="default"
+  [[ -n ${args['--min-expected-messages']:-} ]] || args['--min-expected-messages']="1"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="120"
+  [[ -n ${args['--interval']:-} ]] || args['--interval']="5"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--min-expected-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--min-expected-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--min-expected-messages MIN_EXPECTED_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-expected-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-expected-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-expected-messages MAX_EXPECTED_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--interval'] ]]; then
+    validation_output="$(validate_integer "${args['--interval']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--interval INTERVAL" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--broker']:-} ]] && [[ ! ${args['--broker']:-} =~ ^(ibmmq|rabbitmq|mqtt|activemq|solace)$ ]]; then
+    printf "%s\n" "--broker must be one of: ibmmq, rabbitmq, mqtt, activemq, solace" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_rbac_parse_requirements() {
   local key
 
@@ -182201,6 +184221,11 @@ playground_completion() {
         playground_storage_completion "$completion_current" "$@"
         return
         ;;
+      mq)
+        shift
+        playground_mq_completion "$completion_current" "$@"
+        return
+        ;;
       rbac)
         shift
         playground_rbac_completion "$completion_current" "$@"
@@ -182260,7 +184285,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets account cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db storage rbac connector-plugin connector ec2 codespace
+  completion_candidates "$completion_current" help status doctor config secrets account cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images docker-cleanup forgotten-environment refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog ccloud-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker ansible cfk consumer-group flink ksqldb streams db storage mq rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -208311,6 +210336,552 @@ playground_storage_wait_for_objects_completion() {
 }
 
 # :command.completion_function
+playground_mq_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      put)
+        shift
+        playground_mq_put_completion "$completion_current" "$@"
+        return
+        ;;
+      get)
+        shift
+        playground_mq_get_completion "$completion_current" "$@"
+        return
+        ;;
+      wait)
+        shift
+        playground_mq_wait_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" put get wait
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_mq_put_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --broker)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ibmmq"
+            "rabbitmq"
+            "mqtt"
+            "activemq"
+            "solace"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --vhost)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--vhost"]=1
+
+        ;;
+      --vpn)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--vpn"]=1
+
+        ;;
+      --queue | -q)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--queue"]=1
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+        completion_blocked_flags["--queue"]=1
+
+        ;;
+      --message | -m)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--message"]=1
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+        completion_blocked_flags["--message"]=1
+
+        ;;
+      --nb-messages | -n)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--nb-messages"]=1
+
+        ;;
+      --header)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --broker "$completion_current" --broker
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --vhost "$completion_current" --vhost
+    completion_flag_candidates --vpn "$completion_current" --vpn
+    completion_flag_candidates --queue "$completion_current" --queue -q
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --message "$completion_current" --message -m
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --nb-messages "$completion_current" --nb-messages -n
+    completion_flag_candidates --header "$completion_current" --header
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_mq_get_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --broker)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ibmmq"
+            "rabbitmq"
+            "mqtt"
+            "activemq"
+            "solace"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --vhost)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--vhost"]=1
+
+        ;;
+      --vpn)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--vpn"]=1
+
+        ;;
+      --queue | -q)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--queue"]=1
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+        completion_blocked_flags["--queue"]=1
+
+        ;;
+      --max-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-messages"]=1
+
+        ;;
+      --timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--timeout"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --broker "$completion_current" --broker
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --vhost "$completion_current" --vhost
+    completion_flag_candidates --vpn "$completion_current" --vpn
+    completion_flag_candidates --queue "$completion_current" --queue -q
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --max-messages "$completion_current" --max-messages
+    completion_flag_candidates --timeout "$completion_current" --timeout
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_mq_wait_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --broker)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ibmmq"
+            "rabbitmq"
+            "mqtt"
+            "activemq"
+            "solace"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --vhost)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--vhost"]=1
+
+        ;;
+      --vpn)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--vpn"]=1
+
+        ;;
+      --queue | -q)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--queue"]=1
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+        completion_blocked_flags["--queue"]=1
+
+        ;;
+      --min-expected-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--min-expected-messages"]=1
+
+        ;;
+      --max-expected-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-expected-messages"]=1
+
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --interval)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--interval"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --broker "$completion_current" --broker
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --vhost "$completion_current" --vhost
+    completion_flag_candidates --vpn "$completion_current" --vpn
+    completion_flag_candidates --queue "$completion_current" --queue -q
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --min-expected-messages "$completion_current" --min-expected-messages
+    completion_flag_candidates --max-expected-messages "$completion_current" --max-expected-messages
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --interval "$completion_current" --interval
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
 playground_rbac_completion() {
   local completion_current="$1"
   shift
@@ -216267,6 +218838,10 @@ run() {
     "storage ls") playground_storage_ls_command ;;
     "storage cat") playground_storage_cat_command ;;
     "storage wait-for-objects") playground_storage_wait_for_objects_command ;;
+    "mq") playground_mq_command ;;
+    "mq put") playground_mq_put_command ;;
+    "mq get") playground_mq_get_command ;;
+    "mq wait") playground_mq_wait_command ;;
     "rbac") playground_rbac_command ;;
     "rbac role-binding") playground_rbac_role_binding_command ;;
     "rbac role-binding create") playground_rbac_role_binding_create_command ;;

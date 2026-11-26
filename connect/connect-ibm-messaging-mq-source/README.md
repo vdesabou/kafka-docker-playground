@@ -35,7 +35,7 @@ To test a jar that you built locally, package it the same way (jar in the `lib/`
 1. Downloads the connector jar from GitHub and packages it as a Confluent Hub zip (unless `--connector-zip` is used).
 2. Starts the environment with an IBM MQ container (`ibmmq`).
 3. Creates the `ibm-messaging-mq-source` connector from queue `DEV.QUEUE.1` (channel `DEV.APP.SVRCONN`, user `app`, `mq.message.body.jms=true`) to topic `MyKafkaTopicName`.
-4. Puts 2 messages in the queue with `amqsput`.
+4. Puts 2 messages in the queue with `playground mq put` (`amqsput`).
 5. Verifies the 2 records with `playground topic consume --topic MyKafkaTopicName`.
 
 ## Benchmark

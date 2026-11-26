@@ -298,6 +298,28 @@ playground db cdc-check --connector-user C##MYUSER --table C##MYUSER.CUSTOMERS
 
 A heredoc with a quoted delimiter (`<< 'EOF'`) is the easiest to copy and paste, and to grow into a longer query: `$` and quotes are kept as is (use `<< EOF` to interpolate shell variables). `--sql "<statement>"` exists for a quick one-liner in a terminal. `--container` picks the database when several are running, `--engine` when the image name does not tell which database it is, and `--ignore-errors` runs every statement even after a failing one.
 
+## 📨 Message brokers
+
+[playground mq](/playground%20mq) sends messages to the broker of a source example, shows what a sink wrote, and waits for a queue to fill up or to be drained by the connector: IBM MQ (`amqsput`, `amqsbcg`, `runmqsc` in its container), RabbitMQ (`rabbitmqctl`, `rabbitmqadmin` of the management images, else the HTTP API of `rabbitmq_management`, enabled on the fly), MQTT with mosquitto, ActiveMQ classic (REST API, Jolokia) and Solace (REST messaging, SEMP). The container, the queue manager or vhost and the credentials are found from the container environment and the defaults of the examples.
+
+```bash
+# 10 messages, %g replaced by 1..10 (or one message per line from a heredoc or --file)
+playground mq put --queue myqueue --message '{"id": %g, "product": "product%g"}' --nb-messages 10
+
+# the messages of a queue, without removing them (a source connector reads the same queue)
+playground mq get --queue DEV.QUEUE.1
+playground mq get --queue myqueue --json
+
+# instead of a sleep: wait for the messages, then for the connector to consume them all
+playground mq wait --queue myqueue --min-expected-messages 10
+playground mq wait --queue myqueue --max-expected-messages 0 --max-wait 60
+
+# MQTT has no queue: put, get and wait use --topic (get and wait subscribe)
+playground mq put --topic my-mqtt-topic --message sample-msg-1
+```
+
+`get` browses: IBM MQ and ActiveMQ browse the queue, RabbitMQ reads the messages and requeues them (marked redelivered), Solace lists the spooled messages through SEMP (id, size and time, not the body). Pass `--container` when several brokers run, `--broker` when the image name does not tell which broker it is.
+
 ## 🪣 Object stores
 
 [playground storage](/playground%20storage) lists, reads and waits for the objects that a sink connector writes to an object store: Amazon S3, MinIO and other S3 compatible stores, Google Cloud Storage, Azure Blob Storage, ADLS Gen2, HDFS and SFTP, through one rclone container, so no `aws s3`, `gcloud storage`, `az storage` or helper container. The bucket, the folder (`topics.dir`) and the credentials come from the config of the connector (the only running one by default), self-managed or fully managed; `--url` reads any other location.

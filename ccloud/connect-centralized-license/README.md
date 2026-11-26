@@ -37,5 +37,5 @@ playground run -f mqtt-source.sh
 2. Starts the `ccloud` environment with the variant docker-compose override, which sets the centralized license on the Connect worker (plus Mosquitto for MQTT, a local ZooKeeper and broker for Replicator).
 3. Creates the external resources if needed: for `redshift.sh`, a single-node AWS Redshift cluster and a security group allowing port 5439 (previous ones are deleted first).
 4. Creates the connector without any license property.
-5. Produces test data: an MQTT message with `mosquitto_pub`, 3 Avro records to `orders` with `playground topic produce`, one ServiceNow incident through the ServiceNow REST API, or 10 records to `products` on the on-premise cluster.
+5. Produces test data: an MQTT message with `playground mq put`, 3 Avro records to `orders` with `playground topic produce`, one ServiceNow incident through the ServiceNow REST API, or 10 records to `products` on the on-premise cluster.
 6. Verifies the result with `playground topic consume` (MQTT, ServiceNow, Replicator) or by querying the `orders` table in Redshift with `psql`.

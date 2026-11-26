@@ -26,7 +26,7 @@ playground run -f active-mq-source.sh
 1. (mTLS only) Generates keys and certificates for ActiveMQ and Connect with `security/certs-create.sh`.
 2. Starts the environment with an `activemq` container.
 3. Creates the ActiveMQ source connector (`io.confluent.connect.activemq.ActiveMQSourceConnector`) reading the JMS queue `DEV.QUEUE.1` into topic `MyKafkaTopicName`.
-4. Sends a message to `DEV.QUEUE.1` with the ActiveMQ REST API (`curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue`).
+4. Sends a message to `DEV.QUEUE.1` with `playground mq put --queue DEV.QUEUE.1 --message message` (ActiveMQ REST API).
 5. Verifies the message is received in `MyKafkaTopicName` with `playground topic consume`.
 6. (`active-mq-source.sh` only) Stops the connector with `playground connector stop` and asserts that `DEV.QUEUE.1` is empty, i.e. the message was acknowledged and deleted (`commitRecord` API).
 

@@ -47,7 +47,7 @@ playground run -f fully-managed-solace-source.sh
 3. Creates queue `connector-quickstart` with the Solace CLI and publishes 3 messages through the Solace REST endpoint.
 4. Creates the fully managed `SolaceSource` connector on queue `connector-quickstart`.
 5. Verifies the 3 records with `playground topic consume --topic from-solace-messages`.
-6. Checks with the SEMP monitoring API that the queue is empty, i.e. the messages were acknowledged and deleted after being committed to Kafka.
+6. Checks with `playground mq wait --max-expected-messages 0` (SEMP monitoring API) that the queue is empty, i.e. the messages were acknowledged and deleted after being committed to Kafka.
 7. Asks whether to delete the connector.
 
 In CI, the example is skipped (exit code 111) with the `cfk` environment.

@@ -36,4 +36,4 @@ playground run -f ibm-mq-sink.sh
 3. For the EOS variant: creates the exclusive local queue `KAFKA.OFFSETS.QUEUE` and grants user `app` access to it.
 4. Produces 1 message to topic `sink-messages`.
 5. Creates the IBM MQ sink connector to queue `DEV.QUEUE.1` of queue manager `QM1`.
-6. Verifies the message is in the queue with `amqsbcg`.
+6. Verifies the message is in the queue with `playground mq get` (`amqsbcg`).

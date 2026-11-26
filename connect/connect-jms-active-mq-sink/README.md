@@ -26,4 +26,4 @@ The ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161) (
 2. Starts ActiveMQ alongside the plaintext environment.
 3. Produces the message `This is my message` to topic `sink-messages` with `playground topic produce`.
 4. Creates the `jms-active-mq-sink` connector (`java.naming.provider.url=tcp://activemq:61616`, `jms.destination.type=queue`, `jms.destination.name=DEV.QUEUE.1`, String converters).
-5. Reads a message from queue `DEV.QUEUE.1` through the ActiveMQ REST API (`http://localhost:8161/api/message/DEV.QUEUE.1?type=queue`) and checks that it is `This is my message`.
+5. Browses queue `DEV.QUEUE.1` with `playground mq get` (Jolokia, the message stays in the queue) and checks that it is `This is my message`.

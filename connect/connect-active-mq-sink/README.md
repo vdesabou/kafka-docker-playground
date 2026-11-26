@@ -27,7 +27,7 @@ playground run -f active-mq-sink.sh
 2. Starts the environment with an `activemq` container.
 3. Produces one message (`This is my message`) to topic `sink-messages` with `playground topic produce`.
 4. Creates the ActiveMQ sink connector (`io.confluent.connect.jms.ActiveMqSinkConnector`) writing to the JMS queue `DEV.QUEUE.1`.
-5. Reads the message from `DEV.QUEUE.1` with the ActiveMQ REST API (`http://localhost:8161/api/message/DEV.QUEUE.1?type=queue`) and verifies its content.
+5. Browses `DEV.QUEUE.1` with `playground mq get` (Jolokia, the message stays in the queue) and verifies its content.
 
 ## mTLS setup details
 

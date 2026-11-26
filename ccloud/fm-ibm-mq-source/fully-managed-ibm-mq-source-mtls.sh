@@ -93,7 +93,7 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 5
 
 log "Sending messages to DEV.QUEUE.1 JMS queue:"
-docker exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
+playground mq put --container ibmmq --queue DEV.QUEUE.1 << EOF
 Message 1
 Message 2
 

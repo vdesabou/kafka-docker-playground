@@ -256,6 +256,8 @@ commands:
 
 - import: src/commands/storage.yml
 
+- import: src/commands/mq.yml
+
 - import: src/commands/rbac.yml
 
 - import: src/commands/connector-plugin.yml

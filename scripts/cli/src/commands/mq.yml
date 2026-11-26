@@ -1,0 +1,324 @@
+name: mq
+expose: always
+group: Messaging
+filters:
+- docker_running
+help: |-
+  📨 Message broker commands
+
+  Send messages to the broker of a source example, read what a sink wrote,
+  and wait for a queue to fill up or to be drained by a connector, without
+  docker exec and the client command line of each broker.
+
+    put    send messages to a queue or a topic (--message, --file or stdin)
+    get    show the messages of a queue without removing them
+    wait   wait until a queue contains at least (or at most) N messages
+
+  Supported: IBM MQ (amqsput, amqsbcg, runmqsc in its container), RabbitMQ
+  (rabbitmqctl, and rabbitmqadmin of the -management images, else the HTTP
+  API of rabbitmq_management, enabled on the fly), MQTT with mosquitto
+  (mosquitto_pub, mosquitto_sub), ActiveMQ classic (REST API and Jolokia)
+  and Solace (REST messaging and SEMP). The HTTP APIs are called from a
+  curl container that joins the network of the broker (curlimages/curl):
+  nothing to install, no published port needed.
+
+  The broker is the only running container whose image is one of them
+  (icr.io/ibm-messaging/mq, rabbitmq, eclipse-mosquitto, rmohr/activemq,
+  solace/solace-pubsub-standard in the examples): pass --container when
+  there are several, and --broker when the image name does not tell which
+  broker it is.
+
+  The users and passwords come from the container environment
+  (RABBITMQ_DEFAULT_USER, MQ_QMGR_NAME, username_admin_password...) and the
+  defaults of the examples (myuser / mypassword for mosquitto, admin /
+  admin for ActiveMQ): pass --user and --password for others.
+
+  🎓 Tip: in a source example, 'mq put' then 'topic consume
+  --min-expected-messages', and 'mq wait --max-expected-messages 0' to
+  check that the connector removed the messages from the queue.
+
+  ☸️ cfk: everything runs in the broker pod with kubectl exec (the curl of
+  the ActiveMQ and Solace images, rabbitmqadmin of the RabbitMQ -management
+  images); RabbitMQ put / get with an image that has no rabbitmqadmin (the
+  -alpine one) is not supported
+commands:
+
+  - name: put
+    group: Messaging
+    help: |-
+      📤 Send messages to a queue or a topic
+
+      One message per line, from --message (with --nb-messages, %g is
+      replaced by 1, 2, 3...), --file or stdin (a heredoc). Empty lines are
+      skipped.
+
+        IBM MQ     amqsput to a queue, amqspub to a topic (local bindings:
+                   no channel, no user); --header is not supported
+        RabbitMQ   published to the queue through the default exchange
+                   (rabbitmqadmin publish, or the HTTP API); a queue that
+                   does not exist is declared first (durable false, like
+                   the producer of the examples); --header sets AMQP
+                   headers
+        MQTT       mosquitto_pub -l to a topic; --header sends MQTT 5 user
+                   properties
+        ActiveMQ   REST API (POST /api/message), to a queue or a topic;
+                   --header sets JMS string properties
+        Solace     REST messaging (port 9000, default message VPN), to a
+                   queue (it must exist) or a topic; --header is not
+                   supported
+
+      Exits with 1 when the broker refused a message, with 2 when it could
+      not send (no broker, no destination, no message).
+    flags:
+    - &mq_container
+      long: --container
+      short: -c
+      required: false
+      arg: container
+      completions:
+        dynamic:
+        - playground get-container-list
+      help: |-
+        🐳 Container of the broker
+
+        ℹ️ If not set, the only running container whose image is a supported broker
+    - &mq_broker
+      long: --broker
+      required: false
+      arg: broker
+      allowed: [ibmmq, rabbitmq, mqtt, activemq, solace]
+      help: |-
+        📨 Broker of --container, when the image name does not tell it
+    - &mq_user
+      long: --user
+      short: -u
+      required: false
+      arg: user
+      help: |-
+        👤 User (RabbitMQ, MQTT, ActiveMQ, Solace SEMP)
+
+        ℹ️ If not set, from the container environment, else the user of the examples
+    - &mq_password
+      long: --password
+      required: false
+      arg: password
+      help: |-
+        🔑 Password of --user
+    - &mq_vhost
+      long: --vhost
+      required: false
+      arg: vhost
+      default: "/"
+      help: |-
+        🏠 RabbitMQ virtual host (default is /)
+    - &mq_vpn
+      long: --vpn
+      required: false
+      arg: vpn
+      default: "default"
+      help: |-
+        🏠 Solace message VPN (default is default)
+    - &mq_queue
+      long: --queue
+      short: -q
+      required: false
+      arg: queue
+      conflicts: [--topic]
+      help: |-
+        📥 Queue
+    - &mq_topic
+      long: --topic
+      short: -t
+      required: false
+      arg: topic
+      conflicts: [--queue]
+      help: |-
+        📢 Topic (MQTT; also IBM MQ, ActiveMQ and Solace for put)
+    - long: --message
+      short: -m
+      required: false
+      arg: message
+      conflicts: [--file]
+      help: |-
+        ✍️ Message to send (a template with %g when --nb-messages is set)
+    - long: --file
+      short: -f
+      required: false
+      arg: file
+      conflicts: [--message]
+      validate: file_exists
+      help: |-
+        📄 File with the messages, one per line
+    - long: --nb-messages
+      short: -n
+      required: false
+      arg: nb_messages
+      validate: integer
+      help: |-
+        🔢 Send the message N times, %g replaced by 1..N
+    - long: --header
+      required: false
+      arg: header
+      repeatable: true
+      help: |-
+        🏷️ Property of the messages, key=value (repeat it for several)
+    - import: src/flags/verbose.yml
+    examples:
+    - |-
+      playground mq put --queue myqueue --message '{"id": %g, "name": "product%g"}' --nb-messages 5
+    - |-
+      playground mq put --queue DEV.QUEUE.1 << 'EOF'
+      Message 1
+      Message 2
+      EOF
+    - playground mq put --topic my-mqtt-topic --message sample-msg-1
+    - playground mq put --queue DEV.QUEUE.1 --message hello --header source=playground --container activemq
+    x_example_outputs:
+    - command: |-
+        playground mq put --container rabbitmq --queue orders --message '{"id": %g, "product": "product%g"}' --nb-messages 3 --header source=playground
+      output: |-
+        16:01:32 ℹ️ 📤 Sending 3 message(s) to rabbitmq queue orders (rabbitmq, RabbitMQ vhost /, user myuser)
+        16:01:33 ℹ️ 🆕 declaring queue orders (durable=false) in vhost /
+        16:01:33 ℹ️ ✅ 3 message(s) sent to queue orders
+    - command: playground mq put --container mosquitto --topic my-mqtt-topic --message sample-msg-1
+      output: |-
+        16:01:43 ℹ️ 📤 Sending 1 message(s) to mqtt topic my-mqtt-topic (mosquitto, MQTT (mosquitto), user myuser)
+        16:01:44 ℹ️ ✅ 1 message(s) sent to topic my-mqtt-topic
+
+  - name: get
+    group: Messaging
+    help: |-
+      🔎 Show the messages of a queue, without removing them
+
+      A source connector reads the same queue: 'mq get' never takes its
+      messages away.
+
+        IBM MQ     amqsbcg browses the queue (body, MsgId, Format,
+                   properties)
+        RabbitMQ   rabbitmqadmin get (or the HTTP API) reads the messages
+                   and puts them back (ackmode ack_requeue_true): they
+                   stay in the queue, marked redelivered; the exchange
+                   and routing key are shown
+        ActiveMQ   Jolokia browse() of the queue (body, JMSMessageID,
+                   properties)
+        Solace     SEMP lists the spooled messages: their id, size and
+                   time, not their body (SEMP does not return it)
+        MQTT       no queue: subscribes to --topic for --timeout seconds
+                   and prints what arrives (and the retained message)
+
+      --json prints a json array of {"id", "body", "headers"}.
+    flags:
+    - *mq_container
+    - *mq_broker
+    - *mq_user
+    - *mq_password
+    - *mq_vhost
+    - *mq_vpn
+    - *mq_queue
+    - *mq_topic
+    - long: --max-messages
+      required: false
+      arg: max_messages
+      validate: integer
+      default: "100"
+      help: |-
+        🔢 Maximum number of messages to show (default is 100)
+    - long: --timeout
+      required: false
+      arg: timeout
+      validate: integer
+      default: "10"
+      help: |-
+        ⏳ MQTT: seconds to stay subscribed (default is 10)
+    - long: --json
+      help: |-
+        🤖 Print the messages as a json array
+    - import: src/flags/verbose.yml
+    examples:
+    - playground mq get --queue DEV.QUEUE.1
+    - playground mq get --queue myqueue --max-messages 5 --json
+    - playground mq get --topic sink-messages --timeout 30
+    x_example_outputs:
+    - command: playground mq get --container rabbitmq --queue orders
+      output: |-
+        16:01:34 ℹ️ 🔎 Browsing queue orders (rabbitmq, RabbitMQ vhost /, user myuser): read and requeued, the messages stay in the queue (marked redelivered)
+        #1 {"id": 1, "product": "product1"}
+           source=playground
+        #2 {"id": 2, "product": "product2"}
+           source=playground
+        #3 {"id": 3, "product": "product3"}
+           source=playground
+        📬 3 message(s) in queue orders
+    - command: playground mq get --container ibmmq --queue DEV.QUEUE.3
+      output: |-
+        16:01:36 ℹ️ 🔎 Browsing queue DEV.QUEUE.3 (ibmmq, IBM MQ queue manager QM1), the messages stay in the queue
+        #1 Message 1
+           id=414D5120514D312020202020202020206D47086B012F0040, format=MQSTR, put_time=2026-11-26 15:01:35
+        #2 Message 2
+           id=414D5120514D312020202020202020206D47086B022F0040, format=MQSTR, put_time=2026-11-26 15:01:35
+        📬 2 message(s) in queue DEV.QUEUE.3
+
+  - name: wait
+    group: Messaging
+    help: |-
+      ⏳ Wait for a queue to contain at least (or at most) N messages
+
+      Counts the messages of --queue every --interval seconds until there
+      are at least --min-expected-messages, or at most
+      --max-expected-messages (0: a source connector consumed them all),
+      and fails after --max-wait seconds. A queue that does not exist yet
+      counts as empty.
+
+      Counted with runmqsc (IBM MQ CURDEPTH), rabbitmqctl list_queues,
+      the ActiveMQ admin queue list, Solace SEMP (up to 1000 spooled
+      messages). MQTT keeps no queue: with --topic, the messages received
+      while subscribed are counted, from now on.
+    flags:
+    - *mq_container
+    - *mq_broker
+    - *mq_user
+    - *mq_password
+    - *mq_vhost
+    - *mq_vpn
+    - *mq_queue
+    - *mq_topic
+    - long: --min-expected-messages
+      required: false
+      arg: min_expected_messages
+      validate: integer
+      default: "1"
+      help: |-
+        🔢 Minimum number of messages to wait for (default is 1)
+    - long: --max-expected-messages
+      required: false
+      arg: max_expected_messages
+      validate: integer
+      help: |-
+        🔢 Wait until the queue has at most N messages (0: drained by a source connector)
+    - long: --max-wait
+      arg: max_wait
+      validate: integer
+      default: "120"
+      help: |-
+        ⏳ Max time in seconds to wait (default is 120)
+    - long: --interval
+      arg: interval
+      validate: integer
+      default: "5"
+      help: |-
+        🔁 Interval in seconds between checks (default is 5)
+    - import: src/flags/verbose.yml
+    examples:
+    - playground mq wait --queue DEV.QUEUE.1 --min-expected-messages 3
+    - playground mq wait --queue myqueue --max-expected-messages 0 --max-wait 60
+    - playground mq wait --topic sink-messages --min-expected-messages 1
+    x_example_outputs:
+    - command: playground mq wait --container rabbitmq --queue orders --min-expected-messages 3 --interval 2
+      output: |-
+        16:01:37 ℹ️ ⏳ Waiting up to 120 seconds for queue orders to contain at least 3 message(s) (rabbitmq, RabbitMQ vhost /, user myuser)
+        16:01:38 ℹ️ ✅ queue orders contains 3 message(s) (expected at least 3) after 0 seconds
+    - command: playground mq wait --container ibmmq --queue DEV.QUEUE.3 --max-expected-messages 0 --max-wait 4 --interval 2
+      output: |-
+        16:01:38 ℹ️ ⏳ Waiting up to 4 seconds for queue DEV.QUEUE.3 to contain at most 0 message(s) (ibmmq, IBM MQ queue manager QM1)
+        16:01:38 ℹ️ ⌛ queue DEV.QUEUE.3 contains 2 message(s)
+        16:01:43 🔥 ❌ queue DEV.QUEUE.3 contains 2 message(s) after 4 seconds, expected at most 0

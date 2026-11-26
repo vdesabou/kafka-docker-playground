@@ -44,7 +44,7 @@ playground run -f fully-managed-mqtt-source.sh
 1. Bootstraps the Confluent Cloud environment and deletes topic `mqtt-source-1`.
 2. Starts Mosquitto and ngrok locally (the mTLS variant first generates certificates in `security/`).
 3. Creates the fully managed `MqttSource` connector reading MQTT topic `my-mqtt-topic` into Kafka topic `mqtt-source-1` (Avro).
-4. Publishes a message to `my-mqtt-topic` with `mosquitto_pub`.
+4. Publishes a message to `my-mqtt-topic` with `playground mq put` (`mosquitto_pub`; the `mtls` variant calls `mosquitto_pub` itself, on port 8883).
 5. Verifies the record with `playground topic consume --topic mqtt-source-1`.
 6. Asks whether to delete the connector.
 

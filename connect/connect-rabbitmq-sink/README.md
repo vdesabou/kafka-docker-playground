@@ -25,7 +25,7 @@ playground run -f rabbitmq-sink.sh
 2. Creates exchange `exchange1` (direct), queue `queue1` and a binding with routing key `rkey1` with `rabbitmqadmin`.
 3. Produces 10 messages to topic `rabbitmq-messages` with `playground topic produce`.
 4. Creates the RabbitMQ sink connector `rabbitmq-sink` (exchange `exchange1`, routing key `rkey1`, `PERSISTENT` delivery mode).
-5. Waits for the connector to consume all records with `playground connector show-lag`, then verifies with `rabbitmqadmin get queue=queue1` that the messages are in the queue.
+5. Waits for the connector to consume all records with `playground connector show-lag`, then verifies with `playground mq get --queue queue1` (browsed and requeued) that the messages are in the queue.
 
 Example of result:
 

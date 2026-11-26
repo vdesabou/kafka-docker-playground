@@ -84,22 +84,7 @@ playground connector create-or-update --connector ibm-messaging-mq-sink  << EOF
 EOF
 
 log "Verify messages are received in DEV.QUEUE.1 queue"
-MAX_WAIT=120
-CUR_WAIT=0
-nb_messages=0
-while [ $nb_messages -lt 3 ]
-do
-    playground container exec --container ibmmq --command "bash -c \"/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1\"" > /tmp/result.log 2>&1 || true
-    nb_messages=$(grep -c "Message descriptor" /tmp/result.log || true)
-    sleep 10
-    CUR_WAIT=$(( CUR_WAIT+10 ))
-    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
-    then
-        cat /tmp/result.log
-        logerror "❗❗❗ Expected 3 messages in DEV.QUEUE.1 queue but got $nb_messages after $MAX_WAIT seconds"
-        exit 1
-    fi
-done
+playground mq wait --container ibmmq --queue DEV.QUEUE.1 --min-expected-messages 3 --max-wait 120
+playground mq get --container ibmmq --queue DEV.QUEUE.1 > /tmp/result.log 2>&1
 cat /tmp/result.log
 grep "This is my messa" /tmp/result.log
-log "✅ $nb_messages messages received in DEV.QUEUE.1 queue"
