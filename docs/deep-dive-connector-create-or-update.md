@@ -66,8 +66,9 @@ deploy it (`validate`), compare it with a customer's (`diff`), wait for any stat
 2. **It waits, and how strict it is depends on what runs.** After the update, a self-managed connector is polled
    (`playground connector wait`, every 5 s, up to `--max-wait`, default 120 s) until the connector **and all its
    tasks** are RUNNING:
-   - a FAILED connector or task stops the wait right away, with the stack trace (a failed task doesn't recover on its
-     own).
+   - a FAILED connector or task stops the wait, with the stack trace (a failed task doesn't recover on its own), once
+     it's still FAILED one check later: right after an update or a restart of a failed connector, the status can
+     still show the FAILED task of before for a second.
    - RUNNING only counts when it's still RUNNING one check later: a task is RUNNING before its first record and can
      fail right after.
    - a connector RUNNING with no task for 30 s (nothing to process yet: JDBC source without table, Replicator without

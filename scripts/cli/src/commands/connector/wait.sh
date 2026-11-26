@@ -92,6 +92,7 @@ do
     start_time=$SECONDS
     last_seen=""
     running_seen=false
+    failed_seen=false
     zero_tasks_since=""
     while true
     do
@@ -161,6 +162,19 @@ do
             fi
         fi
         running_seen=false
+
+        # right after an update or a restart, the status can still show the FAILED task of before for a second or so:
+        # FAILED stops the wait for RUNNING only when it is still FAILED at the next check
+        if [ "$state" == "RUNNING" ] && [ "$is_failed" == true ] && [ "$failed_seen" != true ]
+        then
+            failed_seen=true
+            sleep $interval
+            continue
+        fi
+        if [ "$is_failed" != true ]
+        then
+            failed_seen=false
+        fi
 
         if [ "$state" == "RUNNING" ] && [ "$is_failed" == true ]
         then

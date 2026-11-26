@@ -23626,7 +23626,7 @@ playground_connector_status_usage() {
 playground_connector_wait_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector wait\n\n"
-    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own,\n  and runs 'playground connector diagnose' on it: status with the trace,\n  digest of the connect errors since the wait started, offsets, next\n  steps and HTML report, opened in the browser from an interactive\n  terminal ('playground config open-diagnose-report-on-failure false' to\n  only print its path, PG_SKIP_AUTO_DIAGNOSE=1 for the status only).\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning. A Datagen task that failed with \"Stopping connector: generated\n  the configured N number of messages\" (\"iterations\" reached) is\n  completed, not FAILED, and counts as RUNNING.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n\n"
+    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails if the connector or one of its tasks\n  is FAILED, since a failed task does not recover on its own: FAILED must\n  still be there one check later, because right after an update or a\n  restart the status can still show the task that failed before. It then\n  runs 'playground connector diagnose' on it: status with the trace,\n  digest of the connect errors since the wait started, offsets, next\n  steps and HTML report, opened in the browser from an interactive\n  terminal ('playground config open-diagnose-report-on-failure false' to\n  only print its path, PG_SKIP_AUTO_DIAGNOSE=1 for the status only).\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning. A Datagen task that failed with \"Stopping connector: generated\n  the configured N number of messages\" (\"iterations\" reached) is\n  completed, not FAILED, and counts as RUNNING.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n\n"
   else
     printf "playground connector wait - ⏳ Wait for connectors to reach a state\n\n"
   fi
@@ -26601,7 +26601,7 @@ playground_connector_create_or_update_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait")"
-    printf "    ⏳ Wait until the connector and all its tasks are RUNNING (or in\n    --initial-state), and fail otherwise\n    \n    Self-managed connectors are waited for by default: --wait also makes the\n    command fail when the script that runs is a reproduction model (by default,\n    it is only a warning there).\n    \n    Same as running 'playground connector wait' right after the command. It\n    fails right away if the connector or one of its tasks is FAILED. An update\n    of a PAUSED or STOPPED connector waits for that state.\n    \n    With fully managed connectors, it waits for the connector to be provisioned\n    and restarts it if it fails while being provisioned (same as\n    wait_for_ccloud_connector_up in example scripts).\n"
+    printf "    ⏳ Wait until the connector and all its tasks are RUNNING (or in\n    --initial-state), and fail otherwise\n    \n    Self-managed connectors are waited for by default: --wait also makes the\n    command fail when the script that runs is a reproduction model (by default,\n    it is only a warning there).\n    \n    Same as running 'playground connector wait' right after the command. It\n    fails if the connector or one of its tasks is FAILED (still FAILED one check\n    later, 5 seconds: right after an update, the status can still show the task\n    that failed before). An update of a PAUSED or STOPPED connector waits for\n    that state.\n    \n    With fully managed connectors, it waits for the connector to be provisioned\n    and restarts it if it fails while being provisioned (same as\n    wait_for_ccloud_connector_up in example scripts).\n"
     printf "    %s\n" "Conflicts: --no-wait"
     echo
 
@@ -100715,6 +100715,7 @@ playground_connector_wait_command() {
       start_time=$SECONDS
       last_seen=""
       running_seen=false
+      failed_seen=false
       zero_tasks_since=""
       while true
       do
@@ -100784,6 +100785,19 @@ playground_connector_wait_command() {
               fi
           fi
           running_seen=false
+
+          # right after an update or a restart, the status can still show the FAILED task of before for a second or so:
+          # FAILED stops the wait for RUNNING only when it is still FAILED at the next check
+          if [ "$state" == "RUNNING" ] && [ "$is_failed" == true ] && [ "$failed_seen" != true ]
+          then
+              failed_seen=true
+              sleep $interval
+              continue
+          fi
+          if [ "$is_failed" != true ]
+          then
+              failed_seen=false
+          fi
 
           if [ "$state" == "RUNNING" ] && [ "$is_failed" == true ]
           then
