@@ -556,3 +556,53 @@ body.wide-page {
     padding-left: 1rem;
     font-size: 0.92rem;
 }
+
+/* Academy: the "🙋 See solution for previous step?" No / Yes menu of docsify-select is replaced by a button
+   (index.html): the menu stays in the page, hidden, and the button switches it */
+.docsify-select-menu-container.kdp-solution label,
+.docsify-select-menu-container.kdp-solution select {
+    display: none;
+}
+
+.docsify-select-menu-container.kdp-solution {
+    margin: 0.6rem 0 0.4rem;
+}
+
+.markdown-section button.kdp-solution-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba(215, 239, 246, 0.3);
+    border-radius: 6px;
+    background: rgba(215, 239, 246, 0.06);
+    color: #d7eff6;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.markdown-section button.kdp-solution-button:hover {
+    border-color: rgba(215, 239, 246, 0.6);
+    background: rgba(215, 239, 246, 0.12);
+}
+
+.markdown-section button.kdp-solution-button:focus-visible {
+    outline: 2px solid rgba(215, 239, 246, 0.6);
+    outline-offset: 2px;
+}
+
+.markdown-section button.kdp-solution-button[aria-expanded="true"] {
+    background: transparent;
+    color: rgba(215, 239, 246, 0.7);
+}
+
+.markdown-section button.kdp-solution-button .kdp-solution-chevron {
+    transition: transform 0.2s;
+}
+
+.markdown-section button.kdp-solution-button[aria-expanded="true"] .kdp-solution-chevron {
+    transform: rotate(180deg);
+}

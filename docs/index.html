@@ -159,6 +159,40 @@
           theme: "classic"
       },
       plugins: [
+        // Academy (academy.md): each "🙋 See solution for previous step?" No / Yes menu of docsify-select becomes a
+        // "Show the solution" button. The menu stays in the page, hidden (main.css): the button sets it and sends the
+        // change event docsify-select listens to. docsify-select is loaded after this config, its doneEach (which builds
+        // the menus and their listeners) runs after this one: wait for the end of the current task
+        function (hook) {
+          hook.doneEach(function () {
+            setTimeout(function () {
+              document.querySelectorAll('.markdown-section .docsify-select-menu-container').forEach(function (container) {
+                var menu = container.querySelector('select.docsify-select-menu');
+                if (!menu || container.classList.contains('kdp-solution') ||
+                    !menu.querySelector('option[value="yes"]') || !menu.querySelector('option[value="no"]')) {
+                  return;
+                }
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'kdp-solution-button';
+                var render = function () {
+                  var shown = menu.value === 'yes';
+                  button.setAttribute('aria-expanded', shown ? 'true' : 'false');
+                  button.innerHTML = (shown ? '<span>🙈</span> Hide the solution' : '<span>💡</span> Show the solution') +
+                    ' <span class="kdp-solution-chevron">▾</span>';
+                };
+                button.addEventListener('click', function () {
+                  menu.value = menu.value === 'yes' ? 'no' : 'yes';
+                  menu.dispatchEvent(new Event('change'));
+                  render();
+                });
+                container.classList.add('kdp-solution');
+                container.appendChild(button);
+                render();
+              });
+            }, 0);
+          });
+        },
         // resizable sidebar: drag its right edge (wide screens only), the width is kept in localStorage, double-click resets it.
         // Everything in the theme follows --sidebar-width (sidebar, content margin, toggle button)
         function (hook) {
