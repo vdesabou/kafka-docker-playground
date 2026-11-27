@@ -83,3 +83,13 @@ playground schema diff --subject orders-value --to @order-v2.avsc
 Then add a default to the new field, check again with `schema check-compatibility`, and produce both versions with
 `topic produce` to show the consumers keep working. Turn it into a reproduction model with `playground repro bootstrap`
 (see [🛠 Reproduction models](/toolkit-reproduction-models.md)).
+
+## 🧑‍🎓 Academy exercises
+
+Real issues of this area to reproduce and troubleshoot yourself, with the solution of each step hidden until you ask for it ([🧑‍🎓 Playground Academy](/academy.md)):
+
+* ⭐ [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused)
+* ⭐ [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty)
+* ⭐ [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)
+* ⭐ [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte) (also 🔗 Connect)
+* ⭐⭐⭐ [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) (also 🔗 Connect)

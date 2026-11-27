@@ -88,3 +88,16 @@ playground broker transactions describe-producers --topic orders && playground b
 Then `playground broker transactions abort --topic orders --partition <p> --start-offset <offset>` and
 `topic consume -t orders --isolation-level read_committed` to show the fix. Turn it into a reproduction model with
 `playground repro bootstrap` (see [🛠 Reproduction models](/toolkit-reproduction-models.md)).
+
+## 🧑‍🎓 Academy exercises
+
+Real issues of this area to reproduce and troubleshoot yourself, with the solution of each step hidden until you ask for it ([🧑‍🎓 Playground Academy](/academy.md)):
+
+* ⭐ [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster)
+* ⭐ [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers)
+* ⭐ [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works)
+* ⭐ [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash)
+* ⭐ [Producer: slow, without any error](/academy?id=producer-slow-without-any-error)
+* ⭐⭐ [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions)
+* ⭐⭐ [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) (also 🔗 Connect)
+* ⭐⭐⭐ [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) (also 🔗 Connect)

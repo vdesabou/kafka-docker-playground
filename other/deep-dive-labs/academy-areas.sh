@@ -4,10 +4,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
-# lab of the Schema Registry, ksqlDB, SASL and TLS exercises of https://kafka-docker-playground.io/#/academy (the
+# lab of the Schema Registry, ksqlDB, SASL, TLS, Python client and RBAC exercises of https://kafka-docker-playground.io/#/academy (the
 # 🌊 Streams, SR & Non-Java and 🔐 Platform, Security & Cloud Infra support areas): runs their reproduction models and
-# asserts the symptom each exercise is about, then the fix the page gives. The SASL and TLS models start their own
-# environment (sasl-plain, 2way-ssl)
+# asserts the symptom each exercise is about, then the fix the page gives. The SASL, TLS, Python and RBAC models start
+# their own environment (sasl-plain, 2way-ssl, rbac-sasl-plain)
 lab_require_plaintext
 academy="${DIR}/../../academy"
 
@@ -83,5 +83,41 @@ EOF
 sleep 10
 lab_run playground container exec -c connect --command "cat /tmp/output.json"
 lab_expect_contains '{"payment": 3}'
+
+log "Exercise: Python client, the producer cannot connect"
+python_conf="$academy/environment-sasl-plain/client-python-000030/client.properties"
+cp "$python_conf" "$python_conf.lab"
+trap 'mv -f "$python_conf.lab" "$python_conf" 2>/dev/null || true' EXIT
+run_model environment-sasl-plain python-repro-000030-python-producer-cannot-connect.sh
+lab_expect_contains "Disconnected: connection closed by peer"
+lab_expect_contains "Only 0 records out of 5 were delivered"
+cat >> "$python_conf" << 'EOF'
+security.protocol=SASL_PLAINTEXT
+sasl.mechanisms=PLAIN
+sasl.username=client
+sasl.password=client-secret
+EOF
+lab_run playground container exec -c client-python --command "python client.py produce orders /tmp/conf/client.properties 5"
+lab_expect_contains "5 records were produced to topic orders"
+mv -f "$python_conf.lab" "$python_conf"
+
+log "Exercise: RBAC, the connector runs as its own service account"
+run_model environment-rbac-sasl-plain rbac-repro-000031-sink-not-authorized-own-service-account.sh
+lab_expect_contains "TopicAuthorizationException: Not authorized to access topics: [invoices]"
+lab_run playground connector diagnose --connector invoices-sink
+# (the name of the principal comes from the example run with playground run, appSA for a learner; the lab runs the models
+# with bash, so it is <principal> here)
+lab_expect_contains "(principal.service.name) is not authorized on Topic:invoices"
+lab_expect_contains "--role DeveloperRead --resource Topic:invoices"
+lab_run playground rbac role-binding create --principal User:appSA --role DeveloperRead --resource Topic:invoices
+lab_run playground connector restart --connector invoices-sink
+sleep 15
+lab_run playground connector status --connector invoices-sink
+lab_expect_contains "GroupAuthorizationException: Not authorized to access group: connect-invoices-sink"
+lab_run playground rbac role-binding create --principal User:appSA --role DeveloperRead --resource Group:connect-invoices-sink
+lab_run playground connector restart --connector invoices-sink
+sleep 15
+lab_run playground container exec -c connect --command "cat /tmp/output.json"
+lab_expect_contains '{"invoice": 5}'
 
 log "✅ academy areas lab: the exercises behave as the page says"

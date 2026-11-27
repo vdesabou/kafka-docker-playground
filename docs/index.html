@@ -199,6 +199,14 @@
             });
           });
         },
+        // pages made of wide tables (the exercises of the Academy: level, area, exercise, what you learn, commands): the
+        // content uses the width of the screen instead of the 55em of the theme (body.wide-page, main.css)
+        function (hook, vm) {
+          var WIDE_PAGES = ['/academy'];
+          hook.doneEach(function () {
+            document.body.classList.toggle('wide-page', WIDE_PAGES.indexOf(vm.route.path) !== -1);
+          });
+        },
         // home page player (introduction-header.md): the tabs switch the clip, and the next tab starts when a clip ends
         // (only while the player is on screen, never with "reduce motion"). The clip itself is handled like the other
         // autoplay videos (plugin below: played while on screen)

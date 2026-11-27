@@ -101,3 +101,30 @@ Then `playground topic dlq replay --connector filestream-sink` and `connector sh
 show the fix. Turn it into a reproduction model with `playground repro bootstrap` (see
 [🛠 Reproduction models](/toolkit-reproduction-models.md)), and run it with the customer's plugin version with
 `--connector-tag`.
+
+## 🧑‍🎓 Academy exercises
+
+Real issues of this area to reproduce and troubleshoot yourself, with the solution of each step hidden until you ask for it ([🧑‍🎓 Playground Academy](/academy.md)):
+
+* ⭐ [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte)
+* ⭐ [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector)
+* ⭐ [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector)
+* ⭐ [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working)
+* ⭐ [FileStream sink: the new connector skips the records already in the topic](/academy?id=filestream-sink-the-new-connector-skips-the-records-already-in-the-topic)
+* ⭐⭐ [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector)
+* ⭐⭐ [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic)
+* ⭐⭐ [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works)
+* ⭐⭐ [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help)
+* ⭐⭐ [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again)
+* ⭐⭐ [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash)
+* ⭐⭐ [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again)
+* ⭐⭐⭐ [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table)
+* ⭐⭐⭐ [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash)
+* ⭐⭐⭐ [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network)
+* ⭐⭐⭐ [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up)
+* ⭐⭐⭐ [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector)
+* ⭐⭐⭐ [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs)
+* ⭐⭐⭐ [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written)
+* ⭐ [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation) (also 🛡️ Platform & security)
+* ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) (also 🛡️ Platform & security)
+* ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) (also 🛡️ Platform & security)

@@ -9,8 +9,9 @@ Each exercise (⭐ beginner, ⭐⭐ intermediate, ⭐⭐⭐ advanced) is compose
 * 📍 A series of steps. The solution of each step is hidden at the beginning of the next one.
 * 🎓 Next steps to go further, or 🌟 the results.
 
-Each exercise belongs to the GTS support area (skill-based routing) whose cases it looks like: 🔌 Connect,
-🧠 Core & Observability, 🌊 Streams, SR & Non-Java, or 🔐 Platform, Security & Cloud Infra. Pick yours in the
+Each exercise belongs to the GTS support area (skill-based routing) whose cases it looks like, the areas of
+[🗺️ Start from your area](/areas.md): 🔗 Connect, 🖥️ Brokers, clients and observability, 🌊 Streams, schemas and
+non-Java clients, or 🛡️ Platform, security and Cloud infra. Pick yours in the
 [🧭 By support area](/academy?id=%f0%9f%a7%ad-by-support-area) list.
 
 The reproduction models live in the [`academy/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/academy) folder. List them with:
@@ -29,44 +30,49 @@ playground find-example --category academy
 
 | Level | Area | Exercise | What you learn | Main commands |
 | --- | --- | --- | --- | --- |
-| ⭐ | 🔌 Connect · 🌊 Streams, SR & Non-Java | [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte) | a converter error, skip a record, dead letter queue | `connector diagnose`, `connector offsets alter`, `topic dlq inspect` |
-| ⭐ | 🔌 Connect | [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector) | an SMT error, converters vs SMTs | `connector smt test`, `connector update` |
-| ⭐ | 🔌 Connect | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
-| ⭐ | 🔌 Connect | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
-| ⭐ | 🧠 Core & Observability | [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) | a duplicate `node.id`, what the data folder remembers | `broker health`, `broker describe`, `container logs`, `container recreate --fresh-volumes` |
-| ⭐ | 🧠 Core & Observability | [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers) | the cluster id and `meta.properties` | `broker health`, `container logs --errors`, `analyze logs` |
-| ⭐ | 🧠 Core & Observability | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
-| ⭐ | 🧠 Core & Observability | [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash) | `acks=all`, `min.insync.replicas` and the replication factor | `broker health`, `broker stop` / `start`, `topic produce --producer-property acks=all`, `topic reassign` |
-| ⭐ | 🧠 Core & Observability | [Producer: slow, without any error](/academy?id=producer-slow-without-any-error) | client quotas, a throttled client | `quota get`, `quota delete`, `topic produce`, `analyze logs` |
-| ⭐ | 🔌 Connect | [FileStream sink: the new connector skips the records already in the topic](/academy?id=filestream-sink-the-new-connector-skips-the-records-already-in-the-topic) | where a new sink starts reading, `auto.offset.reset` | `connector lint`, `topic get-offsets`, `connector offsets reset` |
-| ⭐ | 🌊 Streams, SR & Non-Java | [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused) | the compatibility rule of a subject, a new field without default | `schema check-compatibility`, `schema list`, `topic produce` |
-| ⭐ | 🌊 Streams, SR & Non-Java | [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty) | where a persistent query starts reading, `auto.offset.reset` | `ksqldb sql`, `ksqldb wait` |
-| ⭐ | 🔐 Platform, Security & Cloud Infra · 🔌 Connect | [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation) | the credentials of a connector: the worker's or its own | `connector diagnose`, `connector show-config`, `analyze logs` |
-| ⭐⭐ | 🔌 Connect | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
-| ⭐⭐ | 🔌 Connect | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
-| ⭐⭐ | 🔌 Connect | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
-| ⭐⭐ | 🔌 Connect | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
-| ⭐⭐ | 🔌 Connect | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
-| ⭐⭐ | 🔌 Connect | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
-| ⭐⭐ | 🧠 Core & Observability | [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) | `listeners` vs `advertised.listeners`, replication | `broker describe`, `broker health`, `topic get-offsets`, `topic describe` |
-| ⭐⭐ | 🔌 Connect · 🧠 Core & Observability | [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) | the poll loop of a sink task, `max.poll.interval.ms` | `connector diagnose`, `connector show-lag`, `tools http-server requests` |
-| ⭐⭐ | 🔐 Platform, Security & Cloud Infra · 🔌 Connect | [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) | hostname verification, the SANs of a certificate | `connector diagnose`, `tools cert inspect` |
-| ⭐⭐⭐ | 🔌 Connect | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
-| ⭐⭐⭐ | 🔌 Connect | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
-| ⭐⭐⭐ | 🔌 Connect | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
-| ⭐⭐⭐ | 🔌 Connect | [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up) | replication slots, heartbeats | `db cdc-check`, `connector offsets get`, `db sql` |
-| ⭐⭐⭐ | 🔌 Connect · 🌊 Streams, SR & Non-Java | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
-| ⭐⭐⭐ | 🔌 Connect | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
-| ⭐⭐⭐ | 🔌 Connect · 🧠 Core & Observability | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
+| ⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte) | a converter error, skip a record, dead letter queue | `connector diagnose`, `connector offsets alter`, `topic dlq inspect` |
+| ⭐ | 🔗 Connect | [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector) | an SMT error, converters vs SMTs | `connector smt test`, `connector update` |
+| ⭐ | 🔗 Connect | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
+| ⭐ | 🔗 Connect | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
+| ⭐ | 🖥️ Brokers & clients | [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) | a duplicate `node.id`, what the data folder remembers | `broker health`, `broker describe`, `container logs`, `container recreate --fresh-volumes` |
+| ⭐ | 🖥️ Brokers & clients | [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers) | the cluster id and `meta.properties` | `broker health`, `container logs --errors`, `analyze logs` |
+| ⭐ | 🖥️ Brokers & clients | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
+| ⭐ | 🖥️ Brokers & clients | [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash) | `acks=all`, `min.insync.replicas` and the replication factor | `broker health`, `broker stop` / `start`, `topic produce --producer-property acks=all`, `topic reassign` |
+| ⭐ | 🖥️ Brokers & clients | [Producer: slow, without any error](/academy?id=producer-slow-without-any-error) | client quotas, a throttled client | `quota get`, `quota delete`, `topic produce`, `analyze logs` |
+| ⭐ | 🔗 Connect | [FileStream sink: the new connector skips the records already in the topic](/academy?id=filestream-sink-the-new-connector-skips-the-records-already-in-the-topic) | where a new sink starts reading, `auto.offset.reset` | `connector lint`, `topic get-offsets`, `connector offsets reset` |
+| ⭐ | 🌊 Streams, schemas & non-Java | [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused) | the compatibility rule of a subject, a new field without default | `schema check-compatibility`, `schema list`, `topic produce` |
+| ⭐ | 🌊 Streams, schemas & non-Java | [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty) | where a persistent query starts reading, `auto.offset.reset` | `ksqldb sql`, `ksqldb wait` |
+| ⭐ | 🛡️ Platform & security · 🔗 Connect | [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation) | the credentials of a connector: the worker's or its own | `connector diagnose`, `connector show-config`, `analyze logs` |
+| ⭐ | 🌊 Streams, schemas & non-Java · 🛡️ Platform & security | [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing) | librdkafka on a SASL listener, `security.protocol` | `container exec`, `analyze logs` |
+| ⭐⭐ | 🔗 Connect | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
+| ⭐⭐ | 🔗 Connect | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
+| ⭐⭐ | 🔗 Connect | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
+| ⭐⭐ | 🔗 Connect | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
+| ⭐⭐ | 🔗 Connect | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
+| ⭐⭐ | 🔗 Connect | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
+| ⭐⭐ | 🖥️ Brokers & clients | [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) | `listeners` vs `advertised.listeners`, replication | `broker describe`, `broker health`, `topic get-offsets`, `topic describe` |
+| ⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) | the poll loop of a sink task, `max.poll.interval.ms` | `connector diagnose`, `connector show-lag`, `tools http-server requests` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) | hostname verification, the SANs of a certificate | `connector diagnose`, `tools cert inspect` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) | `principal.service.name`, the role bindings of a sink | `rbac role-binding list\|create`, `connector diagnose` |
+| ⭐⭐⭐ | 🔗 Connect | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
+| ⭐⭐⭐ | 🔗 Connect | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
+| ⭐⭐⭐ | 🔗 Connect | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
+| ⭐⭐⭐ | 🔗 Connect | [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up) | replication slots, heartbeats | `db cdc-check`, `connector offsets get`, `db sql` |
+| ⭐⭐⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
+| ⭐⭐⭐ | 🔗 Connect | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
+| ⭐⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
 
-<!-- A new exercise: its row in the table above has an Area column, its "🤯 Details" tab starts with a
-"👥 Support area: …" line, and it is listed under its area below (in italics under a second area). -->
+<!-- A new exercise: start its "🤯 Details" tab with a "👥 Support area: …" line (its first area, then the others, separated
+by " · "), then run python3 -I scripts/academy-support-areas.py: it writes the Area column above, the section below and
+the "🧑‍🎓 Academy exercises" section of the area pages from these lines. -->
 
 ## 🧭 By support area
 
-The exercises by the GTS support area (skill-based routing) whose cases they look like. An exercise that belongs to two areas is listed in both, the second time in italics.
+The exercises by the GTS support area (skill-based routing) whose cases they look like, the areas of [🗺️ Start from your area](/areas.md). An exercise that belongs to two areas is listed in both, the second time in italics.
 
-### 🔌 Connect
+### 🔗 Connect
+
+The questions, commands and deep dives of this area: [🔗 Connect](/area-connect.md).
 
 * ⭐ [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte)
 * ⭐ [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector)
@@ -89,8 +95,11 @@ The exercises by the GTS support area (skill-based routing) whose cases they loo
 * ⭐⭐⭐ [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written)
 * ⭐ *[SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)*
 * ⭐⭐ *[TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)*
+* ⭐⭐ *[RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)*
 
-### 🧠 Core & Observability
+### 🖥️ Brokers, clients and observability
+
+The questions, commands and deep dives of this area: [🖥️ Brokers, clients and observability](/area-core-observability.md).
 
 * ⭐ [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster)
 * ⭐ [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers)
@@ -101,17 +110,24 @@ The exercises by the GTS support area (skill-based routing) whose cases they loo
 * ⭐⭐ *[HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again)*
 * ⭐⭐⭐ *[FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written)*
 
-### 🌊 Streams, SR & Non-Java
+### 🌊 Streams, schemas and non-Java clients
+
+The questions, commands and deep dives of this area: [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md).
 
 * ⭐ [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused)
 * ⭐ [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty)
+* ⭐ [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)
 * ⭐ *[Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte)*
 * ⭐⭐⭐ *[JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector)*
 
-### 🔐 Platform, Security & Cloud Infra
+### 🛡️ Platform, security and Cloud infra
+
+The questions, commands and deep dives of this area: [🛡️ Platform, security and Cloud infra](/area-platform-security.md).
 
 * ⭐ [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)
 * ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)
+* ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)
+* ⭐ *[Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)*
 
 ## ⭐ Beginner
 
@@ -130,7 +146,7 @@ Sink connector is getting "Unknown magic byte" deserialization error.
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect · 🌊 Streams, SR & Non-Java
+👥 Support area: 🔗 Connect · 🌊 Streams, schemas & non-Java
 
 Versions used:
 
@@ -443,7 +459,7 @@ org.apache.kafka.connect.errors.DataException: Only Struct objects supported for
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -759,7 +775,7 @@ org.apache.kafka.connect.errors.DataException: Only Struct objects supported for
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -858,7 +874,7 @@ When using [InsertField](https://docs.confluent.io/platform/current/connect/tran
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -1054,7 +1070,7 @@ minute, then exits and is restarted by its service manager, again and again.
 
 #### **🤯 Details**
 
-👥 Support area: 🧠 Core & Observability
+👥 Support area: 🖥️ Brokers & clients
 
 Versions used:
 
@@ -1216,7 +1232,7 @@ A broker runs, but never shows up in the cluster. Its log is flooded with `INCON
 
 #### **🤯 Details**
 
-👥 Support area: 🧠 Core & Observability
+👥 Support area: 🖥️ Brokers & clients
 
 Versions used:
 
@@ -1339,7 +1355,7 @@ existing applications produce and consume without any error.
 
 #### **🤯 Details**
 
-👥 Support area: 🧠 Core & Observability
+👥 Support area: 🖥️ Brokers & clients
 
 Versions used:
 
@@ -1458,7 +1474,7 @@ During the night, one of the three brokers crashed. Since then, the payment serv
 
 #### **🤯 Details**
 
-👥 Support area: 🧠 Core & Observability
+👥 Support area: 🖥️ Brokers & clients
 
 Versions used:
 
@@ -1582,7 +1598,7 @@ error and nothing in the broker logs.
 
 #### **🤯 Details**
 
-👥 Support area: 🧠 Core & Observability
+👥 Support area: 🖥️ Brokers & clients
 
 Versions used:
 
@@ -1683,7 +1699,7 @@ of yesterday's. No error, the connector is RUNNING and its lag is 0.
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -1797,7 +1813,7 @@ The customer service adds a field to its records. Its new version fails at the f
 
 #### **🤯 Details**
 
-👥 Support area: 🌊 Streams, SR & Non-Java
+👥 Support area: 🌊 Streams, schemas & non-Java
 
 Versions used:
 
@@ -1897,7 +1913,7 @@ query is RUNNING, and the table is empty.
 
 #### **🤯 Details**
 
-👥 Support area: 🌊 Streams, SR & Non-Java
+👥 Support area: 🌊 Streams, schemas & non-Java
 
 Versions used:
 
@@ -2000,7 +2016,7 @@ The security team rotated the password of the `client` user last night. This mor
 
 #### **🤯 Details**
 
-👥 Support area: 🔐 Platform, Security & Cloud Infra · 🔌 Connect
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
 
 Versions used:
 
@@ -2076,6 +2092,131 @@ that a rotation does not mean editing every connector.
 <!-- tabs:end -->
 
 
+### Python client: the producer cannot connect, and says almost nothing
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A Python service (confluent-kafka, librdkafka) moves from the test environment to a cluster with SASL/PLAIN
+listeners. It retries forever with `Disconnected: connection closed by peer`, and no record is delivered.
+
+💡 What you'll learn:
+
+* How librdkafka reports a connection the broker closes
+* Where the broker says why
+* The security properties of a librdkafka client
+
+#### **🤯 Details**
+
+👥 Support area: 🌊 Streams, schemas & non-Java · 🛡️ Platform & security
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🐍 confluent-kafka 2.16.1, librdkafka 2.16.0
+
+* 🔐 Environment: `sasl-plain` (SASL/PLAIN on every listener)
+
+Reproduction model: [python-repro-000030-python-producer-cannot-connect.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-sasl-plain/python-repro-000030-python-producer-cannot-connect.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-sasl-plain/python-repro-000030-python-producer-cannot-connect.sh
+```
+
+The client properties are the ones of the test environment ([client.properties](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-sasl-plain/client-python-000030/client.properties)):
+
+```properties
+bootstrap.servers=broker:9092
+schema.registry.url=http://schema-registry:8081
+```
+
+```log
+%4|1795770308.990|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Disconnected: connection closed by peer: receive 0 after POLLIN (after 295ms in state UP)
+%6|1795770309.626|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Disconnected: connection closed by peer: receive 0 after POLLIN (after 306ms in state UP)
+…
+Only 0 records out of 5 were delivered (0 failed, 5 still in queue)
+```
+
+❔Questions:
+
+* Who closes the connection, and why does it happen 300 ms after it was opened?
+* What does the broker log?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What does the broker log?
+
+At INFO, so not in an error digest, one line per attempt:
+
+```log
+[2026-11-27 09:05:38,376] INFO [SocketServer listenerType=BROKER, nodeId=1] Failed authentication with /192.168.112.4 (channelId=192.168.112.3:9092-192.168.112.4:41166-2-30) (errorMessage=Unexpected Kafka request of type METADATA during SASL handshake.) (org.apache.kafka.common.network.Selector)
+```
+
+[playground analyze logs](/playground%20analyze%20logs) on the broker log finds them, and says what they mean:
+
+```bash
+   🌀 STORM broker 1: 61 failed client authentications (INFO of the broker), 1771/h · /192.168.112.4 failed authentication: Unexpected Kafka request of type METADATA during SASL handshake. ×61 · 2026-11-27 09:05:08 → 09:05:38
+      👉 🛂 Wrong security.protocol or SASL mechanism: the client does not speak the protocol of the listener: PLAINTEXT on an SSL or SASL listener, or another SASL mechanism: …
+```
+
+On the client log, it says `[HIGH] 🛂 Wrong security.protocol or SASL mechanism` too.
+
+> Who closes the connection, and why after 300 ms?
+
+The broker. The listener expects a SASL handshake first, the client (`security.protocol` not set, so `plaintext`)
+sends its metadata request instead, and the broker closes the connection. librdkafka 2.x only says
+`connection closed by peer`, and retries: the older versions said `might be caused by incorrect security.protocol
+configuration`.
+
+<!-- select:end -->
+
+* Add what the client needs in `academy/environment-sasl-plain/client-python-000030/client.properties` (the user is `client`, its password `client-secret`), then send the orders again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```properties
+security.protocol=SASL_PLAINTEXT
+sasl.mechanisms=PLAIN
+sasl.username=client
+sasl.password=client-secret
+```
+
+The folder is mounted in the container, so the next run of the client reads the change:
+
+```bash
+playground container exec -c client-python --command "python client.py produce orders /tmp/conf/client.properties 5"
+Produced record to orders [0] at offset 1
+Produced record to orders [1] at offset 0
+5 records were produced to topic orders
+```
+
+Note the librdkafka names: `sasl.mechanisms` (plural, the Java client says `sasl.mechanism`), `sasl.username` /
+`sasl.password` instead of a JAAS line.
+
+<!-- select:end -->
+🥁 So...did you learn how a librdkafka client tells you it speaks the wrong protocol?
+
+#### **🎓 Next Steps**
+
+* Set `debug=broker,security` in the properties: librdkafka logs every step of the connection.
+* The other clients of the playground (`other/client-go`, `other/client-dotnet`, `other/client-javascript`…) use librdkafka too: same properties, same errors.
+
+<!-- tabs:end -->
+
+
 ## ⭐⭐ Intermediate
 
 ### StackOverflowError with S3 sink connector
@@ -2093,7 +2234,7 @@ User is getting StackOverflowError with S3 sink connector. See stack trace in De
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 > [!WARNING]
 > The S3 sink writes to a real S3 bucket: you need an AWS account. Check it with [playground account aws check](/playground%20account%20aws%20check) (and set it up with `playground account aws setup`). No AWS account? Do the same exercise with the MinIO example, [connect-minio-s3-sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-minio-s3-sink), which runs the S3 sink against a local MinIO.
@@ -2376,7 +2517,7 @@ A JDBC source connector copies the `CUSTOMERS` table of a MySQL database to Kafk
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -2590,7 +2731,7 @@ An HTTP sink connector falls behind: its lag keeps growing. The team set `tasks.
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -2799,7 +2940,7 @@ The API that receives the records of an HTTP sink connector added a validation r
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -3019,7 +3160,7 @@ A team renames its connectors to follow a new naming convention: the JDBC sink `
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -3205,7 +3346,7 @@ The data team counts the orders of the day in their S3 bucket (Athena on the Avr
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -3422,7 +3563,7 @@ same partitions, while the others go through. Schema Registry sometimes does not
 
 #### **🤯 Details**
 
-👥 Support area: 🧠 Core & Observability
+👥 Support area: 🖥️ Brokers & clients
 
 Versions used:
 
@@ -3572,7 +3713,7 @@ task too, and the lag never goes down.
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect · 🧠 Core & Observability
+👥 Support area: 🔗 Connect · 🖥️ Brokers & clients
 
 Versions used:
 
@@ -3701,7 +3842,7 @@ instead of its host name. Its task fails at once with `SSL handshake failed`, wh
 
 #### **🤯 Details**
 
-👥 Support area: 🔐 Platform, Security & Cloud Infra · 🔌 Connect
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
 
 Versions used:
 
@@ -3791,6 +3932,124 @@ for any host: a man-in-the-middle protection lost.
 <!-- tabs:end -->
 
 
+### RBAC: the connector runs as its own service account, and is not authorized
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+The security team now wants one service account per connector. A sink connector is created with its own principal,
+`appSA`, "with the same rights as the old one". Its task fails with `TopicAuthorizationException`.
+
+💡 What you'll learn:
+
+* Which principal the clients of a connector use on an RBAC cluster (`principal.service.name`)
+* The role bindings a sink connector needs, and why they show up one at a time
+* How to list and create role bindings
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔐 Environment: `rbac-sasl-plain` (RBAC with MDS, LDAP users)
+
+Reproduction model: [rbac-repro-000031-sink-not-authorized-own-service-account.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-rbac-sasl-plain/rbac-repro-000031-sink-not-authorized-own-service-account.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-rbac-sasl-plain/rbac-repro-000031-sink-not-authorized-own-service-account.sh
+```
+
+```json
+"principal.service.name": "appSA",
+"principal.service.password": "appSA"
+```
+
+```bash
+invoices-sink                  ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to access topics: [invoices]
+```
+
+❔Questions:
+
+* Which principal reads the topic: the worker's, `connectorSA`, or `appSA`?
+* What does `appSA` have?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Which principal reads the topic?
+
+`appSA`. On an RBAC Connect worker, the clients of a connector authenticate with a token of its
+`principal.service.name` (OAUTHBEARER, `TokenUserLoginCallbackHandler` in its `ConsumerConfig`): a
+`consumer.override.sasl.jaas.config` does not change that. The other connectors of this environment run as
+`connectorSA`, which owns every topic, group and subject.
+
+> What does `appSA` have?
+
+```bash
+playground rbac role-binding list --principal User:appSA
+10:16:58 ❗ no role binding found
+```
+
+`connector diagnose` gives the next step:
+
+```bash
+   🚫 User:appSA (principal.service.name) is not authorized on Topic:invoices: playground rbac role-binding list --principal User:appSA, then playground rbac role-binding create --principal User:appSA --role DeveloperRead --resource Topic:invoices (a sink also needs DeveloperRead on Group:connect-invoices-sink)
+```
+
+<!-- select:end -->
+
+* Give `appSA` what it needs, then restart the connector.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+The topic first:
+
+```bash
+playground rbac role-binding create --principal User:appSA --role DeveloperRead --resource Topic:invoices
+playground connector restart --connector invoices-sink
+invoices-sink                  ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.common.errors.GroupAuthorizationException: Not authorized to access group: connect-invoices-sink
+```
+
+The next error: a sink reads in the consumer group `connect-<connector name>`, and joining it needs its own role binding.
+The broker checks one thing at a time, so the missing rights come one by one:
+
+```bash
+playground rbac role-binding create --principal User:appSA --role DeveloperRead --resource Group:connect-invoices-sink
+playground connector restart --connector invoices-sink
+playground rbac role-binding list --principal User:appSA
+PRINCIPAL   ROLE           SCOPE  RESOURCE
+User:appSA  DeveloperRead  kafka  Group:connect-invoices-sink
+User:appSA  DeveloperRead  kafka  Topic:invoices
+```
+
+The task is RUNNING and writes the invoices. A source connector needs `DeveloperWrite` on its topics instead (and on
+`TransactionalId` with exactly-once), a sink with a dead letter queue `DeveloperWrite` on the DLQ topic too.
+
+<!-- select:end -->
+🥁 So...did you learn which role bindings a connector needs?
+
+#### **🎓 Next Steps**
+
+* Use a prefix for a family of topics: `--resource Topic:invoices --prefix`.
+* Read the [🍪 secured environments](/deep-dive-secured-environments.md) deep dive.
+
+<!-- tabs:end -->
+
+
 ## ⭐⭐⭐ Advanced
 
 ### JDBC sink RUNNING, but no data in the table
@@ -3808,7 +4067,7 @@ A JDBC sink connector is RUNNING, its task is RUNNING, there is no error in the 
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -4097,7 +4356,7 @@ The topic has 10 orders, but after a crash of the Connect worker the table has 2
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -4276,7 +4535,7 @@ An HTTP sink connector fails with `java.net.SocketTimeoutException: Read timed o
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -4453,7 +4712,7 @@ A Debezium PostgreSQL source connector is RUNNING, without any error. But the di
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -4627,7 +4886,7 @@ A JDBC sink connector that had been running for months fails with `column "quant
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect · 🌊 Streams, SR & Non-Java
+👥 Support area: 🔗 Connect · 🌊 Streams, schemas & non-Java
 
 Versions used:
 
@@ -4789,7 +5048,7 @@ A customer runs an older HTTP sink connector. To see the requests it sends, they
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect
+👥 Support area: 🔗 Connect
 
 Versions used:
 
@@ -4890,7 +5149,7 @@ rolled back". It writes nothing at all: no error, the task is RUNNING, and the l
 
 #### **🤯 Details**
 
-👥 Support area: 🔌 Connect · 🧠 Core & Observability
+👥 Support area: 🔗 Connect · 🖥️ Brokers & clients
 
 Versions used:
 

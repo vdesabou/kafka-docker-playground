@@ -163,6 +163,34 @@ do
                 next_steps+=("🔑 SASL authentication refused with the credentials of the worker (CONNECT_CONSUMER_SASL_JAAS_CONFIG / CONNECT_PRODUCER_SASL_JAAS_CONFIG): playground container get-properties -c $diagnose_connect_container")
             fi
         fi
+        # not authorized: the principal and the resource, and on RBAC the role bindings to look at and to create
+        if [ $is_cloud -eq 0 ] && grep -q -E "(Topic|Group|TransactionalId|Cluster)AuthorizationException" "$cdir/status.json" 2>/dev/null
+        then
+            authz_resource=""
+            authz_topic=$(grep -o -E "Not authorized to access topics: \[[^]]+\]" "$cdir/status.json" 2>/dev/null | head -1 | sed -E 's/.*\[([^],]+).*/\1/')
+            authz_group=$(grep -o -E "Not authorized to access group: [^ \"\\]+" "$cdir/status.json" 2>/dev/null | head -1 | awk '{print $NF}')
+            [[ -n "$authz_topic" ]] && authz_resource="Topic:$authz_topic"
+            [[ -n "$authz_group" ]] && authz_resource="Group:$authz_group"
+            authz_principal=$(jq -r '."principal.service.name" // empty' "$cdir/config.json" 2>/dev/null)
+            # the connect rest api of an RBAC worker masks principal.service.* ("••••"): show-config prints it
+            # (taken from the example that was run when it is a literal there, as playground connector show-config does)
+            authz_masked=""
+            if [[ "$authz_principal" == *"•"* ]] || [ "$authz_principal" == "[hidden]" ] || [[ "$authz_principal" =~ ^\*+$ ]]
+            then
+                authz_test_file=$(playground state get run.test_file 2>/dev/null)
+                authz_principal=""
+                [ -f "$authz_test_file" ] && authz_principal=$(grep -o -E '"principal\.service\.name"[[:space:]]*:[[:space:]]*"[^"$]*"' "$authz_test_file" | head -1 | sed -E 's/.*:[[:space:]]*"([^"]*)"$/\1/')
+                [[ -z "$authz_principal" ]] && authz_principal="<principal>" && authz_masked=" (<principal>: principal.service.name, playground connector show-config --connector $connector shows it)"
+            fi
+            if [[ "$playground_environment" == rbac* || "$playground_environment" == cfk-rbac ]] && [[ -n "$authz_principal" ]]
+            then
+                authz_role="DeveloperRead"
+                [[ "$type" == "source" ]] && authz_role="DeveloperWrite"
+                next_steps+=("🚫 User:$authz_principal (principal.service.name) is not authorized${authz_resource:+ on $authz_resource}: playground rbac role-binding list --principal User:$authz_principal, then playground rbac role-binding create --principal User:$authz_principal --role $authz_role --resource ${authz_resource:-<Topic:name>}$( [ "$type" == "sink" ] && [[ "$authz_resource" != Group:* ]] && echo " (a sink also needs DeveloperRead on Group:connect-$connector)")$authz_masked")
+            else
+                next_steps+=("🚫 the principal of the connector is not authorized${authz_resource:+ on $authz_resource}: its ACLs or role bindings (playground rbac acl list, playground rbac role-binding list)")
+            fi
+        fi
         # TLS refused: the command that explains the certificate of the broker, with the address the client used
         if [ $is_cloud -eq 0 ] && grep -q -E "SSLHandshakeException|SslAuthenticationException" "$cdir/status.json" 2>/dev/null
         then
