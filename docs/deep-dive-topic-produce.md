@@ -214,6 +214,9 @@ Gotchas:
   throughput tests, not for deduplication or compaction tests (raise `--max-nb-messages-to-generate`).
 - **Slower than expected, without error?** A client quota of the brokers: the summary ends with
   `🚥 the brokers throttled the producer <client.id> N time(s): it is over a client quota (playground quota get …)`.
+- When the producer itself fails (a schema refused by Schema Registry), the summary gives the root cause (the last
+  `Caused by:`, not the `SerializationException: Error registering Avro schema{…}` wrapper), and for an incompatible
+  schema the `schema check-compatibility` command that explains it field by field.
 - When records fail, the summary gives the exception of the **first failed record**
   (`❌ 5 record(s) could not be sent to topic payments: …NotEnoughReplicasException…`), not the warnings the producer
   recovered from (a stopped broker it could not reconnect to).

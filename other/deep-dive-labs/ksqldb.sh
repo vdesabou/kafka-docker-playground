@@ -65,6 +65,8 @@ lab_expect_contains "Created query with ID CSAS_BIG_ORDERS_"
 lab_run playground ksqldb wait --source BIG_ORDERS
 lab_expect_exit 0
 lab_expect_contains "has not committed any offset after 20s: nothing to process from where it started"
+lab_expect_contains "are RUNNING without lag, but CSAS_BIG_ORDERS_" "the last line says that the query processed nothing"
+lab_expect_not_contains "✅ the queries writing to BIG_ORDERS" "no all-clear for a query that processed nothing"
 lab_run playground topic get-number-records --topic BIG_ORDERS
 lab_expect_equals "$(tail -1 <<< "$LAB_OUTPUT")" "0" "BIG_ORDERS is empty: its CREATE was sent without SET 'auto.offset.reset' = 'earliest'"
 

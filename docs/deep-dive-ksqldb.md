@@ -327,7 +327,7 @@ EOF
 playground ksqldb wait --source BIG_ORDERS
 #    ⏳ CSAS_BIG_ORDERS_5: RUNNING, no committed offsets yet
 # ⚠️ CSAS_BIG_ORDERS_5 is RUNNING but has not committed any offset after 20s: nothing to process from where it started (auto.offset.reset is latest unless SET 'auto.offset.reset' = 'earliest' was sent with its CREATE)
-# ✅ the queries writing to BIG_ORDERS are RUNNING and have no lag (after 20s)
+# ⚠️ the queries writing to BIG_ORDERS are RUNNING without lag, but CSAS_BIG_ORDERS_5 processed none of the records already in its input (started at the end of it, see above) (after 20s)
 playground topic get-number-records --topic BIG_ORDERS
 # 0                                   <- 4 orders have QUANTITY >= 3, none of them is in BIG_ORDERS
 ```

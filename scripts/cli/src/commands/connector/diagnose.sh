@@ -150,6 +150,33 @@ do
     if [[ "$connector_state" == "FAILED" ]] || [[ "$task_states" == *"FAILED"* ]]
     then
         next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector$cluster_flag")
+        # SASL refused: which credentials the clients of the connector use, its own (*.override.sasl.jaas.config, or
+        # the admin client of a sink with a DLQ) or the ones of the worker
+        if [ $is_cloud -eq 0 ] && grep -q "SaslAuthenticationException" "$cdir/status.json" 2>/dev/null
+        then
+            override_key=$(jq -r 'to_entries[] | select(.key | test("^(consumer|producer|admin)\\.override\\.sasl\\.jaas\\.config$")) | .key' "$cdir/config.json" 2>/dev/null | head -1)
+            if [[ -n "$override_key" ]]
+            then
+                # (the saved config masks the value: show-config prints it)
+                next_steps+=("🔑 SASL authentication refused with the connector's own credentials: $override_key overrides the credentials of the worker. Check its user and password (a rotated password?): playground connector show-config --connector $connector$cluster_flag")
+            else
+                next_steps+=("🔑 SASL authentication refused with the credentials of the worker (CONNECT_CONSUMER_SASL_JAAS_CONFIG / CONNECT_PRODUCER_SASL_JAAS_CONFIG): playground container get-properties -c $diagnose_connect_container")
+            fi
+        fi
+        # TLS refused: the command that explains the certificate of the broker, with the address the client used
+        if [ $is_cloud -eq 0 ] && grep -q -E "SSLHandshakeException|SslAuthenticationException" "$cdir/status.json" 2>/dev/null
+        then
+            # the most precise reason first (certificate_unknown is the alert that comes with most of them)
+            tls_reason=""
+            for tls_pattern in "No subject alternative names? (present|matching (IP address|DNS name) [^ \"\\]+)" "PKIX path building failed" "NotAfter: [^\"\\]+" "certificate expired" "certificate_unknown"
+            do
+                tls_reason=$(grep -o -E "$tls_pattern" "$cdir/status.json" 2>/dev/null | head -1)
+                [[ -n "$tls_reason" ]] && break
+            done
+            tls_host=$(grep -o -E "matching (IP address|DNS name) [^ \"\\]+" "$cdir/status.json" 2>/dev/null | head -1 | awk '{print $NF}')
+            tls_server=$(jq -r '."consumer.override.bootstrap.servers" // ."producer.override.bootstrap.servers" // ."admin.override.bootstrap.servers" // empty' "$cdir/config.json" 2>/dev/null | cut -d, -f1)
+            next_steps+=("🔐 TLS handshake refused${tls_reason:+ ($tls_reason)}: playground tools cert inspect --server ${tls_server:-<broker host:port>}${tls_host:+ --hostname $tls_host} explains the certificate of the broker and what to change")
+        fi
     elif [[ "$connector_state" == "PAUSED" ]] || [[ "$task_states" == *"PAUSED"* ]]
     then
         next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector$cluster_flag")

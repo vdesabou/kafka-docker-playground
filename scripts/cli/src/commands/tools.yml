@@ -220,7 +220,7 @@ commands:
 
         expired (or not yet valid) certificates, and the ones expiring soon
         the order and the end of each chain (a missing intermediate)
-        --hostname in the subject alternative names (No subject alternative names matching)
+        --hostname in the subject alternative names (No subject alternative names matching): an IP address only matches an IP entry, never a DNS one
         --truststore trusts the chain (PKIX path building failed)
         the private key belongs to the certificate (in the PEM, or --key)
         --purpose server|client in the extended key usage, CA used as leaf,
