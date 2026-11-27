@@ -1,0 +1,22 @@
+---
+services:
+
+  client-java:
+    build:
+      context: ../../other/client-java/
+      # JDK stage of the Dockerfile: runs the single-file programs of labs/ (java X.java), see README.md
+      target: lab
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
+    # own image name: the default one is shared with the fat jar image of start.sh (docker-compose.plaintext.yml)
+    image: client-java-lab
+    # always rebuilt (cached layers): picks up a change of CLIENT_VERSION
+    pull_policy: build
+    hostname: client-java
+    container_name: client-java
+    volumes:
+      - ../../other/client-java/labs:/app/labs
+    working_dir: /app/labs
+    depends_on:
+      - broker

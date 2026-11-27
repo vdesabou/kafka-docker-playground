@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- INFO to stderr, like the tools of the Confluent Platform images, without the configuration dumps of the clients.
+     Use it with: java -Dlog4j2.configurationFile=log4j2.xml -cp "$CONFLUENT_HOME/share/java/kafka/*" X.java -->
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="STDERR" target="SYSTEM_ERR">
+      <PatternLayout pattern="[%d] %p %m (%c)%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="INFO"><AppenderRef ref="STDERR"/></Root>
+    <Logger name="org.apache.kafka.clients.consumer.ConsumerConfig" level="WARN"/>
+    <Logger name="org.apache.kafka.clients.producer.ProducerConfig" level="WARN"/>
+    <Logger name="org.apache.kafka.common.config.AbstractConfig" level="WARN"/>
+  </Loggers>
+</Configuration>

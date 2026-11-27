@@ -1,0 +1,3 @@
+import org.apache.kafka.clients.producer.ProducerConfig; import java.util.*;
+public class Defaults { public static void main(String[] a){ Properties p=new Properties(); p.put("bootstrap.servers","x:1"); p.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer"); p.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
+ ProducerConfig c=new ProducerConfig(p); for (String k: new String[]{"acks","batch.size","linger.ms","request.timeout.ms","delivery.timeout.ms","max.block.ms","buffer.memory","enable.idempotence","retries","max.in.flight.requests.per.connection","compression.type","max.request.size"}) System.out.println(k+" = "+c.originalsStrings().getOrDefault(k, String.valueOf(c.values().get(k)))); } }
