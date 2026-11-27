@@ -411,16 +411,16 @@ def json_report(a: dict, top: int) -> dict:
 TREE_CSS = """<style>
 .tree details{border:0;padding:0;margin-left:18px}
 .tree>details{margin-left:0;border-top:1px solid #f1f5f9;padding:2px 0}
-.tree summary{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;font-weight:normal;padding:2px 0;list-style-position:outside}
-.tree .leaf{margin-left:18px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;padding:2px 0 2px 14px}
+.tree summary{font-family:JetBrains Mono Variable,JetBrains Mono,'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;font-weight:normal;padding:2px 0;list-style-position:outside}
+.tree .leaf{margin-left:18px;font-family:JetBrains Mono Variable,JetBrains Mono,'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;padding:2px 0 2px 14px}
 .tree .dur{display:inline-block;min-width:74px;text-align:right;color:#475569;margin-right:8px}
 .tree .slow{color:#c2410c;font-weight:700}.tree .exc{color:#dc2626}.tree .ret{color:#15803d}.tree .args{color:#1d4ed8}
 .tree .thr{color:#94a3b8}
 .callinfo{margin:4px 0 6px 18px}
 .tree.flat .leaf{margin-left:0;border-top:1px solid #f1f5f9}.tree.flat>details{margin-left:0}
 """ + rh.dark("""
-.tree>details,.tree.flat .leaf{border-top-color:#334155}
-.tree .dur{color:#94a3b8}
+.tree>details,.tree.flat .leaf{border-top-color:#26343d}
+.tree .dur{color:#8a9ba6}
 .tree .slow{color:#fdba74}.tree .exc{color:#f87171}.tree .ret{color:#4ade80}.tree .args{color:#93c5fd}
 """) + "</style>"
 

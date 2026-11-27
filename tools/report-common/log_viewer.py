@@ -39,7 +39,7 @@ a.lv-edit{text-decoration:none;margin-left:4px;opacity:.75}a.lv-edit:hover{opaci
 background:#f8fafc;color:#1e293b;cursor:pointer;text-decoration:none}
 .lv-bar button:hover,.lv-bar a.lv-btn:hover{background:#e2e8f0}
 .lv{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.07);padding:8px 0;overflow-x:auto;
-font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;line-height:1.45}
+font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;line-height:1.45}
 .lv .l{display:flex;white-space:pre;scroll-margin-top:90px}
 .lv .l:hover{background:#f1f5f9}
 .lv .n{flex:0 0 auto;min-width:5.5em;padding:0 10px;text-align:right;color:#94a3b8;user-select:none;text-decoration:none;
@@ -48,13 +48,13 @@ border-right:1px solid #e2e8f0;margin-right:10px}
 .lv .l.hit{background:#fef3c7}.lv .l.hit .n{color:#b45309;font-weight:600}
 .lv .l:target,.lv .l.cur{background:#fde68a;box-shadow:inset 4px 0 0 #d97706}
 .lv .gap{padding:4px 16px;color:#64748b;font-style:italic;background:#f8fafc;border-top:1px dashed #cbd5e1;border-bottom:1px dashed #cbd5e1}
-html[data-theme=dark] .lv-bar,html[data-theme=dark] .lv{background:#1e293b;color:#cbd5e1}
-html[data-theme=dark] .lv-bar button,html[data-theme=dark] .lv-bar a.lv-btn{background:#0f172a;color:#cbd5e1;border-color:#334155}
-html[data-theme=dark] .lv .l:hover{background:#0f172a}
-html[data-theme=dark] .lv .n{border-right-color:#334155}
+html[data-theme=dark] .lv-bar,html[data-theme=dark] .lv{background:#141c21;color:#d3dee4}
+html[data-theme=dark] .lv-bar button,html[data-theme=dark] .lv-bar a.lv-btn{background:#0e1418;color:#d3dee4;border-color:#26343d}
+html[data-theme=dark] .lv .l:hover{background:#0e1418}
+html[data-theme=dark] .lv .n{border-right-color:#26343d}
 html[data-theme=dark] .lv .l.hit{background:#422006}
 html[data-theme=dark] .lv .l:target,html[data-theme=dark] .lv .l.cur{background:#713f12}
-html[data-theme=dark] .lv .gap{background:#0f172a;border-color:#334155}
+html[data-theme=dark] .lv .gap{background:#0e1418;border-color:#26343d}
 """
 
 # previous / next finding (buttons, n / p keys), from the line of the URL (#L33) or the current one; the ✏️ button opens

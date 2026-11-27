@@ -182,21 +182,21 @@ def add_share(page_html: str, title: Optional[str] = None, summary: Optional[str
 
 SHARE_CSS = """<style>
 .share-open{font:inherit;cursor:pointer}
-.share-hero{font-size:.85rem;font-weight:700;padding:6px 16px;border-radius:999px;border:0;background:#fff;color:#4c1d95;
-box-shadow:0 4px 14px rgba(15,23,42,.25);transition:transform .1s;white-space:nowrap}.share-hero:hover{transform:translateY(-1px);background:#f5f3ff}
+.share-hero{font-size:.85rem;font-weight:700;padding:6px 16px;border-radius:999px;border:0;background:linear-gradient(90deg,#d7eff6,#ffe2a8);color:#1e2a33;
+box-shadow:0 4px 14px rgba(15,23,42,.25);transition:transform .1s;white-space:nowrap}.share-hero:hover{transform:translateY(-1px);filter:brightness(1.05)}
 .header-meta .share-hero{margin-left:auto}
 .share-next{margin-left:auto;align-self:flex-start}
 /* below the fixed Toggle theme of the page (top right of the window) */
 .share-corner{position:absolute;top:44px;right:24px;z-index:2}
-.share-float{position:fixed;top:12px;right:16px;z-index:30;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;border:0;background:#7c3aed;color:#fff}
+.share-float{position:fixed;top:12px;right:16px;z-index:30;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;border:0;background:linear-gradient(90deg,#d7eff6,#ffe2a8);color:#1e2a33;box-shadow:0 6px 18px -8px rgba(255,196,92,.6)}
 .share-dlg{border:0;border-radius:18px;padding:0;width:min(660px,92vw);max-width:660px;max-height:88vh;overflow:auto;
 box-shadow:0 30px 80px rgba(15,23,42,.45);background:#fff;color:#1e293b;position:fixed;inset:0;margin:auto;height:fit-content;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
+font-family:Inter Variable,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
 .share-dlg[open]{animation:sd-in .22s cubic-bezier(.22,1,.36,1)}
 @keyframes sd-in{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 .share-dlg::backdrop{background:rgba(15,23,42,.6);backdrop-filter:blur(3px)}
 .sd-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;color:#fff;
-background:radial-gradient(500px 120px at 0% 0%,rgba(56,189,248,.35),transparent 60%),linear-gradient(120deg,#312e81,#6d28d9 60%,#a21caf)}
+background:radial-gradient(500px 120px at 0% 0%,rgba(139,216,239,.32),transparent 60%),radial-gradient(420px 140px at 100% 100%,rgba(255,196,92,.26),transparent 60%),linear-gradient(120deg,#0b1115,#10212b 55%,#173540)}
 .sd-head h3{font-size:1.1rem;margin:0;color:#fff!important;border:0;padding:0}
 .sd-x{border:0!important;background:rgba(255,255,255,.16)!important;color:#fff!important;width:30px;height:30px;padding:0!important;border-radius:50%!important;font-size:.9rem}
 .sd-x:hover{background:rgba(255,255,255,.3)!important}
@@ -205,16 +205,16 @@ background:radial-gradient(500px 120px at 0% 0%,rgba(56,189,248,.35),transparent
 .share-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;text-decoration:none;cursor:pointer;
 padding:12px 14px;border-radius:14px;border:1px solid #e2e8f0;background:#f8fafc;transition:transform .12s,box-shadow .12s,border-color .12s,background .12s}
 .share-card:hover{transform:translateY(-2px);border-color:#a78bfa;box-shadow:0 10px 24px -12px rgba(109,40,217,.5);background:#faf5ff}
-.share-card:focus-visible{outline:2px solid #7c3aed;outline-offset:2px}
+.share-card:focus-visible{outline:2px solid #0891b2;outline-offset:2px}
 .sc-icon{flex:none;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;font-size:1.25rem;
 background:linear-gradient(135deg,#ede9fe,#e0f2fe)}
 .sc-body{display:flex;flex-direction:column;gap:2px;min-width:0}
 .sc-body b{font-size:.9rem}.sc-body small{font-size:.74rem;color:#64748b;line-height:1.35}
 .sc-go{margin-left:auto;font-size:1.3rem;color:#a78bfa;transition:transform .12s}.share-card:hover .sc-go{transform:translateX(3px)}
-.share-card.sc-primary{color:#fff;border:0;padding:14px 16px;background:linear-gradient(120deg,#2563eb,#7c3aed);box-shadow:0 12px 28px -14px rgba(37,99,235,.8)}
-.share-card.sc-primary:hover{background:linear-gradient(120deg,#1d4ed8,#6d28d9)}
-.share-card.sc-primary .sc-icon{background:rgba(255,255,255,.18)}.share-card.sc-primary small{color:rgba(255,255,255,.85)}
-.share-card.sc-primary .sc-go{color:#fff}
+.share-card.sc-primary{border:0;padding:14px 16px;background:linear-gradient(90deg,#d7eff6,#ffe2a8);color:#1e2a33;box-shadow:0 12px 28px -14px rgba(255,196,92,.7)}
+.share-card.sc-primary:hover{filter:brightness(1.05)}
+.share-card.sc-primary .sc-icon{background:rgba(255,255,255,.55)}.share-card.sc-primary small{color:rgba(30,42,51,.72)}
+.share-card.sc-primary .sc-go{color:#1e2a33}
 .share-card.sc-done{border-color:#22c55e!important;background:#f0fdf4!important}
 .share-card.sc-done .sc-icon{background:#bbf7d0}
 .share-done{min-height:1.4em;margin:8px 0 0;font-size:.82rem;font-weight:600;color:#15803d}
@@ -224,18 +224,18 @@ background:linear-gradient(135deg,#ede9fe,#e0f2fe)}
 @media (prefers-reduced-motion:reduce){.share-dlg[open]{animation:none}.share-card{transition:none}}
 .share-warn{background:#fef3c7;color:#92400e;border-radius:12px;padding:10px 14px;font-size:.82rem;border-left:4px solid #f59e0b;margin:0 0 12px}
 .share-close{font:inherit;font-size:.8rem;padding:3px 12px;border-radius:6px;border:1px solid #cbd5e1;background:transparent;color:inherit;cursor:pointer}
-html[data-theme=dark] .share-hero{background:#ede9fe;color:#4c1d95}
-html[data-theme=dark] .share-dlg{background:#1e293b;color:#e2e8f0}
-html[data-theme=dark] .share-card{background:#0f172a;border-color:#334155}
-html[data-theme=dark] .share-card:hover{background:#1e1b4b;border-color:#7c3aed}
-html[data-theme=dark] .sc-icon{background:linear-gradient(135deg,#312e81,#0c4a6e)}
-html[data-theme=dark] .sc-body small,html[data-theme=dark] .sd-meta{color:#94a3b8}
-html[data-theme=dark] .share-card.sc-primary{background:linear-gradient(120deg,#2563eb,#7c3aed)}
-html[data-theme=dark] .share-card.sc-primary small{color:rgba(255,255,255,.85)}
+html[data-theme=dark] .share-hero{background:linear-gradient(90deg,#d7eff6,#ffe2a8);color:#1e2a33}
+html[data-theme=dark] .share-dlg{background:#141c21;color:#dbe5ea}
+html[data-theme=dark] .share-card{background:#0e1418;border-color:#26343d}
+html[data-theme=dark] .share-card:hover{background:#0f2a33;border-color:rgba(139,216,239,.45)}
+html[data-theme=dark] .sc-icon{background:linear-gradient(135deg,#164e63,#0c4a6e)}
+html[data-theme=dark] .sc-body small,html[data-theme=dark] .sd-meta{color:#8a9ba6}
+html[data-theme=dark] .share-card.sc-primary{background:linear-gradient(90deg,#d7eff6,#ffe2a8);color:#1e2a33}
+html[data-theme=dark] .share-card.sc-primary small{color:rgba(30,42,51,.72)}
 html[data-theme=dark] .share-card.sc-done{background:#052e16!important}
 html[data-theme=dark] .share-done{color:#86efac}
 html[data-theme=dark] .share-warn{background:#422006;color:#fcd34d}
-html[data-theme=dark] .share-close{border-color:#334155}
+html[data-theme=dark] .share-close{border-color:#26343d}
 </style>"""
 
 SHARE_SCRIPT = """<script>

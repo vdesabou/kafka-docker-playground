@@ -76,7 +76,7 @@ BAR_CSS = """
 .live{display:inline-flex;align-items:center;gap:7px;letter-spacing:.14em}
 .live i{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pg-pulse 2s infinite;animation-delay:var(--t)}
 .hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;background:#fff;border-radius:16px;padding:24px 28px;margin-bottom:22px;box-shadow:0 10px 30px -12px rgba(30,58,138,.25);border:1px solid #e2e8f0;position:relative;overflow:hidden}
-.hero:before{content:"";position:absolute;inset:-40% -10% auto auto;width:420px;height:420px;background:radial-gradient(circle,rgba(99,102,241,.16),transparent 65%);pointer-events:none}
+.hero:before{content:"";position:absolute;inset:-40% -10% auto auto;width:420px;height:420px;background:radial-gradient(circle,rgba(8,145,178,.16),transparent 65%);pointer-events:none}
 .ring{position:relative;width:148px;height:148px}
 .ring svg{width:148px;height:148px;transform:rotate(-90deg);animation:pg-glow 4s ease-in-out infinite;animation-delay:var(--t)}
 .ring .track{stroke:#e2e8f0}
@@ -84,49 +84,49 @@ BAR_CSS = """
 .ring .orbit{position:absolute;inset:0;animation:pg-spin 4s linear infinite;animation-delay:var(--t)}
 .ring .orbit:after{content:"";position:absolute;top:6px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#38bdf8;box-shadow:0 0 10px 3px rgba(56,189,248,.7)}
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
-.ring-pct{font-size:2.1rem;font-weight:800;line-height:1;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ring-pct{font-size:2.1rem;font-weight:800;line-height:1;background:linear-gradient(135deg,#0891b2,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
 .ring-sub{font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
 .step{display:flex;align-items:center;gap:12px;font-size:1.08rem;font-weight:600;word-break:break-all;position:relative}
-.spinner{flex:none;width:20px;height:20px;border-radius:50%;border:3px solid rgba(99,102,241,.2);border-top-color:#6366f1;border-right-color:#0ea5e9;animation:pg-spin 1s linear infinite;animation-delay:var(--t)}
+.spinner{flex:none;width:20px;height:20px;border-radius:50%;border:3px solid rgba(8,145,178,.2);border-top-color:#0891b2;border-right-color:#0ea5e9;animation:pg-spin 1s linear infinite;animation-delay:var(--t)}
 .phases{display:flex;align-items:center;gap:0;margin-top:20px;flex-wrap:wrap;position:relative}
 .phase{display:flex;align-items:center;gap:8px;font-size:.8rem;color:#94a3b8;font-weight:600;white-space:nowrap}
 .phase b{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid #cbd5e1;font-size:.75rem;background:#fff}
 .phase.done{color:#16a34a}.phase.done b{border-color:#16a34a;background:#16a34a;color:#fff}
-.phase.now{color:#4f46e5}.phase.now b{border-color:#6366f1;background:linear-gradient(135deg,#6366f1,#0ea5e9);color:#fff;animation:pg-pulse 2s infinite;animation-delay:var(--t)}
+.phase.now{color:#0891b2}.phase.now b{border-color:#0891b2;background:linear-gradient(135deg,#0891b2,#0ea5e9);color:#fff;animation:pg-pulse 2s infinite;animation-delay:var(--t)}
 .link{flex:1;min-width:24px;height:2px;margin:0 10px;background:#e2e8f0;border-radius:2px}
 .link.done{background:linear-gradient(90deg,#16a34a,#22c55e)}
-.link.now{background:linear-gradient(90deg,#6366f1 0%,#0ea5e9 50%,#e2e8f0 50%);background-size:200% 100%;animation:pg-shift 2s linear infinite;animation-delay:var(--t)}
+.link.now{background:linear-gradient(90deg,#0891b2 0%,#0ea5e9 50%,#e2e8f0 50%);background-size:200% 100%;animation:pg-shift 2s linear infinite;animation-delay:var(--t)}
 .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kpi-card{border-left:0;border-radius:14px;border:1px solid #e2e8f0;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
-.kpi-card:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,#2563eb,#7c3aed,#0ea5e9)}
+.kpi-card:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,#0891b2,#22b8d8,#f59e0b)}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px -12px rgba(37,99,235,.45)}
 .kpi-value{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .bars{background:#fff;border-radius:14px;padding:20px 22px;border:1px solid #e2e8f0;margin-bottom:22px}
 .bar-label{display:flex;justify-content:space-between;font-size:.84rem;color:#475569;margin:0 0 8px;font-variant-numeric:tabular-nums;font-weight:500}
 .pbar{height:16px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin-bottom:18px;box-shadow:inset 0 1px 3px rgba(0,0,0,.12)}
 .pbar:last-child{margin-bottom:0}
-.pbar div{position:relative;height:100%;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,#2563eb,#7c3aed,#0ea5e9);background-size:200% 100%;box-shadow:0 0 14px rgba(99,102,241,.55);transition:width 1.6s cubic-bezier(.22,1,.36,1)}
+.pbar div{position:relative;height:100%;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,#0891b2,#22b8d8,#f59e0b);background-size:200% 100%;box-shadow:0 0 14px rgba(8,145,178,.55);transition:width 1.6s cubic-bezier(.22,1,.36,1)}
 .pbar div:before{content:"";position:absolute;inset:0;background-image:linear-gradient(45deg,rgba(255,255,255,.18) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.18) 75%,transparent 75%);background-size:40px 40px;animation:pg-stripes 1s linear infinite;animation-delay:var(--t)}
 .pbar div:after{content:"";position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:pg-shine 2s ease-in-out infinite;animation-delay:var(--t)}
 .note{font-size:.8rem;color:#64748b;display:flex;align-items:center;gap:8px}
-.note i{width:6px;height:6px;border-radius:50%;background:#6366f1;animation:pg-pulse 2s infinite;animation-delay:var(--t)}
+.note i{width:6px;height:6px;border-radius:50%;background:#0891b2;animation:pg-pulse 2s infinite;animation-delay:var(--t)}
 @media (max-width:640px){.hero{grid-template-columns:1fr;justify-items:center}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 """
 
 DARK_BAR_CSS = """
 .hero,.bars,.kpi-card{background:#1e293b;border-color:#334155;box-shadow:0 10px 30px -14px rgba(0,0,0,.7)}
-.hero:before{background:radial-gradient(circle,rgba(99,102,241,.28),transparent 65%)}
+.hero:before{background:radial-gradient(circle,rgba(8,145,178,.28),transparent 65%)}
 .ring .track{stroke:#334155}
 .ring-pct{background:linear-gradient(135deg,#60a5fa,#c084fc);-webkit-background-clip:text;background-clip:text}
 .step{color:#f1f5f9}
 .phase b{background:#0f172a;border-color:#475569}
-.phase.now{color:#a5b4fc}.phase.done{color:#4ade80}
+.phase.now{color:#67d4ec}.phase.done{color:#4ade80}
 .phase.done b{background:#16a34a;border-color:#16a34a}
-.phase.now b{background:linear-gradient(135deg,#6366f1,#0ea5e9);border-color:#6366f1}
+.phase.now b{background:linear-gradient(135deg,#0891b2,#0ea5e9);border-color:#0891b2}
 .link{background:#334155}
 .link.done{background:linear-gradient(90deg,#16a34a,#22c55e)}
-.link.now{background:linear-gradient(90deg,#6366f1 0%,#0ea5e9 50%,#334155 50%);background-size:200% 100%}
+.link.now{background:linear-gradient(90deg,#0891b2 0%,#0ea5e9 50%,#334155 50%);background-size:200% 100%}
 .bar-label,.note,.ring-sub{color:#94a3b8}
 .pbar{background:#0f172a;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
 """
@@ -202,7 +202,7 @@ def ring_html(pct, sub: str) -> str:
                f"stroke='url(#{gid})' stroke-width='12' stroke-linecap='round' stroke-dasharray='{RING_C:.1f}' "
                f"style='stroke-dashoffset:{RING_C * (1 - pct / 100):.1f}'/>")
     return (f"<div class='ring'><svg viewBox='0 0 148 148' aria-hidden='true'><defs><linearGradient id='{gid}' x1='0' y1='0' x2='1' y2='1'>"
-            "<stop offset='0' stop-color='#2563eb'/><stop offset='.55' stop-color='#7c3aed'/><stop offset='1' stop-color='#0ea5e9'/>"
+            "<stop offset='0' stop-color='#0891b2'/><stop offset='.55' stop-color='#22b8d8'/><stop offset='1' stop-color='#f59e0b'/>"
             "</linearGradient></defs><circle class='track' cx='74' cy='74' r='64' fill='none' stroke-width='12'/>"
             f"{arc}</svg><div class='orbit'></div><div class='ring-center'>{center}<div class='ring-sub'>{html.escape(sub)}</div></div></div>")
 

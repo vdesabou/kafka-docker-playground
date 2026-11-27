@@ -101,7 +101,7 @@ COMPONENT_LABEL = {
 CSS = """
 *, *::before, *::after { box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: Inter Variable,Inter,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   margin: 0;
   background: #f6f7f9;
   color: #111827;
@@ -193,8 +193,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 80px 40px; }
 .component-btn .n, .instance-btn .n { opacity: 0.7; margin-left: 4px; }
 .component-tag {
   font-size: 11px;
-  background: #eef2ff;
-  color: #3730a3;
+  background: #ecfeff;
+  color: #155e75;
   padding: 2px 8px;
   border-radius: 4px;
   white-space: nowrap;
@@ -303,7 +303,7 @@ table.cfg td:first-child { width: 34%; }
   margin-bottom: 4px;
 }
 .issue .location {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: JetBrains Mono Variable,JetBrains Mono,ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   color: #6b7280;
 }
@@ -340,7 +340,7 @@ table.cfg td:first-child { width: 34%; }
   font-size: 12px;
   overflow-x: auto;
   margin-top: 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: JetBrains Mono Variable,JetBrains Mono,ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .no-issues {
   background: white;

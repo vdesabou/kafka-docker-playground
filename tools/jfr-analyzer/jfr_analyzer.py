@@ -767,7 +767,7 @@ SECTION_CSS = """
   padding: 10px 14px; font-size: .875rem; line-height: 1.45; }
 .jfr-findings .title { font-weight: 600; margin-right: 6px; }
 .jfr-findings .next { color: var(--text-secondary); display: block; margin-top: 3px; }
-.jfr-section code { font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: .78rem; }
+.jfr-section code { font-family: JetBrains Mono Variable,JetBrains Mono,'SFMono-Regular', Consolas, Menlo, monospace; font-size: .78rem; }
 .jfr-section .muted { color: var(--text-muted); }
 .jfr-verdict { margin: 18px 0 0; padding: 12px 16px; border-left: 4px solid var(--sev); font-size: 1rem; font-weight: 500; }
 .jfr-section td code { word-break: break-all; }
@@ -1014,23 +1014,23 @@ STANDALONE_CSS = """
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) .viz-root {
     color-scheme: dark;
-    --page: #0f172a; --surface-1: #1e293b; --text-primary: #e2e8f0; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
-    --grid: #334155; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --page: #0e1418; --surface-1: #141c21; --text-primary: #dbe5ea; --text-secondary: #d3dee4; --text-muted: #8a9ba6;
+    --grid: #26343d; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
     --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
     --good-text: #0ca30c;
   }
 }
 :root[data-theme="dark"] .viz-root {
   color-scheme: dark;
-  --page: #0f172a; --surface-1: #1e293b; --text-primary: #e2e8f0; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
-  --grid: #334155; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+  --page: #0e1418; --surface-1: #141c21; --text-primary: #dbe5ea; --text-secondary: #d3dee4; --text-muted: #8a9ba6;
+  --grid: #26343d; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
   --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
   --good-text: #0ca30c;
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
 .viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
+  font-family: Inter Variable,Inter,system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
 header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 /* the blue header banner of the other playground reports (tools/report-common/report_html.py) */
 header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; border-radius: 12px; padding: 22px 28px; }

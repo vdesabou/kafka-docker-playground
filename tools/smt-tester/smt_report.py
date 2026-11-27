@@ -412,14 +412,14 @@ PAGE = """<!doctype html>
 .root { color-scheme: light; --page: #f1f5f9; --surface: #ffffff; --text: #1e293b; --text2: #475569; --muted: #64748b; --grid: #e2e8f0;
   --border: rgba(15,23,42,0.10); --accent: #2a78d6; --good: #0ca30c; --good-bg: #e7f6e7; --warning: #b77900; --warning-bg: #fdf2dc;
   --critical: #d03b3b; --critical-bg: #fbe9e9; --added: #e3f5e3; --changed: #fdf0d2; --removed: #fbe4e4; }
-@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .root { color-scheme: dark; --page: #0f172a; --surface: #1e293b;
-  --text: #e2e8f0; --text2: #cbd5e1; --muted: #94a3b8; --grid: #334155; --border: rgba(255,255,255,0.10); --accent: #3987e5;
+@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .root { color-scheme: dark; --page: #0e1418; --surface: #141c21;
+  --text: #dbe5ea; --text2: #d3dee4; --muted: #8a9ba6; --grid: #26343d; --border: rgba(255,255,255,0.10); --accent: #3987e5;
   --good-bg: #12301a; --warning: #fab219; --warning-bg: #3a2f12; --critical-bg: #3a1717; --added: #163a1f; --changed: #3d3216; --removed: #421c1c; } }
-:root[data-theme="dark"] .root { color-scheme: dark; --page: #0f172a; --surface: #1e293b; --text: #e2e8f0; --text2: #cbd5e1; --muted: #94a3b8;
-  --grid: #334155; --border: rgba(255,255,255,0.10); --accent: #3987e5; --good-bg: #12301a; --warning: #fab219; --warning-bg: #3a2f12;
+:root[data-theme="dark"] .root { color-scheme: dark; --page: #0e1418; --surface: #141c21; --text: #dbe5ea; --text2: #d3dee4; --muted: #8a9ba6;
+  --grid: #26343d; --border: rgba(255,255,255,0.10); --accent: #3987e5; --good-bg: #12301a; --warning: #fab219; --warning-bg: #3a2f12;
   --critical-bg: #3a1717; --added: #163a1f; --changed: #3d3216; --removed: #421c1c; }
 * { box-sizing: border-box; } body { margin: 0; }
-.root { background: var(--page); color: var(--text); min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
+.root { background: var(--page); color: var(--text); min-height: 100vh; font-family: Inter Variable,Inter,system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
 header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
 /* the blue header banner of the other playground reports (tools/report-common/report_html.py) */
 header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; border-radius: 12px; padding: 22px 28px; }
@@ -444,9 +444,9 @@ h1 { font-size: 1.35rem; margin: 0 0 4px; font-weight: 600; } h2 { font-size: 1.
 .step.st-error { border-color: var(--critical); border-width: 2px; } .step.st-dropped { border-color: var(--warning); border-width: 2px; }
 table { border-collapse: collapse; } .meta { font-size: .84rem; margin: 4px 0 8px; }
 .meta th { text-align: left; color: var(--text2); font-weight: 500; width: 124px; padding: 3px 12px 3px 0; vertical-align: top; white-space: nowrap; }
-.meta td { padding: 3px 0; } code { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: .8rem; }
+.meta td { padding: 3px 0; } code { font-family: JetBrains Mono Variable,JetBrains Mono,"SFMono-Regular", Consolas, Menlo, monospace; font-size: .8rem; }
 .meta code { background: var(--page); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-right: 4px; display: inline-block; margin-bottom: 2px; }
-pre { margin: 0; font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: .8rem; white-space: pre-wrap; word-break: break-word; }
+pre { margin: 0; font-family: JetBrains Mono Variable,JetBrains Mono,"SFMono-Regular", Consolas, Menlo, monospace; font-size: .8rem; white-space: pre-wrap; word-break: break-word; }
 .json { background: var(--page); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
 .json .k { color: var(--accent); }
 .added { background: var(--added); border-radius: 3px; } .changed { background: var(--changed); border-radius: 3px; cursor: help; }
@@ -455,14 +455,14 @@ pre { margin: 0; font-family: "SFMono-Regular", Consolas, Menlo, monospace; font
 .part-label { font-weight: 600; white-space: nowrap; padding-top: 1px; } .part-body { min-width: 0; }
 .note { color: var(--muted); font-size: .78rem; margin-bottom: 4px; } .note code { font-size: .76rem; }
 .chip code { background: var(--page); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: .84rem; font-weight: 600; }
-.type { font-size: .72rem; color: var(--text2); background: var(--page); border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; font-family: "SFMono-Regular", Consolas, Menlo, monospace; }
+.type { font-size: .72rem; color: var(--text2); background: var(--page); border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; font-family: JetBrains Mono Variable,JetBrains Mono,"SFMono-Regular", Consolas, Menlo, monospace; }
 .kv { font-size: .82rem; } .kv th { text-align: left; color: var(--muted); font-weight: 500; font-size: .74rem; padding: 0 16px 3px 0; }
 .kv td { padding: 3px 16px 3px 0; border-top: 1px solid var(--grid); } .kv .hk { font-weight: 600; }
 .kv tr.added td, .kv tr.removed td, .kv tr.changed td { background: none; } .kv tr.added { background: var(--added); } .kv tr.changed { background: var(--changed); }
 .kv tr.removed { background: var(--removed); } .kv tr.removed .hk { text-decoration: line-through; }
 .config { font-size: .82rem; border: 1px solid var(--border); border-radius: 6px; background: var(--page); border-collapse: separate; border-spacing: 0; }
 .config td { padding: 3px 10px; vertical-align: top; } .config tr + tr td { border-top: 1px solid var(--grid); }
-.config .ck { color: var(--text2); font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: .78rem; white-space: nowrap; }
+.config .ck { color: var(--text2); font-family: JetBrains Mono Variable,JetBrains Mono,"SFMono-Regular", Consolas, Menlo, monospace; font-size: .78rem; white-space: nowrap; }
 .config code, .meta .config code { font-weight: 600; word-break: break-all; background: none; border: 0; padding: 0; margin: 0; }
 .label { font-size: .8rem; color: var(--text2); margin: 6px 0 4px; }
 .schema { margin-top: 6px; font-size: .8rem; }

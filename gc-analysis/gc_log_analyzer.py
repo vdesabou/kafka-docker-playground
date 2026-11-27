@@ -118,15 +118,15 @@ _NOT_CAUSES = _G1_KIND_TAGS | {"Major", "Minor", "process weakrefs", "unload cla
 
 _HTML_CSS = report_html.style("""
 .chart-card svg{font-family:inherit}
-.rec-flag{display:block;margin-top:4px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;color:#1e293b}
+.rec-flag{display:block;margin-top:4px;font-family:JetBrains Mono Variable,JetBrains Mono,'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;color:#1e293b}
 .verdict.critical{border-left-color:#dc2626}
 .warn-box{background:#fff7ed;border-left:5px solid #ea580c;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:.88rem}
 td{vertical-align:inherit}
 .pause-hi{font-weight:700;color:#dc2626}
 .full-gc-row td{background:#fff1f2!important}
-.flag-cell{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.8rem;color:#1e293b;word-break:break-all}
+.flag-cell{font-family:JetBrains Mono Variable,JetBrains Mono,'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.8rem;color:#1e293b;word-break:break-all}
 """ + report_html.dark("""
-.rec-flag,.flag-cell{color:#e2e8f0}
+.rec-flag,.flag-cell{color:#dbe5ea}
 .warn-box{background:#431407}
 .pause-hi{color:#f87171}
 .full-gc-row td{background:#4c0519!important}

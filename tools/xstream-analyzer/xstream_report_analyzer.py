@@ -1117,11 +1117,11 @@ _HTML_CSS = report_html.style("""
 .health.CRITICAL{color:#dc2626}.health.DEGRADED{color:#ea580c}.health.AT-RISK{color:#d97706}.health.HEALTHY{color:#16a34a}
 .kpi-value{font-size:1.45rem;word-break:break-word}
 .rec-meta{font-size:.78rem;color:#64748b;margin-top:3px}
-.rec-action{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 9px;margin-top:6px;white-space:pre-wrap}
+.rec-action{font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 9px;margin-top:6px;white-space:pre-wrap}
 .chart-card{margin-bottom:22px}
 td{padding:6px 11px}
 tr:hover td{background:transparent}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:normal}
+.mono{font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:normal}
 .st{display:inline;font-size:inherit;padding:0;border-radius:0;background:transparent;color:inherit;font-weight:600}
 .st.PASS{color:#16a34a}.st.FAIL{color:#dc2626}.st.WARNING{color:#d97706}.st.CHECK{color:#2563eb}.st.INFO,.st.UNKNOWN{color:#64748b}
 .verdict{color:#1e293b}
@@ -1129,13 +1129,13 @@ tr:hover td{background:transparent}
 .report-sep{border:none;border-top:2px dashed #cbd5e1;margin:30px 0}
 .footer{font-size:.75rem;padding:0;margin-top:20px}
 """ + report_html.dark("""
-.health{background:#0f172a}
-.rec-meta{color:#94a3b8}
-.rec-action{background:#0b1220;border-color:#334155;color:#e2e8f0}
+.health{background:#0e1418}
+.rec-meta{color:#8a9ba6}
+.rec-action{background:#0a0f12;border-color:#26343d;color:#dbe5ea}
 tr:hover td{background:transparent}
 .st{background:transparent}
-.st.PASS{color:#4ade80}.st.FAIL{color:#f87171}.st.WARNING{color:#fbbf24}.st.CHECK{color:#60a5fa}.st.INFO,.st.UNKNOWN{color:#94a3b8}
-.report-sep{border-top-color:#334155}
+.st.PASS{color:#4ade80}.st.FAIL{color:#f87171}.st.WARNING{color:#fbbf24}.st.CHECK{color:#60a5fa}.st.INFO,.st.UNKNOWN{color:#8a9ba6}
+.report-sep{border-top-color:#26343d}
 """))
 
 

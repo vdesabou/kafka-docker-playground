@@ -97,7 +97,7 @@ pre{white-space:pre;word-break:normal}
 .warn-box{background:#fff7ed;border-left:5px solid #ea580c;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:.88rem}
 """ + report_html.dark("""
 .st.RUNNABLE{background:#052e16;color:#86efac}.st.BLOCKED{background:#450a0a;color:#fca5a5}
-.st.WAITING{background:#172554;color:#93c5fd}.st.TIMED_WAITING{background:#1e1b4b;color:#a5b4fc}.st.OTHER{background:#334155;color:#cbd5e1}
+.st.WAITING{background:#172554;color:#93c5fd}.st.TIMED_WAITING{background:#1e1b4b;color:#a5b4fc}.st.OTHER{background:#26343d;color:#d3dee4}
 .warn-box{background:#431407}
 """))
 

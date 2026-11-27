@@ -223,20 +223,20 @@ def _mb(n: int) -> str:
 
 SEARCH_CSS = """<style>
 #log-search .ls-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
-#log-search .ls-q{flex:1;min-width:280px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem;padding:8px 12px;
+#log-search .ls-q{flex:1;min-width:280px;font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem;padding:8px 12px;
 border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#0f172a}
 #log-search .ls-q:focus{outline:2px solid #2563eb;outline-offset:-1px;border-color:transparent}
 #log-search .ls-status{font-size:.8rem;color:#475569}#log-search .ls-status b{color:#0f172a}
 #log-search .ls-stats{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 #log-search .ls-stat{font-size:.74rem;padding:2px 9px;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer;color:#334155}
-#log-search .ls-stat:hover{border-color:#6366f1}#log-search .ls-stat i,#log-search .ls-tag{opacity:.65;font-size:.68rem}#log-search .ls-stat b{font-variant-numeric:tabular-nums;margin-left:3px}
+#log-search .ls-stat:hover{border-color:#0891b2}#log-search .ls-stat i,#log-search .ls-tag{opacity:.65;font-size:.68rem}#log-search .ls-stat b{font-variant-numeric:tabular-nums;margin-left:3px}
 #log-search .ls-hist svg{display:block;width:100%;height:90px;cursor:crosshair;user-select:none}
-#log-search .ls-bar-r{fill:#6366f1}#log-search .ls-bar-r:hover{fill:#4338ca}#log-search .ls-axis{fill:#64748b;font-size:10px}
-#log-search .ls-sel{fill:rgba(99,102,241,.18);stroke:#6366f1;stroke-dasharray:4 3}
+#log-search .ls-bar-r{fill:#0891b2}#log-search .ls-bar-r:hover{fill:#0e7490}#log-search .ls-axis{fill:#64748b;font-size:10px}
+#log-search .ls-sel{fill:rgba(8,145,178,.18);stroke:#0891b2;stroke-dasharray:4 3}
 #log-search table.ls-table{width:100%;border-collapse:collapse;font-size:.78rem;table-layout:fixed}
 #log-search table.ls-table td{padding:3px 6px;border-bottom:1px solid #f1f5f9;vertical-align:top}
-#log-search table.ls-table td.ls-line{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all;cursor:pointer}
-#log-search table.ls-table td.ls-time,#log-search table.ls-table td.ls-file{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,monospace;font-size:.74rem}
+#log-search table.ls-table td.ls-line{font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all;cursor:pointer}
+#log-search table.ls-table td.ls-time,#log-search table.ls-table td.ls-file{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,monospace;font-size:.74rem}
 #log-search .ls-lvl{font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:4px;background:#e2e8f0;color:#334155}
 #log-search .ls-lvl.FATAL,#log-search .ls-lvl.ERROR{background:#fee2e2;color:#991b1b}#log-search .ls-lvl.WARN{background:#fef3c7;color:#92400e}
 #log-search .ls-lvl.INFO{background:#dbeafe;color:#1e40af}#log-search .ls-lvl.DEBUG,#log-search .ls-lvl.TRACE{background:#f1f5f9;color:#64748b}
@@ -244,11 +244,11 @@ border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#0f172a}
 #log-search tr.ls-ctx td{background:#f8fafc;padding:6px 10px}#log-search .ls-ctx pre{margin:0;font-size:.74rem;white-space:pre-wrap;word-break:break-all}
 #log-search .ls-ctx .ls-hit{background:#fef9c3;display:block}#log-search .ls-ctx .ls-n{color:#94a3b8;user-select:none}
 #log-search .ls-more{margin:8px 0}#log-search details.ls-help{font-size:.78rem;margin:4px 0}#log-search details.ls-help code{font-size:.74rem}
-html[data-theme=dark] #log-search .ls-q{background:#0f172a;border-color:#334155;color:#e2e8f0}
-html[data-theme=dark] #log-search .ls-status{color:#94a3b8}html[data-theme=dark] #log-search .ls-status b{color:#e2e8f0}
-html[data-theme=dark] #log-search .ls-stat{background:#1e293b;border-color:#334155;color:#cbd5e1}
-html[data-theme=dark] #log-search table.ls-table td{border-color:#1e293b}html[data-theme=dark] #log-search tr.ls-ctx td{background:#0f172a}
-html[data-theme=dark] #log-search .ls-ctx .ls-hit{background:#3f3a0a}html[data-theme=dark] #log-search .ls-lvl{background:#334155;color:#e2e8f0}
+html[data-theme=dark] #log-search .ls-q{background:#0e1418;border-color:#26343d;color:#dbe5ea}
+html[data-theme=dark] #log-search .ls-status{color:#8a9ba6}html[data-theme=dark] #log-search .ls-status b{color:#dbe5ea}
+html[data-theme=dark] #log-search .ls-stat{background:#141c21;border-color:#26343d;color:#d3dee4}
+html[data-theme=dark] #log-search table.ls-table td{border-color:#141c21}html[data-theme=dark] #log-search tr.ls-ctx td{background:#0e1418}
+html[data-theme=dark] #log-search .ls-ctx .ls-hit{background:#3f3a0a}html[data-theme=dark] #log-search .ls-lvl{background:#26343d;color:#dbe5ea}
 html[data-theme=dark] #log-search .ls-lvl.FATAL,html[data-theme=dark] #log-search .ls-lvl.ERROR{background:#450a0a;color:#fca5a5}
 html[data-theme=dark] #log-search .ls-lvl.WARN{background:#422006;color:#fcd34d}html[data-theme=dark] #log-search .ls-lvl.INFO{background:#172554;color:#93c5fd}
 </style>"""
@@ -335,18 +335,18 @@ def period_row(lo: Optional[float], hi: Optional[float], marks: List[dict]) -> s
             "<span class='pp-info fb-label'></span></div>")
 
 
-PERIOD_CSS = ("<style>.pg-period input{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;padding:5px 9px;border-radius:8px;"
+PERIOD_CSS = ("<style>.pg-period input{font-family:JetBrains Mono Variable,JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;padding:5px 9px;border-radius:8px;"
               "border:1px solid #d1d5db;background:#fff;color:#1e293b;width:14.6em}.pg-period .pp-at{width:7em}"
               ".pg-period select{max-width:170px;font-family:inherit;font-size:.78rem;padding:4px 26px 4px 10px;border-radius:8px;border:1px solid #cbd5e1;"
               "background-color:#fff;color:#1e293b;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url(\"data:image/svg+xml,"
               "%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E\");"
               "background-repeat:no-repeat;background-position:right 9px center}.pg-period select:hover{border-color:#2563eb}"
-              "html[data-theme=dark] .pg-period select{background-color:#0f172a;color:#e2e8f0;border-color:#334155}"
+              "html[data-theme=dark] .pg-period select{background-color:#0e1418;color:#dbe5ea;border-color:#26343d}"
               ".pg-period input.pp-bad{border-color:#dc2626;outline:2px solid #fecaca}.pg-period .pill{padding:4px 10px}"
               ".pg-period .pp-nav{display:inline-flex;gap:4px}.pg-period .pp-info b{color:#1e293b}"
-              ".pg-period.pp-on .pp-all{border-color:#6366f1;color:#4338ca}"
-              "html[data-theme=dark] .pg-period input{background:#0f172a;border-color:#334155;color:#e2e8f0}"
-              "html[data-theme=dark] .pg-period .pp-info b{color:#e2e8f0}"
+              ".pg-period.pp-on .pp-all{border-color:#0891b2;color:#0e7490}"
+              "html[data-theme=dark] .pg-period input{background:#0e1418;border-color:#26343d;color:#dbe5ea}"
+              "html[data-theme=dark] .pg-period .pp-info b{color:#dbe5ea}"
               ".pg-period .pp-field{position:relative;display:inline-flex;align-items:center}"
               ".pg-period .pp-field input[type=text]{padding-right:28px}"
               ".pg-period .pp-cal{position:absolute;right:4px;border:0;background:none;cursor:pointer;font-size:.85rem;padding:2px;opacity:.7}"

@@ -196,11 +196,11 @@ CSS = """
 """
 
 DARK_CSS = rh.dark("""
-.explain,.problem,.certbox{background:#1e293b;color:#e2e8f0;border-color:#334155}
-.flow .box{background:#1e3a5f;border-color:#3b82f6;color:#e2e8f0}
-.chip{background:#334155;color:#e2e8f0}.chip.hit{background:#14532d;color:#bbf7d0}
-.kv .k,.issued,.barlbl,.entry-kind{color:#94a3b8}
-.gloss dd{color:#cbd5e1}
+.explain,.problem,.certbox{background:#141c21;color:#dbe5ea;border-color:#26343d}
+.flow .box{background:#17323c;border-color:#3b82f6;color:#dbe5ea}
+.chip{background:#26343d;color:#dbe5ea}.chip.hit{background:#14532d;color:#bbf7d0}
+.kv .k,.issued,.barlbl,.entry-kind{color:#8a9ba6}
+.gloss dd{color:#d3dee4}
 """) if hasattr(rh, "dark") else ""
 
 

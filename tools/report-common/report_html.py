@@ -15,7 +15,13 @@ Imported, after adding this folder to sys.path, by:
     and THEME_SCRIPT (playground analyze cfk-bundle mounts this folder in its container, in /tmp/report-common)
   - log_viewer.py: the pages of the files of the analyze logs and CFK reports, linked from their locations
 The benchmark, flight recorder and SMT test reports have their own layout (charts drawn by a script, filters) and their
-own ☀️ / 🌙 theme button, with the same light / dark palette (slate) as these.
+own ☀️ / 🌙 theme button, with the same light / dark palette as these.
+
+🎨 The look of the website (https://kafka-docker-playground.io/, docs/assets/css/main.css): the dark theme uses its ink
+(#0e1418, cards #141c21) with a soft cyan / amber glow, the accents its ice → amber gradient (#d7eff6 → #ffc45c; teal →
+amber in the light theme), the primary buttons (📤 Share) its ice → amber button, and Inter / JetBrains Mono when they are
+installed (a report loads nothing from the network). The verdict tints (red, amber, green) and the colors of the data
+(series, states, workers) stay as they are.
 
 One header for all of them: the 🐳 kafka-docker-playground badge, the title on a gradient, the verdict as a status pill
 that tints the gradient (red, amber, green: TINTS maps the verdict classes of each report). page() builds it
@@ -55,9 +61,9 @@ BASE_CSS = """
 :focus-visible{outline:2px solid #2a78d6;outline-offset:2px}
 .lv-edit{text-decoration:none;margin-left:5px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5}
+body{font-family:"Inter Variable",Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5;-webkit-font-smoothing:antialiased}
 .page{max-width:1300px;margin:0 auto;padding:24px}
-h1{font-size:1.55rem;font-weight:700}
+h1{font-size:1.55rem;font-weight:700;letter-spacing:-.02em}
 h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;border-radius:12px;padding:22px 28px;margin-bottom:22px}
 .header-meta{font-size:.83rem;opacity:.85;margin-top:6px}
@@ -86,19 +92,19 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .rec-text{font-size:.88rem;flex:1;color:#334155}
 .sev-filter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 10px;font-size:.78rem;color:#475569}
 .rec-card[hidden]{display:none}.sev-chip{border:0;cursor:pointer;font-family:inherit}.sev-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}
-.rec-details{margin:6px 0 0;padding-left:18px}.rec-details li{margin:3px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:break-word}
+.rec-details{margin:6px 0 0;padding-left:18px}.rec-details li{margin:3px 0;font-family:"JetBrains Mono Variable","JetBrains Mono",'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.8rem;word-break:break-word}
 .table-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
 table{width:100%;border-collapse:collapse;font-size:.84rem}
 th{text-align:left;padding:7px 11px;background:#f8fafc;font-weight:600;border-bottom:2px solid #e2e8f0;color:#475569}
 td{padding:7px 11px;border-bottom:1px solid #f1f5f9;vertical-align:top}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 tr:hover td{background:#f8fafc}
-.mono{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.78rem;word-break:break-all}
+.mono{font-family:"JetBrains Mono Variable","JetBrains Mono",'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.78rem;word-break:break-all}
 details summary{cursor:pointer;font-weight:600;font-size:.86rem;padding:6px 0}
 .st{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:12px;background:#f1f5f9;color:#475569}
 .verdict{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;font-size:1rem;font-weight:500;margin-bottom:22px}
 .verdict.danger{border-left-color:#dc2626}.verdict.warn{border-left-color:#d97706}.verdict.ok{border-left-color:#16a34a}
-pre{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;background:#f8fafc;padding:10px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+pre{font-family:"JetBrains Mono Variable","JetBrains Mono",'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.76rem;background:#f8fafc;padding:10px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
 .footer{text-align:center;font-size:.78rem;color:#94a3b8;padding:14px}
 """
 
@@ -113,7 +119,7 @@ details summary{font-size:.84rem;font-weight:normal}
 .st.running{background:#dcfce7;color:#15803d}.st.mine{background:#dbeafe;color:#1d4ed8}
 pre{margin:4px 0 8px}
 .diff-a{background:#fee2e2}.diff-b{background:#dcfce7}.muted{color:#94a3b8}
-code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;background:#f1f5f9;padding:1px 5px;border-radius:4px}
+code{font-family:"JetBrains Mono Variable","JetBrains Mono",'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.8rem;background:#f1f5f9;padding:1px 5px;border-radius:4px}
 """
 
 
@@ -132,18 +138,19 @@ def dark(css: str) -> str:
 
 # dark theme of BASE_CSS and NEWER_REPORTS_CSS, plus the SVG colors the charts write as attributes
 DARK_CSS = dark("""
-body{background:#0f172a;color:#e2e8f0}
-h2,h3,.section-title,.rec-text,.verdict{color:#cbd5e1}
-.kpi-card,.chart-card,.rec-card,.table-card,.verdict{background:#1e293b;box-shadow:none}
-.kpi-label,.legend,.kpi-unit,.footer,.muted{color:#94a3b8}
-th{background:#273449;border-bottom-color:#334155;color:#cbd5e1}
-td{border-bottom-color:#273449}
-tr:hover td{background:#273449}
-pre,code{background:#0b1220;color:#e2e8f0}
-details{border-top-color:#334155}
-a{color:#93c5fd}
+body{background:radial-gradient(70rem 26rem at 85% -8%,rgba(139,216,239,.07),transparent 70%),radial-gradient(46rem 22rem at 20% -6%,rgba(255,196,92,.045),transparent 70%),#0e1418 no-repeat;background-attachment:fixed;color:#dbe5ea}
+h2,h3,.section-title,.rec-text,.verdict{color:#e6eef2}
+.kpi-card,.chart-card,.rec-card,.table-card,.verdict{background:#141c21;box-shadow:none}
+.kpi-label,.legend,.kpi-unit,.footer,.muted{color:#8a9ba6}
+th{background:#19242a;border-bottom-color:#26343d;color:#e6eef2}
+td{border-bottom-color:#1d282e}
+tr:hover td{background:#18232a}
+pre,code{background:#0a0f12;color:#dbe6ec}
+code{color:#bfe9f6;background:rgba(139,216,239,.08)}
+details{border-top-color:#22303a}
+a{color:#8bd8ef}
 .header a{color:#fff}
-.st{background:#334155;color:#cbd5e1}
+.st{background:#22303a;color:#dbe5ea}
 .rec-badge.critical,.st.fatal,.st.failed{background:#450a0a;color:#fca5a5}
 .rec-badge.high,.st.error{background:#431407;color:#fdba74}
 .rec-badge.medium,.st.warn,.st.paused,.st.unassigned{background:#422006;color:#fcd34d}
@@ -151,11 +158,11 @@ a{color:#93c5fd}
 .rec-badge.info,.st.mine{background:#172554;color:#93c5fd}
 .rec-badge.ok{background:#083344;color:#67e8f9}
 .diff-a{background:#450a0a}.diff-b{background:#052e16}
-svg [fill="#64748b"],svg [fill="#94a3b8"]{fill:#94a3b8}
-svg [fill="#1e293b"],svg [fill="#334155"],svg [fill="#475569"]{fill:#cbd5e1}
-svg [stroke="#e2e8f0"],svg [stroke="#f1f5f9"]{stroke:#334155}
-svg [fill="#e2e8f0"],svg [fill="#f1f5f9"]{fill:#334155}
-svg text:not([fill]){fill:#cbd5e1}
+svg [fill="#64748b"],svg [fill="#94a3b8"]{fill:#8a9ba6}
+svg [fill="#1e293b"],svg [fill="#334155"],svg [fill="#475569"]{fill:#d3dee4}
+svg [stroke="#e2e8f0"],svg [stroke="#f1f5f9"]{stroke:#26343d}
+svg [fill="#e2e8f0"],svg [fill="#f1f5f9"]{fill:#26343d}
+svg text:not([fill]){fill:#d3dee4}
 """)
 
 # in the top margin of the page, above the header (whose right side holds the health score of some reports)
@@ -166,7 +173,7 @@ THEME_TOGGLE_CSS = """
 .header:has(.theme-toggle){position:relative}
 .header .theme-toggle{top:12px;right:14px;z-index:2;color:#fff;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);box-shadow:none;backdrop-filter:blur(4px)}
 """ + dark("""
-.theme-toggle{color:#cbd5e1;background:#1e293b;border-color:#334155}
+.theme-toggle{color:#dbe5ea;background:#141c21;border-color:#26343d}
 """)
 
 # dark theme when the system is dark, until the ☀️ / 🌙 button (top right of the page) switches it
@@ -217,11 +224,11 @@ LOG_CSS = """
 """ + dark("""
 .lh-ts{color:#5eead4}
 .lh-fatal,.lh-error{color:#fff;background:#b91c1c}.lh-warn{color:#451a03;background:#fcd34d}
-.lh-info{color:#93c5fd}.lh-debug,.lh-trace{color:#94a3b8}
+.lh-info{color:#93c5fd}.lh-debug,.lh-trace{color:#8a9ba6}
 .lh-exc,.lh-cause{color:#fca5a5}
 .lh-mdc{color:#c4b5fd}
-.lh-logger,.lh-frame{color:#94a3b8}
-.lh-ph{color:#94a3b8}
+.lh-logger,.lh-frame{color:#8a9ba6}
+.lh-ph{color:#8a9ba6}
 """)
 
 _LOG_LEVEL_CLASS = {"fatal": "fatal", "severe": "fatal", "error": "error", "warn": "warn", "warning": "warn",
@@ -293,10 +300,10 @@ ZOOM_CSS = """
 .zoom-chart svg{cursor:crosshair;user-select:none;-webkit-user-select:none}
 .zoom-hint{font-size:.72rem;color:#94a3b8;margin-top:2px}
 """ + dark("""
-.zoom-bar button,.zoom-bar button:disabled:hover{color:#cbd5e1;background:#1e293b;border-color:#334155}
+.zoom-bar button,.zoom-bar button:disabled:hover{color:#dbe5ea;background:#141c21;border-color:#26343d}
 .zoom-bar button.on{background:#2a78d6;border-color:#2a78d6;color:#fff}
-.zoom-info{color:#94a3b8}
-.zoom-hint{color:#64748b}
+.zoom-info{color:#8a9ba6}
+.zoom-hint{color:#6b7f8c}
 """)
 
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "zoom_chart.js"), encoding="utf-8") as _f:
@@ -308,22 +315,24 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "zoom_chart.j
 POLISH_CSS = """/* ✨ the section cards: rounder, a hairline border, a soft shadow that lifts on hover, an accent under the title */
 .table-card,.chart-card{border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -16px rgba(15,23,42,.18);
 transition:box-shadow .2s,border-color .2s}
-.table-card:hover,.chart-card:hover{box-shadow:0 1px 2px rgba(15,23,42,.05),0 14px 34px -18px rgba(79,70,229,.35);border-color:#c7d2fe}
+.table-card:hover,.chart-card:hover{box-shadow:0 1px 2px rgba(15,23,42,.05),0 14px 34px -18px rgba(8,145,178,.35);border-color:#a5e4f3}
 .table-card>h2,.chart-card>h2{position:relative;padding-bottom:10px;margin-bottom:12px}
 .table-card>h2::after,.chart-card>h2::after{content:"";position:absolute;left:0;bottom:0;width:56px;height:3px;border-radius:3px;
-background:linear-gradient(90deg,#6366f1,#ec4899)}
+background:linear-gradient(90deg,#0891b2,#f59e0b)}
+html[data-theme=dark] .table-card>h2::after,html[data-theme=dark] .chart-card>h2::after{background:linear-gradient(90deg,#d7eff6,#ffc45c)}
 .sec-collapsed>h2::after{width:28px;opacity:.5}
 .kpi-card{border-radius:14px;transition:transform .15s,box-shadow .15s}
-html[data-theme=dark] .table-card,html[data-theme=dark] .chart-card{border-color:#273449;box-shadow:0 8px 24px -16px rgba(0,0,0,.7)}
-html[data-theme=dark] .table-card:hover,html[data-theme=dark] .chart-card:hover{border-color:#3730a3;box-shadow:0 14px 34px -18px rgba(99,102,241,.45)}
+html[data-theme=dark] .table-card,html[data-theme=dark] .chart-card,html[data-theme=dark] .kpi-card,html[data-theme=dark] .verdict,html[data-theme=dark] .rec-card{border-top:1px solid rgba(215,239,246,.09);border-right:1px solid rgba(215,239,246,.09);border-bottom:1px solid rgba(215,239,246,.09);box-shadow:0 8px 24px -16px rgba(0,0,0,.7)}
+html[data-theme=dark] .table-card,html[data-theme=dark] .chart-card{border-left:1px solid rgba(215,239,246,.09)}
+html[data-theme=dark] .table-card:hover,html[data-theme=dark] .chart-card:hover{border-color:rgba(139,216,239,.35);box-shadow:0 14px 34px -18px rgba(139,216,239,.3)}
 /* the counts of the sections in their links */
 .quick-links a[data-count]::after,.side-nav a[data-count]::after{content:attr(data-count);margin-left:6px;font-size:.68rem;font-weight:700;
-padding:0 6px;border-radius:999px;background:#eef2ff;color:#4338ca;font-variant-numeric:tabular-nums}
+padding:0 6px;border-radius:999px;background:#ecfeff;color:#0e7490;font-variant-numeric:tabular-nums}
 .side-nav a[data-count]{display:flex;align-items:center}.side-nav a[data-count]::after{margin-left:auto}
-html[data-theme=dark] .quick-links a[data-count]::after,html[data-theme=dark] .side-nav a[data-count]::after{background:#1e1b4b;color:#c7d2fe}
+html[data-theme=dark] .quick-links a[data-count]::after,html[data-theme=dark] .side-nav a[data-count]::after{background:rgba(139,216,239,.14);color:#d7eff6}
 /* how far down the report: a thin bar at the top of the window */
-.pg-progress{position:fixed;left:0;top:0;height:3px;width:0;z-index:40;background:linear-gradient(90deg,#6366f1,#ec4899,#f59e0b);
-box-shadow:0 0 8px rgba(236,72,153,.6);pointer-events:none}"""
+.pg-progress{position:fixed;left:0;top:0;height:3px;width:0;z-index:40;background:linear-gradient(90deg,#d7eff6,#8bd8ef,#ffc45c);
+box-shadow:0 0 10px rgba(255,196,92,.5);pointer-events:none}"""
 
 PROGRESS_SCRIPT = """<script>
 (function () {
@@ -669,21 +678,21 @@ KDP_SITE = "https://kafka-docker-playground.io/"
 # the header of the log report (page() of report_html is shared by every report: styled only when it holds .lr-title)
 HEADER_CSS = """<style>
 .header:has(.lr-title){position:relative;overflow:hidden;border-radius:18px;padding:26px 32px 22px;
-background:radial-gradient(1200px 300px at 0% 0%,rgba(56,189,248,.35),transparent 60%),
-radial-gradient(800px 260px at 100% 100%,rgba(236,72,153,.35),transparent 60%),
-linear-gradient(120deg,#0f172a 0%,#312e81 45%,#6d28d9 75%,#a21caf 100%);box-shadow:0 10px 30px rgba(49,46,129,.35)}
+background:radial-gradient(1200px 300px at 0% 0%,rgba(139,216,239,.30),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(255,196,92,.28),transparent 60%),
+linear-gradient(120deg,#0b1115 0%,#10212b 50%,#173540 100%);box-shadow:0 10px 30px rgba(8,47,73,.35);border:1px solid rgba(215,239,246,.12)}
 /* the verdict tints the header: red with ERROR/FATAL, amber with WARN only, green without error (the progress page keeps the default) */
 .header:has(.lr-status.danger){background:radial-gradient(1200px 300px at 0% 0%,rgba(251,113,133,.30),transparent 60%),
 radial-gradient(800px 260px at 100% 100%,rgba(249,115,22,.40),transparent 60%),
-linear-gradient(120deg,#0f172a 0%,#4c0519 45%,#9f1239 75%,#c2410c 100%);box-shadow:0 10px 30px rgba(159,18,57,.35)}
+linear-gradient(120deg,#0b1115 0%,#4c0519 45%,#9f1239 75%,#c2410c 100%);box-shadow:0 10px 30px rgba(159,18,57,.35)}
 .header:has(.lr-status.warn){background:radial-gradient(1200px 300px at 0% 0%,rgba(253,224,71,.22),transparent 60%),
 radial-gradient(800px 260px at 100% 100%,rgba(251,191,36,.35),transparent 60%),
-linear-gradient(120deg,#0f172a 0%,#422006 45%,#92400e 75%,#d97706 100%);box-shadow:0 10px 30px rgba(146,64,14,.35)}
+linear-gradient(120deg,#0b1115 0%,#422006 45%,#92400e 75%,#d97706 100%);box-shadow:0 10px 30px rgba(146,64,14,.35)}
 .header:has(.lr-status.ok){background:radial-gradient(1200px 300px at 0% 0%,rgba(110,231,183,.25),transparent 60%),
 radial-gradient(800px 260px at 100% 100%,rgba(45,212,191,.35),transparent 60%),
-linear-gradient(120deg,#0f172a 0%,#064e3b 45%,#047857 75%,#0d9488 100%);box-shadow:0 10px 30px rgba(4,120,87,.35)}
+linear-gradient(120deg,#0b1115 0%,#064e3b 45%,#047857 75%,#0d9488 100%);box-shadow:0 10px 30px rgba(4,120,87,.35)}
 .header:has(.lr-title) h1{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 18px;margin:0 0 12px}
-.lr-title{font-size:1.75rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.lr-title{font-size:1.75rem;font-weight:800;letter-spacing:-.025em;line-height:1.2}
 .lr-plus{opacity:.55;margin:0 4px}
 .lr-sub{grid-column:1 / -1;font-size:.86rem;font-weight:500;opacity:.82}
 .lr-status{justify-self:end;font-size:.85rem;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap;
@@ -695,11 +704,13 @@ background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop
 .header:has(.lr-title) .header-meta span{font-size:.78rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.12);
 border:1px solid rgba(255,255,255,.2);margin:0}
 .header:has(.lr-title) .header-meta a{color:#fff}
-.lr-brand{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;
-letter-spacing:.04em;color:#fff;text-decoration:none;padding:3px 12px 3px 6px;border-radius:999px;background:rgba(255,255,255,.12);
-border:1px solid rgba(255,255,255,.22);transition:background .15s}
-.lr-brand:hover{background:rgba(255,255,255,.22)}
-.lr-whale{font-size:1.25rem;line-height:1;display:inline-block;animation:lr-swim 4s ease-in-out infinite}
+/* the wordmark of the website (its sidebar title): kafka-docker-playground, dimmed dashes, "playground" in its gradient */
+.lr-brand{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:8px;font-size:1rem;font-weight:700;
+letter-spacing:-.03em;color:#fff;text-decoration:none;white-space:nowrap;transition:opacity .15s}
+.lr-brand:hover{opacity:.85}
+.lr-brand i{font-style:normal;color:rgba(255,255,255,.45)}
+.lr-brand em{font-style:normal;background:linear-gradient(90deg,#d7eff6,#ffc45c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lr-whale{font-size:1.35rem;line-height:1;display:inline-block;animation:lr-swim 4s ease-in-out infinite}
 @keyframes lr-swim{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-6deg)}}
 @media (prefers-reduced-motion:reduce){.lr-whale{animation:none}}
 .header:has(.lr-title) .header-meta span:has(.lr-howto){background:rgba(56,189,248,.22);border-color:rgba(125,211,252,.55)}
@@ -710,7 +721,7 @@ border:1px solid rgba(255,255,255,.22);transition:background .15s}
 def kdp_brand() -> str:
     """🐳 the kafka-docker-playground badge of the header (with HEADER_CSS): where the report comes from"""
     return (f"<a class='lr-brand' href='{KDP_SITE}' title='kafka-docker-playground: the playground CLI that generated this report'>"
-            "<span class='lr-whale'>🐳</span> kafka-docker-playground</a>")
+            "<span class='lr-whale'>🐳</span><span>kafka<i>-</i>docker<i>-</i><em>playground</em></span></a>")
 
 
 def banner_css(sel: str = "header") -> str:
