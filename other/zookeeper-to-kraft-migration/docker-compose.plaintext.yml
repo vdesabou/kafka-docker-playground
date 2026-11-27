@@ -1,0 +1,28 @@
+---
+services:
+
+  # the KRaft controller of the migration (phase 2): it waits for the cluster id of the ZooKeeper cluster, written by
+  # the example in migration/cluster.id, then the image formats its storage with it (CLUSTER_ID) and starts it
+  kraft-controller:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: kraft-controller
+    container_name: kraft-controller
+    volumes:
+      - ../../other/zookeeper-to-kraft-migration/migration:/tmp/migration
+    command: bash -c 'until [ -s /tmp/migration/cluster.id ]; do sleep 2; done; export CLUSTER_ID=$$(cat /tmp/migration/cluster.id); echo "cluster id of the ZooKeeper cluster $$CLUSTER_ID"; exec /etc/confluent/docker/run'
+    environment:
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_NODE_ID: 3000
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 3000@kraft-controller:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: CONTROLLER://kraft-controller:9093
+      # the controller talks to the ZooKeeper brokers during the migration: their inter-broker listener
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_ZOOKEEPER_METADATA_MIGRATION_ENABLE: "true"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper

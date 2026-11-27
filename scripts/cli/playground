@@ -16437,7 +16437,7 @@ playground_container_kill_usage() {
 playground_container_set_environment_variables_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container set-environment-variables\n\n"
-    printf "  📦 Set environment variable(s) for a container\n  \n  🎓 Tip: you can pass multiple environment variables by specifying --env\n  multiple times\n  \n  Example: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS:\n  org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n\n"
+    printf "  📦 Set environment variable(s) for a container\n  \n  The container is recreated with them. The values are remembered: a\n  later call (on the same container or another one) keeps them, a\n  variable set again replaces its value, and --restore-original-values\n  gives the container its original definition back without touching the\n  others. A new start-environment, 'playground stop' and\n  'playground container recreate' forget them.\n  \n  🎓 Tip: you can pass multiple environment variables by specifying --env\n  multiple times\n  \n  Example: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS:\n  org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\"\n\n"
   else
     printf "playground container set-environment-variables - 📦 Set environment variable(s) for a container\n\n"
   fi
@@ -32074,6 +32074,60 @@ function filter_rbac_environment() {
   then
     logerror "environment should be rbac-sasl-plain, rbac-oauth or cfk-rbac with this command (it is $environment)!"
   fi
+}
+
+# the environment variables and mounts set on each container with 'playground container set-environment-variables'
+# (and 'debug clock', 'debug jscissors'), kept between calls: one file per container, "env<TAB>NAME: value" and
+# "volume<TAB>host:container" lines, in a folder per playground folder. Every call replays them all, so that a change
+# on one container does not reset the variables set before on another one (or on the same one). Cleared by a new
+# start-environment, 'container recreate' and stop_all, which replay the compose definition without them
+function env_overrides_dir () {
+  local key
+  key=$(printf '%s' "$root_folder" | cksum | awk '{print $1}')
+  echo "${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-env-overrides/$key"
+}
+
+function clear_env_overrides () {
+  rm -rf "$(env_overrides_dir)" 2>/dev/null || true
+}
+
+# env_overrides_compose_file <file> [<container to recreate>…]: the compose override with the variables and mounts of
+# every container that has some, and a random DUMMY value on the containers to recreate (the others keep the same
+# definition, so docker compose leaves them as they are). Returns 1 when there is nothing to write
+function env_overrides_compose_file () {
+  local out="$1" dir f container c recreate_list
+  shift
+  recreate_list=" $* "
+  dir=$(env_overrides_dir)
+  echo "services:" > "$out"
+  local written=0
+  # the containers with remembered values, then the ones to recreate without any
+  local containers_seen=""
+  for f in "$dir"/*.env
+  do
+    [ -f "$f" ] || continue
+    container=$(basename "$f" .env)
+    containers_seen="$containers_seen $container "
+    echo "  $container:" >> "$out"
+    echo "    environment:" >> "$out"
+    [[ "$recreate_list" == *" $container "* ]] && echo "      DUMMY: $RANDOM" >> "$out"
+    awk -F'\t' '$1 == "env" { print "      " $2 }' "$f" >> "$out"
+    if grep -q "^volume" "$f"
+    then
+      echo "    volumes:" >> "$out"
+      awk -F'\t' '$1 == "volume" { print "      - " $2 }' "$f" >> "$out"
+    fi
+    written=1
+  done
+  for c in "$@"
+  do
+    [[ "$containers_seen" == *" $c "* ]] && continue
+    echo "  $c:" >> "$out"
+    echo "    environment:" >> "$out"
+    echo "      DUMMY: $RANDOM" >> "$out"
+    written=1
+  done
+  [ $written -eq 1 ]
 }
 
 # an environment with MDS (role bindings, centralized ACLs): rbac-sasl-plain, rbac-oauth, cfk-rbac
@@ -67371,6 +67425,8 @@ playground_start_environment_command() {
   # a new environment invalidates any previous switch-ccloud, otherwise create-or-update
   # and get-connector-list keep resolving the stale environment
   playground state del run.environment_before_switch
+  # and the values of 'container set-environment-variables' of the previous environment
+  clear_env_overrides
   playground state del run.connector_type_before_switch
 
   if [[ ! -n "$no_stop" ]]
@@ -68233,6 +68289,8 @@ playground_stop_command() {
   cfk_port_forward_pids=$(ps -axo pid=,command= | grep -E '[k]ubectl( |.* )port-forward ' | grep 'confluent' | awk '{print $1}')
 
   docker_command=$(playground state get run.docker_command)
+  # the values of 'container set-environment-variables' belong to the containers that are about to go
+  clear_env_overrides
   if [ -z "$test_file" ] && [ -z "$docker_command" ] && [ -z "$cfk_port_forward_pids" ]
   then
       log "💤 no example was started with 'playground run', nothing to stop"
@@ -85615,8 +85673,8 @@ playground_debug_clock_command() {
       docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | grep -q "^LD_PRELOAD=$remote_dir/libfaketime.so.1"
   }
 
-  # every running container with a fake clock: they must be part of each recreate, the override of the last
-  # 'container set-environment-variables' call replaces the previous one
+  # every running container with a fake clock (set-environment-variables remembers their values: passing them again is
+  # harmless, and keeps the ones started before that change working)
   function all_faked_containers () {
       local c
       for c in $(docker ps --format '{{.Names}}')
@@ -85701,20 +85759,20 @@ playground_debug_clock_command() {
       do
           [[ " ${to_reset[*]} " == *" $c "* ]] || remaining+=("$c")
       done
+      # set-environment-variables remembers the values of each container: restoring the ones reset keeps the fake clock
+      # of the others (replayed with them), the ones reset get their original definition
       if [[ ${#remaining[@]} -eq 0 ]]
       then
           log "🧽 recreating ${to_reset[*]} without libfaketime"
-          flags=()
-          for c in "${to_reset[@]}"
-          do
-              flags+=(--container "$c")
-          done
-          playground container set-environment-variables "${flags[@]}" --restore-original-values || exit 1
       else
-          # the other containers keep their fake clock: recreated with it, the ones reset get their original definition
           log "🧽 recreating ${to_reset[*]} without libfaketime (still on a fake clock: ${remaining[*]})"
-          recreate_with_faketime "${remaining[@]}"
       fi
+      flags=()
+      for c in "${to_reset[@]}"
+      do
+          flags+=(--container "$c")
+      done
+      playground container set-environment-variables "${flags[@]}" --restore-original-values || exit 1
       for c in "${containers[@]}"
       do
           show_clock "$c"
@@ -87744,6 +87802,10 @@ playground_container_recreate_command() {
       docker rm -f -v "$fresh_container" > /dev/null
   done
 
+  # recreate replays the compose definition without the values of 'container set-environment-variables': forget them,
+  # so that the next set-environment-variables does not bring them back
+  clear_env_overrides
+
   echo "$docker_command" > /tmp/playground-command
   log "💫 Recreate container(s)"
   bash /tmp/playground-command
@@ -89671,50 +89733,51 @@ EOF
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  overrides_dir=$(env_overrides_dir)
+  mkdir -p "$overrides_dir"
+  resolved_containers=()
+  for container in "${container_array[@]}"
+  do
+      resolved_containers+=("$(resolve_container_name_for_environment "$container")")
+  done
+
   if [[ ! -n "$restore_original_values" ]]
   then
-      cat << EOF > $tmp_dir/docker-compose.override.java.env.yml
-services:
-EOF
-
-      # Generate environment variables for each container
-      for container in "${container_array[@]}"
+      # the values of this call, added to the ones set before on the same container (a variable set again replaces its
+      # previous value): kept in $overrides_dir, replayed by the next calls, on this container or another one
+      for i in "${!container_array[@]}"
       do
-          resolved_container=$(resolve_container_name_for_environment "$container")
-          cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-  $resolved_container:
-    environment:
-      DUMMY: $RANDOM
-EOF
-
+          container="${container_array[$i]}"
+          resolved_container="${resolved_containers[$i]}"
+          f="$overrides_dir/$resolved_container.env"
+          touch "$f"
           for env_variable in "${env_array[@]}"
           do
-              env_list="$env_list $env_variable"
-              cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-      $env_variable
-EOF
+              name="${env_variable%%:*}"
+              awk -F'\t' -v n="$name" '!($1 == "env" && index($2, n ":") == 1)' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+              printf 'env\t%s\n' "$env_variable" >> "$f"
           done
-
-          if [[ -n "$mount_jscissors_files" || -n "$mount_faketime_files" ]]
-          then
-              echo "    volumes:" >> $tmp_dir/docker-compose.override.java.env.yml
-          fi
           if [[ -n "$mount_jscissors_files" ]]
           then
-              cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/
-EOF
+              mount="${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/"
+              grep -qxF "$(printf 'volume\t%s' "$mount")" "$f" || printf 'volume\t%s\n' "$mount" >> "$f"
           fi
           if [[ -n "$mount_faketime_files" ]]
           then
               # libfaketime.so.1 and faketime.rc of 'playground debug clock': the rc file is read again every second
-              cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-faketime/${container}/:/tmp/faketime/
-EOF
+              mount="${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-faketime/${container}/:/tmp/faketime/"
+              grep -qxF "$(printf 'volume\t%s' "$mount")" "$f" || printf 'volume\t%s\n' "$mount" >> "$f"
           fi
       done
+      for env_variable in "${env_array[@]}"
+      do
+          env_list="$env_list $env_variable"
+      done
 
+      env_overrides_compose_file "$tmp_dir/docker-compose.override.java.env.yml" "${resolved_containers[@]}"
       log "📦 enabling containers ${containers} with environment variables $env_list"
+      others=$(ls "$overrides_dir" 2>/dev/null | sed 's/\.env$//' | grep -v -x -F -f <(printf '%s\n' "${resolved_containers[@]}") | paste -sd, - || true)
+      [[ -n "$others" ]] && log "📌 the values set before on $others are kept"
       echo "$docker_command" > $tmp_dir/playground-command-java-env
       sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
       load_env_variables
@@ -89725,7 +89788,16 @@ EOF
       fi
   else
       log "🧽 restore back original values before any changes was made for containers ${containers}"
+      for resolved_container in "${resolved_containers[@]}"
+      do
+          rm -f "$overrides_dir/$resolved_container.env"
+      done
       echo "$docker_command" > $tmp_dir/playground-command
+      # the values set on the other containers stay: they are replayed, the restored containers get their definition back
+      if env_overrides_compose_file "$tmp_dir/docker-compose.override.java.env.yml"
+      then
+          sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command
+      fi
       load_env_variables
       if ! bash $tmp_dir/playground-command
       then

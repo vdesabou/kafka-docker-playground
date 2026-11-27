@@ -18,8 +18,8 @@ function clock_faked () {
     docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | grep -q "^LD_PRELOAD=$remote_dir/libfaketime.so.1"
 }
 
-# every running container with a fake clock: they must be part of each recreate, the override of the last
-# 'container set-environment-variables' call replaces the previous one
+# every running container with a fake clock (set-environment-variables remembers their values: passing them again is
+# harmless, and keeps the ones started before that change working)
 function all_faked_containers () {
     local c
     for c in $(docker ps --format '{{.Names}}')
@@ -104,20 +104,20 @@ then
     do
         [[ " ${to_reset[*]} " == *" $c "* ]] || remaining+=("$c")
     done
+    # set-environment-variables remembers the values of each container: restoring the ones reset keeps the fake clock
+    # of the others (replayed with them), the ones reset get their original definition
     if [[ ${#remaining[@]} -eq 0 ]]
     then
         log "🧽 recreating ${to_reset[*]} without libfaketime"
-        flags=()
-        for c in "${to_reset[@]}"
-        do
-            flags+=(--container "$c")
-        done
-        playground container set-environment-variables "${flags[@]}" --restore-original-values || exit 1
     else
-        # the other containers keep their fake clock: recreated with it, the ones reset get their original definition
         log "🧽 recreating ${to_reset[*]} without libfaketime (still on a fake clock: ${remaining[*]})"
-        recreate_with_faketime "${remaining[@]}"
     fi
+    flags=()
+    for c in "${to_reset[@]}"
+    do
+        flags+=(--container "$c")
+    done
+    playground container set-environment-variables "${flags[@]}" --restore-original-values || exit 1
     for c in "${containers[@]}"
     do
         show_clock "$c"

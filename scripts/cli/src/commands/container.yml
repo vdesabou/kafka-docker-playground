@@ -547,6 +547,13 @@ commands:
     help: |-
       📦 Set environment variable(s) for a container
 
+      The container is recreated with them. The values are remembered: a
+      later call (on the same container or another one) keeps them, a
+      variable set again replaces its value, and --restore-original-values
+      gives the container its original definition back without touching the
+      others. A new start-environment, 'playground stop' and
+      'playground container recreate' forget them.
+
       🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
 
       Example: --env "KAFKA_OPTS: -verbose:class" --env "CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR"

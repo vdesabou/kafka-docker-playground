@@ -3,6 +3,8 @@ test_file=$(playground state get run.test_file)
 cfk_port_forward_pids=$(ps -axo pid=,command= | grep -E '[k]ubectl( |.* )port-forward ' | grep 'confluent' | awk '{print $1}')
 
 docker_command=$(playground state get run.docker_command)
+# the values of 'container set-environment-variables' belong to the containers that are about to go
+clear_env_overrides
 if [ -z "$test_file" ] && [ -z "$docker_command" ] && [ -z "$cfk_port_forward_pids" ]
 then
     log "💤 no example was started with 'playground run', nothing to stop"

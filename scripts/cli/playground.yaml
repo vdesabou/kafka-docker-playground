@@ -8247,10 +8247,14 @@ subcommands:
         used)\n\n\U0001F393 Tip: you can pass multiple containers by specifying --container
         multiple times\n\nRepeatable: ✓ Yes\nDefault value: connect"
   - name: set-environment-variables
-    description: "\U0001F4E6 Set environment variable(s) for a container\n\n\U0001F393
-      Tip: you can pass multiple environment variables by specifying --env multiple
-      times\n\nExample: --env \"KAFKA_OPTS: -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS:
-      org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\""
+    description: "\U0001F4E6 Set environment variable(s) for a container\n\nThe container
+      is recreated with them. The values are remembered: a\nlater call (on the same
+      container or another one) keeps them, a\nvariable set again replaces its value,
+      and --restore-original-values\ngives the container its original definition back
+      without touching the\nothers. A new start-environment, 'playground stop' and\n'playground
+      container recreate' forget them.\n\n\U0001F393 Tip: you can pass multiple environment
+      variables by specifying --env multiple times\n\nExample: --env \"KAFKA_OPTS:
+      -verbose:class\" --env \"CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR\""
     usage: playground container set-environment-variables [OPTIONS]
     options:
     - names:
