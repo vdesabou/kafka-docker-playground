@@ -35,14 +35,24 @@ then
   kafka_acls_principal="--principal $principal"
 fi
 
-get_mds_scope kafka || exit 1
-mds_request POST "/security/1.0/acls:search" "$(jq -nc --argjson scope "$mds_scope" --argjson entry "$entry_filter" '{scope: $scope, aclBindingFilter: {patternFilter: {resourceType: "ANY", patternType: "ANY"}, entryFilter: $entry}}')" || exit 1
-rows=$(jq -r '.[] | [.entry.principal, .entry.permissionType, .entry.operation, "\(.pattern.resourceType):\(.pattern.name)", .pattern.patternType, .entry.host, "centralized"] | @tsv' <<< "$mds_output")
+rows=""
+if is_rbac_environment
+then
+  get_mds_scope kafka || exit 1
+  mds_request POST "/security/1.0/acls:search" "$(jq -nc --argjson scope "$mds_scope" --argjson entry "$entry_filter" '{scope: $scope, aclBindingFilter: {patternFilter: {resourceType: "ANY", patternType: "ANY"}, entryFilter: $entry}}')" || exit 1
+  rows=$(jq -r '.[] | [.entry.principal, .entry.permissionType, .entry.operation, "\(.pattern.resourceType):\(.pattern.name)", .pattern.patternType, .entry.host, "centralized"] | @tsv' <<< "$mds_output")
+fi
 
 # regular Kafka ACLs, kafka-acls --list prints:
 # Current ACLs for resource `ResourcePattern(resourceType=TOPIC, name=foo, patternType=LITERAL)`:
 #  	(principal=User:charlie, host=*, operation=READ, permissionType=ALLOW)
-kafka_acls_output=$(playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --list $kafka_acls_principal" 2>/dev/null)
+if is_rbac_environment
+then
+  kafka_acls_output=$(playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --list $kafka_acls_principal" 2>/dev/null)
+else
+  # the client config of the environment (kerberos, sasl-*, ssl…)
+  kafka_acls_output=$(run_kafka_admin_tool kafka-acls --list $kafka_acls_principal 2>/dev/null)
+fi
 kafka_rows=$(awk '
   /ResourcePattern\(/ {
     match($0, /resourceType=[^,]*/); type = substr($0, RSTART + 13, RLENGTH - 13)

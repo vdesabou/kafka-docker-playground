@@ -3136,6 +3136,23 @@ def test_wrong_security_protocol_non_java_and_broker():
     check("broker storm, wrong password: 🔑", log_report.auth_failure_known_cause(reason) == "🔑 Authentication failure",
           log_report.auth_failure_known_cause(reason))
 
+
+def test_oauth_token_endpoint_refused_and_license_detector_harmless():
+    """academy 000032 / 000033: the token endpoint refusing the client credentials of a connector is 🎟️; the license
+    broker detector of a connector with its own principal, not allowed to read its internal topic, is known harmless"""
+    def causes_of(body, level="ERROR"):
+        text = ("@@PGFILE@@|connect.log|100|1|0|2026-11-27T09:00:00|2026-11-27T10:00:00\n"
+                f"@@PGREC@@|{level}|1|10|10|2026-11-27T09:53:05|2026-11-27T09:53:05\n{body}\n@@PGTS@@|2026-11-27T09:53:05\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    got = causes_of("[2026-11-27 09:53:05,413] ERROR [shipments-sink|task-0] Failed to start task shipments-sink-0 (org.apache.kafka.connect.runtime.Worker:978)\n"
+                    "    org.apache.kafka.common.KafkaException: Failed to construct kafka consumer\n"
+                    '    java.io.IOException: The response code 401 and error response {"unauthorized_client" - "Invalid client or Invalid client credentials"} was encountered reading the token endpoint response; will not attempt further retries')
+    check("token endpoint 401: 🎟️", "🎟️ OAuth token cannot be obtained or validated" in got, got)
+    reason = log_report.known_causes.harmless("Error while detecting broker type from topic __internal_confluent_only_broker_info: Not authorized to access topics: [__internal_confluent_only_broker_info] (io.confluent.license.kafka.BrokerDetectorImpl:115)")
+    check("license broker detector: harmless", reason is not None and "license" in reason, reason)
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

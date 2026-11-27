@@ -54,6 +54,7 @@ playground find-example --category academy
 | ⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) | the poll loop of a sink task, `max.poll.interval.ms` | `connector diagnose`, `connector show-lag`, `tools http-server requests` |
 | ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) | hostname verification, the SANs of a certificate | `connector diagnose`, `tools cert inspect` |
 | ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) | `principal.service.name`, the role bindings of a sink | `rbac role-binding list\|create`, `connector diagnose` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation) | the token endpoint, the OAuth client of a connector | `connector diagnose`, `analyze logs` |
 | ⭐⭐⭐ | 🔗 Connect | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
 | ⭐⭐⭐ | 🔗 Connect | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
 | ⭐⭐⭐ | 🔗 Connect | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
@@ -61,10 +62,12 @@ playground find-example --category academy
 | ⭐⭐⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
 | ⭐⭐⭐ | 🔗 Connect | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
 | ⭐⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
+| ⭐⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed) | keytabs and key versions, a key rotation on the KDC | `connector diagnose`, `container exec` (`klist`, `kadmin`), `analyze logs` |
 
-<!-- A new exercise: start its "🤯 Details" tab with a "👥 Support area: …" line (its first area, then the others, separated
-by " · "), then run python3 -I scripts/academy-support-areas.py: it writes the Area column above, the section below and
-the "🧑‍🎓 Academy exercises" section of the area pages from these lines. -->
+<!-- A new exercise: add its row to the table above with an empty Area cell (| ⭐ | | [title](…) | …), start its
+"🤯 Details" tab with a "👥 Support area: …" line (its first area, then the others, separated by " · "), then run
+python3 -I scripts/academy-support-areas.py: it fills the Area column, the section below and the
+"🧑‍🎓 Academy exercises" section of the area pages from these lines. -->
 
 ## 🧭 By support area
 
@@ -96,6 +99,8 @@ The questions, commands and deep dives of this area: [🔗 Connect](/area-connec
 * ⭐ *[SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)*
 * ⭐⭐ *[TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)*
 * ⭐⭐ *[RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)*
+* ⭐⭐ *[OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)*
+* ⭐⭐⭐ *[Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)*
 
 ### 🖥️ Brokers, clients and observability
 
@@ -127,6 +132,8 @@ The questions, commands and deep dives of this area: [🛡️ Platform, security
 * ⭐ [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)
 * ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)
 * ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)
+* ⭐⭐ [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)
+* ⭐⭐⭐ [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)
 * ⭐ *[Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)*
 
 ## ⭐ Beginner
@@ -4050,6 +4057,108 @@ The task is RUNNING and writes the invoices. A source connector needs `Developer
 <!-- tabs:end -->
 
 
+### OAuth: the connector cannot get its token after a secret rotation
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A sink connector logs in with its own OAuth client (`client_credentials` grant, Keycloak). Its secret was rotated in
+the identity provider last week; today the connector is created again from the config in git, and its task fails at
+once.
+
+💡 What you'll learn:
+
+* How a Kafka client gets an OAuth token (`OAuthBearerLoginCallbackHandler`, token endpoint)
+* Where the answer of the identity provider shows up
+* Whose OAuth client a connector uses: the worker's, or its own
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔐 Environment: `sasl-oauthbearer` (SASL/OAUTHBEARER, Keycloak)
+
+Reproduction model: [oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-sasl-oauthbearer/oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-sasl-oauthbearer/oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh
+```
+
+```bash
+shipments-sink                 ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.common.KafkaException: Failed to construct kafka consumer
+Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: org.apache.kafka.common.KafkaException: org.apache.kafka.common.security.oauthbearer.internals.secured.UnretryableException: java.io.IOException: The response code 401 …
+Caused by: java.io.IOException: The response code 401 and error response {"unauthorized_client" - "Invalid client or Invalid client credentials"} was encountered reading the token endpoint response; will not attempt further retries
+```
+
+❔Questions:
+
+* Who answers 401: the broker, or someone else?
+* Which credentials are wrong?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Who answers 401?
+
+Not the broker: the consumer never got to it. Before it connects, the client asks the **token endpoint** of the identity
+provider (`sasl.oauthbearer.token.endpoint.url`) for a token, with its client id and secret, and Keycloak answers
+`unauthorized_client`. The task fails while building its consumer (`Failed to construct kafka consumer`).
+
+> Which credentials are wrong?
+
+`connector diagnose` says whose they are:
+
+```bash
+   🎟️ the token endpoint refused the OAuth client of the connector ({"unauthorized_client" - "Invalid client or Invalid client credentials"}): consumer.override.sasl.jaas.config (clientId, clientSecret) overrides the client of the worker. Check them against the identity provider (a rotated secret?): playground connector show-config --connector shipments-sink
+```
+
+```json
+"consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"client\" clientSecret=\"client-secret-2025\";"
+```
+
+[playground analyze logs](/playground%20analyze%20logs) on the worker log: `[HIGH] 🎟️ OAuth token cannot be obtained or validated`.
+
+<!-- select:end -->
+
+* Fix the connector with the current secret of the client (`client-secret`).
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Update the secret with [playground connector create-or-update](/playground%20connector%20create-or-update): a config change restarts the failed task.
+
+```bash
+10:55:15 ℹ️ ✅ 🌎onprem connector shipments-sink is RUNNING (1 task(s)) after 5 seconds
+```
+
+The 5 shipments are in `/tmp/output.json`. The same answer comes back for an unknown client id: Keycloak does not say
+which of the two is wrong.
+
+<!-- select:end -->
+🥁 So...did you learn where a Kafka client gets its OAuth token?
+
+#### **🎓 Next Steps**
+
+* Get a token yourself: `playground container exec -c connect --command "curl -s -d grant_type=client_credentials -d client_id=client -d client_secret=client-secret http://keycloak:8080/realms/kafka/protocol/openid-connect/token"`, and decode its payload: `azp` is the principal the brokers see.
+* Read the [🍪 secured environments](/deep-dive-secured-environments.md) deep dive.
+
+<!-- tabs:end -->
+
+
 ## ⭐⭐⭐ Advanced
 
 ### JDBC sink RUNNING, but no data in the table
@@ -5270,6 +5379,119 @@ and the lag shows 2 until the next records. [playground topic dump-log](/playgro
 
 * Read [🍪 brokers and transactions](/deep-dive-broker.md): hanging transactions (`find-hanging`), the transaction coordinator, and `transaction.max.timeout.ms`.
 * Remove `consumer.override.isolation.level` instead of aborting: what does the connector write?
+
+<!-- tabs:end -->
+
+### Kerberos: the connector fails after a restart, Checksum failed
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A sink connector reads with its own Kerberos principal and keytab. It ran fine for days. After a rolling restart of
+the Connect workers, its task fails with `LoginException: Checksum failed`, and nothing changed in Kafka.
+
+💡 What you'll learn:
+
+* How a Kafka client logs in with a keytab, and what the key version number (kvno) is
+* Why a key rotation on the KDC breaks a client only at its next login
+* How to compare a keytab with the KDC
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔐 Environment: `kerberos` (SASL/GSSAPI, MIT KDC in the `kdc` container)
+
+Reproduction model: [kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-kerberos/kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-kerberos/kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh
+```
+
+The connector reads `orders` as `orders_sink@TEST.CONFLUENT.IO`, with the keytab `/var/lib/secret/orders-sink.key`, and
+writes Monday's orders. On Tuesday the keys of the service accounts are rotated on the KDC. On Wednesday the worker
+restarts:
+
+```bash
+orders-sink                    ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.common.KafkaException: Failed to construct kafka consumer
+Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Checksum failed
+Caused by: KrbException: Checksum failed
+Caused by: java.security.GeneralSecurityException: Checksum failed
+```
+
+❔Questions:
+
+* Why did it keep working on Tuesday, after the rotation?
+* What does the keytab hold, compared to the KDC?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Why did it keep working on Tuesday?
+
+A client logs in once, gets a ticket (TGT) and uses it until it expires (or until its re-login, at about 80 % of its
+lifetime): the key of the keytab is only used at login. The rotation changes the key of the principal on the KDC, the
+running consumer does not notice. The restart makes it log in again, with the old key: the KDC cannot decrypt it,
+`Checksum failed` (`Pre-authentication information was invalid (24)` with some KDCs).
+
+```bash
+   🎫 Kerberos login refused (Checksum failed) with consumer.override.sasl.jaas.config: the key in the keytab is not the current key of the principal on the KDC (keys rotated, password reset): export a new keytab (kadmin ktadd, ktpass on Active Directory) and restart; compare the kvno of klist -kt <keytab> with the one of the KDC
+```
+
+> What does the keytab hold, compared to the KDC?
+
+```bash
+playground container exec -c connect --command "klist -kt /var/lib/secret/orders-sink.key"
+KVNO Timestamp         Principal
+---- ----------------- --------------------------------------------------------
+   2 11/27/26 10:01:46 orders_sink@TEST.CONFLUENT.IO
+playground container exec -c kdc --command "kadmin.local -q 'getprinc orders_sink@TEST.CONFLUENT.IO'"
+Key: vno 3, aes256-cts-hmac-sha1-96
+```
+
+The keytab has key version 2, the KDC version 3. [playground analyze logs](/playground%20analyze%20logs) on the worker log: `[HIGH] 🎫 Kerberos keytab out of date (key changed on the KDC)`.
+
+<!-- select:end -->
+
+* Give the connector a keytab with the current key, without rotating it again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+`ktadd -norandkey` exports the current key (without it, `ktadd` creates a new key, and every other keytab of the principal is out of date):
+
+```bash
+playground container exec -c kdc --command "kadmin.local -q 'ktadd -k /var/lib/secret/orders-sink.key -norandkey orders_sink@TEST.CONFLUENT.IO' && chmod a+r /var/lib/secret/orders-sink.key"
+playground connector restart --connector orders-sink
+orders-sink                    ✅ RUNNING  0:🟢 RUNNING                 -
+{"order": 1, "day": "tuesday"}
+…
+```
+
+On Active Directory, the keytab comes from `ktpass` (with `-kvno` matching `msDS-KeyVersionNumber`), and every
+worker needs the new file.
+
+<!-- select:end -->
+🥁 So...did you learn why a key rotation breaks a client only at its next login?
+
+#### **🎓 Next Steps**
+
+* The other way a Kerberos client breaks later: its ticket expires. See [other/kerberos-ticket-expiry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kerberos-ticket-expiry).
+* Remove `+allow_renewable` from the principal (`modprinc -allow_renewable`), restart the connector: `Message stream modified (41)`.
 
 <!-- tabs:end -->
 

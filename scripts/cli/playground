@@ -23120,7 +23120,7 @@ playground_rbac_user_list_usage() {
 playground_rbac_acl_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground rbac acl\n\n"
-    printf "  🚦 ACL commands\n  \n  By default, ACLs are MDS centralized ACLs (stored in the\n  _confluent-metadata-auth topic and enforced by the CONFLUENT access rule\n  provider). With --kafka-acls, they are regular Kafka ACLs created with\n  kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).\n  \n  ⛅ On a Confluent Cloud run, they are the ACLs of the Confluent Cloud\n  cluster (confluent kafka acl). --connector then uses the service\n  account of a fully managed connector created with\n  playground run --ccloud-service-account as principal, to reproduce\n  authorization errors: delete or deny one of its ACLs, then restart the\n  connector.\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%91%%A4-a-fully-managed-connector-with-a-service-account-loses-an-acl\n\n"
+    printf "  🚦 ACL commands\n  \n  On an RBAC environment, ACLs are MDS centralized ACLs by default (stored\n  in the _confluent-metadata-auth topic and enforced by the CONFLUENT\n  access rule provider). With --kafka-acls, they are regular Kafka ACLs\n  created with kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).\n  \n  On the other environments with an authorizer (kerberos, sasl-*,\n  ldap-authorizer-sasl-plain, 2way-ssl…), they are always Kafka ACLs, with\n  the client config of the environment.\n  \n  ⛅ On a Confluent Cloud run, they are the ACLs of the Confluent Cloud\n  cluster (confluent kafka acl). --connector then uses the service\n  account of a fully managed connector created with\n  playground run --ccloud-service-account as principal, to reproduce\n  authorization errors: delete or deny one of its ACLs, then restart the\n  connector.\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%91%%A4-a-fully-managed-connector-with-a-service-account-loses-an-acl\n\n"
   else
     printf "playground rbac acl - 🚦 ACL commands\n\n"
   fi
@@ -32076,6 +32076,19 @@ function filter_rbac_environment() {
   fi
 }
 
+# an environment with MDS (role bindings, centralized ACLs): rbac-sasl-plain, rbac-oauth, cfk-rbac
+function is_rbac_environment() {
+  get_environment_used
+  [[ "$environment" == "rbac-sasl-plain" ]] || [[ "$environment" == "rbac-oauth" ]] || [[ "$environment" == "cfk-rbac" ]]
+}
+
+# the ACL commands: MDS centralized ACLs on an RBAC environment, the ACLs of the cluster on Confluent Cloud, and the
+# Kafka ACLs (kafka-acls) of the authorizer of any other environment (kerberos, sasl-*, ldap-authorizer-sasl-plain,
+# 2way-ssl…): kafka-acls says it when the brokers have no authorizer
+function filter_acl_environment() {
+  return 0
+}
+
 function filter_rbac_or_ccloud_environment() {
   get_environment_used
 
@@ -32294,6 +32307,8 @@ function mds_acl() {
   local deny="${args[--deny]}"
   local host="${args[--host]:-*}"
   local kafka_acls="${args[--kafka-acls]}"
+  # no MDS outside the RBAC environments: Kafka ACLs only
+  is_rbac_environment || kafka_acls=1
   local pattern_type="LITERAL"
   local permission="ALLOW"
   local resource_type=""
@@ -32338,7 +32353,14 @@ function mds_acl() {
       kafka_acls_args="$kafka_acls_args --force"
     fi
     log "🧰 kafka-acls $kafka_acls_args"
-    playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config $kafka_acls_args" || return 1
+    if is_rbac_environment
+    then
+      playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config $kafka_acls_args" || return 1
+    else
+      # the bootstrap server and the client config of the environment (kerberos, sasl-*, ssl…), as the topic commands
+      eval "local kafka_acls_array=($kafka_acls_args)"
+      run_kafka_admin_tool kafka-acls "${kafka_acls_array[@]}" || return 1
+    fi
     return 0
   fi
 
@@ -100228,14 +100250,24 @@ playground_rbac_acl_list_command() {
     kafka_acls_principal="--principal $principal"
   fi
 
-  get_mds_scope kafka || exit 1
-  mds_request POST "/security/1.0/acls:search" "$(jq -nc --argjson scope "$mds_scope" --argjson entry "$entry_filter" '{scope: $scope, aclBindingFilter: {patternFilter: {resourceType: "ANY", patternType: "ANY"}, entryFilter: $entry}}')" || exit 1
-  rows=$(jq -r '.[] | [.entry.principal, .entry.permissionType, .entry.operation, "\(.pattern.resourceType):\(.pattern.name)", .pattern.patternType, .entry.host, "centralized"] | @tsv' <<< "$mds_output")
+  rows=""
+  if is_rbac_environment
+  then
+    get_mds_scope kafka || exit 1
+    mds_request POST "/security/1.0/acls:search" "$(jq -nc --argjson scope "$mds_scope" --argjson entry "$entry_filter" '{scope: $scope, aclBindingFilter: {patternFilter: {resourceType: "ANY", patternType: "ANY"}, entryFilter: $entry}}')" || exit 1
+    rows=$(jq -r '.[] | [.entry.principal, .entry.permissionType, .entry.operation, "\(.pattern.resourceType):\(.pattern.name)", .pattern.patternType, .entry.host, "centralized"] | @tsv' <<< "$mds_output")
+  fi
 
   # regular Kafka ACLs, kafka-acls --list prints:
   # Current ACLs for resource `ResourcePattern(resourceType=TOPIC, name=foo, patternType=LITERAL)`:
   #  	(principal=User:charlie, host=*, operation=READ, permissionType=ALLOW)
-  kafka_acls_output=$(playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --list $kafka_acls_principal" 2>/dev/null)
+  if is_rbac_environment
+  then
+    kafka_acls_output=$(playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --list $kafka_acls_principal" 2>/dev/null)
+  else
+    # the client config of the environment (kerberos, sasl-*, ssl…)
+    kafka_acls_output=$(run_kafka_admin_tool kafka-acls --list $kafka_acls_principal 2>/dev/null)
+  fi
   kafka_rows=$(awk '
     /ResourcePattern\(/ {
       match($0, /resourceType=[^,]*/); type = substr($0, RSTART + 13, RLENGTH - 13)
@@ -107906,6 +107938,38 @@ playground_connector_diagnose_command() {
                   next_steps+=("🔑 SASL authentication refused with the connector's own credentials: $override_key overrides the credentials of the worker. Check its user and password (a rotated password?): playground connector show-config --connector $connector$cluster_flag")
               else
                   next_steps+=("🔑 SASL authentication refused with the credentials of the worker (CONNECT_CONSUMER_SASL_JAAS_CONFIG / CONNECT_PRODUCER_SASL_JAAS_CONFIG): playground container get-properties -c $diagnose_connect_container")
+              fi
+          fi
+          # Kerberos: the login of a client (keytab or ticket cache) refused by the KDC, the most common messages explained
+          if [ $is_cloud -eq 0 ] && grep -q -E "LoginException: (Checksum failed|Pre-authentication information was invalid|Message stream modified|Clock skew too great|Client not found in Kerberos database|Unable to obtain password)" "$cdir/status.json" 2>/dev/null
+          then
+              krb_reason=$(grep -o -E "LoginException: (Checksum failed|Pre-authentication information was invalid \(24\)|Message stream modified \(41\)|Clock skew too great \(37\)|Client not found in Kerberos database \(6\)|Unable to obtain password from user)" "$cdir/status.json" 2>/dev/null | head -1 | sed 's/^LoginException: //')
+              case "$krb_reason" in
+                  "Checksum failed"|"Pre-authentication information was invalid"*)
+                      krb_what="the key in the keytab is not the current key of the principal on the KDC (keys rotated, password reset): export a new keytab (kadmin ktadd, ktpass on Active Directory) and restart; compare the kvno of klist -kt <keytab> with the one of the KDC" ;;
+                  "Message stream modified"*)
+                      krb_what="krb5.conf asks for renewable tickets (renew_lifetime) and the principal is not renewable: modprinc +allow_renewable -maxrenewlife on the KDC, or remove renew_lifetime" ;;
+                  "Clock skew too great"*)
+                      krb_what="the clock of the worker and of the KDC are more than 5 minutes apart (clockskew of krb5.conf): fix the time synchronization" ;;
+                  "Client not found in Kerberos database"*)
+                      krb_what="the principal does not exist on the KDC: check its name and realm (principal= of the JAAS config, the realm of krb5.conf)" ;;
+                  *)
+                      krb_what="the keytab cannot be read, or has no key for the principal: check keyTab= and principal= of the JAAS config, and the permissions of the file" ;;
+              esac
+              krb_key=$(jq -r 'to_entries[] | select(.key | test("^(consumer|producer|admin)\\.override\\.sasl\\.jaas\\.config$")) | .key' "$cdir/config.json" 2>/dev/null | head -1)
+              next_steps+=("🎫 Kerberos login refused ($krb_reason) with ${krb_key:-the JAAS config of the worker}: $krb_what")
+          fi
+          # OAuth: the token endpoint refused the client credentials (client_credentials grant): its error, and whose
+          # OAuth client it is, the connector's own (*.override.sasl.jaas.config) or the worker's
+          if [ $is_cloud -eq 0 ] && grep -q "was encountered reading the token endpoint response" "$cdir/status.json" 2>/dev/null
+          then
+              oauth_error=$(grep -o -E 'error response \{[^}]{0,200}\}' "$cdir/status.json" 2>/dev/null | head -1 | sed -E 's/^error response //; s/\\"/"/g')
+              oauth_key=$(jq -r 'to_entries[] | select(.key | test("^(consumer|producer|admin)\\.override\\.sasl\\.jaas\\.config$")) | .key' "$cdir/config.json" 2>/dev/null | head -1)
+              if [[ -n "$oauth_key" ]]
+              then
+                  next_steps+=("🎟️ the token endpoint refused the OAuth client of the connector${oauth_error:+ ($oauth_error)}: $oauth_key (clientId, clientSecret) overrides the client of the worker. Check them against the identity provider (a rotated secret?): playground connector show-config --connector $connector$cluster_flag")
+              else
+                  next_steps+=("🎟️ the token endpoint refused the OAuth client of the worker${oauth_error:+ ($oauth_error)}: its sasl.jaas.config (clientId, clientSecret) and sasl.oauthbearer.token.endpoint.url: playground container get-properties -c $diagnose_connect_container")
               fi
           fi
           # not authorized: the principal and the resource, and on RBAC the role bindings to look at and to create
@@ -170895,7 +170959,7 @@ playground_rbac_acl_parse_requirements() {
   done
 
   # :command.user_filter
-  filter_error=$(filter_rbac_or_ccloud_environment)
+  filter_error=$(filter_acl_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
     exit 1

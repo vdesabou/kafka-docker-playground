@@ -163,6 +163,38 @@ do
                 next_steps+=("🔑 SASL authentication refused with the credentials of the worker (CONNECT_CONSUMER_SASL_JAAS_CONFIG / CONNECT_PRODUCER_SASL_JAAS_CONFIG): playground container get-properties -c $diagnose_connect_container")
             fi
         fi
+        # Kerberos: the login of a client (keytab or ticket cache) refused by the KDC, the most common messages explained
+        if [ $is_cloud -eq 0 ] && grep -q -E "LoginException: (Checksum failed|Pre-authentication information was invalid|Message stream modified|Clock skew too great|Client not found in Kerberos database|Unable to obtain password)" "$cdir/status.json" 2>/dev/null
+        then
+            krb_reason=$(grep -o -E "LoginException: (Checksum failed|Pre-authentication information was invalid \(24\)|Message stream modified \(41\)|Clock skew too great \(37\)|Client not found in Kerberos database \(6\)|Unable to obtain password from user)" "$cdir/status.json" 2>/dev/null | head -1 | sed 's/^LoginException: //')
+            case "$krb_reason" in
+                "Checksum failed"|"Pre-authentication information was invalid"*)
+                    krb_what="the key in the keytab is not the current key of the principal on the KDC (keys rotated, password reset): export a new keytab (kadmin ktadd, ktpass on Active Directory) and restart; compare the kvno of klist -kt <keytab> with the one of the KDC" ;;
+                "Message stream modified"*)
+                    krb_what="krb5.conf asks for renewable tickets (renew_lifetime) and the principal is not renewable: modprinc +allow_renewable -maxrenewlife on the KDC, or remove renew_lifetime" ;;
+                "Clock skew too great"*)
+                    krb_what="the clock of the worker and of the KDC are more than 5 minutes apart (clockskew of krb5.conf): fix the time synchronization" ;;
+                "Client not found in Kerberos database"*)
+                    krb_what="the principal does not exist on the KDC: check its name and realm (principal= of the JAAS config, the realm of krb5.conf)" ;;
+                *)
+                    krb_what="the keytab cannot be read, or has no key for the principal: check keyTab= and principal= of the JAAS config, and the permissions of the file" ;;
+            esac
+            krb_key=$(jq -r 'to_entries[] | select(.key | test("^(consumer|producer|admin)\\.override\\.sasl\\.jaas\\.config$")) | .key' "$cdir/config.json" 2>/dev/null | head -1)
+            next_steps+=("🎫 Kerberos login refused ($krb_reason) with ${krb_key:-the JAAS config of the worker}: $krb_what")
+        fi
+        # OAuth: the token endpoint refused the client credentials (client_credentials grant): its error, and whose
+        # OAuth client it is, the connector's own (*.override.sasl.jaas.config) or the worker's
+        if [ $is_cloud -eq 0 ] && grep -q "was encountered reading the token endpoint response" "$cdir/status.json" 2>/dev/null
+        then
+            oauth_error=$(grep -o -E 'error response \{[^}]{0,200}\}' "$cdir/status.json" 2>/dev/null | head -1 | sed -E 's/^error response //; s/\\"/"/g')
+            oauth_key=$(jq -r 'to_entries[] | select(.key | test("^(consumer|producer|admin)\\.override\\.sasl\\.jaas\\.config$")) | .key' "$cdir/config.json" 2>/dev/null | head -1)
+            if [[ -n "$oauth_key" ]]
+            then
+                next_steps+=("🎟️ the token endpoint refused the OAuth client of the connector${oauth_error:+ ($oauth_error)}: $oauth_key (clientId, clientSecret) overrides the client of the worker. Check them against the identity provider (a rotated secret?): playground connector show-config --connector $connector$cluster_flag")
+            else
+                next_steps+=("🎟️ the token endpoint refused the OAuth client of the worker${oauth_error:+ ($oauth_error)}: its sasl.jaas.config (clientId, clientSecret) and sasl.oauthbearer.token.endpoint.url: playground container get-properties -c $diagnose_connect_container")
+            fi
+        fi
         # not authorized: the principal and the resource, and on RBAC the role bindings to look at and to create
         if [ $is_cloud -eq 0 ] && grep -q -E "(Topic|Group|TransactionalId|Cluster)AuthorizationException" "$cdir/status.json" 2>/dev/null
         then
