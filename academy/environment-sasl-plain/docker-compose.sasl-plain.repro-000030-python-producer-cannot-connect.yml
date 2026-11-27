@@ -1,0 +1,13 @@
+---
+services:
+
+  client-python:
+    build:
+      context: ../../other/client-python/
+    hostname: client-python
+    container_name: client-python
+    volumes:
+      # a folder, not the file: an edit of client.properties is seen by the next run of the client, without recreating
+      - ../../academy/environment-sasl-plain/client-python-000030:/tmp/conf:ro
+    depends_on:
+      - broker

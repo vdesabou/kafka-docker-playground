@@ -3114,6 +3114,28 @@ def test_broker_quota_throttled_known_cause():
     hint = next(h for h in res["known_causes"] if h["title"].startswith("🚥"))
     check("advice", "playground quota get" in hint["advice"], hint["advice"])
 
+
+def test_wrong_security_protocol_non_java_and_broker():
+    """a client without SASL on a SASL listener (academy 000030): librdkafka 2.x only logs a bootstrap connection closed
+    by the broker right after it was opened, and the broker logs at INFO "Unexpected Kafka request of type METADATA during
+    SASL handshake" (a 🚷 storm of failed authentications): both are 🛂, not the generic 🔑"""
+    def causes_of(body, level="WARN"):
+        text = ("@@PGFILE@@|client.log|100|0|1|2026-11-27T09:00:00|2026-11-27T10:00:00\n"
+                f"@@PGREC@@|{level}|1|10|10|2026-11-27T09:05:08|2026-11-27T09:05:08\n{body}\n@@PGTS@@|2026-11-27T09:05:08\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    got = causes_of("%4|1795770308.990|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Disconnected: connection closed by peer: receive 0 after POLLIN (after 295ms in state UP)")
+    check("librdkafka quick disconnect: 🛂", "🛂 Wrong security.protocol or SASL mechanism" in got, got)
+    got = causes_of("%6|1795770308.990|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Disconnected: connection closed by peer: receive 0 after POLLIN (after 600012ms in state UP)")
+    check("librdkafka idle disconnect: not 🛂", "🛂 Wrong security.protocol or SASL mechanism" not in got, got)
+    reason = "/192.168.112.4 failed authentication: Unexpected Kafka request of type METADATA during SASL handshake. ×61"
+    check("broker storm: 🛂", log_report.auth_failure_known_cause(reason) == "🛂 Wrong security.protocol or SASL mechanism",
+          log_report.auth_failure_known_cause(reason))
+    reason = "/10.0.0.5 failed authentication: Authentication failed: Invalid username or password ×12"
+    check("broker storm, wrong password: 🔑", log_report.auth_failure_known_cause(reason) == "🔑 Authentication failure",
+          log_report.auth_failure_known_cause(reason))
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

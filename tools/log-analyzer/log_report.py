@@ -2768,9 +2768,12 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
         livelock = r["kind"] == "sink_empty_rotation" and r["count"] >= SINK_LIVELOCK_MIN and not commits[r["who"]]
         if livelock:
             reason = (f"{reason} · " if reason else "") + SINK_LIVELOCK_TEXT
+        # 🚷 the failed authentications of a broker (INFO lines, never records): the known cause their error explains
+        # ("Unexpected Kafka request of type METADATA during SASL handshake" is a client without SASL on a SASL listener)
+        known = auth_failure_known_cause(reason) if r["kind"] == "auth_failure" else None
         out.append({"kind": r["kind"], "who": r["who"], "count": r["count"], "first": r["first"], "last": r["last"],
                     "per_hour": per_hour, "connector": r["connectors"].most_common(1)[0][0] if r["connectors"] else None,
-                    "reason": reason, "leaving": leaving, "livelock": livelock,
+                    "reason": reason, "leaving": leaving, "livelock": livelock, "known_cause": known,
                     # a consumer that leaves on purpose (closed: "pro-actively leaving the group", the schema history
                     # consumer of Debezium every few seconds, the short-lived consumers of Oracle CDC) is not a storm
                     "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") + BROKER_STORM_KINDS and r["count"] >= STORM_MIN
@@ -2789,6 +2792,15 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     out.sort(key=lambda r: (not r["loop"], not (r["storm"] or r["livelock"]), r["leaving"], order.index(r["kind"]), -r["count"]))
     # the period the rates are computed on: under an hour, the HTML report shows the count over it instead of a rate
     return {"rows": out, "storms": [r for r in out if r["storm"]], "loops": loops, "hours": round(hours, 3)}
+
+
+def auth_failure_known_cause(reason: Optional[str]) -> Optional[str]:
+    """the known cause that the error of failed client authentications of a broker explains, the most precise one (the
+    longest text matched: "failed authentication" of 🔑 matches every row), None when none does"""
+    if not reason:
+        return None
+    spans = [(len(m.group(0)), title) for pattern, _, title, _ in HINTS for m in [re.search(pattern, reason)] if m]
+    return max(spans)[1] if spans else None
 
 
 def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
@@ -2822,6 +2834,9 @@ def broker_signals_text(lc: Optional[dict], top: int = 8) -> List[str]:
         out.append(f"   {'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
                    + (f" · {r['reason']}" if r.get("reason") else "")
                    + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
+        if r.get("known_cause"):
+            advice = next((a for _, _, title, a in HINTS if title == r["known_cause"]), "")
+            out.append(f"      👉 {r['known_cause']}: {advice}")
     if len(rows) > top:
         out.append(f"   … {len(rows) - top} more in the HTML report and .lifecycle of --json")
     if any(r["kind"] == "isr_expand" for r in rows) and not any(r["kind"] == "isr_shrink" for r in rows):
@@ -3088,7 +3103,9 @@ def lifecycle_html(lc: Optional[dict], viewers: Optional[Dict[str, str]] = None)
                 f"<td class='lc-who'>{who(r)}</td>"
                 f"<td class='lc-count'><b>{r['count']:,}</b><div class='lc-meter'><i style='width:{max(2.0, 100 * r['count'] / max_count):.1f}%'></i></div></td>"
                 f"<td>{rate(r)}</td><td class='lc-when'>{when(r)}</td>"
-                f"<td class='lc-reason'>{e(r.get('reason') or '')}{conn}</td></tr>" + occurrences(r))
+                f"<td class='lc-reason'>{e(r.get('reason') or '')}{conn}"
+                + (f"<br>👉 <b>{e(r['known_cause'])}</b>" if r.get("known_cause") else "")
+                + "</td></tr>" + occurrences(r))
 
     axis = (f"<div class='lc-axis'><span>{e(datetime.fromtimestamp(t0, timezone.utc).strftime('%m-%d %H:%M'))}</span>"
             f"<span>{e(datetime.fromtimestamp(t1, timezone.utc).strftime('%m-%d %H:%M'))}</span></div>") if times else ""
@@ -6124,7 +6141,7 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Broker signals", "", "| What | Broker | Count | Per hour | Partitions / peers |", "| --- | --- | --- | --- | --- |"]
         for r in br_rows[:8]:
             out.append(f"| {'🌀 ' if r['storm'] else ''}{LIFECYCLE_KINDS[r['kind']]} | `{md_cell(r['who'] or '?')}` | {r['count']:,} | "
-                       f"{rate_cell(r)} | {md_cell(r.get('reason') or '')} |")
+                       f"{rate_cell(r)} | {md_cell((r.get('reason') or '') + (' · 👉 ' + r['known_cause'] if r.get('known_cause') else ''))} |")
     conns = res.get("connectors") or []
     if conns:
         out += ["", f"### Connectors ({len(conns)}, most errors first)", "", "| Connector | Version | ERROR/FATAL | WARN | Task kills | Known causes |", "| --- | --- | --- | --- | --- | --- |"]

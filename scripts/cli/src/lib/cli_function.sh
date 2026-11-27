@@ -5006,8 +5006,11 @@ function add_connector_config_based_on_environment () {
 
     rbac-sasl-plain|cfk-rbac)
 
+      # the principal the clients of the connector authenticate as: connectorSA (ResourceOwner of every topic, group and
+      # subject) unless the config names its own service account, kept as is (a customer config with one service account
+      # per connector reproduces its authorization errors)
       echo "$json_content" > $tmp_dir/input.json
-      jq ".[\"principal.service.name\"] = \"connectorSA\" | .[\"principal.service.password\"] = \"connectorSA\"" $tmp_dir/input.json > $tmp_dir/output.json
+      jq 'if has("principal.service.name") then . else .["principal.service.name"] = "connectorSA" | .["principal.service.password"] = "connectorSA" end' $tmp_dir/input.json > $tmp_dir/output.json
       json_content=$(cat $tmp_dir/output.json)
 
       for prefix in {"confluent.topic","redo.log.consumer"}
@@ -5087,10 +5090,14 @@ function add_connector_config_based_on_environment () {
   esac
 
   echo "$json_content" > $tmp_dir/2.json
-  log "✨ Following config was added to handle environment $environment:"
-  set +e
-  diff <(jq --sort-keys . $tmp_dir/1.json) <(jq --sort-keys . $tmp_dir/2.json)
-  set -e
+  local config_added
+  config_added=$(diff <(jq --sort-keys . $tmp_dir/1.json) <(jq --sort-keys . $tmp_dir/2.json) || true)
+  # nothing to say when the config already had everything (its own principal.service.name, its own credentials)
+  if [[ -n "$config_added" ]]
+  then
+    log "✨ Following config was added to handle environment $environment:"
+    echo "$config_added"
+  fi
 }
 
 # the example of the last 'playground run' (run.test_file of playground.ini), on stdout. Errors go to stderr and

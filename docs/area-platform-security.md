@@ -148,3 +148,12 @@ playground connector restart -c filestream-sink && playground connector wait -c 
 
 Then `rbac role-binding create` with the same arguments, restart, and the connector is `RUNNING` again. Turn it into a
 reproduction model with `playground repro bootstrap` (see [🛠 Reproduction models](/toolkit-reproduction-models.md)).
+
+## 🧑‍🎓 Academy exercises
+
+Real issues of this area to reproduce and troubleshoot yourself, with the solution of each step hidden until you ask for it ([🧑‍🎓 Playground Academy](/academy.md)):
+
+* ⭐ [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)
+* ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)
+* ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)
+* ⭐ [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing) (also 🌊 Streams, schemas & non-Java)

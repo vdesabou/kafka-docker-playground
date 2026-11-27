@@ -3,7 +3,8 @@
 The playground is best known for its connector examples, but most of it works for any Confluent Platform or
 Confluent Cloud case: brokers, transactions, clients, Control Center, Schema Registry, ksqlDB, Flink, CFK, security,
 network. Pick your area: each page lists the questions you get, the command or example that answers each one, the
-deep dives to read, and a support case reproduced in 3 commands.
+deep dives to read, a support case reproduced in 3 commands, and the 🧑‍🎓 Academy exercises of the area (real issues to
+reproduce and troubleshoot yourself).
 
 | Area | Covers | Start here |
 | --- | --- | --- |

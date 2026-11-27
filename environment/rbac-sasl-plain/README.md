@@ -43,7 +43,7 @@ Users are the LDAP users of the `openldap` container, loaded from [scripts/secur
 | `schemaregistryUser` | `schemaregistryUser` | schema-registry |
 | `connectAdmin` | `connectAdmin` | connect workers |
 | `connectorSubmitter` | `connectorSubmitter` | creates connectors (Connect REST API, `playground connector`) |
-| `connectorSA` | `connectorSA` | connectors run as this principal (`principal.service.name`) |
+| `connectorSA` | `connectorSA` | connectors run as this principal (`principal.service.name`, added by `playground connector create-or-update`; a config that sets its own `principal.service.name` keeps it, to reproduce a service account without role bindings) |
 | `ksqlDBAdmin`, `ksqlDBUser` | same as user | ksqlDB |
 | `controlcenterAdmin` | `controlcenterAdmin` | control-center |
 | `clientAvroCli` | `clientAvroCli` | Schema Registry access of `playground topic produce/consume` |

@@ -164,6 +164,12 @@ figure.thumbnails img {
     overflow-wrap: anywhere;
 }
 
+/* pages made of wide tables (body.wide-page, plugin in index.html): as wide as the screen allows, instead of the 55em of
+   the theme */
+body.wide-page {
+    --content-max-width: 120rem;
+}
+
 /* "On this page" table of contents (plugin in index.html): only shown when the screen has room for it next to the content */
 .page-toc {
     display: none;

@@ -494,6 +494,12 @@ KNOWN_CAUSES = [
      "pattern": r"incorrect security\.protocol|verify that security\.protocol|broker might require SASL authentication"
                 r"|connecting to a SSL listener|Unexpected handshake request with client mechanism"
                 r"|Client SASL mechanism '[^']+' not enabled|UnsupportedSaslMechanismException"
+                # the broker: a client without SASL (security.protocol PLAINTEXT or SSL) on a SASL listener sends its
+                # ApiVersions / Metadata request instead of the SASL handshake
+                r"|Unexpected Kafka request of type \w+ during SASL handshake"
+                # librdkafka 2.x no longer says "incorrect security.protocol": a bootstrap connection closed by the broker
+                # a few hundred ms after it was opened (not an idle one, closed after connections.max.idle.ms, minutes)
+                r"|/bootstrap: Disconnected: connection closed by peer: receive 0 after POLLIN \(after \d{1,4}ms in state UP\)"
                 # a TLS or HTTP client on a PLAINTEXT listener: the broker reads its first bytes as a size (369296128 is
                 # the start of a TLS record 0x16030100, 1195725856 "GET ")
                 r"|Invalid receive \(size = \d{7,}",
