@@ -606,3 +606,678 @@ body.wide-page {
 .markdown-section button.kdp-solution-button[aria-expanded="true"] .kdp-solution-chevron {
     transform: rotate(180deg);
 }
+
+/* ============================================================================================================
+   ✨ Site-wide look (every page): ink background with a soft glow, Inter + JetBrains Mono, the brand gradient
+   (#d7eff6 → #ffc45c of the home page title) on headings accents, links, code blocks, tables, callouts, sidebar,
+   pagination. Variables of docsify-themeable first, then the elements it doesn't style the way we want.
+   ============================================================================================================ */
+:root {
+    --kdp-ink: #0e1418;
+    --kdp-ink-2: #0a0f12;
+    --kdp-surface: rgba(255, 255, 255, 0.035);
+    --kdp-surface-2: rgba(255, 255, 255, 0.06);
+    --kdp-line: rgba(215, 239, 246, 0.10);
+    --kdp-line-2: rgba(215, 239, 246, 0.18);
+    --kdp-cyan: #8bd8ef;
+    --kdp-ice: #d7eff6;
+    --kdp-amber: #ffc45c;
+    --kdp-gradient: linear-gradient(90deg, var(--kdp-ice), var(--kdp-amber));
+
+    --base-font-family: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    --code-font-family: "JetBrains Mono Variable", ui-monospace, Menlo, Consolas, monospace;
+    --base-font-size: 15.5px;
+    --base-line-height: 1.72;
+    --base-background-color: var(--kdp-ink);
+    --base-color: #c5d1d8;
+    --heading-color: #ffffff;
+    --strong-color: #eef6f9;
+    --link-color: var(--kdp-cyan);
+    --link-text-decoration: none;
+    --selection-color: rgba(139, 216, 239, 0.28);
+    --mark-background: rgba(255, 196, 92, 0.85);
+
+    --heading-h1-font-weight: 750;
+    --heading-h2-font-weight: 700;
+    --heading-h2-border-width: 0;
+    --heading-h2-padding: 0;
+    --heading-h2-margin: 3.2rem 0 1.2rem;
+    --heading-font-weight: 650;
+
+    --code-font-size: 0.9em;
+    --pre-font-size: 14px;
+    --code-inline-background: rgba(139, 216, 239, 0.08);
+    --code-inline-color: #bfe9f6;
+    --code-inline-border-radius: 5px;
+    --code-inline-padding: 0.12em 0.42em;
+    --code-theme-background: #0a1013;
+    --code-block-border-radius: 12px;
+    --code-block-padding: 2.6em 1.4em 1.3em;
+    --code-theme-comment: #6b7f8c;
+    --code-theme-function: #ff8fab;
+    --code-theme-keyword: #8bd8ef;
+    --code-theme-operator: #ffc45c;
+    --code-theme-punctuation: #8a9ba6;
+    --code-theme-selector: #a6e3a1;
+    --code-theme-tag: #f5a97f;
+    --code-theme-text: #dbe6ec;
+    --code-theme-variable: #ffc45c;
+
+    --table-cell-border-width: 0 0 1px 0;
+    --table-cell-border-color: var(--kdp-line);
+    --table-head-border-color: var(--kdp-line-2);
+    --table-cell-padding: 0.7em 0.9em;
+    --table-row-odd-background: transparent;
+
+    --sidebar-background: var(--kdp-ink-2);
+    --sidebar-border-color: var(--kdp-line);
+    --sidebar-border-width: 0 1px 0 0;
+    --sidebar-nav-link-color: rgba(222, 234, 240, 0.72);
+    --sidebar-nav-link-text-decoration--hover: none;
+    --sidebar-nav-link-text-decoration--active: none;
+    --sidebar-nav-strong-color: rgba(222, 234, 240, 0.5);
+
+    --search-input-border-color: var(--kdp-line-2);
+    --search-input-background-color: var(--kdp-surface);
+
+    --blockquote-background: var(--kdp-surface);
+    --blockquote-border-color: var(--kdp-cyan);
+    --hr-border: 0;
+
+    --pagination-border-top: 1px solid var(--kdp-line);
+    --copycode-background: rgba(139, 216, 239, 0.16);
+    --copycode-color: var(--kdp-ice);
+    --docsifytabs-border-color: var(--kdp-line-2);
+    --docsifytabs-tab-background: var(--kdp-surface);
+    --docsifytabs-tab-color: rgba(222, 234, 240, 0.6);
+    --docsifytabs-tab-highlight-color: var(--kdp-cyan);
+    --zoomimage-overlay-background: rgba(5, 8, 10, 0.92);
+}
+
+html {
+    scroll-padding-top: 1rem;
+}
+
+body {
+    background:
+        radial-gradient(60rem 30rem at 85% -10%, rgba(139, 216, 239, 0.07), transparent 70%),
+        radial-gradient(40rem 24rem at 30% -8%, rgba(255, 196, 92, 0.045), transparent 70%),
+        var(--kdp-ink) no-repeat;
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
+}
+
+::selection {
+    background: var(--selection-color);
+}
+
+/* thin scrollbars that match the ink */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(215, 239, 246, 0.16) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 10px;
+    background: rgba(215, 239, 246, 0.16) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(215, 239, 246, 0.3);
+}
+
+/* reading progress bar (plugin in index.html) */
+.kdp-progress {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    background: var(--kdp-gradient);
+    box-shadow: 0 0 10px rgba(255, 196, 92, 0.45);
+    pointer-events: none;
+}
+
+/* each page fades in (not the first paint of the home page hero, which has its own entrance) */
+@media (prefers-reduced-motion: no-preference) {
+    .markdown-section {
+        animation: kdp-page-in 0.35s ease-out both;
+    }
+
+    @keyframes kdp-page-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: none; }
+    }
+}
+
+/* --- headings ---------------------------------------------------------------------------------------------- */
+.markdown-section h1,
+.markdown-section h2,
+.markdown-section h3,
+.markdown-section h4 {
+    letter-spacing: -0.022em;
+    line-height: 1.25;
+}
+
+.markdown-section h1 {
+    margin-bottom: 1.4rem;
+    font-size: 2.35rem;
+}
+
+.markdown-section h2 {
+    position: relative;
+    padding-top: 1.6rem;
+    font-size: 1.65rem;
+}
+
+/* a short gradient bar above each section, instead of the full-width rule of the theme */
+.markdown-section h2::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(215, 239, 246, 0.22), rgba(215, 239, 246, 0.04) 60%, transparent);
+}
+
+.markdown-section h2::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 3.5rem;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--kdp-gradient);
+}
+
+.markdown-section h3 {
+    font-size: 1.28rem;
+    margin-top: 2.2rem;
+}
+
+.markdown-section h4 {
+    font-size: 1.06rem;
+    color: #e6f1f5;
+}
+
+/* code inside a heading (the deep dives, the CLI pages): heading-sized and coloured, no grey box */
+.markdown-section h1 > code,
+.markdown-section h2 > code,
+.markdown-section h3 > code,
+.markdown-section :is(h1, h2, h3) a.anchor code {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 0.92em;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    white-space: normal !important; /* the theme sets nowrap on inline code: a long command overflowed on phones */
+    overflow-wrap: anywhere;
+    background: none !important;
+    color: var(--kdp-ice);
+}
+
+.markdown-section h1 > code,
+.markdown-section h1 a.anchor code {
+    background: var(--kdp-gradient) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+}
+
+/* the anchor of a heading: highlighted on hover */
+.markdown-section :is(h1, h2, h3, h4) a.anchor span {
+    color: inherit;
+}
+
+.markdown-section :is(h2, h3, h4) a.anchor:hover span {
+    color: var(--kdp-cyan);
+}
+
+/* --- text, links, lists ------------------------------------------------------------------------------------ */
+.markdown-section p,
+.markdown-section li {
+    color: var(--base-color);
+}
+
+.markdown-section strong {
+    color: var(--strong-color);
+}
+
+.markdown-section a:not(.home-button):not(.anchor) {
+    color: var(--kdp-cyan);
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: color 0.15s, background-size 0.25s;
+}
+
+.markdown-section a:not(.home-button):not(.anchor):hover {
+    color: var(--kdp-amber);
+    background-size: 100% 1px;
+}
+
+/* links around an image or a card: no underline animation */
+.markdown-section a:has(> img),
+.markdown-section .report-card a,
+.markdown-section .report-tour a,
+.markdown-section .home-numbers a {
+    background-image: none !important;
+}
+
+.markdown-section ul li::marker {
+    color: rgba(139, 216, 239, 0.55);
+}
+
+.markdown-section ol li::marker {
+    color: rgba(139, 216, 239, 0.75);
+    font-weight: 600;
+}
+
+.markdown-section hr {
+    height: 1px;
+    margin: 2.5em 0;
+    border: 0;
+    background: linear-gradient(90deg, transparent, var(--kdp-line-2), transparent);
+}
+
+.markdown-section kbd {
+    padding: 0.15em 0.5em;
+    border: 1px solid var(--kdp-line-2);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    background: var(--kdp-surface-2);
+    font-family: var(--code-font-family);
+    font-size: 0.82em;
+}
+
+/* --- code -------------------------------------------------------------------------------------------------- */
+.markdown-section :not(pre) > code {
+    border: 1px solid rgba(139, 216, 239, 0.12);
+    font-weight: 450;
+}
+
+/* phones: long inline commands wrap instead of widening the page (the theme sets nowrap) */
+@media (max-width: 48em) {
+    .markdown-section :not(pre) > code {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+    }
+}
+
+.markdown-section pre {
+    position: relative;
+    border: 1px solid var(--kdp-line);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+}
+
+/* a terminal title bar: three dots on the left, the language (docsify-themeable, ::after) on the right */
+.markdown-section pre::before {
+    content: "";
+    position: absolute;
+    top: 0.95em;
+    left: 1.1em;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+    box-shadow: 16px 0 0 #febc2e, 32px 0 0 #28c840;
+    opacity: 0.85;
+}
+
+.markdown-section pre[data-lang]::after {
+    top: 0.65em;
+    right: 1.1em;
+    font-family: var(--code-font-family);
+    font-size: 0.7em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(215, 239, 246, 0.38);
+}
+
+.markdown-section pre > code {
+    font-size: 14px !important; /* not an em: the pre already reduces it, the two multiplied gave 11.5px */
+    line-height: 1.65;
+}
+
+.docsify-copy-code-button {
+    border: 1px solid var(--kdp-line-2) !important;
+    border-radius: 7px !important;
+    font-family: var(--base-font-family) !important;
+    font-size: 0.75em !important;
+    backdrop-filter: blur(6px);
+}
+
+/* --- tables ------------------------------------------------------------------------------------------------ */
+.markdown-section table {
+    display: table;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border: 1px solid var(--kdp-line);
+    border-radius: 12px;
+    background: var(--kdp-surface);
+    font-size: 0.93em;
+}
+
+/* wide tables keep a horizontal scroll inside the rounded frame */
+@media (max-width: 60em) {
+    .markdown-section table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+.markdown-section thead th {
+    background: rgba(139, 216, 239, 0.07);
+    color: #f2f8fa;
+    font-size: 0.82em;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.markdown-section tbody tr {
+    transition: background 0.12s;
+}
+
+.markdown-section tbody tr:hover {
+    background: rgba(139, 216, 239, 0.045);
+}
+
+.markdown-section tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.markdown-section td code {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+}
+
+/* --- callouts (flexible-alerts, 'callout' style) and blockquotes ------------------------------------------- */
+.markdown-section .alert.callout,
+.markdown-section blockquote {
+    position: relative;
+    margin: 1.6em 0;
+    padding: 1em 1.3em 1em 1.4em;
+    border: 1px solid var(--kdp-line);
+    border-left: 0;
+    border-radius: 12px;
+    background: var(--kdp-surface);
+    overflow: hidden;
+}
+
+.markdown-section .alert.callout::before,
+.markdown-section blockquote::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: var(--kdp-callout, var(--kdp-cyan));
+}
+
+.markdown-section .alert.callout {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--kdp-callout) 9%, transparent), transparent 70%), var(--kdp-surface);
+}
+
+.markdown-section .alert.callout.note { --kdp-callout: #8bd8ef; }
+.markdown-section .alert.callout.tip { --kdp-callout: #6ee7a8; }
+.markdown-section .alert.callout.warning { --kdp-callout: #ffc45c; }
+.markdown-section .alert.callout.attention { --kdp-callout: #ff7a8a; }
+
+.markdown-section .alert.callout > p.title {
+    margin: 0 0 0.35em;
+    color: var(--kdp-callout);
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.markdown-section .alert.callout > p.title .icon {
+    color: var(--kdp-callout);
+}
+
+.markdown-section .alert.callout > p:last-child,
+.markdown-section blockquote > p:last-child {
+    margin-bottom: 0;
+}
+
+/* --- images and videos in pages ---------------------------------------------------------------------------- */
+.markdown-section p img:not([src*="shields.io"]):not([src*="badge"]):not([width="20"]),
+.markdown-section video {
+    border-radius: 10px;
+}
+
+.markdown-section video {
+    border: 1px solid var(--kdp-line);
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+}
+
+/* --- "Edit on github" (plugin in index.html) --------------------------------------------------------------- */
+.kdp-edit {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -1rem;
+}
+
+.markdown-section a.kdp-edit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.3em 0.75em;
+    border: 1px solid var(--kdp-line);
+    border-radius: 999px;
+    background: var(--kdp-surface) !important;
+    color: rgba(215, 239, 246, 0.6) !important;
+    font-size: 0.78em;
+    transition: border-color 0.15s, color 0.15s !important;
+}
+
+.markdown-section a.kdp-edit-link:hover {
+    border-color: var(--kdp-line-2);
+    color: var(--kdp-amber) !important;
+}
+
+/* --- sidebar ----------------------------------------------------------------------------------------------- */
+.sidebar {
+    border-right: 1px solid var(--kdp-line);
+}
+
+.sidebar .app-name {
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--kdp-line);
+}
+
+.sidebar .search {
+    border: 0 !important;
+}
+
+.sidebar .search .input-wrap {
+    margin: 0 0.9rem;
+    border: 1px solid var(--kdp-line-2);
+    border-radius: 10px;
+    background: var(--kdp-surface);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sidebar .search .input-wrap:focus-within {
+    border-color: rgba(139, 216, 239, 0.55);
+    box-shadow: 0 0 0 3px rgba(139, 216, 239, 0.12);
+}
+
+.sidebar .search input {
+    border: 0 !important;
+    background-color: transparent !important;
+    color: #e6f1f5;
+}
+
+.sidebar .search .results-panel .matching-post {
+    border-bottom-color: var(--kdp-line) !important;
+}
+
+.sidebar .search .matching-post h2 {
+    color: #ffffff;
+}
+
+.sidebar-nav > ul > li > p,
+.sidebar-nav > ul > li > strong,
+.sidebar-nav strong {
+    border-bottom: 0 !important;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(222, 234, 240, 0.45);
+}
+
+.sidebar-nav li > a {
+    border: 0 !important;
+    border-radius: 7px;
+    transition: color 0.12s, background 0.12s;
+}
+
+.sidebar-nav li > a:hover {
+    color: #ffffff !important;
+    background: rgba(215, 239, 246, 0.05);
+}
+
+.sidebar-nav li.active > a {
+    color: #ffffff !important;
+    font-weight: 600;
+    background: linear-gradient(90deg, rgba(139, 216, 239, 0.16), rgba(139, 216, 239, 0.02));
+}
+
+.sidebar-toggle {
+    background: transparent !important;
+}
+
+/* the GitHub corner, in the brand gradient instead of the pale theme colour */
+.github-corner svg {
+    fill: var(--kdp-cyan) !important;
+    color: var(--kdp-ink) !important;
+    opacity: 0.9;
+    transition: opacity 0.15s;
+}
+
+.github-corner:hover svg {
+    opacity: 1;
+}
+
+/* --- pagination (docsify-pagination): two cards -------------------------------------------------------------- */
+.docsify-pagination-container {
+    gap: 1rem;
+    margin-top: 3.5rem !important;
+    padding-top: 1.5rem;
+    border-top: 0 !important;
+}
+
+.pagination-item {
+    flex: 1;
+    margin: 0 !important;
+}
+
+.pagination-item a {
+    display: block;
+    padding: 0.9rem 1.2rem;
+    border: 1px solid var(--kdp-line);
+    border-radius: 12px;
+    background: var(--kdp-surface) !important;
+    transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+
+.pagination-item a:hover {
+    border-color: rgba(139, 216, 239, 0.4);
+    background: var(--kdp-surface-2) !important;
+    transform: translateY(-2px);
+}
+
+.pagination-item a:hover .pagination-item-title {
+    color: var(--kdp-amber);
+}
+
+.pagination-item-label {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.pagination-item-title {
+    color: #ffffff;
+    font-size: 1.05rem !important;
+    font-weight: 600;
+}
+
+/* --- docsify-tabs ------------------------------------------------------------------------------------------ */
+.docsify-tabs__tab {
+    border-radius: 8px 8px 0 0;
+    font-weight: 550;
+}
+
+.docsify-tabs__tab--active {
+    color: #ffffff !important;
+}
+
+.docsify-tabs__content {
+    border-radius: 0 10px 10px 10px;
+}
+
+/* --- home page: a soft entrance and a halo behind the player ----------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+    .home-title, .home-hero > * {
+        animation: kdp-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    .home-hero > :nth-child(2) { animation-delay: 0.06s; }
+    .home-hero > :nth-child(3) { animation-delay: 0.12s; }
+    .home-hero > :nth-child(4) { animation-delay: 0.18s; }
+    .home-hero > :nth-child(5) { animation-delay: 0.24s; }
+
+    @keyframes kdp-rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: none; }
+    }
+}
+
+.home-player {
+    position: relative;
+    box-shadow: 0 0 0 1px rgba(215, 239, 246, 0.06), 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 0 90px -30px rgba(139, 216, 239, 0.35) !important;
+}
+
+.markdown-section a.home-button.primary {
+    box-shadow: 0 8px 24px -8px rgba(255, 196, 92, 0.55);
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+}
+
+.markdown-section a.home-button:hover {
+    transform: translateY(-1px);
+}
+
+.markdown-section .home-numbers a {
+    transition: transform 0.15s;
+}
+
+.markdown-section .home-numbers a:hover {
+    transform: translateY(-2px);
+}

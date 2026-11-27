@@ -20,6 +20,10 @@
          recompute the hash (curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0.9.0/dist/css/theme-simple-dark.css" integrity="sha384-G+RAlt+LEfAH/nY+DZh3+XIhRboypMI32hiJ9BwnmjF41May5BWQKyrDrEkNdV/i" crossorigin="anonymous">
 
+    <!-- Inter (text) and JetBrains Mono (code), variable fonts, see main.css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.3.0/index.css" integrity="sha384-ZTIcl2CmY0wyM9ANOhomBco7rEUIlWztf6lGcLKCocKUrIgGCsfisuZyE+hadW8K" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css" integrity="sha384-bNykZ+bGB4FclZiYvLmgUfE8clWCvZlLOJ3v63czgIEgamTe0EhkaLXIbptJkvmW" crossorigin="anonymous">
+
     <link rel="stylesheet" href="assets/css/main.css">
 
     <!-- ****** faviconit.com favicons ****** -->
@@ -40,7 +44,8 @@
     <link rel="apple-touch-icon" sizes="76x76" href="/assets/favicon/favicon-76.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/assets/favicon/favicon-152.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/favicon-180.png">
-    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileColor" content="#0e1418">
+    <meta name="theme-color" content="#0e1418">
     <meta name="msapplication-TileImage" content="/assets/favicon/favicon-144.png">
     <meta name="msapplication-config" content="/assets/favicon/browserconfig.xml">
     <!-- ****** faviconit.com favicons ****** -->
@@ -102,7 +107,7 @@
       name: 'kafka-docker-playground',
       repo: 'vdesabou/kafka-docker-playground',
       coverpage: false,
-      themeColor: "#d7eff6",
+      themeColor: "#8bd8ef",
       homepage   : 'introduction.md',
       loadSidebar: 'sidebar.md',
       notFoundPage: '_404.md',
@@ -159,6 +164,30 @@
           theme: "classic"
       },
       plugins: [
+        // reading progress: a thin gradient bar at the top of the window (main.css, .kdp-progress)
+        function (hook) {
+          hook.mounted(function () {
+            var bar = document.createElement('div');
+            var scheduled = false;
+            bar.className = 'kdp-progress';
+            document.body.appendChild(bar);
+            function update() {
+              scheduled = false;
+              var max = document.documentElement.scrollHeight - window.innerHeight;
+              bar.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, window.pageYOffset / max) : 0) + ')';
+            }
+            window.addEventListener('scroll', function () {
+              if (!scheduled) {
+                scheduled = true;
+                window.requestAnimationFrame(update);
+              }
+            }, { passive: true });
+            window.addEventListener('resize', update);
+            hook.doneEach(function () {
+              setTimeout(update, 0);
+            });
+          });
+        },
         // Academy (academy.md): each "🙋 See solution for previous step?" No / Yes menu of docsify-select becomes a
         // "Show the solution" button. The menu stays in the page, hidden (main.css): the button sets it and sends the
         // change event docsify-select listens to. docsify-select is loaded after this config, its doneEach (which builds
@@ -348,7 +377,7 @@
               return html;
             }
             var url = 'https://github.com/vdesabou/kafka-docker-playground/edit/master/docs/' + encodeURI(file);
-            return '<div style="overflow: auto"><p style="float: right"><a style="text-decoration: underline" target="_blank" rel="noopener" href="' + url + '">Edit on github</a></p></div>' + html;
+            return '<div class="kdp-edit"><a class="kdp-edit-link" target="_blank" rel="noopener" href="' + url + '">✏️ Edit on GitHub</a></div>' + html;
           });
         },
         // Links to a section (?id=...): docsify scrolls once, right after rendering, but the images and videos above
