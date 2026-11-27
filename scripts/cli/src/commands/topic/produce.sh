@@ -1879,8 +1879,16 @@ then
     log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
 elif [ $producer_failed = 1 ]
 then
-    first_error=$(grep -m1 -E "^([a-zA-Z_$][a-zA-Z0-9_$.]*(Exception|Error)|Caused by|ERROR)( |:|$)" "$tmp_dir/producer_stderr" 2>/dev/null || true)
-    logerror "❌ the console producer failed (exit code $producer_rc) while producing to topic $topic${first_error:+: $first_error}"
+    # the root cause (the last "Caused by:"): the first exception is often a wrapper whose message is the whole schema
+    # ("SerializationException: Error registering Avro schema{…}", the refusal of Schema Registry is its cause)
+    first_error=$(grep -E "^Caused by: " "$tmp_dir/producer_stderr" 2>/dev/null | tail -1 | sed -E 's/^Caused by: //' || true)
+    [[ -z "$first_error" ]] && first_error=$(grep -m1 -E "^([a-zA-Z_$][a-zA-Z0-9_$.]*(Exception|Error)|Caused by|ERROR)( |:|$)" "$tmp_dir/producer_stderr" 2>/dev/null || true)
+    logerror "❌ the console producer failed (exit code $producer_rc) while producing to topic $topic${first_error:+: ${first_error:0:500}}"
+    if [[ "$first_error" == *"incompatible with an earlier schema"* ]]
+    then
+        subject=$(echo "$first_error" | grep -o -E 'for subject "[^"]+"' | head -1 | sed -E 's/for subject "([^"]+)"/\1/')
+        log "🎓 why it is refused, field by field: playground schema check-compatibility --subject ${subject:-<subject>} < <new schema file>"
+    fi
     exit 1
 else
     nb_send_errors=0

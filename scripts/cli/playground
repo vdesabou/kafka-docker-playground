@@ -12301,7 +12301,7 @@ playground_tools_cert_create_usage() {
 playground_tools_cert_inspect_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools cert inspect\n\n"
-    printf "  🔍 Inspect certificates and explain what breaks TLS\n  \n  Reads a keystore or truststore (JKS, PKCS12), a PEM or DER certificate\n  (a chain, a private key), and / or the chain a server sends\n  (--server host:port), and checks what makes Kafka clients fail:\n  \n    expired (or not yet valid) certificates, and the ones expiring soon\n    the order and the end of each chain (a missing intermediate)\n    --hostname in the subject alternative names (No subject alternative names\n  matching)\n    --truststore trusts the chain (PKIX path building failed)\n    the private key belongs to the certificate (in the PEM, or --key)\n    --purpose server|client in the extended key usage, CA used as leaf,\n    RSA keys under 2048 bits, SHA-1 signatures\n  \n  It prints a digest and writes an HTML report made for someone new to\n  TLS: every problem with what it means, why it matters, the java error it\n  causes and how to fix it, each chain drawn certificate by certificate,\n  and a glossary. Exit code 1 when a problem is found.\n  \n  keytool and openssl run in the connect image: nothing to install. A\n  keystore opens with --password, or else with an empty, 'confluent' or\n  'changeit' password (the report says which one).\n  \n  🎓 Tip: for a customer error 'PKIX path building failed', run it on their\n  server certificate (or --server) with --truststore <their truststore>.\n\n"
+    printf "  🔍 Inspect certificates and explain what breaks TLS\n  \n  Reads a keystore or truststore (JKS, PKCS12), a PEM or DER certificate\n  (a chain, a private key), and / or the chain a server sends\n  (--server host:port), and checks what makes Kafka clients fail:\n  \n    expired (or not yet valid) certificates, and the ones expiring soon\n    the order and the end of each chain (a missing intermediate)\n    --hostname in the subject alternative names (No subject alternative names\n  matching): an IP address only matches an IP entry, never a DNS one\n    --truststore trusts the chain (PKIX path building failed)\n    the private key belongs to the certificate (in the PEM, or --key)\n    --purpose server|client in the extended key usage, CA used as leaf,\n    RSA keys under 2048 bits, SHA-1 signatures\n  \n  It prints a digest and writes an HTML report made for someone new to\n  TLS: every problem with what it means, why it matters, the java error it\n  causes and how to fix it, each chain drawn certificate by certificate,\n  and a glossary. Exit code 1 when a problem is found.\n  \n  keytool and openssl run in the connect image: nothing to install. A\n  keystore opens with --password, or else with an empty, 'confluent' or\n  'changeit' password (the report says which one).\n  \n  🎓 Tip: for a customer error 'PKIX path building failed', run it on their\n  server certificate (or --server) with --truststore <their truststore>.\n\n"
   else
     printf "playground tools cert inspect - 🔍 Inspect certificates and explain what breaks TLS\n\n"
   fi
@@ -21520,7 +21520,7 @@ playground_ksqldb_describe_usage() {
 playground_ksqldb_wait_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ksqldb wait\n\n"
-    printf "  ⏳ Wait until the persistent queries are RUNNING and have no lag\n  \n  Waits until every query writing to --source (or every persistent\n  query) is RUNNING and has committed all the records of its input\n  topics, so that its result is complete: use it instead of a sleep\n  after a CREATE ... AS SELECT and the records it reads.\n  \n  A source table (CREATE SOURCE TABLE) is waited for too: its CST_ query\n  materializes it for pull queries and has no sink, its lag is read from\n  its consumer group (_confluent-ksql-<service id>query_<query id>).\n  \n  A query that has not committed any offset yet is done when its input\n  topics are empty, or when it is still without commit after 20 seconds\n  RUNNING: it has nothing to process from where it started (a CREATE\n  sent without SET 'auto.offset.reset' = 'earliest' reads from the end\n  of its topics), and a warning says so.\n  \n  Exits with code 1 when a query is in ERROR, or after --max-wait seconds.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb\n\n"
+    printf "  ⏳ Wait until the persistent queries are RUNNING and have no lag\n  \n  Waits until every query writing to --source (or every persistent\n  query) is RUNNING and has committed all the records of its input\n  topics, so that its result is complete: use it instead of a sleep\n  after a CREATE ... AS SELECT and the records it reads.\n  \n  A source table (CREATE SOURCE TABLE) is waited for too: its CST_ query\n  materializes it for pull queries and has no sink, its lag is read from\n  its consumer group (_confluent-ksql-<service id>query_<query id>).\n  \n  A query that has not committed any offset yet is done when its input\n  topics are empty, or when it is still without commit after 20 seconds\n  RUNNING: it has nothing to process from where it started (a CREATE\n  sent without SET 'auto.offset.reset' = 'earliest' reads from the end\n  of its topics), and a warning says so; the last line is then a ⚠️\n  too (RUNNING without lag, but it processed none of the records already\n  in its input), not a ✅.\n  \n  Exits with code 1 when a query is in ERROR, or after --max-wait seconds.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb\n\n"
   else
     printf "playground ksqldb wait - ⏳ Wait until the persistent queries are RUNNING and have no lag\n\n"
   fi
@@ -77164,6 +77164,21 @@ playground_tools_cert_inspect_command() {
   }
 
   # hostname verification like java: a SAN DNS entry (a wildcard covers one label) or a SAN IP; the CN is not used
+  # an IPv4 or IPv6 address: Java (HostnameChecker) matches it against the IP: entries of the SANs only, never a DNS: one
+  function is_ip_address () {
+      [[ "$1" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || [[ "$1" == *:*:* ]]
+  }
+
+  # the -ext SAN=… value to add for this host name or address
+  function san_ext_for () {
+      if is_ip_address "$1"
+      then
+          echo "ip:$1"
+      else
+          echo "dns:$1"
+      fi
+  }
+
   function host_matches () {
       local host san value
       host=$(tr '[:upper:]' '[:lower:]' <<< "$1")
@@ -77172,6 +77187,7 @@ playground_tools_cert_inspect_command() {
           value=$(tr '[:upper:]' '[:lower:]' <<< "${san#*:}")
           case "$san" in
               DNS:*)
+                  is_ip_address "$host" && continue
                   if [[ "$value" == "$host" ]]
                   then
                       return 0
@@ -77277,12 +77293,12 @@ playground_tools_cert_inspect_command() {
       then
           if [[ -z "$leaf_sans" ]]
           then
-              check "$entry" fail "hostname $hostname" "no subject alternative name (the CN is not used)" "java fails with 'No subject alternative names present': regenerate with -ext SAN=dns:$hostname"
+              check "$entry" fail "hostname $hostname" "no subject alternative name (the CN is not used)" "java fails with 'No subject alternative names present': regenerate with -ext SAN=$(san_ext_for "$hostname")"
           elif host_matches "$hostname" "$leaf_sans"
           then
               check "$entry" ok "hostname $hostname" "in the SANs ($leaf_sans)"
           else
-              check "$entry" fail "hostname $hostname" "not in the SANs ($leaf_sans)" "java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=dns:$hostname, or set ssl.endpoint.identification.algorithm= (empty) on the client to skip the check"
+              check "$entry" fail "hostname $hostname" "not in the SANs ($leaf_sans)" "java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=$(san_ext_for "$hostname")$(is_ip_address "$hostname" && echo " (an address only matches an IP entry, never a DNS one)"), connect with a host name of the SANs, or set ssl.endpoint.identification.algorithm= (empty) on the client to skip the check"
           fi
       fi
       if [[ -n "$purpose" && -z "$leaf_eku" ]]
@@ -94457,8 +94473,16 @@ playground_topic_produce_command() {
       log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
   elif [ $producer_failed = 1 ]
   then
-      first_error=$(grep -m1 -E "^([a-zA-Z_$][a-zA-Z0-9_$.]*(Exception|Error)|Caused by|ERROR)( |:|$)" "$tmp_dir/producer_stderr" 2>/dev/null || true)
-      logerror "❌ the console producer failed (exit code $producer_rc) while producing to topic $topic${first_error:+: $first_error}"
+      # the root cause (the last "Caused by:"): the first exception is often a wrapper whose message is the whole schema
+      # ("SerializationException: Error registering Avro schema{…}", the refusal of Schema Registry is its cause)
+      first_error=$(grep -E "^Caused by: " "$tmp_dir/producer_stderr" 2>/dev/null | tail -1 | sed -E 's/^Caused by: //' || true)
+      [[ -z "$first_error" ]] && first_error=$(grep -m1 -E "^([a-zA-Z_$][a-zA-Z0-9_$.]*(Exception|Error)|Caused by|ERROR)( |:|$)" "$tmp_dir/producer_stderr" 2>/dev/null || true)
+      logerror "❌ the console producer failed (exit code $producer_rc) while producing to topic $topic${first_error:+: ${first_error:0:500}}"
+      if [[ "$first_error" == *"incompatible with an earlier schema"* ]]
+      then
+          subject=$(echo "$first_error" | grep -o -E 'for subject "[^"]+"' | head -1 | sed -E 's/for subject "([^"]+)"/\1/')
+          log "🎓 why it is refused, field by field: playground schema check-compatibility --subject ${subject:-<subject>} < <new schema file>"
+      fi
       exit 1
   else
       nb_send_errors=0
@@ -98156,6 +98180,13 @@ playground_ksqldb_wait_command() {
 
       if [[ -z "$pending" ]]
       then
+          # a query that never committed while its input has records started at the end of it: RUNNING without lag, but
+          # it processed nothing. Not a failure (exit 0, the examples wait on it), but not "all good" either
+          if [ ${#no_commit_warned[@]} -gt 0 ]
+          then
+              logwarn "⚠️ the queries writing to ${sources[*]} are RUNNING without lag, but ${!no_commit_warned[*]} processed none of the records already in its input (started at the end of it, see above) (after $((SECONDS - start))s)"
+              exit 0
+          fi
           log "✅ the queries writing to ${sources[*]} are RUNNING and have no lag (after $((SECONDS - start))s)"
           exit 0
       fi
@@ -107857,6 +107888,33 @@ playground_connector_diagnose_command() {
       if [[ "$connector_state" == "FAILED" ]] || [[ "$task_states" == *"FAILED"* ]]
       then
           next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector$cluster_flag")
+          # SASL refused: which credentials the clients of the connector use, its own (*.override.sasl.jaas.config, or
+          # the admin client of a sink with a DLQ) or the ones of the worker
+          if [ $is_cloud -eq 0 ] && grep -q "SaslAuthenticationException" "$cdir/status.json" 2>/dev/null
+          then
+              override_key=$(jq -r 'to_entries[] | select(.key | test("^(consumer|producer|admin)\\.override\\.sasl\\.jaas\\.config$")) | .key' "$cdir/config.json" 2>/dev/null | head -1)
+              if [[ -n "$override_key" ]]
+              then
+                  # (the saved config masks the value: show-config prints it)
+                  next_steps+=("🔑 SASL authentication refused with the connector's own credentials: $override_key overrides the credentials of the worker. Check its user and password (a rotated password?): playground connector show-config --connector $connector$cluster_flag")
+              else
+                  next_steps+=("🔑 SASL authentication refused with the credentials of the worker (CONNECT_CONSUMER_SASL_JAAS_CONFIG / CONNECT_PRODUCER_SASL_JAAS_CONFIG): playground container get-properties -c $diagnose_connect_container")
+              fi
+          fi
+          # TLS refused: the command that explains the certificate of the broker, with the address the client used
+          if [ $is_cloud -eq 0 ] && grep -q -E "SSLHandshakeException|SslAuthenticationException" "$cdir/status.json" 2>/dev/null
+          then
+              # the most precise reason first (certificate_unknown is the alert that comes with most of them)
+              tls_reason=""
+              for tls_pattern in "No subject alternative names? (present|matching (IP address|DNS name) [^ \"\\]+)" "PKIX path building failed" "NotAfter: [^\"\\]+" "certificate expired" "certificate_unknown"
+              do
+                  tls_reason=$(grep -o -E "$tls_pattern" "$cdir/status.json" 2>/dev/null | head -1)
+                  [[ -n "$tls_reason" ]] && break
+              done
+              tls_host=$(grep -o -E "matching (IP address|DNS name) [^ \"\\]+" "$cdir/status.json" 2>/dev/null | head -1 | awk '{print $NF}')
+              tls_server=$(jq -r '."consumer.override.bootstrap.servers" // ."producer.override.bootstrap.servers" // ."admin.override.bootstrap.servers" // empty' "$cdir/config.json" 2>/dev/null | cut -d, -f1)
+              next_steps+=("🔐 TLS handshake refused${tls_reason:+ ($tls_reason)}: playground tools cert inspect --server ${tls_server:-<broker host:port>}${tls_host:+ --hostname $tls_host} explains the certificate of the broker and what to change")
+          fi
       elif [[ "$connector_state" == "PAUSED" ]] || [[ "$task_states" == *"PAUSED"* ]]
       then
           next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector$cluster_flag")

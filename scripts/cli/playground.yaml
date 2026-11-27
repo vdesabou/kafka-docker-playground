@@ -5425,18 +5425,19 @@ subcommands:
         checks what makes Kafka clients fail:\n\n  expired (or not yet valid) certificates,
         and the ones expiring soon\n  the order and the end of each chain (a missing
         intermediate)\n  --hostname in the subject alternative names (No subject alternative
-        names matching)\n  --truststore trusts the chain (PKIX path building failed)\n
-        \ the private key belongs to the certificate (in the PEM, or --key)\n  --purpose
-        server|client in the extended key usage, CA used as leaf,\n  RSA keys under
-        2048 bits, SHA-1 signatures\n\nIt prints a digest and writes an HTML report
-        made for someone new to\nTLS: every problem with what it means, why it matters,
-        the java error it\ncauses and how to fix it, each chain drawn certificate
-        by certificate,\nand a glossary. Exit code 1 when a problem is found.\n\nkeytool
-        and openssl run in the connect image: nothing to install. A\nkeystore opens
-        with --password, or else with an empty, 'confluent' or\n'changeit' password
-        (the report says which one).\n\n\U0001F393 Tip: for a customer error 'PKIX
-        path building failed', run it on their\nserver certificate (or --server) with
-        --truststore <their truststore>."
+        names matching): an IP address only matches an IP entry, never a DNS one\n
+        \ --truststore trusts the chain (PKIX path building failed)\n  the private
+        key belongs to the certificate (in the PEM, or --key)\n  --purpose server|client
+        in the extended key usage, CA used as leaf,\n  RSA keys under 2048 bits, SHA-1
+        signatures\n\nIt prints a digest and writes an HTML report made for someone
+        new to\nTLS: every problem with what it means, why it matters, the java error
+        it\ncauses and how to fix it, each chain drawn certificate by certificate,\nand
+        a glossary. Exit code 1 when a problem is found.\n\nkeytool and openssl run
+        in the connect image: nothing to install. A\nkeystore opens with --password,
+        or else with an empty, 'confluent' or\n'changeit' password (the report says
+        which one).\n\n\U0001F393 Tip: for a customer error 'PKIX path building failed',
+        run it on their\nserver certificate (or --server) with --truststore <their
+        truststore>."
       usage: playground tools cert inspect [OPTIONS]
       options:
       - names:
@@ -11306,9 +11307,10 @@ subcommands:
       has not committed any offset yet is done when its input\ntopics are empty, or
       when it is still without commit after 20 seconds\nRUNNING: it has nothing to
       process from where it started (a CREATE\nsent without SET 'auto.offset.reset'
-      = 'earliest' reads from the end\nof its topics), and a warning says so.\n\nExits
-      with code 1 when a query is in ERROR, or after --max-wait seconds.\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb"
+      = 'earliest' reads from the end\nof its topics), and a warning says so; the
+      last line is then a ⚠️\ntoo (RUNNING without lag, but it processed none of the
+      records already\nin its input), not a ✅.\n\nExits with code 1 when a query is
+      in ERROR, or after --max-wait seconds.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-ksqldb"
     usage: playground ksqldb wait [OPTIONS]
     options:
     - names:

@@ -142,6 +142,13 @@ do
 
     if [[ -z "$pending" ]]
     then
+        # a query that never committed while its input has records started at the end of it: RUNNING without lag, but
+        # it processed nothing. Not a failure (exit 0, the examples wait on it), but not "all good" either
+        if [ ${#no_commit_warned[@]} -gt 0 ]
+        then
+            logwarn "⚠️ the queries writing to ${sources[*]} are RUNNING without lag, but ${!no_commit_warned[*]} processed none of the records already in its input (started at the end of it, see above) (after $((SECONDS - start))s)"
+            exit 0
+        fi
         log "✅ the queries writing to ${sources[*]} are RUNNING and have no lag (after $((SECONDS - start))s)"
         exit 0
     fi

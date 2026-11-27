@@ -95,6 +95,21 @@ function day () {
 }
 
 # hostname verification like java: a SAN DNS entry (a wildcard covers one label) or a SAN IP; the CN is not used
+# an IPv4 or IPv6 address: Java (HostnameChecker) matches it against the IP: entries of the SANs only, never a DNS: one
+function is_ip_address () {
+    [[ "$1" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || [[ "$1" == *:*:* ]]
+}
+
+# the -ext SAN=… value to add for this host name or address
+function san_ext_for () {
+    if is_ip_address "$1"
+    then
+        echo "ip:$1"
+    else
+        echo "dns:$1"
+    fi
+}
+
 function host_matches () {
     local host san value
     host=$(tr '[:upper:]' '[:lower:]' <<< "$1")
@@ -103,6 +118,7 @@ function host_matches () {
         value=$(tr '[:upper:]' '[:lower:]' <<< "${san#*:}")
         case "$san" in
             DNS:*)
+                is_ip_address "$host" && continue
                 if [[ "$value" == "$host" ]]
                 then
                     return 0
@@ -208,12 +224,12 @@ do
     then
         if [[ -z "$leaf_sans" ]]
         then
-            check "$entry" fail "hostname $hostname" "no subject alternative name (the CN is not used)" "java fails with 'No subject alternative names present': regenerate with -ext SAN=dns:$hostname"
+            check "$entry" fail "hostname $hostname" "no subject alternative name (the CN is not used)" "java fails with 'No subject alternative names present': regenerate with -ext SAN=$(san_ext_for "$hostname")"
         elif host_matches "$hostname" "$leaf_sans"
         then
             check "$entry" ok "hostname $hostname" "in the SANs ($leaf_sans)"
         else
-            check "$entry" fail "hostname $hostname" "not in the SANs ($leaf_sans)" "java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=dns:$hostname, or set ssl.endpoint.identification.algorithm= (empty) on the client to skip the check"
+            check "$entry" fail "hostname $hostname" "not in the SANs ($leaf_sans)" "java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=$(san_ext_for "$hostname")$(is_ip_address "$hostname" && echo " (an address only matches an IP entry, never a DNS one)"), connect with a host name of the SANs, or set ssl.endpoint.identification.algorithm= (empty) on the client to skip the check"
         fi
     fi
     if [[ -n "$purpose" && -z "$leaf_eku" ]]

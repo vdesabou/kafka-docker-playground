@@ -189,7 +189,9 @@ commands:
       topics are empty, or when it is still without commit after 20 seconds
       RUNNING: it has nothing to process from where it started (a CREATE
       sent without SET 'auto.offset.reset' = 'earliest' reads from the end
-      of its topics), and a warning says so.
+      of its topics), and a warning says so; the last line is then a ⚠️
+      too (RUNNING without lag, but it processed none of the records already
+      in its input), not a ✅.
 
       Exits with code 1 when a query is in ERROR, or after --max-wait seconds.
 
