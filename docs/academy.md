@@ -12,7 +12,9 @@ Each exercise (⭐ beginner, ⭐⭐ intermediate, ⭐⭐⭐ advanced) is compose
 Each exercise belongs to the GTS support area (skill-based routing) whose cases it looks like, the areas of
 [🗺️ Start from your area](/areas.md): 🔗 Connect, 🖥️ Brokers, clients and observability, 🌊 Streams, schemas and
 non-Java clients, or 🛡️ Platform, security and Cloud infra. Pick yours in the
-[🧭 By support area](/academy?id=%f0%9f%a7%ad-by-support-area) list.
+[🧭 By support area](/academy?id=%f0%9f%a7%ad-by-support-area) list below; the table of
+[🗂️ All the exercises](/academy?id=%f0%9f%97%82%ef%b8%8f-all-the-exercises), at the bottom of the page, has what each one
+teaches and its main commands.
 
 The reproduction models live in the [`academy/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/academy) folder. List them with:
 
@@ -26,45 +28,10 @@ playground find-example --category academy
 > [!TIP]
 > When a connector fails, the first command to run is [playground connector diagnose](/playground%20connector%20diagnose): status, error digest with the root cause, progress and next steps, in one call. `playground run` already runs it when a connector of the example fails.
 
-## 🗂️ Exercises
-
-| Level | Area | Exercise | What you learn | Main commands |
-| --- | --- | --- | --- | --- |
-| ⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte) | a converter error, skip a record, dead letter queue | `connector diagnose`, `connector offsets alter`, `topic dlq inspect` |
-| ⭐ | 🔗 Connect | [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector) | an SMT error, converters vs SMTs | `connector smt test`, `connector update` |
-| ⭐ | 🔗 Connect | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
-| ⭐ | 🔗 Connect | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
-| ⭐ | 🖥️ Brokers & clients | [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) | a duplicate `node.id`, what the data folder remembers | `broker health`, `broker describe`, `container logs`, `container recreate --fresh-volumes` |
-| ⭐ | 🖥️ Brokers & clients | [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers) | the cluster id and `meta.properties` | `broker health`, `container logs --errors`, `analyze logs` |
-| ⭐ | 🖥️ Brokers & clients | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
-| ⭐ | 🖥️ Brokers & clients | [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash) | `acks=all`, `min.insync.replicas` and the replication factor | `broker health`, `broker stop` / `start`, `topic produce --producer-property acks=all`, `topic reassign` |
-| ⭐ | 🖥️ Brokers & clients | [Producer: slow, without any error](/academy?id=producer-slow-without-any-error) | client quotas, a throttled client | `quota get`, `quota delete`, `topic produce`, `analyze logs` |
-| ⭐ | 🔗 Connect | [FileStream sink: the new connector skips the records already in the topic](/academy?id=filestream-sink-the-new-connector-skips-the-records-already-in-the-topic) | where a new sink starts reading, `auto.offset.reset` | `connector lint`, `topic get-offsets`, `connector offsets reset` |
-| ⭐ | 🌊 Streams, schemas & non-Java | [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused) | the compatibility rule of a subject, a new field without default | `schema check-compatibility`, `schema list`, `topic produce` |
-| ⭐ | 🌊 Streams, schemas & non-Java | [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty) | where a persistent query starts reading, `auto.offset.reset` | `ksqldb sql`, `ksqldb wait` |
-| ⭐ | 🛡️ Platform & security · 🔗 Connect | [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation) | the credentials of a connector: the worker's or its own | `connector diagnose`, `connector show-config`, `analyze logs` |
-| ⭐ | 🌊 Streams, schemas & non-Java · 🛡️ Platform & security | [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing) | librdkafka on a SASL listener, `security.protocol` | `container exec`, `analyze logs` |
-| ⭐⭐ | 🔗 Connect | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
-| ⭐⭐ | 🔗 Connect | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
-| ⭐⭐ | 🔗 Connect | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
-| ⭐⭐ | 🔗 Connect | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
-| ⭐⭐ | 🔗 Connect | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
-| ⭐⭐ | 🔗 Connect | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
-| ⭐⭐ | 🖥️ Brokers & clients | [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) | `listeners` vs `advertised.listeners`, replication | `broker describe`, `broker health`, `topic get-offsets`, `topic describe` |
-| ⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) | the poll loop of a sink task, `max.poll.interval.ms` | `connector diagnose`, `connector show-lag`, `tools http-server requests` |
-| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) | hostname verification, the SANs of a certificate | `connector diagnose`, `tools cert inspect` |
-| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) | `principal.service.name`, the role bindings of a sink | `rbac role-binding list\|create`, `connector diagnose` |
-| ⭐⭐⭐ | 🔗 Connect | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
-| ⭐⭐⭐ | 🔗 Connect | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
-| ⭐⭐⭐ | 🔗 Connect | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
-| ⭐⭐⭐ | 🔗 Connect | [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up) | replication slots, heartbeats | `db cdc-check`, `connector offsets get`, `db sql` |
-| ⭐⭐⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
-| ⭐⭐⭐ | 🔗 Connect | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
-| ⭐⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
-
-<!-- A new exercise: start its "🤯 Details" tab with a "👥 Support area: …" line (its first area, then the others, separated
-by " · "), then run python3 -I scripts/academy-support-areas.py: it writes the Area column above, the section below and
-the "🧑‍🎓 Academy exercises" section of the area pages from these lines. -->
+<!-- A new exercise: add its row to the table of the "🗂️ All the exercises" section (at the bottom of the page) with an empty Area cell (| ⭐ | | [title](…) | …), start its
+"🤯 Details" tab with a "👥 Support area: …" line (its first area, then the others, separated by " · "), then run
+python3 -I scripts/academy-support-areas.py: it fills the Area column of that table, the section below and the
+"🧑‍🎓 Academy exercises" section of the area pages from these lines. -->
 
 ## 🧭 By support area
 
@@ -96,6 +63,8 @@ The questions, commands and deep dives of this area: [🔗 Connect](/area-connec
 * ⭐ *[SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)*
 * ⭐⭐ *[TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)*
 * ⭐⭐ *[RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)*
+* ⭐⭐ *[OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)*
+* ⭐⭐⭐ *[Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)*
 
 ### 🖥️ Brokers, clients and observability
 
@@ -127,6 +96,8 @@ The questions, commands and deep dives of this area: [🛡️ Platform, security
 * ⭐ [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation)
 * ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)
 * ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)
+* ⭐⭐ [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)
+* ⭐⭐⭐ [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)
 * ⭐ *[Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)*
 
 ## ⭐ Beginner
@@ -4050,6 +4021,108 @@ The task is RUNNING and writes the invoices. A source connector needs `Developer
 <!-- tabs:end -->
 
 
+### OAuth: the connector cannot get its token after a secret rotation
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A sink connector logs in with its own OAuth client (`client_credentials` grant, Keycloak). Its secret was rotated in
+the identity provider last week; today the connector is created again from the config in git, and its task fails at
+once.
+
+💡 What you'll learn:
+
+* How a Kafka client gets an OAuth token (`OAuthBearerLoginCallbackHandler`, token endpoint)
+* Where the answer of the identity provider shows up
+* Whose OAuth client a connector uses: the worker's, or its own
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔐 Environment: `sasl-oauthbearer` (SASL/OAUTHBEARER, Keycloak)
+
+Reproduction model: [oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-sasl-oauthbearer/oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-sasl-oauthbearer/oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh
+```
+
+```bash
+shipments-sink                 ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.common.KafkaException: Failed to construct kafka consumer
+Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: org.apache.kafka.common.KafkaException: org.apache.kafka.common.security.oauthbearer.internals.secured.UnretryableException: java.io.IOException: The response code 401 …
+Caused by: java.io.IOException: The response code 401 and error response {"unauthorized_client" - "Invalid client or Invalid client credentials"} was encountered reading the token endpoint response; will not attempt further retries
+```
+
+❔Questions:
+
+* Who answers 401: the broker, or someone else?
+* Which credentials are wrong?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Who answers 401?
+
+Not the broker: the consumer never got to it. Before it connects, the client asks the **token endpoint** of the identity
+provider (`sasl.oauthbearer.token.endpoint.url`) for a token, with its client id and secret, and Keycloak answers
+`unauthorized_client`. The task fails while building its consumer (`Failed to construct kafka consumer`).
+
+> Which credentials are wrong?
+
+`connector diagnose` says whose they are:
+
+```bash
+   🎟️ the token endpoint refused the OAuth client of the connector ({"unauthorized_client" - "Invalid client or Invalid client credentials"}): consumer.override.sasl.jaas.config (clientId, clientSecret) overrides the client of the worker. Check them against the identity provider (a rotated secret?): playground connector show-config --connector shipments-sink
+```
+
+```json
+"consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"client\" clientSecret=\"client-secret-2025\";"
+```
+
+[playground analyze logs](/playground%20analyze%20logs) on the worker log: `[HIGH] 🎟️ OAuth token cannot be obtained or validated`.
+
+<!-- select:end -->
+
+* Fix the connector with the current secret of the client (`client-secret`).
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Update the secret with [playground connector create-or-update](/playground%20connector%20create-or-update): a config change restarts the failed task.
+
+```bash
+10:55:15 ℹ️ ✅ 🌎onprem connector shipments-sink is RUNNING (1 task(s)) after 5 seconds
+```
+
+The 5 shipments are in `/tmp/output.json`. The same answer comes back for an unknown client id: Keycloak does not say
+which of the two is wrong.
+
+<!-- select:end -->
+🥁 So...did you learn where a Kafka client gets its OAuth token?
+
+#### **🎓 Next Steps**
+
+* Get a token yourself: `playground container exec -c connect --command "curl -s -d grant_type=client_credentials -d client_id=client -d client_secret=client-secret http://keycloak:8080/realms/kafka/protocol/openid-connect/token"`, and decode its payload: `azp` is the principal the brokers see.
+* Read the [🍪 secured environments](/deep-dive-secured-environments.md) deep dive.
+
+<!-- tabs:end -->
+
+
 ## ⭐⭐⭐ Advanced
 
 ### JDBC sink RUNNING, but no data in the table
@@ -5273,3 +5346,153 @@ and the lag shows 2 until the next records. [playground topic dump-log](/playgro
 
 <!-- tabs:end -->
 
+### Kerberos: the connector fails after a restart, Checksum failed
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A sink connector reads with its own Kerberos principal and keytab. It ran fine for days. After a rolling restart of
+the Connect workers, its task fails with `LoginException: Checksum failed`, and nothing changed in Kafka.
+
+💡 What you'll learn:
+
+* How a Kafka client logs in with a keytab, and what the key version number (kvno) is
+* Why a key rotation on the KDC breaks a client only at its next login
+* How to compare a keytab with the KDC
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔐 Environment: `kerberos` (SASL/GSSAPI, MIT KDC in the `kdc` container)
+
+Reproduction model: [kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-kerberos/kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-kerberos/kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh
+```
+
+The connector reads `orders` as `orders_sink@TEST.CONFLUENT.IO`, with the keytab `/var/lib/secret/orders-sink.key`, and
+writes Monday's orders. On Tuesday the keys of the service accounts are rotated on the KDC. On Wednesday the worker
+restarts:
+
+```bash
+orders-sink                    ✅ RUNNING  0:🛑 FAILED                   tasks: org.apache.kafka.common.KafkaException: Failed to construct kafka consumer
+Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Checksum failed
+Caused by: KrbException: Checksum failed
+Caused by: java.security.GeneralSecurityException: Checksum failed
+```
+
+❔Questions:
+
+* Why did it keep working on Tuesday, after the rotation?
+* What does the keytab hold, compared to the KDC?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Why did it keep working on Tuesday?
+
+A client logs in once, gets a ticket (TGT) and uses it until it expires (or until its re-login, at about 80 % of its
+lifetime): the key of the keytab is only used at login. The rotation changes the key of the principal on the KDC, the
+running consumer does not notice. The restart makes it log in again, with the old key: the KDC cannot decrypt it,
+`Checksum failed` (`Pre-authentication information was invalid (24)` with some KDCs).
+
+```bash
+   🎫 Kerberos login refused (Checksum failed) with consumer.override.sasl.jaas.config: the key in the keytab is not the current key of the principal on the KDC (keys rotated, password reset): export a new keytab (kadmin ktadd, ktpass on Active Directory) and restart; compare the kvno of klist -kt <keytab> with the one of the KDC
+```
+
+> What does the keytab hold, compared to the KDC?
+
+```bash
+playground container exec -c connect --command "klist -kt /var/lib/secret/orders-sink.key"
+KVNO Timestamp         Principal
+---- ----------------- --------------------------------------------------------
+   2 11/27/26 10:01:46 orders_sink@TEST.CONFLUENT.IO
+playground container exec -c kdc --command "kadmin.local -q 'getprinc orders_sink@TEST.CONFLUENT.IO'"
+Key: vno 3, aes256-cts-hmac-sha1-96
+```
+
+The keytab has key version 2, the KDC version 3. [playground analyze logs](/playground%20analyze%20logs) on the worker log: `[HIGH] 🎫 Kerberos keytab out of date (key changed on the KDC)`.
+
+<!-- select:end -->
+
+* Give the connector a keytab with the current key, without rotating it again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+`ktadd -norandkey` exports the current key (without it, `ktadd` creates a new key, and every other keytab of the principal is out of date):
+
+```bash
+playground container exec -c kdc --command "kadmin.local -q 'ktadd -k /var/lib/secret/orders-sink.key -norandkey orders_sink@TEST.CONFLUENT.IO' && chmod a+r /var/lib/secret/orders-sink.key"
+playground connector restart --connector orders-sink
+orders-sink                    ✅ RUNNING  0:🟢 RUNNING                 -
+{"order": 1, "day": "tuesday"}
+…
+```
+
+On Active Directory, the keytab comes from `ktpass` (with `-kvno` matching `msDS-KeyVersionNumber`), and every
+worker needs the new file.
+
+<!-- select:end -->
+🥁 So...did you learn why a key rotation breaks a client only at its next login?
+
+#### **🎓 Next Steps**
+
+* The other way a Kerberos client breaks later: its ticket expires. See [other/kerberos-ticket-expiry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kerberos-ticket-expiry).
+* Remove `+allow_renewable` from the principal (`modprinc -allow_renewable`), restart the connector: `Message stream modified (41)`.
+
+<!-- tabs:end -->
+
+## 🗂️ All the exercises
+
+| Level | Area | Exercise | What you learn | Main commands |
+| --- | --- | --- | --- | --- |
+| ⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte) | a converter error, skip a record, dead letter queue | `connector diagnose`, `connector offsets alter`, `topic dlq inspect` |
+| ⭐ | 🔗 Connect | [InsertField SMT: DataException: Only Struct objects supported (sink connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-sink-connector) | an SMT error, converters vs SMTs | `connector smt test`, `connector update` |
+| ⭐ | 🔗 Connect | [InsertField SMT: DataException: Only Struct objects supported (source connector)](/academy?id=insertfield-smt-dataexception-only-struct-objects-supported-source-connector) | SMTs on a source connector | `container logs --grep` |
+| ⭐ | 🔗 Connect | [InsertField SMT: adding topic, offset and partition not working](/academy?id=insertfield-smt-adding-topic-offset-and-partition-not-working) | find the failing SMT of a chain | `connector smt test`, `debug log-level` |
+| ⭐ | 🖥️ Brokers & clients | [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) | a duplicate `node.id`, what the data folder remembers | `broker health`, `broker describe`, `container logs`, `container recreate --fresh-volumes` |
+| ⭐ | 🖥️ Brokers & clients | [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers) | the cluster id and `meta.properties` | `broker health`, `container logs --errors`, `analyze logs` |
+| ⭐ | 🖥️ Brokers & clients | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
+| ⭐ | 🖥️ Brokers & clients | [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash) | `acks=all`, `min.insync.replicas` and the replication factor | `broker health`, `broker stop` / `start`, `topic produce --producer-property acks=all`, `topic reassign` |
+| ⭐ | 🖥️ Brokers & clients | [Producer: slow, without any error](/academy?id=producer-slow-without-any-error) | client quotas, a throttled client | `quota get`, `quota delete`, `topic produce`, `analyze logs` |
+| ⭐ | 🔗 Connect | [FileStream sink: the new connector skips the records already in the topic](/academy?id=filestream-sink-the-new-connector-skips-the-records-already-in-the-topic) | where a new sink starts reading, `auto.offset.reset` | `connector lint`, `topic get-offsets`, `connector offsets reset` |
+| ⭐ | 🌊 Streams, schemas & non-Java | [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused) | the compatibility rule of a subject, a new field without default | `schema check-compatibility`, `schema list`, `topic produce` |
+| ⭐ | 🌊 Streams, schemas & non-Java | [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty) | where a persistent query starts reading, `auto.offset.reset` | `ksqldb sql`, `ksqldb wait` |
+| ⭐ | 🛡️ Platform & security · 🔗 Connect | [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation) | the credentials of a connector: the worker's or its own | `connector diagnose`, `connector show-config`, `analyze logs` |
+| ⭐ | 🌊 Streams, schemas & non-Java · 🛡️ Platform & security | [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing) | librdkafka on a SASL listener, `security.protocol` | `container exec`, `analyze logs` |
+| ⭐⭐ | 🔗 Connect | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
+| ⭐⭐ | 🔗 Connect | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
+| ⭐⭐ | 🔗 Connect | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
+| ⭐⭐ | 🔗 Connect | [HTTP sink: the API answers 400, and errors.tolerance doesn't help](/academy?id=http-sink-the-api-answers-400-and-errorstolerance-doesnt-help) | what errors.tolerance covers, retries and error topics of the HTTP sink, replay | `tools http-server requests`, `topic dlq inspect`, `connector offsets reset` |
+| ⭐⭐ | 🔗 Connect | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
+| ⭐⭐ | 🔗 Connect | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
+| ⭐⭐ | 🖥️ Brokers & clients | [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) | `listeners` vs `advertised.listeners`, replication | `broker describe`, `broker health`, `topic get-offsets`, `topic describe` |
+| ⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) | the poll loop of a sink task, `max.poll.interval.ms` | `connector diagnose`, `connector show-lag`, `tools http-server requests` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) | hostname verification, the SANs of a certificate | `connector diagnose`, `tools cert inspect` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) | `principal.service.name`, the role bindings of a sink | `rbac role-binding list\|create`, `connector diagnose` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation) | the token endpoint, the OAuth client of a connector | `connector diagnose`, `analyze logs` |
+| ⭐⭐⭐ | 🔗 Connect | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
+| ⭐⭐⭐ | 🔗 Connect | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
+| ⭐⭐⭐ | 🔗 Connect | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
+| ⭐⭐⭐ | 🔗 Connect | [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up) | replication slots, heartbeats | `db cdc-check`, `connector offsets get`, `db sql` |
+| ⭐⭐⭐ | 🔗 Connect · 🌊 Streams, schemas & non-Java | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
+| ⭐⭐⭐ | 🔗 Connect | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
+| ⭐⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
+| ⭐⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed) | keytabs and key versions, a key rotation on the KDC | `connector diagnose`, `container exec` (`klist`, `kadmin`), `analyze logs` |

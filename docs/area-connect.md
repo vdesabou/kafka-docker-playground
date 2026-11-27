@@ -128,3 +128,5 @@ Real issues of this area to reproduce and troubleshoot yourself, with the soluti
 * ⭐ [SASL: the sink connector is refused after a password rotation](/academy?id=sasl-the-sink-connector-is-refused-after-a-password-rotation) (also 🛡️ Platform & security)
 * ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) (also 🛡️ Platform & security)
 * ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) (also 🛡️ Platform & security)
+* ⭐⭐ [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation) (also 🛡️ Platform & security)
+* ⭐⭐⭐ [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed) (also 🛡️ Platform & security)

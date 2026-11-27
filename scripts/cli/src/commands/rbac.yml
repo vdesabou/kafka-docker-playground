@@ -245,14 +245,18 @@ commands:
     expose: always
     group: RBAC
     filters:
-    - rbac_or_ccloud_environment
+    - acl_environment
     help: |-
       🚦 ACL commands
 
-      By default, ACLs are MDS centralized ACLs (stored in the
-      _confluent-metadata-auth topic and enforced by the CONFLUENT access rule
-      provider). With --kafka-acls, they are regular Kafka ACLs created with
-      kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).
+      On an RBAC environment, ACLs are MDS centralized ACLs by default (stored
+      in the _confluent-metadata-auth topic and enforced by the CONFLUENT
+      access rule provider). With --kafka-acls, they are regular Kafka ACLs
+      created with kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).
+
+      On the other environments with an authorizer (kerberos, sasl-*,
+      ldap-authorizer-sasl-plain, 2way-ssl…), they are always Kafka ACLs, with
+      the client config of the environment.
 
       ⛅ On a Confluent Cloud run, they are the ACLs of the Confluent Cloud
       cluster (confluent kafka acl). --connector then uses the service

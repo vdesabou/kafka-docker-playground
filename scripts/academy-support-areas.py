@@ -89,11 +89,12 @@ def main():
         elif line.startswith("| --- | --- | --- | --- |") and out and out[-1].startswith("| Level | Area |") and line.count("|") == 5:
             line = "| --- | --- | --- | --- | --- |"
         else:
-            m = re.match(r"^\| (⭐+) \| (?:([^|\[]*?) \| )?\[(.+?)\]\(", line)
-            if m and m.group(3) in areas_of:
-                levels[m.group(3)] = m.group(1)
-                rest = line[m.end(2) + 3 if m.group(2) is not None else len(f"| {m.group(1)} | "):]
-                line = f"| {m.group(1)} | {' · '.join(AREAS[k][0] for k in areas_of[m.group(3)])} | {rest}"
+            # a row without the Area column, with an empty one (a new exercise), or with a filled one
+            m = re.match(r"^\| (⭐+) \| (?:[^|\[]*\| )?\[(.+?)\]\(", line)
+            if m and m.group(2) in areas_of:
+                levels[m.group(2)] = m.group(1)
+                rest = line[m.start(2) - 1:]
+                line = f"| {m.group(1)} | {' · '.join(AREAS[k][0] for k in areas_of[m.group(2)])} | {rest}"
         out.append(line)
     t = "\n".join(out)
 

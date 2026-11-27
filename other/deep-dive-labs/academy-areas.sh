@@ -4,10 +4,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
-# lab of the Schema Registry, ksqlDB, SASL, TLS, Python client and RBAC exercises of https://kafka-docker-playground.io/#/academy (the
+# lab of the Schema Registry, ksqlDB, SASL, TLS, Python client, RBAC, OAuth and Kerberos exercises of https://kafka-docker-playground.io/#/academy (the
 # 🌊 Streams, SR & Non-Java and 🔐 Platform, Security & Cloud Infra support areas): runs their reproduction models and
-# asserts the symptom each exercise is about, then the fix the page gives. The SASL, TLS, Python and RBAC models start
-# their own environment (sasl-plain, 2way-ssl, rbac-sasl-plain)
+# asserts the symptom each exercise is about, then the fix the page gives. The SASL, TLS, Python, RBAC, OAuth and
+# Kerberos models start their own environment (sasl-plain, 2way-ssl, rbac-sasl-plain, sasl-oauthbearer, kerberos)
 lab_require_plaintext
 academy="${DIR}/../../academy"
 
@@ -119,5 +119,36 @@ lab_run playground connector restart --connector invoices-sink
 sleep 15
 lab_run playground container exec -c connect --command "cat /tmp/output.json"
 lab_expect_contains '{"invoice": 5}'
+
+log "Exercise: OAuth, the connector cannot get its token after a secret rotation"
+run_model environment-sasl-oauthbearer oauth-repro-000032-sink-cannot-get-token-rotated-secret.sh
+lab_expect_contains "was encountered reading the token endpoint response"
+lab_run playground connector diagnose --connector shipments-sink
+lab_expect_contains "🎟️ the token endpoint refused the OAuth client of the connector"
+playground connector create-or-update --connector shipments-sink << 'EOF'
+{
+     "tasks.max": "1",
+     "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+     "topics": "shipments",
+     "file": "/tmp/output.json",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"client\" clientSecret=\"client-secret\";"
+}
+EOF
+sleep 10
+lab_run playground container exec -c connect --command "cat /tmp/output.json"
+lab_expect_contains '{"shipment": 5}'
+
+log "Exercise: Kerberos, the connector fails after a restart, Checksum failed"
+run_model environment-kerberos kerberos-repro-000033-sink-fails-after-key-rotation-old-keytab.sh
+lab_expect_contains "LoginException: Checksum failed"
+lab_run playground connector diagnose --connector orders-sink
+lab_expect_contains "🎫 Kerberos login refused (Checksum failed) with consumer.override.sasl.jaas.config"
+lab_run playground container exec -c kdc --command "kadmin.local -q 'ktadd -k /var/lib/secret/orders-sink.key -norandkey orders_sink@TEST.CONFLUENT.IO' && chmod a+r /var/lib/secret/orders-sink.key"
+lab_run playground connector restart --connector orders-sink
+sleep 15
+lab_run playground container exec -c connect --command "cat /tmp/output.json"
+lab_expect_contains '{"order": 3, "day": "tuesday"}'
 
 log "✅ academy areas lab: the exercises behave as the page says"

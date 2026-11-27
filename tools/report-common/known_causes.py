@@ -158,7 +158,11 @@ KNOWN_CAUSES = [
     # metadata server or the credentials) or a token the broker cannot validate (JWKS keys, issuer, audience, expiry)
     {"name": "oauth_token", "severity": "high", "category": "Authentication Issues",
      "pattern": r"(?:Login|Sasl)Exception: An internal error occurred while retrieving token from callback handler"
-                r"|InvalidJwtException|UnresolvableKeyException: Unable to find a suitable verification key",
+                r"|InvalidJwtException|UnresolvableKeyException: Unable to find a suitable verification key"
+                # the token endpoint refused the client credentials (OAuthBearerLoginCallbackHandler, client_credentials):
+                # "The response code 401 and error response {"unauthorized_client" - "Invalid client or Invalid client
+                # credentials"} was encountered reading the token endpoint response"
+                r"|was encountered reading the token endpoint response",
      "title": "🎟️ OAuth token cannot be obtained or validated",
      "advice": "SASL/OAUTHBEARER: either the client cannot get its token (its callback handler fails: the token endpoint "
                "or the metadata server is unreachable, or the client id / secret / user is wrong: look at the error just "
@@ -1081,6 +1085,11 @@ HARMLESS = [
     (r"Not initializing since the Jaas config file is not provided", "no JAAS file for this component (not using JAAS)"),
     (r"Switching to END_SESSION because sequences have incremented due to a log switch",
      "Oracle CDC: a redo log switch, the session moves on (normal)"),
+    # a connector with its own principal (consumer.override.sasl.jaas.config): the license broker detector runs with it
+    # and is not allowed to read the internal topic, then the license is registered anyway ("Successfully registered
+    # license for Confluent Platform" right after)
+    (r"Error while detecting broker type from topic __internal_confluent_only_broker_info: Not authorized",
+     "the license broker detector of a connector with its own principal cannot read __internal_confluent_only_broker_info: the license is registered anyway"),
 ]
 _HARMLESS_RX = [(re.compile(p), reason) for p, reason in HARMLESS]
 

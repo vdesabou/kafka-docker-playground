@@ -3195,6 +3195,19 @@ function filter_rbac_environment() {
   fi
 }
 
+# an environment with MDS (role bindings, centralized ACLs): rbac-sasl-plain, rbac-oauth, cfk-rbac
+function is_rbac_environment() {
+  get_environment_used
+  [[ "$environment" == "rbac-sasl-plain" ]] || [[ "$environment" == "rbac-oauth" ]] || [[ "$environment" == "cfk-rbac" ]]
+}
+
+# the ACL commands: MDS centralized ACLs on an RBAC environment, the ACLs of the cluster on Confluent Cloud, and the
+# Kafka ACLs (kafka-acls) of the authorizer of any other environment (kerberos, sasl-*, ldap-authorizer-sasl-plain,
+# 2way-ssl…): kafka-acls says it when the brokers have no authorizer
+function filter_acl_environment() {
+  return 0
+}
+
 function filter_rbac_or_ccloud_environment() {
   get_environment_used
 
@@ -3413,6 +3426,8 @@ function mds_acl() {
   local deny="${args[--deny]}"
   local host="${args[--host]:-*}"
   local kafka_acls="${args[--kafka-acls]}"
+  # no MDS outside the RBAC environments: Kafka ACLs only
+  is_rbac_environment || kafka_acls=1
   local pattern_type="LITERAL"
   local permission="ALLOW"
   local resource_type=""
@@ -3457,7 +3472,14 @@ function mds_acl() {
       kafka_acls_args="$kafka_acls_args --force"
     fi
     log "🧰 kafka-acls $kafka_acls_args"
-    playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config $kafka_acls_args" || return 1
+    if is_rbac_environment
+    then
+      playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config $kafka_acls_args" || return 1
+    else
+      # the bootstrap server and the client config of the environment (kerberos, sasl-*, ssl…), as the topic commands
+      eval "local kafka_acls_array=($kafka_acls_args)"
+      run_kafka_admin_tool kafka-acls "${kafka_acls_array[@]}" || return 1
+    fi
     return 0
   fi
 

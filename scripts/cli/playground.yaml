@@ -12404,15 +12404,17 @@ subcommands:
         argument: ''
         description: "\U0001F41E Show command being ran."
   - name: acl
-    description: "\U0001F6A6 ACL commands\n\nBy default, ACLs are MDS centralized
-      ACLs (stored in the\n_confluent-metadata-auth topic and enforced by the CONFLUENT
-      access rule\nprovider). With --kafka-acls, they are regular Kafka ACLs created
-      with\nkafka-acls (ZK_ACL or KRAFT_ACL access rule provider).\n\n⛅ On a Confluent
-      Cloud run, they are the ACLs of the Confluent Cloud\ncluster (confluent kafka
-      acl). --connector then uses the service\naccount of a fully managed connector
-      created with\nplayground run --ccloud-service-account as principal, to reproduce\nauthorization
-      errors: delete or deny one of its ACLs, then restart the\nconnector.\n\n\U0001F3AC
-      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%91%A4-a-fully-managed-connector-with-a-service-account-loses-an-acl"
+    description: "\U0001F6A6 ACL commands\n\nOn an RBAC environment, ACLs are MDS
+      centralized ACLs by default (stored\nin the _confluent-metadata-auth topic and
+      enforced by the CONFLUENT\naccess rule provider). With --kafka-acls, they are
+      regular Kafka ACLs\ncreated with kafka-acls (ZK_ACL or KRAFT_ACL access rule
+      provider).\n\nOn the other environments with an authorizer (kerberos, sasl-*,\nldap-authorizer-sasl-plain,
+      2way-ssl…), they are always Kafka ACLs, with\nthe client config of the environment.\n\n⛅
+      On a Confluent Cloud run, they are the ACLs of the Confluent Cloud\ncluster
+      (confluent kafka acl). --connector then uses the service\naccount of a fully
+      managed connector created with\nplayground run --ccloud-service-account as principal,
+      to reproduce\nauthorization errors: delete or deny one of its ACLs, then restart
+      the\nconnector.\n\n\U0001F3AC Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%91%A4-a-fully-managed-connector-with-a-service-account-loses-an-acl"
     usage: playground rbac acl COMMAND
     options: []
     subcommands:
