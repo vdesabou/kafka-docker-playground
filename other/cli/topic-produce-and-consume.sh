@@ -6,9 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 
 function produce () {
 
-playground topic produce --tombstone --topic a-topic --key mykey
+playground topic produce --tombstone --topic ${tp}a-topic --key mykey
 
-playground topic produce -t topic-json --nb-messages 10 << 'EOF'
+playground topic produce -t ${tp}topic-json --nb-messages 10 << 'EOF'
 {
     "_meta": {
         "topic": "",
@@ -29,7 +29,7 @@ playground topic produce -t topic-json --nb-messages 10 << 'EOF'
 }
 EOF
 
-playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'
+playground topic produce -t ${tp}topic-datagen-users --nb-messages 10 << 'EOF'
 {
         "namespace": "ksql",
         "name": "users",
@@ -70,9 +70,9 @@ playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'
 }
 EOF
 
-playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON 
+playground  topic produce -t ${tp}topic-datagen-json-schema --nb-messages 1 --value predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON 
 
-playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
+playground topic produce -t ${tp}topic-avro --nb-messages 10 << 'EOF'
 {
     "fields": [
     {
@@ -125,7 +125,7 @@ playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
 }
 EOF
 
-playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'
+playground topic produce -t ${tp}topic-json-schema --nb-messages 3 << 'EOF'
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
@@ -158,7 +158,7 @@ playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'
 EOF
 
 
-playground topic produce -t topic-proto --nb-messages 1 --forced-value '{"count":"635282568338","first_name":"Ysr jkcrb.","last_name":"Qrhrby ixyjxnu cji vtvmnpt.","address":"Fjbeuedswx."}' << 'EOF'
+playground topic produce -t ${tp}topic-proto --nb-messages 1 --forced-value '{"count":"635282568338","first_name":"Ysr jkcrb.","last_name":"Qrhrby ixyjxnu cji vtvmnpt.","address":"Fjbeuedswx."}' << 'EOF'
 syntax = "proto3";
 
 package com.github.vdesabou;
@@ -171,7 +171,7 @@ message Customer {
 }
 EOF
 
-playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'
+playground topic produce -t ${tp}topic-jsql --nb-messages 10 << 'EOF'
 CREATE TABLE "notused"."notused" (
     "id" int PRIMARY KEY COMMENT 'faker.number.int({ min: 1, max: 1000000 })',
     "name" varchar COMMENT 'faker.internet.userName()',
@@ -182,7 +182,7 @@ CREATE TABLE "notused"."notused" (
 );
 EOF
 
-playground topic produce -t topic-string --nb-messages 5000 << 'EOF'
+playground topic produce -t ${tp}topic-string --nb-messages 5000 << 'EOF'
 Ad et ut pariatur officia eos.
 Nesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet atque.
 Quidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto neque.
@@ -198,14 +198,14 @@ EOF
 
 # key and headers
 # mykey1 %g can also be used
-playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key "mykey1" --headers "header1:value1,header2:value2" << 'EOF'
+playground topic produce -t ${tp}topic-json-multiple-lines --nb-messages 10 --key "mykey1" --headers "header1:value1,header2:value2" << 'EOF'
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
 EOF
 
 # avro key
-playground topic produce -t topic-avro-with-key --nb-messages 10 --key '
+playground topic produce -t ${tp}topic-avro-with-key --nb-messages 10 --key '
 {
     "fields": [
     {
@@ -243,13 +243,13 @@ playground topic produce -t topic-avro-with-key --nb-messages 10 --key '
 EOF
 
 # tombstone
-playground topic produce -t topic-json-multiple-lines --tombstone --key "mykey1"
+playground topic produce -t ${tp}topic-json-multiple-lines --tombstone --key "mykey1"
 
 # input file
-playground topic produce -t topic-avro-example3 < ../../scripts/cli/predefined-schemas/avro/lead.avsc
+playground topic produce -t ${tp}topic-avro-example3 < ../../scripts/cli/predefined-schemas/avro/lead.avsc
 
 # record-size
-playground topic produce -t topic-avro-example-big-size --nb-messages 1 --record-size 8300000 << 'EOF'
+playground topic produce -t ${tp}topic-avro-example-big-size --nb-messages 1 --record-size 8300000 << 'EOF'
 {
     "fields": [
     {
@@ -281,7 +281,7 @@ EOF
 
 # validate
 set +e
-playground topic produce -t topic-json-schema-validate --nb-messages 3 --validate << 'EOF'
+playground topic produce -t ${tp}topic-json-schema-validate --nb-messages 3 --validate << 'EOF'
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
@@ -325,7 +325,7 @@ EOF
 set -e
 
 #  --value-subject-name-strategy
-playground topic produce -t topic-avro-example-value-subject-name-strategy --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy << 'EOF'
+playground topic produce -t ${tp}topic-avro-example-value-subject-name-strategy --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy << 'EOF'
 {
     "fields": [
     {
@@ -356,7 +356,7 @@ playground topic produce -t topic-avro-example-value-subject-name-strategy --nb-
 EOF
 
 # --generate-only
-playground topic produce -t topic-avro-example-forced-value --nb-messages 10  --generate-only << 'EOF'
+playground topic produce -t ${tp}topic-avro-example-forced-value --nb-messages 10  --generate-only << 'EOF'
 {
     "fields": [
     {
@@ -405,7 +405,7 @@ playground topic produce -t topic-avro-example-forced-value --nb-messages 10  --
 EOF
 
 # --forced-value
-playground topic produce -t topic-avro-example-forced-value --nb-messages 1 --forced-value '{"count":4,"first_name":"John","last_name":"Doe","address":"xxx","createdDate":1697852606000,"warranty_expiration":{"int":19653}}' << 'EOF'
+playground topic produce -t ${tp}topic-avro-example-forced-value --nb-messages 1 --forced-value '{"count":4,"first_name":"John","last_name":"Doe","address":"xxx","createdDate":1697852606000,"warranty_expiration":{"int":19653}}' << 'EOF'
 {
     "fields": [
     {
@@ -454,7 +454,7 @@ playground topic produce -t topic-avro-example-forced-value --nb-messages 1 --fo
 EOF
 
 # --derive-value-schema-as
-playground topic produce --topic fleet --value predefined-schemas/datagen/fleet_mgmt_location.avro --derive-value-schema-as AVRO --nb-messages 10000 --key predefined-schemas/datagen/fleet_mgmt_description.avro --derive-key-schema-as AVRO 
+playground topic produce --topic ${tp}fleet --value predefined-schemas/datagen/fleet_mgmt_location.avro --derive-value-schema-as AVRO --nb-messages 10000 --key predefined-schemas/datagen/fleet_mgmt_description.avro --derive-key-schema-as AVRO 
 }
 
 function consume () {
@@ -463,7 +463,7 @@ function consume () {
     then
         # the Confluent Cloud cluster is shared with the other CI jobs, which create and delete their own topics
         # (dlq-lcc-*, dbhistory.*…) while this script runs: only consume the topics produced above
-        topics=$(echo "$topics" | grep -E '^(a-topic|fleet|topic-.+)$' || true)
+        topics=$(echo "$topics" | grep -E "^${tp}(a-topic|fleet|topic-.+)$" || true)
     fi
     for topic in $topics
     do
@@ -473,10 +473,27 @@ function consume () {
 }
 
 for environment in plaintext ccloud; do
+    tp=""
+    if [ "$environment" == "ccloud" ]
+    then
+        # another CI job can run this script on the same Confluent Cloud cluster at the same time: with the same topic
+        # names, the end-of-job cleanup of the job that created a topic deletes it while the other job still consumes it
+        # (#10662). A prefix of this run keeps the topics apart.
+        tp="cli-$(date +%s)-${RANDOM}-"
+    fi
     log "🏗️ Starting environment for ${environment}"
     playground start-environment --environment ${environment}
     produce
     consume
+    if [ "$environment" == "ccloud" ]
+    then
+        log "🧹 Deleting the topics ${tp}* and their subjects from the shared Confluent Cloud cluster"
+        set +e
+        playground topic delete --topic "${tp}.*"
+        # TopicRecordNameStrategy subject: not one of the <topic>-key / <topic>-value subjects that topic delete removes
+        playground schema delete --subject "${tp}topic-avro-example-value-subject-name-strategy-com.github.vdesabou.Customer" --permanent
+        set -e
+    fi
     log "🧹 Stopping environment for ${environment}"
     playground stop
 done
