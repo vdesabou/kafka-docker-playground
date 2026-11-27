@@ -287,7 +287,8 @@ commands:
     partitions of a sink, client overrides (consumer.override.*,
     producer.override.*) against connector.client.config.override.policy
     of the worker, consumer.override.max.poll.records too high for
-    max.poll.interval.ms, auto.offset.reset=latest, producer acks not all,
+    max.poll.interval.ms, a max.poll.interval.ms lowered below 60 s,
+    auto.offset.reset=latest, producer acks not all,
     an Avro / Protobuf / JSON Schema converter set on the connector without
     its schema.registry.url (a converter set on the connector does not
     inherit the converter settings of the worker), JsonConverter with a
@@ -1183,6 +1184,11 @@ commands:
       from the earliest offset. The connector is stopped and resumed around
       the reset.
 
+      A sink without committed offsets starts from its auto.offset.reset:
+      with consumer.override.auto.offset.reset=latest it starts from the END
+      of its topics, and the reset re-reads nothing (a ⚠️ says so: remove
+      the key first, or use alter).
+
       ⚠️ Everything is reprocessed, so expect duplicates downstream unless
       the target is idempotent. Use alter when you only want to move back
       to a specific point.
@@ -1858,7 +1864,11 @@ commands:
     The consumer lag of the sink, refreshed every --interval seconds, so you
     see whether it is catching up, standing still or falling behind. A lag
     that does not move while the connector reports RUNNING means the tasks
-    are stuck rather than slow.
+    are stuck rather than slow, with two exceptions said when --max-wait is
+    reached: a small lag made only of transaction markers (COMMIT / ABORT
+    control records, never delivered: 🧾, it reaches 0 with the next
+    records), and a group without member nor committed offset (a task
+    kicked out of its group after max.poll.interval.ms).
 
     It will run until all lag becomes 0 (press ctrl-c to exit), or until
     --max-wait. --once (or --json) takes a single snapshot instead. The

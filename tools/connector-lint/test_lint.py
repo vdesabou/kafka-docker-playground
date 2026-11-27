@@ -82,7 +82,12 @@ class LintTest(unittest.TestCase):
         r = lint.lint(dict(SINK, **{"consumer.override.max.poll.records": "10000",
                                     "consumer.override.auto.offset.reset": "latest"}), {"worker_override_policy": "All"})
         self.assertIn("consumer.override.max.poll.records", keys(r, "MEDIUM"))
-        self.assertIn("consumer.override.auto.offset.reset", keys(r, "LOW"))
+        self.assertIn("consumer.override.auto.offset.reset", keys(r, "MEDIUM"))
+        # a lowered max.poll.interval.ms with the default records per poll (academy 000023)
+        r = lint.lint(dict(SINK, **{"consumer.override.max.poll.interval.ms": "20000"}), {"worker_override_policy": "All"})
+        self.assertIn("consumer.override.max.poll.interval.ms", keys(r, "MEDIUM"))
+        r = lint.lint(dict(SINK, **{"consumer.override.max.poll.interval.ms": "600000"}), {"worker_override_policy": "All"})
+        self.assertNotIn("consumer.override.max.poll.interval.ms", keys(r, "MEDIUM"))
         r = lint.lint(dict(SOURCE, **{"producer.override.acks": "1"}), {"worker_override_policy": "All"})
         self.assertIn("producer.override.acks", keys(r, "MEDIUM"))
 

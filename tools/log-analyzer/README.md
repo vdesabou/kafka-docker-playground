@@ -537,7 +537,7 @@ Replicator, Snowflake, Splunk, MongoDB) have no entry.
 `SourceConnectorConfig`, `ConnectorConfig`, a connector config file) and of its own clients (`ConsumerConfig` of
 `connector-consumer-<name>-*`, `ProducerConfig` of `connector-producer-<name>-*`, not the other clients of its context
 such as a license manager): `errors.tolerance=all` without a DLQ on a sink, skipped records not logged, a DLQ with one
-replica, `max.poll.records` ≥ 5000 with `max.poll.interval.ms` ≤ 300000, `auto.offset.reset=latest` on a sink, `acks` other
+replica, `max.poll.records` ≥ 5000 with `max.poll.interval.ms` ≤ 300000, `max.poll.interval.ms` below 60 s, `auto.offset.reset=latest` on a sink, `acks` other
 than `all` on a source producer. 🧪 on the 🔌 card, the terminal summary, the summary for a ticket, `.config_lint` of `--json`.
 
 ## Errors right after a change

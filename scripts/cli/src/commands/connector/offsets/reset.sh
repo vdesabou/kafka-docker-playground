@@ -133,6 +133,24 @@ do
     fi
     log "🆕 Resetting offsets for $connector_type connector $connector"
     type=$(echo "$curl_output" | jq -r '.type')
+    # a reset through the offsets API deletes the committed offsets of a sink: it then starts from its
+    # auto.offset.reset, the END of its topics with consumer.override.auto.offset.reset=latest, so nothing is consumed
+    # again (the kafka-consumer-groups --to-earliest of CP < 7.6 sets the offsets explicitly and is not concerned)
+    sink_auto_offset_reset=""
+    if [ "$type" == "sink" ]
+    then
+        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+        then
+            handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1 || true
+        else
+            handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1 || true
+        fi
+        sink_auto_offset_reset=$(echo "$curl_output" | jq -r '."consumer.override.auto.offset.reset" // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+    fi
+    if [ "$sink_auto_offset_reset" == "latest" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || version_gt $tag "7.5.99"; }
+    then
+        logwarn "⚠️ $connector has consumer.override.auto.offset.reset=latest: without committed offsets it starts from the END of its topics, so the reset re-reads nothing. Remove the key first (Connect sinks default to earliest), or move it back to a given offset with playground connector offsets alter --connector $connector"
+    fi
     if [ "$type" == "source" ]
     then
         ##
