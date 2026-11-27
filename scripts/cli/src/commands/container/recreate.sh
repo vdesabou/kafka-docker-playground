@@ -68,6 +68,10 @@ do
     docker rm -f -v "$fresh_container" > /dev/null
 done
 
+# recreate replays the compose definition without the values of 'container set-environment-variables': forget them,
+# so that the next set-environment-variables does not bring them back
+clear_env_overrides
+
 echo "$docker_command" > /tmp/playground-command
 log "💫 Recreate container(s)"
 bash /tmp/playground-command

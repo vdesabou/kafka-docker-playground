@@ -270,6 +270,13 @@ KNOWN_CAUSES = [
                "no quorum (a lone member does not serve: echo srvr | nc <host> 2181 says \"not currently serving "
                "requests\"), zookeeper.connect is wrong, or the network / TLS to the client port fails. Start ZooKeeper "
                "first and check one leader and the followers before starting the brokers"},
+    # a ZooKeeper to KRaft migration: Confluent Server brokers in migration mode need the cluster link metadata topic
+    {"name": "zk_migration_link_coordinator", "severity": "critical", "category": "KRaft Issues",
+     "pattern": r"Must have link coordinator enabled during migration",
+     "title": "🚚 ZooKeeper to KRaft migration: link coordinator not enabled",
+     "advice": "a Confluent Server broker refuses to start with zookeeper.metadata.migration.enable=true unless "
+               "confluent.cluster.link.metadata.topic.enable=true is set too (on every broker, during the whole "
+               "migration): add it and restart the broker"},
     {"name": "replication_error", "severity": "high", "category": "Replication Issues",
      "pattern": r"InvalidReplicationFactorException|NotEnoughReplicas(?:AfterAppend)?Exception"
                 r"|replication factor.{0,60}(?:larger|greater) than|under.?min.?isr|replica fetcher.{0,60}(?:error|failed)"

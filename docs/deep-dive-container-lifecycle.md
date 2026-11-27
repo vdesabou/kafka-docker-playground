@@ -168,13 +168,16 @@ How they work:
 
 | Command | Under the hood | Undone by |
 | --- | --- | --- |
-| `set-environment-variables` | writes a temporary compose override with your variables **plus a random `DUMMY` value** (so the container is always rebuilt), then replays `run.docker_command` with `-f <override>` | `--restore-original-values`, or any later `recreate` (it replays the command **without** the override, so the container is rebuilt without your variables) |
+| `set-environment-variables` | remembers your variables per container (in `/tmp/playground-env-overrides/`), writes a compose override with the variables of **every** container set so far, **plus a random `DUMMY` value** on the containers of this call (so that only they are rebuilt), then replays `run.docker_command` with `-f <override>` | `--restore-original-values`, or any later `recreate` (it replays the command **without** the override, so the container is rebuilt without your variables) |
 | `update` | `docker compose … config <service>`, opens the YAML in your editor, then `up -d` with that file as an extra `-f` | a later `recreate` |
 | `change-jdk` | as root: `yum install zulu<version>-jdk`, `update-alternatives --set java`, then `container restart` and `java -version` | a recreate (the JDK is installed in the container, not in the image) |
 
 Gotchas:
 
 - `--env` values use the compose syntax `"NAME: value"`, not `NAME=value`.
+- **The values add up.** Two calls on `connect` keep both variables (the same name: the last value), and a call on
+  `broker` keeps the ones of `connect`. `--restore-original-values -c connect` only restores `connect`. A new
+  `start-environment`, `playground stop` and `container recreate` forget them all.
 - **`set-environment-variables` and `update` recreate the container**: everything in the "lost" column of the mental
   model goes, including network rules and files you copied in. Apply them first, then copy files and degrade traffic.
 - `KAFKA_OPTS` replaces the image's value: keep what the image needs (for example a `-javaagent` of the example).

@@ -3195,6 +3195,60 @@ function filter_rbac_environment() {
   fi
 }
 
+# the environment variables and mounts set on each container with 'playground container set-environment-variables'
+# (and 'debug clock', 'debug jscissors'), kept between calls: one file per container, "env<TAB>NAME: value" and
+# "volume<TAB>host:container" lines, in a folder per playground folder. Every call replays them all, so that a change
+# on one container does not reset the variables set before on another one (or on the same one). Cleared by a new
+# start-environment, 'container recreate' and stop_all, which replay the compose definition without them
+function env_overrides_dir () {
+  local key
+  key=$(printf '%s' "$root_folder" | cksum | awk '{print $1}')
+  echo "${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-env-overrides/$key"
+}
+
+function clear_env_overrides () {
+  rm -rf "$(env_overrides_dir)" 2>/dev/null || true
+}
+
+# env_overrides_compose_file <file> [<container to recreate>…]: the compose override with the variables and mounts of
+# every container that has some, and a random DUMMY value on the containers to recreate (the others keep the same
+# definition, so docker compose leaves them as they are). Returns 1 when there is nothing to write
+function env_overrides_compose_file () {
+  local out="$1" dir f container c recreate_list
+  shift
+  recreate_list=" $* "
+  dir=$(env_overrides_dir)
+  echo "services:" > "$out"
+  local written=0
+  # the containers with remembered values, then the ones to recreate without any
+  local containers_seen=""
+  for f in "$dir"/*.env
+  do
+    [ -f "$f" ] || continue
+    container=$(basename "$f" .env)
+    containers_seen="$containers_seen $container "
+    echo "  $container:" >> "$out"
+    echo "    environment:" >> "$out"
+    [[ "$recreate_list" == *" $container "* ]] && echo "      DUMMY: $RANDOM" >> "$out"
+    awk -F'\t' '$1 == "env" { print "      " $2 }' "$f" >> "$out"
+    if grep -q "^volume" "$f"
+    then
+      echo "    volumes:" >> "$out"
+      awk -F'\t' '$1 == "volume" { print "      - " $2 }' "$f" >> "$out"
+    fi
+    written=1
+  done
+  for c in "$@"
+  do
+    [[ "$containers_seen" == *" $c "* ]] && continue
+    echo "  $c:" >> "$out"
+    echo "    environment:" >> "$out"
+    echo "      DUMMY: $RANDOM" >> "$out"
+    written=1
+  done
+  [ $written -eq 1 ]
+}
+
 # an environment with MDS (role bindings, centralized ACLs): rbac-sasl-plain, rbac-oauth, cfk-rbac
 function is_rbac_environment() {
   get_environment_used

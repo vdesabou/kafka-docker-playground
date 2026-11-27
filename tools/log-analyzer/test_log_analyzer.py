@@ -3152,6 +3152,9 @@ def test_oauth_token_endpoint_refused_and_license_detector_harmless():
     check("token endpoint 401: 🎟️", "🎟️ OAuth token cannot be obtained or validated" in got, got)
     reason = log_report.known_causes.harmless("Error while detecting broker type from topic __internal_confluent_only_broker_info: Not authorized to access topics: [__internal_confluent_only_broker_info] (io.confluent.license.kafka.BrokerDetectorImpl:115)")
     check("license broker detector: harmless", reason is not None and "license" in reason, reason)
+    got = causes_of("[2026-11-27 11:01:36,171] ERROR Exiting Kafka due to fatal exception (kafka.Kafka$)\n"
+                    "    java.lang.IllegalArgumentException: requirement failed: Must have link coordinator enabled during migration.")
+    check("ZK migration without link coordinator: 🚚", "🚚 ZooKeeper to KRaft migration: link coordinator not enabled" in got, got)
 
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]

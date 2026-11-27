@@ -383,50 +383,51 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
+overrides_dir=$(env_overrides_dir)
+mkdir -p "$overrides_dir"
+resolved_containers=()
+for container in "${container_array[@]}"
+do
+    resolved_containers+=("$(resolve_container_name_for_environment "$container")")
+done
+
 if [[ ! -n "$restore_original_values" ]]
 then
-    cat << EOF > $tmp_dir/docker-compose.override.java.env.yml
-services:
-EOF
-
-    # Generate environment variables for each container
-    for container in "${container_array[@]}"
+    # the values of this call, added to the ones set before on the same container (a variable set again replaces its
+    # previous value): kept in $overrides_dir, replayed by the next calls, on this container or another one
+    for i in "${!container_array[@]}"
     do
-        resolved_container=$(resolve_container_name_for_environment "$container")
-        cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-  $resolved_container:
-    environment:
-      DUMMY: $RANDOM
-EOF
-
+        container="${container_array[$i]}"
+        resolved_container="${resolved_containers[$i]}"
+        f="$overrides_dir/$resolved_container.env"
+        touch "$f"
         for env_variable in "${env_array[@]}"
         do
-            env_list="$env_list $env_variable"
-            cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-      $env_variable
-EOF
+            name="${env_variable%%:*}"
+            awk -F'\t' -v n="$name" '!($1 == "env" && index($2, n ":") == 1)' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+            printf 'env\t%s\n' "$env_variable" >> "$f"
         done
-
-        if [[ -n "$mount_jscissors_files" || -n "$mount_faketime_files" ]]
-        then
-            echo "    volumes:" >> $tmp_dir/docker-compose.override.java.env.yml
-        fi
         if [[ -n "$mount_jscissors_files" ]]
         then
-            cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/
-EOF
+            mount="${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/"
+            grep -qxF "$(printf 'volume\t%s' "$mount")" "$f" || printf 'volume\t%s\n' "$mount" >> "$f"
         fi
         if [[ -n "$mount_faketime_files" ]]
         then
             # libfaketime.so.1 and faketime.rc of 'playground debug clock': the rc file is read again every second
-            cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-faketime/${container}/:/tmp/faketime/
-EOF
+            mount="${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-faketime/${container}/:/tmp/faketime/"
+            grep -qxF "$(printf 'volume\t%s' "$mount")" "$f" || printf 'volume\t%s\n' "$mount" >> "$f"
         fi
     done
+    for env_variable in "${env_array[@]}"
+    do
+        env_list="$env_list $env_variable"
+    done
 
+    env_overrides_compose_file "$tmp_dir/docker-compose.override.java.env.yml" "${resolved_containers[@]}"
     log "📦 enabling containers ${containers} with environment variables $env_list"
+    others=$(ls "$overrides_dir" 2>/dev/null | sed 's/\.env$//' | grep -v -x -F -f <(printf '%s\n' "${resolved_containers[@]}") | paste -sd, - || true)
+    [[ -n "$others" ]] && log "📌 the values set before on $others are kept"
     echo "$docker_command" > $tmp_dir/playground-command-java-env
     sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
     load_env_variables
@@ -437,7 +438,16 @@ EOF
     fi
 else
     log "🧽 restore back original values before any changes was made for containers ${containers}"
+    for resolved_container in "${resolved_containers[@]}"
+    do
+        rm -f "$overrides_dir/$resolved_container.env"
+    done
     echo "$docker_command" > $tmp_dir/playground-command
+    # the values set on the other containers stay: they are replayed, the restored containers get their definition back
+    if env_overrides_compose_file "$tmp_dir/docker-compose.override.java.env.yml"
+    then
+        sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command
+    fi
     load_env_variables
     if ! bash $tmp_dir/playground-command
     then
