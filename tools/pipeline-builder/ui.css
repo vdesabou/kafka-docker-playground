@@ -1,29 +1,31 @@
-/* the look of the pipeline builder and of the examples explorer: inlined in both pages by catalog.py */
+/* the look of the pipeline builder and of the examples explorer: inlined in both pages by catalog.py. The palette of the
+   website and of the HTML reports (docs/assets/css/main.css, tools/report-common/report_html.py): teal -> amber accents,
+   the ink #0e1418 with #141c21 cards in the dark theme */
 :root{
   --bg:#f4f6fb;--bg2:#e9edf7;--card:#ffffff;--card2:#f8faff;--fg:#0f172a;--muted:#5b6478;--line:#e3e8f2;
-  --a1:#4f46e5;--a2:#7c3aed;--a3:#06b6d4;--glow:rgba(79,70,229,.18);
-  --ok:#059669;--warn:#d97706;--fix:#7c3aed;--info:#0284c7;
-  --warn-bg:#fff7e6;--fix-bg:#f3edff;--info-bg:#e9f6fd;--ok-bg:#e8f8f1;
+  --a1:#0891b2;--a2:#d97706;--a3:#f59e0b;--glow:rgba(8,145,178,.16);
+  --ok:#059669;--warn:#d97706;--fix:#0e7490;--info:#0284c7;
+  --warn-bg:#fff7e6;--fix-bg:#e6f6fa;--info-bg:#e9f6fd;--ok-bg:#e8f8f1;
   --term:#0b1020;--term-fg:#e2e8f0;--shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
 }
 html[data-theme="dark"]{
-  --bg:#0a0e1a;--bg2:#0f1526;--card:#121a2e;--card2:#162038;--fg:#e6ebf5;--muted:#8f9bb5;--line:#22304d;
-  --glow:rgba(124,58,237,.28);--warn-bg:#2a1f0b;--fix-bg:#221539;--info-bg:#0b2233;--ok-bg:#0b2a20;
-  --term:#060912;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.35);
+  --bg:#0e1418;--bg2:#10191e;--card:#141c21;--card2:#19242a;--fg:#dbe5ea;--muted:#8a9ba6;--line:#26343d;
+  --a1:#22b8d6;--glow:rgba(139,216,239,.16);--warn-bg:#2a1f0b;--fix-bg:#0f2a33;--info-bg:#0b2233;--ok-bg:#0b2a20;
+  --term:#0a0f12;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--fg);line-height:1.45;
-  background:radial-gradient(1200px 500px at 10% -10%,var(--glow),transparent 60%),radial-gradient(900px 400px at 100% 0%,rgba(6,182,212,.12),transparent 60%),var(--bg);min-height:100vh}
+body{font-family:"Inter Variable",Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--fg);line-height:1.45;
+  background:radial-gradient(1200px 500px at 10% -10%,var(--glow),transparent 60%),radial-gradient(900px 400px at 100% 0%,rgba(255,196,92,.07),transparent 60%),var(--bg);min-height:100vh}
 .wrap{max-width:1360px;margin:0 auto;padding:0 28px}
-code,pre,.mono{font-family:'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace}
+code,pre,.mono{font-family:"JetBrains Mono Variable",'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace}
 
 /* hero */
 /* the banner: a card like the header of the HTML reports of playground (report_html.banner_css, injected by catalog.py,
    gives the same gradient; this one is the fallback) */
 header{margin-top:22px;border-radius:18px;padding:22px 30px;color:#fff;position:relative;overflow:hidden;
-  background:radial-gradient(1200px 300px at 0% 0%,rgba(56,189,248,.35),transparent 60%),radial-gradient(800px 260px at 100% 100%,rgba(236,72,153,.35),transparent 60%),
-  linear-gradient(120deg,#0f172a 0%,#312e81 45%,#6d28d9 75%,#a21caf 100%);box-shadow:0 10px 30px rgba(49,46,129,.35)}
+  background:radial-gradient(1200px 300px at 0% 0%,rgba(139,216,239,.30),transparent 60%),radial-gradient(800px 260px at 100% 100%,rgba(255,196,92,.28),transparent 60%),
+  linear-gradient(120deg,#0b1115 0%,#10212b 50%,#173540 100%);box-shadow:0 10px 30px rgba(8,47,73,.35);border:1px solid rgba(215,239,246,.12)}
 .hrow{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;z-index:1}
 .brand{min-width:0}
 h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
@@ -64,9 +66,9 @@ main{padding:20px 0 40px}
 .t .name{overflow:hidden;text-overflow:ellipsis}
 .d{color:var(--muted);font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .variant{display:inline-block;flex:0 1 auto;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis;padding:1px 8px;border-radius:999px;font-family:'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace;
-  font-size:.72rem;font-weight:700;vertical-align:1px;color:var(--a1);background:var(--glow);border:1px solid rgba(124,58,237,.35);white-space:nowrap}
+  font-size:.72rem;font-weight:700;vertical-align:1px;color:var(--a1);background:var(--glow);border:1px solid rgba(8,145,178,.35);white-space:nowrap}
 .variant.default{color:var(--muted);background:transparent;border-color:var(--line);font-weight:600}
-html[data-theme="dark"] .variant{color:#c4b5fd}
+html[data-theme="dark"] .variant{color:#8bd8ef}
 .node .variant{margin-top:3px;max-width:100%}
 .tick{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;transition:.12s}
 .item.selected .tick{border:0;background:linear-gradient(135deg,var(--a1),var(--a3));background-origin:border-box}
@@ -93,7 +95,7 @@ html[data-theme="dark"] .variant{color:#c4b5fd}
 .topic small{font-weight:500;opacity:.85;font-size:.7rem}
 .topic b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 .step{flex:none;white-space:nowrap;display:flex;flex-direction:column;align-items:center;padding:12px 18px;border-radius:14px;color:#fff;font-weight:650;font-size:.86rem;
-  background:linear-gradient(135deg,#a21caf,var(--a2));box-shadow:0 8px 24px rgba(162,28,175,.3)}
+  background:linear-gradient(135deg,#0e7490,var(--a2));box-shadow:0 8px 24px rgba(8,145,178,.3)}
 .step small{font-weight:500;opacity:.85;font-size:.7rem}
 .step small.to{max-width:190px;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .pipe{flex:none;width:44px;height:3px;border-radius:3px;position:relative;margin:0 6px;

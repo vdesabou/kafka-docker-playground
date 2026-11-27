@@ -1,0 +1,22 @@
+{
+ "versions": [
+  {
+   "version": "10.7.6",
+   "changes": [
+    "PR-1361 - CVE-2024-1597: upgrade the PostgreSQL driver to 42.4.4"
+   ]
+  },
+  {
+   "version": "10.7.12",
+   "changes": [
+    "CVE-2022-42003, CVE-2023-44487 and CVE-2023-34462: dependency upgrades (jackson-databind, netty)"
+   ]
+  },
+  {
+   "version": "10.8.0",
+   "changes": [
+    "Upgrade logback to fix CVE-2023-6378"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+[
+  {"key": "connector.class", "status": "same", "a": "io.confluent.connect.jdbc.JdbcSinkConnector", "b": "io.confluent.connect.jdbc.JdbcSinkConnector"},
+  {"key": "topics", "status": "same", "a": "orders", "b": "orders"},
+  {"key": "connection.url", "status": "same", "a": "jdbc:postgresql://postgres:5432/postgres", "b": "jdbc:postgresql://postgres:5432/postgres"},
+  {"key": "connection.user", "status": "same", "a": "myuser", "b": "myuser"},
+  {"key": "connection.password", "status": "masked", "a": "[hidden]", "b": "[hidden]"},
+  {"key": "tasks.max", "status": "different", "a": "1", "b": "4"},
+  {"key": "insert.mode", "status": "different", "a": "insert", "b": "upsert"},
+  {"key": "batch.size", "status": "different", "a": "3000", "b": "500"},
+  {"key": "pk.mode", "status": "only_b", "b": "record_value"},
+  {"key": "pk.fields", "status": "only_b", "b": "id"},
+  {"key": "auto.create", "status": "only_a", "a": "true"},
+  {"key": "value.converter", "status": "different", "a": "io.confluent.connect.avro.AvroConverter", "b": "org.apache.kafka.connect.json.JsonConverter"},
+  {"key": "value.converter.schema.registry.url", "status": "only_a", "a": "http://schema-registry:8081"},
+  {"key": "value.converter.schemas.enable", "status": "only_b", "b": "true"},
+  {"key": "errors.tolerance", "status": "only_b", "b": "all"},
+  {"key": "errors.deadletterqueue.topic.name", "status": "only_b", "b": "dlq-orders"},
+  {"key": "transforms", "status": "only_b", "b": "dropKey"},
+  {"key": "transforms.dropKey.type", "status": "only_b", "b": "org.apache.kafka.connect.transforms.ValueToKey"}
+]

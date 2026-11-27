@@ -17,6 +17,8 @@ on:
       - 'scripts/publish-docs.sh'
       # the pipeline builder page (docs/pipeline-builder.html, written by playground update-docs)
       - 'tools/pipeline-builder/**'
+      # their banner and 🐳 badge (report_html.banner_css / kdp_brand, injected by tools/pipeline-builder/catalog.py)
+      - 'tools/report-common/**'
       # the generator of content.md (playground update-readme; its template is docs/content-template.md)
       - 'scripts/cli/src/commands/update-readme.sh'
 

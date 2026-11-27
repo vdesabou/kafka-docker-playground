@@ -1,0 +1,130 @@
+[
+ {
+  "count": 9,
+  "connector": "jdbc-sink",
+  "stage": "VALUE_CONVERTER",
+  "class": "io.confluent.connect.avro.AvroConverter",
+  "exception": "org.apache.kafka.connect.errors.DataException",
+  "message": "Failed to deserialize data for topic orders to Avro: ",
+  "root_cause": "org.apache.kafka.common.errors.SerializationException: Unknown magic byte!",
+  "original_topics": [
+   {
+    "topic": "orders",
+    "partition": "0",
+    "first_offset": 1200,
+    "last_offset": 1320,
+    "count": 6
+   },
+   {
+    "topic": "orders",
+    "partition": "1",
+    "first_offset": 980,
+    "last_offset": 980,
+    "count": 1
+   },
+   {
+    "topic": "orders",
+    "partition": "2",
+    "first_offset": 1110,
+    "last_offset": 1114,
+    "count": 2
+   }
+  ],
+  "dlq_offsets": [
+   {
+    "partition": 0,
+    "first": 0,
+    "last": 6
+   },
+   {
+    "partition": 1,
+    "first": 0,
+    "last": 7
+   }
+  ],
+  "sample_value": "{\"id\": 42, \"product\": \"pen\", \"quantity\": 3}"
+ },
+ {
+  "count": 7,
+  "connector": "jdbc-sink",
+  "stage": "TASK_PUT",
+  "class": "io.confluent.connect.jdbc.sink.JdbcSinkTask",
+  "exception": "org.apache.kafka.connect.errors.ConnectException",
+  "message": "java.sql.SQLException: Exception chain:\njava.sql.BatchUpdateException: Batch entry 0 INSERT INTO \"orders\" (\"id\",\"product\",\"quantity\") VALUES (17,'book',NULL) was aborted: ERROR: null value in column \"quantity\" violates not-null constraint",
+  "root_cause": "org.postgresql.util.PSQLException: ERROR: null value in column \"quantity\" of relation \"orders\" violates not-null constraint",
+  "original_topics": [
+   {
+    "topic": "orders",
+    "partition": "0",
+    "first_offset": 1335,
+    "last_offset": 1335,
+    "count": 1
+   },
+   {
+    "topic": "orders",
+    "partition": "1",
+    "first_offset": 1007,
+    "last_offset": 1087,
+    "count": 4
+   },
+   {
+    "topic": "orders",
+    "partition": "2",
+    "first_offset": 1152,
+    "last_offset": 1172,
+    "count": 2
+   }
+  ],
+  "dlq_offsets": [
+   {
+    "partition": 0,
+    "first": 5,
+    "last": 10
+   },
+   {
+    "partition": 1,
+    "first": 5,
+    "last": 8
+   }
+  ],
+  "sample_value": "......\".book"
+ },
+ {
+  "count": 4,
+  "connector": "jdbc-sink",
+  "stage": "TRANSFORMATION",
+  "class": "org.apache.kafka.connect.transforms.Cast$Value",
+  "exception": "org.apache.kafka.connect.errors.DataException",
+  "message": "Invalid value: null used for required field: \"quantity\", schema type: INT32",
+  "root_cause": null,
+  "original_topics": [
+   {
+    "topic": "orders",
+    "partition": "1",
+    "first_offset": 1103,
+    "last_offset": 1103,
+    "count": 1
+   },
+   {
+    "topic": "orders",
+    "partition": "2",
+    "first_offset": 1176,
+    "last_offset": 1224,
+    "count": 3
+   }
+  ],
+  "dlq_offsets": [
+   {
+    "partition": 0,
+    "first": 1,
+    "last": 4
+   },
+   {
+    "partition": 1,
+    "first": 1,
+    "last": 4
+   }
+  ],
+  "sample_value": "{\"id\": 77, \"product\": \"lamp\", \"quantity\": null}"
+ }
+]

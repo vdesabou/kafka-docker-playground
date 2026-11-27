@@ -1,0 +1,22 @@
+[2026-11-20 10:02:11,512] INFO [jdbc-postgres-sink|task-0] Initializing writer using SQL dialect: PostgreSqlDatabaseDialect (io.confluent.connect.jdbc.sink.JdbcSinkTask:72)
+[2026-11-20 10:02:14,803] WARN [jdbc-postgres-sink|task-0] Write of 3 records failed, remainingRetries=0 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+java.sql.BatchUpdateException: Batch entry 0 INSERT INTO "orders" ("id","product","quantity","price") VALUES (42,'widget',3,9.99) was aborted: ERROR: duplicate key value violates unique constraint "orders_pkey"
+  Detail: Key (id)=(42) already exists.  Call getNextException to see other errors in the batch.
+	at org.postgresql.jdbc.BatchResultHandler.handleError(BatchResultHandler.java:165)
+	at io.confluent.connect.jdbc.sink.BufferedRecords.executeUpdates(BufferedRecords.java:221)
+[2026-11-20 10:02:14,811] ERROR [jdbc-postgres-sink|task-0] WorkerSinkTask{id=jdbc-postgres-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: java.sql.SQLException: Exception chain:
+java.sql.BatchUpdateException: Batch entry 0 INSERT INTO "orders" ("id","product","quantity","price") VALUES (42,'widget',3,9.99) was aborted: ERROR: duplicate key value violates unique constraint "orders_pkey"
+  Detail: Key (id)=(42) already exists.
+ (org.apache.kafka.connect.runtime.WorkerSinkTask:633)
+org.apache.kafka.connect.errors.ConnectException: java.sql.SQLException: Exception chain:
+	at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:122)
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:605)
+Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "orders_pkey"
+  Detail: Key (id)=(42) already exists.
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2725)
+[2026-11-20 10:02:14,812] ERROR [jdbc-postgres-sink|task-0] WorkerSinkTask{id=jdbc-postgres-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:636)
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:345)
+[2026-11-20 10:02:14,830] INFO [jdbc-postgres-sink|task-0] Stopping task (io.confluent.connect.jdbc.sink.JdbcSinkTask:161)
+[2026-11-20 10:05:00,104] WARN [jdbc-postgres-sink|task-0] [Consumer clientId=connector-consumer-jdbc-postgres-sink-0, groupId=connect-jdbc-postgres-sink] Offset commit failed on partition orders-0 at offset 42: The coordinator is not aware of this member. (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:1193)

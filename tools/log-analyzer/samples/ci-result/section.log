@@ -1,0 +1,29 @@
+16:42:03 ℹ️ 🚀 Running example connect/connect-jdbc-postgresql-sink/postgres-sink.sh with CP 8.4.1
+16:42:05 ℹ️ 🛑 control-center is disabled
+16:43:21 ℹ️ 🎯 Starting environment plaintext
+16:44:02 ℹ️ ✨ Creating JDBC PostgreSQL sink connector
+16:44:05 ℹ️ 🛠️ Creating 🌎onprem connector jdbc-postgres-sink
+16:44:06 ℹ️ 🔗 Connector jdbc-postgres-sink was created
+16:44:06 ℹ️ 💯 Waiting up to 60 seconds for connector jdbc-postgres-sink to be RUNNING
+16:44:12 ❌ connector jdbc-postgres-sink task 0 is FAILED
+16:44:12 ℹ️ 🧩 Displaying status for 🌎onprem connector jdbc-postgres-sink
+Name                           Status       Tasks                                                        Stack Trace
+-------------------------------------------------------------------------------------------------------------
+jdbc-postgres-sink             ✅ RUNNING  0:🛑 FAILED[connect]                                         tasks: org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+-------------------------------------------------------------------------------------------------------------
+playground container display-error-all
+[2026-11-26 16:44:09,301] ERROR [jdbc-postgres-sink|task-0] WorkerSinkTask{id=jdbc-postgres-sink-0} Error converting message value in topic 'orders' partition 0 at offset 0 and timestamp 1795625048123: Failed to deserialize data for topic orders to Avro:  (org.apache.kafka.connect.runtime.WorkerSinkTask:552)
+org.apache.kafka.connect.errors.DataException: Failed to deserialize data for topic orders to Avro:
+	at io.confluent.connect.avro.AvroConverter.toConnectData(AvroConverter.java:148)
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.convertValue(WorkerSinkTask.java:550)
+Caused by: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!
+	at io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.getByteBuffer(AbstractKafkaSchemaSerDe.java:600)
+[2026-11-26 16:44:09,305] ERROR [jdbc-postgres-sink|task-0] WorkerSinkTask{id=jdbc-postgres-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+	at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:230)
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:524)
+Caused by: org.apache.kafka.connect.errors.DataException: Failed to deserialize data for topic orders to Avro:
+	at io.confluent.connect.avro.AvroConverter.toConnectData(AvroConverter.java:148)
+Caused by: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!
+[2026-11-26 16:44:10,002] WARN [jdbc-postgres-sink|task-0] [Consumer clientId=connector-consumer-jdbc-postgres-sink-0, groupId=connect-jdbc-postgres-sink] Synchronous auto-commit of offsets failed: Offset commit cannot be completed since the consumer is not part of an active group for auto partition assignment (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:1153)
+16:44:13 🔥 RESULT: FAILURE for postgres-sink.sh (took: 2min 10s - )

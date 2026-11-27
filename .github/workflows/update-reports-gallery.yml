@@ -29,6 +29,13 @@ on:
       - "tools/cloud-costs/**"
       - "gc-analysis/**"
       - "cfk-analysis/**"
+      # the reports of real runs, rebuilt from their synthetic inputs (tools/report-common/real_run_samples.sh)
+      - "tools/connector-diagnose/**"
+      - "tools/connector-diff/**"
+      - "tools/dlq-tool/**"
+      - "tools/connector-plugin-jars/**"
+      - "tools/benchmark-report/**"
+      - "tools/smt-tester/**"
       # the commands that write them, and the log digest (awk) of analyze logs
       - "scripts/cli/src/commands/analyze.yml"
       - "scripts/cli/src/commands/analyze/**"
@@ -52,6 +59,13 @@ on:
       - "tools/cloud-costs/**"
       - "gc-analysis/**"
       - "cfk-analysis/**"
+      # the reports of real runs, rebuilt from their synthetic inputs (tools/report-common/real_run_samples.sh)
+      - "tools/connector-diagnose/**"
+      - "tools/connector-diff/**"
+      - "tools/dlq-tool/**"
+      - "tools/connector-plugin-jars/**"
+      - "tools/benchmark-report/**"
+      - "tools/smt-tester/**"
       # the commands that write them, and the log digest (awk) of analyze logs
       - "scripts/cli/src/commands/analyze.yml"
       - "scripts/cli/src/commands/analyze/**"
@@ -110,7 +124,8 @@ jobs:
 
       # every report of the gallery from the samples (analyze logs, thread-dump, gc-logs, heap-dump with Eclipse MAT in
       # Docker, flight-recorder, tcp-dump, oracle-xstream-report, jscissors, CFK bundles, streams status, cloud costs); the
-      # reports of real runs (diagnose, DLQ, benchmark…) are kept as they are. The script fails on a local path in a report
+      # reports of real runs (diagnose, diff, DLQ, CI result, benchmark, SMT test, CVE scan) from their synthetic inputs
+      # (tools/report-common/real_run_samples.sh). The script fails on a local path in a report
       - name: Generate the reports gallery
         run: bash docs-repo/scripts/generate-reports-gallery.sh "$GITHUB_WORKSPACE"
 

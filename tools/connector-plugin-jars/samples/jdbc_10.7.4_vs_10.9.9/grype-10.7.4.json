@@ -1,0 +1,156 @@
+{
+ "matches": [
+  {
+   "vulnerability": {
+    "id": "GHSA-24rp-q3w6-vc56",
+    "severity": "Critical",
+    "fix": {
+     "versions": [
+      "42.4.4"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-1597"
+   },
+   "artifact": {
+    "name": "postgresql",
+    "version": "42.4.3",
+    "locations": [
+     {
+      "path": "/lib/postgresql-42.4.3.jar"
+     }
+    ]
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2024-1597"
+    }
+   ]
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2022-42003",
+    "severity": "High",
+    "fix": {
+     "versions": [
+      "2.13.4.2"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-42003"
+   },
+   "artifact": {
+    "name": "jackson-databind",
+    "version": "2.13.4",
+    "locations": [
+     {
+      "path": "/lib/jackson-databind-2.13.4.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2023-44487",
+    "severity": "High",
+    "fix": {
+     "versions": [
+      "4.1.100.Final"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-44487"
+   },
+   "artifact": {
+    "name": "netty-codec-http2",
+    "version": "4.1.86.Final",
+    "locations": [
+     {
+      "path": "/lib/netty-codec-http2-4.1.86.Final.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2023-34462",
+    "severity": "Medium",
+    "fix": {
+     "versions": [
+      "4.1.94.Final"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-34462"
+   },
+   "artifact": {
+    "name": "netty-handler",
+    "version": "4.1.86.Final",
+    "locations": [
+     {
+      "path": "/lib/netty-handler-4.1.86.Final.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2024-25710",
+    "severity": "High",
+    "fix": {
+     "versions": [
+      "1.26.0"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-25710"
+   },
+   "artifact": {
+    "name": "commons-compress",
+    "version": "1.21",
+    "locations": [
+     {
+      "path": "/lib/commons-compress-1.21.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2023-6378",
+    "severity": "High",
+    "fix": {
+     "versions": [
+      "1.2.13"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-6378"
+   },
+   "artifact": {
+    "name": "logback-classic",
+    "version": "1.2.11",
+    "locations": [
+     {
+      "path": "/lib/logback-classic-1.2.11.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2020-8908",
+    "severity": "Low",
+    "fix": {
+     "versions": [
+      "32.0.0-android"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2020-8908"
+   },
+   "artifact": {
+    "name": "guava",
+    "version": "31.1-jre",
+    "locations": [
+     {
+      "path": "/lib/guava-31.1-jre.jar"
+     }
+    ]
+   }
+  }
+ ]
+}

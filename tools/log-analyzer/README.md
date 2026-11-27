@@ -839,6 +839,8 @@ Real logs of `connect/connect-cdc-xstream-oracle19-source`, CP 8.3.2, Oracle XSt
 
 Passwords are masked by Connect (`password=********`).
 
+`samples/ci-result/section.log` (synthetic, not a `--sample`) is the section of a failed script in a CI job log: `tools/report-common/real_run_samples.sh` turns it into the 🤖 CI failure report of `playground get-ci-result --logs` (its last lines before the failure and its digest) for the reports gallery of the website, with the reports of the other commands that need a real run (connector diagnose, diff, DLQ, benchmark, SMT test, CVE scan), from the `samples/` folder of each tool.
+
 ### Logs of the other clients
 
 In the HTML report, `log_html()` of `tools/report-common/report_html.py` colors their lines like the Java ones: the

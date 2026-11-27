@@ -1,0 +1,7 @@
+{
+  "offsets": [
+    {"partition": {"kafka_topic": "orders", "kafka_partition": 0}, "offset": {"kafka_offset": 42}},
+    {"partition": {"kafka_topic": "orders", "kafka_partition": 1}, "offset": {"kafka_offset": 57}},
+    {"partition": {"kafka_topic": "orders", "kafka_partition": 2}, "offset": {"kafka_offset": 39}}
+  ]
+}

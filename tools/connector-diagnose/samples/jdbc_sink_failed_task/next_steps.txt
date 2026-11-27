@@ -1,0 +1,5 @@
+🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector jdbc-postgres-sink
+playground connector show-config --connector jdbc-postgres-sink
+playground container logs -c connect --grep "jdbc-postgres-sink" --no-follow --tail 200
+playground connector log-level --connector jdbc-postgres-sink --level TRACE
+playground debug thread-dump --container connect

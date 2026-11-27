@@ -1,0 +1,67 @@
+{
+ "matches": [
+  {
+   "vulnerability": {
+    "id": "CVE-2020-8908",
+    "severity": "Low",
+    "fix": {
+     "versions": [
+      "32.0.0-android"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2020-8908"
+   },
+   "artifact": {
+    "name": "guava",
+    "version": "31.1-jre",
+    "locations": [
+     {
+      "path": "/lib/guava-31.1-jre.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2024-25710",
+    "severity": "High",
+    "fix": {
+     "versions": [
+      "1.26.0"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-25710"
+   },
+   "artifact": {
+    "name": "commons-compress",
+    "version": "1.21",
+    "locations": [
+     {
+      "path": "/lib/commons-compress-1.21.jar"
+     }
+    ]
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2025-48924",
+    "severity": "Medium",
+    "fix": {
+     "versions": [
+      "3.18.0"
+     ]
+    },
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2025-48924"
+   },
+   "artifact": {
+    "name": "commons-lang3",
+    "version": "3.17.0",
+    "locations": [
+     {
+      "path": "/lib/commons-lang3-3.17.0.jar"
+     }
+    ]
+   }
+  }
+ ]
+}

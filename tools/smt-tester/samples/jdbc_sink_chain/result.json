@@ -1,0 +1,178 @@
+{
+ "label": "CP 8.1.0",
+ "kafka_version": "4.1.0-ccs",
+ "connector_type": "sink",
+ "steps": [
+  {
+   "index": 0,
+   "alias": "input",
+   "record": {
+    "topic": "orders",
+    "partition": 0,
+    "offset": 1234,
+    "timestamp": "2026-11-20T13:05:00Z",
+    "key": "\"42\"",
+    "key_schema": "string",
+    "value": "{\"id\":42,\"product\":\"pen\",\"quantity\":3,\"price\":1.5,\"internal_note\":\"test\",\"created_at\":1795186500000}",
+    "value_schema": "orders.Value v1: id INT32, product STRING, quantity INT32, price FLOAT64, internal_note STRING?, created_at INT64",
+    "value_fields": {
+     "id": "INT32",
+     "product": "STRING",
+     "quantity": "INT32",
+     "price": "FLOAT64",
+     "internal_note": "STRING?",
+     "created_at": "INT64"
+    },
+    "headers": [
+     {
+      "key": "source",
+      "value": "\"web\"",
+      "schema": "string"
+     }
+    ]
+   }
+  },
+  {
+   "index": 1,
+   "alias": "dropNote",
+   "type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+   "origin": "/usr/share/java/kafka/connect-transforms-8.1.0-ccs.jar",
+   "config": {
+    "exclude": "internal_note",
+    "renames": "product:item"
+   },
+   "record": {
+    "topic": "orders",
+    "partition": 0,
+    "offset": 1234,
+    "timestamp": "2026-11-20T13:05:00Z",
+    "key": "\"42\"",
+    "key_schema": "string",
+    "value": "{\"id\":42,\"item\":\"pen\",\"quantity\":3,\"price\":1.5,\"created_at\":1795186500000}",
+    "value_schema": "orders.Value v1: id INT32, item STRING, quantity INT32, price FLOAT64, created_at INT64",
+    "value_fields": {
+     "id": "INT32",
+     "item": "STRING",
+     "quantity": "INT32",
+     "price": "FLOAT64",
+     "created_at": "INT64"
+    },
+    "headers": [
+     {
+      "key": "source",
+      "value": "\"web\"",
+      "schema": "string"
+     }
+    ]
+   }
+  },
+  {
+   "index": 2,
+   "alias": "addRegion",
+   "type": "org.apache.kafka.connect.transforms.InsertField$Value",
+   "origin": "/usr/share/java/kafka/connect-transforms-8.1.0-ccs.jar",
+   "config": {
+    "static.field": "region",
+    "static.value": "eu"
+   },
+   "predicate": "isEuTopic",
+   "predicate_type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
+   "negate": false,
+   "predicate_result": false,
+   "skipped": true,
+   "record": {
+    "topic": "orders",
+    "partition": 0,
+    "offset": 1234,
+    "timestamp": "2026-11-20T13:05:00Z",
+    "key": "\"42\"",
+    "key_schema": "string",
+    "value": "{\"id\":42,\"item\":\"pen\",\"quantity\":3,\"price\":1.5,\"created_at\":1795186500000}",
+    "value_schema": "orders.Value v1: id INT32, item STRING, quantity INT32, price FLOAT64, created_at INT64",
+    "value_fields": {
+     "id": "INT32",
+     "item": "STRING",
+     "quantity": "INT32",
+     "price": "FLOAT64",
+     "created_at": "INT64"
+    },
+    "headers": [
+     {
+      "key": "source",
+      "value": "\"web\"",
+      "schema": "string"
+     }
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "alias": "createdAt",
+   "type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+   "origin": "/usr/share/java/kafka/connect-transforms-8.1.0-ccs.jar",
+   "config": {
+    "field": "created_at",
+    "target.type": "string",
+    "format": "yyyy-MM-dd HH:mm:ss"
+   },
+   "record": {
+    "topic": "orders",
+    "partition": 0,
+    "offset": 1234,
+    "timestamp": "2026-11-20T13:05:00Z",
+    "key": "\"42\"",
+    "key_schema": "string",
+    "value": "{\"id\":42,\"item\":\"pen\",\"quantity\":3,\"price\":1.5,\"created_at\":\"2026-11-20 12:55:00\"}",
+    "value_schema": "orders.Value v1: id INT32, item STRING, quantity INT32, price FLOAT64, created_at STRING",
+    "value_fields": {
+     "id": "INT32",
+     "item": "STRING",
+     "quantity": "INT32",
+     "price": "FLOAT64",
+     "created_at": "STRING"
+    },
+    "headers": [
+     {
+      "key": "source",
+      "value": "\"web\"",
+      "schema": "string"
+     }
+    ]
+   }
+  },
+  {
+   "index": 4,
+   "alias": "routeByTopic",
+   "type": "org.apache.kafka.connect.transforms.RegexRouter",
+   "origin": "/usr/share/java/kafka/connect-transforms-8.1.0-ccs.jar",
+   "config": {
+    "regex": "orders",
+    "replacement": "orders_v2"
+   },
+   "record": {
+    "topic": "orders_v2",
+    "partition": 0,
+    "offset": 1234,
+    "timestamp": "2026-11-20T13:05:00Z",
+    "key": "\"42\"",
+    "key_schema": "string",
+    "value": "{\"id\":42,\"item\":\"pen\",\"quantity\":3,\"price\":1.5,\"created_at\":\"2026-11-20 12:55:00\"}",
+    "value_schema": "orders.Value v1: id INT32, item STRING, quantity INT32, price FLOAT64, created_at STRING",
+    "value_fields": {
+     "id": "INT32",
+     "item": "STRING",
+     "quantity": "INT32",
+     "price": "FLOAT64",
+     "created_at": "STRING"
+    },
+    "headers": [
+     {
+      "key": "source",
+      "value": "\"web\"",
+      "schema": "string"
+     }
+    ]
+   }
+  }
+ ]
+}

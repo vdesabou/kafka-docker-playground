@@ -1,0 +1,84 @@
+{
+ "date": "2026-11-20T09:18:00Z",
+ "test_file": "connect/connect-jdbc-postgresql-sink/postgres-sink.sh",
+ "connector": "postgres-sink",
+ "connector_class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+ "plugin_version": "10.9.9",
+ "cp_tag": "8.4.1",
+ "type": "sink",
+ "mode": "drain",
+ "shape": "bulk",
+ "tasks": 1,
+ "records": 3000000,
+ "seconds": 24.7,
+ "records_per_second": 121405.2,
+ "lower_bound": false,
+ "rate_p50": "122619.3",
+ "rate_p95": "128689.5",
+ "rate_min": "99552.3",
+ "batch_avg_ms": "1.0",
+ "running_ratio": "0.94",
+ "cpu_percent_of_one_core_avg": "69",
+ "cpu_percent_of_one_core_max": "77",
+ "load_seconds": "21.4",
+ "topic_records_delta": "-",
+ "gc_percent": "1.2",
+ "cpu_percent_of_available_avg": "8",
+ "pause_ratio": "0.03",
+ "dlq_records": "0",
+ "skipped_records": "0",
+ "task_shares": "-",
+ "samples_csv": "tools/benchmark-report/samples/jdbc_sink_10.8.4_vs_10.9.9/samples-run4.csv",
+ "setup": {
+  "host": {
+   "os": "Linux",
+   "arch": "amd64",
+   "cpu_model": "8 vCPU",
+   "cpus": 8,
+   "memory_bytes": 34359738368
+  },
+  "engine": {
+   "name": "docker",
+   "version": "29.0.0",
+   "os": "Linux",
+   "cpus": 8,
+   "memory_bytes": 33285996544
+  },
+  "connect": {
+   "image": "confluentinc/cp-server-connect:8.4.1",
+   "image_arch": "amd64",
+   "emulated": false,
+   "heap_opts": "",
+   "heap_max_bytes": 2147483648,
+   "jvm_version": "21.0.9+10-LTS",
+   "jvm_cpus": 8,
+   "workers": 1
+  },
+  "kafka": {
+   "environment": "plaintext",
+   "brokers": 1,
+   "kraft": true
+  },
+  "playground": {
+   "test_file": "connect/connect-jdbc-postgresql-sink/postgres-sink.sh",
+   "repo_url": "https://github.com/vdesabou/kafka-docker-playground",
+   "repo_path": "connect/connect-jdbc-postgresql-sink/postgres-sink.sh"
+  },
+  "connector": {
+   "documentation_url": "https://docs.confluent.io/kafka-connect-jdbc/current/",
+   "source_url": "https://github.com/confluentinc/kafka-connect-jdbc"
+  },
+  "connector_config": {
+   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+   "tasks.max": "1",
+   "topics": "orders",
+   "name": "postgres-sink",
+   "auto.create": "true",
+   "connection.url": "jdbc:postgresql://postgres:5432/postgres",
+   "batch.size": "3000"
+  }
+ },
+ "flight_recorder": {
+  "enabled": false
+ }
+}
