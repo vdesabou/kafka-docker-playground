@@ -26,7 +26,7 @@ then
         then
             logerror "   $group is the group of sink connector $connector_name: stop or delete the connector first (playground connector stop|delete --connector $connector_name)"
         else
-            logerror "   the group still has active members: stop its consumers first (playground consumer-group describe --group $group --members)"
+            logerror "   the group still has active members: stop its consumers first (playground consumer-group describe --group $group --members). A consumer that crashed (a Kafka Streams instance in ERROR, a killed process) stays a member until its session times out (session.timeout.ms, 45 s by default): retry after it"
         fi
     fi
     exit 1

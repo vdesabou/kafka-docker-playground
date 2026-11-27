@@ -6392,7 +6392,16 @@ function handle_onprem_connect_rest_api () {
         return 1
       fi
   else
-      logerror "❌ curl request failed with error code $ret!"
+      local reason
+      case "$ret" in
+        7) reason="nothing listens on the port" ;;
+        28) reason="timeout" ;;
+        35) reason="the TLS connection was reset or refused" ;;
+        52) reason="empty reply" ;;
+        56) reason="the connection was reset" ;;
+        *) reason="" ;;
+      esac
+      logerror "❌ curl request failed with error code $ret${reason:+ ($reason)}: the connect REST API does not answer, is the worker up? playground container logs -c connect --errors"
       return 1
   fi
 }

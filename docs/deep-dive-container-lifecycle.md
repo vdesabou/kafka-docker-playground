@@ -60,7 +60,9 @@ Kubernetes pods with the `cfk` environment (`pod` is an alias of `container`). T
 
 3. **The playground state decides what "the containers" are.** `recreate`, `update` and `set-environment-variables`
    replay `run.docker_command`, and keep the CP version of the running `broker` and `connect` images
-   (`--ignore-current-versions` to take the defaults again). `playground status` lists only containers that belong to a
+   (`--ignore-current-versions` to take the defaults again): the other components follow the broker, whatever
+   `CP_*_TAG` your shell exports (a shell or a lab that sourced `utils.sh` on CP 8, driving an environment started on
+   CP 7.9). `playground status` lists only containers that belong to a
    compose project. `kill-all`, on the other hand, is not scoped to the playground: it removes **every container on
    your machine** and prunes volumes (it runs before each `playground run` only with
    `playground config container-kill-all-before-run true`; by default a run calls `playground stop`).

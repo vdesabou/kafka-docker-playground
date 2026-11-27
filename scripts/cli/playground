@@ -14797,7 +14797,7 @@ playground_debug_degrade_traffic_usage() {
 playground_debug_clock_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug clock\n\n"
-    printf "  ⏰ Shift the clock of a container: token, ticket and certificate expiry, time\n  based partitioning\n  \n  Some bugs only show up at a given time, or after a while: an OAuth\n  token or a Kerberos ticket that expires, a certificate past its\n  validity, the hourly rollover of TimeBasedPartitioner (S3, GCS,\n  Azure, HDFS sinks), daylight saving time, clock skew between connect\n  and the brokers. This moves the clock of one container (or several)\n  forward or backward, the other containers keep the real time.\n  \n    --offset +2h     shift by a duration (s, m, h, d, y); backward:\n                     --offset=-30m (with =, a value starting with - is\n                     read as an option otherwise)\n    --at <date>      jump to a date (\"2026-12-31 23:59:50\", UTC unless a\n                     Z or +02:00 offset is given), then the clock ticks\n    --reset          back to real time (the container is recreated with\n                     its original definition)\n    (no flag)        the time of the container, and its offset\n  \n  libfaketime is preloaded in the container (LD_PRELOAD): the first call\n  recreates the container once, the next ones only rewrite the offset,\n  read again every second by every process of the container (the JVM\n  included), without a restart. The monotonic clock is not shifted, so\n  sleeps and elapsed time measurements keep working.\n  \n  libfaketime is built once per architecture (amd64, arm64), in a UBI8\n  container, and cached in /tmp/playground-faketime: it loads in the\n  UBI8 (CP 7) and UBI9 (CP 8) images, not in musl (alpine) ones.\n  \n  ❕ Recreating the container drops the changes of another 'container\n  set-environment-variables', 'debug java-debug' or 'debug jscissors\n  --restart' on it. A jump forward fires at once the timeouts based on\n  wall clock time: expect reconnections, a rebalance or a token refresh.\n  \n  🧪 Docker only (not cfk).\n\n"
+    printf "  ⏰ Shift the clock of a container: token, ticket and certificate expiry, time\n  based partitioning\n  \n  Some bugs only show up at a given time, or after a while: an OAuth\n  token or a Kerberos ticket that expires, a certificate past its\n  validity, the hourly rollover of TimeBasedPartitioner (S3, GCS,\n  Azure, HDFS sinks), daylight saving time, clock skew between connect\n  and the brokers. This moves the clock of one container (or several)\n  forward or backward, the other containers keep the real time.\n  \n    --offset +2h     shift by a duration (s, m, h, d, y); backward:\n                     --offset=-30m (with =, a value starting with - is\n                     read as an option otherwise)\n    --at <date>      jump to a date (\"2026-12-31 23:59:50\", UTC unless a\n                     Z or +02:00 offset is given), then the clock ticks\n    --reset          back to real time (the container is recreated with\n                     its original definition)\n    (no flag)        the time of the container, and its offset\n  \n  libfaketime is preloaded in the container (LD_PRELOAD): the first call\n  recreates the container once, the next ones only rewrite the offset,\n  read again every second by every process of the container (the JVM\n  included), without a restart. The monotonic clock is not shifted, so\n  sleeps and elapsed time measurements keep working.\n  \n  libfaketime is built once per architecture (amd64, arm64), in a UBI8\n  container, and cached in /tmp/playground-faketime: it loads in the\n  UBI8 (CP 7) and UBI9 (CP 8) images, not in musl (alpine) ones.\n  \n  The recreate goes through 'container set-environment-variables': the\n  values set before on the container (by it, 'debug java-debug' or\n  'debug jscissors --restart') are kept. --reset gives the container\n  its original definition back: those values go too. A jump forward fires at\n  once the timeouts based on wall\n  clock time: expect reconnections, a rebalance or a token refresh.\n  \n  🧪 Docker only (not cfk).\n\n"
   else
     printf "playground debug clock - ⏰ Shift the clock of a container: token, ticket and certificate expiry, time based partitioning\n\n"
   fi
@@ -17175,7 +17175,7 @@ playground_topic_elect_leader_usage() {
 playground_topic_dump_log_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic dump-log\n\n"
-    printf "  🔬 Dump the log segments of a partition: batches, producers, transactions\n  \n  Runs kafka-dump-log on the segment files of a partition, in the broker\n  that holds the replica (the leader by default), and prints a digest\n  before the batches:\n  \n    batches, records, offsets and time range of the segment(s) read\n    compression codecs, largest batch (the max.message.bytes /\n    RecordTooLargeException limit) and largest record\n    producers (id, epochs, offsets), idempotent or transactional, with\n    their COMMIT / ABORT markers\n    open transactions: transactional records with no marker after them,\n    where read_committed consumers stop (the last stable offset)\n  \n  Then the batches: the last 20 (--last, --all), or the ones around\n  --offset, with --records for each record (key and value sizes,\n  headers) and --print-data for the payloads.\n  \n  It reads the last (active) segment, the one that holds --offset, or\n  every segment with --all-segments. The files are read on disk: no\n  client credentials, any secured environment and cfk. Not on Confluent\n  Cloud (no access to the log segments).\n  \n  🎓 Tip: for a read_committed consumer stuck at an offset, or\n  transactions that never end, look at the producers of that offset,\n  then 'playground broker transactions find-hanging'.\n\n"
+    printf "  🔬 Dump the log segments of a partition: batches, producers, transactions\n  \n  Runs kafka-dump-log on the segment files of a partition, in the broker\n  that holds the replica (the leader by default), and prints a digest\n  before the batches:\n  \n    batches, records, offsets and time range of the segment(s) read\n    compression codecs, largest batch (the max.message.bytes /\n    RecordTooLargeException limit) and largest record\n    producers (id, epochs, offsets), idempotent or transactional, with\n    their COMMIT / ABORT markers\n    open transactions: transactional records with no marker after them,\n    where read_committed consumers stop (the last stable offset)\n    on a compacted topic, the active segment (never compacted: its old\n    versions stay until it rolls, after segment.ms) and how to see\n    compaction work\n  \n  Then the batches: the last 20 (--last, --all), or the ones around\n  --offset, with --records for each record (key and value sizes,\n  headers) and --print-data for the payloads.\n  \n  It reads the last (active) segment, the one that holds --offset, or\n  every segment with --all-segments. The files are read on disk: no\n  client credentials, any secured environment and cfk. Not on Confluent\n  Cloud (no access to the log segments).\n  \n  🎓 Tip: for a read_committed consumer stuck at an offset, or\n  transactions that never end, look at the producers of that offset,\n  then 'playground broker transactions find-hanging'.\n\n"
   else
     printf "playground topic dump-log - 🔬 Dump the log segments of a partition: batches, producers, transactions\n\n"
   fi
@@ -19163,7 +19163,7 @@ playground_broker_config_delete_usage() {
 playground_broker_health_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground broker health\n\n"
-    printf "  🩺 Check the health of the cluster\n  \n  One digest of what makes a cluster unhealthy:\n  \n    - broker containers that are not registered (stopped, starting) or fenced\n    - two broker containers with the same node id (only one can register:\n      DUPLICATE_BROKER_REGISTRATION in the log of the other)\n    - two brokers that advertise the same endpoint (advertised.listeners\n      copied from another broker: clients and followers go to the wrong one)\n    - a KRaft quorum without a majority of its controllers running (said at\n      once: metadata changes such as topic creation time out, produce and\n      consume keep working)\n    - under-replicated partitions (kafka-topics --under-replicated-partitions)\n    - partitions under min.insync.replicas (--under-min-isr-partitions):\n      acks=all producers fail with NotEnoughReplicasException (a topic\n      whose replication factor is below min.insync.replicas is only a ⚠️\n      warning: it is a config problem, not a broker one)\n    - unavailable partitions, without leader (--unavailable-partitions)\n    - the KRaft quorum: leader, lag and last caught up time of each node\n      (kafka-metadata-quorum describe --replication)\n  \n  Exits with 1 when the cluster is not healthy. With --wait-healthy, waits\n  until it is (for example after 'playground broker start' or a\n  'container restart'), up to --max-wait seconds.\n  \n  Works on plaintext, secured environments and cfk.\n\n"
+    printf "  🩺 Check the health of the cluster\n  \n  One digest of what makes a cluster unhealthy:\n  \n    - broker containers that are not registered (stopped, starting) or fenced\n    - two broker containers with the same node id (only one can register:\n      DUPLICATE_BROKER_REGISTRATION in the log of the other)\n    - two brokers that advertise the same endpoint (advertised.listeners\n      copied from another broker: clients and followers go to the wrong one)\n    - a KRaft quorum without a majority of its controllers running (said at\n      once: metadata changes such as topic creation time out, produce and\n      consume keep working)\n    - under-replicated partitions (kafka-topics --under-replicated-partitions)\n    - partitions under min.insync.replicas (--under-min-isr-partitions):\n      acks=all producers fail with NotEnoughReplicasException (a topic\n      whose replication factor is below min.insync.replicas is only a ⚠️\n      warning: it is a config problem, not a broker one)\n    - unavailable partitions, without leader (--unavailable-partitions)\n    - the KRaft quorum: leader, lag and last caught up time of each node\n      (kafka-metadata-quorum describe --replication)\n    - a replication throttle set on the cluster (⚠️ warning): the\n      leader / follower.replication.throttled.rate of the brokers and the\n      topics with throttled replicas, often left by a reassignment or an\n      Auto Data Balancer rebalance never completed (only --verify,\n      confluent-rebalancer status or finish remove it): a replica of those\n      topics out of the ISR catches up at that rate\n  \n  Exits with 1 when the cluster is not healthy. With --wait-healthy, waits\n  until it is (for example after 'playground broker start' or a\n  'container restart'), up to --max-wait seconds.\n  \n  Works on plaintext, secured environments and cfk.\n\n"
   else
     printf "playground broker health - 🩺 Check the health of the cluster\n\n"
   fi
@@ -19192,7 +19192,7 @@ playground_broker_health_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    📗 Print the result as JSON (healthy, brokers, partitions, kraft_quorum), and\n    nothing else\n"
+    printf "    📗 Print the result as JSON (healthy, brokers, partitions,\n    replication_throttles, kraft_quorum), and nothing else\n"
     echo
 
     # :flag.usage
@@ -21646,7 +21646,7 @@ playground_streams_usage() {
 playground_streams_status_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground streams status\n\n"
-    printf "  🌊 Show the state of the Kafka Streams instances\n  \n  For each application (application.id) and each instance (container):\n  the state of the KafkaStreams client and since when, the number of\n  rebalances and the time spent in REBALANCING, the stream threads with\n  their active and standby tasks, the active tasks not restored yet, the\n  changelog partitions being restored, the records restored, and the\n  known Kafka Streams errors of the logs (task migrated, fenced producer,\n  deserialization or production handler, missing source topic, topics\n  not co-partitioned, state directory locked, uncaught exception...) with\n  their advice. Then the consumer group of each application: its state,\n  members and lag.\n  \n  Everything comes from the lines that the Kafka Streams library logs at\n  INFO (State transition from ... to ..., Handle new assignment with:,\n  Restored and ready to run, Finished restoring changelog...), so it works\n  with any application and any Kafka Streams version since 3.0, as long\n  as its logs are at INFO. The logs of a restarted container hold its\n  previous runs too: only the current run is shown, the restarts are\n  counted (and drawn in the timeline of --html).\n  \n  --html also writes an HTML report (timeline of the states, task\n  assignment, errors). The same view of a customer's log files is the\n  🌊 Kafka Streams section of 'playground analyze logs'.\n  \n  --sample kafka_streams shows it on the logs shipped in\n  tools/log-analyzer/samples/kafka-streams (no running example needed).\n  \n  Exits with 1 when an instance is not RUNNING (or its container is\n  stopped), so that an example can check it.\n\n"
+    printf "  🌊 Show the state of the Kafka Streams instances\n  \n  For each application (application.id) and each instance (container):\n  the state of the KafkaStreams client and since when, the number of\n  rebalances and the time spent in REBALANCING, the stream threads with\n  their active and standby tasks, the active tasks not restored yet, the\n  changelog partitions being restored, the records restored, and the\n  known Kafka Streams errors of the logs (task migrated, fenced producer,\n  deserialization or production handler, missing source topic, topics\n  not co-partitioned, an internal topic with the wrong number of\n  partitions, state directory locked, uncaught exception...) with their\n  advice. Then the consumer group of each application: its state,\n  members and lag, and a ⚠️ warning when it reads source topics with\n  different partition counts while Kafka Streams skipped the\n  co-partitioning check (no repartition topic, since 3.2): a join of two\n  of them silently loses the keys that land in different partition\n  numbers. With several applications in one JVM, an error whose line\n  names no application is listed apart, not given to the last one seen.\n  \n  Everything comes from the lines that the Kafka Streams library logs at\n  INFO (State transition from ... to ..., Handle new assignment with:,\n  Restored and ready to run, Finished restoring changelog...), so it works\n  with any application and any Kafka Streams version since 3.0, as long\n  as its logs are at INFO. The logs of a restarted container hold its\n  previous runs too: only the current run is shown, the restarts are\n  counted (and drawn in the timeline of --html).\n  \n  --html also writes an HTML report (timeline of the states, task\n  assignment, errors). The same view of a customer's log files is the\n  🌊 Kafka Streams section of 'playground analyze logs'.\n  \n  --sample kafka_streams shows it on the logs shipped in\n  tools/log-analyzer/samples/kafka-streams (no running example needed).\n  \n  Exits with 1 when an instance is not RUNNING (or its container is\n  stopped), so that an example can check it.\n\n"
   else
     printf "playground streams status - 🌊 Show the state of the Kafka Streams instances\n\n"
   fi
@@ -30063,6 +30063,46 @@ function sr_format_compatibility_messages() {
     | select((startswith("{oldSchema") or startswith("{validateFields")) | not)
     | (capture("errorType:\"(?<t>[^\"]+)\", description:\"(?<d>[^\"]*)\"")? // null) as $m
     | if $m then "   \($m.t): \($m.d)" else "   \(.)" end'
+}
+
+# the image tags of the running environment, for the commands that replay its docker compose command (container
+# recreate, set-environment-variables): TAG from the broker, CP_CONNECT_TAG from connect. The CP_*_TAG of the caller's
+# shell are forgotten first, utils.sh (sourced by the replayed command) derives them from TAG: a lab, or a shell where
+# utils.sh was sourced on CP 8, driving an environment started on CP 7.9 would recreate its containers with CP 8 images
+# (cp-zookeeper:8.x: not found)
+function export_running_cp_tags () {
+  local tag_variable
+  for tag_variable in $(compgen -e | grep -E '^CP_[A-Z_]+_TAG$')
+  do
+    unset "$tag_variable"
+  done
+  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+  export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+}
+
+# docker environments: exits with an error when no broker container of the cluster runs (stopped, or exiting at startup
+# and restarted in a loop: docker says Running for a restarting container, its Status is restarting), instead of letting
+# a command take the topics for missing ("could not create topic")
+function exit_if_no_broker_running () {
+  local running_environment b status states=""
+  running_environment=$(playground state get run.environment 2>/dev/null)
+  if [[ "$running_environment" == "ccloud" || "$running_environment" == cfk* ]] || is_mdc_environment
+  then
+    return 0
+  fi
+  for b in broker broker2 broker3
+  do
+    status=$(docker inspect -f '{{.State.Status}}' "$b" 2>/dev/null) || continue
+    if [[ "$status" == "running" ]] && is_container_running "$b"
+    then
+      return 0
+    fi
+    states="$states, $b is $status"
+  done
+  # no broker container at all: an environment with other names, the command decides
+  [[ -z "$states" ]] && return 0
+  logerror "❌ no broker is running: ${states#, }. Why: playground container logs -c broker --errors (or playground analyze logs on its log)"
+  exit 1
 }
 
 function get_broker_container() {
@@ -41382,6 +41422,31 @@ function get_partitions_with_status () {
       if (i == "") i = "-"
       print t, p, l, r, i
     }'
+}
+
+# replication throttles set on the cluster, often left by a reassignment or an Auto Data Balancer rebalance that was
+# never completed (only kafka-reassign-partitions --verify, confluent-rebalancer status / finish remove them): sets
+# health_throttle_rates ("<broker id or default> <key> <value>" per line) and health_throttle_topics ("<topic> <key>
+# <replicas>" per line). Best effort: what kafka-configs could not read stays empty
+function get_replication_throttles () {
+  local output
+  health_throttle_rates=""
+  health_throttle_topics=""
+  if output=$(run_quota_kafka_configs $'--entity-type\tbrokers' --describe 2>/dev/null)
+  then
+    health_throttle_rates=$(echo "$output" | parse_broker_configs | awk -F'\t' '$2 ~ /^(leader|follower)\.replication\.throttled\.rate$/ && $3 != "" { print $1, $2, $3 }')
+  fi
+  if output=$(run_quota_kafka_configs $'--entity-type\ttopics' --describe 2>/dev/null)
+  then
+    health_throttle_topics=$(echo "$output" | awk '
+      /^Dynamic configs for topic / { t = $5 ; next }
+      /^[[:space:]]+(leader|follower)\.replication\.throttled\.replicas=/ {
+        line = $0 ; sub(/^[[:space:]]+/, "", line)
+        eq = index(line, "=") ; k = substr(line, 1, eq - 1) ; v = substr(line, eq + 1) ; sub(/ sensitive=.*/, "", v)
+        if (t != "" && v != "") print t, k, v
+      }')
+  fi
+  return 0
 }
 
 # checks the health of the cluster and sets health_* (registered, fenced and not registered brokers, partitions
@@ -52813,7 +52878,16 @@ function handle_onprem_connect_rest_api () {
         return 1
       fi
   else
-      logerror "❌ curl request failed with error code $ret!"
+      local reason
+      case "$ret" in
+        7) reason="nothing listens on the port" ;;
+        28) reason="timeout" ;;
+        35) reason="the TLS connection was reset or refused" ;;
+        52) reason="empty reply" ;;
+        56) reason="the connection was reset" ;;
+        *) reason="" ;;
+      esac
+      logerror "❌ curl request failed with error code $ret${reason:+ ($reason)}: the connect REST API does not answer, is the worker up? playground container logs -c connect --errors"
       return 1
   fi
 }
@@ -85714,7 +85788,17 @@ playground_debug_clock_command() {
           --env "FAKETIME_DONT_FAKE_MONOTONIC: 1" \
           --mount-faketime-files
       then
-          logerror "❌ could not recreate $* with libfaketime"
+          # recreated with the fake clock, but not ready: often because of the new time itself (a worker that cannot
+          # connect with certificates not valid yet or expired, a token or a Kerberos ticket refused)
+          for c in "$@"
+          do
+              if docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$c" 2> /dev/null | grep -q "^LD_PRELOAD=$remote_dir/libfaketime"
+              then
+                  logerror "❌ $c runs with the fake clock ($(docker exec "$c" date -u '+%Y-%m-%d %H:%M:%S UTC' 2> /dev/null)), but it is not ready: the new time may be what breaks it (certificates not valid yet or expired, tokens, Kerberos tickets): playground container logs -c $c --errors. Back to real time: playground debug clock -c $c --reset"
+              else
+                  logerror "❌ could not recreate $c with libfaketime"
+              fi
+          done
           exit 1
       fi
   }
@@ -87753,8 +87837,7 @@ playground_container_recreate_command() {
   if [[ ! -n "$ignore_current_versions" ]]
   then
     # keep TAG and CP_CONNECT_TAG
-    export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-    export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+    export_running_cp_tags
   fi
 
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
@@ -89714,8 +89797,7 @@ EOF
   fi
 
   # keep TAG, CONNECT TAG and ORACLE_IMAGE
-  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-  export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  export_running_cp_tags
   export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
 
   docker_command=$(playground state get run.docker_command)
@@ -91209,6 +91291,24 @@ playground_topic_dump_log_command() {
   then
       jq -r '.summary.open_transactions[] | "⚠️ producer \(.producer_id): transactional records from offset \(.from_offset) with no COMMIT / ABORT marker after them in the segment(s) read: an open (or hanging) transaction. read_committed consumers stop before offset \(.from_offset) (the last stable offset) until it ends"' <<< "$result" | while IFS= read -r l; do logwarn "$l"; done
       logwarn "   👉 playground broker transactions find-hanging (and describe-producers --topic '"$topic"'), then broker transactions abort if it never ends; a still running transaction is normal"
+  fi
+
+  # a compacted topic: the log cleaner never touches the active segment (the last one), so the old versions of the keys in
+  # it stay until it rolls (segment.ms, segment.bytes)
+  topic_configs=$(playground --output-level ERROR topic describe --topic "$topic" 2>/dev/null | grep -o "Configs:.*" | head -1)
+  if [[ "$topic_configs" == *"cleanup.policy="*compact* ]]
+  then
+      segment_ms=$(echo "$topic_configs" | grep -o -E "(^|[ ,:])segment\.ms=[0-9]+" | cut -d= -f2)
+      dirty_ratio=$(echo "$topic_configs" | grep -o -E "min\.cleanable\.dirty\.ratio=[0-9.]+" | cut -d= -f2)
+      active=$(jq -r '.segments[-1].file // empty' <<< "$result")
+      nb_segments=$(jq -r '.segments | length' <<< "$result")
+      if [ "$nb_segments" == "1" ]
+      then
+          log "🧹 compacted topic, one segment: $active is the active segment, and the log cleaner never compacts the active segment: every version of every key in it stays until it rolls"
+      else
+          log "🧹 compacted topic: $active is the active segment, never compacted (its old versions stay until it rolls); the $((nb_segments - 1)) other(s) are cleaned when their dirty part reaches min.cleanable.dirty.ratio (${dirty_ratio:-0.5 by default})"
+      fi
+      log "   it rolls after segment.ms (${segment_ms:-604800000, 7 days, by default}) at the next record, or at segment.bytes. To see compaction work: playground topic alter --topic $topic --add-config segment.ms=10000,min.cleanable.dirty.ratio=0.01, then one more record"
   fi
 
   # the batches to show
@@ -94092,6 +94192,7 @@ playground_topic_produce_command() {
       set -e
   fi
 
+  exit_if_no_broker_running
   set +e
   existing_topics=$(playground get-topic-list)
   if ! echo "$existing_topics" | grep -qFx "$topic"
@@ -95857,6 +95958,7 @@ playground_broker_health_command() {
       fi
       sleep 5
   done
+  get_replication_throttles
 
   if [[ -n "$json" ]]
   then
@@ -95883,6 +95985,8 @@ playground_broker_health_command() {
           --argjson quorum "$(echo -n "$health_quorum" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), status: .[1], log_end_offset: (.[2] | tonumber), lag: (.[3] | tonumber), seconds_since_caught_up: (.[4] | tonumber)})')" \
           --arg quorum_error "$health_quorum_error" \
           --arg quorum_lost "$health_quorum_lost" \
+          --argjson throttle_rates "$(echo -n "$health_throttle_rates" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {broker: .[0], key: .[1], value: (.[2] | tonumber? // .[2])})')" \
+          --argjson throttle_topics "$(echo -n "$health_throttle_topics" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {topic: .[0], key: .[1], replicas: .[2]})')" \
           '{
               healthy: $healthy,
               error: (if $error == "" then null else $error end),
@@ -95891,6 +95995,7 @@ playground_broker_health_command() {
               under_min_isr_partitions: $under_min_isr,
               topics_with_replication_factor_below_min_isr: $rf_below_min_isr,
               unavailable_partitions: $unavailable,
+              replication_throttles: { rates: $throttle_rates, throttled_replicas: $throttle_topics },
               kraft_quorum: (if $quorum_lost != "" then { lost: $quorum_lost } elif $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
           }'
       [ $healthy -eq 1 ] && exit 0 || exit 1
@@ -95971,6 +96076,24 @@ playground_broker_health_command() {
   if [[ -n "$health_rf_below_min_isr" ]]
   then
       logwarn "⚠️ topics with a replication factor below min.insync.replicas (acks=all producers to them always fail with NotEnoughReplicasException): $(echo "$health_rf_below_min_isr" | awk '{print $1}' | sort -u | paste -sd, - | sed 's/,/, /g')"
+  fi
+  if [[ -n "$health_throttle_rates" || -n "$health_throttle_topics" ]]
+  then
+      # one "<key>=<value> on brokers 1,2,3" per key and value (default: the cluster-wide default)
+      rates=$(echo "$health_throttle_rates" | awk 'NF { k = $2 "=" $3 ((($3 + 0) >= 1024) ? sprintf(" (%.0f KB/s)", $3 / 1024) : "") ; b[k] = (k in b) ? b[k] "," $1 : $1 } END { for (k in b) print k " on " ((b[k] == "default") ? "every broker (cluster-wide default)" : "brokers " b[k]) }' | sort | paste -sd';' - | sed 's/;/; /g')
+      topics=$(echo "$health_throttle_topics" | awk 'NF { print $1 }' | sort -u | paste -sd, - | sed 's/,/, /g')
+      logwarn "🐢 replication throttle set: ${rates:-no rate (the throttled replicas are not limited)}"
+      if [[ -n "$topics" ]]
+      then
+          logwarn "   throttled replicas (leader / follower.replication.throttled.replicas) on topics: $topics"
+          if [[ -n "$health_urp" ]] && [[ -n "$rates" ]] && echo "$health_urp" | awk '{print $1}' | grep -q -x -F -f <(echo "$health_throttle_topics" | awk '{print $1}')
+          then
+              logwarn "   👉 under-replicated partitions of those topics catch up at that rate"
+          fi
+      else
+          log "   no topic has throttled replicas: the rate limits nothing for now"
+      fi
+      log "   left by a reassignment or an Auto Data Balancer rebalance never completed? confluent-rebalancer finish (or status), kafka-reassign-partitions --verify, or remove them by hand (playground broker config delete --key leader.replication.throttled.rate)"
   fi
 
   if [[ -n "$health_quorum_error" ]]
@@ -97473,7 +97596,7 @@ playground_consumer_group_reset_offsets_command() {
           then
               logerror "   $group is the group of sink connector $connector_name: use playground connector offsets reset|alter --connector $connector_name, it stops and resumes the connector for you"
           else
-              logerror "   the group must have no active member: stop its consumers first (playground consumer-group describe --group $group --members)"
+              logerror "   the group must have no active member: stop its consumers first (playground consumer-group describe --group $group --members). A consumer that crashed (a Kafka Streams instance in ERROR, a killed process) stays a member until its session times out (session.timeout.ms, 45 s by default): retry after it"
           fi
       fi
       exit 1
@@ -97531,7 +97654,7 @@ playground_consumer_group_delete_command() {
           then
               logerror "   $group is the group of sink connector $connector_name: stop or delete the connector first (playground connector stop|delete --connector $connector_name)"
           else
-              logerror "   the group still has active members: stop its consumers first (playground consumer-group describe --group $group --members)"
+              logerror "   the group still has active members: stop its consumers first (playground consumer-group describe --group $group --members). A consumer that crashed (a Kafka Streams instance in ERROR, a killed process) stays a member until its session times out (session.timeout.ms, 45 s by default): retry after it"
           fi
       fi
       exit 1
@@ -98464,16 +98587,20 @@ playground_streams_status_command() {
   do
       [ -z "$app" ] && continue
       set +e
-      state_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" --state 2>/dev/null)
-      offsets_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" 2>/dev/null)
+      # < /dev/null: the admin tool runs in docker exec, which would read the rest of the application ids of this loop
+      state_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" --state 2>/dev/null < /dev/null)
+      offsets_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" 2>/dev/null < /dev/null)
       set -e
       # GROUP COORDINATOR (ID) ASSIGNMENT-STRATEGY STATE #MEMBERS
       group_state=$(echo "$state_output" | awk -v g="$app" '$1 == g {print $(NF-1); exit}')
       group_members=$(echo "$state_output" | awk -v g="$app" '$1 == g {print $NF; exit}')
       # LAG is the 6th column, "-" without a committed offset
       group_lag=$(echo "$offsets_output" | awk -v g="$app" '$1 == g && $6 ~ /^[0-9]+$/ {sum += $6; found = 1} END {if (found) print sum}')
-      groups_json=$(jq --arg app "$app" --arg state "$group_state" --arg members "$group_members" --arg lag "$group_lag" \
-          '. + {($app): {state: (if $state == "" then null else $state end), members: (if $members == "" then null else ($members | tonumber? // $members) end), lag: (if $lag == "" then null else ($lag | tonumber) end)}}' <<< "$groups_json")
+      # the source topics of the application and their number of partitions (the internal topics, <application.id>-…,
+      # aside): GROUP TOPIC PARTITION …
+      source_topics=$(echo "$offsets_output" | awk -v g="$app" '$1 == g && $2 != "" && index($2, g "-") != 1 && $3 ~ /^[0-9]+$/ {seen[$2 " " $3] = 1} END {for (k in seen) {split(k, a, " "); n[a[1]]++} for (t in n) printf "%s=%d\n", t, n[t]}' | sort | jq -R -s 'split("\n") | map(select(length > 0) | split("=") | {(.[0]): (.[1] | tonumber)}) | add // {}')
+      groups_json=$(jq --arg app "$app" --arg state "$group_state" --arg members "$group_members" --arg lag "$group_lag" --argjson topics "$source_topics" \
+          '. + {($app): {state: (if $state == "" then null else $state end), members: (if $members == "" then null else ($members | tonumber? // $members) end), lag: (if $lag == "" then null else ($lag | tonumber) end), source_topics: $topics}}' <<< "$groups_json")
   done <<< "$apps_for_groups"
 
   jq --argjson groups "$groups_json" '.applications |= map(. + {consumer_group: ($groups[.application_id] // null)})' "$tmp_dir/report.json" > "$tmp_dir/report-groups.json"
@@ -98503,7 +98630,7 @@ playground_streams_status_command() {
   else
       # the text view: the JSON written above, printed by the same script
       python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" "${report_args[@]}"
-      while IFS=$'\t' read -r app state members lag
+      while IFS=$'\t' read -r app state members lag skipped topics
       do
           if [ "$state" == "null" ]
           then
@@ -98514,7 +98641,12 @@ playground_streams_status_command() {
               [ "$lag" == "0" ] && lag_text="lag 0 🏁"
               log "👥 consumer group $app: $state, $members member(s), $lag_text"
           fi
-      done < <(jq -r '.applications[] | select(.consumer_group != null) | [.application_id, (.consumer_group.state // "null"), (.consumer_group.members // "null"), (.consumer_group.lag // "null")] | @tsv' "$tmp_dir/report-groups.json")
+          if [ "$skipped" == "true" ] && [ "$(jq -r '[.[]] | unique | length' <<< "$topics")" -gt 1 ]
+          then
+              counts=$(jq -r 'to_entries | map("\(.key): \(.value)") | join(", ")' <<< "$topics")
+              logwarn "⚠️ $app reads topics with different partition counts ($counts), and Kafka Streams did not check co-partitioning ('Skipping the repartition topic validation since there are no repartition topics', since 3.2): if the topology joins two of them, only the keys that land in the same partition number in both meet, the other records are lost without any error. Give them the same number of partitions, or repartition() (selectKey) in front of the join"
+          fi
+      done < <(jq -r '.applications[] | select(.consumer_group != null) | [.application_id, (.consumer_group.state // "null"), (.consumer_group.members // "null"), (.consumer_group.lag // "null"), (.copartition_check_skipped // false), (.consumer_group.source_topics // {} | tojson)] | @tsv' "$tmp_dir/report-groups.json")
       if [ "$not_running" != "0" ]
       then
           logwarn "⚠️ $not_running instance(s) not RUNNING"
@@ -108077,7 +108209,7 @@ playground_connector_diagnose_command() {
           then
               # the most precise reason first (certificate_unknown is the alert that comes with most of them)
               tls_reason=""
-              for tls_pattern in "No subject alternative names? (present|matching (IP address|DNS name) [^ \"\\]+)" "PKIX path building failed" "NotAfter: [^\"\\]+" "certificate expired" "certificate_unknown"
+              for tls_pattern in "No subject alternative names? (present|matching (IP address|DNS name) [^ \"\\]+)" "PKIX path building failed" "NotAfter: [^\"\\]+" "NotBefore: [^\"\\]+" "certificate expired" "certificate_unknown"
               do
                   tls_reason=$(grep -o -E "$tls_pattern" "$cdir/status.json" 2>/dev/null | head -1)
                   [[ -n "$tls_reason" ]] && break
@@ -108104,6 +108236,18 @@ playground_connector_diagnose_command() {
           then
               first_topic=$(jq -r '.topics // empty' "$cdir/config.json" 2>/dev/null | cut -d, -f1 | tr -d ' ')
               next_steps+=("🔒 the sink reads read_committed: an open transaction blocks it at its first offset, without error. Look for one: playground broker transactions describe-producers --topic ${first_topic:-<topic>}$cluster_flag (OPEN_TRANSACTION_START_OFFSET ⚠️)")
+          fi
+          # a sink whose consumer cannot reach one broker: the partitions it leads stop, the others move, and the client
+          # only logs it at INFO / WARN (not in the ERROR digest): a stale DNS record, a firewall, a wrong advertised address
+          if [ "$type" == "sink" ] && [ $is_cloud -eq 0 ]
+          then
+              unreachable=$(playground container logs --container "$diagnose_connect_container" --since "$since" --no-follow --grep "connector-consumer-$connector-" 2>/dev/null \
+                  | grep -o -E "Disconnecting from node [0-9]+ due to socket connection setup timeout|Connection to node [0-9]+ \([^)]*\) could not be established" \
+                  | grep -o -E "node [0-9]+( \([^)]*\))?" | sort | uniq -c | sort -rn | head -3 | awk '{ $1 = "" ; sub(/^ /, "") ; print }' | paste -sd, - | sed 's/,/, /g')
+              if [[ -n "$unreachable" ]]
+              then
+                  next_steps+=("🔌 the consumer of the task cannot connect to $unreachable (socket connection setup timeout, connection not established): the partitions that broker leads do not move, the others do. Check, from the worker, the address it resolves and reaches for it: playground broker describe$cluster_flag (the advertised listeners), playground container exec -c $diagnose_connect_container --command \"getent hosts <broker host>\" (a stale DNS record, a firewall; in a repro, playground debug dns -c $diagnose_connect_container lists the faults set)")
+              fi
           fi
           next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
       fi

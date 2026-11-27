@@ -228,7 +228,7 @@ do
         then
             # the most precise reason first (certificate_unknown is the alert that comes with most of them)
             tls_reason=""
-            for tls_pattern in "No subject alternative names? (present|matching (IP address|DNS name) [^ \"\\]+)" "PKIX path building failed" "NotAfter: [^\"\\]+" "certificate expired" "certificate_unknown"
+            for tls_pattern in "No subject alternative names? (present|matching (IP address|DNS name) [^ \"\\]+)" "PKIX path building failed" "NotAfter: [^\"\\]+" "NotBefore: [^\"\\]+" "certificate expired" "certificate_unknown"
             do
                 tls_reason=$(grep -o -E "$tls_pattern" "$cdir/status.json" 2>/dev/null | head -1)
                 [[ -n "$tls_reason" ]] && break
@@ -255,6 +255,18 @@ do
         then
             first_topic=$(jq -r '.topics // empty' "$cdir/config.json" 2>/dev/null | cut -d, -f1 | tr -d ' ')
             next_steps+=("🔒 the sink reads read_committed: an open transaction blocks it at its first offset, without error. Look for one: playground broker transactions describe-producers --topic ${first_topic:-<topic>}$cluster_flag (OPEN_TRANSACTION_START_OFFSET ⚠️)")
+        fi
+        # a sink whose consumer cannot reach one broker: the partitions it leads stop, the others move, and the client
+        # only logs it at INFO / WARN (not in the ERROR digest): a stale DNS record, a firewall, a wrong advertised address
+        if [ "$type" == "sink" ] && [ $is_cloud -eq 0 ]
+        then
+            unreachable=$(playground container logs --container "$diagnose_connect_container" --since "$since" --no-follow --grep "connector-consumer-$connector-" 2>/dev/null \
+                | grep -o -E "Disconnecting from node [0-9]+ due to socket connection setup timeout|Connection to node [0-9]+ \([^)]*\) could not be established" \
+                | grep -o -E "node [0-9]+( \([^)]*\))?" | sort | uniq -c | sort -rn | head -3 | awk '{ $1 = "" ; sub(/^ /, "") ; print }' | paste -sd, - | sed 's/,/, /g')
+            if [[ -n "$unreachable" ]]
+            then
+                next_steps+=("🔌 the consumer of the task cannot connect to $unreachable (socket connection setup timeout, connection not established): the partitions that broker leads do not move, the others do. Check, from the worker, the address it resolves and reaches for it: playground broker describe$cluster_flag (the advertised listeners), playground container exec -c $diagnose_connect_container --command \"getent hosts <broker host>\" (a stale DNS record, a firewall; in a repro, playground debug dns -c $diagnose_connect_container lists the faults set)")
+            fi
         fi
         next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
     fi

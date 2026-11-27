@@ -1397,6 +1397,7 @@ then
     set -e
 fi
 
+exit_if_no_broker_running
 set +e
 existing_topics=$(playground get-topic-list)
 if ! echo "$existing_topics" | grep -qFx "$topic"

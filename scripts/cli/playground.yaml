@@ -7290,10 +7290,11 @@ subcommands:
       clock is not shifted, so\nsleeps and elapsed time measurements keep working.\n\nlibfaketime
       is built once per architecture (amd64, arm64), in a UBI8\ncontainer, and cached
       in /tmp/playground-faketime: it loads in the\nUBI8 (CP 7) and UBI9 (CP 8) images,
-      not in musl (alpine) ones.\n\n❕ Recreating the container drops the changes of
-      another 'container\nset-environment-variables', 'debug java-debug' or 'debug
-      jscissors\n--restart' on it. A jump forward fires at once the timeouts based
-      on\nwall clock time: expect reconnections, a rebalance or a token refresh.\n\n\U0001F9EA
+      not in musl (alpine) ones.\n\nThe recreate goes through 'container set-environment-variables':
+      the\nvalues set before on the container (by it, 'debug java-debug' or\n'debug
+      jscissors --restart') are kept. --reset gives the container\nits original definition
+      back: those values go too. A jump forward fires at once the timeouts based on
+      wall\nclock time: expect reconnections, a rebalance or a token refresh.\n\n\U0001F9EA
       Docker only (not cfk)."
     usage: playground debug clock [OPTIONS]
     options:
@@ -8668,8 +8669,10 @@ subcommands:
       limit) and largest record\n  producers (id, epochs, offsets), idempotent or
       transactional, with\n  their COMMIT / ABORT markers\n  open transactions: transactional
       records with no marker after them,\n  where read_committed consumers stop (the
-      last stable offset)\n\nThen the batches: the last 20 (--last, --all), or the
-      ones around\n--offset, with --records for each record (key and value sizes,\nheaders)
+      last stable offset)\n  on a compacted topic, the active segment (never compacted:
+      its old\n  versions stay until it rolls, after segment.ms) and how to see\n
+      \ compaction work\n\nThen the batches: the last 20 (--last, --all), or the ones
+      around\n--offset, with --records for each record (key and value sizes,\nheaders)
       and --print-data for the payloads.\n\nIt reads the last (active) segment, the
       one that holds --offset, or\nevery segment with --all-segments. The files are
       read on disk: no\nclient credentials, any secured environment and cfk. Not on
@@ -10072,10 +10075,15 @@ subcommands:
       factor is below min.insync.replicas is only a ⚠️\n    warning: it is a config
       problem, not a broker one)\n  - unavailable partitions, without leader (--unavailable-partitions)\n
       \ - the KRaft quorum: leader, lag and last caught up time of each node\n    (kafka-metadata-quorum
-      describe --replication)\n\nExits with 1 when the cluster is not healthy. With
-      --wait-healthy, waits\nuntil it is (for example after 'playground broker start'
-      or a\n'container restart'), up to --max-wait seconds.\n\nWorks on plaintext,
-      secured environments and cfk."
+      describe --replication)\n  - a replication throttle set on the cluster (⚠️ warning):
+      the\n    leader / follower.replication.throttled.rate of the brokers and the\n
+      \   topics with throttled replicas, often left by a reassignment or an\n    Auto
+      Data Balancer rebalance never completed (only --verify,\n    confluent-rebalancer
+      status or finish remove it): a replica of those\n    topics out of the ISR catches
+      up at that rate\n\nExits with 1 when the cluster is not healthy. With --wait-healthy,
+      waits\nuntil it is (for example after 'playground broker start' or a\n'container
+      restart'), up to --max-wait seconds.\n\nWorks on plaintext, secured environments
+      and cfk."
     usage: playground broker health [OPTIONS]
     options:
     - names:
@@ -10093,7 +10101,7 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F4D7 Print the result as JSON (healthy, brokers, partitions,
-        kraft_quorum), and nothing else"
+        replication_throttles, kraft_quorum), and nothing else"
     - names:
       - "--verbose"
       - "-v"
@@ -11379,20 +11387,25 @@ subcommands:
       tasks, the active tasks not restored yet, the\nchangelog partitions being restored,
       the records restored, and the\nknown Kafka Streams errors of the logs (task
       migrated, fenced producer,\ndeserialization or production handler, missing source
-      topic, topics\nnot co-partitioned, state directory locked, uncaught exception...)
-      with\ntheir advice. Then the consumer group of each application: its state,\nmembers
-      and lag.\n\nEverything comes from the lines that the Kafka Streams library logs
-      at\nINFO (State transition from ... to ..., Handle new assignment with:,\nRestored
-      and ready to run, Finished restoring changelog...), so it works\nwith any application
-      and any Kafka Streams version since 3.0, as long\nas its logs are at INFO. The
-      logs of a restarted container hold its\nprevious runs too: only the current
-      run is shown, the restarts are\ncounted (and drawn in the timeline of --html).\n\n--html
-      also writes an HTML report (timeline of the states, task\nassignment, errors).
-      The same view of a customer's log files is the\n\U0001F30A Kafka Streams section
-      of 'playground analyze logs'.\n\n--sample kafka_streams shows it on the logs
-      shipped in\ntools/log-analyzer/samples/kafka-streams (no running example needed).\n\nExits
-      with 1 when an instance is not RUNNING (or its container is\nstopped), so that
-      an example can check it."
+      topic, topics\nnot co-partitioned, an internal topic with the wrong number of\npartitions,
+      state directory locked, uncaught exception...) with their\nadvice. Then the
+      consumer group of each application: its state,\nmembers and lag, and a ⚠️ warning
+      when it reads source topics with\ndifferent partition counts while Kafka Streams
+      skipped the\nco-partitioning check (no repartition topic, since 3.2): a join
+      of two\nof them silently loses the keys that land in different partition\nnumbers.
+      With several applications in one JVM, an error whose line\nnames no application
+      is listed apart, not given to the last one seen.\n\nEverything comes from the
+      lines that the Kafka Streams library logs at\nINFO (State transition from ...
+      to ..., Handle new assignment with:,\nRestored and ready to run, Finished restoring
+      changelog...), so it works\nwith any application and any Kafka Streams version
+      since 3.0, as long\nas its logs are at INFO. The logs of a restarted container
+      hold its\nprevious runs too: only the current run is shown, the restarts are\ncounted
+      (and drawn in the timeline of --html).\n\n--html also writes an HTML report
+      (timeline of the states, task\nassignment, errors). The same view of a customer's
+      log files is the\n\U0001F30A Kafka Streams section of 'playground analyze logs'.\n\n--sample
+      kafka_streams shows it on the logs shipped in\ntools/log-analyzer/samples/kafka-streams
+      (no running example needed).\n\nExits with 1 when an instance is not RUNNING
+      (or its container is\nstopped), so that an example can check it."
     usage: playground streams status [OPTIONS]
     options:
     - names:

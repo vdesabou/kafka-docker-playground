@@ -29,9 +29,15 @@ commands:
       changelog partitions being restored, the records restored, and the
       known Kafka Streams errors of the logs (task migrated, fenced producer,
       deserialization or production handler, missing source topic, topics
-      not co-partitioned, state directory locked, uncaught exception...) with
-      their advice. Then the consumer group of each application: its state,
-      members and lag.
+      not co-partitioned, an internal topic with the wrong number of
+      partitions, state directory locked, uncaught exception...) with their
+      advice. Then the consumer group of each application: its state,
+      members and lag, and a ⚠️ warning when it reads source topics with
+      different partition counts while Kafka Streams skipped the
+      co-partitioning check (no repartition topic, since 3.2): a join of two
+      of them silently loses the keys that land in different partition
+      numbers. With several applications in one JVM, an error whose line
+      names no application is listed apart, not given to the last one seen.
 
       Everything comes from the lines that the Kafka Streams library logs at
       INFO (State transition from ... to ..., Handle new assignment with:,

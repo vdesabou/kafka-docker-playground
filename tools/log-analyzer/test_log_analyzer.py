@@ -3156,6 +3156,77 @@ def test_oauth_token_endpoint_refused_and_license_detector_harmless():
                     "    java.lang.IllegalArgumentException: requirement failed: Must have link coordinator enabled during migration.")
     check("ZK migration without link coordinator: 🚚", "🚚 ZooKeeper to KRaft migration: link coordinator not enabled" in got, got)
 
+def test_streams_two_applications_in_one_jvm():
+    """Two KafkaStreams in one JVM (streams-serde-errors and its fail-on-poison-pill demo): an error line without a
+    Kafka Streams context goes to the application it names (the longest id: one is the prefix of the other), never
+    to the last application seen; a dead instance is not a second owner of its last tasks; first <= last across files."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "streams-analyzer"))
+    import streams_report
+    main = "streams-serde-errors-cc80c63d-ce10-453d-b5b7-188a141a9f99"
+    demo = "streams-serde-errors-fail-on-poison-pill-76a0237a-f8c1-42e5-b105-92856a07167d"
+
+    def log(ts, dead_at=None):
+        lines = [
+            f"[2026-11-27 {ts},000] INFO stream-client [{main}] State transition from REBALANCING to RUNNING (org.apache.kafka.streams.KafkaStreams)",
+            f"[2026-11-27 {ts},001] INFO stream-client [{demo}] State transition from REBALANCING to RUNNING (org.apache.kafka.streams.KafkaStreams)",
+            f"[2026-11-27 {ts},002] INFO stream-thread [{demo}-StreamThread-1] Handle new assignment with:",
+            "\tNew active tasks: [0_2]",
+            "\tNew standby tasks: []",
+            f"[2026-11-27 {ts},003] INFO stream-thread [{main}-StreamThread-1] Processed 1 records",
+            f"[2026-11-27 {ts},004] ERROR Exception caught during Deserialization, taskId: 0_2, topic: payments, partition: 2, offset: 2 (org.apache.kafka.streams.errors.LogAndFailExceptionHandler)",
+            f"[2026-11-27 {ts},005] ERROR 💀 Uncaught exception in a stream thread of streams-serde-errors-fail-on-poison-pill, shutting down the client: org.apache.kafka.streams.errors.StreamsException: Deserialization exception handler is set to fail upon a deserialization error.",
+            f"[2026-11-27 {ts},006] INFO stream-thread [{demo}-StreamThread-1] State transition from RUNNING to DEAD (org.apache.kafka.streams.processor.internals.StreamThread)",
+            f"[2026-11-27 {ts},007] INFO stream-client [{demo}] State transition from RUNNING to ERROR (org.apache.kafka.streams.KafkaStreams)",
+        ]
+        return lines
+
+    p = streams_report.Parser()
+    p.parse("streams", log("13:21:56"))
+    p.parse("streams3", log("13:20:26"))
+    rep = {a["application_id"]: a for a in p.report()["applications"]}
+    assert not rep["streams-serde-errors"]["errors"], rep["streams-serde-errors"]["errors"]
+    demo_errors = {e["key"]: e for e in rep["streams-serde-errors-fail-on-poison-pill"]["errors"]}
+    assert len(demo_errors) == 1, demo_errors
+    uncaught = next(iter(demo_errors.values()))
+    assert uncaught["first"] < uncaught["last"], uncaught
+    # the deserialization line names no application: not given to the healthy one
+    assert "(unknown application)" in rep, list(rep)
+    assert not any("zombie" in f for f in rep["streams-serde-errors-fail-on-poison-pill"]["findings"])
+    # stream-thread [main] is the main thread of the JVM, not an application; the invalid partitions of an internal topic
+    # have their own cause; the skipped co-partitioning validation is recorded for the application
+    p = streams_report.Parser()
+    p.parse("streams", [
+        f"[2026-11-27 14:18:01,000] INFO stream-client [{demo}] State transition from CREATED to REBALANCING (org.apache.kafka.streams.KafkaStreams)",
+        f"[2026-11-27 14:18:01,027] INFO stream-thread [{demo}-StreamThread-1-consumer] Skipping the repartition topic validation since there are no repartition topics. (org.apache.kafka.streams.processor.internals.RepartitionTopics)",
+        "[2026-11-27 14:22:48,660] ERROR stream-thread [main] Existing internal topic streams-serde-errors-fail-on-poison-pill-customers-STATE-STORE-0000000000-changelog has invalid partitions: expected: 3; actual: 6. Use 'org.apache.kafka.tools.StreamsResetter' tool to clean up invalid topics before processing. (org.apache.kafka.streams.processor.internals.InternalTopicManager)",
+    ])
+    rep = {a["application_id"]: a for a in p.report()["applications"]}
+    assert "main" not in rep, list(rep)
+    assert rep["streams-serde-errors-fail-on-poison-pill"]["copartition_check_skipped"] is True
+    assert [e["key"] for e in rep["streams-serde-errors-fail-on-poison-pill"]["errors"]] == ["internal_topic_partitions"], rep
+
+
+def test_certificate_not_yet_valid_clock_behind():
+    """academy 000037: a certificate not valid yet (the clock of the worker behind) or expired is 🕰️, on top of the
+    generic 🔐 TLS handshake failure"""
+    def causes_of(body):
+        text = ("@@PGFILE@@|connect.log|100|1|0|2026-11-25T13:00:00|2026-11-25T14:00:00\n"
+                f"@@PGREC@@|ERROR|1|10|10|2026-11-25T13:52:37|2026-11-25T13:52:37\n{body}\n@@PGTS@@|2026-11-25T13:52:37\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        return [h["title"] for h in res["known_causes"]]
+    got = causes_of("[2026-11-25 13:52:37,761] ERROR Error while getting broker list. (io.confluent.admin.utils.ClusterStatus:72)\n"
+                    "    Caused by: javax.net.ssl.SSLHandshakeException: (bad_certificate) PKIX path validation failed: java.security.cert.CertPathValidatorException: validity check failed\n"
+                    "    Caused by: java.security.cert.CertificateNotYetValidException: NotBefore: Fri Nov 27 13:47:59 GMT 2026")
+    check("not yet valid: 🕰️", "🕰️ Certificate outside its validity period" in got, got)
+    got = causes_of("[2026-11-25 13:52:37,761] ERROR Connection to node -1 failed authentication due to: SSL handshake failed\n"
+                    "    Caused by: java.security.cert.CertificateExpiredException: NotAfter: Sat Nov 27 13:47:59 GMT 2027")
+    check("expired: 🕰️", "🕰️ Certificate outside its validity period" in got, got)
+    got = causes_of("[2026-11-25 13:52:37,761] ERROR Connection to node -1 failed authentication due to: SSL handshake failed\n"
+                    "    Caused by: javax.net.ssl.SSLHandshakeException: No subject alternative names matching IP address 192.168.1.5 found")
+    check("SAN mismatch: not 🕰️", "🕰️ Certificate outside its validity period" not in got and "🔐 TLS handshake failure" in got, got)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

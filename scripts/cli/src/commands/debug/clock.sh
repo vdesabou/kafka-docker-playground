@@ -59,7 +59,17 @@ function recreate_with_faketime () {
         --env "FAKETIME_DONT_FAKE_MONOTONIC: 1" \
         --mount-faketime-files
     then
-        logerror "❌ could not recreate $* with libfaketime"
+        # recreated with the fake clock, but not ready: often because of the new time itself (a worker that cannot
+        # connect with certificates not valid yet or expired, a token or a Kerberos ticket refused)
+        for c in "$@"
+        do
+            if docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$c" 2> /dev/null | grep -q "^LD_PRELOAD=$remote_dir/libfaketime"
+            then
+                logerror "❌ $c runs with the fake clock ($(docker exec "$c" date -u '+%Y-%m-%d %H:%M:%S UTC' 2> /dev/null)), but it is not ready: the new time may be what breaks it (certificates not valid yet or expired, tokens, Kerberos tickets): playground container logs -c $c --errors. Back to real time: playground debug clock -c $c --reset"
+            else
+                logerror "❌ could not recreate $c with libfaketime"
+            fi
+        done
         exit 1
     fi
 }

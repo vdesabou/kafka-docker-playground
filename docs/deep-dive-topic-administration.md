@@ -422,6 +422,7 @@ playground stop
 | "which topics fill the disk?" | `topic list --sort-by-size` |
 | "the client fails / pauses when a partition leader moves (`NOT_LEADER_OR_FOLLOWER`, metadata refresh)" | `playground run --enable-multiple-brokers`, `topic create -t <t> --nb-partitions 3 --replication-factor 3`, then while the client runs: `topic elect-leader -t <t> --partition 0 --leader 2` (a leader change without stopping a broker) |
 | "something goes wrong during a partition reassignment / a rebalance" | `topic reassign -t <t> --replicas 2,3 --throttle 100000 --no-wait` (slow move: under-replicated partitions while it runs), follow with `--verify-only`; `--brokers 1,2,3` spreads the partitions like a rebalance; then `topic elect-leader -t <t>` (preferred leaders). Example: `other/topic-reassign-and-leader-election` |
+| "replicas are slow to catch up long after a reassignment or a rebalance" | `broker health`: `🐢 replication throttle set` (the rates of the brokers, the topics with throttled replicas), left when nobody ran `--verify` / `confluent-rebalancer status` or `finish` after the move. Examples: `academy/environment-plaintext/broker-repro-000034-*`, `other/auto-data-balancer` |
 
 In a repro model, create the topics the scenario depends on **before** the producers and connectors, so their
 partitions and configs are the ones of the case, not the broker's defaults:

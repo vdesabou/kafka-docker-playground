@@ -92,16 +92,20 @@ while IFS= read -r app
 do
     [ -z "$app" ] && continue
     set +e
-    state_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" --state 2>/dev/null)
-    offsets_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" 2>/dev/null)
+    # < /dev/null: the admin tool runs in docker exec, which would read the rest of the application ids of this loop
+    state_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" --state 2>/dev/null < /dev/null)
+    offsets_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$app" 2>/dev/null < /dev/null)
     set -e
     # GROUP COORDINATOR (ID) ASSIGNMENT-STRATEGY STATE #MEMBERS
     group_state=$(echo "$state_output" | awk -v g="$app" '$1 == g {print $(NF-1); exit}')
     group_members=$(echo "$state_output" | awk -v g="$app" '$1 == g {print $NF; exit}')
     # LAG is the 6th column, "-" without a committed offset
     group_lag=$(echo "$offsets_output" | awk -v g="$app" '$1 == g && $6 ~ /^[0-9]+$/ {sum += $6; found = 1} END {if (found) print sum}')
-    groups_json=$(jq --arg app "$app" --arg state "$group_state" --arg members "$group_members" --arg lag "$group_lag" \
-        '. + {($app): {state: (if $state == "" then null else $state end), members: (if $members == "" then null else ($members | tonumber? // $members) end), lag: (if $lag == "" then null else ($lag | tonumber) end)}}' <<< "$groups_json")
+    # the source topics of the application and their number of partitions (the internal topics, <application.id>-…,
+    # aside): GROUP TOPIC PARTITION …
+    source_topics=$(echo "$offsets_output" | awk -v g="$app" '$1 == g && $2 != "" && index($2, g "-") != 1 && $3 ~ /^[0-9]+$/ {seen[$2 " " $3] = 1} END {for (k in seen) {split(k, a, " "); n[a[1]]++} for (t in n) printf "%s=%d\n", t, n[t]}' | sort | jq -R -s 'split("\n") | map(select(length > 0) | split("=") | {(.[0]): (.[1] | tonumber)}) | add // {}')
+    groups_json=$(jq --arg app "$app" --arg state "$group_state" --arg members "$group_members" --arg lag "$group_lag" --argjson topics "$source_topics" \
+        '. + {($app): {state: (if $state == "" then null else $state end), members: (if $members == "" then null else ($members | tonumber? // $members) end), lag: (if $lag == "" then null else ($lag | tonumber) end), source_topics: $topics}}' <<< "$groups_json")
 done <<< "$apps_for_groups"
 
 jq --argjson groups "$groups_json" '.applications |= map(. + {consumer_group: ($groups[.application_id] // null)})' "$tmp_dir/report.json" > "$tmp_dir/report-groups.json"
@@ -131,7 +135,7 @@ then
 else
     # the text view: the JSON written above, printed by the same script
     python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" "${report_args[@]}"
-    while IFS=$'\t' read -r app state members lag
+    while IFS=$'\t' read -r app state members lag skipped topics
     do
         if [ "$state" == "null" ]
         then
@@ -142,7 +146,12 @@ else
             [ "$lag" == "0" ] && lag_text="lag 0 🏁"
             log "👥 consumer group $app: $state, $members member(s), $lag_text"
         fi
-    done < <(jq -r '.applications[] | select(.consumer_group != null) | [.application_id, (.consumer_group.state // "null"), (.consumer_group.members // "null"), (.consumer_group.lag // "null")] | @tsv' "$tmp_dir/report-groups.json")
+        if [ "$skipped" == "true" ] && [ "$(jq -r '[.[]] | unique | length' <<< "$topics")" -gt 1 ]
+        then
+            counts=$(jq -r 'to_entries | map("\(.key): \(.value)") | join(", ")' <<< "$topics")
+            logwarn "⚠️ $app reads topics with different partition counts ($counts), and Kafka Streams did not check co-partitioning ('Skipping the repartition topic validation since there are no repartition topics', since 3.2): if the topology joins two of them, only the keys that land in the same partition number in both meet, the other records are lost without any error. Give them the same number of partitions, or repartition() (selectKey) in front of the join"
+        fi
+    done < <(jq -r '.applications[] | select(.consumer_group != null) | [.application_id, (.consumer_group.state // "null"), (.consumer_group.members // "null"), (.consumer_group.lag // "null"), (.copartition_check_skipped // false), (.consumer_group.source_topics // {} | tojson)] | @tsv' "$tmp_dir/report-groups.json")
     if [ "$not_running" != "0" ]
     then
         logwarn "⚠️ $not_running instance(s) not RUNNING"

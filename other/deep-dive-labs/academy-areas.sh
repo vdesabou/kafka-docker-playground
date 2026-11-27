@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
-# lab of the Schema Registry, ksqlDB, SASL, TLS, Python client, RBAC, OAuth and Kerberos exercises of https://kafka-docker-playground.io/#/academy (the
+# lab of the Schema Registry, ksqlDB, SASL, TLS, Python client, RBAC, OAuth, Kerberos and Kafka Streams exercises of https://kafka-docker-playground.io/#/academy (the
 # 🌊 Streams, SR & Non-Java and 🔐 Platform, Security & Cloud Infra support areas): runs their reproduction models and
 # asserts the symptom each exercise is about, then the fix the page gives. The SASL, TLS, Python, RBAC, OAuth and
 # Kerberos models start their own environment (sasl-plain, 2way-ssl, rbac-sasl-plain, sasl-oauthbearer, kerberos)
@@ -84,6 +84,33 @@ sleep 10
 lab_run playground container exec -c connect --command "cat /tmp/output.json"
 lab_expect_contains '{"payment": 3}'
 
+log "Exercise: TLS, the Connect worker does not come back after a hardware swap (its clock behind)"
+run_model environment-2way-ssl 2way-ssl-repro-000037-connect-worker-down-clock-behind-certificate-not-yet-valid.sh
+lab_expect_contains "runs with the fake clock"
+lab_expect_contains "the connect REST API does not answer, is the worker up?"
+lab_run playground container logs -c connect --errors
+lab_expect_contains "CertificateNotYetValidException: NotBefore:"
+lab_run playground debug clock -c connect
+lab_expect_contains "offset -17"
+lab_run playground debug clock -c connect --reset
+lab_expect_contains "no fake clock"
+MAX_WAIT=120
+CUR_WAIT=0
+until playground --output-level ERROR connector status --connector filestream-sink 2>&1 | grep -q "✅ RUNNING  0:🟢 RUNNING"
+do
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ filestream-sink is not RUNNING $MAX_WAIT seconds after the clock reset"
+        exit 1
+    fi
+done
+lab_run playground topic produce -t payments --nb-messages 2 --forced-value '{"payment": %g, "after": "reset"}'
+sleep 10
+lab_run playground container exec -c connect --command "cat /tmp/output.json"
+lab_expect_contains '{"payment": 2, "after": "reset"}'
+
 log "Exercise: Python client, the producer cannot connect"
 python_conf="$academy/environment-sasl-plain/client-python-000030/client.properties"
 cp "$python_conf" "$python_conf.lab"
@@ -150,5 +177,90 @@ lab_run playground connector restart --connector orders-sink
 sleep 15
 lab_run playground container exec -c connect --command "cat /tmp/output.json"
 lab_expect_contains '{"order": 3, "day": "tuesday"}'
+
+log "Exercise: Kafka Streams, one application stopped on a bad record"
+run_model other-kafka-streams streams-repro-000036-one-application-stops-on-poison-pill.sh
+lab_expect_contains '{"key":"p3","offset":2}'
+lab_expect_not_contains '{"key":"p4","offset"' "p4 never reaches the output of the stopped application"
+lab_run playground streams status
+lab_expect_contains "❌ streams: the client is ERROR since"
+lab_expect_contains "❌ streams2: the client is ERROR since"
+lab_expect_contains "❌ streams3: the client is ERROR since"
+lab_expect_contains "🧪 Deserialization error"
+lab_expect_not_contains "zombie" "a dead instance is not a second owner of its tasks"
+# the dead instances stay members of the group until their session times out (45 s)
+MAX_WAIT=120
+CUR_WAIT=0
+until playground consumer-group describe --group streams-serde-errors-fail-on-poison-pill 2>&1 | grep -q "has no active members"
+do
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ consumer group streams-serde-errors-fail-on-poison-pill still has members after $MAX_WAIT seconds"
+        exit 1
+    fi
+done
+lab_run playground consumer-group reset-offsets --group streams-serde-errors-fail-on-poison-pill --topic payments:2 --to-offset 3
+lab_expect_contains "streams-serde-errors-fail-on-poison-pill payments        2          3"
+lab_run playground container restart -c streams -c streams2 -c streams3
+lab_run playground topic consume --topic payments-processed-fail-demo --min-expected-messages 4 --timeout 120
+lab_expect_contains '"id": "p4"'
+
+log "Exercise: Kafka Streams, the enriched orders of most customers never come out (topics not co-partitioned)"
+run_model other-kafka-streams streams-repro-000038-join-loses-orders-topics-not-co-partitioned.sh
+lab_expect_contains '{"key":"c2","value":'
+lab_expect_not_contains '{"key":"c1","value":' "the order of c1 is lost"
+lab_run playground streams status
+lab_expect_contains "streams-join-copartition-demo reads topics with different partition counts (customers: 3, orders-by-customer: 6)"
+lab_run playground topic delete --topic orders-by-customer
+lab_run playground topic create --topic orders-by-customer --nb-partitions 3
+lab_run playground container restart -c streams -c streams2 -c streams3
+MAX_WAIT=120
+CUR_WAIT=0
+until playground streams status 2>&1 | grep -q "📐 Internal topic with the wrong number of partitions"
+do
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ no 📐 Internal topic with the wrong number of partitions after $MAX_WAIT seconds"
+        exit 1
+    fi
+done
+CUR_WAIT=0
+until playground consumer-group describe --group streams-join-copartition-demo 2>&1 | grep -q "has no active members"
+do
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ consumer group streams-join-copartition-demo still has members after $MAX_WAIT seconds"
+        exit 1
+    fi
+done
+lab_run playground container exec -c broker --command "kafka-streams-application-reset --bootstrap-server broker:9092 --application-id streams-join-copartition-demo --input-topics customers,orders-by-customer --to-earliest"
+lab_expect_contains "Deleting inferred internal topics [streams-join-copartition-demo-customers-STATE-STORE-0000000000-changelog]"
+lab_run playground container restart -c streams -c streams2 -c streams3
+CUR_WAIT=0
+until [ "$(playground streams status --json 2>/dev/null | jq '[.applications[] | select(.application_id == "streams-join-copartition-demo") | .instances[] | select(.state == "RUNNING")] | length')" == "3" ]
+do
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ streams-join-copartition-demo is not RUNNING $MAX_WAIT seconds after the reset"
+        exit 1
+    fi
+done
+for customer in c1 c2 c3
+do
+    playground topic produce --topic orders-by-customer --nb-messages 1 --key $customer --value "{\"order_id\":\"y-$customer\",\"product\":\"p1\"}" --value-format raw > /dev/null
+done
+lab_run playground topic consume --topic orders-by-customer-enriched --min-expected-messages 4 --timeout 60
+lab_expect_contains 'y-c1'
+lab_expect_contains 'y-c3'
+lab_run playground streams status
+lab_expect_not_contains "reads topics with different partition counts" "co-partitioned now"
 
 log "✅ academy areas lab: the exercises behave as the page says"
