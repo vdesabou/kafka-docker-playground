@@ -629,6 +629,16 @@ KNOWN_CAUSES = [
      "advice": "the endpoint (or a gateway, load balancer or proxy in front of it) answered 500, 502, 503 or 504: look at its "
                "side for the same times. A 504 or a timeout does not say whether the request was processed: the retries "
                "of the connector (retry.backoff.ms, max.retries) can send it twice to an endpoint that is not idempotent"},
+    # a Kafka client delayed by a client quota of the brokers (produce / fetch byte rate, request percentage): the
+    # NetworkClient of the client logs it at WARN, nothing fails, the client is only slow (a sink lag that grows)
+    {"name": "kafka_quota_throttled", "severity": "medium", "category": "Kafka Issues",
+     "pattern": r"Connection to node -?\d+ (?:\([^)]{0,200}\) )?is throttled for \d+ ms",
+     "title": "🚥 Throttled by a broker quota",
+     "advice": "the brokers delay this client: it is over a client quota (producer_byte_rate, consumer_byte_rate or "
+               "request_percentage, on its client.id, its user or the defaults of all of them). Nothing fails, the "
+               "client is only slower (records take longer to send, the lag of a consumer or a sink grows). See the "
+               "quotas with playground quota get (kafka-configs --describe --entity-type clients / users), and the "
+               "metrics produce-throttle-time-avg / fetch-throttle-time-avg of the client"},
     {"name": "throttled", "severity": "medium", "category": "Network Issues",
      "pattern": r"ThrottlingException|Rate exceeded|429 Too Many Requests|TooManyRequests|http (?:status|code|error)[ :=]*429"
                 r"|Status code\s*:?\s*429|es_rejected_execution_exception|\bSlowDown\b|RequestLimitExceeded"

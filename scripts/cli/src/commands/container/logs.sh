@@ -57,9 +57,11 @@ fi
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
 
-# with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors)
-records_file=""
-if [[ -n "$html" ]]
+# with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors). A records file
+# given by the caller (connector diagnose: PG_LOG_DIGEST_RECORDS_FILE, for its own report and next steps) is kept: the
+# digests below set PG_LOG_DIGEST_RECORDS_FILE to $records_file, an empty value would drop the records of the caller
+records_file="${PG_LOG_DIGEST_RECORDS_FILE:-}"
+if [[ -n "$html" ]] && [[ -z "$records_file" ]]
 then
     records_file=$(mktemp -t pg-log-records-XXXXXXXXXX)
     trap 'rm -f "$records_file"' EXIT

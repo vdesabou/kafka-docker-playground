@@ -5,7 +5,8 @@ source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
 # lab of the broker exercises of https://kafka-docker-playground.io/#/academy (a broker that never joins, a broker
-# rejected by the controllers, records lost for the partitions of one broker, no controller majority): runs their
+# rejected by the controllers, records lost for the partitions of one broker, no controller majority, acks=all and min
+# ISR, a producer throttled by a quota): runs their
 # reproduction models (academy/environment-plaintext) and asserts the symptom each exercise is about, then the fix the
 # page gives. The fix edits the compose override of the model, as the learner does: the original is put back at the end
 lab_require_plaintext
@@ -96,5 +97,34 @@ lab_run playground broker health --wait-healthy --max-wait 180
 lab_expect_contains "✅ cluster is healthy"
 lab_run playground topic create --topic refunds --nb-partitions 3 --replication-factor 3
 lab_expect_contains "Created topic refunds."
+
+log "Exercise 5: acks=all fails after a broker crash"
+run_model broker-repro-000021-acks-all-not-enough-replicas.sh
+# the error of the records, not the UnknownHostException of the producer that still tries to reach the stopped broker
+lab_expect_contains "record(s) could not be sent to topic payments: org.apache.kafka.common.errors.NotEnoughReplicasException"
+lab_run playground broker health
+lab_expect_contains "under min.insync.replicas partitions"
+
+log "Exercise 5, Step 3: broker 3 back, then a third replica"
+lab_run playground broker start --broker 3
+lab_expect_contains "✅ cluster is healthy"
+lab_run playground topic produce --topic payments --nb-messages 9 --key "account-%g" --forced-value '{"payment": %g}' --producer-property acks=all
+lab_expect_contains "📤 produced 9 records to topic payments"
+lab_run playground topic reassign --topic payments --replicas 1,2,3
+lab_run playground topic describe --topic payments
+lab_expect_contains "Replicas: 1,2,3"
+
+log "Exercise 6: slow, without any error"
+run_model broker-repro-000022-slow-producer-no-error-quota.sh
+lab_expect_contains "is throttled for"
+lab_expect_contains "🚥 the brokers throttled the producer orders-service"
+lab_run playground quota get
+lab_expect_contains "Quota configs for client-id 'orders-service' are producer_byte_rate=51200.0"
+
+log "Exercise 6, Step 3: without the quota"
+lab_run playground quota delete --client-id orders-service --producer-byte-rate
+lab_run playground topic produce --topic orders --nb-messages 3000 --record-size 1000 --forced-value '{"order": %g}' --producer-property client.id=orders-service
+lab_expect_contains "📤 produced 3000 records to topic orders"
+lab_expect_not_contains "🚥 the brokers throttled" "no throttling without the quota"
 
 log "🎉 broker exercises of the academy: every symptom and every fix as on the page"

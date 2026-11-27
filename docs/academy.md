@@ -32,6 +32,8 @@ playground find-example --category academy
 | ⭐ | [Broker: a broker never joins the cluster](/academy?id=broker-a-broker-never-joins-the-cluster) | a duplicate `node.id`, what the data folder remembers | `broker health`, `broker describe`, `container logs`, `container recreate --fresh-volumes` |
 | ⭐ | [Broker: one broker is rejected by the controllers](/academy?id=broker-one-broker-is-rejected-by-the-controllers) | the cluster id and `meta.properties` | `broker health`, `container logs --errors`, `analyze logs` |
 | ⭐ | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
+| ⭐ | [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash) | `acks=all`, `min.insync.replicas` and the replication factor | `broker health`, `broker stop` / `start`, `topic produce --producer-property acks=all`, `topic reassign` |
+| ⭐ | [Producer: slow, without any error](/academy?id=producer-slow-without-any-error) | client quotas, a throttled client | `quota get`, `quota delete`, `topic produce`, `analyze logs` |
 | ⭐⭐ | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
 | ⭐⭐ | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
 | ⭐⭐ | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
@@ -39,6 +41,7 @@ playground find-example --category academy
 | ⭐⭐ | [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again) | sink offsets live in a consumer group named after the connector | `consumer-group describe`, `connector offsets alter`, `--initial-state STOPPED` |
 | ⭐⭐ | [S3 sink: duplicated records in the bucket after a worker crash](/academy?id=s3-sink-duplicated-records-in-the-bucket-after-a-worker-crash) | when the S3 sink is exactly-once, and when it is not | `storage ls`, `storage cat --summary`, `connector reconcile` |
 | ⭐⭐ | [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) | `listeners` vs `advertised.listeners`, replication | `broker describe`, `broker health`, `topic get-offsets`, `topic describe` |
+| ⭐⭐ | [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) | the poll loop of a sink task, `max.poll.interval.ms` | `connector diagnose`, `connector show-lag`, `tools http-server requests` |
 | ⭐⭐⭐ | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
 | ⭐⭐⭐ | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
 | ⭐⭐⭐ | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
@@ -1357,6 +1360,227 @@ Created topic refunds.
 
 * Stop only one controller: is the cluster still able to create a topic? Stop the active one (`Leader` in the KRaft quorum table): how long does the election take?
 * The same lesson holds for a ZooKeeper ensemble (CP 7.x): without a majority of its nodes, produce keeps working and topic creation fails.
+
+<!-- tabs:end -->
+
+
+### Producer: acks=all fails after a broker crash
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+During the night, one of the three brokers crashed. Since then, the payment service fails to send some payments with
+`NotEnoughReplicasException`, but not all of them. The other topics are fine.
+
+💡 What you'll learn:
+
+* What `acks=all` and `min.insync.replicas` promise together
+* Why a replication factor equal to `min.insync.replicas` tolerates no broker failure
+* Why only some partitions fail
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1 (KRaft: CP 8 or later)
+
+* 🖥️ 3 brokers (ids 1, 2 and 3)
+
+Reproduction model: [broker-repro-000021-acks-all-not-enough-replicas.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000021-acks-all-not-enough-replicas.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000021-acks-all-not-enough-replicas.sh
+```
+
+The producer retries, then gives up for 5 of the 9 records:
+
+```log
+[2026-11-26 18:19:15,555] WARN [Producer clientId=console-producer] Got error produce response with correlation id 17 on topic-partition payments-0, retrying (2 attempts left). Error: NOT_ENOUGH_REPLICAS (org.apache.kafka.clients.producer.internals.Sender)
+[2026-11-26 18:19:16,305] ERROR Error when sending message to topic payments with key: 9 bytes, value: 14 bytes with error: (org.apache.kafka.clients.producer.internals.ErrorLoggingCallback)
+org.apache.kafka.common.errors.NotEnoughReplicasException: Messages are rejected since there are fewer in-sync replicas than required.
+19:36:00 🔥 ❌ 5 record(s) could not be sent to topic payments: org.apache.kafka.common.errors.NotEnoughReplicasException: Messages are rejected since there are fewer in-sync replicas than required.
+```
+
+```bash
+19:19:22 ℹ️ 📍 Earliest and latest offsets per partition of topic payments
+PARTITION  EARLIEST        LATEST          RECORDS
+0          0               0               0
+1          0               4               4
+2          0               0               0
+TOTAL                                      4
+```
+
+The output also has `java.net.UnknownHostException: broker3` warnings: the producer still tries to reconnect to the
+broker that crashed. They are not why the records failed.
+
+❔Questions:
+
+* Why do partitions 0 and 2 refuse the records, and not partition 1?
+* How was the topic created?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground broker health
+19:20:12 🔥 ❌ broker 3 (container broker3) is not registered: it is stopped (playground broker start --broker 3)
+19:20:12 🔥 ❌ 2 under min.insync.replicas partitions
+TOPIC     PARTITION  LEADER  REPLICAS  ISR
+payments  0          1       3,1       1
+payments  2          2       2,3       2
+```
+
+> How was the topic created?
+
+With 2 replicas and `min.insync.replicas=2`:
+
+```bash
+playground topic create --topic payments --nb-partitions 3 --replication-factor 2 --config min.insync.replicas=2
+```
+
+> Why do partitions 0 and 2 refuse the records, and not partition 1?
+
+With `acks=all`, the leader writes a record only when at least `min.insync.replicas` replicas are in sync, so that it
+is never on a single disk. Partitions 0 and 2 have a replica on broker 3: their ISR shrank to 1, below 2, so the leader
+refuses the writes. Partition 1 lives on brokers 1 and 2 only. A replication factor equal to `min.insync.replicas`
+means **no** broker can be down for `acks=all` producers: the usual rule is a replication factor of 3 with
+`min.insync.replicas=2`, so one broker can fail (or restart, in a rolling upgrade).
+
+<!-- select:end -->
+
+* Bring broker 3 back, then send the payments again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground broker start --broker 3
+19:36:15 ℹ️ ✅ broker 3 is registered, waiting for its replicas to be back in sync
+19:36:21 ℹ️ ✅ cluster is healthy, broker 3 started in 11s
+playground topic produce --topic payments --nb-messages 9 --key "account-%g" --forced-value '{"payment": %g}' --producer-property acks=all
+19:46:37 ℹ️ 📤 produced 9 records to topic payments, took: 0min 2sec
+```
+
+For good, give the topic a third replica, so that the next crash of one broker does not stop the payments ([playground topic reassign](/playground%20topic%20reassign), every partition on brokers 1, 2 and 3):
+
+```bash
+playground topic reassign --topic payments --replicas 1,2,3
+```
+
+<!-- select:end -->
+🥁 So...did you learn what acks=all and min.insync.replicas promise?
+
+#### **🎓 Next Steps**
+
+* Produce with `--producer-property acks=1` while broker 3 is down: the records are accepted. What can be lost?
+* The [🍪 brokers and transactions](/deep-dive-broker.md) deep dive has the `NotEnoughReplicasException` recipe.
+
+<!-- tabs:end -->
+
+### Producer: slow, without any error
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+The orders service used to send its batch of 3000 orders in a couple of seconds. Now it takes almost a minute, with no
+error and nothing in the broker logs.
+
+💡 What you'll learn:
+
+* What a client quota is, and how a throttled client behaves
+* Where to see that a client is throttled
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+Reproduction model: [broker-repro-000022-slow-producer-no-error-quota.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000022-slow-producer-no-error-quota.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000022-slow-producer-no-error-quota.sh
+```
+
+```bash
+19:21:13 ℹ️ 📤 producing 3000 records to topic orders
+[2026-11-26 18:21:14,350] WARN [Producer clientId=orders-service] Connection to node 1 is throttled for 931 ms until timestamp 1795717275281 (org.apache.kafka.clients.NetworkClient)
+[2026-11-26 18:21:15,288] WARN [Producer clientId=orders-service] Connection to node 1 is throttled for 935 ms until timestamp 1795717276222 (org.apache.kafka.clients.NetworkClient)
+…
+19:22:02 ℹ️ 📤 produced 3000 records to topic orders, took: 0min 49sec
+```
+
+❔Questions:
+
+* Who is throttling the producer, and why?
+* How do you find the setting?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Who is throttling the producer, and why?
+
+The broker: `Connection to node 1 is throttled` means the broker asked the client to wait before its next request,
+because the client is over a **client quota**. Nothing fails, the client is only slowed down to the rate of the quota,
+and the broker logs nothing about it. [playground topic produce](/playground%20topic%20produce) says it at the end:
+
+```bash
+19:24:02 ❗ 🚥 the brokers throttled the producer orders-service 24 time(s): it is over a client quota (playground quota get --client-id orders-service)
+```
+
+and [playground analyze logs](/playground%20analyze%20logs) on a client log: `[MEDIUM] 🚥 Throttled by a broker quota`.
+
+> How do you find the setting?
+
+```bash
+playground quota get
+19:23:09 ℹ️ 🔎 Displaying all client quotas
+Quota configs for client-id 'orders-service' are producer_byte_rate=51200.0
+```
+
+50 KB/s for the client id `orders-service`: 3000 records of 1 KB take about a minute. Quotas can also be set on a
+user, and as defaults for every user or client id (`--all-users`, `--all-client-ids`): check all of them.
+
+<!-- select:end -->
+
+* Remove the quota, then send the orders again.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground quota delete --client-id orders-service --producer-byte-rate
+playground topic produce --topic orders --nb-messages 3000 --record-size 1000 --forced-value '{"order": %g}' --producer-property client.id=orders-service
+19:23:28 ℹ️ 📤 produced 3000 records to topic orders, took: 0min 1sec
+```
+
+<!-- select:end -->
+🥁 So...did you learn how a throttled client looks?
+
+#### **🎓 Next Steps**
+
+* The same on a consumer: `playground quota set --client-id <id> --consumer-byte-rate 10240`, then read the topic. On a sink connector, `--connector <name>` targets the client ids of its tasks, and the lag grows (`playground connector show-lag`).
+* `produce-throttle-time-avg` and `fetch-throttle-time-avg` are the client metrics that show it in a monitoring system.
 
 <!-- tabs:end -->
 
@@ -2823,6 +3047,133 @@ Every partition answers again: `playground topic get-offsets --topic orders` lis
 
 * In ZooKeeper mode (CP 7.x), the same mistake stops the broker at startup: `Configured end points broker2:9092 in advertised listeners are already registered by broker 2`. KRaft accepts it, which makes it much harder to spot.
 * `kafka-broker-api-versions --bootstrap-server broker:9092 | grep '(id:'` shows the same thing as `broker describe`: two ids behind one address.
+
+<!-- tabs:end -->
+
+
+### HTTP sink: the same records are sent again and again
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+Since the API behind an HTTP sink got slower, it receives every record several times. The connector is RUNNING, its
+task too, and the lag never goes down.
+
+💡 What you'll learn:
+
+* The poll loop of a sink task, and what `max.poll.interval.ms` protects
+* Why a task kicked out of its group stays RUNNING, and delivers the same records again
+* What to tune: `max.poll.records`, the batch, or `max.poll.interval.ms`
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 HTTP sink: latest
+
+Reproduction model: [http-sink-repro-000023-records-sent-again-max-poll-interval.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-http-sink/http-sink-repro-000023-records-sent-again-max-poll-interval.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/connect-connect-http-sink/http-sink-repro-000023-records-sent-again-max-poll-interval.sh
+```
+
+The API answers in 2 seconds, the connector sends one record per request (`batch.max.size=1`), and 30 records were
+produced. Two minutes later:
+
+```bash
+http-sink                      ✅ RUNNING  0:🟢 RUNNING                 -
+19:30:39 ℹ️ 🐢 consumer lag for 🌎onprem connector http-sink is not available (no offset committed yet)
+topic: http-messages partition: 0   current-offset: -          end-offset: 30         lag: -          []   0%
+```
+
+And the API received the record `{"order": 7}` once a minute:
+
+```bash
+playground tools http-server requests --grep '"order": 7}'
+19:33:34 ℹ️ 📥 153 request(s) received since the start or the last reset (153 kept), 5 matching
+#7 19:28:39 POST / → 200  text/plain; charset=UTF-8, 12 bytes
+#37 19:29:39 POST / → 200  text/plain; charset=UTF-8, 12 bytes
+#67 19:30:39 POST / → 200  text/plain; charset=UTF-8, 12 bytes
+#97 19:31:40 POST / → 200  text/plain; charset=UTF-8, 12 bytes
+#127 19:32:40 POST / → 200  text/plain; charset=UTF-8, 12 bytes
+```
+
+❔Questions:
+
+* Why are no offsets committed, although every request succeeds?
+* What does `playground connector diagnose` say?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What does `playground connector diagnose` say?
+
+```bash
+playground connector diagnose --connector http-sink
+🔴 ERROR x2 (first seen line 5897, last seen line 5934)
+[2026-11-26 18:29:25,589] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Commit of offsets threw an unexpected exception for sequence number 1: {http-messages-0=OffsetAndMetadata{offset=30, …
+    org.apache.kafka.clients.consumer.CommitFailedException: Offset commit cannot be completed since the consumer is not part of an active group for auto partition assignment; it is likely that the consumer was kicked out of the group.
+
+19:32:13 ❗ 🐢 consumer group connect-http-sink of 🌎onprem connector http-sink has no active member and no committed offset: its task is not in the group right now (starting, rebalancing, or kicked out after max.poll.interval.ms: CommitFailedException in the worker log)
+
+19:33:18 ℹ️ 👉 4/4 next steps
+   🐢 a task was kicked out of its consumer group (CommitFailedException): more than max.poll.interval.ms (20000) between two polls, so its offsets are not committed and the records are delivered again. Lower consumer.override.max.poll.records or make each batch faster, or raise consumer.override.max.poll.interval.ms
+```
+
+> Why are no offsets committed, although every request succeeds?
+
+A sink task runs a loop: `poll()` returns up to `max.poll.records` records (500 by default), the task sends them all,
+then polls again and commits the offsets of what it delivered. If two polls are more than `max.poll.interval.ms`
+apart, the consumer considers the task stuck and leaves the group. Here, 30 records × 2 seconds is 60 seconds between
+two polls, and the customer lowered `max.poll.interval.ms` to 20 seconds ("to detect stuck tasks faster"):
+
+```json
+"batch.max.size": "1",
+"consumer.override.max.poll.interval.ms": "20000"
+```
+
+The commit then fails (`CommitFailedException`), the task joins the group again, gets the partition back from the last
+committed offset (none), and sends the same 30 records again, forever. The task never fails: it stays RUNNING.
+
+<!-- select:end -->
+
+* Change the configuration so that the records are sent once, and check the lag.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Remove `consumer.override.max.poll.interval.ms` (back to 300000 ms, 5 minutes) with
+[playground connector create-or-update](/playground%20connector%20create-or-update), then:
+
+```bash
+playground connector show-lag --connector http-sink --max-wait 180
+19:35:07 ℹ️ 🏁 consumer lag for 🌎onprem connector http-sink is 0 ! took: 1min 7sec
+topic: http-messages partition: 0   current-offset: 30         end-offset: 30         lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100% 🏁
+```
+
+The other ways out, often better: a smaller `consumer.override.max.poll.records` (fewer records per poll), or a
+bigger `batch.max.size` (fewer requests for the same records). A slow API with 500 records per poll can exceed even
+5 minutes.
+
+<!-- select:end -->
+🥁 So...did you learn what max.poll.interval.ms protects?
+
+#### **🎓 Next Steps**
+
+* Keep `max.poll.interval.ms` at 20 seconds and set `consumer.override.max.poll.records` to 5: is it enough?
+* Read the [🍪 offsets and lag](/deep-dive-offsets-and-lag.md) deep dive: where a sink connector keeps its offsets, and how to read them.
 
 <!-- tabs:end -->
 

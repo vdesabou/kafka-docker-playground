@@ -1,0 +1,1 @@
+../../connect/connect-http-sink/stop.sh

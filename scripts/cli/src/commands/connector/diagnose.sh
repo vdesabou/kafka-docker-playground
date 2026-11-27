@@ -155,6 +155,13 @@ do
         next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector$cluster_flag")
     elif [[ "$connector_state" == "RUNNING" ]]
     then
+        # a sink task kicked out of its group: it processes longer than max.poll.interval.ms between two polls, so its
+        # commit fails and the records are delivered again after the rebalance (the task stays RUNNING, without error)
+        if [ "$type" == "sink" ] && [ -s "$cdir/errors.records" ] && grep -q -E "CommitFailedException|consumer poll timeout has expired" "$cdir/errors.records"
+        then
+            max_poll_interval=$(jq -r '."consumer.override.max.poll.interval.ms" // empty' "$cdir/config.json" 2>/dev/null)
+            next_steps+=("🐢 a task was kicked out of its consumer group (CommitFailedException): more than max.poll.interval.ms (${max_poll_interval:-300000 by default}) between two polls, so its offsets are not committed and the records are delivered again. Lower consumer.override.max.poll.records or make each batch faster, or raise consumer.override.max.poll.interval.ms")
+        fi
         next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
     fi
     next_steps+=("playground connector show-config --connector $connector$cluster_flag")

@@ -9208,9 +9208,12 @@ subcommands:
     - names:
       - "--forced-value"
       argument: FORCED-VALUE
-      description: "☢️ Value to use for all records. \n\n\U0001F393 Tip: use --generate-only
-        first with avro, json-schema or protobuf to get skeleton of messages and then
-        use --forced-value to send the message you need."
+      description: "☢️ Value to use for all records. \n\nWith a schema on stdin (a
+        heredoc) or in --value, the records are sent with that schema; without one,
+        it is\nthe raw payload itself. An open stdin with nothing to read is not waited
+        on.\n\n\U0001F393 Tip: use --generate-only first with avro, json-schema or
+        protobuf to get skeleton of messages and then use --forced-value to send the
+        message you need."
     - names:
       - "--generate-only"
       argument: ''

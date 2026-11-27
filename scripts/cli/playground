@@ -17734,7 +17734,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--forced-value FORCED-VALUE")"
-    printf "    ☢️ Value to use for all records. \n    \n    🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get\n    skeleton of messages and then use --forced-value to send the message you\n    need.\n"
+    printf "    ☢️ Value to use for all records. \n    \n    With a schema on stdin (a heredoc) or in --value, the records are sent with\n    that schema; without one, it is\n    the raw payload itself. An open stdin with nothing to read is not waited on.\n    \n    🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get\n    skeleton of messages and then use --forced-value to send the message you\n    need.\n"
     echo
 
     # :flag.usage
@@ -88060,9 +88060,11 @@ playground_container_logs_command() {
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
-  # with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors)
-  records_file=""
-  if [[ -n "$html" ]]
+  # with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors). A records file
+  # given by the caller (connector diagnose: PG_LOG_DIGEST_RECORDS_FILE, for its own report and next steps) is kept: the
+  # digests below set PG_LOG_DIGEST_RECORDS_FILE to $records_file, an empty value would drop the records of the caller
+  records_file="${PG_LOG_DIGEST_RECORDS_FILE:-}"
+  if [[ -n "$html" ]] && [[ -z "$records_file" ]]
   then
       records_file=$(mktemp -t pg-log-records-XXXXXXXXXX)
       trap 'rm -f "$records_file"' EXIT
@@ -92919,7 +92921,10 @@ playground_topic_produce_command() {
           # stdin: a terminal, or an empty stdin (a script, CI, an agent: stdin is not a terminal but has nothing) is
           # the same, no schema was given
           value_content=""
-          if [ ! -t 0 ]
+          # with --forced-value, the schema may come on stdin (a heredoc, a file: the forced value is then sent with that
+          # schema), or not at all: stdin is only read when it has data ready, never waited on (a pipe that a caller keeps
+          # open without writing to it made the command hang forever on cat)
+          if [ ! -t 0 ] && { [[ -z "$forced_value" ]] || read -r -t 0; }
           then
               value_content=$(cat "$value")
           fi
@@ -94463,11 +94468,25 @@ playground_topic_produce_command() {
       fi
       if [ "$nb_send_errors" -gt 0 ]
       then
-          first_send_error=$(grep -m1 -E "^[a-z][a-zA-Z0-9_.]*(Exception|Error):" "$tmp_dir/producer_stderr" || true)
+          # the exception of the first record that failed, logged just after "Error when sending message": not the first
+          # exception of the output, which is often a WARN the producer recovered from (a stopped broker it could not
+          # reconnect to: "UnknownHostException: broker3", while the records failed with NotEnoughReplicasException)
+          first_send_error=$(awk '/Error when sending message/ { f = 1; next } f && /^[a-z][a-zA-Z0-9_.]*(Exception|Error):/ { print; exit }' "$tmp_dir/producer_stderr" || true)
+          [[ -z "$first_send_error" ]] && first_send_error=$(grep -m1 -E "^[a-z][a-zA-Z0-9_.]*(Exception|Error):" "$tmp_dir/producer_stderr" || true)
           logerror "❌ $nb_send_errors record(s) could not be sent to topic $topic${first_send_error:+: $first_send_error}"
           exit 1
       fi
       log "📤 produced $nb_messages_sent records to topic $topic$end_reason, $ELAPSED"
+  fi
+  # a client quota of the brokers slowed the producer down: nothing fails, it only takes longer
+  if [ -f "$tmp_dir/producer_stderr" ] && [ $interrupted != 1 ]
+  then
+      nb_throttled=$(grep -c -E "Connection to node -?[0-9]+ .*is throttled for [0-9]+ ms" "$tmp_dir/producer_stderr" || true)
+      if [ "${nb_throttled:-0}" -gt 0 ]
+      then
+          throttled_client=$(grep -m1 -o -E "\[Producer clientId=[^]]+\] Connection to node" "$tmp_dir/producer_stderr" | sed -E 's/\[Producer clientId=([^]]+)\].*/\1/')
+          logwarn "🚥 the brokers throttled the producer${throttled_client:+ $throttled_client} $nb_throttled time(s): it is over a client quota (playground quota get${throttled_client:+ --client-id $throttled_client})"
+      fi
   fi
 
   if [[ -n "$transactional_id" ]] && [ $interrupted = 1 ]
@@ -107825,6 +107844,13 @@ playground_connector_diagnose_command() {
           next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector$cluster_flag")
       elif [[ "$connector_state" == "RUNNING" ]]
       then
+          # a sink task kicked out of its group: it processes longer than max.poll.interval.ms between two polls, so its
+          # commit fails and the records are delivered again after the rebalance (the task stays RUNNING, without error)
+          if [ "$type" == "sink" ] && [ -s "$cdir/errors.records" ] && grep -q -E "CommitFailedException|consumer poll timeout has expired" "$cdir/errors.records"
+          then
+              max_poll_interval=$(jq -r '."consumer.override.max.poll.interval.ms" // empty' "$cdir/config.json" 2>/dev/null)
+              next_steps+=("🐢 a task was kicked out of its consumer group (CommitFailedException): more than max.poll.interval.ms (${max_poll_interval:-300000 by default}) between two polls, so its offsets are not committed and the records are delivered again. Lower consumer.override.max.poll.records or make each batch faster, or raise consumer.override.max.poll.interval.ms")
+          fi
           next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
       fi
       next_steps+=("playground connector show-config --connector $connector$cluster_flag")
@@ -108470,6 +108496,8 @@ playground_connector_show_lag_command() {
       fi
       # keep the partition rows (3rd field is the partition number) and the errors: informational stderr lines such as
       # "Consumer group 'x' has no active members." or SLF4J noise must neither be summed as a 0 lag nor shown as a row
+      no_active_members=""
+      grep -q "has no active members" "$lag_output" && no_active_members=1
       awk 'tolower($0) ~ /warning|does not exist|^error|exception/ || $3 ~ /^[0-9]+$/' "$lag_output" > "$lag_output.rows"
       mv "$lag_output.rows" "$lag_output"
 
@@ -108583,7 +108611,14 @@ playground_connector_show_lag_command() {
           fi
         else
           # empty output (the command failed or the group has no member yet): never loop without sleeping
-          logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} could not be read (empty output)"
+          if [[ -n "$no_active_members" ]]
+          then
+            # no partition row: no member, and no offset committed yet. A sink task that never commits and keeps leaving
+            # its group (processing longer than max.poll.interval.ms between two polls) looks like this
+            logwarn "🐢 consumer group $consumer_group of $connector_type connector ${connector}${maybe_id} has no active member and no committed offset: its task is not in the group right now (starting, rebalancing, or kicked out after max.poll.interval.ms: CommitFailedException in the worker log)"
+          else
+            logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} could not be read (empty output)"
+          fi
           wait_next_poll || break
         fi
       fi

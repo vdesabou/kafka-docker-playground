@@ -281,6 +281,8 @@ do
     fi
     # keep the partition rows (3rd field is the partition number) and the errors: informational stderr lines such as
     # "Consumer group 'x' has no active members." or SLF4J noise must neither be summed as a 0 lag nor shown as a row
+    no_active_members=""
+    grep -q "has no active members" "$lag_output" && no_active_members=1
     awk 'tolower($0) ~ /warning|does not exist|^error|exception/ || $3 ~ /^[0-9]+$/' "$lag_output" > "$lag_output.rows"
     mv "$lag_output.rows" "$lag_output"
 
@@ -394,7 +396,14 @@ do
         fi
       else
         # empty output (the command failed or the group has no member yet): never loop without sleeping
-        logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} could not be read (empty output)"
+        if [[ -n "$no_active_members" ]]
+        then
+          # no partition row: no member, and no offset committed yet. A sink task that never commits and keeps leaving
+          # its group (processing longer than max.poll.interval.ms between two polls) looks like this
+          logwarn "🐢 consumer group $consumer_group of $connector_type connector ${connector}${maybe_id} has no active member and no committed offset: its task is not in the group right now (starting, rebalancing, or kicked out after max.poll.interval.ms: CommitFailedException in the worker log)"
+        else
+          logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} could not be read (empty output)"
+        fi
         wait_next_poll || break
       fi
     fi

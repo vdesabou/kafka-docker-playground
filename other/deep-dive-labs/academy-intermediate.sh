@@ -317,4 +317,35 @@ lab_run playground connector reconcile --connector minio-sink-fixed
 lab_expect_contains "✅ 9 matching"
 lab_expect_contains "✅ complete: every record is on the other side, with the same values"
 
+log "Exercise: HTTP sink, the same records are sent again and again"
+run_model connect-connect-http-sink http-sink-repro-000023-records-sent-again-max-poll-interval.sh
+lab_expect_contains "no offset committed yet"
+lab_run playground tools http-server requests --grep '"order": 7}'
+lab_expect_contains "POST / → 200"
+lab_run playground connector diagnose --connector http-sink
+lab_expect_contains "CommitFailedException"
+lab_expect_contains "🐢 a task was kicked out of its consumer group (CommitFailedException): more than max.poll.interval.ms (20000) between two polls"
+
+log "Exercise: HTTP sink, Step 3: back to the default max.poll.interval.ms"
+playground connector create-or-update --connector http-sink << 'EOF'
+{
+     "topics": "http-messages",
+     "tasks.max": "1",
+     "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "confluent.topic.bootstrap.servers": "broker:9092",
+     "confluent.topic.replication.factor": "1",
+     "reporter.bootstrap.servers": "broker:9092",
+     "reporter.error.topic.name": "error-responses",
+     "reporter.error.topic.replication.factor": 1,
+     "reporter.result.topic.name": "success-responses",
+     "reporter.result.topic.replication.factor": 1,
+     "http.api.url": "http://httpserver:9006",
+     "batch.max.size": "1"
+}
+EOF
+lab_run playground connector show-lag --connector http-sink --max-wait 240
+lab_expect_contains "is 0 !"
+
 log "✅ academy intermediate lab: the exercises behave as the page says"
