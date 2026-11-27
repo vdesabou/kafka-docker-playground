@@ -13,6 +13,7 @@ playground run -f start.sh
 | Script | Description |
 | --- | --- |
 | `start.sh` | Java producer and consumer, string and Avro records, in the `client-java` container, against the plaintext broker and Schema Registry |
+| `start-lab.sh` | single-file Java programs of [`labs/`](labs/) (`java X.java`) in a JDK `client-java` container, against the plaintext broker |
 
 ## What the script does
 
@@ -46,3 +47,30 @@ playground run -f start.sh --client-version 3.9.1   # the same, also offered by 
 ```
 
 Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).
+
+## Run single-file programs (`start-lab.sh`)
+
+```bash
+playground run -f start-lab.sh
+TAG=7.9.10 CLIENT_VERSION=3.9.1 playground run -f start-lab.sh   # another CP version (ZooKeeper mode) and client version
+```
+
+`start-lab.sh` uses `docker-compose.plaintext.lab.yml` instead of `docker-compose.plaintext.yml`. The image is built from the `lab` target of the same `Dockerfile`: a JDK (`eclipse-temurin:21-jdk`) instead of the JRE, the client jars of the build (`mvn dependency:copy-dependencies`, so `CLIENT_VERSION` works the same way) in `/usr/share/java/kafka` with `CONFLUENT_HOME=/usr` like in the Confluent Platform images, `procps` (`ps`, `pkill`), and log4j2 as the logging backend of the clients like in the Confluent Platform 8 images (`log4j-api`, `log4j-core`, `log4j-slf4j2-impl`; the `slf4j-simple` of the fat jar is left out), so `-Dlog4j2.configurationFile=<file>` works. The [`labs/`](labs/) folder is mounted in `/app/labs`, the working directory, so a program edited on the host runs at once, without a rebuild. The container depends on the broker only (no Schema Registry); in ZooKeeper mode (CP 7.x) the script starts the `zookeeper` service too.
+
+1. Starts the `client-java` lab container and the broker with `playground start-environment --service client-java`.
+2. Creates topic `orders` with 3 partitions.
+3. Runs [`ProducerBasics.java`](labs/ProducerBasics.java), which sends 5 records and prints the partition and offset of each, and fails if one of them is not acknowledged:
+
+   ```bash
+   playground container exec -c client-java --command "java -cp \"\$CONFLUENT_HOME/share/java/kafka/*\" ProducerBasics.java broker:9092"
+   ```
+
+4. Reads them back with [`LabConsumer.java`](labs/LabConsumer.java) (group `lab-check`, it stops on its own after 20 seconds, INFO logs with [`labs/log4j2.xml`](labs/log4j2.xml)), and fails if fewer than 5 records come back:
+
+   ```bash
+   playground container exec -c client-java --command "java -Dlog4j2.configurationFile=log4j2.xml -cp \"\$CONFLUENT_HOME/share/java/kafka/*\" LabConsumer.java bootstrap.servers=broker:9092 group.id=lab-check x.topic=orders x.run.ms=20000"
+   ```
+
+5. Shows the committed offsets of group `lab-check` with `playground consumer-group describe`.
+
+The other programs and their arguments are listed in [`labs/README.md`](labs/README.md). The lab image is named `client-java-lab` and is rebuilt at each start (`pull_policy: build`, cached layers), so it never replaces the fat jar image of `start.sh`.
