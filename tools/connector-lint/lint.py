@@ -179,8 +179,16 @@ def lint(cfg, ctx):
             f"{records} records per poll with max.poll.interval.ms={interval}: a slow put() makes the consumer leave its "
             "group (rebalances, commits failing)",
             "lower consumer.override.max.poll.records or raise consumer.override.max.poll.interval.ms")
+    elif kind == "sink" and interval < 60000:
+        # a lowered max.poll.interval.ms ("to detect stuck tasks faster"): with the default 500 records per poll, a slow
+        # destination is enough to exceed it, the task leaves its group, its commit fails and the records are delivered
+        # again, forever, while the task stays RUNNING (CommitFailedException in the worker log)
+        add("MEDIUM", "consumer.override.max.poll.interval.ms", interval,
+            f"at most {interval} ms between two polls: a batch that takes longer to write (a slow destination, retries) "
+            "makes the consumer leave its group, its offsets are not committed and the records are delivered again",
+            "keep the default (300000) and lower consumer.override.max.poll.records instead")
     if str(cfg.get("consumer.override.auto.offset.reset", "")).lower() == "latest":
-        add("LOW", "consumer.override.auto.offset.reset", "latest",
+        add("MEDIUM", "consumer.override.auto.offset.reset", "latest",
             "without committed offsets (new connector, offsets deleted) the records already in the topic are skipped",
             "remove it: Connect sinks default to earliest")
     acks = cfg.get("producer.override.acks")

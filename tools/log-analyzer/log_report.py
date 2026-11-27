@@ -4478,8 +4478,13 @@ def config_lint(res: dict) -> List[dict]:
                 add(name, c, "MEDIUM", "max.poll.records", str(records), f"{records} records per poll with "
                     f"max.poll.interval.ms={interval}: a slow put() of the batch makes the consumer leave its group (rebalances, "
                     "commits failing): lower consumer.override.max.poll.records or raise consumer.override.max.poll.interval.ms")
+            elif interval < 60000:
+                add(name, c, "MEDIUM", "max.poll.interval.ms", str(interval), f"at most {interval} ms between two polls: a "
+                    "batch that takes longer to write (a slow destination, retries) makes the consumer leave its group, its "
+                    "offsets are not committed and the records are delivered again: keep the default (300000) and lower "
+                    "consumer.override.max.poll.records instead")
             if v.get("auto.offset.reset") == "latest":
-                add(name, c, "LOW", "auto.offset.reset", "latest", "without committed offsets (a new connector, offsets "
+                add(name, c, "MEDIUM", "auto.offset.reset", "latest", "without committed offsets (a new connector, offsets "
                     "deleted), the records already in the topic are skipped: Connect sinks default to earliest")
         if kind == "producer" and v.get("acks") not in (None, "", "all", "-1"):
             add(name, c, "MEDIUM", "acks", v.get("acks"), "the source producer does not wait for all the in-sync replicas: "

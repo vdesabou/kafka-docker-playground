@@ -159,6 +159,34 @@ function log_same() {
   echo -e "$ORANGE$(date +"%H:%M:%S") 🔸$@$NC"
 }
 
+# a lag that never reaches 0 on a transactional topic: the offsets left are COMMIT / ABORT markers (control records),
+# never delivered to the consumer, so its committed offset stays before them until the next records. Checked with
+# topic dump-log on the partitions with a small lag left (self-managed clusters: it reads the segments on a broker)
+function explain_marker_lag () {
+  [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] && return 0
+  [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] && return 0
+  [ -s "$lag_output" ] || return 0
+  local topic partition current end lag dump markers_only
+  while read -r _ topic partition current end lag _
+  do
+    [[ "$partition" =~ ^[0-9]+$ ]] && [[ "$current" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]] || continue
+    [ "$lag" -gt 0 ] && [ "$lag" -le 10 ] || continue
+    dump=$(playground --output-level ERROR topic dump-log --topic "$topic" --partition "$partition" --offset "$current" 2>/dev/null | perl -pe 's/\e\[[0-9;]*m//g')
+    # the batches table: "<first>[-<last>]  <count>  <producer>  <kind>…", a marker is one offset
+    markers_only=$(echo "$dump" | awk -v from="$current" -v to="$((end - 1))" '
+      $1 ~ /^[0-9]+(-[0-9]+)?$/ && NF >= 4 {
+        n = split($1, o, "-"); first = o[1]; last = (n == 2) ? o[2] : o[1]
+        if (last < from || first > to) next
+        if ($0 ~ /marker/) { for (i = first; i <= last; i++) if (i >= from && i <= to) seen[i] = 1 } else bad = 1
+      }
+      END { for (i = from; i <= to; i++) if (!(i in seen)) bad = 1; print (bad ? "no" : "yes") }')
+    if [ "$markers_only" == "yes" ]
+    then
+      log "🧾 partition $topic-$partition: the $lag offset(s) left ($current to $((end - 1))) are transaction markers (COMMIT / ABORT), not records: nothing left to consume, the lag reaches 0 with the next records (playground topic dump-log --topic $topic --partition $partition --offset $current)"
+    fi
+  done < "$lag_output"
+}
+
 timed_out=0
 # sleep --interval, then return 1 once --max-wait is exceeded
 function wait_next_poll () {
@@ -167,6 +195,7 @@ function wait_next_poll () {
   if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
   then
     logwarn "🐢 the consumer lag for $connector_type connector ${connector}${maybe_id} is still not 0 after $max_wait seconds."
+    explain_marker_lag
     timed_out=1
     return 1
   fi

@@ -34,6 +34,7 @@ playground find-example --category academy
 | ⭐ | [Broker: topic creation hangs, but produce works](/academy?id=broker-topic-creation-hangs-but-produce-works) | what needs the KRaft controllers, and what does not | `broker health`, `topic create`, `container restart` |
 | ⭐ | [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash) | `acks=all`, `min.insync.replicas` and the replication factor | `broker health`, `broker stop` / `start`, `topic produce --producer-property acks=all`, `topic reassign` |
 | ⭐ | [Producer: slow, without any error](/academy?id=producer-slow-without-any-error) | client quotas, a throttled client | `quota get`, `quota delete`, `topic produce`, `analyze logs` |
+| ⭐ | [FileStream sink: the new connector skips the records already in the topic](/academy?id=filestream-sink-the-new-connector-skips-the-records-already-in-the-topic) | where a new sink starts reading, `auto.offset.reset` | `connector lint`, `topic get-offsets`, `connector offsets reset` |
 | ⭐⭐ | [StackOverflowError with S3 sink connector](/academy?id=stackoverflowerror-with-s3-sink-connector) | bootstrap a reproduction model from a customer config | `repro bootstrap`, `topic produce` |
 | ⭐⭐ | [JDBC source: the updated rows never reach the topic](/academy?id=jdbc-source-the-updated-rows-never-reach-the-topic) | the modes of the JDBC source, source offsets | `connector offsets get`, `db sql`, `topic consume` |
 | ⭐⭐ | [HTTP sink: tasks.max is 4, but only one task works](/academy?id=http-sink-tasksmax-is-4-but-only-one-task-works) | tasks and partitions, new partitions on a running connector, batching | `connector tasks`, `connector show-lag`, `topic add-partitions` |
@@ -48,6 +49,7 @@ playground find-example --category academy
 | ⭐⭐⭐ | [Debezium PostgreSQL: the connector is RUNNING, the disk of the database fills up](/academy?id=debezium-postgresql-the-connector-is-running-the-disk-of-the-database-fills-up) | replication slots, heartbeats | `db cdc-check`, `connector offsets get`, `db sql` |
 | ⭐⭐⭐ | [JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector) | compatibility rules, what happens after a bad version got in | `schema history`, `schema diff`, `schema check-compatibility` |
 | ⭐⭐⭐ | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
+| ⭐⭐⭐ | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
 
 ## ⭐ Beginner
 
@@ -1581,6 +1583,119 @@ playground topic produce --topic orders --nb-messages 3000 --record-size 1000 --
 
 * The same on a consumer: `playground quota set --client-id <id> --consumer-byte-rate 10240`, then read the topic. On a sink connector, `--connector <name>` targets the client ids of its tasks, and the lag grows (`playground connector show-lag`).
 * `produce-throttle-time-avg` and `fetch-throttle-time-avg` are the client metrics that show it in a monitoring system.
+
+<!-- tabs:end -->
+
+
+### FileStream sink: the new connector skips the records already in the topic
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A new sink connector is created on a topic that already holds yesterday's orders. It writes the new orders, but none
+of yesterday's. No error, the connector is RUNNING and its lag is 0.
+
+💡 What you'll learn:
+
+* Where a new sink connector starts reading, and why
+* Why a lag of 0 does not mean "everything was written"
+* Why an offsets reset can leave the problem in place
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 FileStream sink: shipped with CP
+
+Reproduction model: [filestream-sink-repro-000024-new-sink-skips-existing-records.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-filestream-sink/filestream-sink-repro-000024-new-sink-skips-existing-records.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/connect-connect-filestream-sink/filestream-sink-repro-000024-new-sink-skips-existing-records.sh
+```
+
+5 orders of yesterday are produced, the connector is created, then 3 orders of today. The file has only today's:
+
+```bash
+08:22:07 ℹ️ What the connector wrote
+{"order": 1, "day": "today"}
+{"order": 2, "day": "today"}
+{"order": 3, "day": "today"}
+```
+
+❔Questions:
+
+* What do `playground connector show-lag` and `playground topic get-offsets --topic orders` say?
+* Which setting explains it?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What do `show-lag` and `get-offsets` say?
+
+The lag is 0: the connector is at the end of the topic. But the topic has 8 records, and the file 3. The lag measures
+the distance to the end, not what was written: records skipped before the first commit never count.
+
+> Which setting explains it?
+
+[playground connector lint](/playground%20connector%20lint) finds it:
+
+```bash
+playground connector lint --connector filestream-sink
+🧪 filestream-sink (org.apache.kafka.connect.file.FileStreamSinkConnector, sink)
+🟠 MEDIUM consumer.override.auto.offset.reset = latest
+          why: without committed offsets (new connector, offsets deleted) the records already in the topic are skipped
+          fix: remove it: Connect sinks default to earliest
+```
+
+A new connector has a new consumer group (`connect-filestream-sink`) without committed offsets: it starts where
+`auto.offset.reset` says. Connect sets `earliest` for its sinks, but the customer config overrides it with `latest`,
+copied from a connector that "must not replay old data after a reset".
+
+<!-- select:end -->
+
+* Get yesterday's orders into the file.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+The trap: [playground connector offsets reset](/playground%20connector%20offsets%20reset) alone does nothing here. It deletes the committed offsets, and
+without committed offsets the connector starts from... `auto.offset.reset=latest`, the end again. The command warns
+about it:
+
+```bash
+playground connector offsets reset --connector filestream-sink
+08:25:13 ❗ ⚠️ filestream-sink has consumer.override.auto.offset.reset=latest: without committed offsets it starts from the END of its topics, so the reset re-reads nothing. Remove the key first (Connect sinks default to earliest), or move it back to a given offset with playground connector offsets alter --connector filestream-sink
+```
+
+So, first remove `consumer.override.auto.offset.reset` with [playground connector create-or-update](/playground%20connector%20create-or-update), then reset the offsets:
+
+```bash
+playground connector offsets reset --connector filestream-sink
+playground container exec -c connect --command "cat /tmp/output.json"
+```
+
+The 8 records are written from the beginning: yesterday's 5, then today's 3 again (today's are now in the file twice,
+a reset reprocesses everything). To avoid the duplicates, move the offset to where yesterday's records end instead:
+`playground connector offsets alter --connector filestream-sink`.
+
+<!-- select:end -->
+🥁 So...did you learn where a new sink connector starts reading?
+
+#### **🎓 Next Steps**
+
+* Rename the connector (delete it, create it under another name): its new group starts from `auto.offset.reset` too. See the exercise [Renamed sink connector writes every row again](/academy?id=renamed-sink-connector-writes-every-row-again).
 
 <!-- tabs:end -->
 
@@ -4248,3 +4363,142 @@ cp jcl-over-slf4j-2.0.7.jar confluent-hub/confluentinc-kafka-connect-http/lib/
 * `--tag A --tag B` does the same with Confluent Platform versions.
 
 <!-- tabs:end -->
+
+### FileStream sink: read_committed, and nothing is written
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A sink connector reads the payments topic with `isolation.level=read_committed`, "to never write a payment that was
+rolled back". It writes nothing at all: no error, the task is RUNNING, and the lag is not available.
+
+💡 What you'll learn:
+
+* What `read_committed` does, and the last stable offset
+* How an open transaction of a crashed producer blocks every `read_committed` consumer behind it
+* How to find it and abort it, and why the lag then stays at 2
+
+#### **🤯 Details**
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔗 FileStream sink: shipped with CP
+
+Reproduction model: [filestream-sink-repro-000025-read-committed-sink-stuck-open-transaction.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-filestream-sink/filestream-sink-repro-000025-read-committed-sink-stuck-open-transaction.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/connect-connect-filestream-sink/filestream-sink-repro-000025-read-committed-sink-stuck-open-transaction.sh
+```
+
+The payments service writes 10 payments in a transaction and crashes before the commit. Its new instance (another
+`transactional.id`) writes 5 payments, committed. Then the connector is created:
+
+```bash
+08:27:56 ℹ️ What the connector wrote
+08:27:59 ℹ️ 🐢 consumer lag for 🌎onprem connector filestream-sink is not available (no offset committed yet)
+topic: payments   partition: 0   current-offset: -          end-offset: 16         lag: -          []   0%
+```
+
+❔Questions:
+
+* Why are the 5 committed payments not written?
+* What does `playground connector diagnose` suggest?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What does `playground connector diagnose` suggest?
+
+No error in the worker log, and this next step, because the connector reads `read_committed`:
+
+```bash
+   🔒 the sink reads read_committed: an open transaction blocks it at its first offset, without error. Look for one: playground broker transactions describe-producers --topic payments (OPEN_TRANSACTION_START_OFFSET ⚠️)
+```
+
+```bash
+playground broker transactions describe-producers --topic payments
+08:28:59 ℹ️ 🏭 Active producers of topic payments
+PARTITION  PRODUCER_ID  EPOCH  COORDINATOR_EPOCH  LAST_SEQUENCE  LAST_TIMESTAMP  OPEN_TRANSACTION_START_OFFSET
+0          3            0      -1                 9              1795764427514   0 ⚠️
+0          5            1      0                  -1             1795764442894   -
+08:29:00 ℹ️ 🎓 an open transaction holds the last stable offset of its partition: read_committed consumers don't read past it until it commits, aborts or times out
+```
+
+> Why are the 5 committed payments not written?
+
+A `read_committed` consumer only reads up to the **last stable offset** (LSO) of a partition: the first offset of
+the oldest open transaction. The transaction of the crashed producer started at offset 0 and is still open, so the
+LSO is 0: the 5 committed payments (offsets 10 to 14) are behind it. Nobody will end it: its new instance uses another
+`transactional.id`, so it does not fence the old one. It is aborted only after its `transaction.timeout.ms`, 15
+minutes here.
+
+```bash
+playground broker transactions list --state Ongoing
+TRANSACTIONAL_ID    COORDINATOR  PRODUCER_ID  STATE
+payments-service-1  1            3            Ongoing
+playground broker transactions find-hanging --topic payments
+08:29:04 ℹ️ ✅ no hanging transaction
+08:29:04 ℹ️ 🎓 an open transaction that its coordinator still tracks is not hanging, it is aborted after transaction.timeout.ms
+```
+
+Not "hanging" in the Kafka sense (its coordinator still tracks it), but blocking.
+
+<!-- select:end -->
+
+* Unblock the connector without waiting 15 minutes, and check what it writes and its lag.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Abort it, with the partition and start offset of `describe-producers`:
+
+```bash
+playground broker transactions abort --topic payments --partition 0 --start-offset 0
+playground container exec -c connect --command "cat /tmp/output.json"
+{"payment": 1, "batch": "new"}
+{"payment": 2, "batch": "new"}
+{"payment": 3, "batch": "new"}
+{"payment": 4, "batch": "new"}
+{"payment": 5, "batch": "new"}
+```
+
+The 10 payments of the crashed transaction are skipped (aborted), the 5 committed ones are written. But the lag stays at 2:
+
+```bash
+playground connector show-lag --connector filestream-sink --max-wait 90
+topic: payments   partition: 0   current-offset: 15         end-offset: 17         lag: 2          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹💠💠]  89% 🔸
+08:33:01 ❗ 🐢 the consumer lag for 🌎onprem connector filestream-sink is still not 0 after 90 seconds.
+08:33:03 ℹ️ 🧾 partition payments-0: the 2 offset(s) left (15 to 16) are transaction markers (COMMIT / ABORT), not records: nothing left to consume, the lag reaches 0 with the next records (playground topic dump-log --topic payments --partition 0 --offset 15)
+```
+
+A transaction ends with a **marker** written in the partition (a control record, offset 15 for the commit of the second
+producer, 16 for the abort). It takes an offset, but it is never delivered to the consumer, so the connector commits 15
+and the lag shows 2 until the next records. [playground topic dump-log](/playground%20topic%20dump-log) shows them:
+
+```bash
+   15             1      5/1          ✅ COMMIT marker  none    78 B       2026-11-27 08:27:22
+   16             1      3/0          ❌ ABORT marker   none    78 B       2026-11-27 08:29:43
+```
+
+<!-- select:end -->
+🥁 So...did you learn how an open transaction blocks read_committed consumers?
+
+#### **🎓 Next Steps**
+
+* Read [🍪 brokers and transactions](/deep-dive-broker.md): hanging transactions (`find-hanging`), the transaction coordinator, and `transaction.max.timeout.ms`.
+* Remove `consumer.override.isolation.level` instead of aborting: what does the connector write?
+
+<!-- tabs:end -->
+

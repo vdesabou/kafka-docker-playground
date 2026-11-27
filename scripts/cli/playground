@@ -24549,7 +24549,7 @@ fi
 playground_connector_lint_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector lint\n\n"
-    printf "  🧪 Best-practice warnings on a connector config (no environment needed)\n  \n  'connector validate' only prints what the plugin rejects. A config that\n  validates can still lose records or fail later: lint flags the risky\n  or useless settings, each with why and how to fix it.\n  \n  Rules: errors.tolerance=all without a dead letter queue (records lost)\n  or without errors.log.enable, a dead letter queue that is never\n  written (errors.tolerance=none) or set on a source, replication\n  factors above the number of brokers, tasks.max above the number of\n  partitions of a sink, client overrides (consumer.override.*,\n  producer.override.*) against connector.client.config.override.policy\n  of the worker, consumer.override.max.poll.records too high for\n  max.poll.interval.ms, auto.offset.reset=latest, producer acks not all,\n  an Avro / Protobuf / JSON Schema converter set on the connector without\n  its schema.registry.url (a converter set on the connector does not\n  inherit the converter settings of the worker), JsonConverter with a\n  schema.registry.url, JsonConverter expecting the schema / payload\n  envelope on a sink, a single task Debezium connector with tasks.max > 1,\n  and secrets in clear text (not ${file:...} / ${secret:...}).\n  \n  Severity: 🔴 HIGH (fails), 🟠 MEDIUM (loses records or misbehaves),\n  🟡 LOW (risky), 🔵 INFO (a note, does not count). Exits with 1 when there\n  is at least one warning (HIGH, MEDIUM or LOW).\n  \n  The config is read from stdin, in the same formats as 'connector\n  validate': json, a CFK / Strimzi custom resource, terraform, a\n  .properties, a dump of GET /connectors?expand=info (--connector picks\n  one). Without stdin, --connector lints the config of that running\n  connector.\n  \n  When a local environment runs, the number of brokers, the partitions of\n  the topics of a sink and the override policy of the worker are read\n  from it (--offline to skip). For a customer config, --brokers gives the\n  size of their cluster.\n  \n  ☁️ Fully managed: supported for the generic rules (the converter and secret\n  rules are skipped, a fully managed config holds its secrets)\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
+    printf "  🧪 Best-practice warnings on a connector config (no environment needed)\n  \n  'connector validate' only prints what the plugin rejects. A config that\n  validates can still lose records or fail later: lint flags the risky\n  or useless settings, each with why and how to fix it.\n  \n  Rules: errors.tolerance=all without a dead letter queue (records lost)\n  or without errors.log.enable, a dead letter queue that is never\n  written (errors.tolerance=none) or set on a source, replication\n  factors above the number of brokers, tasks.max above the number of\n  partitions of a sink, client overrides (consumer.override.*,\n  producer.override.*) against connector.client.config.override.policy\n  of the worker, consumer.override.max.poll.records too high for\n  max.poll.interval.ms, a max.poll.interval.ms lowered below 60 s,\n  auto.offset.reset=latest, producer acks not all,\n  an Avro / Protobuf / JSON Schema converter set on the connector without\n  its schema.registry.url (a converter set on the connector does not\n  inherit the converter settings of the worker), JsonConverter with a\n  schema.registry.url, JsonConverter expecting the schema / payload\n  envelope on a sink, a single task Debezium connector with tasks.max > 1,\n  and secrets in clear text (not ${file:...} / ${secret:...}).\n  \n  Severity: 🔴 HIGH (fails), 🟠 MEDIUM (loses records or misbehaves),\n  🟡 LOW (risky), 🔵 INFO (a note, does not count). Exits with 1 when there\n  is at least one warning (HIGH, MEDIUM or LOW).\n  \n  The config is read from stdin, in the same formats as 'connector\n  validate': json, a CFK / Strimzi custom resource, terraform, a\n  .properties, a dump of GET /connectors?expand=info (--connector picks\n  one). Without stdin, --connector lints the config of that running\n  connector.\n  \n  When a local environment runs, the number of brokers, the partitions of\n  the topics of a sink and the override policy of the worker are read\n  from it (--offline to skip). For a customer config, --brokers gives the\n  size of their cluster.\n  \n  ☁️ Fully managed: supported for the generic rules (the converter and secret\n  rules are skipped, a fully managed config holds its secrets)\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
   else
     printf "playground connector lint - 🧪 Best-practice warnings on a connector config (no environment needed)\n\n"
   fi
@@ -25364,7 +25364,7 @@ playground_connector_offsets_get_usage() {
 playground_connector_offsets_reset_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector offsets reset\n\n"
-    printf "  🆕 Reset offsets for source and sink connectors\n  \n  Wipes the recorded offsets so the connector starts over: a source\n  re-reads its origin from the beginning, a sink re-consumes its topics\n  from the earliest offset. The connector is stopped and resumed around\n  the reset.\n  \n  ⚠️ Everything is reprocessed, so expect duplicates downstream unless\n  the target is idempotent. Use alter when you only want to move back\n  to a specific point.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n  \n  See https://docs.confluent.io/cloud/current/connectors/offsets.html\n\n"
+    printf "  🆕 Reset offsets for source and sink connectors\n  \n  Wipes the recorded offsets so the connector starts over: a source\n  re-reads its origin from the beginning, a sink re-consumes its topics\n  from the earliest offset. The connector is stopped and resumed around\n  the reset.\n  \n  A sink without committed offsets starts from its auto.offset.reset:\n  with consumer.override.auto.offset.reset=latest it starts from the END\n  of its topics, and the reset re-reads nothing (a ⚠️ says so: remove\n  the key first, or use alter).\n  \n  ⚠️ Everything is reprocessed, so expect duplicates downstream unless\n  the target is idempotent. Use alter when you only want to move back\n  to a specific point.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n  \n  See https://docs.confluent.io/cloud/current/connectors/offsets.html\n\n"
   else
     printf "playground connector offsets reset - 🆕 Reset offsets for source and sink connectors\n\n"
   fi
@@ -26346,7 +26346,7 @@ playground_connector_history_usage() {
 playground_connector_show_lag_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector show-lag\n\n"
-    printf "  🐢 Show lag of sink connector\n  \n  The consumer lag of the sink, refreshed every --interval seconds, so you\n  see whether it is catching up, standing still or falling behind. A lag\n  that does not move while the connector reports RUNNING means the tasks\n  are stuck rather than slow.\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit), or until\n  --max-wait. --once (or --json) takes a single snapshot instead. The\n  consumer group is connect-<connector>, or the one set with\n  consumer.override.group.id.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%8F%%AA-the-lag-of-a-sink-is-stuck\n\n"
+    printf "  🐢 Show lag of sink connector\n  \n  The consumer lag of the sink, refreshed every --interval seconds, so you\n  see whether it is catching up, standing still or falling behind. A lag\n  that does not move while the connector reports RUNNING means the tasks\n  are stuck rather than slow, with two exceptions said when --max-wait is\n  reached: a small lag made only of transaction markers (COMMIT / ABORT\n  control records, never delivered: 🧾, it reaches 0 with the next\n  records), and a group without member nor committed offset (a task\n  kicked out of its group after max.poll.interval.ms).\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit), or until\n  --max-wait. --once (or --json) takes a single snapshot instead. The\n  consumer group is connect-<connector>, or the one set with\n  consumer.override.group.id.\n  \n  ☁️ Fully managed: supported (custom connectors too)\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%8F%%AA-the-lag-of-a-sink-is-stuck\n\n"
   else
     printf "playground connector show-lag - 🐢 Show lag of sink connector\n\n"
   fi
@@ -106072,6 +106072,24 @@ playground_connector_offsets_reset_command() {
       fi
       log "🆕 Resetting offsets for $connector_type connector $connector"
       type=$(echo "$curl_output" | jq -r '.type')
+      # a reset through the offsets API deletes the committed offsets of a sink: it then starts from its
+      # auto.offset.reset, the END of its topics with consumer.override.auto.offset.reset=latest, so nothing is consumed
+      # again (the kafka-consumer-groups --to-earliest of CP < 7.6 sets the offsets explicitly and is not concerned)
+      sink_auto_offset_reset=""
+      if [ "$type" == "sink" ]
+      then
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+          then
+              handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1 || true
+          else
+              handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1 || true
+          fi
+          sink_auto_offset_reset=$(echo "$curl_output" | jq -r '."consumer.override.auto.offset.reset" // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+      fi
+      if [ "$sink_auto_offset_reset" == "latest" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || version_gt $tag "7.5.99"; }
+      then
+          logwarn "⚠️ $connector has consumer.override.auto.offset.reset=latest: without committed offsets it starts from the END of its topics, so the reset re-reads nothing. Remove the key first (Connect sinks default to earliest), or move it back to a given offset with playground connector offsets alter --connector $connector"
+      fi
       if [ "$type" == "source" ]
       then
           # SOURCE CONNECTOR
@@ -107851,6 +107869,13 @@ playground_connector_diagnose_command() {
               max_poll_interval=$(jq -r '."consumer.override.max.poll.interval.ms" // empty' "$cdir/config.json" 2>/dev/null)
               next_steps+=("🐢 a task was kicked out of its consumer group (CommitFailedException): more than max.poll.interval.ms (${max_poll_interval:-300000 by default}) between two polls, so its offsets are not committed and the records are delivered again. Lower consumer.override.max.poll.records or make each batch faster, or raise consumer.override.max.poll.interval.ms")
           fi
+          # a read_committed sink does not read past the first open transaction of a partition: no error, no progress,
+          # no offset committed, until the transaction commits, aborts or times out (transaction.timeout.ms)
+          if [ "$type" == "sink" ] && [ -s "$cdir/config.json" ] && [ "$(jq -r '."consumer.override.isolation.level" // empty' "$cdir/config.json" 2>/dev/null)" == "read_committed" ]
+          then
+              first_topic=$(jq -r '.topics // empty' "$cdir/config.json" 2>/dev/null | cut -d, -f1 | tr -d ' ')
+              next_steps+=("🔒 the sink reads read_committed: an open transaction blocks it at its first offset, without error. Look for one: playground broker transactions describe-producers --topic ${first_topic:-<topic>}$cluster_flag (OPEN_TRANSACTION_START_OFFSET ⚠️)")
+          fi
           next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
       fi
       next_steps+=("playground connector show-config --connector $connector$cluster_flag")
@@ -108373,6 +108398,34 @@ playground_connector_show_lag_command() {
     echo -e "$ORANGE$(date +"%H:%M:%S") 🔸$@$NC"
   }
 
+  # a lag that never reaches 0 on a transactional topic: the offsets left are COMMIT / ABORT markers (control records),
+  # never delivered to the consumer, so its committed offset stays before them until the next records. Checked with
+  # topic dump-log on the partitions with a small lag left (self-managed clusters: it reads the segments on a broker)
+  function explain_marker_lag () {
+    [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] && return 0
+    [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] && return 0
+    [ -s "$lag_output" ] || return 0
+    local topic partition current end lag dump markers_only
+    while read -r _ topic partition current end lag _
+    do
+      [[ "$partition" =~ ^[0-9]+$ ]] && [[ "$current" =~ ^[0-9]+$ ]] && [[ "$lag" =~ ^[0-9]+$ ]] || continue
+      [ "$lag" -gt 0 ] && [ "$lag" -le 10 ] || continue
+      dump=$(playground --output-level ERROR topic dump-log --topic "$topic" --partition "$partition" --offset "$current" 2>/dev/null | perl -pe 's/\e\[[0-9;]*m//g')
+      # the batches table: "<first>[-<last>]  <count>  <producer>  <kind>…", a marker is one offset
+      markers_only=$(echo "$dump" | awk -v from="$current" -v to="$((end - 1))" '
+        $1 ~ /^[0-9]+(-[0-9]+)?$/ && NF >= 4 {
+          n = split($1, o, "-"); first = o[1]; last = (n == 2) ? o[2] : o[1]
+          if (last < from || first > to) next
+          if ($0 ~ /marker/) { for (i = first; i <= last; i++) if (i >= from && i <= to) seen[i] = 1 } else bad = 1
+        }
+        END { for (i = from; i <= to; i++) if (!(i in seen)) bad = 1; print (bad ? "no" : "yes") }')
+      if [ "$markers_only" == "yes" ]
+      then
+        log "🧾 partition $topic-$partition: the $lag offset(s) left ($current to $((end - 1))) are transaction markers (COMMIT / ABORT), not records: nothing left to consume, the lag reaches 0 with the next records (playground topic dump-log --topic $topic --partition $partition --offset $current)"
+      fi
+    done < "$lag_output"
+  }
+
   timed_out=0
   # sleep --interval, then return 1 once --max-wait is exceeded
   function wait_next_poll () {
@@ -108381,6 +108434,7 @@ playground_connector_show_lag_command() {
     if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
     then
       logwarn "🐢 the consumer lag for $connector_type connector ${connector}${maybe_id} is still not 0 after $max_wait seconds."
+      explain_marker_lag
       timed_out=1
       return 1
     fi

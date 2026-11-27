@@ -162,6 +162,13 @@ do
             max_poll_interval=$(jq -r '."consumer.override.max.poll.interval.ms" // empty' "$cdir/config.json" 2>/dev/null)
             next_steps+=("🐢 a task was kicked out of its consumer group (CommitFailedException): more than max.poll.interval.ms (${max_poll_interval:-300000 by default}) between two polls, so its offsets are not committed and the records are delivered again. Lower consumer.override.max.poll.records or make each batch faster, or raise consumer.override.max.poll.interval.ms")
         fi
+        # a read_committed sink does not read past the first open transaction of a partition: no error, no progress,
+        # no offset committed, until the transaction commits, aborts or times out (transaction.timeout.ms)
+        if [ "$type" == "sink" ] && [ -s "$cdir/config.json" ] && [ "$(jq -r '."consumer.override.isolation.level" // empty' "$cdir/config.json" 2>/dev/null)" == "read_committed" ]
+        then
+            first_topic=$(jq -r '.topics // empty' "$cdir/config.json" 2>/dev/null | cut -d, -f1 | tr -d ' ')
+            next_steps+=("🔒 the sink reads read_committed: an open transaction blocks it at its first offset, without error. Look for one: playground broker transactions describe-producers --topic ${first_topic:-<topic>}$cluster_flag (OPEN_TRANSACTION_START_OFFSET ⚠️)")
+        fi
         next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
     fi
     next_steps+=("playground connector show-config --connector $connector$cluster_flag")

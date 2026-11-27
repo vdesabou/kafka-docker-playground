@@ -13421,24 +13421,25 @@ subcommands:
       source, replication\nfactors above the number of brokers, tasks.max above the
       number of\npartitions of a sink, client overrides (consumer.override.*,\nproducer.override.*)
       against connector.client.config.override.policy\nof the worker, consumer.override.max.poll.records
-      too high for\nmax.poll.interval.ms, auto.offset.reset=latest, producer acks
-      not all,\nan Avro / Protobuf / JSON Schema converter set on the connector without\nits
-      schema.registry.url (a converter set on the connector does not\ninherit the
-      converter settings of the worker), JsonConverter with a\nschema.registry.url,
-      JsonConverter expecting the schema / payload\nenvelope on a sink, a single task
-      Debezium connector with tasks.max > 1,\nand secrets in clear text (not ${file:...}
-      / ${secret:...}).\n\nSeverity: \U0001F534 HIGH (fails), \U0001F7E0 MEDIUM (loses
-      records or misbehaves),\n\U0001F7E1 LOW (risky), \U0001F535 INFO (a note, does
-      not count). Exits with 1 when there\nis at least one warning (HIGH, MEDIUM or
-      LOW).\n\nThe config is read from stdin, in the same formats as 'connector\nvalidate':
-      json, a CFK / Strimzi custom resource, terraform, a\n.properties, a dump of
-      GET /connectors?expand=info (--connector picks\none). Without stdin, --connector
-      lints the config of that running\nconnector.\n\nWhen a local environment runs,
-      the number of brokers, the partitions of\nthe topics of a sink and the override
-      policy of the worker are read\nfrom it (--offline to skip). For a customer config,
-      --brokers gives the\nsize of their cluster.\n\n☁️ Fully managed: supported for
-      the generic rules (the converter and secret rules are skipped, a fully managed
-      config holds its secrets)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+      too high for\nmax.poll.interval.ms, a max.poll.interval.ms lowered below 60
+      s,\nauto.offset.reset=latest, producer acks not all,\nan Avro / Protobuf / JSON
+      Schema converter set on the connector without\nits schema.registry.url (a converter
+      set on the connector does not\ninherit the converter settings of the worker),
+      JsonConverter with a\nschema.registry.url, JsonConverter expecting the schema
+      / payload\nenvelope on a sink, a single task Debezium connector with tasks.max
+      > 1,\nand secrets in clear text (not ${file:...} / ${secret:...}).\n\nSeverity:
+      \U0001F534 HIGH (fails), \U0001F7E0 MEDIUM (loses records or misbehaves),\n\U0001F7E1
+      LOW (risky), \U0001F535 INFO (a note, does not count). Exits with 1 when there\nis
+      at least one warning (HIGH, MEDIUM or LOW).\n\nThe config is read from stdin,
+      in the same formats as 'connector\nvalidate': json, a CFK / Strimzi custom resource,
+      terraform, a\n.properties, a dump of GET /connectors?expand=info (--connector
+      picks\none). Without stdin, --connector lints the config of that running\nconnector.\n\nWhen
+      a local environment runs, the number of brokers, the partitions of\nthe topics
+      of a sink and the override policy of the worker are read\nfrom it (--offline
+      to skip). For a customer config, --brokers gives the\nsize of their cluster.\n\n☁️
+      Fully managed: supported for the generic rules (the converter and secret rules
+      are skipped, a fully managed config holds its secrets)\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
     usage: playground connector lint [JSON] [OPTIONS]
     options:
     - names:
@@ -14061,10 +14062,13 @@ subcommands:
       description: "\U0001F195 Reset offsets for source and sink connectors\n\nWipes
         the recorded offsets so the connector starts over: a source\nre-reads its
         origin from the beginning, a sink re-consumes its topics\nfrom the earliest
-        offset. The connector is stopped and resumed around\nthe reset.\n\n⚠️ Everything
-        is reprocessed, so expect duplicates downstream unless\nthe target is idempotent.
-        Use alter when you only want to move back\nto a specific point.\n\n☁️ Fully
-        managed: supported (custom connectors too)\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
+        offset. The connector is stopped and resumed around\nthe reset.\n\nA sink
+        without committed offsets starts from its auto.offset.reset:\nwith consumer.override.auto.offset.reset=latest
+        it starts from the END\nof its topics, and the reset re-reads nothing (a ⚠️
+        says so: remove\nthe key first, or use alter).\n\n⚠️ Everything is reprocessed,
+        so expect duplicates downstream unless\nthe target is idempotent. Use alter
+        when you only want to move back\nto a specific point.\n\n☁️ Fully managed:
+        supported (custom connectors too)\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
       usage: playground connector offsets reset [OPTIONS]
       options:
       - names:
@@ -14671,9 +14675,13 @@ subcommands:
     description: "\U0001F422 Show lag of sink connector\n\nThe consumer lag of the
       sink, refreshed every --interval seconds, so you\nsee whether it is catching
       up, standing still or falling behind. A lag\nthat does not move while the connector
-      reports RUNNING means the tasks\nare stuck rather than slow.\n\nIt will run
-      until all lag becomes 0 (press ctrl-c to exit), or until\n--max-wait. --once
-      (or --json) takes a single snapshot instead. The\nconsumer group is connect-<connector>,
+      reports RUNNING means the tasks\nare stuck rather than slow, with two exceptions
+      said when --max-wait is\nreached: a small lag made only of transaction markers
+      (COMMIT / ABORT\ncontrol records, never delivered: \U0001F9FE, it reaches 0
+      with the next\nrecords), and a group without member nor committed offset (a
+      task\nkicked out of its group after max.poll.interval.ms).\n\nIt will run until
+      all lag becomes 0 (press ctrl-c to exit), or until\n--max-wait. --once (or --json)
+      takes a single snapshot instead. The\nconsumer group is connect-<connector>,
       or the one set with\nconsumer.override.group.id.\n\n☁️ Fully managed: supported
       (custom connectors too)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck"
