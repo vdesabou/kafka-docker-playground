@@ -347,7 +347,10 @@ then
         # stdin: a terminal, or an empty stdin (a script, CI, an agent: stdin is not a terminal but has nothing) is
         # the same, no schema was given
         value_content=""
-        if [ ! -t 0 ]
+        # with --forced-value, the schema may come on stdin (a heredoc, a file: the forced value is then sent with that
+        # schema), or not at all: stdin is only read when it has data ready, never waited on (a pipe that a caller keeps
+        # open without writing to it made the command hang forever on cat)
+        if [ ! -t 0 ] && { [[ -z "$forced_value" ]] || read -r -t 0; }
         then
             value_content=$(cat "$value")
         fi
@@ -1887,11 +1890,25 @@ else
     fi
     if [ "$nb_send_errors" -gt 0 ]
     then
-        first_send_error=$(grep -m1 -E "^[a-z][a-zA-Z0-9_.]*(Exception|Error):" "$tmp_dir/producer_stderr" || true)
+        # the exception of the first record that failed, logged just after "Error when sending message": not the first
+        # exception of the output, which is often a WARN the producer recovered from (a stopped broker it could not
+        # reconnect to: "UnknownHostException: broker3", while the records failed with NotEnoughReplicasException)
+        first_send_error=$(awk '/Error when sending message/ { f = 1; next } f && /^[a-z][a-zA-Z0-9_.]*(Exception|Error):/ { print; exit }' "$tmp_dir/producer_stderr" || true)
+        [[ -z "$first_send_error" ]] && first_send_error=$(grep -m1 -E "^[a-z][a-zA-Z0-9_.]*(Exception|Error):" "$tmp_dir/producer_stderr" || true)
         logerror "❌ $nb_send_errors record(s) could not be sent to topic $topic${first_send_error:+: $first_send_error}"
         exit 1
     fi
     log "📤 produced $nb_messages_sent records to topic $topic$end_reason, $ELAPSED"
+fi
+# a client quota of the brokers slowed the producer down: nothing fails, it only takes longer
+if [ -f "$tmp_dir/producer_stderr" ] && [ $interrupted != 1 ]
+then
+    nb_throttled=$(grep -c -E "Connection to node -?[0-9]+ .*is throttled for [0-9]+ ms" "$tmp_dir/producer_stderr" || true)
+    if [ "${nb_throttled:-0}" -gt 0 ]
+    then
+        throttled_client=$(grep -m1 -o -E "\[Producer clientId=[^]]+\] Connection to node" "$tmp_dir/producer_stderr" | sed -E 's/\[Producer clientId=([^]]+)\].*/\1/')
+        logwarn "🚥 the brokers throttled the producer${throttled_client:+ $throttled_client} $nb_throttled time(s): it is over a client quota (playground quota get${throttled_client:+ --client-id $throttled_client})"
+    fi
 fi
 
 if [[ -n "$transactional_id" ]] && [ $interrupted = 1 ]

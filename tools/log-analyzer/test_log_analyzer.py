@@ -3098,6 +3098,22 @@ def test_cluster_startup_known_causes():
     got = causes_of("[2026-10-19 13:00:01,000] ERROR [RaftManager id=4] Unexpected quorum error, no leader elected (org.apache.kafka.raft.KafkaRaftClient)")
     check("a KRaft quorum error keeps its cause", "🗳️ KRaft quorum error" in got, got)
 
+
+def test_broker_quota_throttled_known_cause():
+    """a Kafka client over a client quota: its NetworkClient logs "Connection to node N is throttled" at WARN, nothing
+    fails. A known cause that points at the quotas, not the 🚦 of the external systems (HTTP 429)"""
+    body = ("[2026-11-26 18:21:14,350] WARN [Producer clientId=orders-service] Connection to node 1 is throttled for 931 ms until timestamp 1795717275281 (org.apache.kafka.clients.NetworkClient)\n"
+            "[2026-11-26 18:21:15,288] WARN [Consumer clientId=connector-consumer-sink-0, groupId=connect-sink] Connection to node 2 (broker2/10.0.0.2:9092) is throttled for 935 ms until timestamp 1795717276222 (org.apache.kafka.clients.NetworkClient)")
+    text = ("@@PGFILE@@|client.log|100|0|2|2026-11-26T18:00:00|2026-11-26T19:00:00\n"
+            f"@@PGREC@@|WARN|2|10|11|2026-11-26T18:21:14|2026-11-26T18:21:15\n{body}\n@@PGTS@@|2026-11-26T18:21:14\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    titles = [h["title"] for h in res["known_causes"]]
+    check("known cause", "🚥 Throttled by a broker quota" in titles, titles)
+    check("not the external system one", "🚦 Throttled by the external system" not in titles, titles)
+    hint = next(h for h in res["known_causes"] if h["title"].startswith("🚥"))
+    check("advice", "playground quota get" in hint["advice"], hint["advice"])
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

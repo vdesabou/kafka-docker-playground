@@ -212,6 +212,11 @@ Gotchas:
   `could not find string field`).
 - Because of the pool, 1 million records with `--record-size` are 100 distinct big records repeated: fine for
   throughput tests, not for deduplication or compaction tests (raise `--max-nb-messages-to-generate`).
+- **Slower than expected, without error?** A client quota of the brokers: the summary ends with
+  `🚥 the brokers throttled the producer <client.id> N time(s): it is over a client quota (playground quota get …)`.
+- When records fail, the summary gives the exception of the **first failed record**
+  (`❌ 5 record(s) could not be sent to topic payments: …NotEnoughReplicasException…`), not the warnings the producer
+  recovered from (a stopped broker it could not reconnect to).
 
 ---
 
