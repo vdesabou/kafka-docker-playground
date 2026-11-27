@@ -99,5 +99,8 @@ Real issues of this area to reproduce and troubleshoot yourself, with the soluti
 * ⭐ [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash)
 * ⭐ [Producer: slow, without any error](/academy?id=producer-slow-without-any-error)
 * ⭐⭐ [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions)
+* ⭐⭐ [Broker: a restarted broker takes ages to catch up](/academy?id=broker-a-restarted-broker-takes-ages-to-catch-up)
+* ⭐⭐ [Broker: the compacted topic keeps every old version](/academy?id=broker-the-compacted-topic-keeps-every-old-version)
+* ⭐⭐⭐ [ZooKeeper to KRaft migration: the broker refuses to start in migration mode](/academy?id=zookeeper-to-kraft-migration-the-broker-refuses-to-start-in-migration-mode)
 * ⭐⭐ [HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again) (also 🔗 Connect)
 * ⭐⭐⭐ [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) (also 🔗 Connect)

@@ -1183,6 +1183,46 @@ function sr_format_compatibility_messages() {
     | if $m then "   \($m.t): \($m.d)" else "   \(.)" end'
 }
 
+# the image tags of the running environment, for the commands that replay its docker compose command (container
+# recreate, set-environment-variables): TAG from the broker, CP_CONNECT_TAG from connect. The CP_*_TAG of the caller's
+# shell are forgotten first, utils.sh (sourced by the replayed command) derives them from TAG: a lab, or a shell where
+# utils.sh was sourced on CP 8, driving an environment started on CP 7.9 would recreate its containers with CP 8 images
+# (cp-zookeeper:8.x: not found)
+function export_running_cp_tags () {
+  local tag_variable
+  for tag_variable in $(compgen -e | grep -E '^CP_[A-Z_]+_TAG$')
+  do
+    unset "$tag_variable"
+  done
+  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+  export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+}
+
+# docker environments: exits with an error when no broker container of the cluster runs (stopped, or exiting at startup
+# and restarted in a loop: docker says Running for a restarting container, its Status is restarting), instead of letting
+# a command take the topics for missing ("could not create topic")
+function exit_if_no_broker_running () {
+  local running_environment b status states=""
+  running_environment=$(playground state get run.environment 2>/dev/null)
+  if [[ "$running_environment" == "ccloud" || "$running_environment" == cfk* ]] || is_mdc_environment
+  then
+    return 0
+  fi
+  for b in broker broker2 broker3
+  do
+    status=$(docker inspect -f '{{.State.Status}}' "$b" 2>/dev/null) || continue
+    if [[ "$status" == "running" ]] && is_container_running "$b"
+    then
+      return 0
+    fi
+    states="$states, $b is $status"
+  done
+  # no broker container at all: an environment with other names, the command decides
+  [[ -z "$states" ]] && return 0
+  logerror "❌ no broker is running: ${states#, }. Why: playground container logs -c broker --errors (or playground analyze logs on its log)"
+  exit 1
+}
+
 function get_broker_container() {
   if is_mdc_environment
   then
@@ -12468,6 +12508,31 @@ function get_partitions_with_status () {
       if (i == "") i = "-"
       print t, p, l, r, i
     }'
+}
+
+# replication throttles set on the cluster, often left by a reassignment or an Auto Data Balancer rebalance that was
+# never completed (only kafka-reassign-partitions --verify, confluent-rebalancer status / finish remove them): sets
+# health_throttle_rates ("<broker id or default> <key> <value>" per line) and health_throttle_topics ("<topic> <key>
+# <replicas>" per line). Best effort: what kafka-configs could not read stays empty
+function get_replication_throttles () {
+  local output
+  health_throttle_rates=""
+  health_throttle_topics=""
+  if output=$(run_quota_kafka_configs $'--entity-type\tbrokers' --describe 2>/dev/null)
+  then
+    health_throttle_rates=$(echo "$output" | parse_broker_configs | awk -F'\t' '$2 ~ /^(leader|follower)\.replication\.throttled\.rate$/ && $3 != "" { print $1, $2, $3 }')
+  fi
+  if output=$(run_quota_kafka_configs $'--entity-type\ttopics' --describe 2>/dev/null)
+  then
+    health_throttle_topics=$(echo "$output" | awk '
+      /^Dynamic configs for topic / { t = $5 ; next }
+      /^[[:space:]]+(leader|follower)\.replication\.throttled\.replicas=/ {
+        line = $0 ; sub(/^[[:space:]]+/, "", line)
+        eq = index(line, "=") ; k = substr(line, 1, eq - 1) ; v = substr(line, eq + 1) ; sub(/ sensitive=.*/, "", v)
+        if (t != "" && v != "") print t, k, v
+      }')
+  fi
+  return 0
 }
 
 # checks the health of the cluster and sets health_* (registered, fenced and not registered brokers, partitions

@@ -64,6 +64,15 @@ KNOWN_CAUSES = [
                "file): set javax.net.ssl.trustStorePassword with javax.net.ssl.trustStore, or fix the path"},
     # an SSLException that only wraps a socket error (an LDAPS or HTTPS connection, already open, that times out, is
     # reset or closed) is not a TLS problem: it goes to ⏱️ / 🔌 like the same error on a plaintext connection
+    # a certificate outside its validity period: expired, or not valid yet, which is almost always the clock of the host
+    # that validates it (behind: no NTP, a VM restored from a snapshot). Before tls_handshake, which also matches
+    {"name": "tls_certificate_validity", "severity": "high", "category": "Certificate/TLS Issues",
+     "pattern": r"CertificateNotYetValidException|CertificateExpiredException|certificate (?:is )?not yet valid",
+     "title": "🕰️ Certificate outside its validity period",
+     "advice": "a certificate of the chain is expired (NotAfter) or not valid yet (NotBefore) for the clock of the host "
+               "that logs it: an expired one is renewed; 'not yet valid' is almost always that host's clock behind (no NTP, "
+               "a VM restored from a snapshot): compare its date with NotBefore (playground debug clock -c <container> "
+               "shows and resets it in a repro, playground tools cert inspect shows the validity)"},
     {"name": "tls_handshake", "severity": "high", "category": "Certificate/TLS Issues",
      "pattern": r"SSLHandshakeException"
                 r"|SSLException(?!: (?:Connection (?:reset|timed out|closed|or outbound has closed)|Read timed out"
@@ -805,7 +814,7 @@ HINT_ORDER = [
     KILLED_TASK_TITLE, "🧷 Config provider placeholder not resolved", "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🧬 Not enough replicas",
     "🔑 Authentication failure", "🪪 MDS / RBAC token error", "🎟️ OAuth token cannot be obtained or validated", "🎫 Kerberos ticket cache past its renewable lifetime", "🎫 Kerberos keytab out of date (key changed on the KDC)", "🎫 Kerberos re-login failing", "🎫 Kerberos ticket not found or not valid", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure",
-    "🗝️ Empty or unreadable truststore", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
+    "🗝️ Empty or unreadable truststore", "🕰️ Certificate outside its validity period", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
     "🪄 Transformation (SMT) failed", "🕳️ Null value for a required field", "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🪓 Connection terminated during authentication", "🌐 Host name not resolved (DNS)",
     "🔌 Connection failure", "🗄️ JDBC sink: table or column missing (auto.create / auto.evolve off)",

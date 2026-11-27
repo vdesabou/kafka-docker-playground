@@ -220,6 +220,24 @@ then
     logwarn "   👉 playground broker transactions find-hanging (and describe-producers --topic '"$topic"'), then broker transactions abort if it never ends; a still running transaction is normal"
 fi
 
+# a compacted topic: the log cleaner never touches the active segment (the last one), so the old versions of the keys in
+# it stay until it rolls (segment.ms, segment.bytes)
+topic_configs=$(playground --output-level ERROR topic describe --topic "$topic" 2>/dev/null | grep -o "Configs:.*" | head -1)
+if [[ "$topic_configs" == *"cleanup.policy="*compact* ]]
+then
+    segment_ms=$(echo "$topic_configs" | grep -o -E "(^|[ ,:])segment\.ms=[0-9]+" | cut -d= -f2)
+    dirty_ratio=$(echo "$topic_configs" | grep -o -E "min\.cleanable\.dirty\.ratio=[0-9.]+" | cut -d= -f2)
+    active=$(jq -r '.segments[-1].file // empty' <<< "$result")
+    nb_segments=$(jq -r '.segments | length' <<< "$result")
+    if [ "$nb_segments" == "1" ]
+    then
+        log "🧹 compacted topic, one segment: $active is the active segment, and the log cleaner never compacts the active segment: every version of every key in it stays until it rolls"
+    else
+        log "🧹 compacted topic: $active is the active segment, never compacted (its old versions stay until it rolls); the $((nb_segments - 1)) other(s) are cleaned when their dirty part reaches min.cleanable.dirty.ratio (${dirty_ratio:-0.5 by default})"
+    fi
+    log "   it rolls after segment.ms (${segment_ms:-604800000, 7 days, by default}) at the next record, or at segment.bytes. To see compaction work: playground topic alter --topic $topic --add-config segment.ms=10000,min.cleanable.dirty.ratio=0.01, then one more record"
+fi
+
 # the batches to show
 select_filter='.batches[-($last):]'
 title="last $last batch(es)"

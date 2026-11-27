@@ -501,10 +501,11 @@ commands:
     container, and cached in /tmp/playground-faketime: it loads in the
     UBI8 (CP 7) and UBI9 (CP 8) images, not in musl (alpine) ones.
 
-    ❕ Recreating the container drops the changes of another 'container
-    set-environment-variables', 'debug java-debug' or 'debug jscissors
-    --restart' on it. A jump forward fires at once the timeouts based on
-    wall clock time: expect reconnections, a rebalance or a token refresh.
+    The recreate goes through 'container set-environment-variables': the
+    values set before on the container (by it, 'debug java-debug' or
+    'debug jscissors --restart') are kept. --reset gives the container
+    its original definition back: those values go too. A jump forward fires at once the timeouts based on wall
+    clock time: expect reconnections, a rebalance or a token refresh.
 
     🧪 Docker only (not cfk).
   flags:

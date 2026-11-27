@@ -5,7 +5,8 @@ source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
 # lab of the sink offsets exercises of https://kafka-docker-playground.io/#/academy (a new sink that skips the records
-# already in the topic, a read_committed sink blocked by an open transaction): runs their reproduction models
+# already in the topic, a read_committed sink blocked by an open transaction, a sink stuck on the partitions of a broker
+# the worker resolves to a wrong address): runs their reproduction models
 # (academy/connect-connect-filestream-sink) and asserts the symptom each exercise is about, then the fix the page gives
 lab_require_plaintext
 academy="${DIR}/../../academy"
@@ -57,5 +58,27 @@ lab_expect_contains "are transaction markers (COMMIT / ABORT), not records"
 lab_run playground container exec -c connect --command "cat /tmp/output.json"
 lab_expect_contains '{"payment": 5, "batch": "new"}'
 lab_expect_not_contains '"batch": "crashed"}' "the aborted payments are not written"
+
+log "Exercise: after a maintenance, the sink connector is stuck on some partitions (a stale DNS record on the worker)"
+run_model connect-connect-filestream-sink filestream-sink-repro-000039-sink-stuck-on-some-partitions-stale-dns.sh
+lab_expect_not_contains "Orders written by the connector: 120" "some orders are not written"
+lab_run playground connector diagnose --connector filestream-sink
+lab_expect_contains "🔌 the consumer of the task cannot connect to node 2"
+lab_run playground container exec -c connect --command "getent hosts broker2"
+lab_expect_contains "10.255.255.1"
+lab_run playground debug dns -c connect --reset
+MAX_WAIT=120
+CUR_WAIT=0
+until [ "$(playground --output-level ERROR container exec -c connect --command "wc -l < /tmp/output.json" 2>/dev/null | tr -d ' ')" == "120" ]
+do
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ the 120 orders are not written $MAX_WAIT seconds after the DNS reset"
+        exit 1
+    fi
+done
+log "✅ the 120 orders are written"
 
 log "✅ academy sink offsets lab: the exercises behave as the page says"

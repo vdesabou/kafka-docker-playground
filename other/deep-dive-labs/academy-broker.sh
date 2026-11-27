@@ -6,7 +6,8 @@ source ${DIR}/lab-utils.bash
 
 # lab of the broker exercises of https://kafka-docker-playground.io/#/academy (a broker that never joins, a broker
 # rejected by the controllers, records lost for the partitions of one broker, no controller majority, acks=all and min
-# ISR, a producer throttled by a quota): runs their
+# ISR, a producer throttled by a quota, a replication throttle left by a rebalance, a ZooKeeper to KRaft migration
+# stopped at phase 3, a compacted topic that keeps its old versions): runs their
 # reproduction models (academy/environment-plaintext) and asserts the symptom each exercise is about, then the fix the
 # page gives. The fix edits the compose override of the model, as the learner does: the original is put back at the end
 lab_require_plaintext
@@ -126,5 +127,60 @@ lab_run playground quota delete --client-id orders-service --producer-byte-rate
 lab_run playground topic produce --topic orders --nb-messages 3000 --record-size 1000 --forced-value '{"order": %g}' --producer-property client.id=orders-service
 lab_expect_contains "📤 produced 3000 records to topic orders"
 lab_expect_not_contains "🚥 the brokers throttled" "no throttling without the quota"
+
+log "Exercise 7: a restarted broker takes ages to catch up (a replication throttle left by Auto Data Balancer)"
+run_model broker-repro-000034-replica-slow-to-catch-up-rebalance-throttle-left.sh
+lab_expect_contains "under-replicated partitions"
+lab_expect_contains "🐢 replication throttle set: follower.replication.throttled.rate=100000 (98 KB/s) on brokers 1,2,3"
+lab_expect_contains "throttled replicas (leader / follower.replication.throttled.replicas) on topics: orders"
+lab_expect_contains "👉 under-replicated partitions of those topics catch up at that rate"
+lab_run playground broker config get --broker 3
+lab_expect_contains "follower.replication.throttled.rate=100000"
+
+log "Exercise 7, Step 3: confluent-rebalancer finish"
+lab_run playground container exec -c broker --command "confluent-rebalancer finish --bootstrap-server broker:9092"
+lab_expect_contains "The rebalance has completed and throttling has been disabled"
+lab_run playground broker health --wait-healthy --max-wait 90
+lab_expect_contains "✅ cluster is healthy"
+lab_expect_not_contains "🐢" "no replication throttle any more"
+
+log "Exercise 8: ZooKeeper to KRaft migration, the broker refuses to start in migration mode (CP 7.9)"
+run_model broker-repro-000035-broker-refuses-migration-mode-zookeeper-to-kraft.sh
+lab_expect_contains "❌ no broker is running: broker is restarting"
+lab_run playground container logs -c broker --errors
+lab_expect_contains "requirement failed: Must have link coordinator enabled during migration."
+
+log "Exercise 8, Step 3: the missing property"
+lab_run playground container set-environment-variables -c broker --env "KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_ENABLE: 'true'"
+lab_run playground container logs -c kraft-controller --wait-for-log "Completed migration of metadata from ZooKeeper to KRaft" --max-wait 180
+lab_run playground topic produce -t orders --nb-messages 5 --forced-value '{"order": %g, "phase": "dual-write"}'
+lab_expect_contains "📤 produced 5 records to topic orders"
+
+log "Exercise 9: the compacted topic keeps every old version (the active segment)"
+run_model broker-repro-000040-compacted-topic-keeps-old-versions.sh
+lab_expect_contains '{"customer":"c1","version":1}'
+lab_run playground topic dump-log --topic customer-profiles
+lab_expect_contains "15 record(s), offsets 0-14"
+lab_expect_contains "🧹 compacted topic, one segment: 00000000000000000000.log is the active segment"
+
+log "Exercise 9, Step 3: a small segment.ms, then one more record"
+lab_run playground topic alter --topic customer-profiles --add-config segment.ms=10000,min.cleanable.dirty.ratio=0.01
+sleep 12
+lab_run playground topic produce --topic customer-profiles --nb-messages 1 --key c1 --value '{"customer":"c1","version":6}' --value-format raw
+MAX_WAIT=120
+CUR_WAIT=0
+until [ "$(playground topic consume --topic customer-profiles 2>/dev/null | grep -c '"version"')" == "4" ]
+do
+    sleep 10
+    CUR_WAIT=$(( CUR_WAIT+10 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ customer-profiles is not compacted to 4 records $MAX_WAIT seconds after the change"
+        exit 1
+    fi
+done
+lab_run playground topic consume --topic customer-profiles
+lab_expect_contains '{"customer":"c3","version":5}'
+lab_expect_not_contains '{"customer":"c3","version":4}' "the old versions are gone"
 
 log "🎉 broker exercises of the academy: every symptom and every fix as on the page"

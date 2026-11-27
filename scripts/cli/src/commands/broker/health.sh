@@ -22,6 +22,7 @@ do
     fi
     sleep 5
 done
+get_replication_throttles
 
 if [[ -n "$json" ]]
 then
@@ -48,6 +49,8 @@ then
         --argjson quorum "$(echo -n "$health_quorum" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), status: .[1], log_end_offset: (.[2] | tonumber), lag: (.[3] | tonumber), seconds_since_caught_up: (.[4] | tonumber)})')" \
         --arg quorum_error "$health_quorum_error" \
         --arg quorum_lost "$health_quorum_lost" \
+        --argjson throttle_rates "$(echo -n "$health_throttle_rates" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {broker: .[0], key: .[1], value: (.[2] | tonumber? // .[2])})')" \
+        --argjson throttle_topics "$(echo -n "$health_throttle_topics" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {topic: .[0], key: .[1], replicas: .[2]})')" \
         '{
             healthy: $healthy,
             error: (if $error == "" then null else $error end),
@@ -56,6 +59,7 @@ then
             under_min_isr_partitions: $under_min_isr,
             topics_with_replication_factor_below_min_isr: $rf_below_min_isr,
             unavailable_partitions: $unavailable,
+            replication_throttles: { rates: $throttle_rates, throttled_replicas: $throttle_topics },
             kraft_quorum: (if $quorum_lost != "" then { lost: $quorum_lost } elif $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
         }'
     [ $healthy -eq 1 ] && exit 0 || exit 1
@@ -136,6 +140,24 @@ print_partitions "unavailable (no leader)" "$health_unavailable"
 if [[ -n "$health_rf_below_min_isr" ]]
 then
     logwarn "⚠️ topics with a replication factor below min.insync.replicas (acks=all producers to them always fail with NotEnoughReplicasException): $(echo "$health_rf_below_min_isr" | awk '{print $1}' | sort -u | paste -sd, - | sed 's/,/, /g')"
+fi
+if [[ -n "$health_throttle_rates" || -n "$health_throttle_topics" ]]
+then
+    # one "<key>=<value> on brokers 1,2,3" per key and value (default: the cluster-wide default)
+    rates=$(echo "$health_throttle_rates" | awk 'NF { k = $2 "=" $3 ((($3 + 0) >= 1024) ? sprintf(" (%.0f KB/s)", $3 / 1024) : "") ; b[k] = (k in b) ? b[k] "," $1 : $1 } END { for (k in b) print k " on " ((b[k] == "default") ? "every broker (cluster-wide default)" : "brokers " b[k]) }' | sort | paste -sd';' - | sed 's/;/; /g')
+    topics=$(echo "$health_throttle_topics" | awk 'NF { print $1 }' | sort -u | paste -sd, - | sed 's/,/, /g')
+    logwarn "🐢 replication throttle set: ${rates:-no rate (the throttled replicas are not limited)}"
+    if [[ -n "$topics" ]]
+    then
+        logwarn "   throttled replicas (leader / follower.replication.throttled.replicas) on topics: $topics"
+        if [[ -n "$health_urp" ]] && [[ -n "$rates" ]] && echo "$health_urp" | awk '{print $1}' | grep -q -x -F -f <(echo "$health_throttle_topics" | awk '{print $1}')
+        then
+            logwarn "   👉 under-replicated partitions of those topics catch up at that rate"
+        fi
+    else
+        log "   no topic has throttled replicas: the rate limits nothing for now"
+    fi
+    log "   left by a reassignment or an Auto Data Balancer rebalance never completed? confluent-rebalancer finish (or status), kafka-reassign-partitions --verify, or remove them by hand (playground broker config delete --key leader.replication.throttled.rate)"
 fi
 
 if [[ -n "$health_quorum_error" ]]

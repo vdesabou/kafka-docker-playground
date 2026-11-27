@@ -157,5 +157,7 @@ Real issues of this area to reproduce and troubleshoot yourself, with the soluti
 * ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)
 * ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)
 * ⭐⭐ [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)
+* ⭐⭐ [TLS: the Connect worker does not come back after a hardware swap](/academy?id=tls-the-connect-worker-does-not-come-back-after-a-hardware-swap)
+* ⭐⭐ [Network: after a maintenance, the sink connector is stuck on some partitions](/academy?id=network-after-a-maintenance-the-sink-connector-is-stuck-on-some-partitions)
 * ⭐⭐⭐ [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)
 * ⭐ [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing) (also 🌊 Streams, schemas & non-Java)

@@ -64,6 +64,8 @@ The questions, commands and deep dives of this area: [🔗 Connect](/area-connec
 * ⭐⭐ *[TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)*
 * ⭐⭐ *[RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)*
 * ⭐⭐ *[OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)*
+* ⭐⭐ *[TLS: the Connect worker does not come back after a hardware swap](/academy?id=tls-the-connect-worker-does-not-come-back-after-a-hardware-swap)*
+* ⭐⭐ *[Network: after a maintenance, the sink connector is stuck on some partitions](/academy?id=network-after-a-maintenance-the-sink-connector-is-stuck-on-some-partitions)*
 * ⭐⭐⭐ *[Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)*
 
 ### 🖥️ Brokers, clients and observability
@@ -76,6 +78,9 @@ The questions, commands and deep dives of this area: [🖥️ Brokers, clients a
 * ⭐ [Producer: acks=all fails after a broker crash](/academy?id=producer-acksall-fails-after-a-broker-crash)
 * ⭐ [Producer: slow, without any error](/academy?id=producer-slow-without-any-error)
 * ⭐⭐ [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions)
+* ⭐⭐ [Broker: a restarted broker takes ages to catch up](/academy?id=broker-a-restarted-broker-takes-ages-to-catch-up)
+* ⭐⭐ [Broker: the compacted topic keeps every old version](/academy?id=broker-the-compacted-topic-keeps-every-old-version)
+* ⭐⭐⭐ [ZooKeeper to KRaft migration: the broker refuses to start in migration mode](/academy?id=zookeeper-to-kraft-migration-the-broker-refuses-to-start-in-migration-mode)
 * ⭐⭐ *[HTTP sink: the same records are sent again and again](/academy?id=http-sink-the-same-records-are-sent-again-and-again)*
 * ⭐⭐⭐ *[FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written)*
 
@@ -86,6 +91,8 @@ The questions, commands and deep dives of this area: [🌊 Streams, schemas and 
 * ⭐ [Schema Registry: the new version of the producer is refused](/academy?id=schema-registry-the-new-version-of-the-producer-is-refused)
 * ⭐ [ksqlDB: the new table stays empty](/academy?id=ksqldb-the-new-table-stays-empty)
 * ⭐ [Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)
+* ⭐⭐ [Kafka Streams: one application stopped on a bad record, the other one keeps going](/academy?id=kafka-streams-one-application-stopped-on-a-bad-record-the-other-one-keeps-going)
+* ⭐⭐⭐ [Kafka Streams: the enriched orders of most customers never come out](/academy?id=kafka-streams-the-enriched-orders-of-most-customers-never-come-out)
 * ⭐ *[Avro Converter: Unknown magic byte](/academy?id=avro-converter-unknown-magic-byte)*
 * ⭐⭐⭐ *[JDBC sink: an incompatible schema breaks the connector](/academy?id=jdbc-sink-an-incompatible-schema-breaks-the-connector)*
 
@@ -97,6 +104,8 @@ The questions, commands and deep dives of this area: [🛡️ Platform, security
 * ⭐⭐ [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker)
 * ⭐⭐ [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized)
 * ⭐⭐ [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation)
+* ⭐⭐ [TLS: the Connect worker does not come back after a hardware swap](/academy?id=tls-the-connect-worker-does-not-come-back-after-a-hardware-swap)
+* ⭐⭐ [Network: after a maintenance, the sink connector is stuck on some partitions](/academy?id=network-after-a-maintenance-the-sink-connector-is-stuck-on-some-partitions)
 * ⭐⭐⭐ [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed)
 * ⭐ *[Python client: the producer cannot connect, and says almost nothing](/academy?id=python-client-the-producer-cannot-connect-and-says-almost-nothing)*
 
@@ -4123,6 +4132,594 @@ which of the two is wrong.
 <!-- tabs:end -->
 
 
+### Broker: a restarted broker takes ages to catch up
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+Last week the cluster grew from 2 to 3 brokers, and the ops team ran Auto Data Balancer to move partitions of `orders`
+onto broker 3. It all went fine. Today broker 3 was restarted for an OS patch: minutes later, `orders` is still
+under-replicated, although the network between the brokers is idle.
+
+💡 What you'll learn:
+
+* What a replication throttle is, and where it lives (broker and topic configs)
+* Why a rebalance or a reassignment can leave one behind
+* How to see it, and remove it
+
+#### **🤯 Details**
+
+👥 Support area: 🖥️ Brokers & clients
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+Reproduction model: [broker-repro-000034-replica-slow-to-catch-up-rebalance-throttle-left.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000034-replica-slow-to-catch-up-rebalance-throttle-left.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000034-replica-slow-to-catch-up-rebalance-throttle-left.sh
+```
+
+A minute after broker 3 is back:
+
+```bash
+14:02:30 ❌ 3 under-replicated partitions
+TOPIC   PARTITION  LEADER  REPLICAS  ISR
+orders  0          2       2,3       2
+orders  3          2       3,2       2
+orders  4          1       3,1       1
+```
+
+❔Questions:
+
+* Broker 3 is running and registered: why is it so slow to get back in sync?
+* What did last week's rebalance leave behind?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Why is it so slow?
+
+Its replication is **throttled**. [playground broker health](/playground%20broker%20health) says it under the
+partitions:
+
+```bash
+14:02:30 ❗ 🐢 replication throttle set: follower.replication.throttled.rate=100000 (98 KB/s) on brokers 1,2,3; leader.replication.throttled.rate=100000 (98 KB/s) on brokers 1,2,3
+14:02:30 ❗    throttled replicas (leader / follower.replication.throttled.replicas) on topics: orders
+14:02:30 ❗    👉 under-replicated partitions of those topics catch up at that rate
+```
+
+A throttle has two halves: a **rate** per broker (`leader.replication.throttled.rate`,
+`follower.replication.throttled.rate`, [playground broker config get](/playground%20broker%20config%20get)), and the
+**list of throttled replicas** per topic (`leader.replication.throttled.replicas`,
+`follower.replication.throttled.replicas`, `partition:broker` pairs). A replica of the list that is out of the ISR
+replicates at that rate, whatever the network can do: here about 27 MB at 100 KB/s.
+
+> What did the rebalance leave behind?
+
+Exactly that throttle. `confluent-rebalancer execute --throttle` sets it, and says so:
+
+```bash
+Warning: You must run the `status` or `finish` command periodically, until the rebalance completes, to ensure the throttle is removed.
+```
+
+Nobody did: the moves completed during the night, the throttle stayed, and nothing showed it until a replica had to
+catch up. `kafka-reassign-partitions --throttle` (and [playground topic reassign](/playground%20topic%20reassign)
+`--throttle`) behave the same way: only `--verify` after the move removes it.
+
+<!-- select:end -->
+
+* Remove the throttle, and check that broker 3 catches up.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground container exec -c broker --command "confluent-rebalancer finish --bootstrap-server broker:9092"
+The rebalance has completed and throttling has been disabled
+playground broker health --wait-healthy
+14:11:31 ℹ️ ✅ all brokers are registered: 1,2,3
+14:11:31 ℹ️ ✅ no under-replicated partition
+14:11:31 ℹ️ ✅ cluster is healthy
+```
+
+`confluent-rebalancer status` removes it too, with an answer that looks like a failure:
+`Error: No rebalance is currently in progress. If you have called status after a rebalance was started successfully,
+the rebalance has completed.` Without the tool that set it, remove both halves by hand:
+`playground broker config delete --key leader.replication.throttled.rate --broker <id>` (and the follower one), and the
+two `*.replication.throttled.replicas` configs of each topic (`kafka-configs --alter --delete-config`).
+
+<!-- select:end -->
+🥁 So...did you learn why a throttle outlives the rebalance that set it?
+
+#### **🎓 Next Steps**
+
+* The whole Auto Data Balancer flow, `status` and `finish` included: [other/auto-data-balancer](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/auto-data-balancer).
+* Self-Balancing Clusters (`confluent.balancer.enable=true`) manage their throttle themselves (`confluent.balancer.throttle.bytes.per.second`).
+* Why a throttled replica can still catch up 10 MB at once: a follower fetch returns up to `replica.fetch.response.max.bytes` before the quota slows the next ones.
+
+<!-- tabs:end -->
+
+### Kafka Streams: one application stopped on a bad record, the other one keeps going
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+Two Kafka Streams applications read the Avro payments of the topic `payments`: `streams-serde-errors` and
+`streams-serde-errors-fail-on-poison-pill`, 3 instances each. Since 10:02, the second one writes nothing: its output
+`payments-processed-fail-demo` stops at p3, p4 never comes. The first one processed every payment. Nobody changed the
+code or the configuration.
+
+💡 What you'll learn:
+
+* What a poison pill is for a Kafka Streams application
+* What the deserialization exception handler decides, and its default
+* How to skip one record for one application, without touching the others
+
+#### **🤯 Details**
+
+👥 Support area: 🌊 Streams, schemas & non-Java
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+* 🌊 Kafka Streams: 4.4.0 (the client of CP 8.4, `--client-version` for another one)
+
+Reproduction model: [streams-repro-000036-one-application-stops-on-poison-pill.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/other-kafka-streams/streams-repro-000036-one-application-stops-on-poison-pill.sh)
+
+#### **📍 Step 1**
+
+Run the example (the first run builds the application, a few minutes):
+
+```bash
+playground run -f academy/other-kafka-streams/streams-repro-000036-one-application-stops-on-poison-pill.sh
+```
+
+```bash
+14:20:52 ℹ️ 📒 payments-processed-fail-demo, the output of streams-serde-errors-fail-on-poison-pill:
+{"key":"p1","offset":0}
+{"key":"p2","offset":1}
+{"key":"p3","offset":2}
+```
+
+❔Questions:
+
+* What state are the instances of each application in?
+* What stopped the second one, and why not the first one?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> What state are the instances in?
+
+[playground streams status](/playground%20streams%20status):
+
+```bash
+🌊 application streams-serde-errors-fail-on-poison-pill (Kafka Streams 4.4.0): 3 instance(s)
+  INSTANCE  STATE  SINCE     REBALANCES  THREADS  ACTIVE TASKS   STANDBY TASKS  NOT RESTORED
+  streams   ERROR  13:21:57  3 (0.7s)    1 DEAD   0_0, 0_1, 0_2  -              -
+  streams2  ERROR  13:21:11  2 (0.8s)    1 DEAD   0_0, 0_2       -              -
+  streams3  ERROR  13:20:27  1 (0.6s)    1 DEAD   0_2            -              -
+  💀 Uncaught exception in a stream thread x6 (streams, streams2, streams3, first 2026-11-27 13:20:26, last 2026-11-27 13:21:56)
+🌊 errors whose line names no application (several applications in the same logs):
+  🧪 Deserialization error x4 (streams, streams2, streams3, first 2026-11-27 13:20:26, last 2026-11-27 13:21:56)
+     👉 a record could not be deserialized with the configured serdes (poison pill, wrong format, schema not found): deserialization.exception.handler …
+🌊 application streams-serde-errors (Kafka Streams 4.4.0): 3 instance(s)
+  streams   RUNNING  …
+```
+
+All 3 instances of the second application are dead, one after the other: streams3 died on task 0_2, the rebalance gave
+0_2 to streams2, which died on it, then to streams. A poison pill takes the whole application down, one instance at a
+time.
+
+> What stopped it?
+
+A record of `payments` that is not Avro (a test tool sent plain text, partition 2, offset 2):
+
+```bash
+ERROR Exception caught during Deserialization, taskId: 0_2, topic: payments, partition: 2, offset: 2 (org.apache.kafka.streams.errors.LogAndFailExceptionHandler)
+ERROR 💀 Uncaught exception in a stream thread of streams-serde-errors-fail-on-poison-pill, shutting down the client: org.apache.kafka.streams.errors.StreamsException: Deserialization exception handler is set to fail upon a deserialization error.
+```
+
+`deserialization.exception.handler` (`default.deserialization.exception.handler` before Kafka Streams 4.0) decides
+what a record that cannot be deserialized does. Its default, `LogAndFailExceptionHandler`, stops the thread. The first
+application sets `LogAndContinueExceptionHandler` (`playground container logs -c streams --grep StreamsConfig`): it
+logs the record and skips it. The second one leaves the handler to its default.
+
+<!-- select:end -->
+
+* Get the second application running again, skipping that record only for it.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+Its instances are dead, so its consumer group empties and its offsets can be moved past the poison pill, then the
+instances restarted. Not at once: a dead instance stays a member until its session times out (45 s by default), and
+until then `Assignments can only be reset if the group 'streams-serde-errors-fail-on-poison-pill' is inactive, but the
+current state is Stable.` Wait for `has no active members` in
+[playground consumer-group describe](/playground%20consumer-group%20describe):
+
+```bash
+playground consumer-group reset-offsets --group streams-serde-errors-fail-on-poison-pill --topic payments:2 --to-offset 3
+GROUP                                    TOPIC           PARTITION  NEW-OFFSET
+streams-serde-errors-fail-on-poison-pill payments        2          3
+playground container restart -c streams -c streams2 -c streams3
+playground streams status
+🌊 application streams-serde-errors-fail-on-poison-pill (Kafka Streams 4.4.0): 3 instance(s)
+  streams   RUNNING  13:23:15  3 (0.2s)    1 RUNNING  0_0           -              -
+  streams2  RUNNING  13:23:16  2 (2.8s)    1 RUNNING  0_1           -              -
+  streams3  RUNNING  13:23:16  2 (2.2s)    1 RUNNING  0_2           -              -
+14:23:59 ℹ️ 👥 consumer group streams-serde-errors-fail-on-poison-pill: Stable, 3 member(s), lag 0 🏁
+```
+
+p4 is in `payments-processed-fail-demo`. The group id of a Kafka Streams application is its `application.id`; the
+other application, with its own group, is not affected. The restart also restarts the first application (same JVM):
+it rebalances for about 45 s, until the session of its old members times out.
+
+For good: `deserialization.exception.handler=LogAndContinueExceptionHandler`, or a handler of your own that sends the
+record to a dead letter topic (built in since KIP-1034: `errors.dead.letter.queue.topic.name`, in the Kafka Streams 4.4
+client of this exercise).
+
+<!-- select:end -->
+🥁 So...did you learn what a poison pill does to a Kafka Streams application?
+
+#### **🎓 Next Steps**
+
+* The production exception handler, for a record the application cannot write (too large): `other/kafka-streams/serde-errors.sh`.
+* `playground streams status --html`: the timeline of the states and the errors of each instance.
+
+<!-- tabs:end -->
+
+### TLS: the Connect worker does not come back after a hardware swap
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+During the night, the host of the Connect worker was swapped. The worker container is up again, but its REST API never
+answers, and no connector runs. The brokers, Schema Registry and the other clients are fine. Its configuration did not
+change, nor its keystores.
+
+💡 What you'll learn:
+
+* What a certificate's validity period is checked against
+* Why a clock that is behind breaks TLS
+* How to see the time of a container, and change it
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+* 🔐 Environment: `2way-ssl` (mutual TLS on every listener)
+
+Reproduction model: [2way-ssl-repro-000037-connect-worker-down-clock-behind-certificate-not-yet-valid.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-2way-ssl/2way-ssl-repro-000037-connect-worker-down-clock-behind-certificate-not-yet-valid.sh)
+
+#### **📍 Step 1**
+
+Run the example (it waits 5 minutes for the worker, which does not come back):
+
+```bash
+playground run -f academy/environment-2way-ssl/2way-ssl-repro-000037-connect-worker-down-clock-behind-certificate-not-yet-valid.sh
+```
+
+```bash
+14:55:01 ❌ curl request failed with error code 35 (the TLS connection was reset or refused): the connect REST API does not answer, is the worker up? playground container logs -c connect --errors
+filestream-sink                🤔 UNKNOWN (API Error) 🤔 N/A
+```
+
+❔Questions:
+
+* Why does the worker not start?
+* What changed with the new hardware?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Why does the worker not start?
+
+Before it starts, the image waits for the brokers, and every TLS handshake fails:
+
+```bash
+playground container logs -c connect --errors
+[2026-11-25 13:52:37,761] ERROR Error while getting broker list. (io.confluent.admin.utils.ClusterStatus:72)
+    Caused by: javax.net.ssl.SSLHandshakeException: (bad_certificate) PKIX path validation failed: java.security.cert.CertPathValidatorException: validity check failed
+    Caused by: java.security.cert.CertificateNotYetValidException: NotBefore: Fri Nov 27 13:47:59 GMT 2026
+```
+
+The certificate of the broker is valid from November 27th. Look at the date of the log line: November 25th.
+[playground analyze logs](/playground%20analyze%20logs): `[HIGH] 🕰️ Certificate outside its validity period`.
+
+> What changed?
+
+The clock. A certificate is valid between `NotBefore` and `NotAfter`, **for the clock of the host that checks it**.
+The new host has no NTP and is two days behind:
+
+```bash
+playground debug clock -c connect
+🕰️ connect: 2026-11-25 13:54:17 UTC (real 2026-11-27 13:55:42 UTC, offset -172885)
+playground tools cert inspect --server broker:9092
+      valid    2026-11-27 → 2054-04-13 (9998 days left)
+```
+
+For every host with the right time, the certificate is valid: only this one refuses it. An expired certificate gives
+`CertificateExpiredException: NotAfter: …` the same way.
+
+<!-- select:end -->
+
+* Give the worker the right time.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+In the playground, [playground debug clock](/playground%20debug%20clock) `--reset` (on a real host: fix NTP, `chronyc tracking`, `timedatectl`):
+
+```bash
+playground debug clock -c connect --reset
+14:57:58 ℹ️ 🕰️ connect: real time (2026-11-27 13:57:58 UTC), no fake clock
+playground connector status --connector filestream-sink
+filestream-sink                ✅ RUNNING  0:🟢 RUNNING
+playground topic produce -t payments --nb-messages 2 --forced-value '{"payment": %g, "after": "reset"}'
+playground container exec -c connect --command "cat /tmp/output.json"
+{"payment": 1, "after": "reset"}
+{"payment": 2, "after": "reset"}
+```
+
+The reset recreates the container: `/tmp/output.json` starts empty, and the connector goes on after its committed
+offsets, so only the new payments are in it.
+
+A certificate issued minutes before it is used meets the same check when the clocks of two hosts drift by a few
+minutes: certificate authorities usually backdate `NotBefore` for that reason.
+
+<!-- select:end -->
+🥁 So...did you learn whose clock decides whether a certificate is valid?
+
+#### **🎓 Next Steps**
+
+* Move the clock forward instead (`playground debug clock -c connect --offset +30y`): `CertificateExpiredException`.
+* The same with a Kerberos ticket: `Clock skew too great (37)` ([other/kerberos-ticket-expiry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kerberos-ticket-expiry)).
+
+<!-- tabs:end -->
+
+### Network: after a maintenance, the sink connector is stuck on some partitions
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+During the maintenance window, the FileStream sink connector was paused, and broker 2 moved to a new host. The
+connector was resumed: it is `RUNNING`, wrote most of the orders of Tuesday, and stopped moving. No ERROR in the
+worker log. The brokers are healthy, and the other clients see all the orders.
+
+💡 What you'll learn:
+
+* How a consumer reaches each partition: through the broker that leads it, by the address that broker advertises
+* Why a client only notices a wrong address when it opens a new connection
+* How to see how a container resolves a hostname
+
+#### **🤯 Details**
+
+👥 Support area: 🛡️ Platform & security · 🔗 Connect
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+Reproduction model: [filestream-sink-repro-000039-sink-stuck-on-some-partitions-stale-dns.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/connect-connect-filestream-sink/filestream-sink-repro-000039-sink-stuck-on-some-partitions-stale-dns.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/connect-connect-filestream-sink/filestream-sink-repro-000039-sink-stuck-on-some-partitions-stale-dns.sh
+```
+
+```bash
+16:04:38 ℹ️ Orders written by the connector: 101
+```
+
+❔Questions:
+
+* Which orders are missing?
+* Why does the task not get them, without any error?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Which orders are missing?
+
+[playground connector diagnose](/playground%20connector%20diagnose): two partitions do not move, the others are done.
+
+```bash
+topic: orders     partition: 2   current-offset: 7          end-offset: 16         lag: 9
+topic: orders     partition: 3   current-offset: 12         end-offset: 22         lag: 10
+   🔌 the consumer of the task cannot connect to node 2 (socket connection setup timeout, connection not established): the partitions that broker leads do not move, the others do. Check, from the worker, the address it resolves and reaches for it: playground broker describe (the advertised listeners), playground container exec -c connect --command "getent hosts <broker host>" …
+```
+
+`playground topic describe --topic orders`: partitions 2 and 3 are the ones broker 2 leads. The client only logs it at
+INFO: `Disconnecting from node 2 due to socket connection setup timeout. The timeout value is 30000 ms.`
+
+> Why does the task not get them?
+
+A consumer fetches each partition from its leader, at the address the leader advertises (`broker2:9092`), resolved
+by the host of the client. The worker resolves `broker2` to the address of the old host:
+
+```bash
+playground container exec -c connect --command "getent hosts broker2"
+10.255.255.1    broker2
+playground container exec -c broker --command "getent hosts broker2"
+192.168.112.5   broker2
+```
+
+Before the window, the task had a connection open to broker 2, and an open connection does not resolve anything.
+Broker 2 restarted, the leadership of its partitions came back to it, and the new connection went to the old address.
+Nothing fails: the consumer keeps trying, every 30 seconds.
+
+<!-- select:end -->
+
+* Fix the name resolution of the worker.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+In the playground, the stale record was set with [playground debug dns](/playground%20debug%20dns) (on a real host:
+the DNS record, `/etc/hosts`, a resolver cache):
+
+```bash
+playground debug dns -c connect --reset
+```
+
+Within seconds, the 120 orders are written. A JVM keeps a successful lookup 30 s (`networkaddress.cache.ttl`) and a
+failed one 10 s (`networkaddress.cache.negative.ttl`): after a DNS change, a client can take that long to follow, and
+forever with a security manager that caches lookups.
+
+<!-- select:end -->
+🥁 So...did you learn which address a consumer uses for each partition?
+
+#### **🎓 Next Steps**
+
+* The same symptom from the other side: a broker that advertises a wrong address, the [Broker: some records are lost, always for the same partitions](/academy?id=broker-some-records-are-lost-always-for-the-same-partitions) exercise.
+* `playground debug dns --nxdomain` or `--delay 12s` for the other DNS failures.
+
+<!-- tabs:end -->
+
+### Broker: the compacted topic keeps every old version
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+`customer-profiles` holds the profile of each customer, keyed by customer id, with `cleanup.policy=compact`: the
+profile service rebuilds its cache from it each morning, and only needs the latest version of each key. The topic has
+been compacted for days, yet the service still reads every version of every profile.
+
+💡 What you'll learn:
+
+* How compaction works: segments, the active segment, the log cleaner
+* Which settings decide when the old versions go
+* How to look at the segments of a partition
+
+#### **🤯 Details**
+
+👥 Support area: 🖥️ Brokers & clients
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+
+Reproduction model: [broker-repro-000040-compacted-topic-keeps-old-versions.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000040-compacted-topic-keeps-old-versions.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000040-compacted-topic-keeps-old-versions.sh
+```
+
+3 customers, 5 versions each: the consumer reads the 15 records.
+
+❔Questions:
+
+* Is the topic really compacted?
+* Why are the old versions still there?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Is the topic really compacted?
+
+Yes: `playground topic describe --topic customer-profiles` shows `Configs: min.insync.replicas=1,cleanup.policy=compact`.
+
+> Why are the old versions still there?
+
+[playground topic dump-log](/playground%20topic%20dump-log) shows the segments of the partition:
+
+```bash
+📂 customer-profiles-0 on broker 1 (leader) in broker: /var/lib/kafka/data/customer-profiles-0
+   1 segment(s): 00000000000000000000.log (1.4 KB); read: 00000000000000000000.log
+🧮 15 batch(es), 15 record(s), offsets 0-14, 2026-11-27 16:10:44 → 2026-11-27 16:11:39
+🧹 compacted topic, one segment: 00000000000000000000.log is the active segment, and the log cleaner never compacts the active segment: every version of every key in it stays until it rolls
+   it rolls after segment.ms (604800000, 7 days, by default) at the next record, or at segment.bytes.
+```
+
+A partition is a sequence of segment files; records are appended to the last one, the **active segment**. The log
+cleaner only compacts the closed segments: it keeps the latest record of each key, and removes the older ones. A topic
+with little traffic stays in its active segment for days (`segment.ms`, 7 days by default; `segment.bytes`, 1 GB):
+nothing is compacted in the meantime. Then a closed segment is only cleaned when its "dirty" part (records not
+compacted yet) reaches `min.cleanable.dirty.ratio` (0.5 by default) of the log.
+
+<!-- select:end -->
+
+* Make the old versions go, without losing a profile.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+```bash
+playground topic alter --topic customer-profiles --add-config segment.ms=10000,min.cleanable.dirty.ratio=0.01
+# after 10 seconds, the next record rolls the segment
+playground topic produce --topic customer-profiles --nb-messages 1 --key c1 --value '{"customer":"c1","version":6}' --value-format raw
+playground topic consume --topic customer-profiles
+CreateTime:2026-11-27 16:11:31.330|Partition:0|Offset:12|Headers:NO_HEADERS|Key:c1|Value:{"customer":"c1","version":5}
+CreateTime:2026-11-27 16:11:35.438|Partition:0|Offset:13|Headers:NO_HEADERS|Key:c2|Value:{"customer":"c2","version":5}
+CreateTime:2026-11-27 16:11:39.293|Partition:0|Offset:14|Headers:NO_HEADERS|Key:c3|Value:{"customer":"c3","version":5}
+CreateTime:2026-11-27 16:14:37.140|Partition:0|Offset:15|Headers:NO_HEADERS|Key:c1|Value:{"customer":"c1","version":6}
+```
+
+Within seconds, the closed segment keeps the latest version of each key (offsets 12 to 14), and the new active segment
+holds version 6 of c1: version 5 of c1 stays until that segment is compacted too. Compaction keeps the offsets:
+`playground topic get-number-records` still says 16 (it counts offsets, not records).
+
+A small `segment.ms` means many small files: in production, keep it in hours, and accept that a consumer may see a few
+old versions. A consumer must not rely on compaction for correctness: it reads the latest record of each key.
+
+<!-- select:end -->
+🥁 So...did you learn why the active segment is never compacted?
+
+#### **🎓 Next Steps**
+
+* Delete a key: a record with a null value (a tombstone), kept `delete.retention.ms` (1 day) after its segment is compacted.
+* The same active segment rule for retention: `retention.ms` does not delete the records of the active segment.
+
+<!-- tabs:end -->
+
 ## ⭐⭐⭐ Advanced
 
 ### JDBC sink RUNNING, but no data in the table
@@ -5459,6 +6056,247 @@ worker needs the new file.
 
 <!-- tabs:end -->
 
+### ZooKeeper to KRaft migration: the broker refuses to start in migration mode
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+A self-managed cluster on CP 7.9 is migrated from ZooKeeper to KRaft. The KRaft controller is up, in migration mode,
+`waiting for brokers to register`. Phase 3 restarts the broker in migration mode, with the properties of the Apache
+Kafka migration guide: it never comes back, and the producers fail.
+
+💡 What you'll learn:
+
+* The phases of a ZooKeeper to KRaft migration, and where a cluster is in them
+* What Confluent Server needs on top of Apache Kafka for the migration
+* How to find why a container restarts in a loop
+
+#### **🤯 Details**
+
+👥 Support area: 🖥️ Brokers & clients
+
+Versions used:
+
+* 🎯 CP: 7.9.11 (ZooKeeper is removed in CP 8: the model switches to 7.9.11 with a CP 8 tag)
+
+Reproduction model: [broker-repro-000035-broker-refuses-migration-mode-zookeeper-to-kraft.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/environment-plaintext/broker-repro-000035-broker-refuses-migration-mode-zookeeper-to-kraft.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/environment-plaintext/broker-repro-000035-broker-refuses-migration-mode-zookeeper-to-kraft.sh
+```
+
+```bash
+14:04:35 ❌ no broker is running: broker is restarting. Why: playground container logs -c broker --errors (or playground analyze logs on its log)
+14:04:35 ❌ the orders cannot be sent
+```
+
+The broker was restarted with:
+
+```yaml
+KAFKA_ZOOKEEPER_METADATA_MIGRATION_ENABLE: 'true'
+KAFKA_CONTROLLER_QUORUM_VOTERS: '3000@kraft-controller:9093'
+KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'BROKER:PLAINTEXT,HOST:PLAINTEXT,CONTROLLER:PLAINTEXT'
+KAFKA_INTER_BROKER_PROTOCOL_VERSION: '3.9'
+```
+
+❔Questions:
+
+* Why does the broker restart in a loop?
+* Is the cluster lost? Where is it in the migration?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Why does the broker restart in a loop?
+
+It refuses its configuration, at startup:
+
+```bash
+playground container logs -c broker --errors
+🔴 ERROR x7 (first seen line 41, last seen line 335)
+[2026-11-27 13:04:14,256] ERROR Exiting Kafka due to fatal exception (kafka.Kafka$)
+    java.lang.IllegalArgumentException: requirement failed: Must have link coordinator enabled during migration.
+```
+
+[playground analyze logs](/playground%20analyze%20logs) on the broker log:
+`[CRITICAL] 🚚 ZooKeeper to KRaft migration: link coordinator not enabled`. Confluent Server (`cp-server`) keeps the
+metadata of Cluster Linking in an internal topic during the migration, and requires
+`confluent.cluster.link.metadata.topic.enable=true` in migration mode. The Apache Kafka guide does not mention it, the
+[Confluent one](https://docs.confluent.io/platform/7.9/installation/migrate-zk-kraft.html) does.
+
+> Is the cluster lost?
+
+No. The controller is still waiting for the brokers (phase 2), it has not copied anything yet, and ZooKeeper still
+holds all the metadata: the broker can go back to its ZooKeeper settings, or move on once fixed. The point of no return
+is phase 4 (brokers in KRaft mode).
+
+<!-- select:end -->
+
+* Restart the broker with the missing property, and check that the controller copies the metadata.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+[playground container set-environment-variables](/playground%20container%20set-environment-variables) keeps the
+variables set before on the broker, only the new one is needed:
+
+```bash
+playground container set-environment-variables -c broker --env "KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_ENABLE: 'true'"
+playground container logs -c kraft-controller --wait-for-log "Completed migration of metadata from ZooKeeper to KRaft" --max-wait 180
+playground topic produce -t orders --nb-messages 5 --forced-value '{"order": %g, "phase": "dual-write"}'
+14:05:26 ℹ️ 📤 produced 5 records to topic orders, took: 0min 2sec
+```
+
+The cluster is in dual-write: the controller writes every metadata change to ZooKeeper too.
+
+<!-- select:end -->
+🥁 So...did you learn where a migration can stop, and why?
+
+#### **🎓 Next Steps**
+
+* The 6 phases end to end, until ZooKeeper is stopped: [other/zookeeper-to-kraft-migration](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/zookeeper-to-kraft-migration).
+* The other classic stop of phase 2: a controller formatted with a new cluster id instead of the one of ZooKeeper (`/cluster/id`).
+* On Kubernetes, CFK runs the same phases with a `KRaftMigrationJob`: [other/cfk-day2](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cfk-day2).
+
+<!-- tabs:end -->
+
+### Kafka Streams: the enriched orders of most customers never come out
+
+<!-- tabs:start -->
+#### **🔥 Description**
+
+`streams-join-copartition-demo` enriches each order of `orders-by-customer` (keyed by customer) with the customer, from
+the table `customers`. Orders of c1, c2 and c3 went in, only the order of c2 came out. No error, the 3 instances are
+`RUNNING`, no lag. The topic `orders-by-customer` was created by another team.
+
+💡 What you'll learn:
+
+* What co-partitioning is, and why a join needs it
+* Why Kafka Streams no longer refuses two topics that are not co-partitioned (since 3.2)
+* What changing the partitions of a source topic does to the internal topics of an application, and how to reset it
+
+#### **🤯 Details**
+
+👥 Support area: 🌊 Streams, schemas & non-Java
+
+Versions used:
+
+* 🎯 CP: 8.4.1
+* 🌊 Kafka Streams: 4.4.0
+
+Reproduction model: [streams-repro-000038-join-loses-orders-topics-not-co-partitioned.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/academy/other-kafka-streams/streams-repro-000038-join-loses-orders-topics-not-co-partitioned.sh)
+
+#### **📍 Step 1**
+
+Run the example:
+
+```bash
+playground run -f academy/other-kafka-streams/streams-repro-000038-join-loses-orders-topics-not-co-partitioned.sh
+```
+
+```bash
+15:18:50 ℹ️ 📒 orders-by-customer-enriched, the output of streams-join-copartition-demo:
+{"key":"c2","value":"{\"order_id\":\"x2\",\"product\":\"p1\"}{\"name\":\"Bob\",\"tier\":\"silver\"}"}
+```
+
+❔Questions:
+
+* Where are the orders of c1 and c3?
+* Why does nothing complain?
+
+#### **📍 Step 2**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+> Where are the orders of c1 and c3?
+
+[playground streams status](/playground%20streams%20status) shows a healthy application, and one warning:
+
+```bash
+👥 consumer group streams-join-copartition-demo: Stable, 3 member(s), lag 0 🏁
+⚠️ streams-join-copartition-demo reads topics with different partition counts (customers: 3, orders-by-customer: 6), and Kafka Streams did not check co-partitioning ('Skipping the repartition topic validation since there are no repartition topics', since 3.2): if the topology joins two of them, only the keys that land in the same partition number in both meet, the other records are lost without any error.
+```
+
+A stream-table join runs in tasks: task 0_N reads partition N of both topics, and looks the key up in its own piece of
+the table. A key goes to partition `murmur2(key) % partitions`: with 6 and 3 partitions, c2 is in partition 1 of both
+topics and meets its customer; c1 and c3 are in partition 5 of `orders-by-customer` and partition 2 of `customers`, in
+two different tasks. Task 0_5 has no partition of `customers` at all: for it, the table is empty, and an inner join
+drops the order.
+
+> Why does nothing complain?
+
+Up to Kafka Streams 3.1, the topology was refused (`TopologyException: … Topics not co-partitioned`). Since 3.2,
+the check only runs when the topology has repartition topics (KAFKA-12648): two source topics joined directly start
+without a word. A dropped join is not even counted in `dropped-records-total`.
+
+<!-- select:end -->
+
+* Give `orders-by-customer` the partitions of `customers`, and get the orders of c1 and c3 joined.
+
+#### **📍 Step 3**
+<!-- select:start -->
+<!-- select-menu-labels: 🙋 See solution for previous step? -->
+#### --No--
+#### --Yes--
+
+A topic cannot lose partitions: delete it and create it again with 3 (the application stops on the missing source
+topic meanwhile), then restart it:
+
+```bash
+playground topic delete --topic orders-by-customer
+playground topic create --topic orders-by-customer --nb-partitions 3
+playground container restart -c streams -c streams2 -c streams3
+playground streams status
+  📐 Internal topic with the wrong number of partitions x3 (streams, streams2, streams3, …)
+     👉 the number of partitions of a source topic changed after the application created its internal topics (changelogs, repartition topics: one partition per task): it refuses to start…
+```
+
+```bash
+ERROR stream-thread [main] Existing internal topic streams-join-copartition-demo-customers-STATE-STORE-0000000000-changelog has invalid partitions: expected: 3; actual: 6. Use 'org.apache.kafka.tools.StreamsResetter' tool to clean up invalid topics before processing.
+```
+
+The changelog of the table was created with 6 partitions, one per task. The application must be reset: its internal
+topics deleted, its offsets moved back, and its state rebuilt from the topics. All its instances stopped (they are, in
+`ERROR`; wait for `has no active members` in [playground consumer-group describe](/playground%20consumer-group%20describe)):
+
+```bash
+playground container exec -c broker --command "kafka-streams-application-reset --bootstrap-server broker:9092 --application-id streams-join-copartition-demo --input-topics customers,orders-by-customer --to-earliest"
+Reset-offsets for input topics [customers, orders-by-customer]
+…
+Deleting inferred internal topics [streams-join-copartition-demo-customers-STATE-STORE-0000000000-changelog]
+Done.
+playground container restart -c streams -c streams2 -c streams3
+```
+
+The orders sent before were in the deleted topic: send them again, with the same keys. Now c1, c2 and c3 are joined,
+and the warning is gone.
+
+In the code, the other way: `orders.repartition(Repartitioned.numberOfPartitions(3))` (or `selectKey`) in front of the
+join creates a repartition topic co-partitioned with the table, and Kafka Streams checks it.
+
+<!-- select:end -->
+🥁 So...did you learn why a join needs co-partitioned topics?
+
+#### **🎓 Next Steps**
+
+* The same topology with Kafka Streams 3.1: `playground run -f other/kafka-streams/join.sh --client-version 3.1.0` refuses it.
+* The join of `other/kafka-streams/join.sh` that does it right: the orders re-keyed by customer, through a repartition topic.
+
+<!-- tabs:end -->
+
 ## 🗂️ All the exercises
 
 | Level | Area | Exercise | What you learn | Main commands |
@@ -5488,6 +6326,11 @@ worker needs the new file.
 | ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [TLS: the connector fails when it uses the IP address of the broker](/academy?id=tls-the-connector-fails-when-it-uses-the-ip-address-of-the-broker) | hostname verification, the SANs of a certificate | `connector diagnose`, `tools cert inspect` |
 | ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [RBAC: the connector runs as its own service account, and is not authorized](/academy?id=rbac-the-connector-runs-as-its-own-service-account-and-is-not-authorized) | `principal.service.name`, the role bindings of a sink | `rbac role-binding list\|create`, `connector diagnose` |
 | ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [OAuth: the connector cannot get its token after a secret rotation](/academy?id=oauth-the-connector-cannot-get-its-token-after-a-secret-rotation) | the token endpoint, the OAuth client of a connector | `connector diagnose`, `analyze logs` |
+| ⭐⭐ | 🖥️ Brokers & clients | [Broker: a restarted broker takes ages to catch up](/academy?id=broker-a-restarted-broker-takes-ages-to-catch-up) | replication throttles, what a rebalance or a reassignment leaves behind | `broker health`, `broker config get`, `confluent-rebalancer finish` |
+| ⭐⭐ | 🌊 Streams, schemas & non-Java | [Kafka Streams: one application stopped on a bad record, the other one keeps going](/academy?id=kafka-streams-one-application-stopped-on-a-bad-record-the-other-one-keeps-going) | poison pills, the deserialization exception handler, skip a record for one application | `streams status`, `consumer-group reset-offsets`, `container restart` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [TLS: the Connect worker does not come back after a hardware swap](/academy?id=tls-the-connect-worker-does-not-come-back-after-a-hardware-swap) | the validity period of a certificate, the clock of the host that checks it | `container logs --errors`, `debug clock`, `tools cert inspect`, `analyze logs` |
+| ⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [Network: after a maintenance, the sink connector is stuck on some partitions](/academy?id=network-after-a-maintenance-the-sink-connector-is-stuck-on-some-partitions) | partition leaders and advertised addresses, DNS caching | `connector diagnose`, `topic describe`, `debug dns` |
+| ⭐⭐ | 🖥️ Brokers & clients | [Broker: the compacted topic keeps every old version](/academy?id=broker-the-compacted-topic-keeps-every-old-version) | segments, the active segment, the log cleaner | `topic dump-log`, `topic describe`, `topic alter` |
 | ⭐⭐⭐ | 🔗 Connect | [JDBC sink RUNNING, but no data in the table](/academy?id=jdbc-sink-running-but-no-data-in-the-table) | a connector stuck without error: lag, thread dumps, database locks | `connector show-lag`, `analyze thread-dump`, `db sql` |
 | ⭐⭐⭐ | 🔗 Connect | [JDBC sink: duplicates in the table after a worker crash](/academy?id=jdbc-sink-duplicates-in-the-table-after-a-worker-crash) | at-least-once delivery, idempotent sinks | `connector reconcile`, `container kill` |
 | ⭐⭐⭐ | 🔗 Connect | [HTTP sink timeouts: is it the server or the network?](/academy?id=http-sink-timeouts-is-it-the-server-or-the-network) | a slow server or a slow network, timeouts and retries | `tools http-server requests`, `debug tcp-dump`, `debug degrade-traffic` |
@@ -5496,3 +6339,5 @@ worker needs the new file.
 | ⭐⭐⭐ | 🔗 Connect | [Which version of the HTTP sink brought its HTTP logs?](/academy?id=which-version-of-the-http-sink-brought-its-http-logs) | find the version where a behaviour changed | `repro assert`, `repro bisect` |
 | ⭐⭐⭐ | 🔗 Connect · 🖥️ Brokers & clients | [FileStream sink: read_committed, and nothing is written](/academy?id=filestream-sink-read_committed-and-nothing-is-written) | the last stable offset, open transactions, transaction markers | `connector diagnose`, `broker transactions describe-producers\|abort`, `topic dump-log` |
 | ⭐⭐⭐ | 🛡️ Platform & security · 🔗 Connect | [Kerberos: the connector fails after a restart, Checksum failed](/academy?id=kerberos-the-connector-fails-after-a-restart-checksum-failed) | keytabs and key versions, a key rotation on the KDC | `connector diagnose`, `container exec` (`klist`, `kadmin`), `analyze logs` |
+| ⭐⭐⭐ | 🖥️ Brokers & clients | [ZooKeeper to KRaft migration: the broker refuses to start in migration mode](/academy?id=zookeeper-to-kraft-migration-the-broker-refuses-to-start-in-migration-mode) | the phases of a migration, what Confluent Server needs on top of Apache Kafka | `container logs --errors`, `analyze logs`, `container set-environment-variables` |
+| ⭐⭐⭐ | 🌊 Streams, schemas & non-Java | [Kafka Streams: the enriched orders of most customers never come out](/academy?id=kafka-streams-the-enriched-orders-of-most-customers-never-come-out) | co-partitioning, internal topics and their partitions, application reset | `streams status`, `topic describe`, `kafka-streams-application-reset` |

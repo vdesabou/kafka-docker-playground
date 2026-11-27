@@ -68,6 +68,12 @@ KNOWN_ERRORS = [
      "repartition()) or create the topics with the same partition count. Since Kafka Streams 3.2 the check only runs "
      "when the topology has repartition topics: two source topics joined directly are no longer refused, and join "
      "results are silently missing for some keys"),
+    ("internal_topic_partitions", r"Existing internal topic \S+ has invalid partitions",
+     "📐 Internal topic with the wrong number of partitions",
+     "the number of partitions of a source topic changed after the application created its internal topics "
+     "(changelogs, repartition topics: one partition per task): it refuses to start. Reset the application, all its "
+     "instances stopped: kafka-streams-application-reset --application-id <id> --input-topics <sources> --to-earliest "
+     "deletes its internal topics and moves its offsets, then restart it (its state is rebuilt from the topics)"),
     ("missing_source", r"MissingSourceTopicException|One or more source topics were missing",
      "🕳️ Missing source topic",
      "a source topic of the topology does not exist (or the application cannot describe it, an ACL): create it before "
@@ -205,6 +211,8 @@ class Parser:
         self.labels = set()
         self.current_ts = None
         self.last_app = {}     # label -> application of the last line with a Kafka Streams context
+        self.apps_in = {}      # label -> applications seen in the file (several in one JVM: a main and a demo app)
+        self.no_copartition_check = set()  # applications whose co-partitioning was not validated (no repartition topic)
         self.record = 0        # number of the log record the current line belongs to (stack traces continue it)
         self.counted = set()   # (label, record, error key): an error counts once per record
         self.file_last_ts = {} # label -> last timestamp of the file: the current run lasts until then
@@ -239,9 +247,15 @@ class Parser:
             if NEW_RECORD.match(line):
                 self.record += 1
             ctx = CONTEXT.search(line)
-            if ctx:
-                ident = ctx.group("id")
-                self.last_app[label] = app_of(client_of_thread(ident) or ident)
+            # a client (<app>-<process UUID>) or one of its threads; stream-thread [main] is the main thread of the JVM
+            ctx_client = (client_of_thread(ctx.group("id")) or ctx.group("id")) if ctx else None
+            if ctx_client and UUID_SUFFIX.match(ctx_client):
+                self.last_app[label] = app_of(ctx_client)
+                self.apps_in.setdefault(label, set()).add(self.last_app[label])
+                # since Kafka Streams 3.2 co-partitioning is only validated with repartition topics (KAFKA-12648): a
+                # join of two source topics with different partition counts is no longer refused
+                if "Skipping the repartition topic validation" in line:
+                    self.no_copartition_check.add(self.last_app[label])
             if pending_assignment:
                 # the lines of a multi-line assignment record are the ones that do not start a new record
                 if NEW_RECORD.match(line):
@@ -348,6 +362,11 @@ class Parser:
         if len(c.transitions) > 2000:
             c.transitions = c.transitions[-2000:]
 
+    def app_named_in(self, line):
+        known = {c.application_id for c in self.clients.values()} | {a for apps in self.apps_in.values() for a in apps}
+        named = [a for a in known if a and re.search(r"(?<![\w.-])" + re.escape(a) + r"(?![\w-])", line)]
+        return max(named, key=len) if named else None
+
     def error(self, label, line, ts, line_no):
         for key, pattern, title, advice in KNOWN_ERRORS:
             if pattern.search(line):
@@ -357,11 +376,18 @@ class Parser:
                 # the error line names its client or thread, or it belongs to the last application seen in the file
                 # (a handler that logs without the Kafka Streams context, the line of an exception)
                 m = CONTEXT.search(line)
-                if m:
-                    ident = m.group("id")
-                    app = app_of(client_of_thread(ident) or ident)
+                ident = m.group("id") if m else None
+                client = (client_of_thread(ident) or ident) if ident else None
+                # stream-thread [main]: the main thread of the JVM, not a thread of a client (<app>-<process UUID>)
+                if client and UUID_SUFFIX.match(client):
+                    app = app_of(client)
                 else:
-                    app = self.last_app.get(label, "")
+                    # an application named in the line (the longest: one id can be the prefix of another, app and
+                    # app-fail-demo), else the last one seen, only when the file holds one application: with several
+                    # (two KafkaStreams in one JVM) the last one seen is often the other one
+                    app = self.app_named_in(line)
+                    if app is None:
+                        app = self.last_app.get(label, "") if len(self.apps_in.get(label, ())) <= 1 else ""
                 e = self.errors.setdefault((app, key), {"key": key, "title": title, "advice": advice, "count": 0,
                                                         "first": ts, "last": ts, "labels": set(), "sample": line.strip()[:400],
                                                         "first_line": line_no, "first_label": label,
@@ -370,8 +396,11 @@ class Parser:
                 # each occurrence (time, instance), for the chart and the markers of the timeline (HTML view)
                 if ts and len(e["occurrences"]) < 1000:
                     e["occurrences"].append([ts, label])
-                e["last"] = ts or e["last"]
-                e["first"] = e["first"] or ts
+                # the instances are parsed one file after the other: the earliest and the latest, not the first and
+                # the last parsed (timestamps "YYYY-MM-DD HH:MM:SS" compare as strings)
+                if ts:
+                    e["last"] = max(e["last"] or ts, ts)
+                    e["first"] = min(e["first"] or ts, ts)
                 e["labels"].add(label)
                 return
 
@@ -440,6 +469,7 @@ class Parser:
                                                                               "instances": [], "errors": []})
             target["errors"].append({k: (sorted(v) if isinstance(v, set) else v) for k, v in e.items()})
         for a in apps.values():
+            a["copartition_check_skipped"] = a["application_id"] in self.no_copartition_check
             a["tasks"] = task_table(a["instances"])
             a["findings"] = findings(a)
         # the applications with a problem first: an instance not RUNNING, then the most errors
@@ -474,9 +504,20 @@ def findings(app):
                 out.append(f"💀 {i['instance']}: thread {th['name']} is {th['state']}")
         if i["restarts"]:
             out.append(f"🔁 {i['instance']}: restarted {i['restarts']} time(s) in these logs")
-    for task, owners in app["tasks"].items():
-        if len(owners["active"]) > 1:
-            out.append(f"⚠️ task {task} is active on {len(owners['active'])} instances ({', '.join(owners['active'])}): "
+    # the last assignment of a dead thread or of a client in ERROR is not a second owner: it processes nothing
+    alive = {}
+    for i in app["instances"]:
+        if i["state"] in ERROR_STATES:
+            continue
+        for th in i["threads"]:
+            if th["state"] in ("DEAD", "PENDING_SHUTDOWN"):
+                continue
+            for task in th["active"]:
+                alive.setdefault(task, []).append(i["instance"])
+    for task in sorted(alive, key=task_key):
+        owners = sorted(set(alive[task]))
+        if len(owners) > 1:
+            out.append(f"⚠️ task {task} is active on {len(owners)} instances ({', '.join(owners)}): "
                        f"one of them has not caught up with the last rebalance yet, or is a zombie")
     versions = sorted({i["version"] for i in app["instances"] if i["version"]})
     if len(versions) > 1:
@@ -492,8 +533,11 @@ def text(rep):
     lines = []
     for a in rep["applications"]:
         versions = sorted({i["version"] for i in a["instances"] if i["version"]})
-        lines.append(f"🌊 application {a['application_id']}" + (f" (Kafka Streams {', '.join(versions)})" if versions else "")
-                     + f": {len(a['instances'])} instance(s)")
+        if a["application_id"] == "(unknown application)" and not a["instances"]:
+            lines.append("🌊 errors whose line names no application (several applications in the same logs):")
+        else:
+            lines.append(f"🌊 application {a['application_id']}" + (f" (Kafka Streams {', '.join(versions)})" if versions else "")
+                         + f": {len(a['instances'])} instance(s)")
         if a["instances"]:
             rows = [("INSTANCE", "STATE", "SINCE", "REBALANCES", "THREADS", "ACTIVE TASKS", "STANDBY TASKS", "NOT RESTORED")]
             for i in a["instances"]:
